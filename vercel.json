@@ -3,7 +3,7 @@
   "builds": [
     { "src": "api/src/index.js", "use": "@vercel/node" },
     {
-      "src": "web-react/package.json",
+      "src": "web-next-ts/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "build" }
     }
@@ -13,25 +13,28 @@
     {
       "src": "/static/(.*)",
       "headers": { "cache-control": "s-maxage=31536000,immutable" },
-      "dest": "web-react/static/$1"
+      "dest": "web-next-ts/static/$1"
     },
-    { "src": "/favicon.ico", "dest": "web-react/favicon.ico" },
-    { "src": "/img/(.*)", "dest": "web-react/img/$1" },
-    { "src": "/asset-manifest.json", "dest": "web-react/asset-manifest.json" },
-    { "src": "/manifest.json", "dest": "web-react/manifest.json" },
+    { "src": "/favicon.ico", "dest": "web-next-ts/favicon.ico" },
+    { "src": "/img/(.*)", "dest": "web-next-ts/img/$1" },
+    {
+      "src": "/asset-manifest.json",
+      "dest": "web-next-ts/asset-manifest.json"
+    },
+    { "src": "/manifest.json", "dest": "web-next-ts/manifest.json" },
     {
       "src": "/precache-manifest.(.*)",
-      "dest": "web-react/precache-manifest.$1"
+      "dest": "web-next-ts/precache-manifest.$1"
     },
     {
       "src": "/service-worker.js",
       "headers": { "cache-control": "s-maxage=0" },
-      "dest": "web-react/service-worker.js"
+      "dest": "web-next-ts/service-worker.js"
     },
     {
       "src": "^(.*)$",
       "headers": { "cache-control": "s-maxage=0" },
-      "dest": "/web-react/index.html"
+      "dest": "/web-next-ts/index.html"
     }
   ],
   "build": {

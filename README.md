@@ -1,4 +1,4 @@
-[![Deploy to Vercel](https://vercel.com/button)](https://grandstack.io/deploy-starter-vercel)
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/rdamashek/GoalPost)
 
 # GoalPost Prototype 1
 
