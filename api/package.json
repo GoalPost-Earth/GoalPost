@@ -1,0 +1,70 @@
+{
+  "name": "grand-stack-starter-api",
+  "version": "0.0.0",
+  "description": "API app for GRANDstack",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "./node_modules/.bin/nodemon --watch src --ext js,ts,graphql --delay 3 --exec DEBUG=@neo4j/graphql:auth babel-node  src/index.js --extensions '.js,.ts'",
+    "prebuild": " cd src/resolvers && tsc",
+    "build": "babel src --out-dir build && shx cp .env build 2>/dev/null || : && shx cp -r src/schema build",
+    "now-build": "babel src --out-dir build && shx cp -r src/schema build",
+    "start": "npm run build && node build/index.js"
+  },
+  "author": "John-Dag Addy",
+  "license": "MIT",
+  "eslintConfig": {
+    "plugins": [
+      "@typescript-eslint",
+      "no-relative-import-paths",
+      "import"
+    ],
+    "rules": {
+      "import/no-unresolved": "off",
+      "no-console": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-relative-import-paths/no-relative-import-paths": "off"
+    }
+  },
+  "dependencies": {
+    "@apollo/server": "^4.7.0",
+    "@as-integrations/aws-lambda": "^2.0.1",
+    "@neo4j/graphql": "^6.2.0",
+    "@neo4j/graphql-plugin-auth": "^2.2.0",
+    "@netlify/functions": "^1.2.0",
+    "apollo-server-lambda": "^3.12.0",
+    "auth0": "^2.42.0",
+    "axios": "^0.27.2",
+    "axois": "^0.0.1-security",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.0.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.18.2",
+    "form-data": "^4.0.0",
+    "graphql": "^16.3.0",
+    "mailgun.js": "^7.0.0",
+    "neo4j-driver": "^5.7.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.17.10",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.17.10",
+    "@babel/preset-react": "^7.9.4",
+    "@babel/preset-typescript": "^7.16.7",
+    "@babel/register": "^7.17.7",
+    "@babel/runtime-corejs3": "^7.9.2",
+    "babel-plugin-auto-import": "^1.0.5",
+    "babel-plugin-module-resolver": "^4.0.0",
+    "cross-env": "^7.0.2",
+    "nodemon": "^2.0.15",
+    "shx": "^0.3.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}

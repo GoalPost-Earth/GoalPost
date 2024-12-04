@@ -1,0 +1,6 @@
+type Person @node {
+  id: ID! @id
+  firstName: String!
+  lastName: String!
+  fullName: String! @customResolver(requires: "firstName lastName")
+}

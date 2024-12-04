@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "import/no-unresolved": "off",
+    "no-console": "off"
+  },
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": ["/src/components/ui/**"]
+}
