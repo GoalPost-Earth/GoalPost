@@ -3,4 +3,5 @@ type Person @node {
   firstName: String!
   lastName: String!
   fullName: String! @customResolver(requires: "firstName lastName")
+  email: String!
 }
