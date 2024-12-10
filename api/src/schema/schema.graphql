@@ -1,7 +1,102 @@
-type Person @node {
+interface PersonInterface {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  phone: String!
+  email: String!
+  gender: String!
+  state: String!
+  zipPostal: String!
+  county: String!
+  country: String!
+  city: String!
+  address: String!
+  createdAt: DateTime!
+  updatedAt: DateTime
+}
+
+type Member implements PersonInterface @node {
   id: ID! @id
   firstName: String!
   lastName: String!
   fullName: String! @customResolver(requires: "firstName lastName")
+  phone: String!
   email: String!
+  gender: String!
+  state: String!
+  zipPostal: String!
+  county: String!
+  country: String!
+  city: String!
+  address: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+  community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
+}
+
+type Area @node {
+  id: ID! @id
+  name: String!
+  region: String!
+  state: String!
+  distance: Float!
+  country: String!
+  city: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type CarePoint @node {
+  id: ID! @id
+  description: String!
+  status: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Community @node {
+  id: ID! @id
+  name: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type CoreValue @node {
+  id: ID! @id
+  name: String!
+}
+
+type Goal @node {
+  id: ID! @id
+  name: String!
+  description: String!
+  contactible: Boolean!
+  cost: Float!
+  deliveryLocation: String!
+  deliveryType: String!
+  photo: String!
+  type: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
 }

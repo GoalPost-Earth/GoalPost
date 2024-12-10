@@ -11,7 +11,7 @@ const resolvers = {
   // Context: Context object, database connection, API, etc
   // GraphQLResolveInfo
 
-  Person: {
+  Member: {
     fullName: (source: any) => `${source.firstName} ${source.lastName}`,
   },
 
