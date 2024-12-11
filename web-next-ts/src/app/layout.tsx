@@ -20,8 +20,8 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Governor Job Tracker',
-  description: 'Created by @jd_addy',
+  title: 'Goalpost',
+  description: 'Seed COC',
 }
 
 export default function RootLayout({

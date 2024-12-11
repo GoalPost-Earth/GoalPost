@@ -16,16 +16,9 @@ interface PersonInterface {
   updatedAt: DateTime
 }
 
-type Person @node {
-  id: ID! @id
-  firstName: String!
-  lastName: String!
-  phone: String!
-  email: String
-}
-
 type Member implements PersonInterface @node(labels: ["Person"]) {
   id: ID! @id
+  authId: String!
   firstName: String!
   lastName: String!
   fullName: String! @customResolver(requires: "firstName lastName")
@@ -46,6 +39,8 @@ type Member implements PersonInterface @node(labels: ["Person"]) {
     @settable(onCreate: false, onUpdate: true)
   community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
 }
+
+
 
 type Area @node {
   id: ID! @id

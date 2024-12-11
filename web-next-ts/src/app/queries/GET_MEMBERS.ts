@@ -2,7 +2,7 @@ import { graphql } from '@/gql'
 
 export const GET_MEMBERS = graphql(`
   query GetMembers {
-    people {
+    members {
       id
       firstName
       lastName

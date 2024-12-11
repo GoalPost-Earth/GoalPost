@@ -1,16 +1,14 @@
-'use client'
-
 import React from 'react'
 import { query } from '../lib/ApolloClient'
-import { GET_MEMBERS } from './GET_MEMBERS'
-import { useQuery } from '@apollo/client'
+import { GET_MEMBERS } from '../queries/GET_MEMBERS'
 import { Card, Text } from '@chakra-ui/react'
 
 export default async function page() {
-  const { data } = await useQuery(GET_MEMBERS)
-  console.log('🚀 ~ file: page.tsx:7 ~ data:', data)
+  const { data } = await query({
+    query: GET_MEMBERS,
+  })
 
-  const members = data?.people || []
+  const members = data?.members || []
 
   return (
     <div>

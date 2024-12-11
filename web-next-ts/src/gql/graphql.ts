@@ -449,12 +449,6 @@ export type CreateMembersMutationResponse = {
   members: Array<Member>
 }
 
-export type CreatePeopleMutationResponse = {
-  __typename?: 'CreatePeopleMutationResponse'
-  info: CreateInfo
-  people: Array<Person>
-}
-
 export type DateTimeAggregateSelection = {
   __typename?: 'DateTimeAggregateSelection'
   max?: Maybe<Scalars['DateTime']['output']>
@@ -636,6 +630,7 @@ export type IdAggregateSelection = {
 export type Member = PersonInterface & {
   __typename?: 'Member'
   address: Scalars['String']['output']
+  authId: Scalars['String']['output']
   city: Scalars['String']['output']
   community: Array<Community>
   communityAggregate?: Maybe<MemberCommunityCommunityAggregationSelection>
@@ -676,6 +671,7 @@ export type MemberCommunityConnectionArgs = {
 export type MemberAggregateSelection = {
   __typename?: 'MemberAggregateSelection'
   address: StringAggregateSelection
+  authId: StringAggregateSelection
   city: StringAggregateSelection
   count: Scalars['Int']['output']
   country: StringAggregateSelection
@@ -829,6 +825,7 @@ export type MemberCommunityUpdateFieldInput = {
 
 export type MemberCreateInput = {
   address: Scalars['String']['input']
+  authId: Scalars['String']['input']
   city: Scalars['String']['input']
   community?: InputMaybe<MemberCommunityFieldInput>
   country: Scalars['String']['input']
@@ -862,6 +859,7 @@ export type MemberOptions = {
 /** Fields to sort Members by. The order in which sorts are applied is not guaranteed when specifying many fields in one MemberSort object. */
 export type MemberSort = {
   address?: InputMaybe<SortDirection>
+  authId?: InputMaybe<SortDirection>
   city?: InputMaybe<SortDirection>
   country?: InputMaybe<SortDirection>
   county?: InputMaybe<SortDirection>
@@ -879,6 +877,7 @@ export type MemberSort = {
 
 export type MemberUpdateInput = {
   address_SET?: InputMaybe<Scalars['String']['input']>
+  authId_SET?: InputMaybe<Scalars['String']['input']>
   city_SET?: InputMaybe<Scalars['String']['input']>
   community?: InputMaybe<Array<MemberCommunityUpdateFieldInput>>
   country_SET?: InputMaybe<Scalars['String']['input']>
@@ -901,6 +900,11 @@ export type MemberWhere = {
   address_EQ?: InputMaybe<Scalars['String']['input']>
   address_IN?: InputMaybe<Array<Scalars['String']['input']>>
   address_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  authId_EQ?: InputMaybe<Scalars['String']['input']>
+  authId_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   city_CONTAINS?: InputMaybe<Scalars['String']['input']>
   city_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   city_EQ?: InputMaybe<Scalars['String']['input']>
@@ -1002,21 +1006,18 @@ export type Mutation = {
   createCoreValues: CreateCoreValuesMutationResponse
   createGoals: CreateGoalsMutationResponse
   createMembers: CreateMembersMutationResponse
-  createPeople: CreatePeopleMutationResponse
   deleteAreas: DeleteInfo
   deleteCarePoints: DeleteInfo
   deleteCommunities: DeleteInfo
   deleteCoreValues: DeleteInfo
   deleteGoals: DeleteInfo
   deleteMembers: DeleteInfo
-  deletePeople: DeleteInfo
   updateAreas: UpdateAreasMutationResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
   updateCoreValues: UpdateCoreValuesMutationResponse
   updateGoals: UpdateGoalsMutationResponse
   updateMembers: UpdateMembersMutationResponse
-  updatePeople: UpdatePeopleMutationResponse
 }
 
 export type MutationCreateAreasArgs = {
@@ -1043,10 +1044,6 @@ export type MutationCreateMembersArgs = {
   input: Array<MemberCreateInput>
 }
 
-export type MutationCreatePeopleArgs = {
-  input: Array<PersonCreateInput>
-}
-
 export type MutationDeleteAreasArgs = {
   where?: InputMaybe<AreaWhere>
 }
@@ -1070,10 +1067,6 @@ export type MutationDeleteGoalsArgs = {
 export type MutationDeleteMembersArgs = {
   delete?: InputMaybe<MemberDeleteInput>
   where?: InputMaybe<MemberWhere>
-}
-
-export type MutationDeletePeopleArgs = {
-  where?: InputMaybe<PersonWhere>
 }
 
 export type MutationUpdateAreasArgs = {
@@ -1106,11 +1099,6 @@ export type MutationUpdateMembersArgs = {
   where?: InputMaybe<MemberWhere>
 }
 
-export type MutationUpdatePeopleArgs = {
-  update?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<PersonWhere>
-}
-
 /** Pagination information (Relay) */
 export type PageInfo = {
   __typename?: 'PageInfo'
@@ -1118,46 +1106,6 @@ export type PageInfo = {
   hasNextPage: Scalars['Boolean']['output']
   hasPreviousPage: Scalars['Boolean']['output']
   startCursor?: Maybe<Scalars['String']['output']>
-}
-
-export type PeopleConnection = {
-  __typename?: 'PeopleConnection'
-  edges: Array<PersonEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type Person = {
-  __typename?: 'Person'
-  email?: Maybe<Scalars['String']['output']>
-  firstName: Scalars['String']['output']
-  fullName: Scalars['String']['output']
-  id: Scalars['ID']['output']
-  lastName: Scalars['String']['output']
-  phone: Scalars['String']['output']
-}
-
-export type PersonAggregateSelection = {
-  __typename?: 'PersonAggregateSelection'
-  count: Scalars['Int']['output']
-  email: StringAggregateSelection
-  firstName: StringAggregateSelection
-  id: IdAggregateSelection
-  lastName: StringAggregateSelection
-  phone: StringAggregateSelection
-}
-
-export type PersonCreateInput = {
-  email?: InputMaybe<Scalars['String']['input']>
-  firstName: Scalars['String']['input']
-  lastName: Scalars['String']['input']
-  phone: Scalars['String']['input']
-}
-
-export type PersonEdge = {
-  __typename?: 'PersonEdge'
-  cursor: Scalars['String']['output']
-  node: Person
 }
 
 export type PersonInterface = {
@@ -1325,60 +1273,6 @@ export type PersonInterfacesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
-export type PersonOptions = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  /** Specify one or more PersonSort objects to sort People by. The sorts will be applied in the order in which they are arranged in the array. */
-  sort?: InputMaybe<Array<PersonSort>>
-}
-
-/** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
-export type PersonSort = {
-  email?: InputMaybe<SortDirection>
-  firstName?: InputMaybe<SortDirection>
-  id?: InputMaybe<SortDirection>
-  lastName?: InputMaybe<SortDirection>
-  phone?: InputMaybe<SortDirection>
-}
-
-export type PersonUpdateInput = {
-  email_SET?: InputMaybe<Scalars['String']['input']>
-  firstName_SET?: InputMaybe<Scalars['String']['input']>
-  lastName_SET?: InputMaybe<Scalars['String']['input']>
-  phone_SET?: InputMaybe<Scalars['String']['input']>
-}
-
-export type PersonWhere = {
-  AND?: InputMaybe<Array<PersonWhere>>
-  NOT?: InputMaybe<PersonWhere>
-  OR?: InputMaybe<Array<PersonWhere>>
-  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  firstName_EQ?: InputMaybe<Scalars['String']['input']>
-  firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
-  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
-  id_EQ?: InputMaybe<Scalars['ID']['input']>
-  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
-  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastName_EQ?: InputMaybe<Scalars['String']['input']>
-  lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  phone_EQ?: InputMaybe<Scalars['String']['input']>
-  phone_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-}
-
 export type Query = {
   __typename?: 'Query'
   areas: Array<Area>
@@ -1399,9 +1293,6 @@ export type Query = {
   members: Array<Member>
   membersAggregate: MemberAggregateSelection
   membersConnection: MembersConnection
-  people: Array<Person>
-  peopleAggregate: PersonAggregateSelection
-  peopleConnection: PeopleConnection
   personInterfaces: Array<PersonInterface>
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
@@ -1515,24 +1406,6 @@ export type QueryMembersConnectionArgs = {
   where?: InputMaybe<MemberWhere>
 }
 
-export type QueryPeopleArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonSort>>
-  where?: InputMaybe<PersonWhere>
-}
-
-export type QueryPeopleAggregateArgs = {
-  where?: InputMaybe<PersonWhere>
-}
-
-export type QueryPeopleConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonSort>>
-  where?: InputMaybe<PersonWhere>
-}
-
 export type QueryPersonInterfacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -1610,25 +1483,196 @@ export type UpdateMembersMutationResponse = {
   members: Array<Member>
 }
 
-export type UpdatePeopleMutationResponse = {
-  __typename?: 'UpdatePeopleMutationResponse'
-  info: UpdateInfo
-  people: Array<Person>
+export type CreateMembersMutationVariables = Exact<{
+  input: Array<MemberCreateInput> | MemberCreateInput
+}>
+
+export type CreateMembersMutation = {
+  __typename?: 'Mutation'
+  createMembers: {
+    __typename?: 'CreateMembersMutationResponse'
+    members: Array<{
+      __typename?: 'Member'
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    }>
+  }
+}
+
+export type GetLoggedInUserQueryVariables = Exact<{
+  authId: Scalars['String']['input']
+}>
+
+export type GetLoggedInUserQuery = {
+  __typename?: 'Query'
+  members: Array<{
+    __typename?: 'Member'
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }>
 }
 
 export type GetMembersQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetMembersQuery = {
   __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
+  members: Array<{
+    __typename?: 'Member'
     id: string
     firstName: string
     lastName: string
-    email?: string | null
+    email: string
   }>
 }
 
+export const CreateMembersDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateMembers' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'MemberCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createMembers' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateMembersMutation,
+  CreateMembersMutationVariables
+>
+export const GetLoggedInUserDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getLoggedInUser' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'authId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'members' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'authId_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'authId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetLoggedInUserQuery,
+  GetLoggedInUserQueryVariables
+>
 export const GetMembersDocument = {
   kind: 'Document',
   definitions: [
@@ -1641,7 +1685,7 @@ export const GetMembersDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
+            name: { kind: 'Name', value: 'members' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [

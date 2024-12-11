@@ -95,14 +95,12 @@ const Navigation = () => {
           <DrawerFooter>
             <HStack gap="4">
               <Avatar
-                name={user?.given_name + ' ' + user?.family_name}
+                name={user?.name ?? ''}
                 size="lg"
                 src={user?.picture ?? undefined}
               />
               <Stack gap="0">
-                <Text fontWeight="medium">
-                  {user?.given_name + ' ' + user?.family_name}
-                </Text>
+                {user?.name && <Text fontWeight="medium">{user?.name}</Text>}
               </Stack>
             </HStack>
             <Spacer />

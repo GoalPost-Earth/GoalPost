@@ -54,7 +54,7 @@ const ErrorPage = ({ error }: ErrorScreenProps) => {
           </CardHeader>
           <Card.Body padding={2}>
             {errorMessage && (
-              <Text color="red.400" maxLines={3}>
+              <Text color="red" maxLines={3}>
                 {errorMessage}
               </Text>
             )}
@@ -64,7 +64,7 @@ const ErrorPage = ({ error }: ErrorScreenProps) => {
             <Container>
               <Text fontSize="small" fontWeight="bold" paddingBottom={5}>
                 Click the{' '}
-                <Text as="span" color="red.400">
+                <Text as="span" color="red">
                   Show Details
                 </Text>{' '}
                 Button and send a screenshot to provide more details to the
@@ -85,7 +85,7 @@ const ErrorPage = ({ error }: ErrorScreenProps) => {
                     <DialogTitle>{error?.name}</DialogTitle>
                   </DialogHeader>
                   <DialogBody>
-                    <Text fontSize="small" color="blue.100">
+                    <Text fontSize="small" color="blue">
                       {stackLines}
                     </Text>
                   </DialogBody>
