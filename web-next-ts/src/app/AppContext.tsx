@@ -10,11 +10,6 @@ import {
 } from 'react'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
-export type ContextChurch = {
-  id: string
-  name: string
-  level: ChurchOptions
-}
 
 interface AppContextType {
   church: ContextChurch

@@ -39,11 +39,11 @@ export const errorLink = onError(({ graphQLErrors, networkError }) => {
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
 
-      toaster.create({
-        title: 'Error!',
-        description: message,
-        type: 'error',
-      })
+      // toaster.create({
+      //   title: 'Error!',
+      //   description: message,
+      //   type: 'error',
+      // })
     })
   }
   if (networkError) console.error(`[Network error]: ${networkError}`)
@@ -64,7 +64,7 @@ export const authLink = setContext(async (_, { headers }) => {
   }
   const fetchedToken = await getAccessToken({
     authorizationParams: {
-      audience: 'https://flcadmin.netlify.app/graphql',
+      audience: 'https://goalpost.app/graphql',
       scope: 'read:current_user',
       ignoreCache: true,
     },

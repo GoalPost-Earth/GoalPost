@@ -18,7 +18,7 @@ const driver = neo4jDriver(
   process.env.NEO4J_URI || 'bolt://localhost:7687/',
   auth.basic(
     process.env.NEO4J_USER || 'neo4j',
-    process.env.NEO4J_PASSWORD || 'letmein'
+    process.env.NEO4J_PASSWORD || 'letmein0'
   ),
   {
     encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -32,6 +32,7 @@ const neoSchema = new Neo4jGraphQL({
   plugins: {
     auth: new Neo4jGraphQLAuthJWTPlugin({
       secret: process.env.JWT_SECRET,
+      // rolesPath: 'https://goalpost\\.app/roles',
     }),
   },
 })

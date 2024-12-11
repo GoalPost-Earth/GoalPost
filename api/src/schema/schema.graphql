@@ -16,7 +16,15 @@ interface PersonInterface {
   updatedAt: DateTime
 }
 
-type Member implements PersonInterface @node {
+type Person @node {
+  id: ID! @id
+  firstName: String!
+  lastName: String!
+  phone: String!
+  email: String
+}
+
+type Member implements PersonInterface @node(labels: ["Person"]) {
   id: ID! @id
   firstName: String!
   lastName: String!
