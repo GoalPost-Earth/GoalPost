@@ -20,6 +20,8 @@ const documents = {
     types.GetLoggedInUserDocument,
   '\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n':
     types.GetMembersDocument,
+  '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      email\n      address\n      city\n      country\n      county\n      gender\n      phone\n      state\n      zipPostal\n    }\n  }\n':
+    types.GetMemberDocument,
 }
 
 /**
@@ -54,6 +56,12 @@ export function graphql(
 export function graphql(
   source: '\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n'
 ): (typeof documents)['\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      email\n      address\n      city\n      country\n      county\n      gender\n      phone\n      state\n      zipPostal\n    }\n  }\n'
+): (typeof documents)['\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      email\n      address\n      city\n      country\n      county\n      gender\n      phone\n      state\n      zipPostal\n    }\n  }\n']
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {}

@@ -1,4 +1,4 @@
-import { toaster } from '@/components/ui/toaster'
+import { toaster } from '@/components/ui'
 import { HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
@@ -53,15 +53,15 @@ export const authLink = setContext(async (_, { headers }) => {
   const token = '' //localStorage.getItem('token')
   const expiryDate = '' //localStorage.getItem('expiryDate')
 
-  if (token && !isTokenExpired(expiryDate)) {
-    // return the headers to the context so httpLink can read them
-    return {
-      headers: {
-        ...headers,
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  }
+  // if (token && !isTokenExpired(expiryDate)) {
+  //   // return the headers to the context so httpLink can read them
+  //   return {
+  //     headers: {
+  //       ...headers,
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   }
+  // }
   const fetchedToken = await getAccessToken({
     authorizationParams: {
       audience: 'https://goalpost.app/graphql',
@@ -69,6 +69,7 @@ export const authLink = setContext(async (_, { headers }) => {
       ignoreCache: true,
     },
   })
+  console.log('🚀 ~ file: apollo-functions.ts:86 ~ fetchedToken:', fetchedToken)
   // const fetchedExpiryDate = new Date(new Date().getTime() + 3600 * 1000)
 
   // Store token and its expiry date in local storage

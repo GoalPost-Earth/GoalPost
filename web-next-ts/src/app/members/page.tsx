@@ -1,5 +1,5 @@
 import React from 'react'
-import { query } from '../lib/ApolloClient'
+import { query } from '@/lib/ApolloClient'
 import { GET_MEMBERS } from '../queries/GET_MEMBERS'
 import { Card, Text } from '@chakra-ui/react'
 

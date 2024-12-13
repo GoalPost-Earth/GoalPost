@@ -21,6 +21,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/utils": ["./src/app/utils"],
+      "@/lib/*": ["./src/app/lib/*"],
       "@/mutations": ["./src/app/mutations"],
       "@/queries/*": ["./src/app/queries/*"]
     }

@@ -6,19 +6,14 @@ import Link from 'next/link'
 import { query } from './lib/ApolloClient'
 import { GET_LOGGED_IN_USER } from './queries/DASHBOARD_QUERIES'
 import CreateProfilePage from './profile/CreateProfilePage'
+import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const session = await getSession()
   const user = session?.user
 
-  const { data } = await query({
-    query: GET_LOGGED_IN_USER,
-    variables: { authId: user?.sub ?? '' },
-  })
-  const member = data.members[0]
-
-  if (!member) {
-    return <CreateProfilePage />
+  if (user) {
+    redirect('/dashboard')
   }
 
   return (

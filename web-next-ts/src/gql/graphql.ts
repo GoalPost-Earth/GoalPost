@@ -629,25 +629,25 @@ export type IdAggregateSelection = {
 
 export type Member = PersonInterface & {
   __typename?: 'Member'
-  address: Scalars['String']['output']
+  address?: Maybe<Scalars['String']['output']>
   authId: Scalars['String']['output']
-  city: Scalars['String']['output']
+  city?: Maybe<Scalars['String']['output']>
   community: Array<Community>
   communityAggregate?: Maybe<MemberCommunityCommunityAggregationSelection>
   communityConnection: MemberCommunityConnection
-  country: Scalars['String']['output']
-  county: Scalars['String']['output']
+  country?: Maybe<Scalars['String']['output']>
+  county?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
-  email: Scalars['String']['output']
+  email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
   fullName: Scalars['String']['output']
-  gender: Scalars['String']['output']
+  gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
-  phone: Scalars['String']['output']
-  state: Scalars['String']['output']
+  phone?: Maybe<Scalars['String']['output']>
+  state?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-  zipPostal: Scalars['String']['output']
+  zipPostal?: Maybe<Scalars['String']['output']>
 }
 
 export type MemberCommunityArgs = {
@@ -824,19 +824,19 @@ export type MemberCommunityUpdateFieldInput = {
 }
 
 export type MemberCreateInput = {
-  address: Scalars['String']['input']
+  address?: InputMaybe<Scalars['String']['input']>
   authId: Scalars['String']['input']
-  city: Scalars['String']['input']
+  city?: InputMaybe<Scalars['String']['input']>
   community?: InputMaybe<MemberCommunityFieldInput>
-  country: Scalars['String']['input']
-  county: Scalars['String']['input']
-  email: Scalars['String']['input']
+  country?: InputMaybe<Scalars['String']['input']>
+  county?: InputMaybe<Scalars['String']['input']>
+  email?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
-  gender: Scalars['String']['input']
+  gender?: InputMaybe<Scalars['String']['input']>
   lastName: Scalars['String']['input']
-  phone: Scalars['String']['input']
-  state: Scalars['String']['input']
-  zipPostal: Scalars['String']['input']
+  phone?: InputMaybe<Scalars['String']['input']>
+  state?: InputMaybe<Scalars['String']['input']>
+  zipPostal?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MemberDeleteInput = {
@@ -898,7 +898,7 @@ export type MemberWhere = {
   address_CONTAINS?: InputMaybe<Scalars['String']['input']>
   address_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   address_EQ?: InputMaybe<Scalars['String']['input']>
-  address_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  address_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   address_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
   authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -908,7 +908,7 @@ export type MemberWhere = {
   city_CONTAINS?: InputMaybe<Scalars['String']['input']>
   city_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   city_EQ?: InputMaybe<Scalars['String']['input']>
-  city_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  city_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   city_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   communityAggregate?: InputMaybe<MemberCommunityAggregateInput>
   /** Return Members where all of the related MemberCommunityConnections match this filter */
@@ -930,12 +930,12 @@ export type MemberWhere = {
   country_CONTAINS?: InputMaybe<Scalars['String']['input']>
   country_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   country_EQ?: InputMaybe<Scalars['String']['input']>
-  country_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  country_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   country_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   county_CONTAINS?: InputMaybe<Scalars['String']['input']>
   county_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   county_EQ?: InputMaybe<Scalars['String']['input']>
-  county_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  county_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   county_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -946,7 +946,7 @@ export type MemberWhere = {
   email_CONTAINS?: InputMaybe<Scalars['String']['input']>
   email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -956,7 +956,7 @@ export type MemberWhere = {
   gender_CONTAINS?: InputMaybe<Scalars['String']['input']>
   gender_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   gender_EQ?: InputMaybe<Scalars['String']['input']>
-  gender_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  gender_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   gender_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
@@ -971,12 +971,12 @@ export type MemberWhere = {
   phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
   phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_EQ?: InputMaybe<Scalars['String']['input']>
-  phone_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   state_CONTAINS?: InputMaybe<Scalars['String']['input']>
   state_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   state_EQ?: InputMaybe<Scalars['String']['input']>
-  state_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  state_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   state_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -987,7 +987,7 @@ export type MemberWhere = {
   zipPostal_CONTAINS?: InputMaybe<Scalars['String']['input']>
   zipPostal_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   zipPostal_EQ?: InputMaybe<Scalars['String']['input']>
-  zipPostal_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  zipPostal_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   zipPostal_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -1109,21 +1109,21 @@ export type PageInfo = {
 }
 
 export type PersonInterface = {
-  address: Scalars['String']['output']
-  city: Scalars['String']['output']
-  country: Scalars['String']['output']
-  county: Scalars['String']['output']
+  address?: Maybe<Scalars['String']['output']>
+  city?: Maybe<Scalars['String']['output']>
+  country?: Maybe<Scalars['String']['output']>
+  county?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
-  email: Scalars['String']['output']
+  email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
   fullName: Scalars['String']['output']
-  gender: Scalars['String']['output']
+  gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
-  phone: Scalars['String']['output']
-  state: Scalars['String']['output']
+  phone?: Maybe<Scalars['String']['output']>
+  state?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-  zipPostal: Scalars['String']['output']
+  zipPostal?: Maybe<Scalars['String']['output']>
 }
 
 export type PersonInterfaceAggregateSelection = {
@@ -1189,22 +1189,22 @@ export type PersonInterfaceWhere = {
   address_CONTAINS?: InputMaybe<Scalars['String']['input']>
   address_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   address_EQ?: InputMaybe<Scalars['String']['input']>
-  address_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  address_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   address_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   city_CONTAINS?: InputMaybe<Scalars['String']['input']>
   city_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   city_EQ?: InputMaybe<Scalars['String']['input']>
-  city_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  city_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   city_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   country_CONTAINS?: InputMaybe<Scalars['String']['input']>
   country_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   country_EQ?: InputMaybe<Scalars['String']['input']>
-  country_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  country_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   country_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   county_CONTAINS?: InputMaybe<Scalars['String']['input']>
   county_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   county_EQ?: InputMaybe<Scalars['String']['input']>
-  county_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  county_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   county_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -1215,7 +1215,7 @@ export type PersonInterfaceWhere = {
   email_CONTAINS?: InputMaybe<Scalars['String']['input']>
   email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -1230,7 +1230,7 @@ export type PersonInterfaceWhere = {
   gender_CONTAINS?: InputMaybe<Scalars['String']['input']>
   gender_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   gender_EQ?: InputMaybe<Scalars['String']['input']>
-  gender_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  gender_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   gender_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
@@ -1245,12 +1245,12 @@ export type PersonInterfaceWhere = {
   phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
   phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_EQ?: InputMaybe<Scalars['String']['input']>
-  phone_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   state_CONTAINS?: InputMaybe<Scalars['String']['input']>
   state_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   state_EQ?: InputMaybe<Scalars['String']['input']>
-  state_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  state_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   state_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename_IN?: InputMaybe<Array<PersonInterfaceImplementation>>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
@@ -1262,7 +1262,7 @@ export type PersonInterfaceWhere = {
   zipPostal_CONTAINS?: InputMaybe<Scalars['String']['input']>
   zipPostal_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   zipPostal_EQ?: InputMaybe<Scalars['String']['input']>
-  zipPostal_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  zipPostal_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   zipPostal_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -1496,7 +1496,7 @@ export type CreateMembersMutation = {
       id: string
       firstName: string
       lastName: string
-      email: string
+      email?: string | null
     }>
   }
 }
@@ -1512,7 +1512,7 @@ export type GetLoggedInUserQuery = {
     id: string
     firstName: string
     lastName: string
-    email: string
+    email?: string | null
   }>
 }
 
@@ -1525,7 +1525,30 @@ export type GetMembersQuery = {
     id: string
     firstName: string
     lastName: string
-    email: string
+    email?: string | null
+  }>
+}
+
+export type GetMemberQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetMemberQuery = {
+  __typename?: 'Query'
+  members: Array<{
+    __typename?: 'Member'
+    id: string
+    firstName: string
+    lastName: string
+    email?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    county?: string | null
+    gender?: string | null
+    phone?: string | null
+    state?: string | null
+    zipPostal?: string | null
   }>
 }
 
@@ -1701,3 +1724,68 @@ export const GetMembersDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMembersQuery, GetMembersQueryVariables>
+export const GetMemberDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMember' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'members' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'address' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'city' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'country' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'county' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'zipPostal' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetMemberQuery, GetMemberQueryVariables>

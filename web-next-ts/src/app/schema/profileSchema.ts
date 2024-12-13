@@ -12,8 +12,13 @@ export const createProfileSchema = object({
   county: string().min(1).trim(),
   gender: string().min(1).trim(),
   phone: string().min(1).trim().regex(PHONE_NUM_REGEX), // Example regex for phone number
-  state: string().min(1).trim(),
-  zipPostal: string().min(1).trim().regex(ZIP_CODE_REGEX),
+  state: string().trim().optional(),
+  zipPostal: string()
+    .trim()
+    .optional()
+    .refine((val) => val === '' || ZIP_CODE_REGEX.test(val), {
+      message: 'Invalid zip code',
+    }),
 })
 
 export type CreateProfileFormData = z.infer<typeof createProfileSchema>

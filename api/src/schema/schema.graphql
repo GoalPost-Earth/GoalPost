@@ -3,15 +3,15 @@ interface PersonInterface {
   firstName: String!
   lastName: String!
   fullName: String!
-  phone: String!
-  email: String!
-  gender: String!
-  state: String!
-  zipPostal: String!
-  county: String!
-  country: String!
-  city: String!
-  address: String!
+  phone: String
+  email: String
+  gender: String
+  state: String
+  zipPostal: String
+  county: String
+  country: String
+  city: String
+  address: String
   createdAt: DateTime!
   updatedAt: DateTime
 }
@@ -22,15 +22,15 @@ type Member implements PersonInterface @node(labels: ["Person"]) {
   firstName: String!
   lastName: String!
   fullName: String! @customResolver(requires: "firstName lastName")
-  phone: String!
-  email: String!
-  gender: String!
-  state: String!
-  zipPostal: String!
-  county: String!
-  country: String!
-  city: String!
-  address: String!
+  phone: String
+  email: String
+  gender: String
+  state: String
+  zipPostal: String
+  county: String
+  country: String
+  city: String
+  address: String
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -39,8 +39,6 @@ type Member implements PersonInterface @node(labels: ["Person"]) {
     @settable(onCreate: false, onUpdate: true)
   community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
 }
-
-
 
 type Area @node {
   id: ID! @id
