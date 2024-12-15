@@ -2,15 +2,16 @@
 import { Control, FieldErrors } from 'react-hook-form'
 
 export type SelectOptions = {
-  key: string
+  label: string
   value: string
 }[]
 
 export interface ReactHookFormComponentProps {
   label?: string
   name: string
+  required?: boolean
   placeholder?: string
-  options?: { key: string; value: string }[]
+  options?: SelectOptions
   control: Control<any>
   errors: FieldErrors<any>
 }

@@ -17,7 +17,6 @@ const Dashboard = () => {
       id: id,
     },
   })
-  console.log('🚀 ~ file: page.tsx:19 ~ data:', data)
 
   const member = data?.members[0]
 

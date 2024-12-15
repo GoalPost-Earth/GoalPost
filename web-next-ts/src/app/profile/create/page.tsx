@@ -14,6 +14,7 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { useMutation } from '@apollo/client'
 import { CREATE_PROFILE_MUTATION } from '@/mutations'
 import { useRouter } from 'next/navigation'
+import { Select, Checkbox, Switch, Radio } from '@/components/form'
 
 export default function CreateProfilePage() {
   const { user } = useUser()
@@ -101,6 +102,52 @@ export default function CreateProfilePage() {
                 name="email"
                 control={control}
                 errors={errors}
+                required
+              />
+              <Select
+                label="Role"
+                name="role"
+                control={control}
+                errors={errors}
+                options={[
+                  { label: 'Admin', value: 'admin' },
+                  { label: 'User', value: 'user' },
+                ]}
+                required
+              />
+
+              <Checkbox
+                label="Enabled"
+                name="enabled"
+                control={control}
+                errors={errors}
+                // options={[
+                //   { label: 'Admin', value: 'admin' },
+                //   { label: 'User', value: 'user' },
+                // ]}
+                required
+              />
+              <Switch
+                label="Enabled"
+                name="enableds"
+                control={control}
+                errors={errors}
+                // options={[
+                //   { label: 'Admin', value: 'admin' },
+                //   { label: 'User', value: 'user' },
+                // ]}
+                required
+              />
+
+              <Radio
+                label="Role"
+                name="roleeg"
+                control={control}
+                errors={errors}
+                options={[
+                  { label: 'Admin', value: 'admin' },
+                  { label: 'User', value: 'user' },
+                ]}
                 required
               />
               <Input
