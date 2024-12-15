@@ -17,14 +17,13 @@ import { getAccessToken } from '@auth0/nextjs-auth0'
 import { useEffect, useState } from 'react'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import LoadingPage from '@/components/LoadingPage'
-import { redirect } from 'next/navigation'
 
 // have a function to create a client for you
 
 // you need to create a component to wrap your app in
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState('')
-  const { isLoading, user } = useUser()
+  const { isLoading } = useUser()
 
   useEffect(() => {
     const fetchToken = async () => {

@@ -3,10 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Box, Center, Text } from '@chakra-ui/react'
 import { getSession } from '@auth0/nextjs-auth0'
 import Link from 'next/link'
-import { query } from './lib/ApolloClient'
-import { GET_LOGGED_IN_USER } from './queries/DASHBOARD_QUERIES'
-import CreateProfilePage from './profile/CreateProfilePage'
-import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const session = await getSession()

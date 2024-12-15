@@ -1,5 +1,9 @@
-import { ApolloClient, from, InMemoryCache } from '@apollo/client'
-import { registerApolloClient } from '@apollo/experimental-nextjs-app-support'
+import { from } from '@apollo/client'
+import {
+  registerApolloClient,
+  ApolloClient,
+  InMemoryCache,
+} from '@apollo/experimental-nextjs-app-support'
 import {
   authLink,
   ERROR_POLICY,
