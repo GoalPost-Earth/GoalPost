@@ -16,7 +16,7 @@ import { setContext } from '@apollo/client/link/context'
 import { getAccessToken } from '@auth0/nextjs-auth0'
 import { useEffect, useState } from 'react'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import LoadingPage from '@/components/LoadingPage'
+import LoadingPage from '@/components/screens/LoadingPage'
 
 // have a function to create a client for you
 

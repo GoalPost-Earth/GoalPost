@@ -18,17 +18,15 @@ import {
   DialogRoot,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog'
+} from '../ui/dialog'
 import { ApolloError } from '@apollo/client'
-import { Button } from './ui/button'
+import { Button } from '../ui/button'
 
 interface ErrorScreenProps {
   error: ApolloError | Error | undefined
 }
 
 const ErrorPage = ({ error }: ErrorScreenProps) => {
-  console.log('🚀 ~ file: ErrorPage.tsx:30 ~ error:', error)
-
   let errorMessage: string
   let stackLines: string[] = []
 

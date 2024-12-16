@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import localFont from 'next/font/local'
-import Navigation from '@/components/ui/navigation'
+import Navbar from '@/components/ui/navbar'
 import { ApolloWrapper } from './lib/ApolloWrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
-import { Container } from '@chakra-ui/react'
+import { StartupScreen } from '@/components/screens'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -21,7 +21,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: 'Goalpost',
-  description: 'Seed COC',
+  description: 'A directive by the Seed COC',
 }
 
 export default function RootLayout({
@@ -36,10 +36,11 @@ export default function RootLayout({
           <UserProvider>
             <AppProvider>
               <ApolloWrapper>
-                <Container paddingY={5}></Container>
-                <Navigation />
-                <Toaster />
-                {children}
+                <StartupScreen>
+                  <Navbar />
+                  <Toaster />
+                  <main>{children}</main>
+                </StartupScreen>
               </ApolloWrapper>
             </AppProvider>
           </UserProvider>

@@ -37,7 +37,7 @@ const menuItems = [
   },
 ]
 
-const Navigation = () => {
+const NavHamburgerButton = () => {
   const { user } = useUser()
   const [open, setOpen] = useState(false)
   const { church } = useApp()
@@ -56,11 +56,7 @@ const Navigation = () => {
             variant="subtle"
             aria-label="Side Nav Toggle"
             size="lg"
-            position="fixed"
-            bottom={4}
-            right={6}
-            zIndex={2}
-            rounded="full"
+            rounded="small"
           >
             <GiHamburgerMenu />
           </IconButton>
@@ -112,4 +108,4 @@ const Navigation = () => {
   )
 }
 
-export default Navigation
+export default NavHamburgerButton
