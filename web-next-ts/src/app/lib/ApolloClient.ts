@@ -13,6 +13,8 @@ import {
 } from './apollo-functions'
 
 export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
+  console.log('🚀 ~ file: ApolloClient.ts:34 ~ httpLink:', httpLink)
+
   return new ApolloClient({
     uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/graphql',
     link: from([retryLink, errorLink, authLink.concat(httpLink)]),

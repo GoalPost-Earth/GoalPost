@@ -26,7 +26,7 @@ interface ErrorScreenProps {
   error: ApolloError | Error | undefined
 }
 
-const ErrorPage = ({ error }: ErrorScreenProps) => {
+const ErrorScreen = ({ error }: ErrorScreenProps) => {
   let errorMessage: string
   let stackLines: string[] = []
 
@@ -114,4 +114,4 @@ const ErrorPage = ({ error }: ErrorScreenProps) => {
   )
 }
 
-export default ErrorPage
+export default ErrorScreen

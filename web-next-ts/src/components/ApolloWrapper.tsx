@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react'
 import { ApolloError } from '@apollo/client'
-import ErrorPage from './ErrorPage'
-import LoadingPage from './LoadingPage'
+import { ErrorScreen, LoadingScreen } from './screens'
 
 type ApolloWrapperPropsType = {
   placeholder?: boolean
@@ -15,14 +14,14 @@ const ApolloWrapper = (props: ApolloWrapperPropsType) => {
   const { data, loading, error, placeholder } = props
 
   if (error) {
-    return <ErrorPage error={error as ApolloError} />
+    return <ErrorScreen error={error as ApolloError} />
   } else if (data || placeholder) {
     return <>{props.children}</>
   } else if (loading) {
-    return <LoadingPage />
+    return <LoadingScreen />
   }
 
-  return <LoadingPage />
+  return <LoadingScreen />
 }
 
 export default ApolloWrapper

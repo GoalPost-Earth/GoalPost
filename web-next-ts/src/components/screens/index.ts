@@ -1,5 +1,5 @@
-export { default as ErrorPage } from './ErrorPage'
-export { default as LoadingPage } from './LoadingPage'
+export { default as ErrorScreen } from './ErrorScreen'
+export { default as LoadingScreen } from './LoadingScreen'
 export { default as SplashScreen } from './SplashScreen'
 export { default as StartupScreen } from './StartupScreen'
 export { default as GetStartedScreen } from './GetStartedScreen'

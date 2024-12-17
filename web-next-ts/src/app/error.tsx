@@ -1,6 +1,6 @@
 'use client'
 
-import ErrorPage from '@/components/screens/ErrorPage'
+import ErrorPage from '@/components/screens/ErrorScreen'
 import React from 'react'
 
 export default function ErrorBoundary({ error }: { error: Error }) {

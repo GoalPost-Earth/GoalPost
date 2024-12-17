@@ -16,12 +16,12 @@ import { setContext } from '@apollo/client/link/context'
 import { getAccessToken } from '@auth0/nextjs-auth0'
 import { useEffect, useState } from 'react'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import LoadingPage from '@/components/screens/LoadingPage'
+import { LoadingScreen } from '@/components/screens'
 
 // have a function to create a client for you
 
 // you need to create a component to wrap your app in
-export function ApolloWrapper({ children }: { children: React.ReactNode }) {
+export function ApolloProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState('')
   const { isLoading } = useUser()
 
@@ -29,7 +29,7 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
     const fetchToken = async () => {
       const fetchedToken = await getAccessToken({
         authorizationParams: {
-          audience: 'https://flcadmin.netlify.app/graphql',
+          audience: 'https://goalpost.app',
           scope: 'read:current_user',
           ignoreCache: true,
         },
@@ -109,7 +109,7 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   }
 
   if (isLoading) {
-    return <LoadingPage />
+    return <LoadingScreen />
   }
 
   // if (!user) {

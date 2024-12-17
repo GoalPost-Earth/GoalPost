@@ -1,7 +1,7 @@
 import { Center, Container, Spinner } from '@chakra-ui/react'
 import React from 'react'
 
-const LoadingPage = () => {
+const LoadingScreen = () => {
   return (
     <Container>
       <Center height="100vh" alignContent="center">
@@ -11,4 +11,4 @@ const LoadingPage = () => {
   )
 }
 
-export default LoadingPage
+export default LoadingScreen

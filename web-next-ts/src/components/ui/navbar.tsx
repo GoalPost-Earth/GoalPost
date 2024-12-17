@@ -16,7 +16,7 @@ const NavLink = (props: Props) => {
 
   return (
     <Link href={'#'}>
-      <Box as="a" px={2} py={1} rounded={'md'}>
+      <Box px={2} py={1} rounded={'md'}>
         {children}
       </Box>
     </Link>
