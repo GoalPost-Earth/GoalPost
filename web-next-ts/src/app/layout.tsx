@@ -1,22 +1,17 @@
 import type { Metadata } from 'next'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
-import localFont from 'next/font/local'
+import { Urbanist } from 'next/font/google'
 import Navbar from '@/components/ui/navbar'
 import { ApolloWrapper } from './lib/ApolloWrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
-})
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900',
+const urbanist = Urbanist({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-urbanist',
 })
 
 export const metadata: Metadata = {
@@ -31,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${urbanist.variable}`}>
         <Provider>
           <UserProvider>
             <AppProvider>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { SplashScreen, SignInScreen } from '@/components/screens'
+import { SplashScreen, GetStartedScreen } from '@/components/screens'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
 const HomeClient = ({ children }: { children: React.ReactNode }) => {
@@ -21,7 +21,7 @@ const HomeClient = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    return <SignInScreen />
+    return <GetStartedScreen />
   }
 
   return <>{children}</>
