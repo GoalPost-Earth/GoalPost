@@ -13,35 +13,42 @@ import {
   retryLink,
 } from './apollo-functions'
 import { setContext } from '@apollo/client/link/context'
-import { getAccessToken } from '@auth0/nextjs-auth0'
 import { useEffect, useState } from 'react'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { LoadingScreen } from '@/components/screens'
+import { getAccessToken } from '@auth0/nextjs-auth0'
 
 // have a function to create a client for you
 
 // you need to create a component to wrap your app in
-export function ApolloProvider({ children }: { children: React.ReactNode }) {
+export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState('')
-  const { isLoading } = useUser()
+  const { isLoading, user } = useUser()
+  console.log('🚀 ~ file: apollo-wrapper.tsx:27 ~ user:', user)
 
   useEffect(() => {
     const fetchToken = async () => {
-      const fetchedToken = await getAccessToken({
-        authorizationParams: {
-          audience: 'https://goalpost.app',
-          scope: 'read:current_user',
-          ignoreCache: true,
-        },
-      })
+      try {
+        console.log('within whatever')
+        const fetchedToken = await getAccessToken({
+          authorizationParams: {
+            audience: 'https://goalpost.app',
+            scope: 'read:current_user',
+            ignoreCache: true,
+          },
+        })
 
-      setToken(fetchedToken.accessToken ?? '')
-      return token
+        setToken(fetchedToken.accessToken ?? '')
+        return token
+      } catch (e) {
+        console.error(e)
+      }
     }
 
+    console.log('fetching token')
     fetchToken()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isLoading, user])
 
   function makeClient() {
     const httpLink = new HttpLink({
@@ -111,10 +118,6 @@ export function ApolloProvider({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return <LoadingScreen />
   }
-
-  // if (!user) {
-  //   redirect('/api/auth/login?returnTo=/dashboard')
-  // }
 
   return (
     <ApolloNextAppProvider makeClient={makeClient}>

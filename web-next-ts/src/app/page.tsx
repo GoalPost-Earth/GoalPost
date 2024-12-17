@@ -16,7 +16,6 @@ const HomeClient = () => {
     variables: { authId: user?.sub ?? '' },
     skip: !user?.sub,
   })
-  console.log('🚀 ~ file: page.tsx:16 ~ data:', data)
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

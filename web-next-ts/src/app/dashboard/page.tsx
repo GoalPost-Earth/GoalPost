@@ -2,7 +2,7 @@ import React from 'react'
 import { GET_LOGGED_IN_USER } from '../queries/DASHBOARD_QUERIES'
 import { getSession } from '@auth0/nextjs-auth0'
 // import { redirect } from 'next/navigation'
-import { query } from '../lib/ApolloClient'
+import { query } from '../lib/apollo-client'
 
 const Dashboard = async () => {
   const session = await getSession()

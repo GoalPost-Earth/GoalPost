@@ -29,11 +29,10 @@ const neoSchema = new Neo4jGraphQL({
   typeDefs,
   resolvers,
   driver,
-  plugins: {
-    auth: new Neo4jGraphQLAuthJWTPlugin({
-      secret: process.env.JWT_SECRET,
-      // rolesPath: 'https://goalpost\\.app/roles',
-    }),
+  features: {
+    authorization: {
+      key: process.env.JWT_SECRET,
+    },
   },
 })
 
@@ -63,7 +62,10 @@ const startServer = async () => {
   const schema = await neoSchema.getSchema()
 
   const server = new ApolloServer({
-    context: ({ req }) => ({ req, executionContext: driver }),
+    context: ({ req }) => ({
+      req,
+      executionContext: driver,
+    }),
     introspection: true,
     schema,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],

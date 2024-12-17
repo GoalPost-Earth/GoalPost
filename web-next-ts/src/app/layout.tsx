@@ -3,7 +3,7 @@ import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import { Urbanist } from 'next/font/google'
 import Navbar from '@/components/ui/navbar'
-import { ApolloProvider } from './lib/ApolloProvider'
+import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
@@ -30,13 +30,13 @@ export default function RootLayout({
         <Provider>
           <UserProvider>
             <AppProvider>
-              <ApolloProvider>
+              <ApolloWrapper>
                 <StartupScreen>
                   <Navbar />
                   <Toaster />
                   <main>{children}</main>
                 </StartupScreen>
-              </ApolloProvider>
+              </ApolloWrapper>
             </AppProvider>
           </UserProvider>
         </Provider>
