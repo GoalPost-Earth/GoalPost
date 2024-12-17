@@ -1,18 +1,9 @@
 'use client'
 
-import {
-  Box,
-  Flex,
-  Avatar,
-  HStack,
-  Text,
-  IconButton,
-  Button,
-  useDisclosure,
-  Stack,
-} from '@chakra-ui/react'
-import { GiHamburgerMenu } from 'react-icons/gi'
+import { Box, Flex, HStack, useDisclosure, Stack } from '@chakra-ui/react'
 import NavHamburgerButton from './nav-hamburger-button'
+import Link from 'next/link'
+import { AppLogo } from './app-logo'
 
 interface Props {
   children: React.ReactNode
@@ -24,24 +15,16 @@ const NavLink = (props: Props) => {
   const { children } = props
 
   return (
-    <Box
-      as="a"
-      px={2}
-      py={1}
-      rounded={'md'}
-      //   _hover={{
-      //     textDecoration: 'none',
-      //     bg: useColorModeValue('gray.200', 'gray.700'),
-      //   }}
-      href={'#'}
-    >
-      {children}
-    </Box>
+    <Link href={'#'}>
+      <Box as="a" px={2} py={1} rounded={'md'}>
+        {children}
+      </Box>
+    </Link>
   )
 }
 
 export default function Simple() {
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { open, onOpen, onClose } = useDisclosure()
 
   return (
     <>
@@ -51,13 +34,9 @@ export default function Simple() {
             <NavHamburgerButton />
           </Box>
 
-          <HStack spacing={8} alignItems={'center'}>
-            <Box>Logo</Box>
-            <HStack
-              as={'nav'}
-              spacing={4}
-              display={{ base: 'none', md: 'flex' }}
-            >
+          <HStack gap={8} alignItems={'center'}>
+            <AppLogo height={16} width={16} p={2} />
+            <HStack as={'nav'} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link}>{link}</NavLink>
               ))}
@@ -89,9 +68,9 @@ export default function Simple() {
           </Flex>
         </Flex>
 
-        {isOpen ? (
+        {open ? (
           <Box pb={4} display={{ md: 'none' }}>
-            <Stack as={'nav'} spacing={4}>
+            <Stack as={'nav'} gap={4}>
               {Links.map((link) => (
                 <NavLink key={link}>{link}</NavLink>
               ))}

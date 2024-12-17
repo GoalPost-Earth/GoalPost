@@ -1,5 +1,6 @@
-import { Center, Container, Image, Box } from '@chakra-ui/react'
+import { Center, Container, Box } from '@chakra-ui/react'
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
+import { AppLogo } from '@/components/ui'
 
 const SplashScreen = () => {
   const message = 'Welcome to Goalpost!'
@@ -8,7 +9,7 @@ const SplashScreen = () => {
     <Container>
       <Center height="70vh" alignContent="center">
         <Box display="flex" flexDirection="column">
-          <Image src="/goalpost-logo.png" alt="Goalpost Logo" />
+          <AppLogo />
           <TextGenerateEffect duration={3} filter={false} words={message} />
         </Box>
       </Center>

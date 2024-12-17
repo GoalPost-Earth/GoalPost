@@ -25,6 +25,7 @@ import {
 import { Avatar } from './avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { useApp } from '@/app/AppContext'
+import { AppLogo } from './app-logo'
 
 const menuItems = [
   {
@@ -64,7 +65,10 @@ const NavHamburgerButton = () => {
         <DrawerContent>
           <DrawerHeader>
             <Heading>
-              {church?.name.toUpperCase()} {church?.level.toUpperCase()}
+              <HStack>
+                <AppLogo height={16} width={16} />
+                <Text>Goalpost</Text>
+              </HStack>
             </Heading>
           </DrawerHeader>
           <DrawerBody>
