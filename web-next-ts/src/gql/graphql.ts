@@ -478,42 +478,45 @@ export type FloatAggregateSelection = {
 
 export type Goal = {
   __typename?: 'Goal'
-  contactible: Scalars['Boolean']['output']
-  cost: Scalars['Float']['output']
+  caresFor?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
-  deliveryLocation: Scalars['String']['output']
-  deliveryType: Scalars['String']['output']
   description: Scalars['String']['output']
   id: Scalars['ID']['output']
+  location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
-  photo: Scalars['String']['output']
+  photo?: Maybe<Scalars['String']['output']>
+  status?: Maybe<Scalars['Boolean']['output']>
+  successMeasures?: Maybe<Scalars['String']['output']>
+  time?: Maybe<Scalars['String']['output']>
   type: Scalars['String']['output']
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
 export type GoalAggregateSelection = {
   __typename?: 'GoalAggregateSelection'
-  cost: FloatAggregateSelection
+  caresFor: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
-  deliveryLocation: StringAggregateSelection
-  deliveryType: StringAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
+  location: StringAggregateSelection
   name: StringAggregateSelection
   photo: StringAggregateSelection
+  successMeasures: StringAggregateSelection
+  time: StringAggregateSelection
   type: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
 export type GoalCreateInput = {
-  contactible: Scalars['Boolean']['input']
-  cost: Scalars['Float']['input']
-  deliveryLocation: Scalars['String']['input']
-  deliveryType: Scalars['String']['input']
+  caresFor?: InputMaybe<Scalars['String']['input']>
   description: Scalars['String']['input']
+  location?: InputMaybe<Scalars['String']['input']>
   name: Scalars['String']['input']
-  photo: Scalars['String']['input']
+  photo?: InputMaybe<Scalars['String']['input']>
+  status?: InputMaybe<Scalars['Boolean']['input']>
+  successMeasures?: InputMaybe<Scalars['String']['input']>
+  time?: InputMaybe<Scalars['String']['input']>
   type: Scalars['String']['input']
 }
 
@@ -532,31 +535,29 @@ export type GoalOptions = {
 
 /** Fields to sort Goals by. The order in which sorts are applied is not guaranteed when specifying many fields in one GoalSort object. */
 export type GoalSort = {
-  contactible?: InputMaybe<SortDirection>
-  cost?: InputMaybe<SortDirection>
+  caresFor?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
-  deliveryLocation?: InputMaybe<SortDirection>
-  deliveryType?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
   name?: InputMaybe<SortDirection>
   photo?: InputMaybe<SortDirection>
+  status?: InputMaybe<SortDirection>
+  successMeasures?: InputMaybe<SortDirection>
+  time?: InputMaybe<SortDirection>
   type?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
 }
 
 export type GoalUpdateInput = {
-  contactible_SET?: InputMaybe<Scalars['Boolean']['input']>
-  cost_ADD?: InputMaybe<Scalars['Float']['input']>
-  cost_DIVIDE?: InputMaybe<Scalars['Float']['input']>
-  cost_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
-  cost_SET?: InputMaybe<Scalars['Float']['input']>
-  cost_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
-  deliveryLocation_SET?: InputMaybe<Scalars['String']['input']>
-  deliveryType_SET?: InputMaybe<Scalars['String']['input']>
+  caresFor_SET?: InputMaybe<Scalars['String']['input']>
   description_SET?: InputMaybe<Scalars['String']['input']>
+  location_SET?: InputMaybe<Scalars['String']['input']>
   name_SET?: InputMaybe<Scalars['String']['input']>
   photo_SET?: InputMaybe<Scalars['String']['input']>
+  status_SET?: InputMaybe<Scalars['Boolean']['input']>
+  successMeasures_SET?: InputMaybe<Scalars['String']['input']>
+  time_SET?: InputMaybe<Scalars['String']['input']>
   type_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -564,29 +565,17 @@ export type GoalWhere = {
   AND?: InputMaybe<Array<GoalWhere>>
   NOT?: InputMaybe<GoalWhere>
   OR?: InputMaybe<Array<GoalWhere>>
-  contactible_EQ?: InputMaybe<Scalars['Boolean']['input']>
-  cost_EQ?: InputMaybe<Scalars['Float']['input']>
-  cost_GT?: InputMaybe<Scalars['Float']['input']>
-  cost_GTE?: InputMaybe<Scalars['Float']['input']>
-  cost_IN?: InputMaybe<Array<Scalars['Float']['input']>>
-  cost_LT?: InputMaybe<Scalars['Float']['input']>
-  cost_LTE?: InputMaybe<Scalars['Float']['input']>
+  caresFor_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  caresFor_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  caresFor_EQ?: InputMaybe<Scalars['String']['input']>
+  caresFor_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  caresFor_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  deliveryLocation_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  deliveryLocation_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  deliveryLocation_EQ?: InputMaybe<Scalars['String']['input']>
-  deliveryLocation_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  deliveryLocation_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  deliveryType_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  deliveryType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  deliveryType_EQ?: InputMaybe<Scalars['String']['input']>
-  deliveryType_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  deliveryType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   description_CONTAINS?: InputMaybe<Scalars['String']['input']>
   description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   description_EQ?: InputMaybe<Scalars['String']['input']>
@@ -597,6 +586,11 @@ export type GoalWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_EQ?: InputMaybe<Scalars['String']['input']>
+  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
@@ -605,8 +599,19 @@ export type GoalWhere = {
   photo_CONTAINS?: InputMaybe<Scalars['String']['input']>
   photo_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   photo_EQ?: InputMaybe<Scalars['String']['input']>
-  photo_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  photo_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   photo_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  successMeasures_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  successMeasures_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  successMeasures_EQ?: InputMaybe<Scalars['String']['input']>
+  successMeasures_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  successMeasures_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  time_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  time_EQ?: InputMaybe<Scalars['String']['input']>
+  time_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  time_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   type_CONTAINS?: InputMaybe<Scalars['String']['input']>
   type_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   type_EQ?: InputMaybe<Scalars['String']['input']>
@@ -1605,6 +1610,31 @@ export type UpdatePeopleMutationResponse = {
   people: Array<Person>
 }
 
+export type CreateGoalsMutationVariables = Exact<{
+  input: Array<GoalCreateInput> | GoalCreateInput
+}>
+
+export type CreateGoalsMutation = {
+  __typename?: 'Mutation'
+  createGoals: {
+    __typename?: 'CreateGoalsMutationResponse'
+    goals: Array<{
+      __typename?: 'Goal'
+      id: string
+      name: string
+      type: string
+      description: string
+      caresFor?: string | null
+      successMeasures?: string | null
+      photo?: string | null
+      status?: boolean | null
+      location?: string | null
+      time?: string | null
+      createdAt: any
+    }>
+  }
+}
+
 export type CreatePeopleMutationVariables = Exact<{
   input: Array<PersonCreateInput> | PersonCreateInput
 }>
@@ -1661,6 +1691,28 @@ export type GetLoggedInUserQuery = {
   }>
 }
 
+export type GetGoalQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetGoalQuery = {
+  __typename?: 'Query'
+  goals: Array<{
+    __typename?: 'Goal'
+    id: string
+    name: string
+    type: string
+    description: string
+    caresFor?: string | null
+    successMeasures?: string | null
+    photo?: string | null
+    status?: boolean | null
+    location?: string | null
+    time?: string | null
+    createdAt: any
+  }>
+}
+
 export type GetMembersQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetMembersQuery = {
@@ -1693,7 +1745,26 @@ export type GetPersonQuery = {
     gender?: string | null
     pronouns?: string | null
     location?: string | null
-    createdAt: any
+  }>
+}
+
+export type GetAllPeopleQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetAllPeopleQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    fullName: string
+    email?: string | null
+    phone?: string | null
+    manual?: string | null
+    interests?: string | null
+    gender?: string | null
+    pronouns?: string | null
+    location?: string | null
   }>
 }
 
@@ -1715,6 +1786,100 @@ export type GetMemberQuery = {
   }>
 }
 
+export const CreateGoalsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateGoals' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'GoalCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createGoals' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'goals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'caresFor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'successMeasures' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateGoalsMutation, CreateGoalsMutationVariables>
 export const CreatePeopleDocument = {
   kind: 'Document',
   definitions: [
@@ -1954,6 +2119,73 @@ export const GetLoggedInUserDocument = {
   GetLoggedInUserQuery,
   GetLoggedInUserQueryVariables
 >
+export const GetGoalDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getGoal' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goals' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'caresFor' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'successMeasures' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetGoalQuery, GetGoalQueryVariables>
 export const GetMembersDocument = {
   kind: 'Document',
   definitions: [
@@ -2038,7 +2270,6 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],
             },
           },
@@ -2047,6 +2278,41 @@ export const GetPersonDocument = {
     },
   ],
 } as unknown as DocumentNode<GetPersonQuery, GetPersonQueryVariables>
+export const GetAllPeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAllPeople' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'fullName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'manual' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetAllPeopleQuery, GetAllPeopleQueryVariables>
 export const GetMemberDocument = {
   kind: 'Document',
   definitions: [

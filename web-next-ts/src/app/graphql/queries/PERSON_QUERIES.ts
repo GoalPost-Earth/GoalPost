@@ -14,7 +14,25 @@ export const GET_PERSON = graphql(`
       gender
       pronouns
       location
-      createdAt
+    }
+  }
+`)
+
+export const GET_ALL_PEOPLE = graphql(`
+  query getAllPeople {
+    people {
+      id
+      firstName
+      lastName
+      fullName
+      email
+      phone
+      manual
+      interests
+      gender
+      pronouns
+      location
+      # createdAt
     }
   }
 `)

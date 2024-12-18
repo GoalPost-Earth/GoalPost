@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AvatarCarousel } from '@/components/sections'
 import { useQuery } from '@apollo/client'
-import { GET_LOGGED_IN_USER } from './queries/DASHBOARD_QUERIES'
+import { GET_LOGGED_IN_USER } from './graphql/queries/DASHBOARD_QUERIES'
 import ApolloWrapper from '@/components/ApolloWrapper'
 
 const HomeClient = () => {

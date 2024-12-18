@@ -97,13 +97,14 @@ type CoreValue @node {
 type Goal @node {
   id: ID! @id
   name: String!
-  description: String!
-  contactible: Boolean!
-  cost: Float!
-  deliveryLocation: String!
-  deliveryType: String!
-  photo: String!
   type: String!
+  description: String!
+  caresFor: String
+  successMeasures: String
+  photo: String
+  status: Boolean
+  location: String
+  time: String
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)

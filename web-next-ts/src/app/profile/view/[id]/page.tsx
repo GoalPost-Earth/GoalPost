@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Container, Text, Box } from '@chakra-ui/react'
 import { Avatar } from '@/components/ui'
-import { GET_MEMBER } from '@/app/queries/PROFILE_QUERIES'
+import { GET_MEMBER } from '@/app/graphql/queries/PROFILE_QUERIES'
 import { useQuery } from '@apollo/client'
 import { useRouter } from 'next/navigation'
 

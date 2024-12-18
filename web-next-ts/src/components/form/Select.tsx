@@ -6,7 +6,6 @@ import { Field } from '../ui/field'
 import {
   SelectContent,
   SelectItem,
-  SelectLabel,
   SelectRoot,
   SelectTrigger,
   SelectValueText,

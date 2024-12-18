@@ -1,5 +1,5 @@
 import React from 'react'
-import { GET_LOGGED_IN_USER } from '../queries/DASHBOARD_QUERIES'
+import { GET_LOGGED_IN_USER } from '../graphql/queries/DASHBOARD_QUERIES'
 import { getSession } from '@auth0/nextjs-auth0'
 // import { redirect } from 'next/navigation'
 import { query } from '../lib/apollo-client'

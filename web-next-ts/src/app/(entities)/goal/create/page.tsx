@@ -1,15 +1,15 @@
 'use client'
 
-import { CREATE_PEOPLE_MUTATION } from '@/app/mutations/PERSON_MUTATIONS'
+import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
-import { Input, Select } from '@/components/form'
+import { Input, Select, Textarea, Checkbox } from '@/components/form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 
-function CreatePerson() {
+function CreateGoal() {
   const {
     control,
     handleSubmit,
@@ -17,11 +17,11 @@ function CreatePerson() {
   } = useForm()
   const router = useRouter()
 
-  const [CreatePeople] = useMutation(CREATE_PEOPLE_MUTATION)
+  const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
 
   const onSubmit = async (data) => {
     try {
-      const res = await CreatePeople({
+      const res = await CreateGoal({
         variables: {
           input: {
             ...data,
@@ -29,7 +29,7 @@ function CreatePerson() {
         },
       })
 
-      router.push('/person/view/' + res.data?.createPeople.people[0].id)
+      router.push('/goal/view/' + res.data?.createGoals.goals[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -41,72 +41,72 @@ function CreatePerson() {
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
-              label="First Name"
-              name="firstName"
+              label="Name"
+              name="name"
               control={control}
               errors={errors}
               required
             />
           </GridItem>
-          <GridItem>
-            <Input
-              label="Last Name"
-              name="lastName"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Email"
-              name="email"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Phone Number"
-              name="phoneNumber"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-
-          <GridItem>
-            <Input
-              label="Manual (paste a url here)"
-              name="manual"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Interests"
-              name="interests"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-
           <GridItem>
             <Select
-              label="Pronouns"
-              name="pronouns"
+              label="Type"
+              name="type"
               control={control}
               errors={errors}
-              options={[
-                { label: 'He/Him', value: 'he/him' },
-                { label: 'She/Her', value: 'she/her' },
-                { label: 'They/Them', value: 'they/them' },
-              ]}
               required
+              options={[
+                { label: 'Need', value: 'need' },
+                { label: 'Offer', value: 'offer' },
+                { label: 'Wish', value: 'wish' },
+              ]}
+            />
+          </GridItem>
+          <GridItem>
+            <Textarea
+              label="Description"
+              name="description"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
+          <GridItem>
+            <Input
+              label="Cares For"
+              name="caresFor"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
+
+          <GridItem>
+            <Input
+              label="Success Measures"
+              name="successMeasures"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
+          <GridItem>
+            <Input
+              label="Photo"
+              name="photo"
+              control={control}
+              errors={errors}
+              // required
+              disabled
+            />
+          </GridItem>
+
+          <GridItem>
+            <Checkbox
+              label="Status"
+              name="status"
+              control={control}
+              errors={errors}
             />
           </GridItem>
           <GridItem>
@@ -118,13 +118,22 @@ function CreatePerson() {
               required
             />
           </GridItem>
+          <GridItem>
+            <Input
+              label="Time"
+              name="time"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
         </Grid>
         <Box my={5}>
           <hr />
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            Create Person
+            Create Goal
           </Button>
         </Center>
       </form>
@@ -132,4 +141,4 @@ function CreatePerson() {
   )
 }
 
-export default CreatePerson
+export default CreateGoal

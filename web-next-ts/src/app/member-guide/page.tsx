@@ -1,6 +1,6 @@
 import React from 'react'
 import { query } from '@/app/lib/apollo-client'
-import { GET_MEMBERS } from '../queries/GET_MEMBERS'
+import { GET_MEMBERS } from '../graphql/queries/MEMBER_QUERIES'
 import { Card, Text } from '@chakra-ui/react'
 
 export default async function page() {

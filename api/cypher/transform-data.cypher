@@ -17,6 +17,11 @@ SET person.state = person.`person.StateProvince`
 SET person.zipPostal = person.`person.ZipPostal`
 RETURN person LIMIT 1;
 
+MATCH (person:Person) 
+WHERE person.lastName IS NULL
+SET person.lastName = "A"
+RETURN person;
+
 MATCH (area:Area)
 SET area.city = area.`area.City`
 SET area.country = area.`area.Country`
