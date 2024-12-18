@@ -17,7 +17,7 @@ export interface RHFSelectProps extends ReactHookFormComponentProps {
   options: SelectOptions
 }
 
-type SelectPropsType = RHFSelectProps & SelectRootProps
+type SelectPropsType = RHFSelectProps & Omit<SelectRootProps, 'collection'>
 
 const Select = (props: SelectPropsType) => {
   const {
@@ -49,12 +49,13 @@ const Select = (props: SelectPropsType) => {
         >
           <SelectRoot
             id={name}
-            borderRadius="16px"
+            border="1px solid #CBD5E1"
+            variant="subtle"
             {...field}
             {...rest}
             collection={chakraOptions}
           >
-            <SelectLabel>{label}</SelectLabel>
+            {/* <SelectLabel>{label}</SelectLabel> */}
             <SelectTrigger>
               <SelectValueText placeholder={placeholder} />
             </SelectTrigger>

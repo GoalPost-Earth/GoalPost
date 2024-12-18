@@ -9,7 +9,9 @@ const SplashScreen = () => {
     <Container>
       <Center height="70vh" alignContent="center">
         <Box display="flex" flexDirection="column">
-          <AppLogo />
+          <Center>
+            <AppLogo />
+          </Center>
           <TextGenerateEffect duration={3} filter={false} words={message} />
         </Box>
       </Center>

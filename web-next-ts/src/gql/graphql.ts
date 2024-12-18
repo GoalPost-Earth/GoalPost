@@ -449,6 +449,12 @@ export type CreateMembersMutationResponse = {
   members: Array<Member>
 }
 
+export type CreatePeopleMutationResponse = {
+  __typename?: 'CreatePeopleMutationResponse'
+  info: CreateInfo
+  people: Array<Person>
+}
+
 export type DateTimeAggregateSelection = {
   __typename?: 'DateTimeAggregateSelection'
   max?: Maybe<Scalars['DateTime']['output']>
@@ -629,14 +635,10 @@ export type IdAggregateSelection = {
 
 export type Member = PersonInterface & {
   __typename?: 'Member'
-  address?: Maybe<Scalars['String']['output']>
   authId: Scalars['String']['output']
-  city?: Maybe<Scalars['String']['output']>
   community: Array<Community>
   communityAggregate?: Maybe<MemberCommunityCommunityAggregationSelection>
   communityConnection: MemberCommunityConnection
-  country?: Maybe<Scalars['String']['output']>
-  county?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
@@ -644,10 +646,9 @@ export type Member = PersonInterface & {
   gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
+  location?: Maybe<Scalars['String']['output']>
   phone?: Maybe<Scalars['String']['output']>
-  state?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-  zipPostal?: Maybe<Scalars['String']['output']>
 }
 
 export type MemberCommunityArgs = {
@@ -670,22 +671,17 @@ export type MemberCommunityConnectionArgs = {
 
 export type MemberAggregateSelection = {
   __typename?: 'MemberAggregateSelection'
-  address: StringAggregateSelection
   authId: StringAggregateSelection
-  city: StringAggregateSelection
   count: Scalars['Int']['output']
-  country: StringAggregateSelection
-  county: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
   gender: StringAggregateSelection
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  location: StringAggregateSelection
   phone: StringAggregateSelection
-  state: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  zipPostal: StringAggregateSelection
 }
 
 export type MemberCommunityAggregateInput = {
@@ -824,19 +820,14 @@ export type MemberCommunityUpdateFieldInput = {
 }
 
 export type MemberCreateInput = {
-  address?: InputMaybe<Scalars['String']['input']>
   authId: Scalars['String']['input']
-  city?: InputMaybe<Scalars['String']['input']>
   community?: InputMaybe<MemberCommunityFieldInput>
-  country?: InputMaybe<Scalars['String']['input']>
-  county?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
   gender?: InputMaybe<Scalars['String']['input']>
   lastName: Scalars['String']['input']
+  location?: InputMaybe<Scalars['String']['input']>
   phone?: InputMaybe<Scalars['String']['input']>
-  state?: InputMaybe<Scalars['String']['input']>
-  zipPostal?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MemberDeleteInput = {
@@ -858,58 +849,38 @@ export type MemberOptions = {
 
 /** Fields to sort Members by. The order in which sorts are applied is not guaranteed when specifying many fields in one MemberSort object. */
 export type MemberSort = {
-  address?: InputMaybe<SortDirection>
   authId?: InputMaybe<SortDirection>
-  city?: InputMaybe<SortDirection>
-  country?: InputMaybe<SortDirection>
-  county?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
   gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
   phone?: InputMaybe<SortDirection>
-  state?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
-  zipPostal?: InputMaybe<SortDirection>
 }
 
 export type MemberUpdateInput = {
-  address_SET?: InputMaybe<Scalars['String']['input']>
   authId_SET?: InputMaybe<Scalars['String']['input']>
-  city_SET?: InputMaybe<Scalars['String']['input']>
   community?: InputMaybe<Array<MemberCommunityUpdateFieldInput>>
-  country_SET?: InputMaybe<Scalars['String']['input']>
-  county_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   gender_SET?: InputMaybe<Scalars['String']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
+  location_SET?: InputMaybe<Scalars['String']['input']>
   phone_SET?: InputMaybe<Scalars['String']['input']>
-  state_SET?: InputMaybe<Scalars['String']['input']>
-  zipPostal_SET?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MemberWhere = {
   AND?: InputMaybe<Array<MemberWhere>>
   NOT?: InputMaybe<MemberWhere>
   OR?: InputMaybe<Array<MemberWhere>>
-  address_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  address_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  address_EQ?: InputMaybe<Scalars['String']['input']>
-  address_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  address_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
   authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   authId_EQ?: InputMaybe<Scalars['String']['input']>
   authId_IN?: InputMaybe<Array<Scalars['String']['input']>>
   authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  city_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  city_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  city_EQ?: InputMaybe<Scalars['String']['input']>
-  city_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  city_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   communityAggregate?: InputMaybe<MemberCommunityAggregateInput>
   /** Return Members where all of the related MemberCommunityConnections match this filter */
   communityConnection_ALL?: InputMaybe<MemberCommunityConnectionWhere>
@@ -927,16 +898,6 @@ export type MemberWhere = {
   community_SINGLE?: InputMaybe<CommunityWhere>
   /** Return Members where some of the related Communities match this filter */
   community_SOME?: InputMaybe<CommunityWhere>
-  country_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  country_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  country_EQ?: InputMaybe<Scalars['String']['input']>
-  country_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  country_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  county_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  county_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  county_EQ?: InputMaybe<Scalars['String']['input']>
-  county_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  county_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -968,27 +929,22 @@ export type MemberWhere = {
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
   lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
   lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_EQ?: InputMaybe<Scalars['String']['input']>
+  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
   phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_EQ?: InputMaybe<Scalars['String']['input']>
   phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  state_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  state_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  state_EQ?: InputMaybe<Scalars['String']['input']>
-  state_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  state_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
   updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  zipPostal_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  zipPostal_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  zipPostal_EQ?: InputMaybe<Scalars['String']['input']>
-  zipPostal_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  zipPostal_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MembersConnection = {
@@ -1006,18 +962,21 @@ export type Mutation = {
   createCoreValues: CreateCoreValuesMutationResponse
   createGoals: CreateGoalsMutationResponse
   createMembers: CreateMembersMutationResponse
+  createPeople: CreatePeopleMutationResponse
   deleteAreas: DeleteInfo
   deleteCarePoints: DeleteInfo
   deleteCommunities: DeleteInfo
   deleteCoreValues: DeleteInfo
   deleteGoals: DeleteInfo
   deleteMembers: DeleteInfo
+  deletePeople: DeleteInfo
   updateAreas: UpdateAreasMutationResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
   updateCoreValues: UpdateCoreValuesMutationResponse
   updateGoals: UpdateGoalsMutationResponse
   updateMembers: UpdateMembersMutationResponse
+  updatePeople: UpdatePeopleMutationResponse
 }
 
 export type MutationCreateAreasArgs = {
@@ -1044,6 +1003,10 @@ export type MutationCreateMembersArgs = {
   input: Array<MemberCreateInput>
 }
 
+export type MutationCreatePeopleArgs = {
+  input: Array<PersonCreateInput>
+}
+
 export type MutationDeleteAreasArgs = {
   where?: InputMaybe<AreaWhere>
 }
@@ -1067,6 +1030,10 @@ export type MutationDeleteGoalsArgs = {
 export type MutationDeleteMembersArgs = {
   delete?: InputMaybe<MemberDeleteInput>
   where?: InputMaybe<MemberWhere>
+}
+
+export type MutationDeletePeopleArgs = {
+  where?: InputMaybe<PersonWhere>
 }
 
 export type MutationUpdateAreasArgs = {
@@ -1099,6 +1066,11 @@ export type MutationUpdateMembersArgs = {
   where?: InputMaybe<MemberWhere>
 }
 
+export type MutationUpdatePeopleArgs = {
+  update?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<PersonWhere>
+}
+
 /** Pagination information (Relay) */
 export type PageInfo = {
   __typename?: 'PageInfo'
@@ -1108,11 +1080,66 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']['output']>
 }
 
+export type PeopleConnection = {
+  __typename?: 'PeopleConnection'
+  edges: Array<PersonEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type Person = PersonInterface & {
+  __typename?: 'Person'
+  createdAt: Scalars['DateTime']['output']
+  email?: Maybe<Scalars['String']['output']>
+  firstName: Scalars['String']['output']
+  fullName: Scalars['String']['output']
+  gender?: Maybe<Scalars['String']['output']>
+  id: Scalars['ID']['output']
+  interests?: Maybe<Scalars['String']['output']>
+  lastName: Scalars['String']['output']
+  location?: Maybe<Scalars['String']['output']>
+  manual?: Maybe<Scalars['String']['output']>
+  phone?: Maybe<Scalars['String']['output']>
+  pronouns?: Maybe<Scalars['String']['output']>
+  updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+export type PersonAggregateSelection = {
+  __typename?: 'PersonAggregateSelection'
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  gender: StringAggregateSelection
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  manual: StringAggregateSelection
+  phone: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type PersonCreateInput = {
+  email?: InputMaybe<Scalars['String']['input']>
+  firstName: Scalars['String']['input']
+  gender?: InputMaybe<Scalars['String']['input']>
+  interests?: InputMaybe<Scalars['String']['input']>
+  lastName: Scalars['String']['input']
+  location?: InputMaybe<Scalars['String']['input']>
+  manual?: InputMaybe<Scalars['String']['input']>
+  phone?: InputMaybe<Scalars['String']['input']>
+  pronouns?: InputMaybe<Scalars['String']['input']>
+}
+
+export type PersonEdge = {
+  __typename?: 'PersonEdge'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
 export type PersonInterface = {
-  address?: Maybe<Scalars['String']['output']>
-  city?: Maybe<Scalars['String']['output']>
-  country?: Maybe<Scalars['String']['output']>
-  county?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
@@ -1120,19 +1147,14 @@ export type PersonInterface = {
   gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
+  location?: Maybe<Scalars['String']['output']>
   phone?: Maybe<Scalars['String']['output']>
-  state?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-  zipPostal?: Maybe<Scalars['String']['output']>
 }
 
 export type PersonInterfaceAggregateSelection = {
   __typename?: 'PersonInterfaceAggregateSelection'
-  address: StringAggregateSelection
-  city: StringAggregateSelection
   count: Scalars['Int']['output']
-  country: StringAggregateSelection
-  county: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
@@ -1140,10 +1162,9 @@ export type PersonInterfaceAggregateSelection = {
   gender: StringAggregateSelection
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  location: StringAggregateSelection
   phone: StringAggregateSelection
-  state: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  zipPostal: StringAggregateSelection
 }
 
 export type PersonInterfaceEdge = {
@@ -1154,6 +1175,7 @@ export type PersonInterfaceEdge = {
 
 export enum PersonInterfaceImplementation {
   Member = 'Member',
+  Person = 'Person',
 }
 
 export type PersonInterfaceOptions = {
@@ -1165,10 +1187,6 @@ export type PersonInterfaceOptions = {
 
 /** Fields to sort PersonInterfaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonInterfaceSort object. */
 export type PersonInterfaceSort = {
-  address?: InputMaybe<SortDirection>
-  city?: InputMaybe<SortDirection>
-  country?: InputMaybe<SortDirection>
-  county?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
@@ -1176,36 +1194,15 @@ export type PersonInterfaceSort = {
   gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
   phone?: InputMaybe<SortDirection>
-  state?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
-  zipPostal?: InputMaybe<SortDirection>
 }
 
 export type PersonInterfaceWhere = {
   AND?: InputMaybe<Array<PersonInterfaceWhere>>
   NOT?: InputMaybe<PersonInterfaceWhere>
   OR?: InputMaybe<Array<PersonInterfaceWhere>>
-  address_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  address_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  address_EQ?: InputMaybe<Scalars['String']['input']>
-  address_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  address_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  city_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  city_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  city_EQ?: InputMaybe<Scalars['String']['input']>
-  city_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  city_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  country_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  country_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  country_EQ?: InputMaybe<Scalars['String']['input']>
-  country_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  country_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  county_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  county_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  county_EQ?: InputMaybe<Scalars['String']['input']>
-  county_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  county_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -1242,16 +1239,16 @@ export type PersonInterfaceWhere = {
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
   lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
   lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_EQ?: InputMaybe<Scalars['String']['input']>
+  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
   phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   phone_EQ?: InputMaybe<Scalars['String']['input']>
   phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  state_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  state_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  state_EQ?: InputMaybe<Scalars['String']['input']>
-  state_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  state_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename_IN?: InputMaybe<Array<PersonInterfaceImplementation>>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -1259,11 +1256,6 @@ export type PersonInterfaceWhere = {
   updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
   updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  zipPostal_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  zipPostal_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  zipPostal_EQ?: InputMaybe<Scalars['String']['input']>
-  zipPostal_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  zipPostal_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
 export type PersonInterfacesConnection = {
@@ -1271,6 +1263,109 @@ export type PersonInterfacesConnection = {
   edges: Array<PersonInterfaceEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type PersonOptions = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  /** Specify one or more PersonSort objects to sort People by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<PersonSort>>
+}
+
+/** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
+export type PersonSort = {
+  createdAt?: InputMaybe<SortDirection>
+  email?: InputMaybe<SortDirection>
+  firstName?: InputMaybe<SortDirection>
+  gender?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  interests?: InputMaybe<SortDirection>
+  lastName?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
+  manual?: InputMaybe<SortDirection>
+  phone?: InputMaybe<SortDirection>
+  pronouns?: InputMaybe<SortDirection>
+  updatedAt?: InputMaybe<SortDirection>
+}
+
+export type PersonUpdateInput = {
+  email_SET?: InputMaybe<Scalars['String']['input']>
+  firstName_SET?: InputMaybe<Scalars['String']['input']>
+  gender_SET?: InputMaybe<Scalars['String']['input']>
+  interests_SET?: InputMaybe<Scalars['String']['input']>
+  lastName_SET?: InputMaybe<Scalars['String']['input']>
+  location_SET?: InputMaybe<Scalars['String']['input']>
+  manual_SET?: InputMaybe<Scalars['String']['input']>
+  phone_SET?: InputMaybe<Scalars['String']['input']>
+  pronouns_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type PersonWhere = {
+  AND?: InputMaybe<Array<PersonWhere>>
+  NOT?: InputMaybe<PersonWhere>
+  OR?: InputMaybe<Array<PersonWhere>>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  email_EQ?: InputMaybe<Scalars['String']['input']>
+  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_EQ?: InputMaybe<Scalars['String']['input']>
+  firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  gender_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_EQ?: InputMaybe<Scalars['String']['input']>
+  gender_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  gender_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  interests_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  interests_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  interests_EQ?: InputMaybe<Scalars['String']['input']>
+  interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastName_EQ?: InputMaybe<Scalars['String']['input']>
+  lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_EQ?: InputMaybe<Scalars['String']['input']>
+  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  manual_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  manual_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  manual_EQ?: InputMaybe<Scalars['String']['input']>
+  manual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  manual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  phone_EQ?: InputMaybe<Scalars['String']['input']>
+  phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  pronouns_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  pronouns_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  pronouns_EQ?: InputMaybe<Scalars['String']['input']>
+  pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
 export type Query = {
@@ -1293,6 +1388,9 @@ export type Query = {
   members: Array<Member>
   membersAggregate: MemberAggregateSelection
   membersConnection: MembersConnection
+  people: Array<Person>
+  peopleAggregate: PersonAggregateSelection
+  peopleConnection: PeopleConnection
   personInterfaces: Array<PersonInterface>
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
@@ -1406,6 +1504,24 @@ export type QueryMembersConnectionArgs = {
   where?: InputMaybe<MemberWhere>
 }
 
+export type QueryPeopleArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+export type QueryPeopleAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+export type QueryPeopleConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
 export type QueryPersonInterfacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -1483,6 +1599,35 @@ export type UpdateMembersMutationResponse = {
   members: Array<Member>
 }
 
+export type UpdatePeopleMutationResponse = {
+  __typename?: 'UpdatePeopleMutationResponse'
+  info: UpdateInfo
+  people: Array<Person>
+}
+
+export type CreatePeopleMutationVariables = Exact<{
+  input: Array<PersonCreateInput> | PersonCreateInput
+}>
+
+export type CreatePeopleMutation = {
+  __typename?: 'Mutation'
+  createPeople: {
+    __typename?: 'CreatePeopleMutationResponse'
+    people: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+      phone?: string | null
+      location?: string | null
+      manual?: string | null
+      interests?: string | null
+      pronouns?: string | null
+    }>
+  }
+}
+
 export type CreateMembersMutationVariables = Exact<{
   input: Array<MemberCreateInput> | MemberCreateInput
 }>
@@ -1529,6 +1674,29 @@ export type GetMembersQuery = {
   }>
 }
 
+export type GetPersonQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetPersonQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    fullName: string
+    email?: string | null
+    phone?: string | null
+    manual?: string | null
+    interests?: string | null
+    gender?: string | null
+    pronouns?: string | null
+    location?: string | null
+    createdAt: any
+  }>
+}
+
 export type GetMemberQueryVariables = Exact<{
   id: Scalars['ID']['input']
 }>
@@ -1540,18 +1708,108 @@ export type GetMemberQuery = {
     id: string
     firstName: string
     lastName: string
+    fullName: string
     email?: string | null
-    address?: string | null
-    city?: string | null
-    country?: string | null
-    county?: string | null
     gender?: string | null
     phone?: string | null
-    state?: string | null
-    zipPostal?: string | null
   }>
 }
 
+export const CreatePeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreatePeople' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'PersonCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPeople' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'people' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'manual' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pronouns' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreatePeopleMutation,
+  CreatePeopleMutationVariables
+>
 export const CreateMembersDocument = {
   kind: 'Document',
   definitions: [
@@ -1724,6 +1982,71 @@ export const GetMembersDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMembersQuery, GetMembersQueryVariables>
+export const GetPersonDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPerson' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'fullName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'manual' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPersonQuery, GetPersonQueryVariables>
 export const GetMemberDocument = {
   kind: 'Document',
   definitions: [
@@ -1772,15 +2095,10 @@ export const GetMemberDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'fullName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'address' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'city' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'country' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'county' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'zipPostal' } },
               ],
             },
           },

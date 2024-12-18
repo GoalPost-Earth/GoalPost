@@ -20,19 +20,10 @@ const HomeClient = () => {
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <Heading></Heading>
+        <Heading>Hi JD!</Heading>
         <AvatarCarousel />
         <Center>
           <Box>
-            <Text>Welcome to Goalpost</Text>
-
-            <Link href="/forms">
-              <Button>Form</Button>
-            </Link>
-            <Link href="/members">
-              <Button>Show Members</Button>
-            </Link>
-
             {!user ? (
               <a href="/api/auth/login?returnTo=/">
                 <Button colorPalette="yellow">Sign In</Button>

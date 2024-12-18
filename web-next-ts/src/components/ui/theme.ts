@@ -6,7 +6,8 @@ export const customTheme = createSystem(defaultConfig, {
       colors: {
         brand: {
           50: { value: '#fdf3e9' },
-          100: { value: '#fbe1c7' },
+          // 100: { value: '#fbe1c7' },
+          100: { value: '#FFFFFF' },
           200: { value: '#f7c89b' },
           300: { value: '#f3a96a' },
           400: { value: '#ef8a3e' },

@@ -10,7 +10,7 @@ import {
   Text,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { GiHamburgerMenu } from 'react-icons/gi'
+import { GiHamburgerMenu, GiHomeGarage } from 'react-icons/gi'
 import Link from 'next/link'
 import { ColorModeButton } from './color-mode'
 import {
@@ -26,15 +26,38 @@ import { Avatar } from './avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { useApp } from '@/app/AppContext'
 import { AppLogo } from './app-logo'
+import { MenuOutline } from '../icons'
 
 const menuItems = [
   {
     name: 'Home',
     to: () => '/',
+    icon: <MenuOutline />,
+  },
+  {
+    name: 'Input Data',
+    to: () => '/forms',
+    icon: <MenuOutline />,
+  },
+  {
+    name: 'Discover',
+    to: () => '/#',
+    icon: <MenuOutline />,
+  },
+  {
+    name: 'Chatbot',
+    to: () => '/#',
+    icon: <MenuOutline />,
+  },
+  {
+    name: 'My Member Guide',
+    to: () => '/#',
+    icon: <MenuOutline />,
   },
   {
     name: 'Log Out',
     to: () => '/api/auth/logout?returnTo=/',
+    icon: <GiHomeGarage />,
   },
 ]
 
@@ -71,16 +94,18 @@ const NavHamburgerButton = () => {
               </HStack>
             </Heading>
           </DrawerHeader>
-          <DrawerBody>
+          <DrawerBody paddingX={0}>
             {menuItems.map((item) => {
+              const pathname = window.location.pathname
               return (
                 <Link href={item.to()} key={item.name}>
                   <Button
+                    borderRadius="none"
+                    border="none"
                     key={item.name}
-                    paddingY={7}
-                    marginY={1}
-                    colorPalette="gray"
-                    variant="subtle"
+                    paddingY={8}
+                    colorPalette="brand"
+                    variant={pathname === item.to() ? 'solid' : 'outline'}
                     width="100%"
                     onClick={() => {
                       setOpen(false)

@@ -6,15 +6,10 @@ export const GET_MEMBER = graphql(`
       id
       firstName
       lastName
+      fullName
       email
-      address
-      city
-      country
-      county
       gender
       phone
-      state
-      zipPostal
     }
   }
 `)

@@ -49,8 +49,8 @@ export const errorLink = onError(({ graphQLErrors, networkError }) => {
 })
 
 export const authLink = setContext(async (_, { headers }) => {
-  const token = localStorage.getItem('token') ?? ''
-  const expiryDate = localStorage.getItem('expiryDate') ?? ''
+  const token = ''
+  const expiryDate = ''
 
   if (token && !isTokenExpired(expiryDate)) {
     // return the headers to the context so httpLink can read them

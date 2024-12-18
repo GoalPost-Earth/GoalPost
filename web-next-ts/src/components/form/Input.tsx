@@ -37,7 +37,13 @@ const Input = (props: InputPropsType) => {
           errorText={errors[name]?.message as string}
           required={required}
         >
-          <ChakraInput id={name} {...field} {...rest} />
+          <ChakraInput
+            id={name}
+            border="1px solid #CBD5E1"
+            variant="subtle"
+            {...field}
+            {...rest}
+          />
         </Field>
       )}
     />

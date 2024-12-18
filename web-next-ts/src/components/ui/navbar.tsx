@@ -1,7 +1,7 @@
 'use client'
 
 import { Box, Flex, HStack, useDisclosure, Stack } from '@chakra-ui/react'
-import NavHamburgerButton from './nav-hamburger-button'
+import NavHamburgerButton from './sidenav-button'
 import Link from 'next/link'
 import { AppLogo } from './app-logo'
 

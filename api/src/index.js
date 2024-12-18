@@ -7,7 +7,6 @@ import cors from 'cors'
 import { json } from 'body-parser'
 import { auth, driver as neo4jDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
-import { Neo4jGraphQLAuthJWTPlugin } from '@neo4j/graphql-plugin-auth'
 import { typeDefs } from './schema/graphql-schema'
 import resolvers from './resolvers/resolvers'
 
@@ -29,11 +28,11 @@ const neoSchema = new Neo4jGraphQL({
   typeDefs,
   resolvers,
   driver,
-  features: {
-    authorization: {
-      key: process.env.JWT_SECRET,
-    },
-  },
+  // features: {
+  //   authorization: {
+  //     key: process.env.JWT_SECRET,
+  //   },
+  // },
 })
 
 /*
@@ -59,7 +58,11 @@ const host = process.env.GRAPHQL_SERVER_HOST || '0.0.0.0'
  * This also also allows us to specify a path for the GraphQL endpoint
  */
 const startServer = async () => {
-  const schema = await neoSchema.getSchema()
+  const schema = await neoSchema.getSchema().catch((error) => {
+    // eslint-disable-next-line
+    console.error(JSON.stringify(error))
+    process.exit(1)
+  })
 
   const server = new ApolloServer({
     context: ({ req }) => ({

@@ -24,7 +24,6 @@ import { getAccessToken } from '@auth0/nextjs-auth0'
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState('')
   const { isLoading, user } = useUser()
-  console.log('🚀 ~ file: apollo-wrapper.tsx:27 ~ user:', user)
 
   useEffect(() => {
     const fetchToken = async () => {
