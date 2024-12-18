@@ -11,7 +11,7 @@ export const GET_COREVALUE = graphql(`
       alignmentExamples
       description
       why
-      guides {
+      guidesPerson {
         id
         name
       }

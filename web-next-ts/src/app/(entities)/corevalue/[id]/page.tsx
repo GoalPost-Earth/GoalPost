@@ -43,7 +43,7 @@ export default async function CoreValuePage({
 
         <ProfileDetailCard
           title="Guides"
-          detail={corevalue.guides.map((guide) => guide.name).join(', ')}
+          detail={corevalue.guidesPerson.map((guide) => guide.name).join(', ')}
         />
       </VStack>
     </Container>

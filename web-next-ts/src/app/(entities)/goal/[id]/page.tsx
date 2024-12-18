@@ -43,7 +43,7 @@ export default async function ViewGoalPage({
         <HStack width="100%" mb={2}>
           <Spacer />
           <Text fontWeight="bold" fontSize="xs">
-            {goal.person.name}
+            {goal.motivatesPerson.name}
           </Text>
         </HStack>
 

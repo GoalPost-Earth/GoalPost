@@ -28,7 +28,7 @@ export default function Simple() {
 
   return (
     <>
-      <Box px={4}>
+      <Box px={4} position="sticky" top={0} zIndex={100} bgColor={'white'}>
         <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
           <Box display={{ md: 'none' }}>
             <NavHamburgerButton />

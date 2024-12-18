@@ -186,6 +186,10 @@ export type CarePointAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
+export type CarePointConnectWhere = {
+  node: CarePointWhere
+}
+
 export type CarePointCreateInput = {
   description: Scalars['String']['input']
   status: Scalars['String']['input']
@@ -268,9 +272,30 @@ export type CommunitiesConnection = {
 export type Community = {
   __typename?: 'Community'
   createdAt: Scalars['DateTime']['output']
+  hasAccessToResource: Array<Resource>
+  hasAccessToResourceAggregate?: Maybe<CommunityResourceHasAccessToResourceAggregationSelection>
+  hasAccessToResourceConnection: CommunityHasAccessToResourceConnection
   id: Scalars['ID']['output']
   name: Scalars['String']['output']
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+export type CommunityHasAccessToResourceArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceSort>>
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type CommunityHasAccessToResourceAggregateArgs = {
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type CommunityHasAccessToResourceConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CommunityHasAccessToResourceConnectionSort>>
+  where?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
 }
 
 export type CommunityAggregateSelection = {
@@ -282,12 +307,31 @@ export type CommunityAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
+export type CommunityConnectInput = {
+  hasAccessToResource?: InputMaybe<
+    Array<CommunityHasAccessToResourceConnectFieldInput>
+  >
+}
+
 export type CommunityConnectWhere = {
   node: CommunityWhere
 }
 
 export type CommunityCreateInput = {
+  hasAccessToResource?: InputMaybe<CommunityHasAccessToResourceFieldInput>
   name: Scalars['String']['input']
+}
+
+export type CommunityDeleteInput = {
+  hasAccessToResource?: InputMaybe<
+    Array<CommunityHasAccessToResourceDeleteFieldInput>
+  >
+}
+
+export type CommunityDisconnectInput = {
+  hasAccessToResource?: InputMaybe<
+    Array<CommunityHasAccessToResourceDisconnectFieldInput>
+  >
 }
 
 export type CommunityEdge = {
@@ -296,11 +340,231 @@ export type CommunityEdge = {
   node: Community
 }
 
+export type CommunityHasAccessToResourceAggregateInput = {
+  AND?: InputMaybe<Array<CommunityHasAccessToResourceAggregateInput>>
+  NOT?: InputMaybe<CommunityHasAccessToResourceAggregateInput>
+  OR?: InputMaybe<Array<CommunityHasAccessToResourceAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CommunityHasAccessToResourceNodeAggregationWhereInput>
+}
+
+export type CommunityHasAccessToResourceConnectFieldInput = {
+  connect?: InputMaybe<Array<ResourceConnectInput>>
+  where?: InputMaybe<ResourceConnectWhere>
+}
+
+export type CommunityHasAccessToResourceConnection = {
+  __typename?: 'CommunityHasAccessToResourceConnection'
+  edges: Array<CommunityHasAccessToResourceRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type CommunityHasAccessToResourceConnectionSort = {
+  node?: InputMaybe<ResourceSort>
+}
+
+export type CommunityHasAccessToResourceConnectionWhere = {
+  AND?: InputMaybe<Array<CommunityHasAccessToResourceConnectionWhere>>
+  NOT?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+  OR?: InputMaybe<Array<CommunityHasAccessToResourceConnectionWhere>>
+  node?: InputMaybe<ResourceWhere>
+}
+
+export type CommunityHasAccessToResourceCreateFieldInput = {
+  node: ResourceCreateInput
+}
+
+export type CommunityHasAccessToResourceDeleteFieldInput = {
+  delete?: InputMaybe<ResourceDeleteInput>
+  where?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+}
+
+export type CommunityHasAccessToResourceDisconnectFieldInput = {
+  disconnect?: InputMaybe<ResourceDisconnectInput>
+  where?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+}
+
+export type CommunityHasAccessToResourceFieldInput = {
+  connect?: InputMaybe<Array<CommunityHasAccessToResourceConnectFieldInput>>
+  create?: InputMaybe<Array<CommunityHasAccessToResourceCreateFieldInput>>
+}
+
+export type CommunityHasAccessToResourceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CommunityHasAccessToResourceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CommunityHasAccessToResourceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CommunityHasAccessToResourceNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  time_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CommunityHasAccessToResourceRelationship = {
+  __typename?: 'CommunityHasAccessToResourceRelationship'
+  cursor: Scalars['String']['output']
+  node: Resource
+}
+
+export type CommunityHasAccessToResourceUpdateConnectionInput = {
+  node?: InputMaybe<ResourceUpdateInput>
+}
+
+export type CommunityHasAccessToResourceUpdateFieldInput = {
+  connect?: InputMaybe<Array<CommunityHasAccessToResourceConnectFieldInput>>
+  create?: InputMaybe<Array<CommunityHasAccessToResourceCreateFieldInput>>
+  delete?: InputMaybe<Array<CommunityHasAccessToResourceDeleteFieldInput>>
+  disconnect?: InputMaybe<
+    Array<CommunityHasAccessToResourceDisconnectFieldInput>
+  >
+  update?: InputMaybe<CommunityHasAccessToResourceUpdateConnectionInput>
+  where?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+}
+
 export type CommunityOptions = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
   /** Specify one or more CommunitySort objects to sort Communities by. The sorts will be applied in the order in which they are arranged in the array. */
   sort?: InputMaybe<Array<CommunitySort>>
+}
+
+export type CommunityResourceHasAccessToResourceAggregationSelection = {
+  __typename?: 'CommunityResourceHasAccessToResourceAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CommunityResourceHasAccessToResourceNodeAggregateSelection>
+}
+
+export type CommunityResourceHasAccessToResourceNodeAggregateSelection = {
+  __typename?: 'CommunityResourceHasAccessToResourceNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  status: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
 }
 
 /** Fields to sort Communities by. The order in which sorts are applied is not guaranteed when specifying many fields in one CommunitySort object. */
@@ -312,6 +576,9 @@ export type CommunitySort = {
 }
 
 export type CommunityUpdateInput = {
+  hasAccessToResource?: InputMaybe<
+    Array<CommunityHasAccessToResourceUpdateFieldInput>
+  >
   name_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -325,6 +592,23 @@ export type CommunityWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  hasAccessToResourceAggregate?: InputMaybe<CommunityHasAccessToResourceAggregateInput>
+  /** Return Communities where all of the related CommunityHasAccessToResourceConnections match this filter */
+  hasAccessToResourceConnection_ALL?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+  /** Return Communities where none of the related CommunityHasAccessToResourceConnections match this filter */
+  hasAccessToResourceConnection_NONE?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+  /** Return Communities where one of the related CommunityHasAccessToResourceConnections match this filter */
+  hasAccessToResourceConnection_SINGLE?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+  /** Return Communities where some of the related CommunityHasAccessToResourceConnections match this filter */
+  hasAccessToResourceConnection_SOME?: InputMaybe<CommunityHasAccessToResourceConnectionWhere>
+  /** Return Communities where all of the related Resources match this filter */
+  hasAccessToResource_ALL?: InputMaybe<ResourceWhere>
+  /** Return Communities where none of the related Resources match this filter */
+  hasAccessToResource_NONE?: InputMaybe<ResourceWhere>
+  /** Return Communities where one of the related Resources match this filter */
+  hasAccessToResource_SINGLE?: InputMaybe<ResourceWhere>
+  /** Return Communities where some of the related Resources match this filter */
+  hasAccessToResource_SOME?: InputMaybe<ResourceWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -350,9 +634,9 @@ export type CoreValue = {
   caresFor?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   description?: Maybe<Scalars['String']['output']>
-  guides: Array<Person>
-  guidesAggregate?: Maybe<CoreValuePersonGuidesAggregationSelection>
-  guidesConnection: CoreValueGuidesConnection
+  guidesPerson: Array<Person>
+  guidesPersonAggregate?: Maybe<CoreValuePersonGuidesPersonAggregationSelection>
+  guidesPersonConnection: CoreValueGuidesPersonConnection
   id: Scalars['ID']['output']
   name: Scalars['String']['output']
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -360,22 +644,22 @@ export type CoreValue = {
   why?: Maybe<Scalars['String']['output']>
 }
 
-export type CoreValueGuidesArgs = {
+export type CoreValueGuidesPersonArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonSort>>
   where?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueGuidesAggregateArgs = {
+export type CoreValueGuidesPersonAggregateArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueGuidesConnectionArgs = {
+export type CoreValueGuidesPersonConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<CoreValueGuidesConnectionSort>>
-  where?: InputMaybe<CoreValueGuidesConnectionWhere>
+  sort?: InputMaybe<Array<CoreValueGuidesPersonConnectionSort>>
+  where?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
 }
 
 export type CoreValueAggregateSelection = {
@@ -394,7 +678,7 @@ export type CoreValueAggregateSelection = {
 }
 
 export type CoreValueConnectInput = {
-  guides?: InputMaybe<Array<CoreValueGuidesConnectFieldInput>>
+  guidesPerson?: InputMaybe<Array<CoreValueGuidesPersonConnectFieldInput>>
 }
 
 export type CoreValueConnectWhere = {
@@ -406,18 +690,18 @@ export type CoreValueCreateInput = {
   alignmentExamples?: InputMaybe<Scalars['String']['input']>
   caresFor?: InputMaybe<Scalars['String']['input']>
   description?: InputMaybe<Scalars['String']['input']>
-  guides?: InputMaybe<CoreValueGuidesFieldInput>
+  guidesPerson?: InputMaybe<CoreValueGuidesPersonFieldInput>
   name: Scalars['String']['input']
   whoSupports?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
 
 export type CoreValueDeleteInput = {
-  guides?: InputMaybe<Array<CoreValueGuidesDeleteFieldInput>>
+  guidesPerson?: InputMaybe<Array<CoreValueGuidesPersonDeleteFieldInput>>
 }
 
 export type CoreValueDisconnectInput = {
-  guides?: InputMaybe<Array<CoreValueGuidesDisconnectFieldInput>>
+  guidesPerson?: InputMaybe<Array<CoreValueGuidesPersonDisconnectFieldInput>>
 }
 
 export type CoreValueEdge = {
@@ -426,64 +710,64 @@ export type CoreValueEdge = {
   node: CoreValue
 }
 
-export type CoreValueGuidesAggregateInput = {
-  AND?: InputMaybe<Array<CoreValueGuidesAggregateInput>>
-  NOT?: InputMaybe<CoreValueGuidesAggregateInput>
-  OR?: InputMaybe<Array<CoreValueGuidesAggregateInput>>
+export type CoreValueGuidesPersonAggregateInput = {
+  AND?: InputMaybe<Array<CoreValueGuidesPersonAggregateInput>>
+  NOT?: InputMaybe<CoreValueGuidesPersonAggregateInput>
+  OR?: InputMaybe<Array<CoreValueGuidesPersonAggregateInput>>
   count_EQ?: InputMaybe<Scalars['Int']['input']>
   count_GT?: InputMaybe<Scalars['Int']['input']>
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<CoreValueGuidesNodeAggregationWhereInput>
+  node?: InputMaybe<CoreValueGuidesPersonNodeAggregationWhereInput>
 }
 
-export type CoreValueGuidesConnectFieldInput = {
+export type CoreValueGuidesPersonConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
   where?: InputMaybe<PersonConnectWhere>
 }
 
-export type CoreValueGuidesConnection = {
-  __typename?: 'CoreValueGuidesConnection'
-  edges: Array<CoreValueGuidesRelationship>
+export type CoreValueGuidesPersonConnection = {
+  __typename?: 'CoreValueGuidesPersonConnection'
+  edges: Array<CoreValueGuidesPersonRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
-export type CoreValueGuidesConnectionSort = {
+export type CoreValueGuidesPersonConnectionSort = {
   node?: InputMaybe<PersonSort>
 }
 
-export type CoreValueGuidesConnectionWhere = {
-  AND?: InputMaybe<Array<CoreValueGuidesConnectionWhere>>
-  NOT?: InputMaybe<CoreValueGuidesConnectionWhere>
-  OR?: InputMaybe<Array<CoreValueGuidesConnectionWhere>>
+export type CoreValueGuidesPersonConnectionWhere = {
+  AND?: InputMaybe<Array<CoreValueGuidesPersonConnectionWhere>>
+  NOT?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
+  OR?: InputMaybe<Array<CoreValueGuidesPersonConnectionWhere>>
   node?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueGuidesCreateFieldInput = {
+export type CoreValueGuidesPersonCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type CoreValueGuidesDeleteFieldInput = {
+export type CoreValueGuidesPersonDeleteFieldInput = {
   delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<CoreValueGuidesConnectionWhere>
+  where?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
 }
 
-export type CoreValueGuidesDisconnectFieldInput = {
+export type CoreValueGuidesPersonDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<CoreValueGuidesConnectionWhere>
+  where?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
 }
 
-export type CoreValueGuidesFieldInput = {
-  connect?: InputMaybe<Array<CoreValueGuidesConnectFieldInput>>
-  create?: InputMaybe<Array<CoreValueGuidesCreateFieldInput>>
+export type CoreValueGuidesPersonFieldInput = {
+  connect?: InputMaybe<Array<CoreValueGuidesPersonConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValueGuidesPersonCreateFieldInput>>
 }
 
-export type CoreValueGuidesNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<CoreValueGuidesNodeAggregationWhereInput>>
-  NOT?: InputMaybe<CoreValueGuidesNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<CoreValueGuidesNodeAggregationWhereInput>>
+export type CoreValueGuidesPersonNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CoreValueGuidesPersonNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CoreValueGuidesPersonNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CoreValueGuidesPersonNodeAggregationWhereInput>>
   createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -624,6 +908,21 @@ export type CoreValueGuidesNodeAggregationWhereInput = {
   phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -651,23 +950,23 @@ export type CoreValueGuidesNodeAggregationWhereInput = {
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
-export type CoreValueGuidesRelationship = {
-  __typename?: 'CoreValueGuidesRelationship'
+export type CoreValueGuidesPersonRelationship = {
+  __typename?: 'CoreValueGuidesPersonRelationship'
   cursor: Scalars['String']['output']
   node: Person
 }
 
-export type CoreValueGuidesUpdateConnectionInput = {
+export type CoreValueGuidesPersonUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
 }
 
-export type CoreValueGuidesUpdateFieldInput = {
-  connect?: InputMaybe<Array<CoreValueGuidesConnectFieldInput>>
-  create?: InputMaybe<Array<CoreValueGuidesCreateFieldInput>>
-  delete?: InputMaybe<Array<CoreValueGuidesDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<CoreValueGuidesDisconnectFieldInput>>
-  update?: InputMaybe<CoreValueGuidesUpdateConnectionInput>
-  where?: InputMaybe<CoreValueGuidesConnectionWhere>
+export type CoreValueGuidesPersonUpdateFieldInput = {
+  connect?: InputMaybe<Array<CoreValueGuidesPersonConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValueGuidesPersonCreateFieldInput>>
+  delete?: InputMaybe<Array<CoreValueGuidesPersonDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<CoreValueGuidesPersonDisconnectFieldInput>>
+  update?: InputMaybe<CoreValueGuidesPersonUpdateConnectionInput>
+  where?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
 }
 
 export type CoreValueOptions = {
@@ -677,14 +976,14 @@ export type CoreValueOptions = {
   sort?: InputMaybe<Array<CoreValueSort>>
 }
 
-export type CoreValuePersonGuidesAggregationSelection = {
-  __typename?: 'CoreValuePersonGuidesAggregationSelection'
+export type CoreValuePersonGuidesPersonAggregationSelection = {
+  __typename?: 'CoreValuePersonGuidesPersonAggregationSelection'
   count: Scalars['Int']['output']
-  node?: Maybe<CoreValuePersonGuidesNodeAggregateSelection>
+  node?: Maybe<CoreValuePersonGuidesPersonNodeAggregateSelection>
 }
 
-export type CoreValuePersonGuidesNodeAggregateSelection = {
-  __typename?: 'CoreValuePersonGuidesNodeAggregateSelection'
+export type CoreValuePersonGuidesPersonNodeAggregateSelection = {
+  __typename?: 'CoreValuePersonGuidesPersonNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
@@ -695,6 +994,7 @@ export type CoreValuePersonGuidesNodeAggregateSelection = {
   location: StringAggregateSelection
   manual: StringAggregateSelection
   phone: StringAggregateSelection
+  photo: StringAggregateSelection
   pronouns: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
@@ -718,7 +1018,7 @@ export type CoreValueUpdateInput = {
   alignmentExamples_SET?: InputMaybe<Scalars['String']['input']>
   caresFor_SET?: InputMaybe<Scalars['String']['input']>
   description_SET?: InputMaybe<Scalars['String']['input']>
-  guides?: InputMaybe<Array<CoreValueGuidesUpdateFieldInput>>
+  guidesPerson?: InputMaybe<Array<CoreValueGuidesPersonUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
   whoSupports_SET?: InputMaybe<Scalars['String']['input']>
   why_SET?: InputMaybe<Scalars['String']['input']>
@@ -758,23 +1058,23 @@ export type CoreValueWhere = {
   description_EQ?: InputMaybe<Scalars['String']['input']>
   description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  guidesAggregate?: InputMaybe<CoreValueGuidesAggregateInput>
-  /** Return CoreValues where all of the related CoreValueGuidesConnections match this filter */
-  guidesConnection_ALL?: InputMaybe<CoreValueGuidesConnectionWhere>
-  /** Return CoreValues where none of the related CoreValueGuidesConnections match this filter */
-  guidesConnection_NONE?: InputMaybe<CoreValueGuidesConnectionWhere>
-  /** Return CoreValues where one of the related CoreValueGuidesConnections match this filter */
-  guidesConnection_SINGLE?: InputMaybe<CoreValueGuidesConnectionWhere>
-  /** Return CoreValues where some of the related CoreValueGuidesConnections match this filter */
-  guidesConnection_SOME?: InputMaybe<CoreValueGuidesConnectionWhere>
+  guidesPersonAggregate?: InputMaybe<CoreValueGuidesPersonAggregateInput>
+  /** Return CoreValues where all of the related CoreValueGuidesPersonConnections match this filter */
+  guidesPersonConnection_ALL?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
+  /** Return CoreValues where none of the related CoreValueGuidesPersonConnections match this filter */
+  guidesPersonConnection_NONE?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
+  /** Return CoreValues where one of the related CoreValueGuidesPersonConnections match this filter */
+  guidesPersonConnection_SINGLE?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
+  /** Return CoreValues where some of the related CoreValueGuidesPersonConnections match this filter */
+  guidesPersonConnection_SOME?: InputMaybe<CoreValueGuidesPersonConnectionWhere>
   /** Return CoreValues where all of the related People match this filter */
-  guides_ALL?: InputMaybe<PersonWhere>
+  guidesPerson_ALL?: InputMaybe<PersonWhere>
   /** Return CoreValues where none of the related People match this filter */
-  guides_NONE?: InputMaybe<PersonWhere>
+  guidesPerson_NONE?: InputMaybe<PersonWhere>
   /** Return CoreValues where one of the related People match this filter */
-  guides_SINGLE?: InputMaybe<PersonWhere>
+  guidesPerson_SINGLE?: InputMaybe<PersonWhere>
   /** Return CoreValues where some of the related People match this filter */
-  guides_SOME?: InputMaybe<PersonWhere>
+  guidesPerson_SOME?: InputMaybe<PersonWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -859,6 +1159,12 @@ export type CreatePeopleMutationResponse = {
   people: Array<Person>
 }
 
+export type CreateResourcesMutationResponse = {
+  __typename?: 'CreateResourcesMutationResponse'
+  info: CreateInfo
+  resources: Array<Resource>
+}
+
 export type DateTimeAggregateSelection = {
   __typename?: 'DateTimeAggregateSelection'
   max?: Maybe<Scalars['DateTime']['output']>
@@ -887,10 +1193,10 @@ export type Goal = {
   description: Scalars['String']['output']
   id: Scalars['ID']['output']
   location?: Maybe<Scalars['String']['output']>
+  motivatesPerson: Person
+  motivatesPersonAggregate?: Maybe<GoalPersonMotivatesPersonAggregationSelection>
+  motivatesPersonConnection: GoalMotivatesPersonConnection
   name: Scalars['String']['output']
-  person: Person
-  personAggregate?: Maybe<GoalPersonPersonAggregationSelection>
-  personConnection: GoalPersonConnection
   photo?: Maybe<Scalars['String']['output']>
   status?: Maybe<Scalars['Boolean']['output']>
   successMeasures?: Maybe<Scalars['String']['output']>
@@ -899,22 +1205,22 @@ export type Goal = {
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
-export type GoalPersonArgs = {
+export type GoalMotivatesPersonArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonSort>>
   where?: InputMaybe<PersonWhere>
 }
 
-export type GoalPersonAggregateArgs = {
+export type GoalMotivatesPersonAggregateArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
-export type GoalPersonConnectionArgs = {
+export type GoalMotivatesPersonConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<GoalPersonConnectionSort>>
-  where?: InputMaybe<GoalPersonConnectionWhere>
+  sort?: InputMaybe<Array<GoalMotivatesPersonConnectionSort>>
+  where?: InputMaybe<GoalMotivatesPersonConnectionWhere>
 }
 
 export type GoalAggregateSelection = {
@@ -937,8 +1243,8 @@ export type GoalCreateInput = {
   caresFor?: InputMaybe<Scalars['String']['input']>
   description: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
+  motivatesPerson?: InputMaybe<GoalMotivatesPersonFieldInput>
   name: Scalars['String']['input']
-  person?: InputMaybe<GoalPersonFieldInput>
   photo?: InputMaybe<Scalars['String']['input']>
   status?: InputMaybe<Scalars['Boolean']['input']>
   successMeasures?: InputMaybe<Scalars['String']['input']>
@@ -947,7 +1253,7 @@ export type GoalCreateInput = {
 }
 
 export type GoalDeleteInput = {
-  person?: InputMaybe<GoalPersonDeleteFieldInput>
+  motivatesPerson?: InputMaybe<GoalMotivatesPersonDeleteFieldInput>
 }
 
 export type GoalEdge = {
@@ -956,71 +1262,64 @@ export type GoalEdge = {
   node: Goal
 }
 
-export type GoalOptions = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  /** Specify one or more GoalSort objects to sort Goals by. The sorts will be applied in the order in which they are arranged in the array. */
-  sort?: InputMaybe<Array<GoalSort>>
-}
-
-export type GoalPersonAggregateInput = {
-  AND?: InputMaybe<Array<GoalPersonAggregateInput>>
-  NOT?: InputMaybe<GoalPersonAggregateInput>
-  OR?: InputMaybe<Array<GoalPersonAggregateInput>>
+export type GoalMotivatesPersonAggregateInput = {
+  AND?: InputMaybe<Array<GoalMotivatesPersonAggregateInput>>
+  NOT?: InputMaybe<GoalMotivatesPersonAggregateInput>
+  OR?: InputMaybe<Array<GoalMotivatesPersonAggregateInput>>
   count_EQ?: InputMaybe<Scalars['Int']['input']>
   count_GT?: InputMaybe<Scalars['Int']['input']>
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<GoalPersonNodeAggregationWhereInput>
+  node?: InputMaybe<GoalMotivatesPersonNodeAggregationWhereInput>
 }
 
-export type GoalPersonConnectFieldInput = {
+export type GoalMotivatesPersonConnectFieldInput = {
   connect?: InputMaybe<PersonConnectInput>
   where?: InputMaybe<PersonConnectWhere>
 }
 
-export type GoalPersonConnection = {
-  __typename?: 'GoalPersonConnection'
-  edges: Array<GoalPersonRelationship>
+export type GoalMotivatesPersonConnection = {
+  __typename?: 'GoalMotivatesPersonConnection'
+  edges: Array<GoalMotivatesPersonRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
-export type GoalPersonConnectionSort = {
+export type GoalMotivatesPersonConnectionSort = {
   node?: InputMaybe<PersonSort>
 }
 
-export type GoalPersonConnectionWhere = {
-  AND?: InputMaybe<Array<GoalPersonConnectionWhere>>
-  NOT?: InputMaybe<GoalPersonConnectionWhere>
-  OR?: InputMaybe<Array<GoalPersonConnectionWhere>>
+export type GoalMotivatesPersonConnectionWhere = {
+  AND?: InputMaybe<Array<GoalMotivatesPersonConnectionWhere>>
+  NOT?: InputMaybe<GoalMotivatesPersonConnectionWhere>
+  OR?: InputMaybe<Array<GoalMotivatesPersonConnectionWhere>>
   node?: InputMaybe<PersonWhere>
 }
 
-export type GoalPersonCreateFieldInput = {
+export type GoalMotivatesPersonCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type GoalPersonDeleteFieldInput = {
+export type GoalMotivatesPersonDeleteFieldInput = {
   delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<GoalPersonConnectionWhere>
+  where?: InputMaybe<GoalMotivatesPersonConnectionWhere>
 }
 
-export type GoalPersonDisconnectFieldInput = {
+export type GoalMotivatesPersonDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<GoalPersonConnectionWhere>
+  where?: InputMaybe<GoalMotivatesPersonConnectionWhere>
 }
 
-export type GoalPersonFieldInput = {
-  connect?: InputMaybe<GoalPersonConnectFieldInput>
-  create?: InputMaybe<GoalPersonCreateFieldInput>
+export type GoalMotivatesPersonFieldInput = {
+  connect?: InputMaybe<GoalMotivatesPersonConnectFieldInput>
+  create?: InputMaybe<GoalMotivatesPersonCreateFieldInput>
 }
 
-export type GoalPersonNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<GoalPersonNodeAggregationWhereInput>>
-  NOT?: InputMaybe<GoalPersonNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<GoalPersonNodeAggregationWhereInput>>
+export type GoalMotivatesPersonNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<GoalMotivatesPersonNodeAggregationWhereInput>>
+  NOT?: InputMaybe<GoalMotivatesPersonNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<GoalMotivatesPersonNodeAggregationWhereInput>>
   createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -1161,6 +1460,21 @@ export type GoalPersonNodeAggregationWhereInput = {
   phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1188,14 +1502,40 @@ export type GoalPersonNodeAggregationWhereInput = {
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
-export type GoalPersonPersonAggregationSelection = {
-  __typename?: 'GoalPersonPersonAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<GoalPersonPersonNodeAggregateSelection>
+export type GoalMotivatesPersonRelationship = {
+  __typename?: 'GoalMotivatesPersonRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
 }
 
-export type GoalPersonPersonNodeAggregateSelection = {
-  __typename?: 'GoalPersonPersonNodeAggregateSelection'
+export type GoalMotivatesPersonUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+}
+
+export type GoalMotivatesPersonUpdateFieldInput = {
+  connect?: InputMaybe<GoalMotivatesPersonConnectFieldInput>
+  create?: InputMaybe<GoalMotivatesPersonCreateFieldInput>
+  delete?: InputMaybe<GoalMotivatesPersonDeleteFieldInput>
+  disconnect?: InputMaybe<GoalMotivatesPersonDisconnectFieldInput>
+  update?: InputMaybe<GoalMotivatesPersonUpdateConnectionInput>
+  where?: InputMaybe<GoalMotivatesPersonConnectionWhere>
+}
+
+export type GoalOptions = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  /** Specify one or more GoalSort objects to sort Goals by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<GoalSort>>
+}
+
+export type GoalPersonMotivatesPersonAggregationSelection = {
+  __typename?: 'GoalPersonMotivatesPersonAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<GoalPersonMotivatesPersonNodeAggregateSelection>
+}
+
+export type GoalPersonMotivatesPersonNodeAggregateSelection = {
+  __typename?: 'GoalPersonMotivatesPersonNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
@@ -1206,27 +1546,9 @@ export type GoalPersonPersonNodeAggregateSelection = {
   location: StringAggregateSelection
   manual: StringAggregateSelection
   phone: StringAggregateSelection
+  photo: StringAggregateSelection
   pronouns: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-}
-
-export type GoalPersonRelationship = {
-  __typename?: 'GoalPersonRelationship'
-  cursor: Scalars['String']['output']
-  node: Person
-}
-
-export type GoalPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-}
-
-export type GoalPersonUpdateFieldInput = {
-  connect?: InputMaybe<GoalPersonConnectFieldInput>
-  create?: InputMaybe<GoalPersonCreateFieldInput>
-  delete?: InputMaybe<GoalPersonDeleteFieldInput>
-  disconnect?: InputMaybe<GoalPersonDisconnectFieldInput>
-  update?: InputMaybe<GoalPersonUpdateConnectionInput>
-  where?: InputMaybe<GoalPersonConnectionWhere>
 }
 
 /** Fields to sort Goals by. The order in which sorts are applied is not guaranteed when specifying many fields in one GoalSort object. */
@@ -1249,8 +1571,8 @@ export type GoalUpdateInput = {
   caresFor_SET?: InputMaybe<Scalars['String']['input']>
   description_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
+  motivatesPerson?: InputMaybe<GoalMotivatesPersonUpdateFieldInput>
   name_SET?: InputMaybe<Scalars['String']['input']>
-  person?: InputMaybe<GoalPersonUpdateFieldInput>
   photo_SET?: InputMaybe<Scalars['String']['input']>
   status_SET?: InputMaybe<Scalars['Boolean']['input']>
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
@@ -1288,14 +1610,14 @@ export type GoalWhere = {
   location_EQ?: InputMaybe<Scalars['String']['input']>
   location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  motivatesPerson?: InputMaybe<PersonWhere>
+  motivatesPersonAggregate?: InputMaybe<GoalMotivatesPersonAggregateInput>
+  motivatesPersonConnection?: InputMaybe<GoalMotivatesPersonConnectionWhere>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  person?: InputMaybe<PersonWhere>
-  personAggregate?: InputMaybe<GoalPersonAggregateInput>
-  personConnection?: InputMaybe<GoalPersonConnectionWhere>
   photo_CONTAINS?: InputMaybe<Scalars['String']['input']>
   photo_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   photo_EQ?: InputMaybe<Scalars['String']['input']>
@@ -1437,6 +1759,7 @@ export type MemberCommunityCommunityNodeAggregateSelection = {
 }
 
 export type MemberCommunityConnectFieldInput = {
+  connect?: InputMaybe<Array<CommunityConnectInput>>
   where?: InputMaybe<CommunityConnectWhere>
 }
 
@@ -1463,10 +1786,12 @@ export type MemberCommunityCreateFieldInput = {
 }
 
 export type MemberCommunityDeleteFieldInput = {
+  delete?: InputMaybe<CommunityDeleteInput>
   where?: InputMaybe<MemberCommunityConnectionWhere>
 }
 
 export type MemberCommunityDisconnectFieldInput = {
+  disconnect?: InputMaybe<CommunityDisconnectInput>
   where?: InputMaybe<MemberCommunityConnectionWhere>
 }
 
@@ -1913,6 +2238,7 @@ export type Mutation = {
   createGoals: CreateGoalsMutationResponse
   createMembers: CreateMembersMutationResponse
   createPeople: CreatePeopleMutationResponse
+  createResources: CreateResourcesMutationResponse
   deleteAreas: DeleteInfo
   deleteCarePoints: DeleteInfo
   deleteCommunities: DeleteInfo
@@ -1920,6 +2246,7 @@ export type Mutation = {
   deleteGoals: DeleteInfo
   deleteMembers: DeleteInfo
   deletePeople: DeleteInfo
+  deleteResources: DeleteInfo
   updateAreas: UpdateAreasMutationResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
@@ -1927,6 +2254,7 @@ export type Mutation = {
   updateGoals: UpdateGoalsMutationResponse
   updateMembers: UpdateMembersMutationResponse
   updatePeople: UpdatePeopleMutationResponse
+  updateResources: UpdateResourcesMutationResponse
 }
 
 export type MutationCreateAreasArgs = {
@@ -1957,6 +2285,10 @@ export type MutationCreatePeopleArgs = {
   input: Array<PersonCreateInput>
 }
 
+export type MutationCreateResourcesArgs = {
+  input: Array<ResourceCreateInput>
+}
+
 export type MutationDeleteAreasArgs = {
   where?: InputMaybe<AreaWhere>
 }
@@ -1966,6 +2298,7 @@ export type MutationDeleteCarePointsArgs = {
 }
 
 export type MutationDeleteCommunitiesArgs = {
+  delete?: InputMaybe<CommunityDeleteInput>
   where?: InputMaybe<CommunityWhere>
 }
 
@@ -1987,6 +2320,11 @@ export type MutationDeleteMembersArgs = {
 export type MutationDeletePeopleArgs = {
   delete?: InputMaybe<PersonDeleteInput>
   where?: InputMaybe<PersonWhere>
+}
+
+export type MutationDeleteResourcesArgs = {
+  delete?: InputMaybe<ResourceDeleteInput>
+  where?: InputMaybe<ResourceWhere>
 }
 
 export type MutationUpdateAreasArgs = {
@@ -2024,6 +2362,11 @@ export type MutationUpdatePeopleArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type MutationUpdateResourcesArgs = {
+  update?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<ResourceWhere>
+}
+
 /** Pagination information (Relay) */
 export type PageInfo = {
   __typename?: 'PageInfo'
@@ -2056,6 +2399,7 @@ export type Person = PersonInterface & {
   manual?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
   phone?: Maybe<Scalars['String']['output']>
+  photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
@@ -2091,6 +2435,7 @@ export type PersonAggregateSelection = {
   location: StringAggregateSelection
   manual: StringAggregateSelection
   phone: StringAggregateSelection
+  photo: StringAggregateSelection
   pronouns: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
@@ -2133,6 +2478,7 @@ export type PersonCreateInput = {
   location?: InputMaybe<Scalars['String']['input']>
   manual?: InputMaybe<Scalars['String']['input']>
   phone?: InputMaybe<Scalars['String']['input']>
+  photo?: InputMaybe<Scalars['String']['input']>
   pronouns?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -2703,6 +3049,7 @@ export type PersonSort = {
   location?: InputMaybe<SortDirection>
   manual?: InputMaybe<SortDirection>
   phone?: InputMaybe<SortDirection>
+  photo?: InputMaybe<SortDirection>
   pronouns?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
 }
@@ -2717,6 +3064,7 @@ export type PersonUpdateInput = {
   location_SET?: InputMaybe<Scalars['String']['input']>
   manual_SET?: InputMaybe<Scalars['String']['input']>
   phone_SET?: InputMaybe<Scalars['String']['input']>
+  photo_SET?: InputMaybe<Scalars['String']['input']>
   pronouns_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -2792,6 +3140,11 @@ export type PersonWhere = {
   phone_EQ?: InputMaybe<Scalars['String']['input']>
   phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  photo_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  photo_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  photo_EQ?: InputMaybe<Scalars['String']['input']>
+  photo_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  photo_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   pronouns_CONTAINS?: InputMaybe<Scalars['String']['input']>
   pronouns_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   pronouns_EQ?: InputMaybe<Scalars['String']['input']>
@@ -2831,6 +3184,9 @@ export type Query = {
   personInterfaces: Array<PersonInterface>
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
+  resources: Array<Resource>
+  resourcesAggregate: ResourceAggregateSelection
+  resourcesConnection: ResourcesConnection
 }
 
 export type QueryAreasArgs = {
@@ -2977,6 +3333,968 @@ export type QueryPersonInterfacesConnectionArgs = {
   where?: InputMaybe<PersonInterfaceWhere>
 }
 
+export type QueryResourcesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceSort>>
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type QueryResourcesAggregateArgs = {
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type QueryResourcesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceSort>>
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type Resource = {
+  __typename?: 'Resource'
+  appliedToCarePoint: Array<CarePoint>
+  appliedToCarePointAggregate?: Maybe<ResourceCarePointAppliedToCarePointAggregationSelection>
+  appliedToCarePointConnection: ResourceAppliedToCarePointConnection
+  createdAt: Scalars['DateTime']['output']
+  dependsOnResource: Array<Resource>
+  dependsOnResourceAggregate?: Maybe<ResourceResourceDependsOnResourceAggregationSelection>
+  dependsOnResourceConnection: ResourceDependsOnResourceConnection
+  description?: Maybe<Scalars['String']['output']>
+  id: Scalars['ID']['output']
+  location?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+  providedByPerson: Array<Person>
+  providedByPersonAggregate?: Maybe<ResourcePersonProvidedByPersonAggregationSelection>
+  providedByPersonConnection: ResourceProvidedByPersonConnection
+  status?: Maybe<Scalars['String']['output']>
+  time?: Maybe<Scalars['String']['output']>
+  updatedAt?: Maybe<Scalars['DateTime']['output']>
+  why?: Maybe<Scalars['String']['output']>
+}
+
+export type ResourceAppliedToCarePointArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CarePointSort>>
+  where?: InputMaybe<CarePointWhere>
+}
+
+export type ResourceAppliedToCarePointAggregateArgs = {
+  where?: InputMaybe<CarePointWhere>
+}
+
+export type ResourceAppliedToCarePointConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceAppliedToCarePointConnectionSort>>
+  where?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+}
+
+export type ResourceDependsOnResourceArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceSort>>
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type ResourceDependsOnResourceAggregateArgs = {
+  where?: InputMaybe<ResourceWhere>
+}
+
+export type ResourceDependsOnResourceConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceDependsOnResourceConnectionSort>>
+  where?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+}
+
+export type ResourceProvidedByPersonArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+export type ResourceProvidedByPersonAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+export type ResourceProvidedByPersonConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResourceProvidedByPersonConnectionSort>>
+  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+}
+
+export type ResourceAggregateSelection = {
+  __typename?: 'ResourceAggregateSelection'
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  status: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
+export type ResourceAppliedToCarePointAggregateInput = {
+  AND?: InputMaybe<Array<ResourceAppliedToCarePointAggregateInput>>
+  NOT?: InputMaybe<ResourceAppliedToCarePointAggregateInput>
+  OR?: InputMaybe<Array<ResourceAppliedToCarePointAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResourceAppliedToCarePointNodeAggregationWhereInput>
+}
+
+export type ResourceAppliedToCarePointConnectFieldInput = {
+  where?: InputMaybe<CarePointConnectWhere>
+}
+
+export type ResourceAppliedToCarePointConnection = {
+  __typename?: 'ResourceAppliedToCarePointConnection'
+  edges: Array<ResourceAppliedToCarePointRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResourceAppliedToCarePointConnectionSort = {
+  node?: InputMaybe<CarePointSort>
+}
+
+export type ResourceAppliedToCarePointConnectionWhere = {
+  AND?: InputMaybe<Array<ResourceAppliedToCarePointConnectionWhere>>
+  NOT?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+  OR?: InputMaybe<Array<ResourceAppliedToCarePointConnectionWhere>>
+  node?: InputMaybe<CarePointWhere>
+}
+
+export type ResourceAppliedToCarePointCreateFieldInput = {
+  node: CarePointCreateInput
+}
+
+export type ResourceAppliedToCarePointDeleteFieldInput = {
+  where?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+}
+
+export type ResourceAppliedToCarePointDisconnectFieldInput = {
+  where?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+}
+
+export type ResourceAppliedToCarePointFieldInput = {
+  connect?: InputMaybe<Array<ResourceAppliedToCarePointConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceAppliedToCarePointCreateFieldInput>>
+}
+
+export type ResourceAppliedToCarePointNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourceAppliedToCarePointNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourceAppliedToCarePointNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourceAppliedToCarePointNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type ResourceAppliedToCarePointRelationship = {
+  __typename?: 'ResourceAppliedToCarePointRelationship'
+  cursor: Scalars['String']['output']
+  node: CarePoint
+}
+
+export type ResourceAppliedToCarePointUpdateConnectionInput = {
+  node?: InputMaybe<CarePointUpdateInput>
+}
+
+export type ResourceAppliedToCarePointUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourceAppliedToCarePointConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceAppliedToCarePointCreateFieldInput>>
+  delete?: InputMaybe<Array<ResourceAppliedToCarePointDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResourceAppliedToCarePointDisconnectFieldInput>>
+  update?: InputMaybe<ResourceAppliedToCarePointUpdateConnectionInput>
+  where?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+}
+
+export type ResourceCarePointAppliedToCarePointAggregationSelection = {
+  __typename?: 'ResourceCarePointAppliedToCarePointAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResourceCarePointAppliedToCarePointNodeAggregateSelection>
+}
+
+export type ResourceCarePointAppliedToCarePointNodeAggregateSelection = {
+  __typename?: 'ResourceCarePointAppliedToCarePointNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  id: IdAggregateSelection
+  status: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type ResourceConnectInput = {
+  appliedToCarePoint?: InputMaybe<
+    Array<ResourceAppliedToCarePointConnectFieldInput>
+  >
+  dependsOnResource?: InputMaybe<
+    Array<ResourceDependsOnResourceConnectFieldInput>
+  >
+  providedByPerson?: InputMaybe<
+    Array<ResourceProvidedByPersonConnectFieldInput>
+  >
+}
+
+export type ResourceConnectWhere = {
+  node: ResourceWhere
+}
+
+export type ResourceCreateInput = {
+  appliedToCarePoint?: InputMaybe<ResourceAppliedToCarePointFieldInput>
+  dependsOnResource?: InputMaybe<ResourceDependsOnResourceFieldInput>
+  description?: InputMaybe<Scalars['String']['input']>
+  location?: InputMaybe<Scalars['String']['input']>
+  name: Scalars['String']['input']
+  providedByPerson?: InputMaybe<ResourceProvidedByPersonFieldInput>
+  status?: InputMaybe<Scalars['String']['input']>
+  time?: InputMaybe<Scalars['String']['input']>
+  why?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ResourceDeleteInput = {
+  appliedToCarePoint?: InputMaybe<
+    Array<ResourceAppliedToCarePointDeleteFieldInput>
+  >
+  dependsOnResource?: InputMaybe<
+    Array<ResourceDependsOnResourceDeleteFieldInput>
+  >
+  providedByPerson?: InputMaybe<Array<ResourceProvidedByPersonDeleteFieldInput>>
+}
+
+export type ResourceDependsOnResourceAggregateInput = {
+  AND?: InputMaybe<Array<ResourceDependsOnResourceAggregateInput>>
+  NOT?: InputMaybe<ResourceDependsOnResourceAggregateInput>
+  OR?: InputMaybe<Array<ResourceDependsOnResourceAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResourceDependsOnResourceNodeAggregationWhereInput>
+}
+
+export type ResourceDependsOnResourceConnectFieldInput = {
+  connect?: InputMaybe<Array<ResourceConnectInput>>
+  where?: InputMaybe<ResourceConnectWhere>
+}
+
+export type ResourceDependsOnResourceConnection = {
+  __typename?: 'ResourceDependsOnResourceConnection'
+  edges: Array<ResourceDependsOnResourceRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResourceDependsOnResourceConnectionSort = {
+  node?: InputMaybe<ResourceSort>
+}
+
+export type ResourceDependsOnResourceConnectionWhere = {
+  AND?: InputMaybe<Array<ResourceDependsOnResourceConnectionWhere>>
+  NOT?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+  OR?: InputMaybe<Array<ResourceDependsOnResourceConnectionWhere>>
+  node?: InputMaybe<ResourceWhere>
+}
+
+export type ResourceDependsOnResourceCreateFieldInput = {
+  node: ResourceCreateInput
+}
+
+export type ResourceDependsOnResourceDeleteFieldInput = {
+  delete?: InputMaybe<ResourceDeleteInput>
+  where?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+}
+
+export type ResourceDependsOnResourceDisconnectFieldInput = {
+  disconnect?: InputMaybe<ResourceDisconnectInput>
+  where?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+}
+
+export type ResourceDependsOnResourceFieldInput = {
+  connect?: InputMaybe<Array<ResourceDependsOnResourceConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceDependsOnResourceCreateFieldInput>>
+}
+
+export type ResourceDependsOnResourceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourceDependsOnResourceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourceDependsOnResourceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourceDependsOnResourceNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  time_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResourceDependsOnResourceRelationship = {
+  __typename?: 'ResourceDependsOnResourceRelationship'
+  cursor: Scalars['String']['output']
+  node: Resource
+}
+
+export type ResourceDependsOnResourceUpdateConnectionInput = {
+  node?: InputMaybe<ResourceUpdateInput>
+}
+
+export type ResourceDependsOnResourceUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourceDependsOnResourceConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceDependsOnResourceCreateFieldInput>>
+  delete?: InputMaybe<Array<ResourceDependsOnResourceDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResourceDependsOnResourceDisconnectFieldInput>>
+  update?: InputMaybe<ResourceDependsOnResourceUpdateConnectionInput>
+  where?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+}
+
+export type ResourceDisconnectInput = {
+  appliedToCarePoint?: InputMaybe<
+    Array<ResourceAppliedToCarePointDisconnectFieldInput>
+  >
+  dependsOnResource?: InputMaybe<
+    Array<ResourceDependsOnResourceDisconnectFieldInput>
+  >
+  providedByPerson?: InputMaybe<
+    Array<ResourceProvidedByPersonDisconnectFieldInput>
+  >
+}
+
+export type ResourceEdge = {
+  __typename?: 'ResourceEdge'
+  cursor: Scalars['String']['output']
+  node: Resource
+}
+
+export type ResourceOptions = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  /** Specify one or more ResourceSort objects to sort Resources by. The sorts will be applied in the order in which they are arranged in the array. */
+  sort?: InputMaybe<Array<ResourceSort>>
+}
+
+export type ResourcePersonProvidedByPersonAggregationSelection = {
+  __typename?: 'ResourcePersonProvidedByPersonAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResourcePersonProvidedByPersonNodeAggregateSelection>
+}
+
+export type ResourcePersonProvidedByPersonNodeAggregateSelection = {
+  __typename?: 'ResourcePersonProvidedByPersonNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  gender: StringAggregateSelection
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  manual: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type ResourceProvidedByPersonAggregateInput = {
+  AND?: InputMaybe<Array<ResourceProvidedByPersonAggregateInput>>
+  NOT?: InputMaybe<ResourceProvidedByPersonAggregateInput>
+  OR?: InputMaybe<Array<ResourceProvidedByPersonAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResourceProvidedByPersonNodeAggregationWhereInput>
+}
+
+export type ResourceProvidedByPersonConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type ResourceProvidedByPersonConnection = {
+  __typename?: 'ResourceProvidedByPersonConnection'
+  edges: Array<ResourceProvidedByPersonRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResourceProvidedByPersonConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type ResourceProvidedByPersonConnectionWhere = {
+  AND?: InputMaybe<Array<ResourceProvidedByPersonConnectionWhere>>
+  NOT?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+  OR?: InputMaybe<Array<ResourceProvidedByPersonConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type ResourceProvidedByPersonCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type ResourceProvidedByPersonDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+}
+
+export type ResourceProvidedByPersonDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+}
+
+export type ResourceProvidedByPersonFieldInput = {
+  connect?: InputMaybe<Array<ResourceProvidedByPersonConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceProvidedByPersonCreateFieldInput>>
+}
+
+export type ResourceProvidedByPersonNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourceProvidedByPersonNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourceProvidedByPersonNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourceProvidedByPersonNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  manual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  manual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  manual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  manual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  manual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  manual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  manual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  manual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  manual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  manual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  manual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  manual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  manual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  manual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  manual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  phone_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type ResourceProvidedByPersonRelationship = {
+  __typename?: 'ResourceProvidedByPersonRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type ResourceProvidedByPersonUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+}
+
+export type ResourceProvidedByPersonUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourceProvidedByPersonConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceProvidedByPersonCreateFieldInput>>
+  delete?: InputMaybe<Array<ResourceProvidedByPersonDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResourceProvidedByPersonDisconnectFieldInput>>
+  update?: InputMaybe<ResourceProvidedByPersonUpdateConnectionInput>
+  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+}
+
+export type ResourceResourceDependsOnResourceAggregationSelection = {
+  __typename?: 'ResourceResourceDependsOnResourceAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResourceResourceDependsOnResourceNodeAggregateSelection>
+}
+
+export type ResourceResourceDependsOnResourceNodeAggregateSelection = {
+  __typename?: 'ResourceResourceDependsOnResourceNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  status: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
+/** Fields to sort Resources by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResourceSort object. */
+export type ResourceSort = {
+  createdAt?: InputMaybe<SortDirection>
+  description?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
+  name?: InputMaybe<SortDirection>
+  status?: InputMaybe<SortDirection>
+  time?: InputMaybe<SortDirection>
+  updatedAt?: InputMaybe<SortDirection>
+  why?: InputMaybe<SortDirection>
+}
+
+export type ResourceUpdateInput = {
+  appliedToCarePoint?: InputMaybe<
+    Array<ResourceAppliedToCarePointUpdateFieldInput>
+  >
+  dependsOnResource?: InputMaybe<
+    Array<ResourceDependsOnResourceUpdateFieldInput>
+  >
+  description_SET?: InputMaybe<Scalars['String']['input']>
+  location_SET?: InputMaybe<Scalars['String']['input']>
+  name_SET?: InputMaybe<Scalars['String']['input']>
+  providedByPerson?: InputMaybe<Array<ResourceProvidedByPersonUpdateFieldInput>>
+  status_SET?: InputMaybe<Scalars['String']['input']>
+  time_SET?: InputMaybe<Scalars['String']['input']>
+  why_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ResourceWhere = {
+  AND?: InputMaybe<Array<ResourceWhere>>
+  NOT?: InputMaybe<ResourceWhere>
+  OR?: InputMaybe<Array<ResourceWhere>>
+  appliedToCarePointAggregate?: InputMaybe<ResourceAppliedToCarePointAggregateInput>
+  /** Return Resources where all of the related ResourceAppliedToCarePointConnections match this filter */
+  appliedToCarePointConnection_ALL?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+  /** Return Resources where none of the related ResourceAppliedToCarePointConnections match this filter */
+  appliedToCarePointConnection_NONE?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+  /** Return Resources where one of the related ResourceAppliedToCarePointConnections match this filter */
+  appliedToCarePointConnection_SINGLE?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+  /** Return Resources where some of the related ResourceAppliedToCarePointConnections match this filter */
+  appliedToCarePointConnection_SOME?: InputMaybe<ResourceAppliedToCarePointConnectionWhere>
+  /** Return Resources where all of the related CarePoints match this filter */
+  appliedToCarePoint_ALL?: InputMaybe<CarePointWhere>
+  /** Return Resources where none of the related CarePoints match this filter */
+  appliedToCarePoint_NONE?: InputMaybe<CarePointWhere>
+  /** Return Resources where one of the related CarePoints match this filter */
+  appliedToCarePoint_SINGLE?: InputMaybe<CarePointWhere>
+  /** Return Resources where some of the related CarePoints match this filter */
+  appliedToCarePoint_SOME?: InputMaybe<CarePointWhere>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  dependsOnResourceAggregate?: InputMaybe<ResourceDependsOnResourceAggregateInput>
+  /** Return Resources where all of the related ResourceDependsOnResourceConnections match this filter */
+  dependsOnResourceConnection_ALL?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+  /** Return Resources where none of the related ResourceDependsOnResourceConnections match this filter */
+  dependsOnResourceConnection_NONE?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+  /** Return Resources where one of the related ResourceDependsOnResourceConnections match this filter */
+  dependsOnResourceConnection_SINGLE?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+  /** Return Resources where some of the related ResourceDependsOnResourceConnections match this filter */
+  dependsOnResourceConnection_SOME?: InputMaybe<ResourceDependsOnResourceConnectionWhere>
+  /** Return Resources where all of the related Resources match this filter */
+  dependsOnResource_ALL?: InputMaybe<ResourceWhere>
+  /** Return Resources where none of the related Resources match this filter */
+  dependsOnResource_NONE?: InputMaybe<ResourceWhere>
+  /** Return Resources where one of the related Resources match this filter */
+  dependsOnResource_SINGLE?: InputMaybe<ResourceWhere>
+  /** Return Resources where some of the related Resources match this filter */
+  dependsOnResource_SOME?: InputMaybe<ResourceWhere>
+  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  description_EQ?: InputMaybe<Scalars['String']['input']>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  location_EQ?: InputMaybe<Scalars['String']['input']>
+  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  name_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  name_EQ?: InputMaybe<Scalars['String']['input']>
+  name_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  providedByPersonAggregate?: InputMaybe<ResourceProvidedByPersonAggregateInput>
+  /** Return Resources where all of the related ResourceProvidedByPersonConnections match this filter */
+  providedByPersonConnection_ALL?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+  /** Return Resources where none of the related ResourceProvidedByPersonConnections match this filter */
+  providedByPersonConnection_NONE?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+  /** Return Resources where one of the related ResourceProvidedByPersonConnections match this filter */
+  providedByPersonConnection_SINGLE?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+  /** Return Resources where some of the related ResourceProvidedByPersonConnections match this filter */
+  providedByPersonConnection_SOME?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+  /** Return Resources where all of the related People match this filter */
+  providedByPerson_ALL?: InputMaybe<PersonWhere>
+  /** Return Resources where none of the related People match this filter */
+  providedByPerson_NONE?: InputMaybe<PersonWhere>
+  /** Return Resources where one of the related People match this filter */
+  providedByPerson_SINGLE?: InputMaybe<PersonWhere>
+  /** Return Resources where some of the related People match this filter */
+  providedByPerson_SOME?: InputMaybe<PersonWhere>
+  status_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_EQ?: InputMaybe<Scalars['String']['input']>
+  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  time_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  time_EQ?: InputMaybe<Scalars['String']['input']>
+  time_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  time_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_EQ?: InputMaybe<Scalars['String']['input']>
+  why_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ResourcesConnection = {
+  __typename?: 'ResourcesConnection'
+  edges: Array<ResourceEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** An enum for sorting in either ascending or descending order. */
 export enum SortDirection {
   /** Sort by field values in ascending order. */
@@ -3040,6 +4358,12 @@ export type UpdatePeopleMutationResponse = {
   __typename?: 'UpdatePeopleMutationResponse'
   info: UpdateInfo
   people: Array<Person>
+}
+
+export type UpdateResourcesMutationResponse = {
+  __typename?: 'UpdateResourcesMutationResponse'
+  info: UpdateInfo
+  resources: Array<Resource>
 }
 
 export type CreateCoreValuesMutationVariables = Exact<{
@@ -3131,6 +4455,33 @@ export type CreateMembersMutation = {
   }
 }
 
+export type CreateResourcesMutationVariables = Exact<{
+  input: Array<ResourceCreateInput> | ResourceCreateInput
+}>
+
+export type CreateResourcesMutation = {
+  __typename?: 'Mutation'
+  createResources: {
+    __typename?: 'CreateResourcesMutationResponse'
+    resources: Array<{
+      __typename?: 'Resource'
+      id: string
+      name: string
+      description?: string | null
+      status?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      dependsOnResource: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+      }>
+      appliedToCarePoint: Array<{ __typename?: 'CarePoint'; id: string }>
+    }>
+  }
+}
+
 export type GetCoreValueQueryVariables = Exact<{
   id: Scalars['ID']['input']
 }>
@@ -3147,7 +4498,7 @@ export type GetCoreValueQuery = {
     alignmentExamples?: string | null
     description?: string | null
     why?: string | null
-    guides: Array<{ __typename?: 'Person'; id: string; name: string }>
+    guidesPerson: Array<{ __typename?: 'Person'; id: string; name: string }>
   }>
 }
 
@@ -3204,7 +4555,7 @@ export type GetGoalQuery = {
     location?: string | null
     time?: string | null
     createdAt: any
-    person: { __typename?: 'Person'; id: string; name: string }
+    motivatesPerson: { __typename?: 'Person'; id: string; name: string }
   }>
 }
 
@@ -3227,7 +4578,7 @@ export type GetAllGoalsQuery = {
     location?: string | null
     time?: string | null
     createdAt: any
-    person: { __typename?: 'Person'; id: string; name: string }
+    motivatesPerson: { __typename?: 'Person'; id: string; name: string }
   }>
 }
 
@@ -3304,6 +4655,68 @@ export type GetMemberQuery = {
     email?: string | null
     gender?: string | null
     phone?: string | null
+  }>
+}
+
+export type GetResourceQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetResourceQuery = {
+  __typename?: 'Query'
+  resources: Array<{
+    __typename?: 'Resource'
+    id: string
+    name: string
+    description?: string | null
+    status?: string | null
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    dependsOnResource: Array<{
+      __typename?: 'Resource'
+      id: string
+      name: string
+    }>
+    appliedToCarePoint: Array<{ __typename?: 'CarePoint'; id: string }>
+    providedByPerson: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      phone?: string | null
+      photo?: string | null
+    }>
+  }>
+}
+
+export type GetAllResourcesQueryVariables = Exact<{
+  where?: InputMaybe<ResourceWhere>
+}>
+
+export type GetAllResourcesQuery = {
+  __typename?: 'Query'
+  resources: Array<{
+    __typename?: 'Resource'
+    id: string
+    name: string
+    description?: string | null
+    status?: string | null
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    dependsOnResource: Array<{
+      __typename?: 'Resource'
+      id: string
+      name: string
+    }>
+    appliedToCarePoint: Array<{ __typename?: 'CarePoint'; id: string }>
+    providedByPerson: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      phone?: string | null
+      photo?: string | null
+    }>
   }>
 }
 
@@ -3669,6 +5082,120 @@ export const CreateMembersDocument = {
   CreateMembersMutation,
   CreateMembersMutationVariables
 >
+export const CreateResourcesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateResources' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'ResourceCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createResources' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dependsOnResource' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'appliedToCarePoint' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateResourcesMutation,
+  CreateResourcesMutationVariables
+>
 export const GetCoreValueDocument = {
   kind: 'Document',
   definitions: [
@@ -3730,7 +5257,7 @@ export const GetCoreValueDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'guides' },
+                  name: { kind: 'Name', value: 'guidesPerson' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -3938,7 +5465,7 @@ export const GetGoalDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'person' },
+                  name: { kind: 'Name', value: 'motivatesPerson' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -4010,7 +5537,7 @@ export const GetAllGoalsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'person' },
+                  name: { kind: 'Name', value: 'motivatesPerson' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -4248,3 +5775,188 @@ export const GetMemberDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMemberQuery, GetMemberQueryVariables>
+export const GetResourceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getResource' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resources' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'dependsOnResource' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'appliedToCarePoint' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'providedByPerson' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetResourceQuery, GetResourceQueryVariables>
+export const GetAllResourcesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAllResources' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'ResourceWhere' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resources' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'dependsOnResource' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'appliedToCarePoint' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'providedByPerson' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllResourcesQuery,
+  GetAllResourcesQueryVariables
+>

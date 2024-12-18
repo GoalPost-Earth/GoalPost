@@ -25,7 +25,7 @@ export default async function AllGoals() {
             </Card.Body>
             <Card.Footer justifyContent="flex-end">
               <Text fontSize="small" fontWeight="bold">
-                {goal.person.name}
+                {goal.motivatesPerson.name}
               </Text>
             </Card.Footer>
           </Card.Root>

@@ -14,7 +14,7 @@ export const GET_GOAL = graphql(`
       location
       time
       createdAt
-      person {
+      motivatesPerson {
         id
         name
       }
@@ -36,7 +36,7 @@ export const GET_ALL_GOALS = graphql(`
       location
       time
       createdAt
-      person {
+      motivatesPerson {
         id
         name
       }

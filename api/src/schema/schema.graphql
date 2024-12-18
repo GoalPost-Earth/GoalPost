@@ -18,6 +18,7 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   phone: String
+  photo: String
   email: String
   manual: String
   interests: String
@@ -84,6 +85,8 @@ type CarePoint @node {
 type Community @node {
   id: ID! @id
   name: String!
+  hasAccessToResource: [Resource!]!
+    @relationship(type: "HAS_ACCESS_TO", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -101,7 +104,7 @@ type CoreValue @node {
   alignmentExamples: String
   description: String
   why: String
-  guides: [Person!]! @relationship(type: "GUIDED_BY", direction: IN)
+  guidesPerson: [Person!]! @relationship(type: "GUIDED_BY", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -121,7 +124,28 @@ type Goal @node {
   status: Boolean
   location: String
   time: String
-  person: Person! @relationship(type: "MOTIVATED_BY", direction: IN)
+  motivatesPerson: Person! @relationship(type: "MOTIVATED_BY", direction: IN)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Resource @node {
+  id: ID! @id
+  name: String!
+  description: String
+  status: String
+  why: String
+  location: String
+  time: String
+  providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
+  dependsOnResource: [Resource!]!
+    @relationship(type: "DEPENDS_ON", direction: OUT)
+  appliedToCarePoint: [CarePoint!]!
+    @relationship(type: "APPLIED_TO", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
