@@ -6,7 +6,7 @@ export const GET_MEMBER = graphql(`
       id
       firstName
       lastName
-      fullName
+      name
       email
       gender
       phone

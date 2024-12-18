@@ -34,7 +34,7 @@ export default async function ViewPersonPage({
             // size="2xl"
             alt="Profile Picture"
           />
-          <Text>{person?.fullName}</Text>
+          <Text>{person?.name}</Text>
 
           <ProfileDetailCard title="First Name" detail={person.firstName} />
           <ProfileDetailCard title="Last Name" detail={person.lastName} />

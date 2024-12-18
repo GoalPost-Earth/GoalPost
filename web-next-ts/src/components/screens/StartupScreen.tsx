@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { SplashScreen, GetStartedScreen } from '@/components/screens'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
-const  StartupScreen = ({ children }: { children: React.ReactNode }) => {
+const StartupScreen = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser()
   const [showSplash, setShowSplash] = useState(true)
 
@@ -27,4 +27,4 @@ const  StartupScreen = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
-export default StartupScreen 
+export default StartupScreen

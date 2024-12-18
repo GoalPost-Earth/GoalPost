@@ -1,31 +1,80 @@
 import { GET_ALL_PEOPLE } from '@/app/graphql'
 import { query } from '@/app/lib/apollo-client'
 import { Avatar } from '@/components/ui'
-import { Card, Container, Heading, HStack, Text } from '@chakra-ui/react'
+import {
+  Box,
+  Card,
+  Container,
+  Heading,
+  HStack,
+  IconButton,
+  Span,
+  Text,
+} from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
+import { LuPhone } from 'react-icons/lu'
 
 export default async function AllPeople() {
   const { data } = await query({
     query: GET_ALL_PEOPLE,
   })
 
-  const people = data?.people
+  const people = data?.people ?? []
 
   return (
     <Container>
       <Heading>All People</Heading>
       {people.map((person) => (
         <Link href={'/person/' + person.id} key={person.id}>
-          <Card.Root key={person.id} my={1}>
+          <Card.Root my={1}>
             <Card.Header p={2} bgColor="gray.100">
               <HStack>
-                <Avatar src="https://bit.ly/dan-abramov" /> {person.fullName}
+                <Avatar src="https://bit.ly/dan-abramov" /> {person.name}
               </HStack>
             </Card.Header>
             <Card.Body p={2}>
               <Text>{person.email}</Text>
-              <Text>{person.phone}</Text>
+              {!!person.phone && (
+                <>
+                  <Link href={`tel:${person.phone}`}>
+                    <HStack>
+                      <IconButton
+                        colorPalette="brand"
+                        aria-label="phone"
+                        size="xs"
+                        borderRadius={100}
+                      >
+                        <LuPhone />
+                      </IconButton>
+                      <Text>{person.phone}</Text>
+                    </HStack>
+                  </Link>
+
+                  <Box my={2}>
+                    <hr />
+                  </Box>
+                </>
+              )}
+
+              {!!person.guidedBy.length && (
+                <>
+                  <Box>
+                    <Heading size="sm">Core Values:</Heading>
+                    {person.guidedBy.map((coreValue, index) => (
+                      <Text as="span" fontSize="sm">
+                        {coreValue.name}
+                        {index < person.guidedBy.length - 1 && (
+                          <Text as="span">, </Text>
+                        )}
+                      </Text>
+                    ))}
+                  </Box>
+                  <Box my={2}>
+                    <hr />
+                  </Box>
+                </>
+              )}
             </Card.Body>
           </Card.Root>
         </Link>

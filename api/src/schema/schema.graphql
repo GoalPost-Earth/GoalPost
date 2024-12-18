@@ -2,11 +2,12 @@ interface PersonInterface {
   id: ID!
   firstName: String!
   lastName: String!
-  fullName: String!
+  name: String!
   phone: String
   email: String
   gender: String
   location: String
+  guidedBy: [CoreValue!]! @declareRelationship
   createdAt: DateTime!
   updatedAt: DateTime
 }
@@ -15,7 +16,7 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
   id: ID! @id
   firstName: String!
   lastName: String!
-  fullName: String! @customResolver(requires: "firstName lastName")
+  name: String! @customResolver(requires: "firstName lastName")
   phone: String
   email: String
   manual: String
@@ -23,6 +24,7 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
   gender: String
   pronouns: String
   location: String
+  guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -36,11 +38,12 @@ type Member implements PersonInterface @node(labels: ["Member"]) {
   authId: String!
   firstName: String!
   lastName: String!
-  fullName: String! @customResolver(requires: "firstName lastName")
+  name: String! @customResolver(requires: "firstName lastName")
   phone: String
   email: String
   gender: String
   location: String
+  guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -92,6 +95,19 @@ type Community @node {
 type CoreValue @node {
   id: ID! @id
   name: String!
+  caresFor: String
+  whoSupports: String
+  alignmentChallenges: String
+  alignmentExamples: String
+  description: String
+  why: String
+  guides: [Person!]! @relationship(type: "GUIDED_BY", direction: IN)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
 }
 
 type Goal @node {
@@ -105,6 +121,7 @@ type Goal @node {
   status: Boolean
   location: String
   time: String
+  person: Person! @relationship(type: "MOTIVATED_BY", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)

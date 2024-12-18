@@ -6,7 +6,7 @@ export const GET_PERSON = graphql(`
       id
       firstName
       lastName
-      fullName
+      name
       email
       phone
       manual
@@ -19,12 +19,12 @@ export const GET_PERSON = graphql(`
 `)
 
 export const GET_ALL_PEOPLE = graphql(`
-  query getAllPeople {
-    people {
+  query getAllPeople($where: PersonWhere) {
+    people(where: $where) {
       id
       firstName
       lastName
-      fullName
+      name
       email
       phone
       manual
@@ -32,6 +32,10 @@ export const GET_ALL_PEOPLE = graphql(`
       gender
       pronouns
       location
+      guidedBy {
+        id
+        name
+      }
       # createdAt
     }
   }

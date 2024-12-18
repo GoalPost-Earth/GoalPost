@@ -14,6 +14,32 @@ export const GET_GOAL = graphql(`
       location
       time
       createdAt
+      person {
+        id
+        name
+      }
+    }
+  }
+`)
+
+export const GET_ALL_GOALS = graphql(`
+  query getAllGoals($where: GoalWhere) {
+    goals(where: $where) {
+      id
+      name
+      type
+      description
+      caresFor
+      successMeasures
+      photo
+      status
+      location
+      time
+      createdAt
+      person {
+        id
+        name
+      }
     }
   }
 `)

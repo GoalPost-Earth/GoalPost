@@ -12,10 +12,10 @@ const resolvers = {
   // GraphQLResolveInfo
 
   Person: {
-    fullName: (source: any) => `${source.firstName} ${source.lastName}`,
+    name: (source: any) => `${source.firstName} ${source.lastName}`,
   },
   Member: {
-    fullName: (source: any) => `${source.firstName} ${source.lastName}`,
+    name: (source: any) => `${source.firstName} ${source.lastName}`,
   },
 
   Mutation: {},

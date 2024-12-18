@@ -40,7 +40,7 @@ const viewAllButtons = [
   },
   {
     name: 'View All Core Values',
-    to: '/core-value',
+    to: '/corevalue',
   },
   {
     name: 'View All Resources',

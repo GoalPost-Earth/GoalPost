@@ -1,6 +1,6 @@
 'use client'
 
-import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
+import { CREATE_COREVALUE_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
 import { Input, Select, Textarea, Checkbox } from '@/components/form'
 import { Button } from '@/components/ui'
@@ -10,7 +10,7 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
-function CreateGoal() {
+function CreateCoreValue() {
   const { user } = useUser()
   const {
     control,
@@ -19,11 +19,11 @@ function CreateGoal() {
   } = useForm()
   const router = useRouter()
 
-  const [CreateCoreValues] = useMutation(CREATE_GOAL_MUTATION)
+  const [CreateCoreValue] = useMutation(CREATE_COREVALUE_MUTATION)
 
   const onSubmit = async (data) => {
     try {
-      const res = await CreateCoreValues({
+      const res = await CreateCoreValue({
         variables: {
           input: {
             ...data,
@@ -52,29 +52,6 @@ function CreateGoal() {
             />
           </GridItem>
           <GridItem>
-            <Select
-              label="Type"
-              name="type"
-              control={control}
-              errors={errors}
-              required
-              options={[
-                { label: 'Need', value: 'need' },
-                { label: 'Offer', value: 'offer' },
-                { label: 'Wish', value: 'wish' },
-              ]}
-            />
-          </GridItem>
-          <GridItem>
-            <Textarea
-              label="Description"
-              name="description"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
             <Input
               label="Cares For"
               name="caresFor"
@@ -83,52 +60,36 @@ function CreateGoal() {
               required
             />
           </GridItem>
+          <GridItem>
+            <Input
+              label="Who Supports"
+              name="whoSupports"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
+          <GridItem>
+            <Input
+              label="Alignment Challenges"
+              name="alignmentChallenges"
+              control={control}
+              errors={errors}
+              required
+            />
+          </GridItem>
 
           <GridItem>
             <Input
-              label="Success Measures"
-              name="successMeasures"
+              label="Description"
+              name="description"
               control={control}
               errors={errors}
               required
             />
           </GridItem>
           <GridItem>
-            <Input
-              label="Photo"
-              name="photo"
-              control={control}
-              errors={errors}
-              // required
-              disabled
-            />
-          </GridItem>
-
-          <GridItem>
-            <Checkbox
-              label="Status"
-              name="status"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Location"
-              name="location"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Time"
-              name="time"
-              control={control}
-              errors={errors}
-              required
-            />
+            <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>
         </Grid>
         <Box my={5}>
@@ -136,7 +97,7 @@ function CreateGoal() {
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            Create Goal
+            Create Core Value
           </Button>
         </Center>
       </form>
@@ -144,4 +105,4 @@ function CreateGoal() {
   )
 }
 
-export default CreateGoal
+export default CreateCoreValue
