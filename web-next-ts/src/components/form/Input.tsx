@@ -40,6 +40,7 @@ const Input = (props: InputPropsType) => {
           <ChakraInput
             id={name}
             border="1px solid #CBD5E1"
+            borderRadius="10px"
             variant="subtle"
             {...field}
             {...rest}

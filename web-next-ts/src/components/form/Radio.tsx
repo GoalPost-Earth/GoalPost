@@ -10,40 +10,50 @@ export interface CustomRadioProps extends ReactHookFormComponentProps {
 type RadioPropsType = CustomRadioProps & RadioProps
 
 const Radio = (props: RadioPropsType) => {
-  const { label, name, control, errors, required, options, ...rest } = props
+  const { label, name, control, errors, options  } = props
 
   return (
-    <Fieldset.Root invalid={!!errors.value} required={required}>
+    <Fieldset.Root invalid={!!errors.value} >
       <Fieldset.Legend>{label}</Fieldset.Legend>
       <Controller
         name={name}
         control={control}
         render={({ field }) => (
-          <RadioGroup
-            id={name}
-            name={field.name}
-            value={field.value}
-            onValueChange={({ value }) => {
-              field.onChange(value)
-            }}
-          >
-            <HStack gap="6">
-              {options.map((item) => (
-                <ChakraRadio
-                  key={item.value}
-                  value={item.value}
-                  inputProps={{ onBlur: field.onBlur }}
-                  {...rest}
-                >
-                  {item.label}
-                </ChakraRadio>
-              ))}
-            </HStack>
-          </RadioGroup>
-        )}
+            <RadioGroup
+              id={name}
+              name={field.name}
+              value={field.value}
+              onValueChange={({ value }) => {
+                field.onChange(value)
+              }}
+            
+            >
+              <HStack gap={4} justifyContent={'space-between'}>
+              {options.map((item) => { 
+                const fieldValue = field.value
+                return (
+                    <ChakraRadio
+                    key={item.value}
+                    value={item.value}
+                    inputProps={{ onBlur: field.onBlur }}
+                    width={'50%'}
+                    padding={4}
+                    border="1px solid #CBD5E1"
+                    borderRadius="10px"
+                    {...fieldValue === item.value && { bg: 'gray.subtle' }}
+                  
+                  >
+                    {item.label}
+                  </ChakraRadio>
+                )
+              })}
+              </HStack>
+            </RadioGroup>
+          )
+        }
       />
       {errors.value && (
-        <Fieldset.ErrorText>{errors.value?.message}</Fieldset.ErrorText>
+        <Fieldset.ErrorText>{(errors.value.message as string)}</Fieldset.ErrorText>
       )}
     </Fieldset.Root>
   )
