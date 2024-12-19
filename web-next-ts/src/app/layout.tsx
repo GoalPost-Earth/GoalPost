@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${urbanist.variable}`}>
+    <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning >
+      <body >
         <Provider>
           <UserProvider>
             <AppProvider>

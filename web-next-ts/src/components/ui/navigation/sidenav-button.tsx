@@ -88,12 +88,13 @@ const NavHamburgerButton = () => {
               )
             })}
           </Box>
+          <Link href="/api/auth/logout?returnTo=/">
           <Button
             marginTop={50}
             paddingY={8}
             as="a"
             variant="ghost"
-            href="/api/auth/logout?returnTo=/"
+            
             width="100%"
           >
             <Flex gap="30px" alignItems="center" width="100%" px={6}>
@@ -104,7 +105,8 @@ const NavHamburgerButton = () => {
                 Logout
               </Text>
             </Flex>
-          </Button>
+            </Button>
+            </Link>
         </DrawerBody>
         <DrawerFooter>
           <HStack gap="4">

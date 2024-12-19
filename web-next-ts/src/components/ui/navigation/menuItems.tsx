@@ -18,7 +18,7 @@ export const menuItems = [
     icon: <DiscoverIcon />,
   },
   {
-    name: 'AI Chat Box',
+    name: 'AI Chat Bot',
     to: () => '/#',
     icon: <ChatBotIcon />,
   },
@@ -32,4 +32,9 @@ export const menuItems = [
     to: () => '/#',
     icon: <GraphIcon />,
   },
+  {
+    name: 'Forms',
+    to: () => '/forms',
+    icon: <GraphIcon />,
+  }
 ]

@@ -3,7 +3,7 @@
 import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { Input, Select } from '@/components/form'
-import { Button } from '@/components/ui'
+import { Avatar, Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import {
   Box,
@@ -45,8 +45,15 @@ function CreatePerson() {
 
   return (
     <Container>
-      <Heading>Create A Person</Heading>
+      <Heading>Create a Profile</Heading>
       <form onSubmit={handleSubmit(onSubmit)}>
+        <Center >
+          <Avatar
+            name="avatar"
+            src="https://bit.ly/dan-abramov"
+            size="2xl"
+          />
+          </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input

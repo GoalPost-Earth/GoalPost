@@ -68,7 +68,7 @@ export default function CreateProfilePage() {
         },
       })
 
-      router.push(`/profile/view/${response.data.createMembers.members[0].id}`)
+      router.push(`/profile/view/${response.data?.createMembers.members[0].id}`)
     } catch (error) {
       console.error(error)
     }
@@ -139,7 +139,7 @@ export default function CreateProfilePage() {
                 required
               />
 
-              <Radio
+              {/* <Radio
                 label="Role"
                 name="roleeg"
                 control={control}
@@ -148,8 +148,10 @@ export default function CreateProfilePage() {
                   { label: 'Admin', value: 'admin' },
                   { label: 'User', value: 'user' },
                 ]}
+                value={getValues('roleeg')}
                 required
-              />
+              /> */}
+
               <Input
                 label="Phone"
                 name="phone"
