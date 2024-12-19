@@ -32,7 +32,7 @@ const GetStartedScreen = () => {
       >
         <VStack width="100%" textAlign="center" gap={5}>
           <Image src="/goalpost-logo.png" alt="Goalpost Logo" width={100} height={100} />
-          <Text fontSize="2rem" fontWeight="bold">
+          <Text fontSize="2rem" fontWeight="bold" color="brand.100">
             Hello and Welcome
           </Text>
           <Text fontSize="sm" color="brand.100" opacity={0.6}>
