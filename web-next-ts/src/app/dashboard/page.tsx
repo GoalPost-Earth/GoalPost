@@ -8,7 +8,7 @@ const Dashboard = async () => {
   const session = await getSession()
   const user = session?.user
 
-  const { data } = query({
+  const { data } = await query({
     query: GET_LOGGED_IN_USER,
     variables: {
       authId: user?.sub ?? '',
@@ -17,10 +17,6 @@ const Dashboard = async () => {
 
   const member = data?.members[0]
   console.log('🚀 ~ file: page.tsx:20 ~ member:', member)
-
-  // if (!member) {
-  //   redirect('/profile/create')
-  // }
 
   return <div>page</div>
 }

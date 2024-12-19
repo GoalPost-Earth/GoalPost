@@ -1,5 +1,7 @@
-import { Box } from '@chakra-ui/react'
+import { Box, Text, VStack } from '@chakra-ui/react'
 import { Button } from '@/components/ui'
+import Link from 'next/link'
+import Image from 'next/image'
 
 const GetStartedScreen = () => {
   return (
@@ -21,15 +23,27 @@ const GetStartedScreen = () => {
         width="100%"
         height="50%"
         display="flex"
+        flexDirection="column"
         justifyContent="center"
+        padding="25px"
+        gap="50px"
         alignItems="center"
         bgGradient="linear(to-t, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0))"
       >
-        <a href="/api/auth/login?returnTo=/">
+        <VStack width="100%" textAlign="center" gap={5}>
+          <Image src="/goalpost-logo.png" alt="Goalpost Logo" width={100} height={100} />
+          <Text fontSize="2rem" fontWeight="bold">
+            Hello and Welcome
+          </Text>
+          <Text fontSize="sm" color="brand.100" opacity={0.6}>
+            Amplify your social circles,and engage, share and make your mark in the community.
+          </Text>
+        </VStack>
+        <Link href="/api/auth/login?returnTo=/">
           <Button size="lg" paddingY={6}>
-            Get Started
+            Next
           </Button>
-        </a>
+        </Link>
       </Box>
     </Box>
   )

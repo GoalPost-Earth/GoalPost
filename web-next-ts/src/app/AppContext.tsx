@@ -11,6 +11,11 @@ import {
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
+interface ContextChurch {
+  id: string
+  name: string
+  level: ChurchOptions
+}
 interface AppContextType {
   church: ContextChurch
   setChurch: ({
@@ -42,7 +47,7 @@ export const useApp = () => {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [church, setChurchState] = useState<ContextChurch>({
+  const [church, setChurch] = useState<ContextChurch>({
     id: '',
     name: '',
     level: 'council',
@@ -51,7 +56,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const sessionChurch = JSON.parse(sessionStorage.getItem('church') ?? '{}')
     if (sessionChurch.id && sessionChurch.level) {
-      setChurchState(sessionChurch)
+      setChurch(sessionChurch)
     }
   }, [])
 
@@ -68,7 +73,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         level: ChurchOptions
       }) => {
         sessionStorage.setItem('church', JSON.stringify({ id, name, level }))
-        setChurchState({ level, id, name })
+        setChurch({ level, id, name })
       },
     }),
     [church]

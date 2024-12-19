@@ -39,7 +39,7 @@ const ErrorScreen = ({ error }: ErrorScreenProps) => {
     stackLines = error.flatMap((err) => formatStackTrace(err.stack || ''))
   } else {
     errorMessage = error?.message ?? 'An error occurred while loading data'
-    stackLines = formatStackTrace(error?.stack || '')
+    stackLines = formatStackTrace(error?.stack ?? '')
   }
 
   return (

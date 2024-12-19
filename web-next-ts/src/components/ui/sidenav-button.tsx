@@ -67,7 +67,6 @@ const NavHamburgerButton = () => {
   const { church } = useApp()
 
   return (
-    <>
       <DrawerRoot
         open={open}
         onOpenChange={(e) => setOpen(e.open)}
@@ -133,7 +132,6 @@ const NavHamburgerButton = () => {
           </DrawerFooter>
         </DrawerContent>
       </DrawerRoot>
-    </>
   )
 }
 
