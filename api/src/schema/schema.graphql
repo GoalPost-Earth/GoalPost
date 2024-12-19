@@ -5,7 +5,9 @@ interface PersonInterface {
   name: String!
   phone: String
   email: String
-  gender: String
+  manual: String
+  interests: String
+  pronouns: String
   location: String
   guidedBy: [CoreValue!]! @declareRelationship
   createdAt: DateTime!
@@ -18,11 +20,9 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   phone: String
-  photo: String
   email: String
   manual: String
   interests: String
-  gender: String
   pronouns: String
   location: String
   guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
@@ -42,16 +42,34 @@ type Member implements PersonInterface @node(labels: ["Member"]) {
   name: String! @customResolver(requires: "firstName lastName")
   phone: String
   email: String
-  gender: String
+  manual: String
+  interests: String
+  pronouns: String
   location: String
+
+  # Non Inherited Fields
+  gender: String
+  status: Boolean!
+  photo: String
+  signupDate: Date!
+  avatar: String
+  favourites: String
+  passions: String
+  traits: String
+  fieldsOfCare: String
+  circles: String
+
+  # Relationships
+  connectsToMember: [Member!]!
+    @relationship(type: "CONNECTS_TO", direction: OUT)
   guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
+  community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
   updatedAt: DateTime
     @timestamp(operations: [UPDATE])
     @settable(onCreate: false, onUpdate: true)
-  community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
 }
 
 type Area @node {
@@ -85,6 +103,15 @@ type CarePoint @node {
 type Community @node {
   id: ID! @id
   name: String!
+  caresFor: String
+  activities: String
+  resultsAchieved: String
+  status: Boolean!
+  location: String
+
+  hasMembers: [Member!]! @relationship(type: "BELONGS_TO", direction: IN)
+  relatesToCommunity: [Community!]!
+    @relationship(type: "RELATES_TO", direction: OUT)
   hasAccessToResource: [Resource!]!
     @relationship(type: "HAS_ACCESS_TO", direction: OUT)
   createdAt: DateTime!
@@ -121,10 +148,10 @@ type Goal @node {
   caresFor: String
   successMeasures: String
   photo: String
-  status: Boolean
+  status: Boolean!
   location: String
   time: String
-  motivatesPerson: Person! @relationship(type: "MOTIVATED_BY", direction: IN)
+  motivatesPerson: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
