@@ -3,22 +3,28 @@
 import { Box, Flex, HStack, useDisclosure, Stack } from '@chakra-ui/react'
 import NavHamburgerButton from './sidenav-button'
 import Link from 'next/link'
-import { AppLogo } from './app-logo'
+import { AppLogo } from '../app-logo'
+import { menuItems } from './menuItems'
+import { Button } from '../button'
 
 interface Props {
+  link: string
   children: React.ReactNode
 }
 
-const Links = ['Dashboard', 'Forms', 'Show Members']
-
 const NavLink = (props: Props) => {
-  const { children } = props
+  const { children, link } = props
 
   return (
-    <Link href={'#'}>
-      <Box px={2} py={1} rounded={'md'}>
+    <Link href={link}>
+      <Button
+        colorPalette="blackAlpha"
+        variant="subtle"
+        size={'sm'}
+        borderRadius="0px"
+      >
         {children}
-      </Box>
+      </Button>
     </Link>
   )
 }
@@ -28,7 +34,7 @@ export default function Simple() {
 
   return (
     <>
-      <Box px={4} position="sticky" top={0} zIndex={100} bgColor={'white'}>
+      <Box px={4} position="sticky" top={0} zIndex={100}>
         <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
           <Box display={{ md: 'none' }}>
             <NavHamburgerButton />
@@ -37,8 +43,10 @@ export default function Simple() {
           <HStack gap={8} alignItems={'center'}>
             <AppLogo height={16} width={16} p={2} />
             <HStack as={'nav'} display={{ base: 'none', md: 'flex' }}>
-              {Links.map((link) => (
-                <NavLink key={link}>{link}</NavLink>
+              {menuItems.map((item) => (
+                <NavLink key={item.name} link={item.to()}>
+                  {item.name}
+                </NavLink>
               ))}
             </HStack>
           </HStack>

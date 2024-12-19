@@ -1,6 +1,6 @@
 import { GET_ALL_COREVALUES } from '@/app/graphql'
 import { query } from '@/app/lib/apollo-client'
-import { Card, Container, Heading, Text } from '@chakra-ui/react'
+import { Card, Container, Heading } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 
