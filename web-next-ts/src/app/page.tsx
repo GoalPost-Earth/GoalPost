@@ -28,9 +28,13 @@ const HomeClient = () => {
                 <Button colorPalette="yellow">Sign In</Button>
               </a>
             ) : (
-              <a href="/api/auth/logout?returnTo=/">
-                <Button colorPalette="red">Log out</Button>
-              </a>
+              <Button
+                as="a"
+                colorPalette="red"
+                href="/api/auth/logout?returnTo=/"
+              >
+                Log out
+              </Button>
             )}
           </Box>
         </Center>

@@ -88,18 +88,23 @@ const NavHamburgerButton = () => {
               )
             })}
           </Box>
-          <Box marginTop="50px" paddingLeft="20px">
-            <Button onClick={() => {}} border="none" background="none">
-              <Flex gap="20px" alignItems="center" width="100%">
-                <Box rounded="full" bg="red.500" padding={2}>
-                  <LogoutIcon />
-                </Box>
-                <Text color="red.500" fontSize="1rem">
-                  Logout
-                </Text>
-              </Flex>
-            </Button>
-          </Box>
+          <Button
+            marginTop={50}
+            paddingY={8}
+            as="a"
+            variant="ghost"
+            href="/api/auth/logout?returnTo=/"
+            width="100%"
+          >
+            <Flex gap="30px" alignItems="center" width="100%" px={6}>
+              <Box rounded="full" bg="red" padding={2}>
+                <LogoutIcon />
+              </Box>
+              <Text color="red.500" fontSize="1rem">
+                Logout
+              </Text>
+            </Flex>
+          </Button>
         </DrawerBody>
         <DrawerFooter>
           <HStack gap="4">
