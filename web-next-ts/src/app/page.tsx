@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { Button } from '@/components/ui'
-import { Box, Center, Container, Heading, Text } from '@chakra-ui/react'
-import Link from 'next/link'
+import { Box, Center, Container, Heading } from '@chakra-ui/react'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AvatarCarousel } from '@/components/sections'
 import { useQuery } from '@apollo/client'

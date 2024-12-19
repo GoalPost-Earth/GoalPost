@@ -7,7 +7,6 @@ export default function CreateMemberGuide() {
   const {
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm()
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { CREATE_RESOURCES_MUTATION } from '@/app/graphql/mutations/RESOURCE_MUTATIONS'
+import { CREATE_RESOURCE_MUTATION } from '@/app/graphql/mutations/RESOURCE_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { Input, Select } from '@/components/form'
 import { Button } from '@/components/ui'
@@ -24,9 +24,10 @@ function CreateResource() {
   } = useForm()
   const router = useRouter()
 
-  const [CreateResources] = useMutation(CREATE_RESOURCES_MUTATION)
+  const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
 
-  const onSubmit = async (data) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmit = async (data: any) => {
     try {
       const res = await CreateResources({
         variables: {

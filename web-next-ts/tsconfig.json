@@ -22,8 +22,8 @@
       "@/*": ["./src/*"],
       "@/utils": ["./src/app/utils"],
       "@/lib/*": ["./src/app/lib/*"],
-      "@/mutations": ["src/app/graphql/mutations"],
-      "@/queries/*": ["src/app/graphql/queries/*"]
+      "@/mutations": ["./src/app/graphql/mutations"],
+      "@/queries/*": ["./src/app/graphql/queries/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

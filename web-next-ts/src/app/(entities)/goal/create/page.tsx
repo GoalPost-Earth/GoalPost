@@ -1,6 +1,6 @@
 'use client'
 
-import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
+import { CREATE_COREVALUE_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
 import { Input, Select, Textarea, Checkbox } from '@/components/form'
 import { Button } from '@/components/ui'
@@ -8,10 +8,9 @@ import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreateGoal() {
-  const { user } = useUser()
+  // const { user } = useUser()
   const {
     control,
     handleSubmit,
@@ -19,9 +18,10 @@ function CreateGoal() {
   } = useForm()
   const router = useRouter()
 
-  const [CreateCoreValues] = useMutation(CREATE_GOAL_MUTATION)
+  const [CreateCoreValues] = useMutation(CREATE_COREVALUE_MUTATION)
 
-  const onSubmit = async (data) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmit = async (data: any) => {
     try {
       const res = await CreateCoreValues({
         variables: {

@@ -26,7 +26,8 @@ function CreatePerson() {
 
   const [CreatePeople] = useMutation(CREATE_PEOPLE_MUTATION)
 
-  const onSubmit = async (data) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmit = async (data: any) => {
     try {
       const res = await CreatePeople({
         variables: {
