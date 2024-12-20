@@ -72,7 +72,11 @@ coreValue.alignmentExamples = row.alignmentExamples,
 coreValue.caresFor = row.caresFor,
 coreValue.why = row.why
 
-RETURN coreValue;
+WITH coreValue, row
+MATCH (person:Person {id: row.personId})
+MERGE (person)-[:GUIDED_BY]->(coreValue)
+
+RETURN coreValue, person;
 
 
 // Load Goals
@@ -159,3 +163,24 @@ MERGE (carePoint)-[:CARES_FOR]->(need)
 
 
 RETURN carePoint, offer, need, resource;
+
+// Load Person - Goal Relationships
+LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=1729232360&single=true&output=csv" AS row
+MATCH (person:Person {id: row.personId})
+MATCH (goal:Goal {id: row.goalId})
+MERGE (person)-[r:MOTIVATED_BY]->(goal)
+RETURN person, goal;
+
+// Load Community - Goal Relationships
+LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=281806365&single=true&output=csv" AS row
+MATCH (community:Community {id: row.communityId})
+MATCH (goal:Goal {id: row.goalId})
+MERGE (community)-[r:MOTIVATED_BY]->(goal)
+RETURN community, goal;
+
+// Load Community - Resource Relationships
+LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=2114184472&single=true&output=csv" AS row
+MATCH (community:Community {id: row.communityId})
+MATCH (resource:Resource {id: row.resourceId})
+MERGE (community)-[:HAS_ACCESS_TO]->(resource)
+RETURN community, resource;
