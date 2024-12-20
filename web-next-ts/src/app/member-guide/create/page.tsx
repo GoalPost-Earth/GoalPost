@@ -1,3 +1,5 @@
+'use client'
+
 import { Input } from '@/components/form'
 import { Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'

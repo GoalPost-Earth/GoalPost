@@ -30,7 +30,6 @@ const NavLink = (props: Props) => {
 }
 
 export default function Simple() {
-  const { open, onOpen, onClose } = useDisclosure()
 
   return (
     <>
@@ -75,16 +74,6 @@ export default function Simple() {
             {/* </Menu> */}
           </Flex>
         </Flex>
-
-        {open ? (
-          <Box pb={4} display={{ md: 'none' }}>
-            <Stack as={'nav'} gap={4}>
-              {menuItems.map((link) => (
-                <NavLink key={link.name}>{link}</NavLink>
-              ))}
-            </Stack>
-          </Box>
-        ) : null}
       </Box>
     </>
   )
