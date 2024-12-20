@@ -10,29 +10,30 @@ export interface CustomRadioProps extends ReactHookFormComponentProps {
 type RadioPropsType = CustomRadioProps & RadioProps
 
 const Radio = (props: RadioPropsType) => {
-  const { label, name, control, errors, options  } = props
+  const { label, name, control, errors, options } = props
 
   return (
-    <Fieldset.Root invalid={!!errors.value} >
+    <Fieldset.Root invalid={!!errors.value}>
       <Fieldset.Legend>{label}</Fieldset.Legend>
       <Controller
         name={name}
         control={control}
         render={({ field }) => (
-            <RadioGroup
-              id={name}
-              name={field.name}
-              value={field.value}
-              onValueChange={({ value }) => {
-                field.onChange(value)
-              }}
-            
-            >
-              <HStack gap={4} justifyContent={'space-between'}>
-              {options.map((item) => { 
+          <RadioGroup
+            id={name}
+            name={field.name}
+            value={field.value}
+            onValueChange={({ value }) => {
+              field.onChange(value)
+            }}
+          >
+            <HStack gap={4} justifyContent={'space-between'}>
+              {options.map((item) => {
                 const fieldValue = field.value
+                const isActive = fieldValue === item.value
+
                 return (
-                    <ChakraRadio
+                  <ChakraRadio
                     key={item.value}
                     value={item.value}
                     inputProps={{ onBlur: field.onBlur }}
@@ -40,23 +41,44 @@ const Radio = (props: RadioPropsType) => {
                     padding={4}
                     border="1px solid #CBD5E1"
                     borderRadius="10px"
-                    {...fieldValue === item.value && { bg: 'gray.subtle' }}
-                  
+                    {...(isActive && { bg: 'gray.subtle' })}
+                    alignContent={'center'}
+                    _after={{
+                      content: isActive ? '"✔"' : '""',
+                      color: 'white',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      position: 'absolute',
+                      width: '1.5rem',
+                      height: '1.5rem',
+                      paddingTop: '1px',
+                      top: '14px',
+                      left: '15px',
+                      borderRadius: 'full',
+                      border: isActive ? 'none' : '1px solid',
+                      borderColor: isActive ? 'transparent' : 'blue.focusRing',
+                      background: isActive ? 'blue.500' : 'blue.100',
+                    }}
                   >
                     {item.label}
                   </ChakraRadio>
                 )
               })}
-              </HStack>
-            </RadioGroup>
-          )
-        }
+            </HStack>
+          </RadioGroup>
+        )}
       />
       {errors.value && (
-        <Fieldset.ErrorText>{(errors.value.message as string)}</Fieldset.ErrorText>
+        <Fieldset.ErrorText>
+          {errors.value.message as string}
+        </Fieldset.ErrorText>
       )}
     </Fieldset.Root>
   )
 }
 
 export default Radio
+
+// background:
+// 'linear-gradient(180deg, #F4F7FF 0%, #FFFFFF 100%)',

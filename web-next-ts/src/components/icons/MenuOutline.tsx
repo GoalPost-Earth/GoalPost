@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-const MenuOutline = () => (
+const MenuOutline = ({ color }: { color?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -9,7 +9,7 @@ const MenuOutline = () => (
     viewBox="0 0 24 24"
   >
     <path
-      stroke="#fff"
+      stroke={color ?? '#E19E48'}
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"

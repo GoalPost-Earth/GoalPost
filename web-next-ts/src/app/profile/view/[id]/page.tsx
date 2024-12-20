@@ -8,7 +8,6 @@ import { useQuery } from '@apollo/client'
 import { useParams } from 'next/navigation'
 
 const Dashboard = () => {
-  
   const { id } = useParams()
 
   console.log('🚀 ~ file: page.tsx:13 ~ id:', id)

@@ -65,6 +65,7 @@ const NavHamburgerButton = () => {
           <Box bg="gray.subtle">
             {menuItems.map((item) => {
               const pathname = window.location.pathname
+              const isActive = pathname === item.to()
               return (
                 <Link href={item.to()} key={item.name}>
                   <Button
@@ -73,14 +74,16 @@ const NavHamburgerButton = () => {
                     key={item.name}
                     paddingY={8}
                     colorPalette="brand"
-                    variant={pathname === item.to() ? 'solid' : 'outline'}
+                    variant={isActive ? 'solid' : 'outline'}
                     width="100%"
                     onClick={() => {
                       setOpen(false)
                     }}
                   >
                     <Flex gap="30px" alignItems="center" width="100%" px={6}>
-                      {item.icon}
+                      {React.cloneElement(item.icon, {
+                        color: isActive ? '#FFFFFF' : '#E19E48',
+                      })}
                       <Text fontSize="1rem">{item.name}</Text>
                     </Flex>
                   </Button>
@@ -88,25 +91,25 @@ const NavHamburgerButton = () => {
               )
             })}
           </Box>
+
           <Link href="/api/auth/logout?returnTo=/">
-          <Button
-            marginTop={50}
-            paddingY={8}
-            as="a"
-            variant="ghost"
-            
-            width="100%"
-          >
-            <Flex gap="30px" alignItems="center" width="100%" px={6}>
-              <Box rounded="full" bg="red" padding={2}>
-                <LogoutIcon />
-              </Box>
-              <Text color="red.500" fontSize="1rem">
-                Logout
-              </Text>
-            </Flex>
+            <Button
+              marginTop={50}
+              paddingY={8}
+              as="a"
+              variant="ghost"
+              width="100%"
+            >
+              <Flex gap="30px" alignItems="center" width="100%" px={6}>
+                <Box rounded="full" bg="red" padding={2}>
+                  <LogoutIcon />
+                </Box>
+                <Text color="red.500" fontSize="1rem">
+                  Logout
+                </Text>
+              </Flex>
             </Button>
-            </Link>
+          </Link>
         </DrawerBody>
         <DrawerFooter>
           <HStack gap="4">

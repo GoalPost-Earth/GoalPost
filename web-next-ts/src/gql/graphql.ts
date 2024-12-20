@@ -1900,12 +1900,6 @@ export type MemberCreateInput = {
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
   phone?: InputMaybe<Scalars['String']['input']>
-  address?: InputMaybe<Scalars['String']['input']>
-  city?: InputMaybe<Scalars['String']['input']>
-  state?: InputMaybe<Scalars['String']['input']>
-  county?: InputMaybe<Scalars['String']['input']>
-  country?: InputMaybe<Scalars['String']['input']>
-  zipPostal?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MemberDeleteInput = {

@@ -1,6 +1,6 @@
-import * as React from "react";
+import * as React from 'react'
 
-const LogoutIcon: React.FC<React.SVGProps<SVGElement>> = (props) => (
+const LogoutIcon: React.FC<React.SVGProps<SVGElement>> = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -22,6 +22,6 @@ const LogoutIcon: React.FC<React.SVGProps<SVGElement>> = (props) => (
       d="M3 12h11M3 12c0 .7 1.994 2.008 2.5 2.5M3 12c0-.7 1.994-2.008 2.5-2.5"
     ></path>
   </svg>
-);
+)
 
-export default LogoutIcon;
+export default LogoutIcon

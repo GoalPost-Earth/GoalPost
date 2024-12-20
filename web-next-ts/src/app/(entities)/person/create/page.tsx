@@ -16,7 +16,6 @@ import {
 import React from 'react'
 import { useForm } from 'react-hook-form'
 
-
 function CreatePerson() {
   const {
     control,
@@ -47,15 +46,13 @@ function CreatePerson() {
 
   return (
     <Container position={'relative'} pt={2}>
-      <Heading position={'absolute'} top={0} left={0} ml={"1rem"}>Create a Profile</Heading>
+      <Heading position={'absolute'} top={0} left={0} ml={'1rem'}>
+        Create a Profile
+      </Heading>
       <form onSubmit={handleSubmit(onSubmit)} style={{ marginTop: '2rem' }}>
         <Center pt={2}>
-          <Avatar
-            name="avatar"
-            src="https://bit.ly/dan-abramov"
-            size="2xl"
-          />
-          </Center>
+          <Avatar name="avatar" src="https://bit.ly/dan-abramov" size="2xl" />
+        </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
@@ -109,15 +106,15 @@ function CreatePerson() {
           </GridItem>
           <GridItem>
             <Input
-              label='Member ID'
+              label="Member ID"
               name="memberId"
               control={control}
               errors={errors}
               required
             />
           </GridItem>
-          <GridItem >
-            <Radio  
+          <GridItem>
+            <Radio
               name="gender"
               label="Gender"
               value={getValues('gender')}
@@ -198,7 +195,7 @@ function CreatePerson() {
           <Button type="submit" loading={isSubmitting}>
             Create Person
           </Button>
-          </Center>
+        </Center>
       </form>
     </Container>
   )

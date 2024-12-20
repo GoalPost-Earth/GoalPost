@@ -1,6 +1,10 @@
-import * as React from "react";
+import * as React from 'react'
 
-const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = (props) => (
+const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = ({
+  color,
+}: {
+  color?: string
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="17"
@@ -12,13 +16,13 @@ const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = (props) => (
       cx="8.579"
       cy="5.778"
       r="4.778"
-      stroke="#E19E48"
+      stroke={color ?? '#E19E48'}
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"
     ></circle>
     <path
-      stroke="#E19E48"
+      stroke={color ?? '#E19E48'}
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"
@@ -26,6 +30,6 @@ const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = (props) => (
       clipRule="evenodd"
     ></path>
   </svg>
-);
+)
 
-export default ProfileIcon;
+export default ProfileIcon
