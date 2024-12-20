@@ -14,7 +14,7 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { useMutation } from '@apollo/client'
 import { CREATE_PROFILE_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
-import { Select, Checkbox, Switch, Radio } from '@/components/form'
+import { Select, Checkbox, Switch } from '@/components/form'
 
 export default function CreateProfilePage() {
   const { user } = useUser()

@@ -16,12 +16,9 @@ export const createProfileSchema = object({
   zipPostal: string()
     .trim()
     .optional()
-    .refine(
-      (val) => val === '' || (val !== undefined && ZIP_CODE_REGEX.test(val)),
-      {
-        message: 'Invalid zip code',
-      }
-    ),
+    .refine((val) => val === '' || ZIP_CODE_REGEX.test(val ?? ''), {
+      message: 'Invalid zip code',
+    }),
 })
 
 export type CreateProfileFormData = z.infer<typeof createProfileSchema>

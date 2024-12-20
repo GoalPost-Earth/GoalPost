@@ -79,8 +79,8 @@ export default function Simple() {
         {open ? (
           <Box pb={4} display={{ md: 'none' }}>
             <Stack as={'nav'} gap={4}>
-              {Links.map((link) => (
-                <NavLink key={link}>{link}</NavLink>
+              {menuItems.map((link) => (
+                <NavLink key={link.name}>{link}</NavLink>
               ))}
             </Stack>
           </Box>
