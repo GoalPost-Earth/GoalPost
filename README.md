@@ -53,6 +53,6 @@ GoalPost has the potential to profoundly influence both personal and community d
 - **Global Knowledge Sharing**: By connecting like-minded communities worldwide, GoalPost allows for the exchange of best practices, innovative ideas, and sustainable solutions. This can accelerate learning and adaptation, empowering communities to solve challenges collectively rather than in isolation.
 
 ### In Summary
-GoalPost represents a shift towards technology that prioritizes human connection, mutual aid, and ethical interactions. By building a platform that supports sustainable, resilient, and compassionate communities, GoalPost has the potential to impact how people live, work, and interact in the digital age. Its commitment to privacy, sustainability, and user control offers a hopeful model for future platforms, inspiring a more interconnected and caring world that values people over profit..
+GoalPost represents a shift towards technology that prioritizes human connection, mutual aid, and ethical interactions. By building a platform that supports sustainable, resilient, and compassionate communities, GoalPost has the potential to impact how people live, work, and interact in the digital age. Its commitment to privacy, sustainability, and user control offers a hopeful model for future platforms, inspiring a more interconnected and caring world that values people over profit.
 
 ** [Back to Top](#goalpost-prototype-1) **
