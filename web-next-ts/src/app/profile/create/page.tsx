@@ -19,6 +19,7 @@ import { Select, Checkbox, Switch } from '@/components/form'
 export default function CreateProfilePage() {
   const { user } = useUser()
   const router = useRouter()
+  const unused = 'unused'
 
   const defaultValues: CreateProfileFormData = {
     firstName: '',
