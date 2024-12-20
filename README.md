@@ -54,3 +54,5 @@ GoalPost has the potential to profoundly influence both personal and community d
 
 ### In Summary
 GoalPost represents a shift towards technology that prioritizes human connection, mutual aid, and ethical interactions. By building a platform that supports sustainable, resilient, and compassionate communities, GoalPost has the potential to impact how people live, work, and interact in the digital age. Its commitment to privacy, sustainability, and user control offers a hopeful model for future platforms, inspiring a more interconnected and caring world that values people over profit.
+
+** [Back to Top](#goalpost-prototype-1) **
