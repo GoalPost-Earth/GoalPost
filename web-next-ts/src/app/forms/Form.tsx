@@ -9,7 +9,6 @@ function Forms() {
   const {
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm()
 

@@ -1,10 +1,8 @@
 import { query } from '@/app/lib/apollo-client'
 import ProfileDetailCard from '@/components/ProfileDetailCard'
-import { Avatar } from '@/components/ui'
 import {
   Badge,
   Container,
-  defineStyle,
   Heading,
   HStack,
   Spacer,

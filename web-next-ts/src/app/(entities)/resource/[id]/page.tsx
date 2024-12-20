@@ -1,7 +1,7 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_RESOURCE } from '@/app/graphql/queries'
 import ProfileDetailCard from '@/components/ProfileDetailCard'
-import { Container, Image, Text, VStack } from '@chakra-ui/react'
+import { Container, VStack } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'

@@ -8,7 +8,6 @@ import {
   Heading,
   HStack,
   IconButton,
-  Span,
   Text,
 } from '@chakra-ui/react'
 import Link from 'next/link'
@@ -62,7 +61,7 @@ export default async function AllPeople() {
                   <Box>
                     <Heading size="sm">Core Values:</Heading>
                     {person.guidedBy.map((coreValue, index) => (
-                      <Text as="span" fontSize="sm">
+                      <Text key={coreValue.name} as="span" fontSize="sm">
                         {coreValue.name}
                         {index < person.guidedBy.length - 1 && (
                           <Text as="span">, </Text>

@@ -1,6 +1,6 @@
 import { query } from '@/app/lib/apollo-client'
 import ProfileDetailCard from '@/components/ProfileDetailCard'
-import { Container, Heading, Text, VStack } from '@chakra-ui/react'
+import { Container, Heading, VStack } from '@chakra-ui/react'
 import React from 'react'
 import { GET_COREVALUE } from '@/app/graphql/queries'
 

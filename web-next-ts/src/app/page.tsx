@@ -24,9 +24,9 @@ const HomeClient = () => {
         <Center>
           <Box>
             {!user ? (
-              <a href="/api/auth/login?returnTo=/">
-                <Button colorPalette="yellow">Sign In</Button>
-              </a>
+              <Button as="a" colorPalette="yellow">
+                Sign In
+              </Button>
             ) : (
               <Button
                 as="a"

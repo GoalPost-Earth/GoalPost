@@ -1,16 +1,7 @@
 import { GET_ALL_RESOURCES } from '@/app/graphql'
 import { query } from '@/app/lib/apollo-client'
 import { Avatar } from '@/components/ui'
-import {
-  Box,
-  Card,
-  Container,
-  Heading,
-  HStack,
-  IconButton,
-  Span,
-  Text,
-} from '@chakra-ui/react'
+import { Card, Container, Heading, IconButton, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import { LuPhone } from 'react-icons/lu'

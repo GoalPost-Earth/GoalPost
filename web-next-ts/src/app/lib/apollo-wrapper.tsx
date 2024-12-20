@@ -21,7 +21,9 @@ import { getAccessToken } from '@auth0/nextjs-auth0'
 // have a function to create a client for you
 
 // you need to create a component to wrap your app in
-export function ApolloWrapper({ children }: Readonly<{ children: React.ReactNode }>) {
+export function ApolloWrapper({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   const [token, setToken] = useState('')
   const { isLoading, user } = useUser()
 
@@ -124,4 +126,3 @@ export function ApolloWrapper({ children }: Readonly<{ children: React.ReactNode
     </ApolloNextAppProvider>
   )
 }
-
