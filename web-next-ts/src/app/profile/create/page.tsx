@@ -21,16 +21,7 @@ export default function CreateProfilePage() {
   const router = useRouter()
 
   const defaultValues: CreateProfileFormData = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    address: '',
-    city: '',
-    country: '',
-    county: '',
-    gender: '',
-    phone: '',
-    state: '',
+    firstName: '', lastName: '', email: '', address: '', city: '', country: '', county: '', gender: '', phone: '', state: '',
     zipPostal: '',
   }
 
