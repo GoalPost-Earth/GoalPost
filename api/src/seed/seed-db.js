@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
-import dotenv from 'dotenv'
+import { dotenv } from 'dotenv'
 import fetch from 'node-fetch'
 import { getSeedMutations } from './seed-mutations'
 
