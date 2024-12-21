@@ -1,4 +1,4 @@
-import initializeApolloServer from './init/apollo'
+import initializeApolloServer from './apollo'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 // Initialize Apollo Server
