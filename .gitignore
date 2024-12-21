@@ -3,6 +3,12 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Build Directories
+dist/
+build/
+.next/
+out/
+
 # Logs
 logs/
 *.log
@@ -28,7 +34,7 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
-.env.local
+.env.*
 
 # MacOS
 .DS_Store
@@ -44,3 +50,4 @@ jspm_packages/
 
 # Other
 Thumbs.db
+.vercel

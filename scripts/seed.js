@@ -1,15 +1,2 @@
-const concurrently = require('concurrently')
-const { API_DIR, runner, concurrentOpts } = require('./common')
-
-const jobs = [
-  {
-    name: 'api:seedDb',
-    command: `cd ${API_DIR} && ${runner} run seedDb`,
-    prefixColor: 'yellow',
-  },
-]
-
-concurrently(jobs, concurrentOpts).catch((e) => {
-  // eslint-disable-next-line no-console
-  console.error(e.message)
-})
+// TODO: Write a script to seed the DB
+// Run command to seed the DB

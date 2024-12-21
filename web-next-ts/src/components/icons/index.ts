@@ -1,7 +1,0 @@
-export { default as MenuOutline } from './MenuOutline'
-export { default as LogoutIcon } from './LogoutIcon'
-export { default as GraphIcon } from './GraphIcon'
-export { default as ChatBotIcon } from './ChatBotIcon'
-export { default as DiscoverIcon } from './DiscoverIcon'
-export { default as ProfileIcon } from './ProfileIcon'
-

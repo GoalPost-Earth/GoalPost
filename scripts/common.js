@@ -1,15 +1,18 @@
-const path = require('path')
-const execa = require('execa')
+import path from 'path'
+import { execaSync } from 'execa'
+import { templateName, templateFileName } from './config.js'
 
-const { templateName, templateFileName } = require('./config')
-const API_DIR = path.join(__dirname, '../api')
-const TEMPLATE_DIR = path.join(__dirname, `../${templateFileName}`)
+const TEMPLATE_DIR = path.join(
+  path.dirname(new URL(import.meta.url).pathname),
+  ''
+)
 
 const shouldUseYarn = () => {
   try {
-    execa.sync('yarnpkg', ['--version'])
+    execaSync('yarnpkg', ['--version'])
     return true
   } catch (e) {
+    console.error(e)
     return false
   }
 }
@@ -22,11 +25,4 @@ const concurrentOpts = {
   timestampFormat: 'HH:mm:ss',
 }
 
-module.exports = {
-  templateName,
-  templateFileName,
-  concurrentOpts,
-  runner,
-  API_DIR,
-  TEMPLATE_DIR,
-}
+export { templateName, templateFileName, concurrentOpts, runner, TEMPLATE_DIR }

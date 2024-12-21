@@ -1,41 +1,21 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // eslint-disable-next-line import/no-extraneous-dependencies
-const concurrently = require('concurrently')
+import concurrently from 'concurrently'
 
-const {
-  API_DIR,
-  TEMPLATE_DIR,
-  runner,
-  concurrentOpts,
-  templateName,
-} = require('./common')
+import { TEMPLATE_DIR, runner, concurrentOpts, templateName } from './common.js'
 
-const jobs = [
-  {
-    name: 'GraphQL-API',
-    command: `cd ${API_DIR} && ${runner} run start:dev`,
-    prefixColor: 'green',
-  },
-]
+const jobs = []
 
-if (templateName === 'Flutter') {
-  jobs.push({
-    name: templateName,
-    command: `cd ${TEMPLATE_DIR} && flutter run`,
-    prefixColor: 'blue',
-  })
-} else {
-  jobs.push({
-    name: templateName,
-    command: `cd ${TEMPLATE_DIR} && ${runner} run dev`,
-    prefixColor: 'blue',
-  })
-  jobs.push({
-    name: 'Codegen',
-    command: `cd ${TEMPLATE_DIR} && ${runner} run codegen`,
-    prefixColor: 'magenta',
-  })
-}
+jobs.push({
+  name: templateName,
+  command: `cd ${TEMPLATE_DIR} && ${runner} run dev`,
+  prefixColor: 'blue',
+})
+jobs.push({
+  name: 'Codegen',
+  command: `cd ${TEMPLATE_DIR} && ${runner} run codegen`,
+  prefixColor: 'magenta',
+})
 
 const { result } = concurrently(jobs, concurrentOpts)
 

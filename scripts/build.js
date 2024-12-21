@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // eslint-disable-next-line import/no-extraneous-dependencies
-const concurrently = require('concurrently')
+import concurrently from 'concurrently'
 
-const {
+import {
   API_DIR,
   TEMPLATE_DIR,
   runner,
   concurrentOpts,
   templateName,
-} = require('./common')
+} from './common'
 
 const jobs = [
   {

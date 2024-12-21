@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Ensure npx is available
+export PATH=$PATH:/Users/jd/.npm-global/bin
+
+
+npx --no -- commitlint --edit 
