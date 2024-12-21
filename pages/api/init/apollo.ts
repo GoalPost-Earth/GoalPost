@@ -1,5 +1,5 @@
 import { ApolloServer } from 'apollo-server-micro'
-import typeDefs from './schema/schema.gql'
+import typeDefs from '../schema/schema.gql'
 import resolvers from '../resolvers/resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
