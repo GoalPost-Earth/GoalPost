@@ -32,5 +32,8 @@ export default async function initializeApolloServer() {
     introspection: true,
     schema,
   })
-  return apolloServer
+
+  await apolloServer.start()
+
+  return apolloServer.createHandler({ path: '/api/graphql' })
 }

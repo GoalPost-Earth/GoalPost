@@ -1,19 +1,23 @@
 import initializeApolloServer from './apollo'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { applyCorsMiddleware } from './middleware/cors'
 
 // Initialize Apollo Server
-const server = await initializeApolloServer()
+const apolloHandler = await initializeApolloServer()
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Start Apollo Server
-  console.log('Starting Apollo Server')
+  // Enable CORS
+  await applyCorsMiddleware(req, res)
 
-  const startServer = server.start()
-  await startServer
-  await server.createHandler({ path: '/api/graphql' })(req, res)
+  // Handle GraphQL requests
+  if (req.method === 'OPTIONS') {
+    res.end()
+  } else {
+    await apolloHandler(req, res)
+  }
 }
 // export default function handler(req, res) {
 //   res.status(200).json({ message: 'Hello GraphQL' })
@@ -22,5 +26,6 @@ export default async function handler(
 export const config = {
   api: {
     bodyParser: false,
+    maxDuration: 60,
   },
 }
