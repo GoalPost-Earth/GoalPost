@@ -1,6 +1,8 @@
 import path from 'path'
 import { execaSync } from 'execa'
-import { templateName, templateFileName } from './config.js'
+
+const templateName = 'Next.js'
+const templateFileName = 'web-next-ts'
 
 const TEMPLATE_DIR = path.join(
   path.dirname(new URL(import.meta.url).pathname),

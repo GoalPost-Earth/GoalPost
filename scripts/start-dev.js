@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-// eslint-disable-next-line import/no-extraneous-dependencies
 import concurrently from 'concurrently'
 
 import { TEMPLATE_DIR, runner, concurrentOpts, templateName } from './common.js'
