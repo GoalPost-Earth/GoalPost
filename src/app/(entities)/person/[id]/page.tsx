@@ -39,7 +39,6 @@ export default async function ViewPersonPage({
   })
 
   const person = data?.people[0]
-  console.log('🚀 ~ file: page.tsx:22 ~ person:', person)
 
   if (!person) {
     return <LoadingScreen />

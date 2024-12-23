@@ -7,6 +7,7 @@ import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
+import { Container } from '@chakra-ui/react'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -34,7 +35,14 @@ export default function RootLayout({
                 <StartupScreen>
                   <Navbar />
                   <Toaster />
-                  <main>{children}</main>
+                  <main>
+                    <Container
+                      paddingX={{ sm: '0', md: '200px' }}
+                      width={{ sm: '100%', md: 'auto' }}
+                    >
+                      {children}
+                    </Container>
+                  </main>
                 </StartupScreen>
               </ApolloWrapper>
             </AppProvider>

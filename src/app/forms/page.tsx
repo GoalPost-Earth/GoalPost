@@ -48,7 +48,7 @@ const viewAllButtons = [
   },
 ]
 
-function page() {
+function ShowForms() {
   return (
     <Container>
       <Heading size="md" marginBottom={5}>
@@ -88,4 +88,4 @@ function page() {
   )
 }
 
-export default page
+export default ShowForms

@@ -41,6 +41,7 @@ export function ApolloWrapper({
         setToken(fetchedToken.accessToken ?? '')
         return token
       } catch (e) {
+        console.log('error fetching token')
         console.error(e)
       }
     }

@@ -6042,6 +6042,7 @@ export type GetPersonQuery = {
     gender?: string | null
     pronouns?: string | null
     location?: string | null
+    createdAt: any
   }>
 }
 
@@ -7098,6 +7099,7 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],
             },
           },

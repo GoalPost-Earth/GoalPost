@@ -38,7 +38,7 @@ function CreatePerson() {
         },
       })
 
-      router.push('/person/view/' + res.data?.createPeople.people[0].id)
+      router.push('/person/' + res.data?.createPeople.people[0].id)
     } catch (error) {
       console.error(error)
     }

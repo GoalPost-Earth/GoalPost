@@ -14,6 +14,7 @@ export const GET_PERSON = graphql(`
       gender
       pronouns
       location
+      createdAt
     }
   }
 `)
