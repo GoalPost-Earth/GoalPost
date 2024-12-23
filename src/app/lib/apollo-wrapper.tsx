@@ -41,12 +41,10 @@ export function ApolloWrapper({
         setToken(fetchedToken.accessToken ?? '')
         return token
       } catch (e) {
-        console.log('error fetching token')
         console.error(e)
       }
     }
 
-    console.log('fetching token')
     fetchToken()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, user])
