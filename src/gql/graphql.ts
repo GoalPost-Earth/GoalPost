@@ -5939,7 +5939,7 @@ export type GetAllCoreValuesQuery = {
 }
 
 export type GetLoggedInUserQueryVariables = Exact<{
-  authId: Scalars['String']['input']
+  email: Scalars['String']['input']
 }>
 
 export type GetLoggedInUserQuery = {
@@ -5950,6 +5950,17 @@ export type GetLoggedInUserQuery = {
     firstName: string
     lastName: string
     email?: string | null
+    community: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      hasMembers: Array<{
+        __typename?: 'Member'
+        id: string
+        name: string
+        photo?: string | null
+      }>
+    }>
   }>
 }
 
@@ -6767,7 +6778,7 @@ export const GetLoggedInUserDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'authId' },
+            name: { kind: 'Name', value: 'email' },
           },
           type: {
             kind: 'NonNullType',
@@ -6793,10 +6804,10 @@ export const GetLoggedInUserDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'authId_EQ' },
+                      name: { kind: 'Name', value: 'email_EQ' },
                       value: {
                         kind: 'Variable',
-                        name: { kind: 'Name', value: 'authId' },
+                        name: { kind: 'Name', value: 'email' },
                       },
                     },
                   ],
@@ -6810,6 +6821,38 @@ export const GetLoggedInUserDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'community' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'hasMembers' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },

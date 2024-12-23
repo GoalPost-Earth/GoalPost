@@ -8,19 +8,24 @@ import { AvatarCarousel } from '@/components/sections'
 import { useQuery } from '@apollo/client'
 import { GET_LOGGED_IN_USER } from './graphql/queries/DASHBOARD_QUERIES'
 import ApolloWrapper from '@/components/ApolloWrapper'
+import { Member } from '@/gql/graphql'
 
 const HomeClient = () => {
   const { user } = useUser()
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
-    variables: { authId: user?.sub ?? '' },
-    skip: !user?.sub,
+    variables: { email: user?.name ?? '' },
+    skip: !user?.name,
   })
+
+  const member = data?.members[0]
+  const community = member?.community[0]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <Heading>Hi JD!</Heading>
-        <AvatarCarousel />
+        <Heading marginBottom={5}>Hi {member?.firstName}!</Heading>
+
+        <AvatarCarousel members={community?.hasMembers as Member[]} />
         <Center>
           <Box>
             {!user ? (

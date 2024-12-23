@@ -67,7 +67,7 @@ type Member implements PersonInterface @node(labels: ["Member"]) {
   connectsToMember: [Member!]!
     @relationship(type: "CONNECTS_TO", direction: OUT)
   guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
-  community: [Community!]! @relationship(type: "BELONGS_TO", direction: OUT)
+  community: [Community!]! @relationship(type: "MEMBER_OF", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -113,7 +113,7 @@ type Community @node {
   status: Boolean!
   location: String
 
-  hasMembers: [Member!]! @relationship(type: "BELONGS_TO", direction: IN)
+  hasMembers: [Member!]! @relationship(type: "MEMBER_OF", direction: IN)
   relatesToCommunity: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
   hasAccessToResource: [Resource!]!

@@ -1,25 +1,19 @@
 import { HStack } from '@chakra-ui/react'
 import React from 'react'
 import { Avatar } from '../ui'
+import { Member } from '@/gql/graphql'
 
-const AvatarCarousel = () => {
+const AvatarCarousel = ({ members = [] }: { members: Member[] }) => {
   return (
     <HStack gap="4">
-      <Avatar
-        name="Random"
-        colorPalette="pink"
-        src="https://randomuser.me/api/portraits/men/70.jpg"
-      />
-      <Avatar
-        name="Random"
-        colorPalette="green"
-        src="https://randomuser.me/api/portraits/men/54.jpg"
-      />
-      <Avatar
-        name="Random"
-        colorPalette="blue"
-        src="https://randomuser.me/api/portraits/men/42.jpg"
-      />
+      {members.map((member) => (
+        <Avatar
+          key={member.id}
+          name={member.name}
+          src={member.photo ?? ''}
+          size="xl"
+        />
+      ))}
     </HStack>
   )
 }

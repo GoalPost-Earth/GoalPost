@@ -30,7 +30,6 @@ export function ApolloWrapper({
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        console.log('within whatever')
         const fetchedToken = await getAccessToken({
           authorizationParams: {
             audience: 'https://goalpost.app',
