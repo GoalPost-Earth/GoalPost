@@ -174,7 +174,7 @@ export type CarePoint = {
   createdAt: Scalars['DateTime']['output']
   description: Scalars['String']['output']
   id: Scalars['ID']['output']
-  status: Scalars['String']['output']
+  status: Scalars['Boolean']['output']
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
@@ -184,7 +184,6 @@ export type CarePointAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
-  status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -194,7 +193,6 @@ export type CarePointConnectWhere = {
 
 export type CarePointCreateInput = {
   description: Scalars['String']['input']
-  status: Scalars['String']['input']
 }
 
 export type CarePointEdge = {
@@ -221,7 +219,6 @@ export type CarePointSort = {
 
 export type CarePointUpdateInput = {
   description_SET?: InputMaybe<Scalars['String']['input']>
-  status_SET?: InputMaybe<Scalars['String']['input']>
 }
 
 export type CarePointWhere = {
@@ -244,11 +241,7 @@ export type CarePointWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  status_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_EQ?: InputMaybe<Scalars['Boolean']['input']>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -401,7 +394,6 @@ export type CommunityCreateInput = {
   name: Scalars['String']['input']
   relatesToCommunity?: InputMaybe<CommunityRelatesToCommunityFieldInput>
   resultsAchieved?: InputMaybe<Scalars['String']['input']>
-  status: Scalars['Boolean']['input']
 }
 
 export type CommunityDeleteInput = {
@@ -553,21 +545,6 @@ export type CommunityHasAccessToResourceNodeAggregationWhereInput = {
   name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   time_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   time_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   time_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1231,7 +1208,6 @@ export type CommunityResourceHasAccessToResourceNodeAggregateSelection = {
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
-  status: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
@@ -1263,7 +1239,6 @@ export type CommunityUpdateInput = {
     Array<CommunityRelatesToCommunityUpdateFieldInput>
   >
   resultsAchieved_SET?: InputMaybe<Scalars['String']['input']>
-  status_SET?: InputMaybe<Scalars['Boolean']['input']>
 }
 
 export type CommunityWhere = {
@@ -1985,7 +1960,6 @@ export type GoalCreateInput = {
   motivatesPerson?: InputMaybe<GoalMotivatesPersonFieldInput>
   name: Scalars['String']['input']
   photo?: InputMaybe<Scalars['String']['input']>
-  status: Scalars['Boolean']['input']
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   type: Scalars['String']['input']
@@ -2313,7 +2287,6 @@ export type GoalUpdateInput = {
   motivatesPerson?: InputMaybe<Array<GoalMotivatesPersonUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
   photo_SET?: InputMaybe<Scalars['String']['input']>
-  status_SET?: InputMaybe<Scalars['Boolean']['input']>
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
   type_SET?: InputMaybe<Scalars['String']['input']>
@@ -3145,7 +3118,6 @@ export type MemberCreateInput = {
   photo?: InputMaybe<Scalars['String']['input']>
   pronouns?: InputMaybe<Scalars['String']['input']>
   signupDate: Scalars['Date']['input']
-  status: Scalars['Boolean']['input']
   traits?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -3437,7 +3409,6 @@ export type MemberUpdateInput = {
   photo_SET?: InputMaybe<Scalars['String']['input']>
   pronouns_SET?: InputMaybe<Scalars['String']['input']>
   signupDate_SET?: InputMaybe<Scalars['Date']['input']>
-  status_SET?: InputMaybe<Scalars['Boolean']['input']>
   traits_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -4784,7 +4755,7 @@ export type Resource = {
   providedByPerson: Array<Person>
   providedByPersonAggregate?: Maybe<ResourcePersonProvidedByPersonAggregationSelection>
   providedByPersonConnection: ResourceProvidedByPersonConnection
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['Boolean']['output']
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
   why?: Maybe<Scalars['String']['output']>
@@ -4852,7 +4823,6 @@ export type ResourceAggregateSelection = {
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
-  status: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
@@ -4948,21 +4918,6 @@ export type ResourceAppliedToCarePointNodeAggregationWhereInput = {
   id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
-  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -5005,7 +4960,6 @@ export type ResourceCarePointAppliedToCarePointNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
-  status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -5032,7 +4986,6 @@ export type ResourceCreateInput = {
   location?: InputMaybe<Scalars['String']['input']>
   name: Scalars['String']['input']
   providedByPerson?: InputMaybe<ResourceProvidedByPersonFieldInput>
-  status?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
@@ -5170,21 +5123,6 @@ export type ResourceDependsOnResourceNodeAggregationWhereInput = {
   name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   time_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   time_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   time_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5566,7 +5504,6 @@ export type ResourceResourceDependsOnResourceNodeAggregateSelection = {
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
-  status: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
@@ -5596,7 +5533,6 @@ export type ResourceUpdateInput = {
   location_SET?: InputMaybe<Scalars['String']['input']>
   name_SET?: InputMaybe<Scalars['String']['input']>
   providedByPerson?: InputMaybe<Array<ResourceProvidedByPersonUpdateFieldInput>>
-  status_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
   why_SET?: InputMaybe<Scalars['String']['input']>
 }
@@ -5682,11 +5618,7 @@ export type ResourceWhere = {
   providedByPerson_SINGLE?: InputMaybe<PersonWhere>
   /** Return Resources where some of the related People match this filter */
   providedByPerson_SOME?: InputMaybe<PersonWhere>
-  status_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_EQ?: InputMaybe<Scalars['Boolean']['input']>
   time_CONTAINS?: InputMaybe<Scalars['String']['input']>
   time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   time_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5885,7 +5817,7 @@ export type CreateResourcesMutation = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: boolean
       why?: string | null
       location?: string | null
       time?: string | null
@@ -6099,7 +6031,7 @@ export type GetResourceQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: boolean
     why?: string | null
     location?: string | null
     time?: string | null
@@ -6130,7 +6062,7 @@ export type GetAllResourcesQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: boolean
     why?: string | null
     location?: string | null
     time?: string | null

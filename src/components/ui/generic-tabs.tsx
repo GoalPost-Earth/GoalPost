@@ -12,7 +12,7 @@ const GenericTabs = ({ triggers, contents }: GenericTabsProps) => {
       defaultValue={triggers[0]}
       colorPalette={'brand'}
       width={'100%'}
-      mt={10}
+      mt={2}
     >
       <Tabs.List mt={2} w={'full'} bg={'gray.subtle'}>
         {triggers.map((trigger, index) => (

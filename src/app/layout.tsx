@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
 import { Container } from '@chakra-ui/react'
+import ChatBotButton from '@/components/ui/ChatBotButton'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -27,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning>
-      <body>
+      <body style={{ position: 'relative' }}>
         <Provider>
           <UserProvider>
             <AppProvider>
@@ -39,8 +40,10 @@ export default function RootLayout({
                     <Container
                       paddingX={{ sm: '0', md: '200px' }}
                       width={{ sm: '100%', md: 'auto' }}
+                      position={'relative'}
                     >
                       {children}
+                      <ChatBotButton />
                     </Container>
                   </main>
                 </StartupScreen>

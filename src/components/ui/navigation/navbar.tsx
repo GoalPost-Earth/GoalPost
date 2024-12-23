@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Flex, HStack, useDisclosure, Stack } from '@chakra-ui/react'
+import { Box, Flex, HStack } from '@chakra-ui/react'
 import NavHamburgerButton from './sidenav-button'
 import Link from 'next/link'
 import { AppLogo } from '../app-logo'
@@ -32,7 +32,7 @@ const NavLink = (props: Props) => {
 export default function Simple() {
   return (
     <>
-      <Box px={4} position="sticky" top={0} zIndex={100}>
+      <Box px={4} position="sticky" top={0} zIndex={100} bg="bg">
         <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
           <Box display={{ md: 'none' }}>
             <NavHamburgerButton />
