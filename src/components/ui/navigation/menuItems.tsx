@@ -13,11 +13,6 @@ export const menuItems = [
     icon: <MenuOutline />,
   },
   {
-    name: 'Discover',
-    to: () => '/#',
-    icon: <DiscoverIcon />,
-  },
-  {
     name: 'AI Chat Bot',
     to: () => '/#',
     icon: <ChatBotIcon />,
