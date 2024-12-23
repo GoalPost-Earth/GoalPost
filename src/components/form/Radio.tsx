@@ -29,37 +29,13 @@ const Radio = (props: RadioPropsType) => {
           >
             <HStack gap={4} justifyContent={'space-between'}>
               {options.map((item) => {
-                const fieldValue = field.value
-                const isActive = fieldValue === item.value
-
                 return (
                   <ChakraRadio
                     key={item.value}
                     value={item.value}
-                    inputProps={{ onBlur: field.onBlur }}
                     width={'50%'}
-                    padding={4}
-                    border="1px solid #CBD5E1"
                     borderRadius="10px"
-                    {...(isActive && { bg: 'gray.subtle' })}
                     alignContent={'center'}
-                    _after={{
-                      content: isActive ? '"✔"' : '""',
-                      color: 'white',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      position: 'absolute',
-                      width: '1.5rem',
-                      height: '1.5rem',
-                      paddingTop: '1px',
-                      top: '14px',
-                      left: '15px',
-                      borderRadius: 'full',
-                      border: isActive ? 'none' : '1px solid',
-                      borderColor: isActive ? 'transparent' : 'blue.focusRing',
-                      background: isActive ? 'blue.500' : 'blue.100',
-                    }}
                   >
                     {item.label}
                   </ChakraRadio>

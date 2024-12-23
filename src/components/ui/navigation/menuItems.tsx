@@ -32,9 +32,4 @@ export const menuItems = [
     to: () => '/#',
     icon: <GraphIcon />,
   },
-  {
-    name: 'Forms',
-    to: () => '/forms',
-    icon: <GraphIcon />,
-  },
 ]

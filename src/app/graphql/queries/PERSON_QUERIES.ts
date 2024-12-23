@@ -27,6 +27,7 @@ export const GET_ALL_PEOPLE = graphql(`
       lastName
       name
       email
+      photo
       phone
       manual
       interests

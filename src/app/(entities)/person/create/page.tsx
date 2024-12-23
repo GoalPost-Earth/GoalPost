@@ -3,7 +3,7 @@
 import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { Input, Select, Radio } from '@/components/form'
-import { Avatar, Button } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import {
   Box,
@@ -15,12 +15,14 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
+import { ImageUpload } from '@/components/form'
 
 function CreatePerson() {
   const {
     control,
     getValues,
     handleSubmit,
+    setValue,
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
@@ -51,7 +53,14 @@ function CreatePerson() {
       </Heading>
       <form onSubmit={handleSubmit(onSubmit)} style={{ marginTop: '2rem' }}>
         <Center pt={2}>
-          <Avatar name="avatar" src="https://bit.ly/dan-abramov" size="2xl" />
+          <ImageUpload
+            name="photo"
+            control={control}
+            errors={errors}
+            uploadPreset="member-photos"
+            // initialValue="https://picsum.photos/300/300"
+            setValue={setValue}
+          />
         </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>

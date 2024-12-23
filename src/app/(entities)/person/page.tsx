@@ -31,7 +31,7 @@ export default function AllPeople() {
             <Card.Root my={1}>
               <Card.Header p={2} bgColor="gray.100">
                 <HStack>
-                  <Avatar src="https://bit.ly/dan-abramov" /> {person.name}
+                  <Avatar src={person.photo} /> {person.name}
                 </HStack>
               </Card.Header>
               <Card.Body p={2}>

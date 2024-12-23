@@ -8,7 +8,13 @@ import Link from 'next/link'
 import React from 'react'
 
 export default function AllGoals() {
-  const { data, loading, error } = useQuery(GET_ALL_GOALS)
+  const { data, loading, error } = useQuery(GET_ALL_GOALS, {
+    variables: {
+      where: {
+        motivatesPerson_NONE: null,
+      },
+    },
+  })
 
   const goals = data?.goals ?? []
 
@@ -20,7 +26,7 @@ export default function AllGoals() {
           <Link key={goal.id} href={'/goal/' + goal.id}>
             <Card.Root key={goal.id} my={1}>
               <Card.Header py={2} bgColor="gray.100">
-                {goal.name}
+                {goal?.name}
               </Card.Header>
               <Card.Body>
                 <Card.Description>{goal.description}</Card.Description>

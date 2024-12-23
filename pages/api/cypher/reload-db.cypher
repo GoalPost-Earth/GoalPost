@@ -40,7 +40,8 @@ member.phoneNumber = row.phoneNumber,
 member.email = row.email,
 member.gender = row.gender,
 member.traits = row.traits,
-member.firstName = row.firstName
+member.firstName = row.firstName,
+member.createdAt = datetime()
 
 WITH member, row
 MATCH (community:Community {id: row.communityId})
@@ -96,7 +97,7 @@ goal.type = row.type
 RETURN goal;
 
 // Show goal alignment to core values
-LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=233893666&single=true&output=csv" AS row
+LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=595870152&single=true&output=csv" AS row
 MATCH (goal:Goal {id: row.id})
 MATCH (coreValue:CoreValue {id: row.coreValueId})
 MERGE (goal)-[:ALIGNED_TO]->(coreValue)
@@ -184,3 +185,5 @@ MATCH (community:Community {id: row.communityId})
 MATCH (resource:Resource {id: row.resourceId})
 MERGE (community)-[:HAS_ACCESS_TO]->(resource)
 RETURN community, resource;
+
+MATCH (n) SET n.createdAt = datetime();

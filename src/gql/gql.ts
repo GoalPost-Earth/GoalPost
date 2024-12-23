@@ -38,7 +38,7 @@ const documents = {
     types.GetMembersDocument,
   '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n':
     types.GetPersonDocument,
-  '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
+  '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
     types.GetAllPeopleDocument,
   '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n':
     types.GetMemberDocument,
@@ -138,8 +138,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
+  source: '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      manual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
