@@ -13,7 +13,6 @@ import ShowForms from './forms/page'
 
 const HomeClient = () => {
   const { user } = useUser()
-  console.log('🚀 ~ file: page.tsx:15 ~ user:', user)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,

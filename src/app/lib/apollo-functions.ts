@@ -52,10 +52,6 @@ export const authLink = setContext(async (_, { headers }) => {
   const token = ''
   const expiryDate = ''
 
-  console.log(
-    '🚀 ~ file: apollo-functions.ts:56 ~ isTokenExpired(expiryDate):',
-    isTokenExpired(expiryDate)
-  )
   if (token && !isTokenExpired(expiryDate)) {
     // return the headers to the context so httpLink can read them
     return {
