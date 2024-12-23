@@ -12,6 +12,7 @@ export default async function handler(
   // Enable CORS
   await applyCorsMiddleware(req, res)
 
+  console.log('🚀 ~ file: graphql.ts:22 ~ req:', req.method)
   // Handle GraphQL requests
   if (req.method === 'OPTIONS') {
     res.end()
