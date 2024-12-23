@@ -5968,6 +5968,7 @@ export type GetPersonQuery = {
     lastName: string
     name: string
     email?: string | null
+    photo?: string | null
     phone?: string | null
     manual?: string | null
     interests?: string | null
@@ -7026,6 +7027,7 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'manual' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'interests' } },

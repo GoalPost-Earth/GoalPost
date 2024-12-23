@@ -8,6 +8,7 @@ export const GET_PERSON = graphql(`
       lastName
       name
       email
+      photo
       phone
       manual
       interests

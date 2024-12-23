@@ -7,7 +7,6 @@ import { LoadingScreen } from '@/components/screens'
 import { Avatar } from '@/components/ui'
 import UserInfo from './components/user-info'
 import {
-  AlbumIcon,
   CalendarIcon,
   FigureIcon,
   IdeaIcon,
@@ -63,11 +62,6 @@ export default async function ViewPersonPage({
       title: 'Avatar',
       description: 'Owl',
       icon: <AvatarIcon />,
-    },
-    {
-      title: 'Photo',
-      description: ' ',
-      icon: <AlbumIcon />,
     },
     {
       title: 'Sign Up Date',
@@ -147,7 +141,7 @@ export default async function ViewPersonPage({
             >
               <Avatar
                 name={person?.name}
-                src={undefined}
+                src={person.photo ?? undefined}
                 width={'58px'}
                 height={'58px'}
                 border={'3px solid white'}
