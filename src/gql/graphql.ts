@@ -5915,7 +5915,12 @@ export type GetGoalQuery = {
     location?: string | null
     time?: string | null
     createdAt: any
-    motivatesPerson: Array<{ __typename?: 'Person'; id: string; name: string }>
+    motivatesPerson: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      photo?: string | null
+    }>
   }>
 }
 
@@ -5938,7 +5943,12 @@ export type GetAllGoalsQuery = {
     location?: string | null
     time?: string | null
     createdAt: any
-    motivatesPerson: Array<{ __typename?: 'Person'; id: string; name: string }>
+    motivatesPerson: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      photo?: string | null
+    }>
   }>
 }
 
@@ -6866,6 +6876,7 @@ export const GetGoalDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                     ],
                   },
                 },
@@ -6938,6 +6949,7 @@ export const GetAllGoalsDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                     ],
                   },
                 },

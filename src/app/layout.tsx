@@ -7,7 +7,6 @@ import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
-import { Container } from '@chakra-ui/react'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 
 const urbanist = Urbanist({
@@ -37,14 +36,10 @@ export default function RootLayout({
                   <Navbar />
                   <Toaster />
                   <main>
-                    <Container
-                      paddingX={{ sm: '0', md: '200px' }}
-                      width={{ sm: '100%', md: 'auto' }}
-                      position={'relative'}
-                    >
+                    <>
                       {children}
                       <ChatBotButton />
-                    </Container>
+                    </>
                   </main>
                 </StartupScreen>
               </ApolloWrapper>

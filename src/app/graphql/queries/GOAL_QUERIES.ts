@@ -17,6 +17,7 @@ export const GET_GOAL = graphql(`
       motivatesPerson {
         id
         name
+        photo
       }
     }
   }
@@ -39,6 +40,7 @@ export const GET_ALL_GOALS = graphql(`
       motivatesPerson {
         id
         name
+        photo
       }
     }
   }
