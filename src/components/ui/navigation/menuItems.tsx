@@ -24,7 +24,7 @@ export const menuItems = [
   },
   {
     name: 'Graph Visualization',
-    to: () => '/#',
+    to: () => '/graph-visualization',
     icon: <GraphIcon />,
   },
 ]

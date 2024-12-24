@@ -24,6 +24,7 @@
     "@neo4j/graphql": "^6.2.3",
     "@neo4j/graphql-ogm": "^5.9.1",
     "@parcel/watcher": "^2.4.1",
+    "@xyflow/react": "^12.3.6",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",
     "apollo-server-micro": "^3.13.0",
