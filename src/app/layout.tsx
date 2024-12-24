@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
+import { ReactFlowProvider } from '@xyflow/react'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -31,18 +32,20 @@ export default function RootLayout({
         <Provider>
           <UserProvider>
             <AppProvider>
-              <ApolloWrapper>
-                <StartupScreen>
-                  <Navbar />
-                  <Toaster />
-                  <main>
-                    <>
-                      {children}
-                      <ChatBotButton />
-                    </>
-                  </main>
-                </StartupScreen>
-              </ApolloWrapper>
+              <ReactFlowProvider>
+                <ApolloWrapper>
+                  <StartupScreen>
+                    <Navbar />
+                    <Toaster />
+                    <main>
+                      <>
+                        {children}
+                        <ChatBotButton />
+                      </>
+                    </main>
+                  </StartupScreen>
+                </ApolloWrapper>
+              </ReactFlowProvider>
             </AppProvider>
           </UserProvider>
         </Provider>

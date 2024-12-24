@@ -5,7 +5,7 @@ import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 import { Avatar } from '@/components/ui'
-import UserInfo from './components/user-info'
+import UserInfo from '@/components/ui/user-info'
 import {
   CalendarIcon,
   FigureIcon,
