@@ -30,6 +30,7 @@ export default async function initializeApolloServer() {
     resolvers,
     context: ({ event }) => ({ req: event }),
     introspection: true,
+    cache: 'bounded',
     persistedQueries: false,
     schema,
   })

@@ -58,7 +58,6 @@ export default function CreateProfilePage() {
               gender: data.gender,
               phone: data.phone,
               signupDate: new Date().toISOString(),
-              status: true,
             },
           ],
         },

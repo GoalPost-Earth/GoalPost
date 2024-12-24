@@ -34,7 +34,10 @@ export default async function ViewResourcePage({
             detail={resource.description}
           />
 
-          <ProfileDetailCard title="Status" detail={resource.status} />
+          <ProfileDetailCard
+            title="Status"
+            detail={resource.status ? 'Active' : 'Inactive'}
+          />
           <ProfileDetailCard title="Why" detail={resource.why} />
           <ProfileDetailCard title="Location" detail={resource.location} />
           <ProfileDetailCard title="Time" detail={resource.time} />
