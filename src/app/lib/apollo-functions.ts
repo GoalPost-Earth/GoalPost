@@ -68,6 +68,9 @@ export const authLink = setContext(async (_, { headers }) => {
       scope: 'read:current_user',
       ignoreCache: true,
     },
+  }).catch((error) => {
+    console.error('Error fetching token:', error)
+    return { accessToken: '' }
   })
   // const fetchedExpiryDate = new Date(new Date().getTime() + 3600 * 1000)
 

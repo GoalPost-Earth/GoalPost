@@ -103,7 +103,7 @@ export default async function ViewPersonPage({
     },
   ]
 
-  const triggers = ['Bio', 'Edit Profile', 'Contacts']
+  const triggers = ['Bio', 'Contacts']
 
   const contents = [
     <UserInfo data={bioData} key="bio" />,
@@ -122,7 +122,7 @@ export default async function ViewPersonPage({
             height={'160px'}
           >
             <Image
-              src="https://images.unsplash.com/photo-1566679056462-2075774c8c07?q=80&w=2075&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              src="https://picsum.photos/400/400"
               alt="Profile background"
               objectFit="cover"
               transform={'translateY(-15%)'}
