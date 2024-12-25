@@ -7,6 +7,7 @@ import { LoadingScreen } from '@/components/screens'
 import { Avatar } from '@/components/ui'
 import UserInfo from '@/components/ui/user-info'
 import {
+  AvatarIcon,
   CalendarIcon,
   FigureIcon,
   IdeaIcon,
@@ -16,7 +17,6 @@ import {
   PhoneIcon,
   UserIcon,
 } from '@/components/icons'
-import AvatarIcon from '@/components/icons/AvatarIcon'
 import GenericTabs from '@/components/ui/generic-tabs'
 
 export default async function ViewPersonPage({
