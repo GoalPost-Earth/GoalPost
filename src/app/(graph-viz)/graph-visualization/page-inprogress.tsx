@@ -29,10 +29,12 @@ const GraphVisualization = () => {
       data: { label: person.name },
     })) ?? []
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   const onConnect = useCallback(
+    // @ts-expect-error getEdgeParams is not defined
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   )
