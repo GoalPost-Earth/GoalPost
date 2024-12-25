@@ -17,7 +17,7 @@ import '@xyflow/react/dist/style.css'
 
 import { useQuery } from '@apollo/client'
 import ApolloWrapper from '@/components/ApolloWrapper'
-import { getRandomPosition } from '@/utils'
+import { calculateNodePositionsAsRings, getRandomPosition } from '@/utils'
 import GraphNodes from '@/components/ui/graph-nodes'
 import { Flex } from '@chakra-ui/react'
 import { Button } from '@/components/ui'
@@ -42,58 +42,67 @@ const GraphVisualization = () => {
     customNode: GraphNodes,
   }
 
-  const NodeTriggers = ['Person', 'Member', 'CoreValue', 'Goal', 'Resource']
+  const NodeTriggers = ['Resource', 'Person', 'Member', 'CoreValue', 'Goal']
 
   const peopleNodes =
     people?.people.map((person) => ({
-      id: person.id,
+      id: `${person.__typename}` + person.id,
       position: getRandomPosition(),
       type: 'customNode',
-      data: { label: person.name, nodeName: person.__typename },
+      data: { label: person.name, nodeName: person.__typename, id: person.id },
     })) ?? []
 
   const coreValuesNodes =
     coreValues?.coreValues.map((coreValue) => ({
-      id: coreValue.id,
+      id: `${coreValue.__typename}` + coreValue.id,
       position: getRandomPosition(),
       type: 'customNode',
-      data: { label: coreValue.name, nodeName: coreValue.__typename },
+      data: {
+        label: coreValue.name,
+        nodeName: coreValue.__typename,
+        id: coreValue.id,
+      },
     })) ?? []
 
   const goalNodes =
     goals?.goals.map((goal) => ({
-      id: goal.id,
+      id: `${goal.__typename}` + goal.id,
       position: getRandomPosition(),
       type: 'customNode',
-      data: { label: goal.name, nodeName: goal.__typename },
+      data: { label: goal.name, nodeName: goal.__typename, id: goal.id },
     })) ?? []
 
   const resourceNodes =
     resources?.resources.map((resource) => ({
-      id: resource.id,
+      id: `${resource.__typename}` + resource.id,
       position: getRandomPosition(),
       type: 'customNode',
-      data: { label: resource.name, nodeName: resource.__typename },
+      data: {
+        label: resource.name,
+        nodeName: resource.__typename,
+        id: resource.id,
+      },
     })) ?? []
 
   const memberNodes =
     members?.members.map((member) => ({
-      id: member.id,
+      id: `${member.__typename}` + member.id,
       position: getRandomPosition(),
       type: 'customNode',
       data: {
         label: `${member.firstName} ${member.lastName}`,
         nodeName: member.__typename,
+        id: member.id,
       },
     })) ?? []
 
-  const graphNodes = [
-    ...peopleNodes,
-    ...coreValuesNodes,
-    ...goalNodes,
-    ...resourceNodes,
-    ...memberNodes,
-  ]
+  const graphNodes = calculateNodePositionsAsRings([
+    resourceNodes,
+    memberNodes,
+    peopleNodes,
+    coreValuesNodes,
+    goalNodes,
+  ])
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
     peopleNodes ?? []
   )
@@ -121,11 +130,11 @@ const GraphVisualization = () => {
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <div style={{ width: '100vw', height: '100vh' }}>
-        <Flex gap={2} mt={2}>
+      <div>
+        <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
           {NodeTriggers.map((trigger) => {
             const nextNodes = graphNodes.filter(
-              (node) => node.data.nodeName === trigger
+              (node: Node) => node.data.nodeName === trigger
             )
             return (
               <Button
@@ -151,18 +160,20 @@ const GraphVisualization = () => {
             )
           })}
         </Flex>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-        >
-          <Controls />
-          <MiniMap />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
+        <div style={{ width: '100%', height: '80vh' }}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+          >
+            <Controls />
+            <MiniMap />
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        </div>
       </div>
     </ApolloWrapper>
   )
