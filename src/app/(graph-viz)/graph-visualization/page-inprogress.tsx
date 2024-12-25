@@ -42,54 +42,6 @@ const GraphVisualization = () => {
       data: { label: person.name, nodeName: person.__typename },
     })) ?? []
 
-  const coreValuesNodes =
-    coreValues?.coreValues.map((coreValue) => ({
-      id: coreValue.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: { label: coreValue.name, nodeName: coreValue.__typename },
-    })) ?? []
-
-  const goalNodes =
-    goals?.goals.map((goal) => ({
-      id: goal.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: { label: goal.name, nodeName: goal.__typename },
-    })) ?? []
-
-  const resourceNodes =
-    resources?.resources.map((resource) => ({
-      id: resource.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: { label: resource.name, nodeName: resource.__typename },
-    })) ?? []
-
-  const memberNodes =
-    members?.members.map((member) => ({
-      id: member.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: {
-        label: `${member.firstName} ${member.lastName}`,
-        nodeName: member.__typename,
-      },
-    })) ?? []
-
-  const graphNodes = [
-    ...peopleNodes,
-    ...coreValuesNodes,
-    ...goalNodes,
-    ...resourceNodes,
-    ...memberNodes,
-  ]
-  const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
-    peopleNodes ?? []
-  )
-
-  const initNodes: Node[] = selectedNodes ?? []
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
@@ -97,7 +49,8 @@ const GraphVisualization = () => {
   type Params = Connection | Edge
 
   const onConnect = useCallback(
-    (params: Params) => setEdges((eds: Edge[]) => addEdge(params, eds)),
+    // @ts-expect-error getEdgeParams is not defined
+    (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   )
 
