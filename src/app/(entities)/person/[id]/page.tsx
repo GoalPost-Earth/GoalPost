@@ -18,7 +18,7 @@ import {
 import AvatarIcon from '@/components/icons/AvatarIcon'
 import GenericTabs from '@/components/ui/generic-tabs'
 import { RANDOM_IMAGE_URL_400 } from '@/types'
-import { getHumanReadableDate } from '@/app/utils'
+import { getHumanReadableDateTime } from '@/app/utils'
 
 export default async function ViewPersonPage({
   params,
@@ -71,7 +71,7 @@ export default async function ViewPersonPage({
     },
     {
       title: 'Sign Up Date',
-      description: getHumanReadableDate(person.createdAt),
+      description: getHumanReadableDateTime(person.createdAt),
       icon: <CalendarIcon />,
     },
     {
