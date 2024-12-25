@@ -106,7 +106,7 @@ const GraphVisualization = () => {
   type Params = Connection | Edge
 
   const onConnect = useCallback(
-    (params: Params) => setEdges((eds) => addEdge(params, eds)),
+    (params: Params) => setEdges((eds: Edge[]) => addEdge(params, eds)),
     [setEdges]
   )
 
@@ -168,40 +168,3 @@ const GraphVisualization = () => {
 }
 
 export default GraphVisualization
-
-{
-  /* <Flex gap={2} mt={2}>
-  {
-    NodeTriggers.map((trigger) => {
-      const nextNodes = graphNodes.filter((node) => node.nodeName === trigger);
-      
-      const areNextNodesSelected = nextNodes.every((nextNode) => 
-        selectedNodes.some((selectedNode) => selectedNode.nodeName === nextNode.nodeName)
-      );
-
-      return (
-        <Button 
-          key={trigger} 
-          onClick={() => {
-            setSelectedNodes((prevSelectedNodes) => {
-              if (areNextNodesSelected) {
-                // Remove nextNodes from selectedNodes
-                return prevSelectedNodes.filter(
-                  (node) => !nextNodes.some((nextNode) => nextNode.nodeName === node.nodeName)
-                );
-              } else {
-                // Add nextNodes to selectedNodes
-                return [...prevSelectedNodes, ...nextNodes.filter(
-                  (nextNode) => !prevSelectedNodes.some((node) => node.nodeName === nextNode.nodeName)
-                )];
-              }
-            });
-          }}
-        >
-          {trigger}
-        </Button>
-      );
-    })
-  }
-</Flex> */
-}
