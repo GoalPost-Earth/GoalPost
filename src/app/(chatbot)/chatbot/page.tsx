@@ -1,11 +1,13 @@
 import { Container, Heading, Text } from '@chakra-ui/react'
 import React from 'react'
 
-export default function MyProfile() {
+const Chatbot = () => {
   return (
     <Container>
-      <Heading>My Profile</Heading>
+      <Heading>Chatbot</Heading>
       <Text>This page is under construction</Text>
     </Container>
   )
 }
+
+export default Chatbot

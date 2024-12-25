@@ -4,7 +4,7 @@ import React from 'react'
 export default function MyProfile() {
   return (
     <Container>
-      <Heading>My Profile</Heading>
+      <Heading>Graph Visualization</Heading>
       <Text>This page is under construction</Text>
     </Container>
   )

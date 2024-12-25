@@ -14,19 +14,10 @@ import {
 } from '@xyflow/react'
 import { Edge, Connection } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import {
-  GET_ALL_PEOPLE,
-  GET_ALL_COREVALUES,
-  GET_ALL_GOALS,
-  GET_ALL_RESOURCES,
-  GET_MEMBERS,
-} from '../graphql'
 import { useQuery } from '@apollo/client'
 import ApolloWrapper from '@/components/ApolloWrapper'
-import { getRandomPosition } from '../utils'
-import GraphNodes from '@/components/ui/graph-nodes'
-import { Flex } from '@chakra-ui/react'
-import { Button } from '@/components/ui'
+import { getRandomPosition } from '@/app/utils'
+import { GET_ALL_PEOPLE } from '@/app/graphql'
 
 const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }]
 const GraphVisualization = () => {

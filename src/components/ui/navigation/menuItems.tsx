@@ -14,12 +14,12 @@ export const menuItems = [
   },
   {
     name: 'AI Chat Bot',
-    to: () => '/#',
+    to: () => '/chatbot',
     icon: <ChatBotIcon />,
   },
   {
     name: 'Profile',
-    to: () => '/#',
+    to: () => '/profile',
     icon: <ProfileIcon />,
   },
   {

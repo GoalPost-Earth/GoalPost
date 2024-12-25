@@ -3,9 +3,9 @@ import { Tabs } from '@chakra-ui/react'
 
 interface GenericTabsProps {
   triggers: string[]
-  contents: React.ReactNode[]
+  content: React.ReactNode[]
 }
-const GenericTabs = ({ triggers, contents }: GenericTabsProps) => {
+const GenericTabs = ({ triggers, content }: GenericTabsProps) => {
   return (
     <Tabs.Root
       variant="subtle"
@@ -29,7 +29,7 @@ const GenericTabs = ({ triggers, contents }: GenericTabsProps) => {
           </Tabs.Trigger>
         ))}
       </Tabs.List>
-      {contents.map((content, index) => (
+      {content.map((content, index) => (
         <Tabs.Content
           key={`${triggers[index]}-${index}`}
           value={triggers[index]}

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Checkbox as ChakraCheckbox, CheckboxProps } from '../ui/checkbox'
 import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps } from './types'
+import { ReactHookFormComponentProps } from '../../app/types/form'
 import { Field } from '../ui/field'
 
 export type CustomCheckboxProps = ReactHookFormComponentProps
