@@ -10,7 +10,6 @@ import {
   CalendarIcon,
   FigureIcon,
   IdeaIcon,
-  LocationIcon,
   MailIcon,
   ManualIcon,
   PhoneIcon,
@@ -18,6 +17,8 @@ import {
 } from '@/components/icons'
 import AvatarIcon from '@/components/icons/AvatarIcon'
 import GenericTabs from '@/components/ui/generic-tabs'
+import { RANDOM_IMAGE_URL_400 } from '@/types'
+import { getHumanReadableDate } from '@/app/utils'
 
 export default async function ViewPersonPage({
   params,
@@ -49,6 +50,16 @@ export default async function ViewPersonPage({
       icon: <UserIcon />,
     },
     {
+      title: 'Email',
+      description: person.email,
+      icon: <MailIcon />,
+    },
+    {
+      title: 'Phone Number',
+      description: person.phone ?? '',
+      icon: <PhoneIcon />,
+    },
+    {
       title: 'Pronouns',
       description: person.pronouns ?? '',
       icon: <FigureIcon />,
@@ -59,13 +70,8 @@ export default async function ViewPersonPage({
       icon: <FigureIcon />,
     },
     {
-      title: 'Avatar',
-      description: 'Owl',
-      icon: <AvatarIcon />,
-    },
-    {
       title: 'Sign Up Date',
-      description: '19/12/24',
+      description: getHumanReadableDate(person.createdAt),
       icon: <CalendarIcon />,
     },
     {
@@ -78,38 +84,16 @@ export default async function ViewPersonPage({
       description: person.interests ?? '',
       icon: <IdeaIcon />,
     },
-  ]
-
-  const contactsData = [
-    {
-      title: 'Sign Up Date',
-      description: '19/12/24',
-      icon: <CalendarIcon />,
-    },
-    {
-      title: 'Email',
-      description: person.email,
-      icon: <MailIcon />,
-    },
-    {
-      title: 'Phone Number',
-      description: person.phone ?? '',
-      icon: <PhoneIcon />,
-    },
     {
       title: 'Location',
-      description: 'Ghana',
-      icon: <LocationIcon />,
+      description: person.location ?? '',
+      icon: <AvatarIcon />,
     },
   ]
 
-  const triggers = ['Bio', 'Contacts']
+  const triggers = ['Bio', 'Contact']
 
-  const contents = [
-    <UserInfo data={bioData} key="bio" />,
-    <UserInfo key={'edit-profile'} />,
-    <UserInfo data={contactsData} key="contacts" />,
-  ]
+  const content = [<UserInfo data={bioData} key="bio" />]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
@@ -122,7 +106,7 @@ export default async function ViewPersonPage({
             height={'160px'}
           >
             <Image
-              src="https://picsum.photos/400/400"
+              src={RANDOM_IMAGE_URL_400}
               alt="Profile background"
               objectFit="cover"
               transform={'translateY(-15%)'}
@@ -151,7 +135,7 @@ export default async function ViewPersonPage({
               </Text>
             </Flex>
           </Box>
-          <GenericTabs triggers={triggers} contents={contents} />
+          <GenericTabs triggers={triggers} content={content} />
         </VStack>
       </Container>
     </ApolloWrapper>

@@ -9,6 +9,7 @@ export const CREATE_PEOPLE_MUTATION = graphql(`
         lastName
         email
         phone
+        photo
         location
         manual
         interests

@@ -5778,6 +5778,7 @@ export type CreatePeopleMutation = {
       lastName: string
       email?: string | null
       phone?: string | null
+      photo?: string | null
       location?: string | null
       manual?: string | null
       interests?: string | null
@@ -6347,6 +6348,7 @@ export const CreatePeopleDocument = {
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'location' },

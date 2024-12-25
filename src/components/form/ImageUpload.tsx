@@ -9,7 +9,7 @@ import {
   Fieldset,
 } from '@chakra-ui/react'
 import { UseFormSetValue } from 'react-hook-form'
-import { ReactHookFormComponentProps } from './types'
+import { ReactHookFormComponentProps } from '../../app/types/form'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
 export interface ImageUploadProps extends ReactHookFormComponentProps {

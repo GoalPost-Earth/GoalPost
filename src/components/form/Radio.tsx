@@ -1,7 +1,10 @@
 import React from 'react'
 import { HStack, Fieldset } from '@chakra-ui/react'
 import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps, SelectOptions } from './types'
+import {
+  ReactHookFormComponentProps,
+  SelectOptions,
+} from '../../app/types/form'
 import { Radio as ChakraRadio, RadioGroup, RadioProps } from '../ui/radio'
 
 export interface CustomRadioProps extends ReactHookFormComponentProps {

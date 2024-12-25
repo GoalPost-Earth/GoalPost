@@ -1,7 +1,10 @@
 import React from 'react'
 import { createListCollection, SelectRootProps } from '@chakra-ui/react'
 import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps, SelectOptions } from './types'
+import {
+  ReactHookFormComponentProps,
+  SelectOptions,
+} from '../../app/types/form'
 import { Field } from '../ui/field'
 import {
   SelectContent,

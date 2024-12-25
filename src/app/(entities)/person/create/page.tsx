@@ -5,17 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Input, Select, Radio } from '@/components/form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
-import {
-  Box,
-  Center,
-  Container,
-  Grid,
-  GridItem,
-  Heading,
-} from '@chakra-ui/react'
+import { Center, Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { ImageUpload } from '@/components/form'
+import {
+  CloudinaryPresets,
+  GENDER_SELECT_OPTIONS,
+  PRONOUN_SELECT_OPTIONS,
+} from '@/types'
 
 function CreatePerson() {
   const {
@@ -39,7 +37,6 @@ function CreatePerson() {
           },
         },
       })
-
       router.push('/person/' + res.data?.createPeople.people[0].id)
     } catch (error) {
       console.error(error)
@@ -47,7 +44,7 @@ function CreatePerson() {
   }
 
   return (
-    <Container position={'relative'} pt={2}>
+    <Container position={'relative'} pt={2} pb={10} width={{ md: '50%' }}>
       <Heading position={'absolute'} top={0} left={0} ml={'1rem'}>
         Create a Profile
       </Heading>
@@ -57,8 +54,7 @@ function CreatePerson() {
             name="photo"
             control={control}
             errors={errors}
-            uploadPreset="member-photos"
-            // initialValue="https://picsum.photos/300/300"
+            uploadPreset={CloudinaryPresets.MemberPhotos}
             setValue={setValue}
           />
         </Center>
@@ -90,36 +86,13 @@ function CreatePerson() {
               required
             />
           </GridItem>
-          <GridItem>
-            <Select
-              label="Pronouns"
-              name="pronouns"
-              control={control}
-              errors={errors}
-              options={[
-                { label: 'He/Him', value: 'he/him' },
-                { label: 'She/Her', value: 'she/her' },
-                { label: 'They/Them', value: 'they/them' },
-              ]}
-              required
-            />
-          </GridItem>
+
           <GridItem>
             <Input
-              label="Telephone"
-              name="phoneNumber"
+              label="Phone Number"
+              name="phone"
               control={control}
               errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Member ID"
-              name="memberId"
-              control={control}
-              errors={errors}
-              required
             />
           </GridItem>
           <GridItem>
@@ -129,78 +102,45 @@ function CreatePerson() {
               value={getValues('gender')}
               control={control}
               errors={errors}
-              options={[
-                { label: 'Male', value: 'male' },
-                { label: 'Female', value: 'female' },
-              ]}
-              required
+              options={GENDER_SELECT_OPTIONS}
+            />
+          </GridItem>
+          <GridItem>
+            <Select
+              label="Pronouns"
+              name="pronouns"
+              control={control}
+              errors={errors}
+              options={PRONOUN_SELECT_OPTIONS}
             />
           </GridItem>
           <GridItem>
             <Input
-              label="Country"
-              name="country"
+              label="Manual"
+              name="manual"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
           <GridItem>
             <Input
-              label="Zip Postal Code"
-              name="zipPostal"
+              label="Interests"
+              name="interests"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
           <GridItem>
             <Input
               label="Location"
               name="location"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Location"
-              name="location"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Traits"
-              name="traits"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Favourites"
-              name="favourites"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Passions"
-              name="passions"
               control={control}
               errors={errors}
             />
           </GridItem>
         </Grid>
-        <Box my={5}>
-          <hr />
-        </Box>
-        <Center>
+
+        <Center my={5}>
           <Button type="submit" loading={isSubmitting}>
             Create Person
           </Button>
