@@ -6,7 +6,7 @@ interface PersonInterface {
   photo: String
   phone: String
   email: String
-  manual: String
+  careManual: String
   interests: String
   gender: String
   pronouns: String
@@ -24,7 +24,7 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
   photo: String
   phone: String
   email: String
-  manual: String
+  careManual: String
   interests: String
   gender: String
   pronouns: String
@@ -46,18 +46,14 @@ type Member implements PersonInterface @node(labels: ["Member"]) {
   name: String! @customResolver(requires: "firstName lastName")
   phone: String
   email: String
-  manual: String
+  careManual: String
   interests: String
   gender: String
   pronouns: String
   location: String
 
   # Non Inherited Fields
-  status: Boolean!
-    @cypher(
-      statement: "MATCH (this) RETURN this.status = true AS status"
-      columnName: "status"
-    )
+  status: String!
   photo: String
   signupDate: Date!
   avatar: String
@@ -99,11 +95,13 @@ type Area @node {
 type CarePoint @node {
   id: ID! @id
   description: String!
-  status: Boolean!
-    @cypher(
-      statement: "MATCH (this) RETURN this.status = true AS status"
-      columnName: "status"
-    )
+  status: String!
+
+  appliedInResource: [Resource!]!
+    @relationship(type: "APPLIED_IN", direction: OUT)
+  enabledByGoal: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
+  caresForGoal: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
+
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -115,15 +113,13 @@ type CarePoint @node {
 type Community @node {
   id: ID! @id
   name: String!
-  caresFor: String
+  description: String
+  why: String
+  location: String
+  time: String
   activities: String
   resultsAchieved: String
-  status: Boolean!
-    @cypher(
-      statement: "MATCH (this) RETURN this.status = true AS status"
-      columnName: "status"
-    )
-  location: String
+  status: String!
 
   hasMembers: [Member!]! @relationship(type: "MEMBER_OF", direction: IN)
   relatesToCommunity: [Community!]!
@@ -161,14 +157,10 @@ type Goal @node {
   name: String!
   type: String!
   description: String!
-  caresFor: String
   successMeasures: String
   photo: String
-  status: Boolean!
-    @cypher(
-      statement: "MATCH (this) RETURN this.status = true AS status"
-      columnName: "status"
-    )
+  activities: String
+  status: String!
   location: String
   time: String
   motivatesPerson: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
@@ -184,11 +176,7 @@ type Resource @node {
   id: ID! @id
   name: String!
   description: String
-  status: Boolean!
-    @cypher(
-      statement: "MATCH (this) RETURN this.status = true AS status"
-      columnName: "status"
-    )
+  status: String!
   why: String
   location: String
   time: String

@@ -13,11 +13,24 @@ community.status = row.status,
 community.location  = row.location,
 community.description = row.description,
 community.name = row.name,
-community.caresFor = row.caresFor,
 community.activities = row.activities,
 community.why = row.why
 
 RETURN community;
+
+LOAD CSV WITH HEADERS from "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=824956865&single=true&output=csv" AS row
+
+MERGE (person:Person {id: row.id})
+SET person.firstName = row.firstName,
+person.lastName = row.lastName,
+person.email = row.email,
+person.phone = row.phoneNumber,
+person.location = row.location,
+person.pronouns = row.pronouns,
+person.gender = row.gender
+
+RETURN person;
+
 
 
 // Load Members
@@ -34,9 +47,9 @@ member.favourites = row.favourites,
 member.avatar = row.avatar,
 member.photo = row.photo,
 member.fieldsOfCare = row.fieldsOfCare,
-member.manual = row.manual,
+member.careManual = row.careManual,
 member.signupDate = datetime(row.signupDate),
-member.phoneNumber = row.phoneNumber,
+member.phone = row.phoneNumber,
 member.email = row.email,
 member.gender = row.gender,
 member.traits = row.traits,
@@ -54,8 +67,7 @@ LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsx
 MATCH (source:Person {id: row.sourceId})
 MATCH (target:Person {id: row.targetId})
 MERGE (source)-[r:CONNECTS_TO]->(target)
-SET r.type = row.type,
-r.why = row.why,
+SET r.why = row.why,
 r.interests = row.interests
 
 RETURN source, target;
@@ -68,9 +80,7 @@ MERGE (coreValue:CoreValue {id: row.id})
 SET coreValue.name = row.name,
 coreValue.alignmentChallenges = row.alignmentChallenges,
 coreValue.description = row.description,
-coreValue.whoSupports = row.whoSupports,
 coreValue.alignmentExamples = row.alignmentExamples,
-coreValue.caresFor = row.caresFor,
 coreValue.why = row.why
 
 WITH coreValue, row
@@ -88,6 +98,7 @@ SET goal.time = row.time,
 goal.status = row.status,
 goal.location = row.location,
 goal.description = row.description,
+goal.activities = row.activities,
 goal.name = row.name,
 goal.photo = row.photo,
 goal.successMeasures = row.successMeasures,
@@ -126,8 +137,7 @@ LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsx
 MATCH (source:Community {id: row.sourceId})
 MATCH (target:Community {id: row.targetId})
 MERGE (source)-[r:RELATES_TO]->(target)
-SET r.type = row.type,
-r.why = row.why
+SET r.why = row.why
 RETURN source, target;
 
 // Load COmmunity CoreValue
@@ -143,7 +153,7 @@ LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsx
 
 MERGE (carePoint:CarePoint {id: randomUUID()})
 SET carePoint.issuesResolved = row.issuesResolved,
-carePoint.percentFulfilled = row.percentFulfilled,
+carePoint.levelFulfilled = row.levelFulfilled,
 carePoint.location = row.location,
 carePoint.status = row.status,
 carePoint.issuesIdentified = row.issuesIdentified,
