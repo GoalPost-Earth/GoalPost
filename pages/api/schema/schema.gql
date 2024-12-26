@@ -15,8 +15,9 @@ interface PersonInterface {
   createdAt: DateTime!
   updatedAt: DateTime
 }
+extend schema @authentication
 
-type Person implements PersonInterface @node(labels: ["Person"]) {
+type Person implements PersonInterface {
   id: ID! @id
   authId: String
   firstName: String!
@@ -39,7 +40,9 @@ type Person implements PersonInterface @node(labels: ["Person"]) {
     @settable(onCreate: false, onUpdate: true)
 }
 
-type Member implements PersonInterface @node(labels: ["Member"]) {
+type Member implements PersonInterface
+  @authentication
+  @node(labels: ["Member"]) {
   id: ID! @id
   authId: String
   firstName: String!

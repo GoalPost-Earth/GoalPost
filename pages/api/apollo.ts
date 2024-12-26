@@ -1,8 +1,9 @@
-import { ApolloServer } from 'apollo-server-micro'
 import typeDefs from './schema/schema.gql'
 import resolvers from './resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
+import { createYoga } from 'graphql-yoga'
+import { jwtDecode } from 'jwt-decode'
 
 export default async function initializeApolloServer() {
   const driver = neoDriver(
@@ -17,25 +18,27 @@ export default async function initializeApolloServer() {
     typeDefs,
     resolvers,
     driver,
-    // features: {
-    //   authorization: {
-    //     key: process.env.JWT_SECRET ?? '',
-    //   },
-    // },
+    features: {
+      authorization: {
+        key: process.env.JWT_SECRET ?? '',
+      },
+    },
   })
   const schema = await neoSchema.getSchema()
 
-  const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ event }) => ({ req: event }),
-    introspection: true,
-    cache: 'bounded',
-    persistedQueries: false,
+  const yogaServer = createYoga({
     schema,
+    context: async (req) => {
+      // decode JWT token
+      const token = req.request.headers.get('authorization')
+      const jwt = jwtDecode(token ?? '')
+
+      return {
+        jwt,
+      }
+    },
+    graphqlEndpoint: '/api/graphql',
   })
 
-  await apolloServer.start()
-
-  return apolloServer.createHandler({ path: '/api/graphql' })
+  return yogaServer
 }

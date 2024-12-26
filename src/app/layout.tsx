@@ -9,6 +9,8 @@ import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
+import { getAccessToken, getSession } from '@auth0/nextjs-auth0'
+import { jwtDecode } from 'jwt-decode'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -21,11 +23,29 @@ export const metadata: Metadata = {
   description: 'A directive by the Seed COC',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await getSession()
+  let token
+
+  if (session) {
+    const at = await getAccessToken()
+
+    if (at?.accessToken) {
+      const decoded = jwtDecode(at.accessToken) as { exp: number }
+
+      token = {
+        accessToken: at.accessToken,
+        accessTokenDecoded: decoded,
+        user: session.user,
+        expiresAt: decoded.exp,
+      }
+    }
+  }
+
   return (
     <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning>
       <body style={{ position: 'relative' }}>
@@ -33,7 +53,7 @@ export default function RootLayout({
           <UserProvider>
             <AppProvider>
               <ReactFlowProvider>
-                <ApolloWrapper>
+                <ApolloWrapper token={token}>
                   <StartupScreen>
                     <Navbar />
                     <Toaster />

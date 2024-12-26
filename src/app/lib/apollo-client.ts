@@ -1,9 +1,6 @@
 import { from } from '@apollo/client'
-import {
-  registerApolloClient,
-  ApolloClient,
-  InMemoryCache,
-} from '@apollo/experimental-nextjs-app-support'
+import { ApolloClient, InMemoryCache } from '@apollo/client'
+import { registerApolloClient } from '@apollo/experimental-nextjs-app-support'
 import {
   authLink,
   ERROR_POLICY,
@@ -17,7 +14,6 @@ export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
     uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/api/graphql',
     link: from([retryLink, errorLink, authLink.concat(httpLink)]),
     cache: new InMemoryCache(),
-    connectToDevTools: true,
     defaultOptions: {
       watchQuery: {
         errorPolicy: ERROR_POLICY,
