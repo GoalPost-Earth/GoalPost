@@ -59,7 +59,10 @@ export default async function ViewGoalPage({
         />
         <ProfileDetailCard title="Location" detail={goal.location} />
         <ProfileDetailCard title="Type" detail={goal.type} />
-        <ProfileDetailCard title="Created By" detail={goal.createdBy[0].name} />
+        <ProfileDetailCard
+          title="Created By"
+          detail={goal.createdBy[0]?.name}
+        />
       </VStack>
     </Container>
   )
