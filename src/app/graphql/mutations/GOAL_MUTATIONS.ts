@@ -8,7 +8,6 @@ export const CREATE_GOAL_MUTATION = graphql(`
         name
         type
         description
-        caresFor
         successMeasures
         photo
         status

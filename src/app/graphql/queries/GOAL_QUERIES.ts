@@ -7,7 +7,6 @@ export const GET_GOAL = graphql(`
       name
       type
       description
-      caresFor
       successMeasures
       photo
       status
@@ -30,7 +29,6 @@ export const GET_ALL_GOALS = graphql(`
       name
       type
       description
-      caresFor
       successMeasures
       photo
       status

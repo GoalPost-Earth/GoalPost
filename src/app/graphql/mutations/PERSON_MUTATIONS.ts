@@ -11,7 +11,7 @@ export const CREATE_PEOPLE_MUTATION = graphql(`
         phone
         photo
         location
-        manual
+        careManual
         interests
         pronouns
       }
