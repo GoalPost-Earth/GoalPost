@@ -12,3 +12,8 @@ export const GENDER_SELECT_OPTIONS = [
   { label: 'Male', value: 'Male' },
   { label: 'Female', value: 'Female' },
 ]
+
+export const STATUS_SELECT_OPTIONS = [
+  { label: 'Active', value: 'Active' },
+  { label: 'Inactive', value: 'Inactive' },
+]

@@ -5,6 +5,7 @@ import {
   Container,
   Heading,
   HStack,
+  Image,
   Spacer,
   Text,
   VStack,
@@ -30,7 +31,6 @@ export default async function ViewGoalPage({
     <Container>
       <Heading>Goal Details</Heading>
       <VStack>
-        {/* <Avatar src="https://bit.ly/dan-abramov" size="2xl" /> */}
         <HStack mt={2} width="100%">
           <Text>{goal.name}</Text>
           <Spacer />
@@ -38,16 +38,28 @@ export default async function ViewGoalPage({
             {goal.type.toUpperCase()}
           </Badge>
         </HStack>
-        <HStack width="100%" mb={2}>
-          <Spacer />
-          <Text fontWeight="bold" fontSize="xs">
-            {goal.motivatesPerson[0].name}
-          </Text>
-        </HStack>
+
+        {goal.motivatesPerson.length > 0 &&
+          goal.motivatesPerson.map((person) => (
+            <Text key={person.id}>{person.name} is motivated by this goal</Text>
+          ))}
+
+        <Image
+          src={goal.photo ?? 'https://via.placeholder.com/400'}
+          alt="Profile background"
+          width={400}
+        />
 
         <ProfileDetailCard title="Name" detail={goal.name} />
         <ProfileDetailCard title="Description" detail={goal.description} />
+        <ProfileDetailCard title="Status" detail={goal.status} />
+        <ProfileDetailCard
+          title="Success Measures"
+          detail={goal.successMeasures}
+        />
         <ProfileDetailCard title="Location" detail={goal.location} />
+        <ProfileDetailCard title="Type" detail={goal.type} />
+        <ProfileDetailCard title="Created By" detail={goal.createdBy[0].name} />
       </VStack>
     </Container>
   )

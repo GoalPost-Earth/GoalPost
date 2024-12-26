@@ -4,6 +4,7 @@ export const GET_LOGGED_IN_USER = graphql(`
   query getLoggedInUser($email: String!) {
     members(where: { email_EQ: $email }) {
       id
+      authId
       firstName
       lastName
       email

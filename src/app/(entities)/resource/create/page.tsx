@@ -15,6 +15,8 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
+import { STATUS_SELECT_OPTIONS } from '@/app/types'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreateResource() {
   const {
@@ -23,8 +25,8 @@ function CreateResource() {
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
-
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
+  const { user } = useUser()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
@@ -33,11 +35,16 @@ function CreateResource() {
         variables: {
           input: {
             ...data,
+            providedByPerson: {
+              connect: {
+                where: { node: { authId_EQ: user?.sub ?? '' } },
+              },
+            },
           },
         },
       })
 
-      router.push('/resource/view/' + res.data?.createResources.resources[0].id)
+      router.push('/resource/' + res.data?.createResources.resources[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -50,8 +57,8 @@ function CreateResource() {
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
-              label="First Name"
-              name="firstName"
+              label="Name"
+              name="name"
               control={control}
               errors={errors}
               required
@@ -59,64 +66,23 @@ function CreateResource() {
           </GridItem>
           <GridItem>
             <Input
-              label="Last Name"
-              name="lastName"
+              label="Description"
+              name="description"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
-          <GridItem>
-            <Input
-              label="Email"
-              name="email"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Phone Number"
-              name="phoneNumber"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-
-          <GridItem>
-            <Input
-              label="Manual (paste a url here)"
-              name="manual"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Interests"
-              name="interests"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-
           <GridItem>
             <Select
-              label="Pronouns"
-              name="pronouns"
+              label="Status"
+              name="status"
               control={control}
               errors={errors}
-              options={[
-                { label: 'He/Him', value: 'he/him' },
-                { label: 'She/Her', value: 'she/her' },
-                { label: 'They/Them', value: 'they/them' },
-              ]}
-              required
+              options={STATUS_SELECT_OPTIONS}
             />
+          </GridItem>
+          <GridItem>
+            <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>
           <GridItem>
             <Input
@@ -124,8 +90,10 @@ function CreateResource() {
               name="location"
               control={control}
               errors={errors}
-              required
             />
+          </GridItem>
+          <GridItem>
+            <Input label="Time" name="time" control={control} errors={errors} />
           </GridItem>
         </Grid>
         <Box my={5}>

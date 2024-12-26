@@ -6,7 +6,6 @@ export const CREATE_COREVALUE_MUTATION = graphql(`
       coreValues {
         id
         name
-        caresFor
         whoSupports
         alignmentChallenges
         alignmentExamples

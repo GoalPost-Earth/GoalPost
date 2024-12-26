@@ -5,17 +5,35 @@ import { Button } from '@/components/ui'
 import { Box, Center, Container, Heading } from '@chakra-ui/react'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AvatarCarousel } from '@/components/sections'
-import { useQuery } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { GET_LOGGED_IN_USER } from './graphql/queries/DASHBOARD_QUERIES'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { Member } from '@/gql/graphql'
 import ShowForms from './forms/page'
+import { UPDATE_MEMBER_MUTATION } from './graphql'
 
 const HomeClient = () => {
   const { user } = useUser()
+  const [UpdateMember] = useMutation(UPDATE_MEMBER_MUTATION)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
+    onCompleted: (data) => {
+      if (!data?.members[0]) {
+        return
+      }
+
+      if (data?.members[0].authId !== user?.sub) {
+        UpdateMember({
+          variables: {
+            where: { email_EQ: user?.email },
+            update: {
+              authId_SET: user?.sub,
+            },
+          },
+        })
+      }
+    },
   })
 
   const member = data?.members[0]

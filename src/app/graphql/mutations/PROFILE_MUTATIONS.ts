@@ -12,3 +12,17 @@ export const CREATE_PROFILE_MUTATION = graphql(`
     }
   }
 `)
+
+export const UPDATE_MEMBER_MUTATION = graphql(`
+  mutation UpdateMember($where: MemberWhere!, $update: MemberUpdateInput!) {
+    updateMembers(where: $where, update: $update) {
+      members {
+        id
+        authId
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`)

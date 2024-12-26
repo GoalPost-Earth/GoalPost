@@ -8,6 +8,7 @@ import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreateCoreValue() {
   const {
@@ -16,6 +17,7 @@ function CreateCoreValue() {
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
+  const { user } = useUser()
 
   const [CreateCoreValue] = useMutation(CREATE_COREVALUE_MUTATION)
 
@@ -26,7 +28,9 @@ function CreateCoreValue() {
         variables: {
           input: {
             ...data,
-            // createdBy: { connect: { where: { node: { authId: user?.sub } } } },
+            guidesPerson: {
+              connect: { where: { node: { authId: user?.sub } } },
+            },
           },
         },
       })
@@ -50,22 +54,13 @@ function CreateCoreValue() {
               required
             />
           </GridItem>
-          <GridItem>
-            <Input
-              label="Cares For"
-              name="caresFor"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
+
           <GridItem>
             <Input
               label="Who Supports"
               name="whoSupports"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
           <GridItem>
@@ -74,7 +69,6 @@ function CreateCoreValue() {
               name="alignmentChallenges"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
 
@@ -84,7 +78,6 @@ function CreateCoreValue() {
               name="description"
               control={control}
               errors={errors}
-              required
             />
           </GridItem>
           <GridItem>

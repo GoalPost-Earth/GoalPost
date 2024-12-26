@@ -1,38 +1,43 @@
 'use client'
 
-import { CREATE_COREVALUE_MUTATION } from '@/app/graphql/mutations'
+import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
-import { Input, Select, Textarea, Checkbox } from '@/components/form'
+import { Input, Select, Textarea, ImageUpload } from '@/components/form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import { CloudinaryPresets, STATUS_SELECT_OPTIONS } from '@/app/types'
 
 function CreateGoal() {
-  // const { user } = useUser()
+  const { user } = useUser()
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
 
-  const [CreateCoreValues] = useMutation(CREATE_COREVALUE_MUTATION)
+  const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
     try {
-      const res = await CreateCoreValues({
+      const res = await CreateGoal({
         variables: {
           input: {
             ...data,
-            // createdBy: { connect: { where: { node: { authId: user?.sub } } } },
+            createdBy: {
+              connect: { where: { node: { authId_EQ: user?.sub } } },
+            },
           },
         },
       })
 
-      router.push('/corevalue/' + res.data?.createCoreValues.coreValues[0].id)
+      router.push('/goal/' + res.data?.createGoals.goals[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -41,6 +46,15 @@ function CreateGoal() {
   return (
     <Container>
       <form onSubmit={handleSubmit(onSubmit)}>
+        <Center pt={2}>
+          <ImageUpload
+            name="photo"
+            control={control}
+            errors={errors}
+            uploadPreset={CloudinaryPresets.MemberPhotos}
+            setValue={setValue}
+          />
+        </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
@@ -59,9 +73,9 @@ function CreateGoal() {
               errors={errors}
               required
               options={[
-                { label: 'Need', value: 'need' },
-                { label: 'Offer', value: 'offer' },
-                { label: 'Wish', value: 'wish' },
+                { label: 'Need', value: 'Need' },
+                { label: 'Offer', value: 'Offer' },
+                { label: 'Wish', value: 'Wish' },
               ]}
             />
           </GridItem>
@@ -71,16 +85,6 @@ function CreateGoal() {
               name="description"
               control={control}
               errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Cares For"
-              name="caresFor"
-              control={control}
-              errors={errors}
-              required
             />
           </GridItem>
 
@@ -90,26 +94,17 @@ function CreateGoal() {
               name="successMeasures"
               control={control}
               errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Photo"
-              name="photo"
-              control={control}
-              errors={errors}
-              // required
-              disabled
             />
           </GridItem>
 
           <GridItem>
-            <Checkbox
+            <Select
               label="Status"
               name="status"
               control={control}
               errors={errors}
+              options={STATUS_SELECT_OPTIONS}
+              required
             />
           </GridItem>
           <GridItem>

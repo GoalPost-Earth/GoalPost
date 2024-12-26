@@ -17,7 +17,7 @@ const createButtons = [
   },
   {
     name: 'Input A Core Value',
-    to: '/core-value/create',
+    to: '/corevalue/create',
   },
   {
     name: 'Input A Resource',

@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
-  '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        caresFor\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
+  '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
     types.CreateCoreValuesDocument,
   '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        type\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.CreateGoalsDocument,
@@ -22,15 +22,17 @@ const documents = {
     types.CreatePeopleDocument,
   '\n  mutation CreateMembers($input: [MemberCreateInput!]!) {\n    createMembers(input: $input) {\n      members {\n        id\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n':
     types.CreateMembersDocument,
+  '\n  mutation UpdateMember($where: MemberWhere!, $update: MemberUpdateInput!) {\n    updateMembers(where: $where, update: $update) {\n      members {\n        id\n        authId\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n':
+    types.UpdateMemberDocument,
   '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n':
     types.CreateResourcesDocument,
-  '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
+  '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
     types.GetCoreValueDocument,
-  '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n':
+  '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n':
     types.GetAllCoreValuesDocument,
-  '\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n':
+  '\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      authId\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n':
     types.GetLoggedInUserDocument,
-  '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
+  '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n':
     types.GetGoalDocument,
   '\n  query getAllGoals($where: GoalWhere) {\n    goals(where: $where) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetAllGoalsDocument,
@@ -66,8 +68,8 @@ export function graphql(source: string): unknown
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        caresFor\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n'
-): (typeof documents)['\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        caresFor\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n']
+  source: '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -90,32 +92,38 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation UpdateMember($where: MemberWhere!, $update: MemberUpdateInput!) {\n    updateMembers(where: $where, update: $update) {\n      members {\n        id\n        authId\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation UpdateMember($where: MemberWhere!, $update: MemberUpdateInput!) {\n    updateMembers(where: $where, update: $update) {\n      members {\n        id\n        authId\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
+  source: '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      caresFor\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n']
+  source: '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n']
+  source: '\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      authId\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getLoggedInUser($email: String!) {\n    members(where: { email_EQ: $email }) {\n      id\n      authId\n      firstName\n      lastName\n      email\n      community {\n        id\n        name\n        hasMembers {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
+  source: '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

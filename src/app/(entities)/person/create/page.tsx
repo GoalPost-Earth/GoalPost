@@ -116,8 +116,8 @@ function CreatePerson() {
           </GridItem>
           <GridItem>
             <Input
-              label="Manual"
-              name="manual"
+              label="Care Manual"
+              name="careManual"
               control={control}
               errors={errors}
             />

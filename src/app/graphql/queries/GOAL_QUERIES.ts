@@ -18,6 +18,10 @@ export const GET_GOAL = graphql(`
         name
         photo
       }
+      createdBy {
+        id
+        name
+      }
     }
   }
 `)

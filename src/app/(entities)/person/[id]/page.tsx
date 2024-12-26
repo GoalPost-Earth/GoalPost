@@ -76,7 +76,7 @@ export default async function ViewPersonPage({
     },
     {
       title: 'Manual',
-      description: person.manual ?? '',
+      description: person.careManual ?? '',
       icon: <ManualIcon />,
     },
     {
