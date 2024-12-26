@@ -26,7 +26,6 @@ export default async function CoreValuePage({
 
         <ProfileDetailCard title="Name" detail={corevalue.name} />
         <ProfileDetailCard title="Description" detail={corevalue.description} />
-        <ProfileDetailCard title="Cares For" detail={corevalue.caresFor} />
         <ProfileDetailCard
           title="Who Supports"
           detail={corevalue.whoSupports}
