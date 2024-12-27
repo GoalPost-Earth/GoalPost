@@ -55,12 +55,14 @@ export function ApolloWrapper({
           router.refresh()
         }
 
-        operation.setContext(({ headers }) => ({
-          headers: {
-            authorization: `Bearer ${token?.accessToken}`,
-            ...headers,
-          },
-        }))
+        operation.setContext(
+          ({ headers }: { headers: Record<string, string> }) => ({
+            headers: {
+              authorization: `Bearer ${token?.accessToken}`,
+              ...headers,
+            },
+          })
+        )
       } catch (error) {
         console.log(error)
       }
