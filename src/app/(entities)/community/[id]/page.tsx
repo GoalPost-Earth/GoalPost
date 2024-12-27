@@ -1,12 +1,12 @@
 import { query } from '@/app/lib/apollo-client'
-import { GET_RESOURCE } from '@/app/graphql/queries'
+import { GET_COMMUNITY } from '@/app/graphql/queries'
 import MemberGuideDetailCard from '@/components/MemberGuideDetailCard'
 import { Container, VStack } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 
-export default async function ViewResourcePage({
+export default async function ViewCommunityPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -14,13 +14,13 @@ export default async function ViewResourcePage({
   const { id } = await params
 
   const { data, loading, error } = await query({
-    query: GET_RESOURCE,
+    query: GET_COMMUNITY,
     variables: { id },
   })
 
-  const resource = data?.resources[0]
+  const community = data?.communities[0]
 
-  if (!resource) {
+  if (!community) {
     return <LoadingScreen />
   }
 
@@ -28,23 +28,19 @@ export default async function ViewResourcePage({
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
         <VStack>
-          <MemberGuideDetailCard title="Name" detail={resource.name} />
+          <MemberGuideDetailCard title="Name" detail={community.name} />
           <MemberGuideDetailCard
             title="Description"
-            detail={resource.description}
+            detail={community.description}
           />
 
           <MemberGuideDetailCard
             title="Status"
-            detail={resource.status ? 'Active' : 'Inactive'}
+            detail={community.status ? 'Active' : 'Inactive'}
           />
-          <MemberGuideDetailCard title="Why" detail={resource.why} />
-          <MemberGuideDetailCard title="Location" detail={resource.location} />
-          <MemberGuideDetailCard title="Time" detail={resource.time} />
-          <MemberGuideDetailCard
-            title="Provided By"
-            detail={resource.providedByPerson[0].name}
-          />
+          <MemberGuideDetailCard title="Why" detail={community.why} />
+          <MemberGuideDetailCard title="Location" detail={community.location} />
+          <MemberGuideDetailCard title="Time" detail={community.time} />
         </VStack>
       </Container>
     </ApolloWrapper>

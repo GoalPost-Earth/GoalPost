@@ -1,1 +1,1 @@
-export * from './profileSchema'
+export * from './memberGuideSchema'

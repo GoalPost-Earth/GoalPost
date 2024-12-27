@@ -51,7 +51,6 @@ const GraphVisualization = () => {
       position: getRandomPosition(),
       type: 'customNode',
       data: { label: person.name, nodeName: person.__typename, id: person.id },
-      guidedBy: person.guidedBy,
     })) ?? []),
   ]
 
@@ -137,22 +136,33 @@ const GraphVisualization = () => {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
 
-      peopleNodes.forEach((personNode) => {
-        personNode.guidedBy?.forEach((value) => {
-          if (value === null) return
-          linkedEdges.push({
-            id: `edge-${personNode.id}-${value.id}`,
-            source: personNode.id,
-            target: `${value.__typename}` + value.id,
-          })
-        })
-      })
+      // peopleNodes.forEach((personNode) => {
+      // personNode.guidedBy?.forEach((value) => {
+      //   if (value === null) return
+      //   linkedEdges.push({
+      //     id: `edge-${personNode.id}-${value.id}`,
+      //     source: personNode.id,
+      //     target: `${value.__typename}` + value.id,
+      //   })
+      // })
+      // })
     }
     console.log('Linked Edges', linkedEdges)
     console.log('Person Nodes', peopleNodes)
 
     setEdges(linkedEdges)
-  }, [selectedNodes, people, coreValues, goals, resources, members])
+  }, [
+    selectedNodes,
+    people,
+    coreValues,
+    goals,
+    resources,
+    members,
+    linkedEdges,
+    peopleNodes,
+    setEdges,
+    setNodes,
+  ])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

@@ -10,7 +10,6 @@ export const GET_PERSON = graphql(`
       email
       photo
       phone
-      careManual
       interests
       gender
       pronouns
@@ -30,7 +29,6 @@ export const GET_ALL_PEOPLE = graphql(`
       email
       photo
       phone
-      careManual
       interests
       gender
       pronouns

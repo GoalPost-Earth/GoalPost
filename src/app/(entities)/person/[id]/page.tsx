@@ -107,7 +107,7 @@ export default async function ViewPersonPage({
           >
             <Image
               src={RANDOM_IMAGE_URL_400}
-              alt="Profile background"
+              alt="Member Guide background"
               objectFit="cover"
               transform={'translateY(-15%)'}
             />

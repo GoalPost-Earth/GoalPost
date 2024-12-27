@@ -4,7 +4,7 @@ import { Box, Flex, HStack } from '@chakra-ui/react'
 import NavHamburgerButton from './sidenav-button'
 import Link from 'next/link'
 import { AppLogo } from '../app-logo'
-import { menuItems } from './menuItems'
+import { navItems } from './navItems'
 import { Button } from '../button'
 
 interface Props {
@@ -41,7 +41,7 @@ export default function Simple() {
           <HStack gap={8} alignItems={'center'}>
             <AppLogo height={16} width={16} p={2} />
             <HStack as={'nav'} display={{ base: 'none', md: 'flex' }}>
-              {menuItems.map((item) => (
+              {navItems.map((item) => (
                 <NavLink key={item.name} link={item.to()}>
                   {item.name}
                 </NavLink>

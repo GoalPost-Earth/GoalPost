@@ -1,5 +1,5 @@
 import { query } from '@/app/lib/apollo-client'
-import ProfileDetailCard from '@/components/ProfileDetailCard'
+import MemberGuideDetailCard from '@/components/MemberGuideDetailCard'
 import {
   Badge,
   Container,
@@ -46,20 +46,20 @@ export default async function ViewGoalPage({
 
         <Image
           src={goal.photo ?? 'https://via.placeholder.com/400'}
-          alt="Profile background"
+          alt="Member Guide background"
           width={400}
         />
 
-        <ProfileDetailCard title="Name" detail={goal.name} />
-        <ProfileDetailCard title="Description" detail={goal.description} />
-        <ProfileDetailCard title="Status" detail={goal.status} />
-        <ProfileDetailCard
+        <MemberGuideDetailCard title="Name" detail={goal.name} />
+        <MemberGuideDetailCard title="Description" detail={goal.description} />
+        <MemberGuideDetailCard title="Status" detail={goal.status} />
+        <MemberGuideDetailCard
           title="Success Measures"
           detail={goal.successMeasures}
         />
-        <ProfileDetailCard title="Location" detail={goal.location} />
-        <ProfileDetailCard title="Type" detail={goal.type} />
-        <ProfileDetailCard
+        <MemberGuideDetailCard title="Location" detail={goal.location} />
+        <MemberGuideDetailCard title="Type" detail={goal.type} />
+        <MemberGuideDetailCard
           title="Created By"
           detail={goal.createdBy[0]?.name}
         />

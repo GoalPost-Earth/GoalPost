@@ -8,6 +8,10 @@ const createButtons = [
   //   to: '/member-guide/create',
   // },
   {
+    name: 'Create a Community',
+    to: '/community/create',
+  },
+  {
     name: 'Create A Person',
     to: '/person/create',
   },
@@ -45,6 +49,10 @@ const viewAllButtons = [
   {
     name: 'View All Resources',
     to: '/resource',
+  },
+  {
+    name: 'View All Communities',
+    to: '/community',
   },
 ]
 

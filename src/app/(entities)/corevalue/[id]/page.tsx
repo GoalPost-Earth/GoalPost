@@ -1,5 +1,5 @@
 import { query } from '@/app/lib/apollo-client'
-import ProfileDetailCard from '@/components/ProfileDetailCard'
+import MemberGuideDetailCard from '@/components/MemberGuideDetailCard'
 import { Container, Heading, VStack } from '@chakra-ui/react'
 import React from 'react'
 import { GET_COREVALUE } from '@/app/graphql/queries'
@@ -24,23 +24,26 @@ export default async function CoreValuePage({
       <VStack>
         {/* <Avatar src="https://bit.ly/dan-abramov" size="2xl" /> */}
 
-        <ProfileDetailCard title="Name" detail={corevalue.name} />
-        <ProfileDetailCard title="Description" detail={corevalue.description} />
-        <ProfileDetailCard
+        <MemberGuideDetailCard title="Name" detail={corevalue.name} />
+        <MemberGuideDetailCard
+          title="Description"
+          detail={corevalue.description}
+        />
+        <MemberGuideDetailCard
           title="Who Supports"
           detail={corevalue.whoSupports}
         />
-        <ProfileDetailCard
+        <MemberGuideDetailCard
           title="Alignment Challenges"
           detail={corevalue.alignmentChallenges}
         />
-        <ProfileDetailCard
+        <MemberGuideDetailCard
           title="Alignment Examples"
           detail={corevalue.alignmentExamples}
         />
-        <ProfileDetailCard title="Why" detail={corevalue.why} />
+        <MemberGuideDetailCard title="Why" detail={corevalue.why} />
 
-        <ProfileDetailCard
+        <MemberGuideDetailCard
           title="Guides"
           detail={corevalue.guidesPerson.map((guide) => guide.name).join(', ')}
         />

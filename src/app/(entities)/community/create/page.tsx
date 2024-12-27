@@ -1,43 +1,43 @@
 'use client'
 
-import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
+import { CREATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input, Select, Textarea, ImageUpload } from '@/components/form'
+import { Input, Select } from '@/components/form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
-import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
+import {
+  Box,
+  Center,
+  Container,
+  Grid,
+  GridItem,
+  Heading,
+} from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import { CloudinaryPresets, STATUS_SELECT_OPTIONS } from '@/app/types'
+import { STATUS_SELECT_OPTIONS } from '@/app/types'
 
-function CreateGoal() {
-  const { user } = useUser()
+function CreateCommunity() {
   const {
     control,
     handleSubmit,
-    setValue,
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
-
-  const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
+  const [CreateCommunities] = useMutation(CREATE_COMMUNITY_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
     try {
-      const res = await CreateGoal({
+      const res = await CreateCommunities({
         variables: {
           input: {
             ...data,
-            createdBy: {
-              connect: { where: { node: { authId_EQ: user?.sub } } },
-            },
           },
         },
       })
 
-      router.push('/goal/' + res.data?.createGoals.goals[0].id)
+      router.push('/community/' + res.data?.createCommunities.communities[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -45,16 +45,8 @@ function CreateGoal() {
 
   return (
     <Container>
+      <Heading>Create A Community</Heading>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Center pt={2}>
-          <ImageUpload
-            name="photo"
-            control={control}
-            errors={errors}
-            uploadPreset={CloudinaryPresets.MemberPhotos}
-            setValue={setValue}
-          />
-        </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
@@ -66,37 +58,13 @@ function CreateGoal() {
             />
           </GridItem>
           <GridItem>
-            <Select
-              label="Type"
-              name="type"
-              control={control}
-              errors={errors}
-              required
-              options={[
-                { label: 'Need', value: 'Need' },
-                { label: 'Offer', value: 'Offer' },
-                { label: 'Wish', value: 'Wish' },
-              ]}
-            />
-          </GridItem>
-          <GridItem>
-            <Textarea
+            <Input
               label="Description"
               name="description"
               control={control}
               errors={errors}
             />
           </GridItem>
-
-          <GridItem>
-            <Input
-              label="Success Measures"
-              name="successMeasures"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-
           <GridItem>
             <Select
               label="Status"
@@ -105,6 +73,9 @@ function CreateGoal() {
               errors={errors}
               options={STATUS_SELECT_OPTIONS}
             />
+          </GridItem>
+          <GridItem>
+            <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>
           <GridItem>
             <Input
@@ -123,7 +94,7 @@ function CreateGoal() {
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            Create Goal
+            Create Community
           </Button>
         </Center>
       </form>
@@ -131,4 +102,4 @@ function CreateGoal() {
   )
 }
 
-export default CreateGoal
+export default CreateCommunity

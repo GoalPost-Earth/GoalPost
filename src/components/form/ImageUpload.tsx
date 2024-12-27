@@ -89,6 +89,9 @@ const ImageUpload = (props: ImageUploadProps) => {
             <Spinner data-testid="loading-spinner" color="grey" />
           ) : (
             <Image
+              width={350}
+              height={350}
+              objectFit="cover"
               data-testid="image-loaded"
               src={image || initialValue}
               rounded="md"
