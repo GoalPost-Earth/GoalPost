@@ -2,7 +2,7 @@ import { Card, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 
-const ProfileDetailCard = ({
+const MemberGuideDetailCard = ({
   title,
   detail,
   link,
@@ -34,4 +34,4 @@ const ProfileDetailCard = ({
   )
 }
 
-export default ProfileDetailCard
+export default MemberGuideDetailCard

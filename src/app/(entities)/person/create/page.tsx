@@ -46,7 +46,7 @@ function CreatePerson() {
   return (
     <Container position={'relative'} pt={2} pb={10} width={{ md: '50%' }}>
       <Heading position={'absolute'} top={0} left={0} ml={'1rem'}>
-        Create a Profile
+        Create a Member Guide
       </Heading>
       <form onSubmit={handleSubmit(onSubmit)} style={{ marginTop: '2rem' }}>
         <Center pt={2}>
@@ -114,14 +114,7 @@ function CreatePerson() {
               options={PRONOUN_SELECT_OPTIONS}
             />
           </GridItem>
-          <GridItem>
-            <Input
-              label="Care Manual"
-              name="careManual"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
+
           <GridItem>
             <Input
               label="Interests"

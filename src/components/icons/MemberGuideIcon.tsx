@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = ({
+const MemberGuideIcon: React.FC<React.SVGProps<SVGElement>> = ({
   color,
 }: {
   color?: string
@@ -32,4 +32,4 @@ const ProfileIcon: React.FC<React.SVGProps<SVGElement>> = ({
   </svg>
 )
 
-export default ProfileIcon
+export default MemberGuideIcon

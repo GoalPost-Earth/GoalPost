@@ -31,9 +31,18 @@ export default async function initializeApolloServer() {
     context: async (req) => {
       // decode JWT token
       const token = req.request.headers.get('authorization')
-      const jwt = jwtDecode(token ?? '')
+      let jwt = null
+
+      if (token) {
+        try {
+          jwt = jwtDecode(token)
+        } catch (error) {
+          console.error('Invalid token:', error)
+        }
+      }
 
       return {
+        token,
         jwt,
       }
     },

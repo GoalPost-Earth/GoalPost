@@ -1185,7 +1185,7 @@ export type Community = {
   relatesToCommunityAggregate?: Maybe<CommunityCommunityRelatesToCommunityAggregationSelection>
   relatesToCommunityConnection: CommunityRelatesToCommunityConnection
   resultsAchieved?: Maybe<Scalars['String']['output']>
-  status: Scalars['String']['output']
+  status?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
   why?: Maybe<Scalars['String']['output']>
@@ -1305,7 +1305,7 @@ export type CommunityCreateInput = {
   name: Scalars['String']['input']
   relatesToCommunity?: InputMaybe<CommunityRelatesToCommunityFieldInput>
   resultsAchieved?: InputMaybe<Scalars['String']['input']>
-  status: Scalars['String']['input']
+  status?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
@@ -2331,7 +2331,7 @@ export type CommunityWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   time_CONTAINS?: InputMaybe<Scalars['String']['input']>
   time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -3625,21 +3625,6 @@ export type GoalMotivatesPersonNodeAggregationWhereInput = {
   authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -3842,7 +3827,6 @@ export type GoalPersonMotivatesPersonAggregationSelection = {
 export type GoalPersonMotivatesPersonNodeAggregateSelection = {
   __typename?: 'GoalPersonMotivatesPersonNodeAggregateSelection'
   authId: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
@@ -5414,7 +5398,6 @@ export type PeopleConnection = {
 export type Person = PersonInterface & {
   __typename?: 'Person'
   authId?: Maybe<Scalars['String']['output']>
-  careManual?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
@@ -5454,7 +5437,6 @@ export type PersonGuidedByConnectionArgs = {
 export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
   authId: StringAggregateSelection
-  careManual: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
@@ -5499,7 +5481,6 @@ export type PersonCoreValueGuidedByNodeAggregateSelection = {
 
 export type PersonCreateInput = {
   authId?: InputMaybe<Scalars['String']['input']>
-  careManual?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
   gender?: InputMaybe<Scalars['String']['input']>
@@ -5696,7 +5677,6 @@ export type PersonGuidedByUpdateFieldInput = {
 }
 
 export type PersonInterface = {
-  careManual?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
@@ -5730,7 +5710,6 @@ export type PersonInterfaceGuidedByConnectionArgs = {
 
 export type PersonInterfaceAggregateSelection = {
   __typename?: 'PersonInterfaceAggregateSelection'
-  careManual: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
@@ -5943,7 +5922,6 @@ export type PersonInterfaceOptions = {
 
 /** Fields to sort PersonInterfaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonInterfaceSort object. */
 export type PersonInterfaceSort = {
-  careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
@@ -5963,11 +5941,6 @@ export type PersonInterfaceWhere = {
   AND?: InputMaybe<Array<PersonInterfaceWhere>>
   NOT?: InputMaybe<PersonInterfaceWhere>
   OR?: InputMaybe<Array<PersonInterfaceWhere>>
-  careManual_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  careManual_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  careManual_EQ?: InputMaybe<Scalars['String']['input']>
-  careManual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  careManual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -6072,7 +6045,6 @@ export type PersonOptions = {
 /** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
 export type PersonSort = {
   authId?: InputMaybe<SortDirection>
-  careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
@@ -6089,7 +6061,6 @@ export type PersonSort = {
 
 export type PersonUpdateInput = {
   authId_SET?: InputMaybe<Scalars['String']['input']>
-  careManual_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   gender_SET?: InputMaybe<Scalars['String']['input']>
@@ -6111,11 +6082,6 @@ export type PersonWhere = {
   authId_EQ?: InputMaybe<Scalars['String']['input']>
   authId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  careManual_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  careManual_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  careManual_EQ?: InputMaybe<Scalars['String']['input']>
-  careManual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  careManual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -6905,7 +6871,6 @@ export type ResourcePersonProvidedByPersonAggregationSelection = {
 export type ResourcePersonProvidedByPersonNodeAggregateSelection = {
   __typename?: 'ResourcePersonProvidedByPersonNodeAggregateSelection'
   authId: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
@@ -6993,21 +6958,6 @@ export type ResourceProvidedByPersonNodeAggregationWhereInput = {
   authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -7424,6 +7374,29 @@ export type UpdateResourcesMutationResponse = {
   resources: Array<Resource>
 }
 
+export type CreateCommunitiesMutationVariables = Exact<{
+  input: Array<CommunityCreateInput> | CommunityCreateInput
+}>
+
+export type CreateCommunitiesMutation = {
+  __typename?: 'Mutation'
+  createCommunities: {
+    __typename?: 'CreateCommunitiesMutationResponse'
+    communities: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      description?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      activities?: string | null
+      resultsAchieved?: string | null
+      status?: string | null
+    }>
+  }
+}
+
 export type CreateCoreValuesMutationVariables = Exact<{
   input: Array<CoreValueCreateInput> | CoreValueCreateInput
 }>
@@ -7470,30 +7443,6 @@ export type CreateGoalsMutation = {
   }
 }
 
-export type CreatePeopleMutationVariables = Exact<{
-  input: Array<PersonCreateInput> | PersonCreateInput
-}>
-
-export type CreatePeopleMutation = {
-  __typename?: 'Mutation'
-  createPeople: {
-    __typename?: 'CreatePeopleMutationResponse'
-    people: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      email?: string | null
-      phone?: string | null
-      photo?: string | null
-      location?: string | null
-      careManual?: string | null
-      interests?: string | null
-      pronouns?: string | null
-    }>
-  }
-}
-
 export type CreateMembersMutationVariables = Exact<{
   input: Array<MemberCreateInput> | MemberCreateInput
 }>
@@ -7532,6 +7481,29 @@ export type UpdateMemberMutation = {
   }
 }
 
+export type CreatePeopleMutationVariables = Exact<{
+  input: Array<PersonCreateInput> | PersonCreateInput
+}>
+
+export type CreatePeopleMutation = {
+  __typename?: 'Mutation'
+  createPeople: {
+    __typename?: 'CreatePeopleMutationResponse'
+    people: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+      phone?: string | null
+      photo?: string | null
+      location?: string | null
+      interests?: string | null
+      pronouns?: string | null
+    }>
+  }
+}
+
 export type CreateResourcesMutationVariables = Exact<{
   input: Array<ResourceCreateInput> | ResourceCreateInput
 }>
@@ -7557,6 +7529,46 @@ export type CreateResourcesMutation = {
       appliedToCarePoint: Array<{ __typename?: 'CarePoint'; id: string }>
     }>
   }
+}
+
+export type GetCommunityQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetCommunityQuery = {
+  __typename?: 'Query'
+  communities: Array<{
+    __typename?: 'Community'
+    id: string
+    name: string
+    description?: string | null
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    activities?: string | null
+    resultsAchieved?: string | null
+    status?: string | null
+  }>
+}
+
+export type GetAllCommunitesQueryVariables = Exact<{
+  where?: InputMaybe<CommunityWhere>
+}>
+
+export type GetAllCommunitesQuery = {
+  __typename?: 'Query'
+  communities: Array<{
+    __typename?: 'Community'
+    id: string
+    name: string
+    description?: string | null
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    activities?: string | null
+    resultsAchieved?: string | null
+    status?: string | null
+  }>
 }
 
 export type GetCoreValueQueryVariables = Exact<{
@@ -7678,6 +7690,24 @@ export type GetAllGoalsQuery = {
   }>
 }
 
+export type GetMemberQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetMemberQuery = {
+  __typename?: 'Query'
+  members: Array<{
+    __typename?: 'Member'
+    id: string
+    firstName: string
+    lastName: string
+    name: string
+    email?: string | null
+    gender?: string | null
+    phone?: string | null
+  }>
+}
+
 export type GetMembersQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetMembersQuery = {
@@ -7706,7 +7736,6 @@ export type GetPersonQuery = {
     email?: string | null
     photo?: string | null
     phone?: string | null
-    careManual?: string | null
     interests?: string | null
     gender?: string | null
     pronouns?: string | null
@@ -7730,30 +7759,11 @@ export type GetAllPeopleQuery = {
     email?: string | null
     photo?: string | null
     phone?: string | null
-    careManual?: string | null
     interests?: string | null
     gender?: string | null
     pronouns?: string | null
     location?: string | null
     guidedBy: Array<{ __typename?: 'CoreValue'; id: string; name: string }>
-  }>
-}
-
-export type GetMemberQueryVariables = Exact<{
-  id: Scalars['ID']['input']
-}>
-
-export type GetMemberQuery = {
-  __typename?: 'Query'
-  members: Array<{
-    __typename?: 'Member'
-    id: string
-    firstName: string
-    lastName: string
-    name: string
-    email?: string | null
-    gender?: string | null
-    phone?: string | null
   }>
 }
 
@@ -7819,6 +7829,98 @@ export type GetAllResourcesQuery = {
   }>
 }
 
+export const CreateCommunitiesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateCommunities' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'CommunityCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createCommunities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'communities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activities' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resultsAchieved' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateCommunitiesMutation,
+  CreateCommunitiesMutationVariables
+>
 export const CreateCoreValuesDocument = {
   kind: 'Document',
   definitions: [
@@ -8000,102 +8102,6 @@ export const CreateGoalsDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateGoalsMutation, CreateGoalsMutationVariables>
-export const CreatePeopleDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'CreatePeople' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'ListType',
-              type: {
-                kind: 'NonNullType',
-                type: {
-                  kind: 'NamedType',
-                  name: { kind: 'Name', value: 'PersonCreateInput' },
-                },
-              },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'createPeople' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'people' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'location' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'careManual' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'interests' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pronouns' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  CreatePeopleMutation,
-  CreatePeopleMutationVariables
->
 export const CreateMembersDocument = {
   kind: 'Document',
   definitions: [
@@ -8272,6 +8278,98 @@ export const UpdateMemberDocument = {
   UpdateMemberMutation,
   UpdateMemberMutationVariables
 >
+export const CreatePeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreatePeople' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'PersonCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPeople' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'people' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pronouns' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreatePeopleMutation,
+  CreatePeopleMutationVariables
+>
 export const CreateResourcesDocument = {
   kind: 'Document',
   definitions: [
@@ -8385,6 +8483,133 @@ export const CreateResourcesDocument = {
 } as unknown as DocumentNode<
   CreateResourcesMutation,
   CreateResourcesMutationVariables
+>
+export const GetCommunityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getCommunity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'communities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'activities' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resultsAchieved' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetCommunityQuery, GetCommunityQueryVariables>
+export const GetAllCommunitesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAllCommunites' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'CommunityWhere' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'communities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'activities' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resultsAchieved' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllCommunitesQuery,
+  GetAllCommunitesQueryVariables
 >
 export const GetCoreValueDocument = {
   kind: 'Document',
@@ -8786,6 +9011,66 @@ export const GetAllGoalsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetAllGoalsQuery, GetAllGoalsQueryVariables>
+export const GetMemberDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMember' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'members' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetMemberQuery, GetMemberQueryVariables>
 export const GetMembersDocument = {
   kind: 'Document',
   definitions: [
@@ -8866,7 +9151,6 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
@@ -8926,7 +9210,6 @@ export const GetAllPeopleDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
@@ -8950,66 +9233,6 @@ export const GetAllPeopleDocument = {
     },
   ],
 } as unknown as DocumentNode<GetAllPeopleQuery, GetAllPeopleQueryVariables>
-export const GetMemberDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getMember' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'members' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'gender' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetMemberQuery, GetMemberQueryVariables>
 export const GetResourceDocument = {
   kind: 'Document',
   definitions: [

@@ -44,13 +44,14 @@ const GraphVisualization = () => {
 
   const NodeTriggers = ['Resource', 'Person', 'Member', 'CoreValue', 'Goal']
 
-  const peopleNodes =
-    people?.people.map((person) => ({
+  const peopleNodes = [
+    ...(people?.people.map((person) => ({
       id: `${person.__typename}` + person.id,
       position: getRandomPosition(),
       type: 'customNode',
       data: { label: person.name, nodeName: person.__typename, id: person.id },
-    })) ?? []
+    })) ?? []),
+  ]
 
   const coreValuesNodes =
     coreValues?.coreValues.map((coreValue) => ({

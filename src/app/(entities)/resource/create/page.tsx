@@ -79,6 +79,7 @@ function CreateResource() {
               control={control}
               errors={errors}
               options={STATUS_SELECT_OPTIONS}
+              required
             />
           </GridItem>
           <GridItem>

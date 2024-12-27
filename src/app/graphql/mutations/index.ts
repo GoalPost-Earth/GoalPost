@@ -1,5 +1,6 @@
-export * from './PROFILE_MUTATIONS'
+export * from './MEMBERGUIDE_MUTATIONS'
 export * from './PERSON_MUTATIONS'
 export * from './GOAL_MUTATIONS'
 export * from './COREVALUE_MUTATIONS'
 export * from './RESOURCE_MUTATIONS'
+export * from './COMMUNITY_MUTATIONS'

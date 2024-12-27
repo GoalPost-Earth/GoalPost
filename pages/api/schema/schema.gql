@@ -6,7 +6,6 @@ interface PersonInterface {
   photo: String
   phone: String
   email: String
-  careManual: String
   interests: String
   gender: String
   pronouns: String
@@ -17,7 +16,7 @@ interface PersonInterface {
 }
 extend schema @authentication
 
-type Person implements PersonInterface {
+type Person implements PersonInterface @node {
   id: ID! @id
   authId: String
   firstName: String!
@@ -26,7 +25,6 @@ type Person implements PersonInterface {
   photo: String
   phone: String
   email: String
-  careManual: String
   interests: String
   gender: String
   pronouns: String
@@ -123,7 +121,7 @@ type Community @node {
   time: String
   activities: String
   resultsAchieved: String
-  status: String!
+  status: String
 
   hasMembers: [Member!]! @relationship(type: "MEMBER_OF", direction: IN)
   relatesToCommunity: [Community!]!

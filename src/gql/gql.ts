@@ -14,18 +14,24 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
+  '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n':
+    types.CreateCommunitiesDocument,
   '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
     types.CreateCoreValuesDocument,
   '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        type\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.CreateGoalsDocument,
-  '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        careManual\n        interests\n        pronouns\n      }\n    }\n  }\n':
-    types.CreatePeopleDocument,
   '\n  mutation CreateMembers($input: [MemberCreateInput!]!) {\n    createMembers(input: $input) {\n      members {\n        id\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n':
     types.CreateMembersDocument,
   '\n  mutation UpdateMember($where: MemberWhere!, $update: MemberUpdateInput!) {\n    updateMembers(where: $where, update: $update) {\n      members {\n        id\n        authId\n        firstName\n        lastName\n        email\n      }\n    }\n  }\n':
     types.UpdateMemberDocument,
+  '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        interests\n        pronouns\n      }\n    }\n  }\n':
+    types.CreatePeopleDocument,
   '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n':
     types.CreateResourcesDocument,
+  '\n  query getCommunity($id: ID!) {\n    communities(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n':
+    types.GetCommunityDocument,
+  '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n':
+    types.GetAllCommunitesDocument,
   '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      guidesPerson {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
     types.GetCoreValueDocument,
   '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n':
@@ -36,14 +42,14 @@ const documents = {
     types.GetGoalDocument,
   '\n  query getAllGoals($where: GoalWhere) {\n    goals(where: $where) {\n      id\n      name\n      type\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPerson {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetAllGoalsDocument,
-  '\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n':
-    types.GetMembersDocument,
-  '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n':
-    types.GetPersonDocument,
-  '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
-    types.GetAllPeopleDocument,
   '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n':
     types.GetMemberDocument,
+  '\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n':
+    types.GetMembersDocument,
+  '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n':
+    types.GetPersonDocument,
+  '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
+    types.GetAllPeopleDocument,
   '\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResource {\n        id\n        name\n      }\n      appliedToCarePoint {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        phone\n        photo\n      }\n    }\n  }\n':
     types.GetResourceDocument,
   '\n  query getAllResources($where: ResourceWhere) {\n    resources(where: $where) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResource {\n        id\n        name\n      }\n      appliedToCarePoint {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        phone\n        photo\n      }\n    }\n  }\n':
@@ -68,6 +74,12 @@ export function graphql(source: string): unknown
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n']
 /**
@@ -76,12 +88,6 @@ export function graphql(
 export function graphql(
   source: '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        type\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        type\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(
-  source: '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        careManual\n        interests\n        pronouns\n      }\n    }\n  }\n'
-): (typeof documents)['\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        careManual\n        interests\n        pronouns\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -98,8 +104,26 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        interests\n        pronouns\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        interests\n        pronouns\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResource {\n          id\n          name\n        }\n        appliedToCarePoint {\n          id\n        }\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getCommunity($id: ID!) {\n    communities(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n'
+): (typeof documents)['\n  query getCommunity($id: ID!) {\n    communities(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n'
+): (typeof documents)['\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -134,26 +158,26 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n'
+): (typeof documents)['\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n'
 ): (typeof documents)['\n  query GetMembers {\n    members {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n']
+  source: '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      careManual\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(
-  source: '\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n'
-): (typeof documents)['\n  query getMember($id: ID!) {\n    members(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      gender\n      phone\n    }\n  }\n']
+  source: '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      interests\n      gender\n      pronouns\n      location\n      guidedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

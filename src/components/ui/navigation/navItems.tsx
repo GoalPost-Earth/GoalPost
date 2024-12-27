@@ -1,12 +1,6 @@
-import {
-  ChatBotIcon,
-  DiscoverIcon,
-  GraphIcon,
-  MenuOutline,
-  ProfileIcon,
-} from '@/icons'
+import { ChatBotIcon, GraphIcon, MenuOutline, MemberGuideIcon } from '@/icons'
 
-export const menuItems = [
+export const navItems = [
   {
     name: 'Home Page',
     to: () => '/',
@@ -18,9 +12,9 @@ export const menuItems = [
     icon: <ChatBotIcon />,
   },
   {
-    name: 'Profile',
-    to: () => '/profile',
-    icon: <ProfileIcon />,
+    name: 'My Member Guide',
+    to: () => '/user-member-guide',
+    icon: <MemberGuideIcon />,
   },
   {
     name: 'Graph Visualization',

@@ -28,7 +28,7 @@ import { Avatar } from '../avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
 import { LogoutIcon } from '@/icons'
-import { menuItems } from './menuItems'
+import { navItems } from './navItems'
 
 const NavHamburgerButton = () => {
   const { user } = useUser()
@@ -63,7 +63,7 @@ const NavHamburgerButton = () => {
         </DrawerHeader>
         <DrawerBody paddingX={0}>
           <Box bg="gray.subtle">
-            {menuItems.map((item) => {
+            {navItems.map((item) => {
               const pathname = window.location.pathname
               const isActive = pathname === item.to()
               return (
