@@ -12,10 +12,9 @@ import {
   FigureIcon,
   IdeaIcon,
   MailIcon,
-  ManualIcon,
   PhoneIcon,
   UserIcon,
-} from '@/components/icons'
+} from '@/icons'
 import GenericTabs from '@/components/ui/generic-tabs'
 import { RANDOM_IMAGE_URL_400 } from '@/types'
 import { getHumanReadableDateTime } from '@/app/utils'
@@ -73,11 +72,6 @@ export default async function ViewPersonPage({
       title: 'Sign Up Date',
       description: getHumanReadableDateTime(person.createdAt),
       icon: <CalendarIcon />,
-    },
-    {
-      title: 'Manual',
-      description: person.careManual ?? '',
-      icon: <ManualIcon />,
     },
     {
       title: 'Interests',
