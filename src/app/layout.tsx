@@ -32,7 +32,7 @@ export default async function RootLayout({
   let token
 
   if (session) {
-    const at = await getAccessToken()
+    const at = await getAccessToken().catch(() => null)
 
     if (at?.accessToken) {
       const decoded = jwtDecode(at.accessToken) as { exp: number }

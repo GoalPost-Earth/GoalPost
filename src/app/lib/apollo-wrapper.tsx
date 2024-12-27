@@ -39,6 +39,10 @@ export function ApolloWrapper({
     // const { data } = useSuspenseQuery(MY_QUERY, { context: { fetchOptions: { cache: "force-cache" }}});
   })
 
+  if (!token) {
+    router.push('/api/auth/logout?returnTo=/')
+  }
+
   const authLink = new ApolloLink((operation, forward) => {
     if (token?.accessToken) {
       try {
