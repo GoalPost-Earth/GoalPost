@@ -24,12 +24,12 @@ const GoalCard = ({ goal }: { goal: Goal }) => (
         </Card.Description>
       </Card.Body>
     </Link>
-    <Link href={'/person/' + goal.motivatesPerson[0].id}>
+    <Link href={'/person/' + goal.motivatesPeople[0].id}>
       <Card.Footer justifyContent="flex-end">
         <HStack>
-          <Avatar src={goal.motivatesPerson[0].photo ?? undefined} size="sm" />
+          <Avatar src={goal.motivatesPeople[0].photo ?? undefined} size="sm" />
           <Text fontSize="small" fontWeight="bold">
-            {goal.motivatesPerson[0].name}
+            {goal.motivatesPeople[0].name}
           </Text>
         </HStack>
       </Card.Footer>

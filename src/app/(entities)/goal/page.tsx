@@ -12,7 +12,7 @@ export default function AllGoals() {
   const { data, loading, error } = useQuery(GET_ALL_GOALS, {
     variables: {
       where: {
-        motivatesPerson_NONE: null,
+        motivatesPeople_NONE: null,
       },
     },
   })

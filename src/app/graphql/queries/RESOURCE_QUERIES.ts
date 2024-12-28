@@ -10,11 +10,11 @@ export const GET_RESOURCE = graphql(`
       why
       location
       time
-      dependsOnResource {
+      dependsOnResources {
         id
         name
       }
-      appliedToCarePoint {
+      carePoints {
         id
       }
       providedByPerson {
@@ -37,11 +37,11 @@ export const GET_ALL_RESOURCES = graphql(`
       why
       location
       time
-      dependsOnResource {
+      dependsOnResources {
         id
         name
       }
-      appliedToCarePoint {
+      carePoints {
         id
       }
       providedByPerson {

@@ -37,14 +37,14 @@ const HomeClient = () => {
   })
 
   const member = data?.members[0]
-  const community = member?.community[0]
+  const community = member?.communities[0]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
         <Heading marginBottom={5}>Hi {member?.firstName}!</Heading>
 
-        <AvatarCarousel members={community?.hasMembers as Member[]} />
+        <AvatarCarousel members={community?.members as Member[]} />
         <Center marginTop={10}>
           <ShowForms />
         </Center>

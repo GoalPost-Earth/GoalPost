@@ -22,6 +22,13 @@ export default async function initializeApolloServer() {
       authorization: {
         key: process.env.JWT_SECRET ?? '',
       },
+      excludeDeprecatedFields: {
+        implicitEqualFilters: true,
+        implicitSet: true,
+        deprecatedOptionsArgument: true,
+        directedArgument: true,
+        connectOrCreate: true,
+      },
     },
   })
   const schema = await neoSchema.getSchema()
