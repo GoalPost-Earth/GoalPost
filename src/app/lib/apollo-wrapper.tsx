@@ -14,16 +14,19 @@ import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
 import { onError } from '@apollo/client/link/error'
+import { useEffect, useState } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import { Token } from '../types'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in
 export function ApolloWrapper({
-  token,
   children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: Readonly<{ token: any; children: React.ReactNode }>) {
-  const { isLoading } = useUser()
+}: Readonly<{ children: React.ReactNode }>) {
+  const { isLoading, user } = useUser()
   const router = useRouter()
+  const [token, setToken] = useState<Token>()
   const httpLink = new HttpLink({
     // this needs to be an absolute url, as relative urls cannot be used in SSR
     uri: process.env.NEXT_PUBLIC_GRAPHQL_URI ?? '/api/graphql',
@@ -37,12 +40,35 @@ export function ApolloWrapper({
     // to an Apollo Client data fetching hook, e.g.:
     // const { data } = useSuspenseQuery(MY_QUERY, { context: { fetchOptions: { cache: "force-cache" }}});
   })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      if (user) {
+        const response = await fetch('/api/auth/access-token')
+        const resJson = await response.json()
 
-  if (!token) {
-    router.push('/api/auth/logout?returnTo=/')
+        if (resJson?.accessToken) {
+          const decoded = jwtDecode(resJson.accessToken) as { exp: number }
+
+          setToken({
+            accessToken: resJson.accessToken,
+            accessTokenDecoded: decoded,
+            user,
+            expiresAt: decoded.exp,
+          })
+        }
+      }
+    }
+
+    fetchTokenData()
+  }, [user])
+
+  if (isLoading || !token) {
+    return <LoadingScreen />
   }
 
   const authLink = new ApolloLink((operation, forward) => {
+    console.log('🚀 ~ file: apollo-wrapper.tsx:45 ~ token:', token)
     if (token?.accessToken) {
       try {
         const expireDate = new Date(token.expiresAt * 1000)
@@ -55,15 +81,17 @@ export function ApolloWrapper({
         }
 
         operation.setContext(
-          ({ headers }: { headers: Record<string, string> }) => ({
-            headers: {
-              authorization: `Bearer ${token?.accessToken}`,
-              ...headers,
-            },
-          })
+          ({ headers }: { headers: Record<string, string> }) => {
+            return {
+              headers: {
+                authorization: `Bearer ${token?.accessToken}`,
+                ...headers,
+              },
+            }
+          }
         )
       } catch (error) {
-        console.log(error)
+        console.error(error)
       }
     }
 
@@ -115,10 +143,6 @@ export function ApolloWrapper({
         },
       },
     })
-
-  if (isLoading) {
-    return <LoadingScreen />
-  }
 
   return (
     <ApolloNextAppProvider makeClient={makeClient}>

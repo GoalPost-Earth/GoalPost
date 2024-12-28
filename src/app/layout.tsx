@@ -3,14 +3,14 @@ import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import { Urbanist } from 'next/font/google'
 import Navbar from '@/components/ui/navigation/navbar'
-import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './AppContext'
 import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
-import { getAccessToken, getSession } from '@auth0/nextjs-auth0'
-import { jwtDecode } from 'jwt-decode'
+import { ApolloWrapper } from './lib/apollo-wrapper'
+// import { getAccessToken, getSession } from '@auth0/nextjs-auth0'
+// import { jwtDecode } from 'jwt-decode'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -23,29 +23,11 @@ export const metadata: Metadata = {
   description: 'A directive by the Seed COC',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await getSession()
-  let token
-
-  if (session) {
-    const at = await getAccessToken().catch(() => null)
-
-    if (at?.accessToken) {
-      const decoded = jwtDecode(at.accessToken) as { exp: number }
-
-      token = {
-        accessToken: at.accessToken,
-        accessTokenDecoded: decoded,
-        user: session.user,
-        expiresAt: decoded.exp,
-      }
-    }
-  }
-
   return (
     <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning>
       <body style={{ position: 'relative' }}>
@@ -53,7 +35,7 @@ export default async function RootLayout({
           <UserProvider>
             <AppProvider>
               <ReactFlowProvider>
-                <ApolloWrapper token={token}>
+                <ApolloWrapper>
                   <StartupScreen>
                     <Navbar />
                     <Toaster />
