@@ -1,13 +1,12 @@
 'use client'
 
 import { ApolloLink, HttpLink } from '@apollo/client'
-
 import {
   ApolloNextAppProvider,
-  NextSSRInMemoryCache,
-  NextSSRApolloClient,
+  InMemoryCache,
+  ApolloClient,
   SSRMultipartLink,
-} from '@apollo/experimental-nextjs-app-support/ssr'
+} from '@apollo/experimental-nextjs-app-support'
 import { ERROR_POLICY } from './apollo-functions'
 
 import { useUser } from '@auth0/nextjs-auth0/client'
@@ -98,11 +97,11 @@ export function ApolloWrapper({
   ])
 
   const makeClient = () =>
-    new NextSSRApolloClient({
+    new ApolloClient({
       name: 'web-ssr',
       version: '1.2',
       link: authHttpLink,
-      cache: new NextSSRInMemoryCache(),
+      cache: new InMemoryCache(),
       connectToDevTools: true,
       defaultOptions: {
         watchQuery: {
