@@ -9,8 +9,6 @@ import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
 import { ApolloWrapper } from './lib/apollo-wrapper'
-// import { getAccessToken, getSession } from '@auth0/nextjs-auth0'
-// import { jwtDecode } from 'jwt-decode'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
