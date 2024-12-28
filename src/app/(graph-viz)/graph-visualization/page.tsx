@@ -38,8 +38,6 @@ const GraphVisualization = () => {
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
   const { data: members } = useQuery(GET_MEMBERS)
 
-  console.log(people)
-
   const nodeTypes = {
     customNode: GraphNodes,
   }
@@ -153,8 +151,6 @@ const GraphVisualization = () => {
         }))
     })
 
-    console.log('New edges', newEdges)
-
     setEdges((prevEdges) => {
       const existingEdgeIds = new Set(prevEdges.map((edge) => edge.id))
       const uniqueEdges = newEdges.filter(
@@ -163,8 +159,6 @@ const GraphVisualization = () => {
       return [...prevEdges, ...uniqueEdges]
     })
   }, [people, coreValues, setEdges])
-
-  console.log(edges)
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
@@ -192,6 +186,13 @@ const GraphVisualization = () => {
                     setSelectedNodes([...selectedNodes, ...nextNodes])
                   }
                 }}
+                variant={
+                  selectedNodes.some(
+                    (selectedNode) => selectedNode.data.nodeName === trigger
+                  )
+                    ? 'solid'
+                    : 'outline'
+                }
               >
                 {trigger}
               </Button>
