@@ -43,9 +43,7 @@ function GraphNodes({ data }: Data) {
         <button
           style={{ border: 'none', padding: 0, cursor: 'inherit' }}
           onClick={() => {
-            if (data.nodeName === 'Person' || data.nodeName === 'Member') {
-              router.push(`/person/${data.id}`)
-            }
+            router.push(`/${data.nodeName.toLowerCase()}/${data.id}`)
           }}
         >
           {data.label.length > 16

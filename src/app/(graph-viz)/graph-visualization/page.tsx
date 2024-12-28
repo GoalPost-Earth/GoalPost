@@ -100,13 +100,16 @@ const GraphVisualization = () => {
       },
     })) ?? []
 
-  const graphNodes = calculateNodePositionsAsRings([
-    resourceNodes,
-    memberNodes,
-    peopleNodes,
-    coreValuesNodes,
-    goalNodes,
-  ])
+  const graphNodes = React.useMemo(() => {
+    return calculateNodePositionsAsRings([
+      resourceNodes,
+      memberNodes,
+      peopleNodes,
+      coreValuesNodes,
+      goalNodes,
+    ])
+  }, [resourceNodes, memberNodes, peopleNodes, coreValuesNodes, goalNodes])
+
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
     peopleNodes ?? []
   )
@@ -131,6 +134,37 @@ const GraphVisualization = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNodes])
+
+  useEffect(() => {
+    const newEdges = peopleNodes.flatMap((person) => {
+      const personValues = person.guidedBy
+      return coreValuesNodes
+        .filter((coreValue) => {
+          if (personValues) {
+            return personValues.find((value) => value.id === coreValue.data.id)
+          }
+          return false
+        })
+        .map((coreValue) => ({
+          id: `e${person.data.id}-${coreValue.data.id}`,
+          source: person.data.id,
+          target: coreValue.data.id,
+          type: 'smoothstep',
+        }))
+    })
+
+    console.log('New edges', newEdges)
+
+    setEdges((prevEdges) => {
+      const existingEdgeIds = new Set(prevEdges.map((edge) => edge.id))
+      const uniqueEdges = newEdges.filter(
+        (edge) => !existingEdgeIds.has(edge.id)
+      )
+      return [...prevEdges, ...uniqueEdges]
+    })
+  }, [people, coreValues, setEdges])
+
+  console.log(edges)
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
