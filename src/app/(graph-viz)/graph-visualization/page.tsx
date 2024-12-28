@@ -38,19 +38,23 @@ const GraphVisualization = () => {
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
   const { data: members } = useQuery(GET_MEMBERS)
 
+  console.log(people)
+
   const nodeTypes = {
     customNode: GraphNodes,
   }
 
   const NodeTriggers = ['Resource', 'Person', 'Member', 'CoreValue', 'Goal']
 
-  const peopleNodes =
-    people?.people.map((person) => ({
+  const peopleNodes = [
+    ...(people?.people.map((person) => ({
       id: `${person.__typename}` + person.id,
       position: getRandomPosition(),
       type: 'customNode',
       data: { label: person.name, nodeName: person.__typename, id: person.id },
-    })) ?? []
+      guidedBy: members?.members,
+    })) ?? []),
+  ]
 
   const coreValuesNodes =
     coreValues?.coreValues.map((coreValue) => ({
