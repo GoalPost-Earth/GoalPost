@@ -1,6 +1,6 @@
 'use client'
 
-import { GET_ALL_PEOPLE } from '@/app/graphql'
+import { GET_ALL_MEMBERS } from '@/app/graphql'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { Avatar } from '@/components/ui'
 import { useQuery } from '@apollo/client'
@@ -17,28 +17,28 @@ import Link from 'next/link'
 import React from 'react'
 import { LuPhone } from 'react-icons/lu'
 
-export default function AllPeople() {
-  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
+export default function AllMembers() {
+  const { data, loading, error } = useQuery(GET_ALL_MEMBERS)
 
-  const people = data?.people ?? []
+  const members = data?.members ?? []
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <Heading>All People</Heading>
-        {people.map((person) => (
-          <Link href={'/person/' + person.id} key={person.id}>
+        <Heading>All Members</Heading>
+        {members.map((member) => (
+          <Link href={'/member/' + member.id} key={member.id}>
             <Card.Root my={1}>
               <Card.Header p={2} bgColor="gray.100">
                 <HStack>
-                  <Avatar src={person.photo ?? undefined} /> {person.name}
+                  <Avatar src={member.photo ?? undefined} /> {member.name}
                 </HStack>
               </Card.Header>
               <Card.Body p={2}>
-                <Text>{person.email}</Text>
-                {!!person.phone && (
+                <Text>{member.email}</Text>
+                {!!member.phone && (
                   <>
-                    <Link href={`tel:${person.phone}`}>
+                    <Link href={`tel:${member.phone}`}>
                       <HStack>
                         <IconButton
                           colorPalette="brand"
@@ -48,10 +48,29 @@ export default function AllPeople() {
                         >
                           <LuPhone />
                         </IconButton>
-                        <Text>{person.phone}</Text>
+                        <Text>{member.phone}</Text>
                       </HStack>
                     </Link>
 
+                    <Box my={2}>
+                      <hr />
+                    </Box>
+                  </>
+                )}
+
+                {!!member.coreValues.length && (
+                  <>
+                    <Box>
+                      <Heading size="sm">Core Values:</Heading>
+                      {member.coreValues.map((coreValue, index) => (
+                        <Text key={coreValue.name} as="span" fontSize="sm">
+                          {coreValue.name}
+                          {index < member.coreValues.length - 1 && (
+                            <Text as="span">, </Text>
+                          )}
+                        </Text>
+                      ))}
+                    </Box>
                     <Box my={2}>
                       <hr />
                     </Box>

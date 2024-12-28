@@ -39,8 +39,8 @@ export default async function ViewGoalPage({
           </Badge>
         </HStack>
 
-        {goal.motivatesPerson.length > 0 &&
-          goal.motivatesPerson.map((person) => (
+        {goal.motivatesPeople.length > 0 &&
+          goal.motivatesPeople.map((person) => (
             <Text key={person.id}>{person.name} is motivated by this goal</Text>
           ))}
 

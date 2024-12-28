@@ -6,11 +6,9 @@ interface PersonInterface {
   photo: String
   phone: String
   email: String
-  interests: String
   gender: String
   pronouns: String
   location: String
-  guidedBy: [CoreValue!]! @declareRelationship
   createdAt: DateTime!
   updatedAt: DateTime
 }
@@ -25,11 +23,9 @@ type Person implements PersonInterface @node {
   photo: String
   phone: String
   email: String
-  interests: String
   gender: String
   pronouns: String
   location: String
-  guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -40,7 +36,7 @@ type Person implements PersonInterface @node {
 
 type Member implements PersonInterface
   @authentication
-  @node(labels: ["Member"]) {
+  @node(labels: ["Member", "Person"]) {
   id: ID! @id
   authId: String
   firstName: String!
@@ -66,10 +62,11 @@ type Member implements PersonInterface
   circles: String
 
   # Relationships
-  connectsToMember: [Member!]!
-    @relationship(type: "CONNECTS_TO", direction: OUT)
-  guidedBy: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
-  community: [Community!]! @relationship(type: "MEMBER_OF", direction: OUT)
+  connectedTo: [Person!]! @relationship(type: "CONNECTS_TO", direction: OUT)
+  coreValues: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
+  providesResources: [Resource!]!
+    @relationship(type: "PROVIDES", direction: OUT)
+  communities: [Community!]! @relationship(type: "MEMBER_OF", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -99,10 +96,9 @@ type CarePoint @node {
   description: String!
   status: String!
 
-  appliedInResource: [Resource!]!
-    @relationship(type: "APPLIED_IN", direction: OUT)
-  enabledByGoal: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
-  caresForGoal: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
+  resources: [Resource!]! @relationship(type: "APPLIED_IN", direction: OUT)
+  enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
+  caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
 
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
@@ -123,11 +119,10 @@ type Community @node {
   resultsAchieved: String
   status: String
 
-  hasMembers: [Member!]! @relationship(type: "MEMBER_OF", direction: IN)
-  relatesToCommunity: [Community!]!
+  members: [Member!]! @relationship(type: "MEMBER_OF", direction: IN)
+  relatedCommunities: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
-  hasAccessToResource: [Resource!]!
-    @relationship(type: "HAS_ACCESS_TO", direction: OUT)
+  resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -144,7 +139,7 @@ type CoreValue @node {
   alignmentExamples: String
   description: String
   why: String
-  guidesPerson: [Member!]! @relationship(type: "GUIDED_BY", direction: IN)
+  guidesPeople: [Member!]! @relationship(type: "GUIDED_BY", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -164,7 +159,7 @@ type Goal @node {
   status: String!
   location: String
   time: String
-  motivatesPerson: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
+  motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   createdBy: [Member!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
@@ -183,10 +178,9 @@ type Resource @node {
   location: String
   time: String
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
-  dependsOnResource: [Resource!]!
+  dependsOnResources: [Resource!]!
     @relationship(type: "DEPENDS_ON", direction: OUT)
-  appliedToCarePoint: [CarePoint!]!
-    @relationship(type: "APPLIED_TO", direction: IN)
+  carePoints: [CarePoint!]! @relationship(type: "APPLIED_TO", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)

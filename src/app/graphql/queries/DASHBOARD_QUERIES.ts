@@ -8,10 +8,10 @@ export const GET_LOGGED_IN_USER = graphql(`
       firstName
       lastName
       email
-      community {
+      communities {
         id
         name
-        hasMembers {
+        members {
           id
           name
           photo

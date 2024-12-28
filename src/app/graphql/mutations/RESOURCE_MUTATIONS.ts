@@ -11,11 +11,11 @@ export const CREATE_RESOURCE_MUTATION = graphql(`
         why
         location
         time
-        dependsOnResource {
+        dependsOnResources {
           id
           name
         }
-        appliedToCarePoint {
+        carePoints {
           id
         }
       }

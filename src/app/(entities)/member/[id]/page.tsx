@@ -1,5 +1,5 @@
 import { query } from '@/app/lib/apollo-client'
-import { GET_PERSON } from '@/app/graphql/queries'
+import { GET_MEMBER } from '@/app/graphql/queries'
 import { Box, Container, Flex, Image, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
@@ -10,6 +10,7 @@ import {
   AvatarIcon,
   CalendarIcon,
   FigureIcon,
+  IdeaIcon,
   MailIcon,
   PhoneIcon,
   UserIcon,
@@ -18,7 +19,7 @@ import GenericTabs from '@/components/ui/generic-tabs'
 import { RANDOM_IMAGE_URL_400 } from '@/types'
 import { getHumanReadableDateTime } from '@/app/utils'
 
-export default async function ViewPersonPage({
+export default async function ViewMemberPage({
   params,
 }: {
   readonly params: Promise<{ id: string }>
@@ -26,55 +27,60 @@ export default async function ViewPersonPage({
   const { id } = await params
 
   const { data, loading, error } = await query({
-    query: GET_PERSON,
+    query: GET_MEMBER,
     variables: { id },
   })
 
-  const person = data?.people[0]
+  const member = data?.members[0]
 
-  if (!person) {
+  if (!member) {
     return <LoadingScreen />
   }
 
   const bioData = [
     {
       title: 'First Name',
-      description: person.firstName,
+      description: member.firstName,
       icon: <UserIcon />,
     },
     {
       title: 'Last Name',
-      description: person.lastName,
+      description: member.lastName,
       icon: <UserIcon />,
     },
     {
       title: 'Email',
-      description: person.email,
+      description: member.email,
       icon: <MailIcon />,
     },
     {
       title: 'Phone Number',
-      description: person.phone ?? '',
+      description: member.phone ?? '',
       icon: <PhoneIcon />,
     },
     {
       title: 'Pronouns',
-      description: person.pronouns ?? '',
+      description: member.pronouns ?? '',
       icon: <FigureIcon />,
     },
     {
       title: 'Gender',
-      description: person.gender ?? '',
+      description: member.gender ?? '',
       icon: <FigureIcon />,
     },
     {
       title: 'Sign Up Date',
-      description: getHumanReadableDateTime(person.createdAt),
+      description: getHumanReadableDateTime(member.createdAt),
       icon: <CalendarIcon />,
     },
     {
+      title: 'Interests',
+      description: member.interests ?? '',
+      icon: <IdeaIcon />,
+    },
+    {
       title: 'Location',
-      description: person.location ?? '',
+      description: member.location ?? '',
       icon: <AvatarIcon />,
     },
   ]
@@ -112,14 +118,14 @@ export default async function ViewPersonPage({
               bottom={8}
             >
               <Avatar
-                name={person?.name}
-                src={person.photo ?? undefined}
+                name={member?.name}
+                src={member.photo ?? undefined}
                 width={'58px'}
                 height={'58px'}
                 border={'3px solid white'}
               />
               <Text color={'white'} fontWeight={'semibold'}>
-                {person?.name}
+                {member?.name}
               </Text>
             </Flex>
           </Box>
