@@ -5,6 +5,7 @@ import {
   addEdge,
   Background,
   BackgroundVariant,
+  Connection,
   Controls,
   MiniMap,
   Node,
@@ -12,7 +13,7 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react'
-import { Edge, Connection } from '@xyflow/react'
+import { Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { useQuery } from '@apollo/client'
@@ -29,7 +30,7 @@ import {
   GET_MEMBERS,
 } from '@/app/graphql'
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }]
+const initialEdges: Edge[] = []
 const GraphVisualization = () => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
   const { data: people } = useQuery(GET_ALL_PEOPLE)
@@ -50,7 +51,7 @@ const GraphVisualization = () => {
       position: getRandomPosition(),
       type: 'customNode',
       data: { label: person.name, nodeName: person.__typename, id: person.id },
-      guidedBy: members?.members,
+      guidedBy: person.guidedBy,
     })) ?? []),
   ]
 
@@ -108,11 +109,15 @@ const GraphVisualization = () => {
     ])
   }, [resourceNodes, memberNodes, peopleNodes, coreValuesNodes, goalNodes])
 
+  coreValuesNodes.forEach((coreValueNode) => {
+    console.log('Core Value Node Id', coreValueNode.id)
+  })
+
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
     peopleNodes ?? []
   )
 
-  const initNodes: Node[] = selectedNodes ?? []
+  const initNodes: Node[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes)
@@ -125,40 +130,29 @@ const GraphVisualization = () => {
     [setEdges]
   )
 
+  const linkedEdges: Edge[] = []
+
   useEffect(() => {
     if (people && coreValues && goals && resources && members) {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNodes])
 
-  useEffect(() => {
-    const newEdges = peopleNodes.flatMap((person) => {
-      const personValues = person.guidedBy
-      return coreValuesNodes
-        .filter((coreValue) => {
-          if (personValues) {
-            return personValues.find((value) => value.id === coreValue.data.id)
-          }
-          return false
+      peopleNodes.forEach((personNode) => {
+        personNode.guidedBy?.forEach((value) => {
+          if (value === null) return
+          linkedEdges.push({
+            id: `edge-${personNode.id}-${value.id}`,
+            source: personNode.id,
+            target: `${value.__typename}` + value.id,
+          })
         })
-        .map((coreValue) => ({
-          id: `e${person.data.id}-${coreValue.data.id}`,
-          source: person.data.id,
-          target: coreValue.data.id,
-          type: 'smoothstep',
-        }))
-    })
+      })
+    }
+    console.log('Linked Edges', linkedEdges)
+    console.log('Person Nodes', peopleNodes)
 
-    setEdges((prevEdges) => {
-      const existingEdgeIds = new Set(prevEdges.map((edge) => edge.id))
-      const uniqueEdges = newEdges.filter(
-        (edge) => !existingEdgeIds.has(edge.id)
-      )
-      return [...prevEdges, ...uniqueEdges]
-    })
-  }, [people, coreValues, setEdges])
+    setEdges(linkedEdges)
+  }, [selectedNodes, people, coreValues, goals, resources, members])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
