@@ -1,8 +1,8 @@
-import LoadingPage from '@/components/screens/LoadingScreen'
+import { LoadingScreen } from '@/components/screens'
 import React from 'react'
 
 const Loading = () => {
-  return <LoadingPage />
+  return <LoadingScreen />
 }
 
 export default Loading

@@ -63,12 +63,11 @@ export function ApolloWrapper({
     fetchTokenData()
   }, [user])
 
-  if (isLoading || !token) {
+  if (isLoading || (!token && user)) {
     return <LoadingScreen />
   }
 
   const authLink = new ApolloLink((operation, forward) => {
-    console.log('🚀 ~ file: apollo-wrapper.tsx:45 ~ token:', token)
     if (token?.accessToken) {
       try {
         const expireDate = new Date(token.expiresAt * 1000)

@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning>
-      <body style={{ position: 'relative' }}>
+      <body>
         <Provider>
           <UserProvider>
             <AppProvider>
