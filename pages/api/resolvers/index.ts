@@ -10,9 +10,6 @@ const resolvers = {
   Person: {
     name: (source: Member) => `${source.firstName} ${source.lastName}`,
   },
-  Member: {
-    name: (source: Member) => `${source.firstName} ${source.lastName}`,
-  },
 
   Mutation: {},
   Query: {},

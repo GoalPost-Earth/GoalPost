@@ -8,23 +8,23 @@ import { AvatarCarousel } from '@/components/sections'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_LOGGED_IN_USER } from './graphql/queries/DASHBOARD_QUERIES'
 import ApolloWrapper from '@/components/ApolloWrapper'
-import { Member } from '@/gql/graphql'
 import ShowForms from './forms/page'
-import { UPDATE_MEMBER_MUTATION } from './graphql'
+import { UPDATE_PERSON_MUTATION } from './graphql'
+import { Person } from '@/gql/graphql'
 
 const HomeClient = () => {
   const { user } = useUser()
-  const [UpdateMember] = useMutation(UPDATE_MEMBER_MUTATION)
+  const [UpdatePerson] = useMutation(UPDATE_PERSON_MUTATION)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
     onCompleted: (data) => {
-      if (!data?.members[0]) {
+      if (!data?.people[0]) {
         return
       }
 
-      if (data?.members[0].authId !== user?.sub) {
-        UpdateMember({
+      if (data?.people[0].authId !== user?.sub) {
+        UpdatePerson({
           variables: {
             where: { email_EQ: user?.email },
             update: {
@@ -36,15 +36,15 @@ const HomeClient = () => {
     },
   })
 
-  const member = data?.members[0]
-  const community = member?.communities[0]
+  const person = data?.people[0]
+  const community = person?.communities[0]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <Heading marginBottom={5}>Hi {member?.firstName}!</Heading>
+        <Heading marginBottom={5}>Hi {person?.firstName}!</Heading>
 
-        <AvatarCarousel members={community?.members as Member[]} />
+        <AvatarCarousel members={community?.members as Person[]} />
         <Center marginTop={10}>
           <ShowForms />
         </Center>

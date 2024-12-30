@@ -10,7 +10,7 @@ export const GET_COREVALUE = graphql(`
       alignmentExamples
       description
       why
-      guidesPeople {
+      isEmbracedBy {
         id
         name
       }

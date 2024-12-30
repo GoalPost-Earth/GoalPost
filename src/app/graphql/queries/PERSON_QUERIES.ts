@@ -10,7 +10,6 @@ export const GET_PERSON = graphql(`
       email
       photo
       phone
-      gender
       pronouns
       location
       createdAt
@@ -28,7 +27,6 @@ export const GET_ALL_PEOPLE = graphql(`
       email
       photo
       phone
-      gender
       pronouns
       location
       # createdAt

@@ -1,5 +1,4 @@
 export * from './DASHBOARD_QUERIES'
-export * from './MEMBER_QUERIES'
 export * from './PERSON_QUERIES'
 export * from './GOAL_QUERIES'
 export * from './COREVALUE_QUERIES'

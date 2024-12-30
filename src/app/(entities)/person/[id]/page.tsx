@@ -46,10 +46,7 @@ export default async function ViewPersonPage({
       title: 'Pronouns',
       description: person.pronouns ?? '',
     },
-    {
-      title: 'Gender',
-      description: person.gender ?? '',
-    },
+
     {
       title: 'Location',
       description: person.location ?? '',

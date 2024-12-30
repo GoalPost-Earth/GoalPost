@@ -5,7 +5,6 @@ export const GET_GOAL = graphql(`
     goals(where: { id_EQ: $id }) {
       id
       name
-      type
       description
       successMeasures
       photo
@@ -31,7 +30,6 @@ export const GET_ALL_GOALS = graphql(`
     goals(where: $where) {
       id
       name
-      type
       description
       successMeasures
       photo
