@@ -69,6 +69,17 @@ export default async function ViewPersonPage({
     </>,
   ]
 
+  const desktopContent = [
+    null,
+    <>
+      {person.connectedTo.map((person) => (
+        <Link key={person.id} href={`/person/${person.id}`}>
+          <Text>{person.name}</Text>
+        </Link>
+      ))}
+    </>,
+  ]
+
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container
@@ -106,7 +117,7 @@ export default async function ViewPersonPage({
         >
           <GenericTabs
             triggers={desktopTriggers}
-            content={[]}
+            content={desktopContent}
             props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
           />
         </Box>
