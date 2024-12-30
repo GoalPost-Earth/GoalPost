@@ -6,7 +6,6 @@ interface PersonInterface {
   photo: String
   phone: String
   email: String
-  gender: String
   pronouns: String
   location: String
   createdAt: DateTime!
@@ -23,7 +22,6 @@ type Person implements PersonInterface @node {
   photo: String
   phone: String
   email: String
-  gender: String
   pronouns: String
   location: String
   createdAt: DateTime!
@@ -46,7 +44,6 @@ type Member implements PersonInterface
   email: String
   careManual: String
   interests: String
-  gender: String
   pronouns: String
   location: String
 
