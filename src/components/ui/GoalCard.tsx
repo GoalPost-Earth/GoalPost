@@ -2,7 +2,6 @@ import { Goal } from '@/gql/graphql'
 import { Badge, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import GoalTypeBadge from './GoalTypeBadge'
 import { Avatar } from './avatar'
 
 const GoalCard = ({ goal }: { goal: Goal }) => (
@@ -10,7 +9,6 @@ const GoalCard = ({ goal }: { goal: Goal }) => (
     <Link key={goal.id} href={'/goal/' + goal.id}>
       <Card.Header py={2} bgColor="gray.100">
         <HStack>
-          <GoalTypeBadge goal={goal} />
           <Text fontWeight="bold" textOverflow="ellipsis" truncate>
             {goal?.name}
           </Text>

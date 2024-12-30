@@ -1,4 +1,4 @@
-import { Member } from '@/gql/graphql'
+import { Person } from '@/gql/graphql'
 
 const resolvers = {
   // Resolver Parameters
@@ -8,7 +8,7 @@ const resolvers = {
   // GraphQLResolveInfo
 
   Person: {
-    name: (source: Member) => `${source.firstName} ${source.lastName}`,
+    name: (source: Person) => `${source.firstName} ${source.lastName}`,
   },
 
   Mutation: {},

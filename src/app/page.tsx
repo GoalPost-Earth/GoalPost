@@ -44,7 +44,7 @@ const HomeClient = () => {
       <Container>
         <Heading marginBottom={5}>Hi {person?.firstName}!</Heading>
 
-        <AvatarCarousel members={community?.members as Person[]} />
+        <AvatarCarousel people={community?.members as Person[]} />
         <Center marginTop={10}>
           <ShowForms />
         </Center>

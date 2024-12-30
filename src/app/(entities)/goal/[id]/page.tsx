@@ -1,15 +1,6 @@
 import { query } from '@/app/lib/apollo-client'
 import MemberGuideDetailCard from '@/components/MemberGuideDetailCard'
-import {
-  Badge,
-  Container,
-  Heading,
-  HStack,
-  Image,
-  Spacer,
-  Text,
-  VStack,
-} from '@chakra-ui/react'
+import { Container, Heading, Image, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
 import { GET_GOAL } from '@/app/graphql/queries'
 
@@ -31,13 +22,7 @@ export default async function ViewGoalPage({
     <Container>
       <Heading>Goal Details</Heading>
       <VStack>
-        <HStack mt={2} width="100%">
-          <Text>{goal.name}</Text>
-          <Spacer />
-          <Badge size="lg" colorPalette="brand">
-            {goal.type.toUpperCase()}
-          </Badge>
-        </HStack>
+        <Text mt={2}>{goal.name}</Text>
 
         {goal.motivatesPeople.length > 0 &&
           goal.motivatesPeople.map((person) => (
@@ -58,7 +43,6 @@ export default async function ViewGoalPage({
           detail={goal.successMeasures}
         />
         <MemberGuideDetailCard title="Location" detail={goal.location} />
-        <MemberGuideDetailCard title="Type" detail={goal.type} />
         <MemberGuideDetailCard
           title="Created By"
           detail={goal.createdBy[0]?.name}

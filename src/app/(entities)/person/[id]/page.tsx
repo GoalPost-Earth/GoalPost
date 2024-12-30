@@ -1,12 +1,13 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, VStack } from '@chakra-ui/react'
+import { Box, Container, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 import UserInfo from '@/components/ui/user-info'
 import UserProfile from '@/components/ui/user-profile'
 import GenericTabs from '@/components/ui/generic-tabs'
+import Link from 'next/link'
 
 const BKG_IMG_URL =
   'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGhvbWUlMjBidWlsZGluZyUyMGJhY2tncm91bmR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800'
@@ -57,7 +58,16 @@ export default async function ViewPersonPage({
 
   const desktopTriggers = ['Recents', 'People']
 
-  const content = [<UserInfo data={bioData} key="bio" />]
+  const content = [
+    <UserInfo data={bioData} key="bio" />,
+    <>
+      {person.connectedTo.map((person) => (
+        <Link key={person.id} href={`/person/${person.id}`}>
+          <Text>{person.name}</Text>
+        </Link>
+      ))}
+    </>,
+  ]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

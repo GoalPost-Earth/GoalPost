@@ -40,7 +40,7 @@ const documents = {
     types.GetGoalDocument,
   '\n  query getAllGoals($where: GoalWhere) {\n    goals(where: $where) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetAllGoalsDocument,
-  '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      location\n      createdAt\n    }\n  }\n':
+  '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      connectedTo {\n        id\n        name\n        photo\n      }\n      location\n      createdAt\n    }\n  }\n':
     types.GetPersonDocument,
   '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      location\n      # createdAt\n    }\n  }\n':
     types.GetAllPeopleDocument,
@@ -146,8 +146,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      location\n      createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      location\n      createdAt\n    }\n  }\n']
+  source: '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      connectedTo {\n        id\n        name\n        photo\n      }\n      location\n      createdAt\n    }\n  }\n'
+): (typeof documents)['\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      connectedTo {\n        id\n        name\n        photo\n      }\n      location\n      createdAt\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

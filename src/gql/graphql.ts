@@ -6559,6 +6559,12 @@ export type GetPersonQuery = {
     pronouns?: string | null
     location?: string | null
     createdAt: any
+    connectedTo: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      photo?: string | null
+    }>
   }>
 }
 
@@ -7800,6 +7806,18 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connectedTo' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],

@@ -45,7 +45,7 @@ export default async function CoreValuePage({
 
         <MemberGuideDetailCard
           title="Guides"
-          detail={corevalue.guidesPeople
+          detail={corevalue.isEmbracedBy
             .map((person) => person.name)
             .join(', ')}
         />

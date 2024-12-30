@@ -1,17 +1,17 @@
 import { HStack } from '@chakra-ui/react'
 import React from 'react'
 import { Avatar } from '../ui'
-import { Member } from '@/gql/graphql'
 import Link from 'next/link'
+import { Person } from '@/gql/graphql'
 
-const AvatarCarousel = ({ members = [] }: { members: Member[] }) => {
+const AvatarCarousel = ({ people = [] }: { people: Person[] }) => {
   return (
     <HStack gap="4">
-      {members.map((member) => (
-        <Link key={member.id} href={`/person/${member.id}`}>
+      {people.map((person) => (
+        <Link key={person.id} href={`/person/${person.id}`}>
           <Avatar
-            name={member.name}
-            src={member?.photo ?? undefined}
+            name={person.name}
+            src={person?.photo ?? undefined}
             size="xl"
           />
         </Link>

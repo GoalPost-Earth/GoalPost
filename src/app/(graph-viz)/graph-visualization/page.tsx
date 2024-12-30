@@ -27,7 +27,6 @@ import {
   GET_ALL_COREVALUES,
   GET_ALL_GOALS,
   GET_ALL_RESOURCES,
-  GET_MEMBERS,
 } from '@/app/graphql'
 
 const initialEdges: Edge[] = []
@@ -37,7 +36,7 @@ const GraphVisualization = () => {
   const { data: coreValues } = useQuery(GET_ALL_COREVALUES)
   const { data: goals } = useQuery(GET_ALL_GOALS)
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
-  const { data: members } = useQuery(GET_MEMBERS)
+  const members = people
 
   const nodeTypes = {
     customNode: GraphNodes,
@@ -87,7 +86,7 @@ const GraphVisualization = () => {
     })) ?? []
 
   const memberNodes =
-    members?.members.map((member) => ({
+    members?.people.map((member) => ({
       id: `${member.__typename}` + member.id,
       position: getRandomPosition(),
       type: 'customNode',

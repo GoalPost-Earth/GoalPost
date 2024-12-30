@@ -11,6 +11,11 @@ export const GET_PERSON = graphql(`
       photo
       phone
       pronouns
+      connectedTo {
+        id
+        name
+        photo
+      }
       location
       createdAt
     }
