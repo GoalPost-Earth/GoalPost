@@ -7,7 +7,6 @@ interface GenericTabsProps {
   content: React.ReactNode[]
   props?: any
 }
-
 const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
   return (
     <Tabs.Root
