@@ -60,7 +60,7 @@ type Member implements PersonInterface
 
   # Relationships
   connectedTo: [Person!]! @relationship(type: "CONNECTS_TO", direction: OUT)
-  coreValues: [CoreValue!]! @relationship(type: "GUIDED_BY", direction: OUT)
+  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
   communities: [Community!]! @relationship(type: "MEMBER_OF", direction: OUT)
@@ -136,7 +136,7 @@ type CoreValue @node {
   alignmentExamples: String
   description: String
   why: String
-  guidesPeople: [Member!]! @relationship(type: "GUIDED_BY", direction: IN)
+  isEmbracedByMembers: [Member!]! @relationship(type: "EMBRACES", direction: IN)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
