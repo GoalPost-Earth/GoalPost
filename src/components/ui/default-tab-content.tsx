@@ -1,4 +1,4 @@
-import { Box, Center, Flex, Text } from '@chakra-ui/react'
+import { Center, Flex, Text } from '@chakra-ui/react'
 import HandIcon from '../icons/HandIcon'
 
 function DefaultTabContent() {
