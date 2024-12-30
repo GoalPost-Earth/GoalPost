@@ -47,7 +47,6 @@ function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
           Update Details
         </Button>
       </Stack>
-      {/* </Box> */}
       <GenericTabs
         triggers={tabTriggers}
         content={tabContent}

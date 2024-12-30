@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   addEdge,
   Background,
@@ -44,60 +44,78 @@ const GraphVisualization = () => {
 
   const NodeTriggers = ['Resource', 'Person', 'Member', 'CoreValue', 'Goal']
 
-  const peopleNodes = [
-    ...(people?.people.map((person) => ({
-      id: `${person.__typename}` + person.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: { label: person.name, nodeName: person.__typename, id: person.id },
-    })) ?? []),
-  ]
+  const peopleNodes = useMemo(() => {
+    return (
+      people?.people.map((person) => ({
+        id: `${person.__typename}${person.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          label: person.name,
+          nodeName: person.__typename,
+          id: person.id,
+        },
+      })) ?? []
+    )
+  }, [people])
 
-  const coreValuesNodes =
-    coreValues?.coreValues.map((coreValue) => ({
-      id: `${coreValue.__typename}` + coreValue.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: {
-        label: coreValue.name,
-        nodeName: coreValue.__typename,
-        id: coreValue.id,
-      },
-    })) ?? []
+  const coreValuesNodes = useMemo(() => {
+    return (
+      coreValues?.coreValues.map((coreValue) => ({
+        id: `${coreValue.__typename}${coreValue.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          label: coreValue.name,
+          nodeName: coreValue.__typename,
+          id: coreValue.id,
+        },
+      })) ?? []
+    )
+  }, [coreValues])
 
-  const goalNodes =
-    goals?.goals.map((goal) => ({
-      id: `${goal.__typename}` + goal.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: { label: goal.name, nodeName: goal.__typename, id: goal.id },
-    })) ?? []
+  const goalNodes = useMemo(() => {
+    return (
+      goals?.goals.map((goal) => ({
+        id: `${goal.__typename}${goal.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: { label: goal.name, nodeName: goal.__typename, id: goal.id },
+      })) ?? []
+    )
+  }, [goals])
 
-  const resourceNodes =
-    resources?.resources.map((resource) => ({
-      id: `${resource.__typename}` + resource.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: {
-        label: resource.name,
-        nodeName: resource.__typename,
-        id: resource.id,
-      },
-    })) ?? []
+  const resourceNodes = useMemo(() => {
+    return (
+      resources?.resources.map((resource) => ({
+        id: `${resource.__typename}${resource.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          label: resource.name,
+          nodeName: resource.__typename,
+          id: resource.id,
+        },
+      })) ?? []
+    )
+  }, [resources])
 
-  const memberNodes =
-    members?.people.map((member) => ({
-      id: `${member.__typename}` + member.id,
-      position: getRandomPosition(),
-      type: 'customNode',
-      data: {
-        label: `${member.firstName} ${member.lastName}`,
-        nodeName: member.__typename,
-        id: member.id,
-      },
-    })) ?? []
+  const memberNodes = useMemo(() => {
+    return (
+      members?.people.map((member) => ({
+        id: `${member.__typename}${member.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          label: `${member.firstName} ${member.lastName}`,
+          nodeName: member.__typename,
+          id: member.id,
+        },
+      })) ?? []
+    )
+  }, [members])
 
-  const graphNodes = React.useMemo(() => {
+  const graphNodes = useMemo(() => {
     return calculateNodePositionsAsRings([
       resourceNodes,
       memberNodes,
@@ -125,28 +143,12 @@ const GraphVisualization = () => {
     [setEdges]
   )
 
-  // const linkedEdges: Edge[] = []
-
   useEffect(() => {
     if (people && coreValues && goals && resources && members) {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
-
-      // peopleNodes.forEach((personNode) => {
-      // personNode.guidedBy?.forEach((value) => {
-      //   if (value === null) return
-      //   linkedEdges.push({
-      //     id: `edge-${personNode.id}-${value.id}`,
-      //     source: personNode.id,
-      //     target: `${value.__typename}` + value.id,
-      //   })
-      // })
-      // })
     }
-    // console.log('Linked Edges', linkedEdges)
-
-    // setEdges(linkedEdges)
-  }, [selectedNodes, people, coreValues, goals, resources, members])
+  }, [selectedNodes, setNodes, people, coreValues, goals, resources, members])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

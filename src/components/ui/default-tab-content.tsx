@@ -3,12 +3,16 @@ import HandIcon from '../icons/HandIcon'
 
 function DefaultTabContent() {
   return (
-    <Center bgColor="white" borderRadius="50%" height={300} width={300}>
+    <Center width={'100%'}>
       <Flex
         flexDirection={{ base: 'column', md: 'row' }}
         justifyContent={'center'}
         alignItems={'center'}
         gap={3}
+        bgColor="white"
+        borderRadius="full"
+        height={300}
+        width={300}
       >
         <HandIcon />
         <Text>Nothing to see yet!</Text>
