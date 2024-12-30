@@ -151,7 +151,6 @@ type CoreValue @node {
 type Goal @node {
   id: ID! @id
   name: String!
-  type: String!
   description: String
   successMeasures: String
   photo: String
