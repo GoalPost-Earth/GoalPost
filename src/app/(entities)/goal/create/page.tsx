@@ -66,20 +66,6 @@ function CreateGoal() {
             />
           </GridItem>
           <GridItem>
-            <Select
-              label="Type"
-              name="type"
-              control={control}
-              errors={errors}
-              required
-              options={[
-                { label: 'Need', value: 'Need' },
-                { label: 'Offer', value: 'Offer' },
-                { label: 'Wish', value: 'Wish' },
-              ]}
-            />
-          </GridItem>
-          <GridItem>
             <Textarea
               label="Description"
               name="description"

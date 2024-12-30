@@ -28,8 +28,8 @@ function CreateCoreValue() {
         variables: {
           input: {
             ...data,
-            guidesPerson: {
-              connect: { where: { node: { authId: user?.sub } } },
+            isEmbracedBy: {
+              connect: { where: { node: { authId_EQ: user?.sub } } },
             },
           },
         },

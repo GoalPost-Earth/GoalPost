@@ -2,23 +2,18 @@
 
 import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input, Select, Radio } from '@/components/form'
+import { Input, Select } from '@/components/form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Center, Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { ImageUpload } from '@/components/form'
-import {
-  CloudinaryPresets,
-  GENDER_SELECT_OPTIONS,
-  PRONOUN_SELECT_OPTIONS,
-} from '@/types'
+import { CloudinaryPresets, PRONOUN_SELECT_OPTIONS } from '@/types'
 
 function CreatePerson() {
   const {
     control,
-    getValues,
     handleSubmit,
     setValue,
     formState: { isSubmitting, errors },
@@ -96,31 +91,12 @@ function CreatePerson() {
             />
           </GridItem>
           <GridItem>
-            <Radio
-              name="gender"
-              label="Gender"
-              value={getValues('gender')}
-              control={control}
-              errors={errors}
-              options={GENDER_SELECT_OPTIONS}
-            />
-          </GridItem>
-          <GridItem>
             <Select
               label="Pronouns"
               name="pronouns"
               control={control}
               errors={errors}
               options={PRONOUN_SELECT_OPTIONS}
-            />
-          </GridItem>
-
-          <GridItem>
-            <Input
-              label="Interests"
-              name="interests"
-              control={control}
-              errors={errors}
             />
           </GridItem>
           <GridItem>

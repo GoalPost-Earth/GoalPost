@@ -18,22 +18,22 @@ export default function AllResources() {
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
         <Heading>All Resources</Heading>
-        {resources.map((resource) => (
+        {resources?.map((resource) => (
           <Link href={'/resource/' + resource.id} key={resource.id}>
             <Card.Root key={resource.id} my={1}>
               <Card.Header py={2} bgColor="gray.100">
-                {resource.name}
+                {resource?.name}
               </Card.Header>
               <Card.Body>
-                <Card.Description>{resource.description}</Card.Description>
+                <Card.Description>{resource?.description}</Card.Description>
               </Card.Body>
               <Card.Footer justifyContent="flex-end">
                 <>
-                  <Avatar src={resource.providedByPerson[0].name} size="sm" />
+                  <Avatar src={resource?.providedByPerson[0]?.name} size="sm" />
                   <Text fontSize="small" fontWeight="bold">
-                    {resource.providedByPerson[0].name}
+                    {resource?.providedByPerson[0]?.name}
                   </Text>
-                  <Link href={`tel:${resource.providedByPerson[0].phone}`}>
+                  <Link href={`tel:${resource?.providedByPerson[0]?.phone}`}>
                     <IconButton size="xs" variant="ghost" aria-label="phone">
                       {<LuPhone />}
                     </IconButton>
