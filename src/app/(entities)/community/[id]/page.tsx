@@ -41,6 +41,10 @@ export default async function ViewCommunityPage({
           <MemberGuideDetailCard title="Why" detail={community.why} />
           <MemberGuideDetailCard title="Location" detail={community.location} />
           <MemberGuideDetailCard title="Time" detail={community.time} />
+          <MemberGuideDetailCard
+            title="Time"
+            detail={community.createdBy.name}
+          />
         </VStack>
       </Container>
     </ApolloWrapper>

@@ -4,6 +4,7 @@ import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
 import { jwtDecode } from 'jwt-decode'
+import { authIdCallback } from './callbacks/populatedByCallbacks'
 
 export default async function initializeApolloServer() {
   const driver = neoDriver(
@@ -21,6 +22,11 @@ export default async function initializeApolloServer() {
     features: {
       authorization: {
         key: process.env.JWT_SECRET ?? '',
+      },
+      populatedBy: {
+        callbacks: {
+          authIdCallback,
+        },
       },
       excludeDeprecatedFields: {
         implicitEqualFilters: true,

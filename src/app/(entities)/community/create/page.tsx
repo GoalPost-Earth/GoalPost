@@ -16,6 +16,7 @@ import {
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/app/types'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreateCommunity() {
   const {
@@ -24,6 +25,7 @@ function CreateCommunity() {
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
+  const { user } = useUser()
   const [CreateCommunities] = useMutation(CREATE_COMMUNITY_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,6 +35,9 @@ function CreateCommunity() {
         variables: {
           input: {
             ...data,
+            createdBy: {
+              connect: { where: { node: { authId_EQ: user?.sub } } },
+            },
           },
         },
       })

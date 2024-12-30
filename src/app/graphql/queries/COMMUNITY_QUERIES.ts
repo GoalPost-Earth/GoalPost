@@ -12,6 +12,11 @@ export const GET_COMMUNITY = graphql(`
       activities
       resultsAchieved
       status
+      createdBy {
+        id
+        name
+        photo
+      }
     }
   }
 `)
@@ -28,6 +33,11 @@ export const GET_ALL_COMMUNITIES = graphql(`
       activities
       resultsAchieved
       status
+      createdBy {
+        id
+        name
+        photo
+      }
     }
   }
 `)

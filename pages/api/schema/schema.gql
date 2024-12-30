@@ -99,6 +99,7 @@ type Community @node {
   relatedCommunities: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
+  createdBy: Person! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
