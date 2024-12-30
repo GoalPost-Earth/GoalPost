@@ -1,3 +1,30 @@
+#### 1.0.1 (2024-12-30)
+
+##### Chores
+
+*  remove unrelated fields from entities ([7bb6cbb7](https://github.com/rdamashek/GoalPost/commit/7bb6cbb76bf79732a13be724741d4afa0824c773))
+*  uncomment content code ([6837fa52](https://github.com/rdamashek/GoalPost/commit/6837fa526d45a70316363571aa884afcf85a24c8))
+*  clean up unused imports and optimize code structure ([3ae678ee](https://github.com/rdamashek/GoalPost/commit/3ae678ee945314ef67574b463bb310be18ef2928))
+
+##### New Features
+
+*  add createdBy field to Community schema and update related queries and components ([77886a37](https://github.com/rdamashek/GoalPost/commit/77886a37c2d122594fcebca3de20106b24513e55))
+*  add connectedTo field to Person queries and update related components ([86465f18](https://github.com/rdamashek/GoalPost/commit/86465f18eef1e7e591f6309a11bae60bae21372c))
+
+##### Bug Fixes
+
+*  clear lint errors and warnings ([0b2cb44e](https://github.com/rdamashek/GoalPost/commit/0b2cb44e4b463d9aeb1589313d24fb92ca144ca0))
+*  move member props to Person-> Community relationships ([a97d9b11](https://github.com/rdamashek/GoalPost/commit/a97d9b1128b2a1bc0eabb41f8a9d0921fa42f099))
+*  update relationship types for coreValues and change guides to embraces in schema ([ab92b87a](https://github.com/rdamashek/GoalPost/commit/ab92b87a65808bd3f6a603d3bc557fd34993fe67))
+*  remove 'gender' field from Person and Member schemas ([4e258073](https://github.com/rdamashek/GoalPost/commit/4e2580731add78845d4299944a3990009cedda7a))
+*  remove 'type' field from Goal schema ([a265008f](https://github.com/rdamashek/GoalPost/commit/a265008f1043d9c733789c093c8128bc7d3ceb12))
+
+##### Refactors
+
+*  add desktop content to person page ([674673e5](https://github.com/rdamashek/GoalPost/commit/674673e5fc5de14523e77d2cd793be851bce334c))
+*  update user info structure and improve UI components for better readability ([39aeebb6](https://github.com/rdamashek/GoalPost/commit/39aeebb6254693ca8212e497ea71ec4048e1eb32))
+*  replace 'Member' with 'Person' in queries and mutations, remove unused member files ([3fcca711](https://github.com/rdamashek/GoalPost/commit/3fcca711c06275c42b3b2f650b6cd1b4ebccc138))
+
 ## 1.0.0 (2024-12-30)
 
 ##### Chores
