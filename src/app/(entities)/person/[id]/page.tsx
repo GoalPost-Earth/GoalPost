@@ -1,22 +1,15 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, Flex, Image, Text, VStack } from '@chakra-ui/react'
+import { Box, Container, VStack } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
-import { Avatar } from '@/components/ui'
 import UserInfo from '@/components/ui/user-info'
-import {
-  AvatarIcon,
-  CalendarIcon,
-  FigureIcon,
-  MailIcon,
-  PhoneIcon,
-  UserIcon,
-} from '@/icons'
+import UserProfile from '@/components/ui/user-profile'
 import GenericTabs from '@/components/ui/generic-tabs'
-import { RANDOM_IMAGE_URL_400 } from '@/types'
-import { getHumanReadableDateTime } from '@/app/utils'
+
+const BKG_IMG_URL =
+  'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGhvbWUlMjBidWlsZGluZyUyMGJhY2tncm91bmR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800'
 
 export default async function ViewPersonPage({
   params,
@@ -40,91 +33,76 @@ export default async function ViewPersonPage({
     {
       title: 'First Name',
       description: person.firstName,
-      icon: <UserIcon />,
     },
     {
       title: 'Last Name',
       description: person.lastName,
-      icon: <UserIcon />,
-    },
-    {
-      title: 'Email',
-      description: person.email,
-      icon: <MailIcon />,
     },
     {
       title: 'Phone Number',
       description: person.phone ?? '',
-      icon: <PhoneIcon />,
     },
     {
       title: 'Pronouns',
       description: person.pronouns ?? '',
-      icon: <FigureIcon />,
     },
     {
       title: 'Gender',
       description: person.gender ?? '',
-      icon: <FigureIcon />,
-    },
-    {
-      title: 'Sign Up Date',
-      description: getHumanReadableDateTime(person.createdAt),
-      icon: <CalendarIcon />,
     },
     {
       title: 'Location',
       description: person.location ?? '',
-      icon: <AvatarIcon />,
     },
   ]
 
-  const triggers = ['Bio', 'Contact']
+  const triggers = ['About', 'People']
+
+  const desktopTriggers = ['Recents', 'People']
 
   const content = [<UserInfo data={bioData} key="bio" />]
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container px={8} position="relative">
-        <VStack>
+      <Container
+        p={8}
+        pt={{ md: 0 }}
+        position="relative"
+        display={{ base: 'flex', lg: 'block' }}
+        flexDirection={'column'}
+        alignItems={{ base: 'center' }}
+        width={'100%'}
+        isolation={'isolate'}
+      >
+        <VStack display={{ base: 'none', lg: 'flex' }} mx={-8}>
           <Box
-            position="relative"
-            marginX={-8}
-            overflow={'hidden'}
-            height={'160px'}
-          >
-            <Image
-              src={RANDOM_IMAGE_URL_400}
-              alt="Member Guide background"
-              objectFit="cover"
-              transform={'translateY(-15%)'}
-            />
-            <Box
-              position="absolute"
-              inset={0}
-              background={`radial-gradient(circle at left center, rgba(0, 0, 0, 0.6) 20%, rgba(0, 0, 0, 0) 100%)`}
-            ></Box>
-            <Flex
-              gap={3}
-              alignItems="center"
-              position={'absolute'}
-              left={8}
-              bottom={8}
-            >
-              <Avatar
-                name={person?.name}
-                src={person.photo ?? undefined}
-                width={'58px'}
-                height={'58px'}
-                border={'3px solid white'}
-              />
-              <Text color={'white'} fontWeight={'semibold'}>
-                {person?.name}
-              </Text>
-            </Flex>
-          </Box>
-          <GenericTabs triggers={triggers} content={content} />
+            width={'100%'}
+            height={'200px'}
+            backgroundImage={`url(${BKG_IMG_URL})`}
+            backgroundSize={'cover'}
+            backgroundRepeat={'no-repeat'}
+          ></Box>
         </VStack>
+        <UserProfile
+          user={{
+            name: person.name,
+            email: person.email ?? '',
+            photo: person.photo ?? '',
+          }}
+          tabTriggers={triggers}
+          tabContent={content}
+        />
+        <Box
+          float={'right'}
+          width={'calc(100% - 500px)'}
+          display={{ base: 'none', lg: 'block' }}
+        >
+          <GenericTabs
+            triggers={desktopTriggers}
+            content={[]}
+            props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
+          />
+        </Box>
       </Container>
     </ApolloWrapper>
   )

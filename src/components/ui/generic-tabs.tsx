@@ -1,11 +1,14 @@
 import React from 'react'
 import { Tabs } from '@chakra-ui/react'
+import DefaultTabContent from './default-tab-content'
 
 interface GenericTabsProps {
   triggers: string[]
   content: React.ReactNode[]
+  props?: any
 }
-const GenericTabs = ({ triggers, content }: GenericTabsProps) => {
+
+const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
   return (
     <Tabs.Root
       variant="subtle"
@@ -14,28 +17,34 @@ const GenericTabs = ({ triggers, content }: GenericTabsProps) => {
       width={'100%'}
       mt={2}
     >
-      <Tabs.List mt={2} w={'full'} bg={'gray.subtle'}>
+      <Tabs.List
+        mt={2}
+        w={'full'}
+        display="flex"
+        gap={2}
+        justifyContent={'center'}
+        {...props}
+      >
         {triggers.map((trigger, index) => (
           <Tabs.Trigger
             key={`${trigger}-${index}`}
             value={trigger}
             fontSize={'xs'}
             fontWeight="bold"
-            w="full"
             justifyContent={'center'}
-            p={0}
+            borderRadius={'full'}
           >
             {trigger}
           </Tabs.Trigger>
         ))}
       </Tabs.List>
-      {content.map((content, index) => (
+      {triggers.map((trigger, index) => (
         <Tabs.Content
-          key={`${triggers[index]}-${index}`}
-          value={triggers[index]}
+          key={`${trigger}-${index}`}
+          value={trigger}
           width={'100%'}
         >
-          {content}
+          {content[index] || <DefaultTabContent />}
         </Tabs.Content>
       ))}
     </Tabs.Root>
