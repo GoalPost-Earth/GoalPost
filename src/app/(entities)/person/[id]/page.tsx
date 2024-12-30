@@ -31,25 +31,25 @@ export default async function ViewPersonPage({
 
   const bioData = [
     {
-      title: 'First Name',
-      description: person.firstName,
+      key: 'First Name',
+      value: person.firstName,
     },
     {
-      title: 'Last Name',
-      description: person.lastName,
+      key: 'Last Name',
+      value: person.lastName,
     },
     {
-      title: 'Phone Number',
-      description: person.phone ?? '',
+      key: 'Phone Number',
+      value: person.phone ?? '',
     },
     {
-      title: 'Pronouns',
-      description: person.pronouns ?? '',
+      key: 'Pronouns',
+      value: person.pronouns ?? '',
     },
 
     {
-      title: 'Location',
-      description: person.location ?? '',
+      key: 'Location',
+      value: person.location ?? '',
     },
   ]
 

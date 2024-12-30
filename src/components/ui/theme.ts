@@ -4,6 +4,7 @@ export const customTheme = createSystem(defaultConfig, {
   theme: {
     tokens: {
       colors: {
+        contrastWhite: { value: '#F9FBFD' },
         brand: {
           50: { value: '#fdf3e9' },
           // 100: { value: '#fbe1c7' },

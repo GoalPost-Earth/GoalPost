@@ -14,12 +14,7 @@ interface UserProfileProps {
   tabProps?: Record<string, any>
 }
 
-function UserProfile({
-  user,
-  tabTriggers,
-  tabContent,
-  tabProps,
-}: UserProfileProps) {
+function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
   return (
     <VStack
       border={{ base: 'none', lg: '2px solid #E19E48' }}
@@ -28,10 +23,10 @@ function UserProfile({
       top={{ lg: '40px' }}
       left={{ lg: '70px' }}
       zIndex={1}
-      maxWidth={'420px'}
+      maxWidth={'380px'}
       width={'100%'}
       mb={{ lg: '40px' }}
-      paddingTop={{ md: '45px' }}
+      paddingY={{ md: '45px' }}
       px={{ lg: 8 }}
       background={'gray.contrast'}
     >
