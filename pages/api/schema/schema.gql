@@ -24,6 +24,15 @@ type Person implements PersonInterface @node {
   email: String
   pronouns: String
   location: String
+
+  # Relationships
+  connectedTo: [Person!]! @relationship(type: "CONNECTS_TO", direction: OUT)
+  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
+  providesResources: [Resource!]!
+    @relationship(type: "PROVIDES", direction: OUT)
+  communities: [Community!]!
+    @relationship(type: "MEMBER_OF", direction: OUT, properties: "MemberOf")
+
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -32,44 +41,14 @@ type Person implements PersonInterface @node {
     @settable(onCreate: false, onUpdate: true)
 }
 
-type Member implements PersonInterface
-  @authentication
-  @node(labels: ["Member", "Person"]) {
-  id: ID! @id
-  authId: String
-  firstName: String!
-  lastName: String!
-  name: String! @customResolver(requires: "firstName lastName")
-  phone: String
-  email: String
-  careManual: String
-  interests: String
-  pronouns: String
-  location: String
-
-  # Non Inherited Fields
-  status: String!
-  photo: String
-  signupDate: Date!
+type MemberOf @relationshipProperties {
+  signupDate: Date
   avatar: String
   favourites: String
   passions: String
   traits: String
   fieldsOfCare: String
-  circles: String
-
-  # Relationships
-  connectedTo: [Person!]! @relationship(type: "CONNECTS_TO", direction: OUT)
-  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
-  providesResources: [Resource!]!
-    @relationship(type: "PROVIDES", direction: OUT)
-  communities: [Community!]! @relationship(type: "MEMBER_OF", direction: OUT)
-  createdAt: DateTime!
-    @timestamp(operations: [CREATE])
-    @settable(onCreate: true, onUpdate: false)
-  updatedAt: DateTime
-    @timestamp(operations: [UPDATE])
-    @settable(onCreate: false, onUpdate: true)
+  interests: String
 }
 
 type Area @node {
