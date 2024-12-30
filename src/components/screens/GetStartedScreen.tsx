@@ -38,11 +38,10 @@ const GetStartedScreen = () => {
             height={100}
           />
           <Text fontSize="2rem" fontWeight="bold" color="brand.100">
-            Hello and Welcome
+            Hello and Welcome!
           </Text>
           <Text fontSize="sm" color="brand.100" opacity={0.6}>
-            Amplify your social circles,and engage, share and make your mark in
-            the community.
+            Connect with and care for your community
           </Text>
         </VStack>
         <Link href="/api/auth/login?returnTo=/">
