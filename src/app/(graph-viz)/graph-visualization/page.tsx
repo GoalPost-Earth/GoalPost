@@ -20,7 +20,7 @@ import { useQuery } from '@apollo/client'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { calculateNodePositionsAsRings, getRandomPosition } from '@/utils'
 import GraphNodes from '@/components/ui/graph-nodes'
-import { Flex } from '@chakra-ui/react'
+import { Flex, Stack } from '@chakra-ui/react'
 import { Button } from '@/components/ui'
 import {
   GET_ALL_PEOPLE,
@@ -108,14 +108,11 @@ const GraphVisualization = () => {
     ])
   }, [resourceNodes, memberNodes, peopleNodes, coreValuesNodes, goalNodes])
 
-  coreValuesNodes.forEach((coreValueNode) => {
-    console.log('Core Value Node Id', coreValueNode.id)
-  })
-
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
     peopleNodes ?? []
   )
 
+  console.log('Members: ', members)
   const initNodes: Node[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -129,7 +126,7 @@ const GraphVisualization = () => {
     [setEdges]
   )
 
-  const linkedEdges: Edge[] = []
+  // const linkedEdges: Edge[] = []
 
   useEffect(() => {
     if (people && coreValues && goals && resources && members) {
@@ -147,63 +144,59 @@ const GraphVisualization = () => {
       // })
       // })
     }
-    console.log('Linked Edges', linkedEdges)
-    console.log('Person Nodes', peopleNodes)
+    // console.log('Linked Edges', linkedEdges)
 
-    setEdges(linkedEdges)
-  }, [
-    selectedNodes,
-    people,
-    coreValues,
-    goals,
-    resources,
-    members,
-    linkedEdges,
-    peopleNodes,
-    setEdges,
-    setNodes,
-  ])
+    // setEdges(linkedEdges)
+  }, [selectedNodes, people, coreValues, goals, resources, members])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <div>
-        <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
-          {NodeTriggers.map((trigger) => {
-            const nextNodes = graphNodes.filter(
-              (node: Node) => node.data.nodeName === trigger
-            )
-            return (
-              <Button
-                key={trigger}
-                onClick={() => {
-                  if (
+      <Stack direction={'row'} height={'100%'}>
+        <Flex
+          flexDirection={'column'}
+          width={'fit-content'}
+          padding={2}
+          background={'gray.subtle'}
+        >
+          <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
+            {NodeTriggers.map((trigger) => {
+              const nextNodes = graphNodes.filter(
+                (node: Node) => node.data.nodeName === trigger
+              )
+              return (
+                <Button
+                  key={trigger}
+                  onClick={() => {
+                    if (
+                      selectedNodes.some(
+                        (selectedNode) => selectedNode.data.nodeName === trigger
+                      )
+                    ) {
+                      setSelectedNodes(
+                        selectedNodes.filter(
+                          (selectedNode) =>
+                            selectedNode.data.nodeName !== trigger
+                        )
+                      )
+                    } else {
+                      setSelectedNodes([...selectedNodes, ...nextNodes])
+                    }
+                  }}
+                  variant={
                     selectedNodes.some(
                       (selectedNode) => selectedNode.data.nodeName === trigger
                     )
-                  ) {
-                    setSelectedNodes(
-                      selectedNodes.filter(
-                        (selectedNode) => selectedNode.data.nodeName !== trigger
-                      )
-                    )
-                  } else {
-                    setSelectedNodes([...selectedNodes, ...nextNodes])
+                      ? 'solid'
+                      : 'outline'
                   }
-                }}
-                variant={
-                  selectedNodes.some(
-                    (selectedNode) => selectedNode.data.nodeName === trigger
-                  )
-                    ? 'solid'
-                    : 'outline'
-                }
-              >
-                {trigger}
-              </Button>
-            )
-          })}
+                >
+                  {trigger}
+                </Button>
+              )
+            })}
+          </Flex>
         </Flex>
-        <div style={{ width: '100%', height: '80vh' }}>
+        <div style={{ width: '100%', height: '90vh' }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -217,7 +210,7 @@ const GraphVisualization = () => {
             <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           </ReactFlow>
         </div>
-      </div>
+      </Stack>
     </ApolloWrapper>
   )
 }
