@@ -197,3 +197,13 @@ MERGE (community)-[:HAS_ACCESS_TO]->(resource)
 RETURN community, resource;
 
 MATCH (n) SET n.createdAt = datetime();
+
+// All not assigned communities to Robert
+MATCH (comm:Community)
+WHERE NOT EXISTS {
+    MATCH (comm)-[:CREATED_BY]->(member)
+} 
+
+MATCH (member:Person {firstName: "Robert"})
+MERGE (comm)-[:CREATED_BY]->(member)
+RETURN comm, member LIMIT 1;

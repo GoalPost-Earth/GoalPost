@@ -9,6 +9,13 @@ export async function GET() {
     })
   } catch (error) {
     console.error(error)
+    if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
+      return NextResponse.json(
+        { error: 'Expired access token', code: error.code },
+        { status: 401 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to get access token' },
       { status: 500 }
@@ -17,5 +24,13 @@ export async function GET() {
 }
 
 export async function POST() {
+  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
+}
+
+export async function PUT() {
+  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
+}
+
+export async function DELETE() {
   return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
 }

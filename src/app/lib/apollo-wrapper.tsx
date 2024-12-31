@@ -43,9 +43,14 @@ export function ApolloWrapper({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useEffect(() => {
     const fetchTokenData = async () => {
-      if (user) {
+      try {
+        if (!user) {
+          router.push('/')
+          return
+        }
+
         const response = await fetch('/api/auth/access-token')
-        const resJson = await response.json()
+        const resJson = await response?.json()
 
         if (resJson?.accessToken) {
           const decoded = jwtDecode(resJson.accessToken) as { exp: number }
@@ -57,11 +62,17 @@ export function ApolloWrapper({
             expiresAt: decoded.exp,
           })
         }
+      } catch (error) {
+        if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
+          console.debug('Access token expired, refreshing...')
+        }
+
+        console.error(error)
       }
     }
 
     fetchTokenData()
-  }, [user])
+  }, [router, user])
 
   if (isLoading || (!token && user)) {
     return <LoadingScreen />
