@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { HamburgerIcon } from '@/components/icons'
-import { VStack } from '@chakra-ui/react'
+import { Flex, VStack } from '@chakra-ui/react'
 import { InputAccordion, NavItemLinks } from './navItems'
 import {
   DrawerBackdrop,
@@ -10,6 +10,7 @@ import {
   DrawerRoot,
   DrawerTrigger,
 } from '@/components/ui/drawer'
+import { AppLogo } from '../app-logo'
 
 function ExtendedSidenav() {
   const [isExtended, setExtended] = useState(false)
@@ -30,7 +31,7 @@ function ExtendedSidenav() {
         overflowX={'hidden'}
         transition={'all 0.3s ease-in-out'}
         padding={0}
-        paddingTop={2}
+        paddingTop={1}
         scrollbarWidth={'none'}
         WebkitOverflowScrolling={'touch'}
       >
@@ -48,14 +49,18 @@ function ExtendedSidenav() {
       </VStack>
       <DrawerContent>
         <DrawerBody padding={0} paddingTop={2}>
-          <DrawerTrigger
-            onClick={() => setExtended(!isExtended)}
-            background={'none'}
-            padding={4}
-            pl={5}
-          >
-            <HamburgerIcon />
-          </DrawerTrigger>
+          <Flex alignItems={'center'}>
+            <DrawerTrigger
+              onClick={() => setExtended(!isExtended)}
+              background={'none'}
+              padding={4}
+              pl={5}
+            >
+              <HamburgerIcon />
+            </DrawerTrigger>
+            <AppLogo width={'40px'} marginLeft={'70px'} />
+          </Flex>
+
           <NavItemLinks setOpen={setExtended} isExtended={true} extendable />
           <InputAccordion setOpen={setExtended} isExtended={true} extendable />
         </DrawerBody>

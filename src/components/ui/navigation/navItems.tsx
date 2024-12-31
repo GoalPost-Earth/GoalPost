@@ -85,7 +85,7 @@ export function NavItemLinks({
               borderRadius="none"
               border="none"
               key={item.name}
-              paddingY={8}
+              paddingY={6}
               colorPalette="brand"
               variant={isActive ? 'solid' : 'outline'}
               width="100%"
@@ -97,7 +97,7 @@ export function NavItemLinks({
                 gap="30px"
                 alignItems="center"
                 width="100%"
-                px={6}
+                px={3}
                 pl={extendable && !isExtended ? 1.5 : 6}
               >
                 {React.cloneElement(item.icon, {
@@ -154,7 +154,7 @@ export function InputAccordion({
                     borderRadius="none"
                     border="none"
                     key={link.name}
-                    paddingY={8}
+                    paddingY={6}
                     colorPalette="brand"
                     variant="outline"
                     width="100%"

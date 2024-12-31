@@ -28,7 +28,7 @@ function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
       mb={{ lg: '40px' }}
       paddingY={{ md: '45px' }}
       px={{ lg: 8 }}
-      background={'gray.contrast'}
+      background={{ base: 'inherit', lg: 'gray.contrast' }}
     >
       <Stack align={'center'} justify={'center'}>
         <Avatar

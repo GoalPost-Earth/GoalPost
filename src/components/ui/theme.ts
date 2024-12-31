@@ -1,6 +1,18 @@
 import { createSystem, defaultConfig } from '@chakra-ui/react'
 
 export const customTheme = createSystem(defaultConfig, {
+  globalCss: {
+    body: {
+      bg: 'bg.muted',
+      minHeight: '100vh',
+      height: '100%',
+    },
+    html: {
+      height: '100%',
+      scrollBehavior: 'smooth',
+      bg: 'bg.muted',
+    },
+  },
   theme: {
     tokens: {
       colors: {
@@ -25,8 +37,8 @@ export const customTheme = createSystem(defaultConfig, {
           primary: { value: '#E19E48' },
           secondary: { value: '#EE0F0F' },
         },
-        heading: { value: 'var(--font-urbanist)' },
-        body: { value: 'var(--font-urbanist)' },
+        heading: { value: 'var(--font-inter)' },
+        body: { value: 'var(--font-inter)' },
       },
     },
     semanticTokens: {
