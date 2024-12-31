@@ -1,73 +1,223 @@
-'use client'
-import { useState } from 'react'
-import { HamburgerIcon } from '@/components/icons'
-import { Flex, VStack } from '@chakra-ui/react'
-import { InputAccordion, NavItemLinks } from './navItems'
-import {
-  DrawerBackdrop,
-  DrawerBody,
-  DrawerContent,
-  DrawerRoot,
-  DrawerTrigger,
-} from '@/components/ui/drawer'
-import { AppLogo } from '../app-logo'
+// 'use client'
+// import { useState, useRef, useEffect } from 'react'
+// import { HamburgerIcon } from '@/components/icons'
+// import { Box, Portal, VStack } from '@chakra-ui/react'
+// import { InputAccordion, NavItemLinks } from './navItems'
+// import { Button } from '../button'
 
-function ExtendedSidenav() {
+// export default function ExtendedSideNav() {
+//   const [isExtended, setExtended] = useState(false)
+//   const navRef = useRef<HTMLDivElement>(null)
+
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (navRef.current && !navRef.current.contains(event.target as Node)) {
+//         setExtended(false)
+//       }
+//     }
+
+//     document.addEventListener('mousedown', handleClickOutside)
+//     return () => {
+//       document.removeEventListener('mousedown', handleClickOutside)
+//     }
+//   }, [])
+
+//   return (
+//     <Portal>
+//       <VStack
+//         ref={navRef}
+//         display={{ base: 'none', lg: 'flex' }}
+//         width={isExtended ? '300px' : '50px'}
+//         height={'100vh'}
+//         position={'fixed'}
+//         top={0}
+//         left={0}
+//         flexDirection={'column'}
+//         zIndex={1000}
+//         bg={'bg'}
+//         alignItems={'flex-start'}
+//         overflowX={'hidden'}
+//         transition={'all 0.3s ease-in-out'}
+//         padding={0}
+//         paddingTop={1}
+//         scrollbarWidth={'none'}
+//         WebkitOverflowScrolling={'touch'}
+//       >
+//         <Button
+//           cursor={'pointer'}
+//           onClick={() => setExtended(!isExtended)}
+//           background={'none'}
+//           padding={4}
+//         >
+//           <HamburgerIcon />
+//         </Button>
+//         <NavItemLinks setOpen={setExtended} isExtended={isExtended} extendable />
+//         <InputAccordion setOpen={setExtended} isExtended={isExtended} extendable />
+//       </VStack>
+//     </Portal>
+//   )
+// }
+
+// 'use client'
+// import { useState, useRef, useEffect } from 'react'
+// import { HamburgerIcon } from '@/components/icons'
+// import { Portal, VStack, Box } from '@chakra-ui/react'
+// import { InputAccordion, NavItemLinks } from './navItems'
+// import { Button } from '../button'
+
+// export default function ExtendedSideNav() {
+//   const [isExtended, setExtended] = useState(false)
+//   const navRef = useRef<HTMLDivElement>(null)
+
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (navRef.current && !navRef.current.contains(event.target as Node)) {
+//         setExtended(false)
+//       }
+//     }
+
+//     document.addEventListener('mousedown', handleClickOutside)
+//     return () => {
+//       document.removeEventListener('mousedown', handleClickOutside)
+//     }
+//   }, [])
+
+//   return (
+//     <Portal>
+//       {isExtended && (
+//         <Box
+//           position="fixed"
+//           top={0}
+//           left={0}
+//           width="100vw"
+//           height="100vh"
+//           bg="rgba(0, 0, 0, 0.5)"
+//           zIndex={999}
+//           onClick={() => setExtended(false)}
+//         />
+//       )}
+//       <VStack
+//         ref={navRef}
+//         display={{ base: 'none', lg: 'flex' }}
+//         width={isExtended ? '300px' : '50px'}
+//         height="100vh"
+//         position="fixed"
+//         top={0}
+//         left={0}
+//         flexDirection="column"
+//         zIndex={1000}
+//         bg="bg"
+//         alignItems="flex-start"
+//         overflowX="hidden"
+//         transition="all 0.3s ease-in-out"
+//         padding={0}
+//         paddingTop={1}
+//         scrollbarWidth="none"
+//         WebkitOverflowScrolling="touch"
+//       >
+//         <Button
+//           cursor="pointer"
+//           onClick={() => setExtended(!isExtended)}
+//           background="none"
+//           padding={4}
+//         >
+//           <HamburgerIcon />
+//         </Button>
+//         <NavItemLinks setOpen={setExtended} isExtended={isExtended} extendable />
+//         <InputAccordion setOpen={setExtended} isExtended={isExtended} extendable />
+//       </VStack>
+//     </Portal>
+//   )
+// }
+
+'use client'
+import { useState, useRef, useEffect } from 'react'
+import { HamburgerIcon } from '@/components/icons'
+import { Portal, VStack, Box } from '@chakra-ui/react'
+import { InputAccordion, NavItemLinks } from './navItems'
+import { Button } from '../button'
+
+export default function ExtendedSideNav() {
   const [isExtended, setExtended] = useState(false)
+  const navRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isExtended) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isExtended])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setExtended(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   return (
-    <DrawerRoot placement={'start'}>
-      <DrawerBackdrop />
+    <Portal>
+      {isExtended && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          bg="rgba(0, 0, 0, 0.5)"
+          zIndex={999}
+          onClick={() => setExtended(false)}
+        />
+      )}
       <VStack
+        ref={navRef}
         display={{ base: 'none', lg: 'flex' }}
-        width={'65px'}
-        // boxShadow={'sm'}
-        height={'100vh'}
-        position={'fixed'}
+        width={isExtended ? '300px' : '50px'}
+        height="100vh"
+        position="fixed"
         top={0}
         left={0}
-        flexDirection={'column'}
+        flexDirection="column"
         zIndex={1000}
-        bg={'bg'}
-        alignItems={'flex-start'}
-        overflowX={'hidden'}
-        transition={'all 0.3s ease-in-out'}
+        bg="bg"
+        alignItems="flex-start"
+        overflowX="hidden"
+        transition="all 0.3s ease-in-out"
         padding={0}
         paddingTop={1}
-        scrollbarWidth={'none'}
-        WebkitOverflowScrolling={'touch'}
+        scrollbarWidth="none"
+        WebkitOverflowScrolling="touch"
       >
-        <DrawerTrigger
-          cursor={'pointer'}
+        <Button
+          cursor="pointer"
           onClick={() => setExtended(!isExtended)}
-          background={'none'}
+          background="none"
           padding={4}
-          pl={5}
         >
           <HamburgerIcon />
-        </DrawerTrigger>
-        <NavItemLinks setOpen={setExtended} isExtended={false} extendable />
-        <InputAccordion setOpen={setExtended} isExtended={false} extendable />
+        </Button>
+        <NavItemLinks
+          setOpen={setExtended}
+          isExtended={isExtended}
+          extendable
+        />
+        <InputAccordion
+          setOpen={setExtended}
+          isExtended={isExtended}
+          extendable
+        />
       </VStack>
-      <DrawerContent>
-        <DrawerBody padding={0} paddingTop={2}>
-          <Flex alignItems={'center'}>
-            <DrawerTrigger
-              onClick={() => setExtended(!isExtended)}
-              background={'none'}
-              padding={4}
-              pl={5}
-            >
-              <HamburgerIcon />
-            </DrawerTrigger>
-            <AppLogo width={'40px'} marginLeft={'70px'} />
-          </Flex>
-
-          <NavItemLinks setOpen={setExtended} isExtended={true} extendable />
-          <InputAccordion setOpen={setExtended} isExtended={true} extendable />
-        </DrawerBody>
-      </DrawerContent>
-    </DrawerRoot>
+    </Portal>
   )
 }
-
-export default ExtendedSidenav

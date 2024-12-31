@@ -19,6 +19,7 @@ import {
 import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
+import { useParams, usePathname } from 'next/navigation'
 
 export const navItems = [
   {
@@ -77,7 +78,7 @@ export function NavItemLinks({
   return (
     <Box borderBottom={'2px solid'} borderColor={'gray.subtle'} pb={10}>
       {navItems.map((item) => {
-        const pathname = window.location.pathname
+        const pathname = usePathname()
         const isActive = pathname === item.to
 
         return (
@@ -87,6 +88,7 @@ export function NavItemLinks({
               border="none"
               key={item.name}
               paddingY={6}
+              paddingX={2}
               colorPalette="brand"
               variant={isActive ? 'solid' : 'outline'}
               width="100%"
@@ -100,10 +102,12 @@ export function NavItemLinks({
                 width="100%"
                 px={3}
                 pl={extendable && !isExtended ? 1.5 : 6}
+                transition={'all 0.4s ease-in-out'}
               >
-                <item.icon color={isActive ? 'bg' : 'iconColor'} />
-
-                <Text fontSize="1rem">{item.name}</Text>
+                <item.icon color={isActive ? 'white' : '#C05621'} />
+                {extendable && isExtended && (
+                  <Text fontSize="1rem">{item.name}</Text>
+                )}
               </Flex>
             </Button>
           </Link>

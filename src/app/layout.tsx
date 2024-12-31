@@ -39,7 +39,7 @@ export default function RootLayout({
                     <Navbar />
                     <Toaster />
                     <Container
-                      paddingLeft={{ base: '16px', lg: '72px' }}
+                      paddingLeft={{ base: '16px', lg: '50px' }}
                       paddingTop={'65px'}
                     >
                       <>
