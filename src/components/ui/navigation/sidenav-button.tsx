@@ -7,12 +7,12 @@ import {
   Heading,
   HStack,
   IconButton,
+  Input,
   Spacer,
   Stack,
   Text,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { GiHamburgerMenu } from 'react-icons/gi'
 import Link from 'next/link'
 import { ColorModeButton } from '../color-mode'
 import {
@@ -27,8 +27,8 @@ import {
 import { Avatar } from '../avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
-import { LogoutIcon } from '@/icons'
-import { navItems } from './navItems'
+import { HamburgerIcon, LogoutIcon } from '@/icons'
+import { InputAccordion, NavItemLinks, navItems } from './navItems'
 
 const NavHamburgerButton = () => {
   const { user } = useUser()
@@ -49,8 +49,9 @@ const NavHamburgerButton = () => {
           size="lg"
           rounded="small"
           background={'none'}
+          display={{ base: 'flex', lg: 'none' }}
         >
-          <GiHamburgerMenu />
+          <HamburgerIcon />
         </IconButton>
       </DrawerTrigger>
       <DrawerContent>
@@ -62,36 +63,8 @@ const NavHamburgerButton = () => {
           </Heading>
         </DrawerHeader>
         <DrawerBody paddingX={0}>
-          <Box bg="gray.subtle">
-            {navItems.map((item) => {
-              const pathname = window.location.pathname
-              const isActive = pathname === item.to()
-              return (
-                <Link href={item.to()} key={item.name}>
-                  <Button
-                    borderRadius="none"
-                    border="none"
-                    key={item.name}
-                    paddingY={8}
-                    colorPalette="brand"
-                    variant={isActive ? 'solid' : 'outline'}
-                    width="100%"
-                    onClick={() => {
-                      setOpen(false)
-                    }}
-                  >
-                    <Flex gap="30px" alignItems="center" width="100%" px={6}>
-                      {React.cloneElement(item.icon, {
-                        color: isActive ? '#FFFFFF' : '#E19E48',
-                      })}
-                      <Text fontSize="1rem">{item.name}</Text>
-                    </Flex>
-                  </Button>
-                </Link>
-              )
-            })}
-          </Box>
-
+          <NavItemLinks setOpen={setOpen} />
+          <InputAccordion setOpen={setOpen} />
           <Link href="/api/auth/logout?returnTo=/">
             <Button
               marginTop={50}

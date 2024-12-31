@@ -9,6 +9,7 @@ import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
 import { ApolloWrapper } from './lib/apollo-wrapper'
+import { Container } from '@chakra-ui/react'
 
 const urbanist = Urbanist({
   subsets: ['latin'],
@@ -37,12 +38,12 @@ export default function RootLayout({
                   <StartupScreen>
                     <Navbar />
                     <Toaster />
-                    <main>
+                    <Container paddingLeft={{ base: '16px', lg: '72px' }}>
                       <>
                         {children}
                         <ChatBotButton />
                       </>
-                    </main>
+                    </Container>
                   </StartupScreen>
                 </ApolloWrapper>
               </ReactFlowProvider>
