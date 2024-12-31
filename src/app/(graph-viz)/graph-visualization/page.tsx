@@ -42,7 +42,7 @@ const GraphVisualization = () => {
     customNode: GraphNodes,
   }
 
-  const NodeTriggers = ['Resource', 'Person', 'Member', 'CoreValue', 'Goal']
+  const NodeTriggers = ['Resource', 'Person', 'CoreValue', 'Goal']
 
   const peopleNodes = useMemo(() => {
     return (

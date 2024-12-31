@@ -8,16 +8,18 @@ export async function GET() {
       status: 200,
     })
   } catch (error) {
-    console.error(error)
-    if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
+    const errorWithType = error as {
+      code: string
+    }
+    if (errorWithType.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
       return NextResponse.json(
-        { error: 'Expired access token', code: error.code },
+        { error: 'Expired access token', code: errorWithType.code },
         { status: 401 }
       )
     }
 
     return NextResponse.json(
-      { error: 'Failed to get access token' },
+      { error: 'Failed to get access token', code: errorWithType.code },
       { status: 500 }
     )
   }

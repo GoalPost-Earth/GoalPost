@@ -63,7 +63,7 @@ export function ApolloWrapper({
           })
         }
       } catch (error) {
-        if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
+        if ((error as { code?: string }).code === 'ERR_EXPIRED_ACCESS_TOKEN') {
           console.debug('Access token expired, refreshing...')
         }
 
