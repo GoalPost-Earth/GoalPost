@@ -54,9 +54,9 @@ export default async function ViewPersonPage({
     },
   ]
 
-  const triggers = ['About', 'People']
+  const triggers = ['About', 'Connections']
 
-  const desktopTriggers = ['Recents', 'People']
+  const desktopTriggers = ['Recents', 'Connections']
 
   const content = [
     <UserInfo data={bioData} key="bio" />,
