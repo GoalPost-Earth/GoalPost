@@ -3,23 +3,34 @@ import { createSystem, defaultConfig } from '@chakra-ui/react'
 export const customTheme = createSystem(defaultConfig, {
   globalCss: {
     body: {
-      bg: 'bg.muted',
+      bg: 'contrastWhite',
       minHeight: '100vh',
       height: '100%',
     },
     html: {
       height: '100%',
       scrollBehavior: 'smooth',
-      bg: 'bg.muted',
+      bg: 'contrastWhite',
     },
   },
   theme: {
     tokens: {
       colors: {
         contrastWhite: { value: '#F9FBFD' },
+        brandIcons: {
+          50: { value: '#FFFAF0' },
+          100: { value: '#FEEBCB' },
+          200: { value: '#FBD38D' },
+          300: { value: '#F6AD55' },
+          400: { value: '#ED8936' },
+          500: { value: '#DD6B20' },
+          600: { value: '#C05621' },
+          700: { value: '#9C4221' },
+          800: { value: '#7B341E' },
+          900: { value: '#652B19' },
+        },
         brand: {
-          50: { value: '#fdf3e9' },
-          // 100: { value: '#fbe1c7' },
+          50: { value: '#FFFAF0' },
           100: { value: '#FFFFFF' },
           200: { value: '#f7c89b' },
           300: { value: '#f3a96a' },

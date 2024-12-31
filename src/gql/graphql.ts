@@ -6764,8 +6764,10 @@ export type GetLoggedInUserQuery = {
     authId?: string | null
     firstName: string
     lastName: string
+    name: string
     email?: string | null
     photo?: string | null
+    createdAt: any
     communities: Array<{
       __typename?: 'Community'
       id: string
@@ -7866,8 +7868,10 @@ export const GetLoggedInUserDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'authId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'communities' },

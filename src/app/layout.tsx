@@ -2,15 +2,14 @@ import type { Metadata } from 'next'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import { Inter } from 'next/font/google'
-import Navbar from '@/components/ui/navigation/navbar'
+import Navbar from '@/components/ui/navigation/top-nav'
 import { Toaster } from '@/components/ui/toaster'
-import { AppProvider } from './AppContext'
+import { AppProvider } from './contexts/AppContext'
 import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
 import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Container } from '@chakra-ui/react'
-import LoggedInUserContextProvider from './LoggedInUserContext'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,27 +32,26 @@ export default function RootLayout({
       <body>
         <Provider>
           <UserProvider>
-            <AppProvider>
-              <ReactFlowProvider>
-                <ApolloWrapper>
-                  <LoggedInUserContextProvider>
-                    <StartupScreen>
-                      <Navbar />
-                      <Toaster />
-                      <Container
-                        paddingLeft={{ base: '16px', lg: '72px' }}
-                        paddingTop={'65px'}
-                      >
-                        <>
-                          {children}
-                          <ChatBotButton />
-                        </>
-                      </Container>
-                    </StartupScreen>
-                  </LoggedInUserContextProvider>
-                </ApolloWrapper>
-              </ReactFlowProvider>
-            </AppProvider>
+            <ReactFlowProvider>
+              <ApolloWrapper>
+                <AppProvider>
+                  <StartupScreen>
+                    <Navbar />
+                    <Toaster />
+                    <Container
+                      paddingLeft={{ base: '16px', lg: '72px' }}
+                      paddingTop={'65px'}
+                    >
+                      <>
+                        {children}
+                        <ChatBotButton />
+                      </>
+                    </Container>
+                  </StartupScreen>
+                </AppProvider>
+                ggi
+              </ApolloWrapper>
+            </ReactFlowProvider>
           </UserProvider>
         </Provider>
       </body>

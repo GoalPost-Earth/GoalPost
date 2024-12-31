@@ -6,11 +6,11 @@ import SearchBar from '../searchbar'
 import ExtendedSidenav from './extended-sidenav'
 import { Avatar } from '../avatar'
 import { AppLogo } from '../app-logo'
-import { LoggedInUserContext } from '@/app/LoggedInUserContext'
 import { useContext } from 'react'
+import { useApp } from '@/app/contexts/AppContext'
 
-export default function Simple() {
-  const { name, photo } = useContext(LoggedInUserContext)
+export default function TopNav() {
+  const { user } = useApp()
 
   return (
     <HStack
@@ -21,7 +21,8 @@ export default function Simple() {
       left={0}
       right={0}
       zIndex={100}
-      bg={'inherit'}
+      bgColor="white"
+      boxShadow="sm"
     >
       <ExtendedSidenav />
       <NavHamburgerButton />
@@ -41,8 +42,8 @@ export default function Simple() {
         mr={2}
         ml={{ base: 'auto', lg: '0px' }}
       >
-        <Text>{name}</Text>
-        <Avatar src={photo} />
+        <Text>{user?.name} </Text>
+        <Avatar src={user?.photo ?? undefined} />
       </Flex>
     </HStack>
   )

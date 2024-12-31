@@ -1,7 +1,6 @@
 import { Box, Text, VStack } from '@chakra-ui/react'
-import { Button } from '@/components/ui'
+import { AppLogo, Button } from '@/components/ui'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const GetStartedScreen = () => {
   return (
@@ -31,12 +30,7 @@ const GetStartedScreen = () => {
         bgGradient="linear(to-t, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0))"
       >
         <VStack width="100%" textAlign="center" gap={5}>
-          <Image
-            src="/goalpost-logo.png"
-            alt="Goalpost Logo"
-            width={100}
-            height={100}
-          />
+          <AppLogo width={100} height={100} />
           <Text fontSize="2rem" fontWeight="bold" color="brand.100">
             Hello and Welcome!
           </Text>

@@ -3,7 +3,6 @@
 import React from 'react'
 import { Box, Button, Icon, Text, ButtonProps, HStack } from '@chakra-ui/react'
 import Link from 'next/link'
-import { ChurchOptions, useApp } from '@/app/AppContext'
 
 type MenuButtonProps = {
   icon: JSX.Element
@@ -25,8 +24,6 @@ const MenuButton: React.FC<MenuButtonProps> = ({
   id,
   ...rest
 }) => {
-  const { setChurch } = useApp()
-
   return (
     <Link href={link}>
       <Button
@@ -40,13 +37,6 @@ const MenuButton: React.FC<MenuButtonProps> = ({
         borderRadius={15}
         justifyContent="flex-start"
         overflow="clip"
-        onClick={() =>
-          setChurch({
-            name: title,
-            level: subtitle.toLowerCase() as ChurchOptions,
-            id,
-          })
-        }
         {...rest}
       >
         <Box>

@@ -23,46 +23,46 @@ import React from 'react'
 export const navItems = [
   {
     name: 'Home',
-    to: () => '/',
-    icon: <HomeIcon />,
+    to: '/',
+    icon: HomeIcon,
   },
   {
     name: 'People',
-    to: () => '/person',
-    icon: <PeopleIcon />,
+    to: '/person',
+    icon: PeopleIcon,
   },
   {
     name: 'Resources',
-    to: () => '/resource',
-    icon: <SettingsIcon />,
+    to: '/resource',
+    icon: SettingsIcon,
   },
   {
     name: 'Goals',
-    to: () => '/goal',
-    icon: <GoalsIcon />,
+    to: '/goal',
+    icon: GoalsIcon,
   },
   {
     name: 'Care Points',
-    to: () => '/carepoint',
-    icon: <CarePointsIcon />,
+    to: '/carepoint',
+    icon: CarePointsIcon,
   },
   {
     name: 'AI Chat Bot',
-    to: () => '/chatbot',
-    icon: <ChatBotIcon />,
+    to: '/chatbot',
+    icon: ChatBotIcon,
   },
   {
     name: 'Graph Visualization',
-    to: () => '/graph-visualization',
-    icon: <GraphNodeIcon />,
+    to: '/graph-visualization',
+    icon: GraphNodeIcon,
   },
 ]
 
 export const inputLinks = [
-  { name: 'Add Person', to: () => '/person/create' },
-  { name: 'Add Resources', to: () => '/resource/create' },
-  { name: 'Add Goals', to: () => '/goal/create' },
-  { name: 'Add Community', to: () => '/community/create' },
+  { name: 'Add Person', to: '/person/create' },
+  { name: 'Add Resources', to: '/resource/create' },
+  { name: 'Add Goals', to: '/goal/create' },
+  { name: 'Add Community', to: '/community/create' },
 ]
 
 export function NavItemLinks({
@@ -78,9 +78,10 @@ export function NavItemLinks({
     <Box borderBottom={'2px solid'} borderColor={'gray.subtle'} pb={10}>
       {navItems.map((item) => {
         const pathname = window.location.pathname
-        const isActive = pathname === item.to()
+        const isActive = pathname === item.to
+
         return (
-          <Link href={item.to()} key={item.name}>
+          <Link href={item.to} key={item.name}>
             <Button
               borderRadius="none"
               border="none"
@@ -100,9 +101,8 @@ export function NavItemLinks({
                 px={3}
                 pl={extendable && !isExtended ? 1.5 : 6}
               >
-                {React.cloneElement(item.icon, {
-                  color: isActive ? '#FFFFFF' : '#C05621',
-                })}
+                <item.icon color={isActive ? 'bg' : 'iconColor'} />
+
                 <Text fontSize="1rem">{item.name}</Text>
               </Flex>
             </Button>
@@ -147,7 +147,7 @@ export function InputAccordion({
           <AccordionItemContent ml={'auto'}>
             {inputLinks.map((link) => {
               return (
-                <Link href={link.to()} key={link.name}>
+                <Link href={link.to} key={link.name}>
                   <Button
                     display={'flex'}
                     justifyContent={'flex-end'}

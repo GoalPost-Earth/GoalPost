@@ -20,6 +20,7 @@ function ExtendedSidenav() {
       <VStack
         display={{ base: 'none', lg: 'flex' }}
         width={'65px'}
+        // boxShadow={'sm'}
         height={'100vh'}
         position={'fixed'}
         top={0}
