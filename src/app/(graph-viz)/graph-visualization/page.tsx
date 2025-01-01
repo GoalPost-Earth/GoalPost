@@ -20,14 +20,14 @@ import { useQuery } from '@apollo/client'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { calculateNodePositionsAsRings, getRandomPosition } from '@/utils'
 import GraphNodes from '@/components/ui/graph-nodes'
-import { Flex, Stack } from '@chakra-ui/react'
-import { Button } from '@/components/ui'
+import { Stack } from '@chakra-ui/react'
 import {
   GET_ALL_PEOPLE,
   GET_ALL_COREVALUES,
   GET_ALL_GOALS,
   GET_ALL_RESOURCES,
 } from '@/app/graphql'
+import GraphSideBar from '@/components/ui/graph-sidebar'
 
 const initialEdges: Edge[] = []
 const GraphVisualization = () => {
@@ -153,50 +153,13 @@ const GraphVisualization = () => {
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Stack direction={'row'} height={'100%'}>
-        <Flex
-          flexDirection={'column'}
-          width={'fit-content'}
-          padding={2}
-          background={'gray.subtle'}
-        >
-          <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
-            {NodeTriggers.map((trigger) => {
-              const nextNodes = graphNodes.filter(
-                (node: Node) => node.data.nodeName === trigger
-              )
-              return (
-                <Button
-                  key={trigger}
-                  onClick={() => {
-                    if (
-                      selectedNodes.some(
-                        (selectedNode) => selectedNode.data.nodeName === trigger
-                      )
-                    ) {
-                      setSelectedNodes(
-                        selectedNodes.filter(
-                          (selectedNode) =>
-                            selectedNode.data.nodeName !== trigger
-                        )
-                      )
-                    } else {
-                      setSelectedNodes([...selectedNodes, ...nextNodes])
-                    }
-                  }}
-                  variant={
-                    selectedNodes.some(
-                      (selectedNode) => selectedNode.data.nodeName === trigger
-                    )
-                      ? 'solid'
-                      : 'outline'
-                  }
-                >
-                  {trigger}
-                </Button>
-              )
-            })}
-          </Flex>
-        </Flex>
+        <GraphSideBar
+          nodes={graphNodes}
+          selectedNodes={selectedNodes}
+          setNodes={setSelectedNodes}
+          triggers={NodeTriggers}
+        />
+
         <div style={{ width: '100%', height: '90vh' }}>
           <ReactFlow
             nodes={nodes}
@@ -205,6 +168,7 @@ const GraphVisualization = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            fitView
           >
             <Controls />
             <MiniMap />

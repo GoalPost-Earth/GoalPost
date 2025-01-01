@@ -1,19 +1,20 @@
 import type { Metadata } from 'next'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
-import { Urbanist } from 'next/font/google'
-import Navbar from '@/components/ui/navigation/navbar'
+import { Inter } from 'next/font/google'
+import Navbar from '@/components/ui/navigation/top-nav'
 import { Toaster } from '@/components/ui/toaster'
-import { AppProvider } from './AppContext'
+import { AppProvider } from './contexts/AppContext'
 import { StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/ChatBotButton'
 import { ReactFlowProvider } from '@xyflow/react'
 import { ApolloWrapper } from './lib/apollo-wrapper'
+import { Container } from '@chakra-ui/react'
 
-const urbanist = Urbanist({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-urbanist',
+  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
@@ -27,26 +28,33 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${urbanist.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body>
         <Provider>
           <UserProvider>
-            <AppProvider>
-              <ReactFlowProvider>
-                <ApolloWrapper>
+            <ReactFlowProvider>
+              <ApolloWrapper>
+                <AppProvider>
                   <StartupScreen>
                     <Navbar />
                     <Toaster />
-                    <main>
+                    <Container
+                      marginX={{ base: '0px', lg: '60px' }}
+                      marginY={'65px'}
+                      padding={10}
+                      bg="white"
+                      boxShadow={'md'}
+                      borderRadius={'2xl'}
+                    >
                       <>
                         {children}
                         <ChatBotButton />
                       </>
-                    </main>
+                    </Container>
                   </StartupScreen>
-                </ApolloWrapper>
-              </ReactFlowProvider>
-            </AppProvider>
+                </AppProvider>
+              </ApolloWrapper>
+            </ReactFlowProvider>
           </UserProvider>
         </Provider>
       </body>

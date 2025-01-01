@@ -7,7 +7,10 @@ export const GET_LOGGED_IN_USER = graphql(`
       authId
       firstName
       lastName
+      name
       email
+      photo
+      createdAt
       communities {
         id
         name
