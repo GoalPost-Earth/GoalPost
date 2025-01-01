@@ -7,7 +7,6 @@ import {
   Heading,
   HStack,
   IconButton,
-  Input,
   Spacer,
   Stack,
   Text,
@@ -28,7 +27,7 @@ import { Avatar } from '../avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
 import { HamburgerIcon, LogoutIcon } from '@/icons'
-import { InputAccordion, NavItemLinks, navItems } from './navItems'
+import { InputAccordion, NavItemLinks } from './navItems'
 
 const NavHamburgerButton = () => {
   const { user } = useUser()
@@ -63,7 +62,7 @@ const NavHamburgerButton = () => {
           </Heading>
         </DrawerHeader>
         <DrawerBody paddingX={0}>
-          <NavItemLinks setOpen={setOpen} />
+          <NavItemLinks setOpen={setOpen} extendable isExtended />
           <InputAccordion setOpen={setOpen} />
           <Link href="/api/auth/logout?returnTo=/">
             <Button

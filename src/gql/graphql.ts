@@ -6907,6 +6907,7 @@ export type GetResourceQuery = {
       __typename?: 'Person'
       id: string
       name: string
+      email?: string | null
       phone?: string | null
       photo?: string | null
     }>
@@ -8286,6 +8287,7 @@ export const GetResourceDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                     ],

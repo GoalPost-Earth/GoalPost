@@ -38,10 +38,7 @@ export default function RootLayout({
                   <StartupScreen>
                     <Navbar />
                     <Toaster />
-                    <Container
-                      marginX={{ base: '0px', lg: '60px' }}
-                      marginY={'65px'}
-                    >
+                    <Container my={'65px'} pl={{ lg: '50px' }} pb="20px">
                       {children}
                       <ChatBotButton />
                     </Container>

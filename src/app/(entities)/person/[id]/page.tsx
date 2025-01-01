@@ -1,6 +1,6 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, Text, VStack } from '@chakra-ui/react'
+import { Box, Container, Text } from '@chakra-ui/react'
 import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
@@ -8,9 +8,7 @@ import UserInfo from '@/components/ui/user-info'
 import UserProfile from '@/components/ui/user-profile'
 import GenericTabs from '@/components/ui/generic-tabs'
 import Link from 'next/link'
-
-const BKG_IMG_URL =
-  'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGhvbWUlMjBidWlsZGluZyUyMGJhY2tncm91bmR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800'
+import ProfileBackground from '@/components/ui/profile-background'
 
 export default async function ViewPersonPage({
   params,
@@ -92,16 +90,7 @@ export default async function ViewPersonPage({
         width={'100%'}
         isolation={'isolate'}
       >
-        <VStack display={{ base: 'none', lg: 'flex' }} mx={-8}>
-          <Box
-            width={'100%'}
-            height={'200px'}
-            backgroundImage={`url(${BKG_IMG_URL})`}
-            backgroundSize={'cover'}
-            backgroundRepeat={'no-repeat'}
-            borderTopRadius={16}
-          ></Box>
-        </VStack>
+        <ProfileBackground />
         <UserProfile
           user={{
             name: person.name,

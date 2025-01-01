@@ -6,6 +6,7 @@ export const customTheme = createSystem(defaultConfig, {
       bg: 'contrastWhite',
       minHeight: '100vh',
       height: '100%',
+      position: 'relative',
     },
     html: {
       height: '100%',

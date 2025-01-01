@@ -20,6 +20,7 @@ export const GET_RESOURCE = graphql(`
       providedByPerson {
         id
         name
+        email
         phone
         photo
       }
