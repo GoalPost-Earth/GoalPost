@@ -39,8 +39,12 @@ export default function RootLayout({
                     <Navbar />
                     <Toaster />
                     <Container
-                      paddingLeft={{ base: '16px', lg: '50px' }}
-                      paddingTop={'65px'}
+                      marginX={{ base: '0px', lg: '60px' }}
+                      marginY={'65px'}
+                      padding={10}
+                      bg="white"
+                      boxShadow={'md'}
+                      borderRadius={'2xl'}
                     >
                       <>
                         {children}
@@ -49,7 +53,6 @@ export default function RootLayout({
                     </Container>
                   </StartupScreen>
                 </AppProvider>
-                ggi
               </ApolloWrapper>
             </ReactFlowProvider>
           </UserProvider>

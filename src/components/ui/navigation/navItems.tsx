@@ -106,7 +106,7 @@ export function NavItemLinks({
               >
                 <item.icon color={isActive ? 'white' : '#C05621'} />
                 {extendable && isExtended && (
-                  <Text fontSize="1rem">{item.name}</Text>
+                  <Text fontSize="small">{item.name}</Text>
                 )}
               </Flex>
             </Button>
@@ -143,7 +143,7 @@ export function InputAccordion({
               cursor={'pointer'}
             >
               <InputIcon />
-              <Text fontSize="1rem" color="#C05621">
+              <Text fontSize="small" color="brandIcons.600">
                 Input
               </Text>
             </Flex>
@@ -155,19 +155,17 @@ export function InputAccordion({
                   <Button
                     display={'flex'}
                     justifyContent={'flex-end'}
-                    borderRadius="none"
-                    border="none"
                     key={link.name}
                     paddingY={6}
                     colorPalette="brand"
-                    variant="outline"
+                    variant="ghost"
                     width="100%"
                     onClick={() => {
                       setOpen(false)
                     }}
                   >
                     <Text
-                      fontSize="1rem"
+                      fontSize="small"
                       textAlign={'left'}
                       display={'inline-block'}
                       mx={'auto'}

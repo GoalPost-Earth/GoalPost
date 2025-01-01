@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Icon, IconProps } from '@chakra-ui/react'
 
-const InputIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
-  <Icon color={color} width="24px" height="22px" {...rest}>
+const InputIcon = ({ color = 'brandIcons.600', ...rest }: IconProps) => (
+  <Icon color={color} width="22px" height="22px" {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="20"
@@ -11,7 +11,7 @@ const InputIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
       viewBox="0 0 20 20"
     >
       <path
-        stroke={'#C05621'}
+        stroke={'currentColor'}
         strokeLinecap="round"
         strokeWidth="2"
         d="M10 6v8m-4-4h8M3 1h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2Z"

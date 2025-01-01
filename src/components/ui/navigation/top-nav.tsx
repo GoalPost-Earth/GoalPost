@@ -6,7 +6,6 @@ import SearchBar from '../searchbar'
 import ExtendedSidenav from './extended-sidenav'
 import { Avatar } from '../avatar'
 import { AppLogo } from '../app-logo'
-import { useContext } from 'react'
 import { useApp } from '@/app/contexts/AppContext'
 
 export default function TopNav() {
@@ -21,8 +20,7 @@ export default function TopNav() {
       left={0}
       right={0}
       zIndex={100}
-      bgColor="white"
-      boxShadow="sm"
+      bgColor="contrastWhite"
     >
       <ExtendedSidenav />
       <NavHamburgerButton />
