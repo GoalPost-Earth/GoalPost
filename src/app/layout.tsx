@@ -41,15 +41,9 @@ export default function RootLayout({
                     <Container
                       marginX={{ base: '0px', lg: '60px' }}
                       marginY={'65px'}
-                      padding={10}
-                      bg="white"
-                      boxShadow={'md'}
-                      borderRadius={'2xl'}
                     >
-                      <>
-                        {children}
-                        <ChatBotButton />
-                      </>
+                      {children}
+                      <ChatBotButton />
                     </Container>
                   </StartupScreen>
                 </AppProvider>

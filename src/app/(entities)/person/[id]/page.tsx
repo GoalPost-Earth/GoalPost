@@ -99,6 +99,7 @@ export default async function ViewPersonPage({
             backgroundImage={`url(${BKG_IMG_URL})`}
             backgroundSize={'cover'}
             backgroundRepeat={'no-repeat'}
+            borderTopRadius={16}
           ></Box>
         </VStack>
         <UserProfile

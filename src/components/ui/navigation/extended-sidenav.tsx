@@ -58,7 +58,8 @@ export default function ExtendedSideNav() {
         left={0}
         flexDirection="column"
         zIndex={1000}
-        bg="contrastWhite"
+        bg="bg"
+        boxShadow="xs"
         alignItems="flex-start"
         overflowX="hidden"
         transition="all 0.3s ease-in-out"
