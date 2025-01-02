@@ -44,7 +44,7 @@ function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
           {user?.name}
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
-        <Box display={{ lg: 'none' }}>
+        <Box display={{ lg: 'none' }} my={2}>
           <ActionButtons />
         </Box>
       </Stack>

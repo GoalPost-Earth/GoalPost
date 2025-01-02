@@ -10,7 +10,7 @@ const UserInfo = ({
   }[]
 }) => {
   return (
-    <Container padding={0}>
+    <Container paddingY={3} bg="gray.contrast" borderRadius={'8px'}>
       {data?.map((info) => (
         <Flex
           key={info.key}

@@ -32,7 +32,7 @@ function ConnectionsCard({
       border="none"
       width="100%"
       _notLast={{
-        borderBottom: { base: '1px solid', lg: 'none' },
+        borderBottom: { base: '2px solid', lg: 'none' },
         borderColor: 'gray.subtle',
       }}
       borderRadius={{ base: 'none', lg: '10px' }}
