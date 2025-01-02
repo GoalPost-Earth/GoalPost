@@ -187,7 +187,7 @@ export default async function ViewPersonPage({
         >
           <Box
             position={'absolute'}
-            top={{ lg: '250px' }}
+            top={{ lg: '260px' }}
             right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
             display={{ base: 'none', lg: 'block' }}
           >
