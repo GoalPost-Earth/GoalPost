@@ -3,9 +3,10 @@ import { Container, Text, VStack } from '@chakra-ui/react'
 export default function ResourceDetails({ resource }: { resource: any }) {
   return (
     <VStack
-      py={4}
+      p={4}
       bg={'gray.contrast'}
       borderRadius={'2xl'}
+      boxShadow={'xs'}
       alignItems={'flex-start'}
     >
       <VStack width={{ base: '100%', lg: '80%' }} gap={4}>

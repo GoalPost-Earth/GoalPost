@@ -29,16 +29,14 @@ export default async function ViewResourcePage({
     return <LoadingScreen />
   }
 
-  console.log(resource)
-
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
         <ProfileBackground />
-        <VStack alignItems={'center'} gap={10}>
+        <VStack alignItems={'center'} gap={3}>
           <Flex
             flexDirection={{ base: 'column', lg: 'row' }}
-            gap={10}
+            gap={5}
             alignItems={{ base: 'center', lg: 'flex-end' }}
             justifyContent="center"
             position={{ lg: 'absolute' }}
@@ -50,14 +48,12 @@ export default async function ViewResourcePage({
               width={200}
               height={200}
               border={'10px solid white'}
-              name="Seed CoC"
+              name={resource?.name}
               fontSize="60px"
             />
             <Flex flexDirection={'column'} gap={2} pb={5}>
               <Flex alignItems="center" gap={2}>
-                <Heading fontSize="clamp(1.875rem, 2vw + 1rem, 2.25rem)">
-                  {resource?.name}
-                </Heading>
+                <Heading fontSize="2xl">{resource?.name}</Heading>
                 <EllipseIcon />
               </Flex>
               <Text
@@ -74,8 +70,8 @@ export default async function ViewResourcePage({
         </VStack>
         <Container
           display="flex"
-          gap={6}
-          mt={{ base: 10, lg: '200px' }}
+          gap={3}
+          mt={{ base: 10, lg: '150px' }}
           flexDirection={{ base: 'column', lg: 'row' }}
           alignItems={{ base: 'center', lg: 'flex-start' }}
         >

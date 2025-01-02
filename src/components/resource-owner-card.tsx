@@ -1,6 +1,7 @@
 import { Box, Card, Flex, Text } from '@chakra-ui/react'
 import { Avatar } from './ui'
 import React from 'react'
+import Link from 'next/link'
 
 export default function ResourceOwnerCard({
   image,
@@ -14,10 +15,11 @@ export default function ResourceOwnerCard({
   return (
     <Card.Root
       my={{ base: 10, lg: 0 }}
-      width={'100%'}
+      maxWidth={'320px'}
+      width="100%"
       border={{ lg: '2px solid #E19E48' }}
-      borderRadius={{ lg: '24px' }}
-      minHeight={{ lg: '512px' }}
+      borderRadius={{ base: '16px', lg: '24px' }}
+      minHeight={{ lg: '45vh' }}
     >
       <Card.Body
         padding={4}
@@ -27,7 +29,6 @@ export default function ResourceOwnerCard({
         flexDirection={{ base: 'row', lg: 'column' }}
         alignItems={{ lg: 'center' }}
         justifyContent={{ lg: 'center' }}
-        columnGap={8}
       >
         <Avatar
           src={image}
@@ -53,7 +54,9 @@ export default function ResourceOwnerCard({
           fontWeight="light"
           display={{ base: 'none', lg: 'block' }}
         >
-          <Text my={2}>{email}</Text>
+          <Link href={`mailto:${email}`}>
+            <Text my={2}>{email}</Text>
+          </Link>
           <Text>This resource is provided by</Text>
           <Text>{name}</Text>
         </Box>

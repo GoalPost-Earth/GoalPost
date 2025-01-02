@@ -20,12 +20,10 @@ type ContextUser = UserProfile & Person
 
 interface AppContextType {
   user?: ContextUser
-  setUser: (user: ContextUser) => void
 }
 
 const AppContext = createContext<AppContextType>({
   user: undefined,
-  setUser: () => {},
 })
 
 export const useApp = () => {
@@ -73,15 +71,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (sessionUser.id && sessionUser.level) {
       setLoggedInUser(sessionUser)
     }
-  }, [])
+  }, [user])
 
   const value = useMemo(
     () => ({
       user: loggedInUser,
-      setUser: (user: ContextUser) => {
-        setLoggedInUser(user)
-        sessionStorage.setItem('user', JSON.stringify(user))
-      },
     }),
     [loggedInUser]
   )

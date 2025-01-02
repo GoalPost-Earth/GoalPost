@@ -34,16 +34,16 @@ export default function RootLayout({
           <UserProvider>
             <ReactFlowProvider>
               <ApolloWrapper>
-                <AppProvider>
-                  <StartupScreen>
+                <StartupScreen>
+                  <AppProvider>
                     <Navbar />
                     <Toaster />
-                    <Container my={'65px'} pl={{ lg: '50px' }} pb="20px">
+                    <Container mt={'65px'} pl={{ lg: '50px' }}>
                       {children}
                       <ChatBotButton />
                     </Container>
-                  </StartupScreen>
-                </AppProvider>
+                  </AppProvider>
+                </StartupScreen>
               </ApolloWrapper>
             </ReactFlowProvider>
           </UserProvider>
