@@ -1,4 +1,4 @@
-import { Box, HStack, Text, VStack } from '@chakra-ui/react'
+import { Box, Heading, HStack, Text, VStack } from '@chakra-ui/react'
 import { AppLogo, Button } from '@/components/ui'
 import Image from 'next/image'
 
@@ -80,7 +80,10 @@ function DesktopGetStartedScreen() {
         height={'100%'}
         justifyContent="center"
       >
-        <AppLogo width={100} height={100} alignSelf="flex-start" />
+        <HStack alignSelf="start">
+          <AppLogo width={100} height={100} alignSelf="flex-start" />
+          <Heading>GoalPost</Heading>
+        </HStack>
         <Text as="h1" fontSize="70px" fontWeight="bold" lineHeight={1}>
           Sense of Community
         </Text>
