@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Text, VStack } from '@chakra-ui/react'
+import { Box, Container, Heading, HStack, Text, VStack } from '@chakra-ui/react'
 import { AppLogo, Button } from '@/components/ui'
 import Image from 'next/image'
 
@@ -57,7 +57,7 @@ const GetStartedScreen = () => {
 
 function DesktopGetStartedScreen() {
   return (
-    <HStack display={{ base: 'none', lg: 'flex' }} height={'100dvh'}>
+    <HStack display={{ base: 'none', lg: 'flex' }} height={'100vh'}>
       <Box
         position="relative"
         flex={1}
@@ -75,21 +75,24 @@ function DesktopGetStartedScreen() {
       <VStack
         flex={1}
         width="60%"
-        gap={12}
+        gap={4}
         padding={'60px'}
         height={'100%'}
         justifyContent="center"
+        alignSelf="start"
       >
         <HStack alignSelf="start">
-          <AppLogo width={100} height={100} alignSelf="flex-start" />
+          <AppLogo />
           <Heading>GoalPost</Heading>
         </HStack>
-        <Text as="h1" fontSize="70px" fontWeight="bold" lineHeight={1}>
-          Sense of Community
-        </Text>
-        <Text fontSize="20px">
-          Stay connected to our favourite communities anytime, anywhere
-        </Text>
+        <Container>
+          <Heading fontWeight="bold" alignSelf="start">
+            Welcome!
+          </Heading>
+          <Heading alignSelf="start" fontSize="4xl">
+            Connect with and care for your community
+          </Heading>
+        </Container>
         <Button as="a" href="/api/auth/login?returnTo=/" size="lg" paddingY={6}>
           Next
         </Button>
