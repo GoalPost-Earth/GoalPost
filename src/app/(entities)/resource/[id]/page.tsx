@@ -5,11 +5,11 @@ import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 import ResourceDetails from '@/components/ui/resource-details'
-import { Avatar } from '@/components/ui'
 import EllipseIcon from '@/components/icons/EllipseIcon'
-import ResourceOwnerCard from '@/components/resource-owner-card'
+import ResourceOwnerCard from '@/components/ui/resource-owner-card'
 import ActionButtons from '@/components/ui/action-buttons'
 import ProfileBackground from '@/components/ui/profile-background'
+import PlaceHolderAvatar from '@/components/ui/placeholder-avatar'
 
 export default async function ViewResourcePage({
   params,
@@ -29,8 +29,6 @@ export default async function ViewResourcePage({
     return <LoadingScreen />
   }
 
-  console.log(resource)
-
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
@@ -45,17 +43,13 @@ export default async function ViewResourcePage({
             left={{ lg: '70px' }}
             top={{ lg: '150px' }}
           >
-            <Avatar
-              src={undefined}
-              width={200}
-              height={200}
-              border={'10px solid white'}
-              name="Seed CoC"
-              fontSize="60px"
-            />
+            <PlaceHolderAvatar />
             <Flex flexDirection={'column'} gap={2} pb={5}>
-              <Flex alignItems="center" gap={2}>
-                <Heading fontSize="clamp(1.875rem, 2vw + 1rem, 2.25rem)">
+              <Flex alignItems="center" gap={2} width="fit-content">
+                <Heading
+                  fontSize="clamp(1.875rem, 2vw + 1rem, 2.25rem)"
+                  width="fit-content"
+                >
                   {resource?.name}
                 </Heading>
                 <EllipseIcon />

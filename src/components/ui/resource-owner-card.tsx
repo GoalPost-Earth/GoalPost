@@ -1,5 +1,5 @@
 import { Box, Card, Flex, Text } from '@chakra-ui/react'
-import { Avatar } from './ui'
+import { Avatar } from '.'
 import React from 'react'
 
 export default function ResourceOwnerCard({

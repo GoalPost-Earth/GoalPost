@@ -1,7 +1,8 @@
-import { Stack, Text, VStack } from '@chakra-ui/react'
+import { Box, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { Button } from './button'
 import GenericTabs from './generic-tabs'
+import ActionButtons from './action-buttons'
 
 interface UserProfileProps {
   user: {
@@ -43,9 +44,9 @@ function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
           {user?.name}
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
-        <Button my={1} display={{ lg: 'none' }}>
-          Update Details
-        </Button>
+        <Box display={{ lg: 'none' }}>
+          <ActionButtons />
+        </Box>
       </Stack>
       <GenericTabs
         triggers={tabTriggers}
