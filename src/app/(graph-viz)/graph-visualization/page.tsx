@@ -26,6 +26,7 @@ import {
   GET_ALL_COREVALUES,
   GET_ALL_GOALS,
   GET_ALL_RESOURCES,
+  GET_ALL_COMMUNITIES,
 } from '@/app/graphql'
 import GraphSideBar from '@/components/ui/graph-sidebar'
 
@@ -36,13 +37,14 @@ const GraphVisualization = () => {
   const { data: coreValues } = useQuery(GET_ALL_COREVALUES)
   const { data: goals } = useQuery(GET_ALL_GOALS)
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
+  const { data: communities } = useQuery(GET_ALL_COMMUNITIES)
   const members = people
 
   const nodeTypes = {
     customNode: GraphNodes,
   }
 
-  const NodeTriggers = ['Resource', 'Person', 'CoreValue', 'Goal']
+  const NodeTriggers = ['Resource', 'Person', 'Community', 'CoreValue', 'Goal']
 
   const peopleNodes = useMemo(() => {
     return (
@@ -115,6 +117,21 @@ const GraphVisualization = () => {
     )
   }, [members])
 
+  const communityNodes = useMemo(() => {
+    return (
+      communities?.communities.map((community) => ({
+        id: `${community.__typename}${community.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          label: community.name,
+          nodeName: community.__typename,
+          id: community.id,
+        },
+      })) ?? []
+    )
+  }, [communities])
+
   const graphNodes = useMemo(() => {
     return calculateNodePositionsAsRings([
       resourceNodes,
@@ -122,14 +139,21 @@ const GraphVisualization = () => {
       peopleNodes,
       coreValuesNodes,
       goalNodes,
+      communityNodes,
     ])
-  }, [resourceNodes, memberNodes, peopleNodes, coreValuesNodes, goalNodes])
+  }, [
+    resourceNodes,
+    memberNodes,
+    peopleNodes,
+    coreValuesNodes,
+    goalNodes,
+    communityNodes,
+  ])
 
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
     peopleNodes ?? []
   )
 
-  console.log('Members: ', members)
   const initNodes: Node[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -144,7 +168,7 @@ const GraphVisualization = () => {
   )
 
   useEffect(() => {
-    if (people && coreValues && goals && resources && members) {
+    if (people && coreValues && goals && resources && members && communities) {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
     }
