@@ -2,8 +2,6 @@ import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
 import { Box, Container, Grid, GridItem, VStack } from '@chakra-ui/react'
 import React from 'react'
-import ApolloWrapper from '@/components/ApolloWrapper'
-import { LoadingScreen } from '@/components/screens'
 import UserInfo from '@/components/ui/user-info'
 import UserProfile from '@/components/ui/user-profile'
 import GenericTabs from '@/components/ui/generic-tabs'
@@ -19,18 +17,12 @@ export default async function ViewPersonPage({
 }) {
   const { id } = await params
 
-  const { data, loading, error } = await query({
+  const { data } = await query({
     query: GET_PERSON,
     variables: { id },
   })
 
   const person = data?.people[0]
-
-  console.log(person)
-
-  if (!person) {
-    return <LoadingScreen />
-  }
 
   const bioData = [
     {
@@ -106,45 +98,43 @@ export default async function ViewPersonPage({
   ]
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container
-        position="relative"
-        display={{ base: 'flex', lg: 'block' }}
-        flexDirection={'column'}
-        alignItems={{ base: 'center' }}
-        width={'100%'}
-        isolation={'isolate'}
+    <Container
+      position="relative"
+      display={{ base: 'flex', lg: 'block' }}
+      flexDirection={'column'}
+      alignItems={{ base: 'center' }}
+      width={'100%'}
+      isolation={'isolate'}
+    >
+      <ProfileBackground />
+      <UserProfile
+        user={{
+          name: person.name,
+          email: person.email ?? '',
+          photo: person.photo ?? '',
+        }}
+        tabTriggers={triggers}
+        tabContent={content}
+      />
+      <Box
+        float={'right'}
+        width={'calc(100% - 500px)'}
+        display={{ base: 'none', lg: 'block' }}
       >
-        <ProfileBackground />
-        <UserProfile
-          user={{
-            name: person.name,
-            email: person.email ?? '',
-            photo: person.photo ?? '',
-          }}
-          tabTriggers={triggers}
-          tabContent={content}
-        />
         <Box
-          float={'right'}
-          width={'calc(100% - 500px)'}
+          position={'absolute'}
+          top={{ lg: '260px' }}
+          right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
           display={{ base: 'none', lg: 'block' }}
         >
-          <Box
-            position={'absolute'}
-            top={{ lg: '260px' }}
-            right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
-            display={{ base: 'none', lg: 'block' }}
-          >
-            <ActionButtons />
-          </Box>
-          <GenericTabs
-            triggers={desktopTriggers}
-            content={desktopContent}
-            props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
-          />
+          <ActionButtons />
         </Box>
-      </Container>
-    </ApolloWrapper>
+        <GenericTabs
+          triggers={desktopTriggers}
+          content={desktopContent}
+          props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
+        />
+      </Box>
+    </Container>
   )
 }
