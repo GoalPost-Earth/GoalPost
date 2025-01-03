@@ -2,7 +2,7 @@ import { Flex, Text } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import Link from 'next/link'
 
-export default function ConnectionsInfo({
+export function ConnectionsInfo({
   photo,
   name,
   id,

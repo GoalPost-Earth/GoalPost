@@ -3,7 +3,7 @@ import { Button, HStack, Text } from '@chakra-ui/react'
 import EditIcon from '../icons/EditIcon'
 import DeleteIcon from '../icons/DeleteIcon'
 
-export default function ActionButtons() {
+export function ActionButtons() {
   return (
     <HStack>
       <Button
@@ -15,8 +15,10 @@ export default function ActionButtons() {
         bg="brand.50"
         color="#6F7175"
       >
-        <EditIcon />
-        <Text fontSize={'sm'}>Edit</Text>
+        <EditIcon m={1} />
+        <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
+          Edit
+        </Text>
       </Button>
       <Button
         paddingX={2}
@@ -27,8 +29,10 @@ export default function ActionButtons() {
         bg="brand.50"
         color="#6F7175"
       >
-        <DeleteIcon />
-        <Text fontSize={'sm'}>Delete</Text>
+        <DeleteIcon m={1} />
+        <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
+          Delete
+        </Text>
       </Button>
     </HStack>
   )

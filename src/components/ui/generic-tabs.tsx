@@ -8,7 +8,7 @@ interface GenericTabsProps {
   content: React.ReactNode[]
   props?: any
 }
-const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
+export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
   const [activeTab, setActiveTab] = useState(triggers[0])
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
@@ -32,25 +32,29 @@ const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
       value={activeTab}
       onValueChange={(details) => setActiveTab(details.value)}
       colorPalette={'brand'}
-      width={'100%'}
+      width="100%"
       mt={2}
     >
       <Tabs.List
         mt={2}
-        w={'full'}
         display="flex"
         gap={2}
-        justifyContent={'center'}
         {...props}
+        overflowX="auto"
+        whiteSpace="nowrap"
+        scrollbarWidth="none"
+        WebkitOverflowScrolling="touch"
       >
         {triggers.map((trigger, index) => (
           <Tabs.Trigger
             key={`${trigger}-${index}`}
             value={trigger}
-            fontSize={'xs'}
+            fontSize="xs"
             fontWeight="bold"
-            justifyContent={'center'}
-            borderRadius={'full'}
+            justifyContent="center"
+            borderRadius="full"
+            minWidth="fit-content"
+            bg={activeTab !== trigger ? 'gray.100' : 'brand.200'}
           >
             {trigger}
           </Tabs.Trigger>
@@ -70,5 +74,3 @@ const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
     </Tabs.Root>
   )
 }
-
-export default GenericTabs

@@ -2,13 +2,17 @@ import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
 import { Box, Container, Grid, GridItem, VStack } from '@chakra-ui/react'
 import React from 'react'
-import UserInfo from '@/components/ui/user-info'
-import UserProfile from '@/components/ui/user-profile'
-import GenericTabs from '@/components/ui/generic-tabs'
-import ProfileBackground from '@/components/ui/profile-background'
-import ActionButtons from '@/components/ui/action-buttons'
-import ConnectionsCard from '@/components/ui/connections-card'
-import ConnectionsInfo from '@/components/ui/connections-info'
+import {
+  ActionButtons,
+  CommunityCard,
+  ConnectionsCard,
+  ConnectionsInfo,
+  GenericTabs,
+  ProfileBackground,
+  UserInfo,
+  UserProfile,
+} from '@/components/ui'
+import Link from 'next/link'
 
 export default async function ViewPersonPage({
   params,
@@ -24,6 +28,8 @@ export default async function ViewPersonPage({
 
   const person = data?.people[0]
 
+  const isMember = person.communities.length > 0
+
   const bioData = [
     {
       key: 'First Name',
@@ -35,22 +41,28 @@ export default async function ViewPersonPage({
     },
     {
       key: 'Phone Number',
-      value: person.phone ?? '',
+      value: person.phone ?? 'n/a',
     },
     {
       key: 'Pronouns',
-      value: person.pronouns ?? '',
+      value: person.pronouns ?? 'n/a',
     },
 
     {
       key: 'Location',
-      value: person.location ?? '',
+      value: person.location ?? 'n/a',
     },
   ]
 
-  const triggers = ['About', 'Connections']
+  const memberTriggers = ['Communities', 'Goals', 'People', 'Core Values']
 
-  const desktopTriggers = ['Recents', 'Connections']
+  const triggers = isMember
+    ? ['About', 'Connections', ...memberTriggers]
+    : ['About', 'Connections']
+
+  const desktopTriggers = isMember
+    ? ['Recents', 'Connections', ...memberTriggers]
+    : ['Recents', 'Connections']
 
   const content = [
     <UserInfo data={bioData} key="bio" />,
@@ -74,6 +86,17 @@ export default async function ViewPersonPage({
         ))}
       </VStack>
     ) : null,
+    <VStack gap={4} key="communities">
+      {person.communities.map((community) => (
+        <Link key={community.id} href={`/community/${community.id}`}>
+          <CommunityCard
+            name={community.name}
+            description={community.description}
+            members={community.members}
+          />
+        </Link>
+      ))}
+    </VStack>,
   ]
 
   const desktopContent = [
@@ -95,6 +118,23 @@ export default async function ViewPersonPage({
         ))}
       </Grid>
     ) : null,
+    <Grid
+      key="communities"
+      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+      gap={6}
+    >
+      {person.communities.map((community) => (
+        <GridItem key={community.id}>
+          <Link href={`/community/${community.id}`}>
+            <CommunityCard
+              name={community.name}
+              description={community.description}
+              members={community.members}
+            />
+          </Link>
+        </GridItem>
+      ))}
+    </Grid>,
   ]
 
   return (
@@ -132,7 +172,11 @@ export default async function ViewPersonPage({
         <GenericTabs
           triggers={desktopTriggers}
           content={desktopContent}
-          props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
+          props={{
+            justifyContent: 'flex-start',
+            marginTop: '40px',
+            width: { lg: '80%', xl: '100%' },
+          }}
         />
       </Box>
     </Container>

@@ -7,9 +7,12 @@ import ExtendedSidenav from './extended-sidenav'
 import { Avatar } from '../avatar'
 import { AppLogo } from '../app-logo'
 import { useApp } from '@/app/contexts/AppContext'
+import { GoalPostIcon } from '@/components/icons'
+import { useRouter } from 'next/navigation'
 
 export default function TopNav() {
   const { user } = useApp()
+  const router = useRouter()
 
   return (
     <HStack
@@ -24,7 +27,18 @@ export default function TopNav() {
     >
       <ExtendedSidenav />
       <NavHamburgerButton />
-      <AppLogo width={'40px'} marginLeft={{ base: '30px', lg: '70px' }} />
+      <Flex
+        gap={5}
+        alignItems="center"
+        cursor="pointer"
+        onClick={() => {
+          router.push('/')
+        }}
+      >
+        <AppLogo width={'40px'} marginLeft={{ base: '15px', lg: '70px' }} />
+        <GoalPostIcon />
+      </Flex>
+
       <Box
         mx={'auto'}
         maxWidth={400}

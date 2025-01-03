@@ -1,7 +1,7 @@
 import { Container, Flex, Text } from '@chakra-ui/react'
 import React from 'react'
 
-const UserInfo = ({
+export const UserInfo = ({
   data,
 }: {
   data?: {
@@ -30,5 +30,3 @@ const UserInfo = ({
     </Container>
   )
 }
-
-export default UserInfo

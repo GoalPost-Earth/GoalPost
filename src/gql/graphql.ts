@@ -6859,6 +6859,13 @@ export type GetPersonQuery = {
       name: string
       photo?: string | null
     }>
+    communities: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      description?: string | null
+      members: Array<{ __typename?: 'Person'; photo?: string | null }>
+    }>
   }>
 }
 
@@ -8142,6 +8149,34 @@ export const GetPersonDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'communities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'members' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },

@@ -18,6 +18,14 @@ export const GET_PERSON = graphql(`
       }
       location
       createdAt
+      communities {
+        id
+        name
+        members {
+          photo
+        }
+        description
+      }
     }
   }
 `)

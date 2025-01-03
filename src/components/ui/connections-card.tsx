@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Avatar } from '@/components/ui'
 import { Box, Card, CardBodyProps, Text } from '@chakra-ui/react'
 
-export default function ConnectionsCard({
+export function ConnectionsCard({
   id,
   name,
   photo,

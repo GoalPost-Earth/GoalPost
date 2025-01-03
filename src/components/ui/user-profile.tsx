@@ -1,8 +1,7 @@
 import { Box, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
-import { Button } from './button'
-import GenericTabs from './generic-tabs'
-import ActionButtons from './action-buttons'
+import { ActionButtons } from './action-buttons'
+import { GenericTabs } from './generic-tabs'
 
 interface UserProfileProps {
   user: {
@@ -15,7 +14,11 @@ interface UserProfileProps {
   tabProps?: Record<string, any>
 }
 
-function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
+export function UserProfile({
+  user,
+  tabTriggers,
+  tabContent,
+}: UserProfileProps) {
   return (
     <VStack
       border={{ base: 'none', lg: '2px solid #E19E48' }}
@@ -58,5 +61,3 @@ function UserProfile({ user, tabTriggers, tabContent }: UserProfileProps) {
     </VStack>
   )
 }
-
-export default UserProfile

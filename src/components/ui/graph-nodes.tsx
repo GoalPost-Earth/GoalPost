@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect } from 'react'
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react'
 import { useRouter } from 'next/navigation'

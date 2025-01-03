@@ -9,6 +9,8 @@ function SearchBar({ ...props }) {
         placeholder="Search..."
         borderRadius={'full'}
         bg={'gray.contrast'}
+        borderWidth={1}
+        borderColor={'brand.200'}
       />
     </InputGroup>
   )
