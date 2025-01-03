@@ -26,7 +26,14 @@ type Person implements PersonInterface @node {
   location: String
 
   # Relationships
-  connectedTo: [Person!]! @relationship(type: "CONNECTS_TO", direction: OUT)
+  connectedTo: [Person!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:CONNECTS_TO]-(other:Person)
+      RETURN DISTINCT other
+      """
+      columnName: "other"
+    )
   coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
