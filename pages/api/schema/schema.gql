@@ -40,6 +40,7 @@ type Person implements PersonInterface @node {
   communities: [Community!]!
     @relationship(type: "MEMBER_OF", direction: OUT, properties: "MemberOf")
 
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -66,6 +67,8 @@ type Area @node {
   distance: Float!
   country: String!
   city: String!
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -83,6 +86,7 @@ type CarePoint @node {
   enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
   caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
 
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -106,7 +110,8 @@ type Community @node {
   relatedCommunities: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
-  createdBy: Person! @relationship(type: "CREATED_BY", direction: OUT)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -124,6 +129,8 @@ type CoreValue @node {
   description: String
   why: String
   isEmbracedBy: [Person!]! @relationship(type: "EMBRACES", direction: IN)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
@@ -143,6 +150,7 @@ type Goal @node {
   location: String
   time: String
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
+
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
@@ -164,6 +172,8 @@ type Resource @node {
   dependsOnResources: [Resource!]!
     @relationship(type: "DEPENDS_ON", direction: OUT)
   carePoints: [CarePoint!]! @relationship(type: "APPLIED_TO", direction: IN)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
