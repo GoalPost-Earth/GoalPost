@@ -2,7 +2,7 @@
 
 import { GET_ALL_GOALS } from '@/app/graphql'
 import ApolloWrapper from '@/components/ApolloWrapper'
-import GoalCard from '@/components/ui/GoalCard'
+import GoalCard from '@/components/ui/goal-card'
 import { Goal } from '@/gql/graphql'
 import { useQuery } from '@apollo/client'
 import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'

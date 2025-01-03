@@ -62,6 +62,7 @@ const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
           value={trigger}
           width={'100%'}
           minHeight={'315px'}
+          borderRadius="lg"
         >
           {content[index] || <DefaultTabContent />}
         </Tabs.Content>

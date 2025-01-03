@@ -10,15 +10,15 @@ const UserInfo = ({
   }[]
 }) => {
   return (
-    <Container padding={0}>
+    <Container paddingY={3} bg="gray.contrast" borderRadius={2}>
       {data?.map((info) => (
         <Flex
           key={info.key}
           padding={2}
           flexDirection={'column'}
           _notLast={{
-            borderBottom: '1.5px solid',
-            borderColor: 'gray.subtle',
+            borderBottom: '1px solid',
+            borderColor: 'gray.200',
           }}
         >
           <Text fontSize={'sm'} fontWeight={300}>

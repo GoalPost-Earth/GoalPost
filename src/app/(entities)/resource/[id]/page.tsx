@@ -5,11 +5,11 @@ import React from 'react'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 import ResourceDetails from '@/components/ui/resource-details'
-import { Avatar } from '@/components/ui'
 import EllipseIcon from '@/components/icons/EllipseIcon'
-import ResourceOwnerCard from '@/components/resource-owner-card'
+import ResourceOwnerCard from '@/components/ui/resource-owner-card'
 import ActionButtons from '@/components/ui/action-buttons'
 import ProfileBackground from '@/components/ui/profile-background'
+import { Avatar } from '@/components/ui'
 
 export default async function ViewResourcePage({
   params,

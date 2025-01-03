@@ -45,7 +45,6 @@ export function ApolloWrapper({
     const fetchTokenData = async () => {
       try {
         if (!user) {
-          router.push('/')
           return
         }
 
@@ -66,6 +65,8 @@ export function ApolloWrapper({
         if ((error as { code?: string }).code === 'ERR_EXPIRED_ACCESS_TOKEN') {
           console.debug('Access token expired, refreshing...')
         }
+
+        router.push('/')
 
         console.error(error)
       }

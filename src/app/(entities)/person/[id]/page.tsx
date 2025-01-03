@@ -1,14 +1,14 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, Text } from '@chakra-ui/react'
+import { Box, Container, Grid, GridItem, VStack } from '@chakra-ui/react'
 import React from 'react'
-import ApolloWrapper from '@/components/ApolloWrapper'
-import { LoadingScreen } from '@/components/screens'
 import UserInfo from '@/components/ui/user-info'
 import UserProfile from '@/components/ui/user-profile'
 import GenericTabs from '@/components/ui/generic-tabs'
-import Link from 'next/link'
 import ProfileBackground from '@/components/ui/profile-background'
+import ActionButtons from '@/components/ui/action-buttons'
+import ConnectionsCard from '@/components/ui/connections-card'
+import ConnectionsInfo from '@/components/ui/connections-info'
 
 export default async function ViewPersonPage({
   params,
@@ -17,16 +17,12 @@ export default async function ViewPersonPage({
 }) {
   const { id } = await params
 
-  const { data, loading, error } = await query({
+  const { data } = await query({
     query: GET_PERSON,
     variables: { id },
   })
 
   const person = data?.people[0]
-
-  if (!person) {
-    return <LoadingScreen />
-  }
 
   const bioData = [
     {
@@ -58,60 +54,87 @@ export default async function ViewPersonPage({
 
   const content = [
     <UserInfo data={bioData} key="bio" />,
-    <>
-      {person.connectedTo.map((person) => (
-        <Link key={person.id} href={`/person/${person.id}`}>
-          <Text>{person.name}</Text>
-        </Link>
-      ))}
-    </>,
+    person.connectedTo.length > 0 ? (
+      <VStack
+        key="connections"
+        padding={4}
+        borderRadius="md"
+        border="1px"
+        borderColor="gray.200"
+        gap={2}
+        bg="gray.contrast"
+      >
+        {person.connectedTo.map((person) => (
+          <ConnectionsInfo
+            key={person.id}
+            photo={person.photo ?? ''}
+            name={person.name}
+            id={person.id}
+          />
+        ))}
+      </VStack>
+    ) : null,
   ]
 
   const desktopContent = [
     null,
-    <>
-      {person.connectedTo.map((person) => (
-        <Link key={person.id} href={`/person/${person.id}`}>
-          <Text>{person.name}</Text>
-        </Link>
-      ))}
-    </>,
+    person.connectedTo.length > 0 ? (
+      <Grid
+        key="connections"
+        templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+        gap={6}
+      >
+        {person.connectedTo.map((person) => (
+          <GridItem key={person.id}>
+            <ConnectionsCard
+              id={person.id}
+              photo={person.photo ?? ''}
+              name={person.name}
+            />
+          </GridItem>
+        ))}
+      </Grid>
+    ) : null,
   ]
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container
-        p={8}
-        pt={{ md: 0 }}
-        position="relative"
-        display={{ base: 'flex', lg: 'block' }}
-        flexDirection={'column'}
-        alignItems={{ base: 'center' }}
-        width={'100%'}
-        isolation={'isolate'}
+    <Container
+      position="relative"
+      display={{ base: 'flex', lg: 'block' }}
+      flexDirection={'column'}
+      alignItems={{ base: 'center' }}
+      width={'100%'}
+      isolation={'isolate'}
+    >
+      <ProfileBackground />
+      <UserProfile
+        user={{
+          name: person.name,
+          email: person.email ?? '',
+          photo: person.photo ?? '',
+        }}
+        tabTriggers={triggers}
+        tabContent={content}
+      />
+      <Box
+        float={'right'}
+        width={'calc(100% - 500px)'}
+        display={{ base: 'none', lg: 'block' }}
       >
-        <ProfileBackground />
-        <UserProfile
-          user={{
-            name: person.name,
-            email: person.email ?? '',
-            photo: person.photo ?? '',
-          }}
-          tabTriggers={triggers}
-          tabContent={content}
-        />
         <Box
-          float={'right'}
-          width={'calc(100% - 500px)'}
+          position={'absolute'}
+          top={{ lg: '260px' }}
+          right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
           display={{ base: 'none', lg: 'block' }}
         >
-          <GenericTabs
-            triggers={desktopTriggers}
-            content={desktopContent}
-            props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
-          />
+          <ActionButtons />
         </Box>
-      </Container>
-    </ApolloWrapper>
+        <GenericTabs
+          triggers={desktopTriggers}
+          content={desktopContent}
+          props={{ justifyContent: { lg: 'flex-start' }, marginTop: '40px' }}
+        />
+      </Box>
+    </Container>
   )
 }
