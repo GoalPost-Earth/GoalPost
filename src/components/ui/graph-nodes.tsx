@@ -19,6 +19,7 @@ const NodeBgColor = {
   CoreValue: 'yellow.fg',
   Goal: 'green.fg',
   Resource: 'purple.fg',
+  Community: 'orange.fg',
 }
 function GraphNodes({ data }: Data) {
   const router = useRouter()
