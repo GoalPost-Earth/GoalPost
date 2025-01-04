@@ -188,7 +188,7 @@ const HomeClient = () => {
           </GridItem>
           <GridItem>
             <Heading mb={2} fontWeight="bolder">
-              What&apos;s new for me?
+              {"What's new for me?"}
             </Heading>
             <VStack>
               {recentActions
@@ -222,9 +222,7 @@ const HomeClient = () => {
               {communities.map((community) => (
                 <CommunityCard
                   key={community.id}
-                  name={community.name}
-                  description={community.description}
-                  members={community.members}
+                  community={community}
                   fontWeight={400}
                 />
               ))}
