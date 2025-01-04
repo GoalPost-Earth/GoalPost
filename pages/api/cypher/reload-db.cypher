@@ -58,7 +58,7 @@ member.createdAt = datetime()
 
 WITH member, row
 MATCH (community:Community {id: row.communityId})
-MERGE (member)-[:MEMBER_OF]->(community)
+MERGE (member)-[:BELONGS_TO]->(community)
 RETURN member, community;
 
 

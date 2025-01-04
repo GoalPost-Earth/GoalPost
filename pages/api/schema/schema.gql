@@ -38,7 +38,7 @@ type Person implements PersonInterface @node {
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
   communities: [Community!]!
-    @relationship(type: "MEMBER_OF", direction: OUT, properties: "MemberOf")
+    @relationship(type: "BELONGS_TO", direction: OUT, properties: "MemberOf")
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
@@ -49,7 +49,7 @@ type Person implements PersonInterface @node {
     @settable(onCreate: false, onUpdate: true)
 }
 
-type MemberOf @relationshipProperties {
+type BelongsTo @relationshipProperties {
   signupDate: Date
   avatar: String
   favourites: String
@@ -106,7 +106,7 @@ type Community @node {
   resultsAchieved: String
   status: String
 
-  members: [Person!]! @relationship(type: "MEMBER_OF", direction: IN)
+  members: [Person!]! @relationship(type: "BELONGS_TO", direction: IN)
   relatedCommunities: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
