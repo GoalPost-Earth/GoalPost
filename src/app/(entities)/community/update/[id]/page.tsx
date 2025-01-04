@@ -1,22 +1,15 @@
 'use client'
 import { UPDATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input, Select } from '@/components/form'
-import { Button } from '@/components/ui'
 import { useMutation, useQuery } from '@apollo/client'
-import {
-  Box,
-  Center,
-  Container,
-  Grid,
-  GridItem,
-  Heading,
-} from '@chakra-ui/react'
+import { Container } from '@chakra-ui/react'
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { STATUS_SELECT_OPTIONS } from '@/app/types'
+import { FormMode } from '@/types'
 import { GET_COMMUNITY } from '@/app/graphql'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
+import { CommunityForm } from '@/components'
+import { Community } from '@/gql/graphql'
 
 export default function UpdateCommunity({
   params,
@@ -74,86 +67,19 @@ export default function UpdateCommunity({
   }
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container>
-        <Heading>Update Community</Heading>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-            <GridItem>
-              <Input
-                label="Name"
-                name="name"
-                defaultValue={community?.name}
-                control={control}
-                errors={errors}
-                required
-              />
-            </GridItem>
-            <GridItem>
-              <Input
-                label="Description"
-                name="description"
-                defaultValue={community?.description ?? ''}
-                control={control}
-                errors={errors}
-              />
-            </GridItem>
-            <GridItem>
-              <Select
-                label="Status"
-                name="status"
-                defaultValue={
-                  community?.status
-                    ? [
-                        STATUS_SELECT_OPTIONS.find(
-                          (option) => option.value === community?.status
-                        )?.value ?? '',
-                      ]
-                    : []
-                }
-                control={control}
-                errors={errors}
-                options={STATUS_SELECT_OPTIONS}
-              />
-            </GridItem>
-            <GridItem>
-              <Input
-                label="Why"
-                name="why"
-                defaultValue={community?.why ?? ''}
-                control={control}
-                errors={errors}
-              />
-            </GridItem>
-            <GridItem>
-              <Input
-                label="Location"
-                name="location"
-                defaultValue={community?.location ?? ''}
-                control={control}
-                errors={errors}
-              />
-            </GridItem>
-            <GridItem>
-              <Input
-                label="Time"
-                name="time"
-                defaultValue={community?.time ?? ''}
-                control={control}
-                errors={errors}
-              />
-            </GridItem>
-          </Grid>
-          <Box my={5}>
-            <hr />
-          </Box>
-          <Center>
-            <Button type="submit" loading={isSubmitting}>
-              Update Community
-            </Button>
-          </Center>
-        </form>
-      </Container>
-    </ApolloWrapper>
+    <>
+      <ApolloWrapper data={data} loading={loading} error={error}>
+        <Container px={300}>
+          <CommunityForm
+            formMode={FormMode.Update}
+            data={community as Community}
+            control={control}
+            errors={errors}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit(onSubmit)}
+          />
+        </Container>
+      </ApolloWrapper>
+    </>
   )
 }

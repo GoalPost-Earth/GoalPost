@@ -2,13 +2,13 @@
 
 import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/form'
+import { Input } from '@/components/react-hook-form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Center, Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { ImageUpload } from '@/components/form'
+import { ImageUpload } from '@/components/react-hook-form'
 import { CloudinaryPresets } from '@/types'
 
 function CreatePerson() {

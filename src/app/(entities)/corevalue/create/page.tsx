@@ -2,7 +2,7 @@
 
 import { CREATE_COREVALUE_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/form'
+import { Input } from '@/components/react-hook-form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'

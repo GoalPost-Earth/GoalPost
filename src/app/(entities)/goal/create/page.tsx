@@ -2,14 +2,19 @@
 
 import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
-import { Input, Select, Textarea, ImageUpload } from '@/components/form'
+import {
+  Input,
+  Select,
+  Textarea,
+  ImageUpload,
+} from '@/components/react-hook-form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import { Box, Center, Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import { CloudinaryPresets, STATUS_SELECT_OPTIONS } from '@/app/types'
+import { CloudinaryPresets, STATUS_SELECT_OPTIONS } from '@/types'
 
 function CreateGoal() {
   const { user } = useUser()

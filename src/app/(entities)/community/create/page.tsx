@@ -2,7 +2,7 @@
 
 import { CREATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input, Select } from '@/components/form'
+import { Input, Select } from '@/components/react-hook-form'
 import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
 import {
@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { STATUS_SELECT_OPTIONS } from '@/app/types'
+import { STATUS_SELECT_OPTIONS } from '@/types'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreateCommunity() {

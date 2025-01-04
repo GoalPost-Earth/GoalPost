@@ -3,7 +3,7 @@ import { GET_COMMUNITY } from '@/app/graphql/queries'
 import MemberGuideDetailCard from '@/components/MemberGuideDetailCard'
 import { Container, VStack } from '@chakra-ui/react'
 import React from 'react'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 import { LoadingScreen } from '@/components/screens'
 
 export default async function ViewCommunityPage({

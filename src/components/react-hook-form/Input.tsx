@@ -4,7 +4,7 @@ import {
   InputProps as ChakraInputProps,
 } from '@chakra-ui/react'
 import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps } from '../../app/types/form'
+import { ReactHookFormComponentProps } from '../../types/form'
 import { Field } from '../ui/field'
 
 export interface InputProps extends ReactHookFormComponentProps {
