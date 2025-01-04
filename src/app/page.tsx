@@ -17,7 +17,7 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { AvatarCarousel } from '@/components/sections'
-import { Person } from '@/gql/graphql'
+import { Community, Person } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
 import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
 import { useQuery } from '@apollo/client'
@@ -164,7 +164,7 @@ const HomeClient = () => {
           >
             <Flex gap={{ base: 2, lg: 5 }} flexDirection={{ lg: 'column' }}>
               <Avatar
-                src={user?.picture ?? undefined}
+                src={user?.photo ?? undefined}
                 width={{ base: '50px', lg: '200px' }}
                 height={{ base: '50px', lg: '200px' }}
               />
@@ -222,7 +222,7 @@ const HomeClient = () => {
               {communities.map((community) => (
                 <CommunityCard
                   key={community.id}
-                  community={community}
+                  community={community as Community}
                   fontWeight={400}
                 />
               ))}

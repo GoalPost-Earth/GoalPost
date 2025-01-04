@@ -14,7 +14,7 @@ export function CommunityCard({
   community,
   ...rest
 }: {
-  community: Community
+  community: Pick<Community, 'id' | 'name' | 'description' | 'members'>
 } & CardHeaderProps) {
   const { id, name, description, members } = community
   const displayedMembers = members.slice(0, 2)

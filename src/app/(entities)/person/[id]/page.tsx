@@ -12,7 +12,7 @@ import {
   UserInfo,
   UserProfile,
 } from '@/components/ui'
-import Link from 'next/link'
+import { Community } from '@/gql/graphql'
 
 export default async function ViewPersonPage({
   params,
@@ -88,13 +88,7 @@ export default async function ViewPersonPage({
     ) : null,
     <VStack gap={4} key="communities">
       {person.communities.map((community) => (
-        <Link key={community.id} href={`/community/${community.id}`}>
-          <CommunityCard
-            name={community.name}
-            description={community.description}
-            members={community.members}
-          />
-        </Link>
+        <CommunityCard key={community.id} community={community as Community} />
       ))}
     </VStack>,
   ]
@@ -125,13 +119,7 @@ export default async function ViewPersonPage({
     >
       {person.communities.map((community) => (
         <GridItem key={community.id}>
-          <Link href={`/community/${community.id}`}>
-            <CommunityCard
-              name={community.name}
-              description={community.description}
-              members={community.members}
-            />
-          </Link>
+          <CommunityCard community={community as Community} />
         </GridItem>
       ))}
     </Grid>,
