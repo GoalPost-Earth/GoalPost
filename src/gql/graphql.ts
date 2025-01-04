@@ -6546,6 +6546,37 @@ export type CreateCommunitiesMutation = {
   }
 }
 
+export type UpdateCommunityMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: CommunityUpdateInput
+}>
+
+export type UpdateCommunityMutation = {
+  __typename?: 'Mutation'
+  updateCommunities: {
+    __typename?: 'UpdateCommunitiesMutationResponse'
+    communities: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      description?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      activities?: string | null
+      resultsAchieved?: string | null
+      status?: string | null
+    }>
+    info: {
+      __typename?: 'UpdateInfo'
+      nodesCreated: number
+      nodesDeleted: number
+      relationshipsCreated: number
+      relationshipsDeleted: number
+    }
+  }
+}
+
 export type CreateCoreValuesMutationVariables = Exact<{
   input: Array<CoreValueCreateInput> | CoreValueCreateInput
 }>
@@ -7036,6 +7067,142 @@ export const CreateCommunitiesDocument = {
 } as unknown as DocumentNode<
   CreateCommunitiesMutation,
   CreateCommunitiesMutationVariables
+>
+export const UpdateCommunityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateCommunity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CommunityUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateCommunities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'communities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activities' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resultsAchieved' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesDeleted' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsDeleted' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateCommunityMutation,
+  UpdateCommunityMutationVariables
 >
 export const CreateCoreValuesDocument = {
   kind: 'Document',

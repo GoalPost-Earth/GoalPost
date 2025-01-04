@@ -16,6 +16,8 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
 const documents = {
   '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n':
     types.CreateCommunitiesDocument,
+  '\n  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {\n    updateCommunities(where: { id_EQ: $id }, update: $update) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
+    types.UpdateCommunityDocument,
   '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
     types.CreateCoreValuesDocument,
   '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
@@ -70,6 +72,12 @@ export function graphql(source: string): unknown
 export function graphql(
   source: '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {\n    updateCommunities(where: { id_EQ: $id }, update: $update) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {\n    updateCommunities(where: { id_EQ: $id }, update: $update) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
