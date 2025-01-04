@@ -53,3 +53,26 @@ export function calculateNodePositionsAsRings(
 
   return nodesWithPositions
 }
+
+export function formatDate(inputDate: string) {
+  const date = new Date(inputDate)
+
+  if (!date) {
+    throw new Error('Invalid date input')
+  }
+
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+
+  return `${day}.${month}.${year}`
+}
+
+export function getInitials(name: string) {
+  const names = name.trim().split(' ')
+  const firstName = names[0] != null ? names[0] : ''
+  const lastName = names.length > 1 ? names[names.length - 1] : ''
+  return firstName && lastName
+    ? `${firstName.charAt(0)}${lastName.charAt(0)}`
+    : firstName.charAt(0)
+}

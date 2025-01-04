@@ -1,13 +1,19 @@
 import Link from 'next/link'
 import { Avatar } from '@/components/ui'
-import { Box, Card, CardBodyProps, Text } from '@chakra-ui/react'
+import { Box, Card, CardBodyProps, Flex, Text } from '@chakra-ui/react'
 
 export function ConnectionsCard({
   id,
   name,
   photo,
+  info,
   ...rest
-}: { id: string; name: string; photo?: string | null } & CardBodyProps) {
+}: {
+  id: string
+  name: string
+  photo?: string | null
+  info?: string
+} & CardBodyProps) {
   return (
     <Card.Root key={id} maxWidth="380px" width="100%" borderRadius="md">
       <Link href={`/person/${id}`}>
@@ -21,9 +27,10 @@ export function ConnectionsCard({
           {...rest}
         >
           <Avatar src={photo ?? undefined} />
-          <Box>
+          <Flex flexDirection="column">
             <Text>{name}</Text>
-          </Box>
+            {info && <Text fontWeight={300}>{info}</Text>}
+          </Flex>
         </Card.Body>
       </Link>
     </Card.Root>

@@ -172,7 +172,16 @@ const GraphVisualization = () => {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
     }
-  }, [selectedNodes, setNodes, people, coreValues, goals, resources, members])
+  }, [
+    selectedNodes,
+    setNodes,
+    people,
+    coreValues,
+    goals,
+    resources,
+    members,
+    communities,
+  ])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

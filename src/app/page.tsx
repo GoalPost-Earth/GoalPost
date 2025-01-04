@@ -1,37 +1,223 @@
 'use client'
 
 import React from 'react'
-import { Button } from '@/components/ui'
-import { Box, Center, Container, Heading } from '@chakra-ui/react'
+import {
+  ActionCard,
+  Avatar,
+  CommunityCard,
+  ConnectionsCard,
+} from '@/components/ui'
+import {
+  Container,
+  Flex,
+  Grid,
+  GridItem,
+  Heading,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import { AvatarCarousel } from '@/components/sections'
-import ShowForms from './forms/page'
 import { Person } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
+import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
+import { useQuery } from '@apollo/client'
+import ApolloWrapper from '@/components/ApolloWrapper'
+import { LoadingScreen } from '@/components/screens'
+import GoalCard from '@/components/ui/goal-card'
+import {
+  CarePointsIcon,
+  GoalsIcon,
+  PeopleIcon,
+  SettingsIcon,
+} from '@/components/icons'
 
 const HomeClient = () => {
   const { user } = useApp()
-  const community = user?.communities[0]
+  const connections = user?.connectedTo
+
+  const { data, loading, error } = useQuery(GET_RECENT_ACTIONS)
+  const { data: communityData } = useQuery(GET_ALL_COMMUNITIES)
+
+  const communities = communityData?.communities
+
+  if (!(data && communities)) {
+    return <LoadingScreen />
+  }
+
+  console.log('data:', data)
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const recentCarePoints = data?.carePoints.map((carePoint) => {
+    return {
+      actionName: carePoint.__typename,
+      id: carePoint.id,
+      createdAt: carePoint.createdAt,
+      createdBy: carePoint.createdBy,
+      children: '',
+    }
+  })
+
+  const recentGoals = data?.goals.map((goal) => {
+    return {
+      actionName: goal.__typename,
+      actionInfo: 'posted a new goal',
+      icon: <GoalsIcon />,
+      id: goal.id,
+      createdAt: goal.createdAt,
+      personName: goal.createdBy[0].name,
+      personPhoto: goal.createdBy[0].photo,
+      description: goal.description,
+      name: goal.name,
+      photo: goal.photo,
+      status: goal.status,
+      children: (
+        <GoalCard
+          id={goal.id}
+          photo={goal.photo}
+          name={goal.name}
+          createdAt={goal.createdAt}
+          description={goal.description}
+        />
+      ),
+    }
+  })
+  const recentCoreValues = data?.coreValues.map((coreValue) => {
+    return {
+      actionName: coreValue.__typename,
+      actionInfo: 'posted a new core value',
+      icon: <CarePointsIcon />,
+      id: coreValue.id,
+      createdAt: coreValue.createdAt,
+      createdBy: coreValue.isEmbracedBy,
+      description: coreValue.description,
+      personName: coreValue.isEmbracedBy[0]?.name,
+      personPhoto: coreValue.isEmbracedBy[0]?.photo,
+      children: '',
+    }
+  })
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const recentResources = data?.resources.map((resource) => {
+    return {
+      actionName: resource.__typename,
+      actionInfo: 'added a new resource',
+      icon: <SettingsIcon />,
+      personName: resource.providedByPerson[0].name,
+      personPhoto: resource.providedByPerson[0].photo,
+      id: resource.id,
+      createdAt: resource.createdAt,
+      createdBy: resource.providedByPerson,
+      description: resource.description,
+      name: resource.name,
+    }
+  })
+
+  const recentCommunityMembers = data?.communities.flatMap((community) => {
+    return community.members.flatMap((member) => {
+      return {
+        actionName: community.__typename,
+        id: member.id,
+        icon: <PeopleIcon />,
+        createdAt: member.createdAt,
+        personName: member.name,
+        personPhoto: member.photo,
+        name: community.name,
+        actionInfo: `joined a community`,
+        children: (
+          <ConnectionsCard
+            id={member.id}
+            name={member.name}
+            photo={member.photo}
+            info={community.name}
+          />
+        ),
+      }
+    })
+  })
+
+  const recentActions = [
+    ...recentGoals,
+    ...recentCoreValues,
+    ...recentCommunityMembers,
+  ]
 
   return (
-    <Container>
-      <Heading marginBottom={5}>Hi {user?.firstName}!</Heading>
-
-      <AvatarCarousel people={community?.members as Person[]} />
-      <Center marginTop={10}>
-        <ShowForms />
-      </Center>
-      <Box width="100%" display="flex" justifyContent="center" marginTop={10}>
-        {!user ? (
-          <Button as="a" colorPalette="yellow">
-            Sign In
-          </Button>
-        ) : (
-          <Button as="a" colorPalette="red" href="/api/auth/logout?returnTo=/">
-            Log out
-          </Button>
-        )}
-      </Box>
-    </Container>
+    <ApolloWrapper data={data} loading={loading} error={error}>
+      <Container p={{ base: 0 }}>
+        <Grid
+          templateColumns={{ base: 'repeat(1, 1fr)', lg: '1fr 2fr 1fr' }}
+          gap={5}
+          mt={5}
+          position="relative"
+        >
+          <GridItem
+            display="flex"
+            flexDirection="column"
+            gap={5}
+            alignItems={{ base: 'flex-start', lg: 'center' }}
+            mt={{ base: 2, lg: 5 }}
+          >
+            <Flex gap={{ base: 2, lg: 5 }} flexDirection={{ lg: 'column' }}>
+              <Avatar
+                src={user?.picture ?? ''}
+                width={{ base: '50px', lg: '200px' }}
+                height={{ base: '50px', lg: '200px' }}
+              />
+              <Flex
+                direction="column"
+                textAlign={{ base: 'left', lg: 'center' }}
+              >
+                <Text>Hi</Text>
+                <Heading>{user?.name}</Heading>
+              </Flex>
+            </Flex>
+            <VStack gap={2} alignItems={{ base: 'flex-start', lg: 'center' }}>
+              <Heading fontSize={{ lg: 'md' }} fontWeight={{ lg: 300 }}>
+                Your Connections
+              </Heading>
+              <AvatarCarousel people={connections as Person[]} />
+            </VStack>
+          </GridItem>
+          <GridItem>
+            <Heading mb={2}>What&apos;s new for me?</Heading>
+            <VStack>
+              {recentActions
+                .sort((a, b) => {
+                  return (
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                  )
+                })
+                .map((action) => (
+                  <ActionCard
+                    photo={action.personPhoto ?? ''}
+                    actionInfo={action.actionInfo}
+                    key={action.id}
+                    name={action.personName}
+                    actionName={action.actionName}
+                    createdAt={action.createdAt}
+                    icon={action.icon}
+                    content={action.children}
+                  />
+                ))}
+            </VStack>
+          </GridItem>
+          <GridItem>
+            <Heading mb={2}>Our Communities</Heading>
+            <VStack>
+              {communities.map((community) => (
+                <CommunityCard
+                  key={community.id}
+                  name={community.name}
+                  description={community.description}
+                  members={community.members}
+                />
+              ))}
+            </VStack>
+          </GridItem>
+        </Grid>
+      </Container>
+    </ApolloWrapper>
   )
 }
 

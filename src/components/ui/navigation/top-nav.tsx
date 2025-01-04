@@ -36,7 +36,7 @@ export default function TopNav() {
         }}
       >
         <AppLogo width={'40px'} marginLeft={{ base: '15px', lg: '70px' }} />
-        <GoalPostIcon />
+        <GoalPostIcon display={{ base: 'none', lg: 'block' }} />
       </Flex>
 
       <Box
@@ -54,7 +54,7 @@ export default function TopNav() {
         mr={2}
         ml={{ base: 'auto', lg: '0px' }}
       >
-        <Text>{user?.name} </Text>
+        <Text display={{ base: 'none', lg: 'block' }}>{user?.name} </Text>
         <Avatar src={user?.photo ?? undefined} />
       </Flex>
     </HStack>

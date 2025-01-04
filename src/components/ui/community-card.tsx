@@ -33,6 +33,7 @@ export function CommunityCard({
       <Card.Footer justifyContent="flex-end" position="relative" mt={{ lg: 2 }}>
         {displayedMembers.map((member, index) => (
           <Box
+            key={`${member.__typename}-${index}`}
             position="absolute"
             bottom={0}
             left={index * 20 + 'px'}

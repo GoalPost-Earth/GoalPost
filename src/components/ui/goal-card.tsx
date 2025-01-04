@@ -1,38 +1,80 @@
-import { Goal } from '@/gql/graphql'
-import { Badge, Card, HStack, Text } from '@chakra-ui/react'
+import { Badge, Box, Card, Flex, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import { Avatar } from './avatar'
+import EllipseIcon from '../icons/EllipseIcon'
+import { formatDate, getInitials } from '@/app/utils'
+import { CalenderIcon } from '../icons'
 
-const GoalCard = ({ goal }: { goal: Goal }) => (
-  <Card.Root key={goal.id} height="100%">
-    <Link key={goal.id} href={'/goal/' + goal.id}>
-      <Card.Header py={2} bgColor="gray.100">
-        <HStack>
-          <Text fontWeight="bold" textOverflow="ellipsis" truncate>
-            {goal?.name}
-          </Text>
-        </HStack>
-      </Card.Header>
-      <Card.Body flex="1">
-        <Card.Description>
-          <Text lineClamp={4} textOverflow="ellipsis">
-            {goal.description}
-          </Text>
-        </Card.Description>
-      </Card.Body>
-    </Link>
-    <Link href={'/person/' + goal.motivatesPeople[0].id}>
-      <Card.Footer justifyContent="flex-end">
-        <HStack>
-          <Avatar src={goal.motivatesPeople[0].photo ?? undefined} size="sm" />
-          <Text fontSize="small" fontWeight="bold">
-            {goal.motivatesPeople[0].name}
-          </Text>
-        </HStack>
-      </Card.Footer>
-    </Link>
-  </Card.Root>
-)
+const GoalCard = ({
+  id,
+  photo,
+  name,
+  createdAt,
+  description,
+}: {
+  id: string
+  photo: string | null | undefined
+  name: string
+  createdAt: string
+  description: string | null | undefined
+}) => {
+  const goalDate = formatDate(createdAt)
+
+  return (
+    <Card.Root key={id} height="100%" borderRadius="lg" boxShadow="sm">
+      <Link href={'/goal/' + id}>
+        <Card.Body
+          flexDirection="row"
+          p={{ base: 2, lg: 4 }}
+          gap={{ base: 2, lg: 5 }}
+          height="100%"
+          alignItems={{ base: 'center', lg: 'flex-start' }}
+        >
+          <Flex
+            bg="#B7E0A3"
+            width="30%"
+            height="auto"
+            alignSelf="stretch"
+            margin={{ lg: '-16px' }}
+            marginRight={{ lg: '16px' }}
+            textAlign="center"
+            alignItems="center"
+            justifyContent="center"
+            fontWeight="500"
+            fontSize="clamp(0.75rem, 5.5vw - 0.6rem, 3rem)"
+            borderRadius="md"
+            borderTopRightRadius={{ lg: 'none' }}
+            borderBottomRightRadius={{ lg: 'none' }}
+          >
+            {getInitials(name)}
+          </Flex>
+          <Box width="100%">
+            <Text fontWeight="bold">{name}</Text>
+            <Flex gap={2} mt={1} fontSize="xs">
+              <Badge colorPalette="brand" py={1} px={2} borderRadius="full">
+                Offer
+              </Badge>
+              <Flex gap={1} alignItems="center">
+                <CalenderIcon />
+                {goalDate}
+              </Flex>
+              <Badge
+                marginLeft="auto"
+                color="#B7E0A3"
+                bg="inherit"
+                fontWeight="bold"
+              >
+                <EllipseIcon width="14px" height="14px" /> Active
+              </Badge>
+            </Flex>
+            <Text display={{ base: 'none', lg: 'block' }} lineClamp={3}>
+              {description}
+            </Text>
+          </Box>
+        </Card.Body>
+      </Link>
+    </Card.Root>
+  )
+}
 
 export default GoalCard
