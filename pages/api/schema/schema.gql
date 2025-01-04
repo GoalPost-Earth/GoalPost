@@ -38,7 +38,7 @@ type Person implements PersonInterface @node {
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
   communities: [Community!]!
-    @relationship(type: "BELONGS_TO", direction: OUT, properties: "MemberOf")
+    @relationship(type: "BELONGS_TO", direction: OUT, properties: "BelongsTo")
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
