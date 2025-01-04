@@ -1,24 +1,29 @@
-import { Box, Card, Flex } from '@chakra-ui/react'
+import { Box, Card, Center, Flex } from '@chakra-ui/react'
 import { Avatar } from './avatar'
+import Link from 'next/link'
 
 export function ActionCard({
+  id,
   name,
   photo,
   actionInfo,
+  personId,
   createdAt,
   actionName,
   icon,
   content,
 }: {
+  id: string
   name: string
-  photo: string
+  photo: string | undefined
+  personId: string
   actionInfo: string | undefined
   createdAt: string
   actionName: string | undefined
   icon: React.ReactElement
   content: React.ReactNode
 }) {
-  const createdData = new Date(createdAt).toLocaleString('en-US', {
+  const createdDate = new Date(createdAt).toLocaleString('en-US', {
     hour: 'numeric',
     minute: 'numeric',
     hour12: true,
@@ -26,7 +31,7 @@ export function ActionCard({
 
   const time =
     Date.now() - new Date(createdAt).getTime() < 86400000
-      ? createdData
+      ? createdDate
       : new Date(createdAt).toLocaleDateString('en-US', {
           day: 'numeric',
           month: 'long',
@@ -48,26 +53,53 @@ export function ActionCard({
       borderRadius="lg"
       boxShadow="sm"
     >
-      <Box
+      <Center
         position="absolute"
         top={1.5}
         right={1.5}
-        padding={1.5}
+        padding={1}
+        width="30px"
+        height="30px"
         bg="white"
         borderRadius="full"
       >
         {icon}
-      </Box>
-      <Card.Header p={{ base: 1, lg: 4 }}>
+      </Center>
+      <Card.Header px={0} py={2}>
         <Flex gap={2} alignItems="center">
-          <Avatar src={photo} />
-          <Box>
-            <span style={{ fontWeight: 'bold' }}>{name}</span> {actionInfo} •{' '}
-            {time}
+          <Link href={`/person/${personId}`}>
+            <Avatar src={photo} />
+          </Link>
+          <Box fontSize="14px" maxWidth="70%">
+            <Link
+              href={`/person/${personId}`}
+              style={{ fontWeight: 'bold', fontSize: '16px' }}
+            >
+              {name}
+            </Link>{' '}
+            {actionInfo} • {time}
           </Box>
         </Flex>
       </Card.Header>
-      <Card.Body p={{ base: 2, lg: 4 }}>{content}</Card.Body>
+      <Card.Body mt={{ base: 2, lg: 0 }} p={0} pl={{ base: 0, lg: 10 }}>
+        {content}
+      </Card.Body>
+      <Card.Footer
+        alignSelf="flex-end"
+        width="fit-content"
+        position="relative"
+        mt={2}
+        fontSize="sm"
+        textDecoration={'underline'}
+        _hover={{
+          color: 'brand.500',
+          textDecorationThickness: '2px',
+          cursor: 'pointer',
+        }}
+        p={0}
+      >
+        <Link href={`/${actionName?.toLowerCase()}/${id}`}>See more</Link>
+      </Card.Footer>
     </Card.Root>
   )
 }

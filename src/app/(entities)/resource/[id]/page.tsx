@@ -81,7 +81,7 @@ export default async function ViewResourcePage({
           >
             <ResourceOwnerCard
               name={resource?.providedByPerson[0]?.name}
-              image={resource?.providedByPerson[0]?.photo ?? ''}
+              image={resource?.providedByPerson[0]?.photo ?? undefined}
               email={resource?.providedByPerson[0]?.email ?? ''}
             />
             <Box display={{ base: 'none', lg: 'block' }}>

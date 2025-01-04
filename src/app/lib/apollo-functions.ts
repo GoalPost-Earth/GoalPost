@@ -75,14 +75,14 @@ export const authLink = setContext(async (_, { headers }) => {
   // const fetchedExpiryDate = new Date(new Date().getTime() + 3600 * 1000)
 
   // Store token and its expiry date in local storage
-  // localStorage.setItem('token', fetchedToken.accessToken ?? '')
+  // localStorage.setItem('token', fetchedToken.accessToken ?? null)
   // localStorage.setItem('expiryDate', fetchedExpiryDate.toString())
 
   // return the headers to the context so httpLink can read them
   return {
     headers: {
       ...headers,
-      Authorization: `Bearer ${fetchedToken.accessToken ?? ''}`,
+      Authorization: `Bearer ${fetchedToken.accessToken ?? null}`,
     },
   }
 })

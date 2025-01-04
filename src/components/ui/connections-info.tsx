@@ -7,7 +7,7 @@ export function ConnectionsInfo({
   name,
   id,
 }: {
-  photo: string
+  photo: string | undefined
   name: string
   id: string
 }) {

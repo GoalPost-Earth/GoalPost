@@ -26,7 +26,7 @@ const GoalCard = ({
         <Card.Body
           flexDirection="row"
           p={{ base: 2, lg: 4 }}
-          gap={{ base: 2, lg: 5 }}
+          gap={{ base: 4, lg: 0 }}
           height="100%"
           alignItems={{ base: 'center', lg: 'flex-start' }}
         >
@@ -41,12 +41,12 @@ const GoalCard = ({
             alignItems="center"
             justifyContent="center"
             fontWeight="500"
-            fontSize="clamp(0.75rem, 5.5vw - 0.6rem, 3rem)"
+            fontSize="clamp(0.75rem, 3.4vw + 0rem, 3rem)"
             borderRadius="md"
             borderTopRightRadius={{ lg: 'none' }}
             borderBottomRightRadius={{ lg: 'none' }}
           >
-            {getInitials(name)}
+            {getInitials(name).toUpperCase()}
           </Flex>
           <Box width="100%">
             <Text fontWeight="bold">{name}</Text>
@@ -67,7 +67,13 @@ const GoalCard = ({
                 <EllipseIcon width="14px" height="14px" /> Active
               </Badge>
             </Flex>
-            <Text display={{ base: 'none', lg: 'block' }} lineClamp={3}>
+            <Text
+              display={{ base: 'none', lg: 'block' }}
+              lineClamp={3}
+              fontSize="sm"
+              fontWeight={300}
+              mt={2}
+            >
               {description}
             </Text>
           </Box>

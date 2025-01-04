@@ -7,7 +7,7 @@ interface UserProfileProps {
   user: {
     name: string
     email: string
-    photo: string
+    photo: string | undefined
   }
   tabTriggers: string[]
   tabContent: React.ReactNode[]

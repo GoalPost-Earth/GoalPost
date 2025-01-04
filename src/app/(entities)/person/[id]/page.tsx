@@ -79,7 +79,7 @@ export default async function ViewPersonPage({
         {person.connectedTo.map((person) => (
           <ConnectionsInfo
             key={person.id}
-            photo={person.photo ?? ''}
+            photo={person.photo ?? undefined}
             name={person.name}
             id={person.id}
           />
@@ -111,7 +111,7 @@ export default async function ViewPersonPage({
           <GridItem key={person.id}>
             <ConnectionsCard
               id={person.id}
-              photo={person.photo ?? ''}
+              photo={person.photo ?? null}
               name={person.name}
             />
           </GridItem>
@@ -151,7 +151,7 @@ export default async function ViewPersonPage({
         user={{
           name: person.name,
           email: person.email ?? '',
-          photo: person.photo ?? '',
+          photo: person.photo ?? undefined,
         }}
         tabTriggers={triggers}
         tabContent={content}

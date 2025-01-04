@@ -8,7 +8,7 @@ export default function ResourceOwnerCard({
   name,
   email,
 }: {
-  image: string
+  image: string | undefined
   name: string
   email: string
 }) {

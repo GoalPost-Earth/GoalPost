@@ -37,7 +37,7 @@ function CreateResource() {
             ...data,
             providedByPerson: {
               connect: {
-                where: { node: { authId_EQ: user?.sub ?? '' } },
+                where: { node: { authId_EQ: user?.sub ?? null } },
               },
             },
           },

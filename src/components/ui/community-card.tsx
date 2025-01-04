@@ -1,10 +1,18 @@
-import { Box, Card, Flex, Heading, Text } from '@chakra-ui/react'
+import {
+  Box,
+  Card,
+  CardHeaderProps,
+  Flex,
+  Heading,
+  Text,
+} from '@chakra-ui/react'
 import { Avatar } from './avatar'
 
 export function CommunityCard({
   name,
   description,
   members,
+  ...rest
 }: {
   name: string
   description: string | null | undefined
@@ -12,7 +20,7 @@ export function CommunityCard({
     __typename?: string | undefined
     photo?: string | null | undefined
   }[]
-}) {
+} & CardHeaderProps) {
   const displayedMembers = members.slice(0, 2)
   return (
     <Card.Root
@@ -23,7 +31,7 @@ export function CommunityCard({
       borderRadius="md"
     >
       <Card.Header p={2}>
-        <Heading>{name}</Heading>
+        <Heading {...rest}>{name}</Heading>
       </Card.Header>
       <Card.Body p={2}>
         <Text fontWeight={300} lineClamp={{ base: 2, lg: 3 }}>
@@ -44,7 +52,7 @@ export function CommunityCard({
             overflow="hidden"
           >
             <Avatar
-              src={member.photo ?? ''}
+              src={member.photo ?? undefined}
               width={{ base: '25px', lg: '30px' }}
               height={{ base: '25px', lg: '30px' }}
             />

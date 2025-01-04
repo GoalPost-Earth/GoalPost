@@ -1,11 +1,10 @@
 'use client'
-
+import React from 'react'
 import { GET_ALL_GOALS } from '@/app/graphql'
 import ApolloWrapper from '@/components/ApolloWrapper'
 import GoalCard from '@/components/ui/goal-card'
 import { useQuery } from '@apollo/client'
 import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'
-import React from 'react'
 
 export default function AllGoals() {
   const { data, loading, error } = useQuery(GET_ALL_GOALS, {
