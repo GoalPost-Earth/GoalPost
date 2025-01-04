@@ -3,52 +3,62 @@ import { UPDATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUT
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FormMode } from '@/types'
 import { GET_COMMUNITY } from '@/app/graphql'
 import { ApolloWrapper } from '@/components'
 import { CommunityForm } from '@/components'
-import { Community } from '@/gql/graphql'
+import { CommunityFormData, communitySchema } from '@/app/schema'
 
 export default function UpdateCommunity({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const [id, setId] = useState<string | null>(null)
+  const { id } = use(params)
   const router = useRouter()
 
-  useEffect(() => {
-    const getId = async () => {
-      const { id } = await params
-      setId(id)
-    }
-    getId()
-  }, [params])
+  const { data, loading, error } = useQuery(GET_COMMUNITY, {
+    variables: { id },
+  })
+  const [UpdateCommunities] = useMutation(UPDATE_COMMUNITY_MUTATION)
+
+  const community = data?.communities[0]
+
+  const defaultValues: CommunityFormData = useMemo(
+    () => ({
+      name: community?.name || '',
+      description: community?.description || '',
+      status: community?.status || '',
+      why: community?.why || '',
+      location: community?.location || '',
+      time: community?.time || '',
+    }),
+    [community]
+  )
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { isSubmitting, errors },
-  } = useForm()
-
-  const [UpdateCommunities] = useMutation(UPDATE_COMMUNITY_MUTATION)
-
-  const { data, loading, error } = useQuery(GET_COMMUNITY, {
-    variables: { id: id as string },
+  } = useForm<CommunityFormData>({
+    defaultValues,
+    resolver: zodResolver(communitySchema),
   })
+  useEffect(() => {
+    if (community) {
+      reset(defaultValues)
+    }
+  }, [community, defaultValues, reset])
 
-  const community = data?.communities[0]
-
-  console.log(community)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (formData: any) => {
+  const onSubmit = async (formData: CommunityFormData) => {
     try {
       const res = await UpdateCommunities({
         variables: {
-          id: id as string,
+          id: id,
           update: {
             name_SET: formData.name,
             description_SET: formData.description,
@@ -67,19 +77,16 @@ export default function UpdateCommunity({
   }
 
   return (
-    <>
-      <ApolloWrapper data={data} loading={loading} error={error}>
-        <Container px={300}>
-          <CommunityForm
-            formMode={FormMode.Update}
-            data={community as Community}
-            control={control}
-            errors={errors}
-            isSubmitting={isSubmitting}
-            onSubmit={handleSubmit(onSubmit)}
-          />
-        </Container>
-      </ApolloWrapper>
-    </>
+    <ApolloWrapper data={data} loading={loading} error={error}>
+      <Container px={300}>
+        <CommunityForm
+          formMode={FormMode.Update}
+          control={control}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit(onSubmit)}
+        />
+      </Container>
+    </ApolloWrapper>
   )
 }

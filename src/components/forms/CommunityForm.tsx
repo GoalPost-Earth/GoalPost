@@ -4,12 +4,11 @@ import { Input, Select } from '../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/types'
 import { Button } from '../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
-import { Community } from '@/gql/graphql'
 
 export interface CommunityFormProps {
   formMode: string
-  data: Community | undefined
-  control: Control<FieldValues>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void
@@ -17,24 +16,20 @@ export interface CommunityFormProps {
 
 const CommunityForm = ({
   formMode,
-  data,
   control,
   errors,
   isSubmitting,
   onSubmit,
 }: CommunityFormProps) => {
-  const community = data
-
   return (
     <>
       <Heading>{formMode} Community</Heading>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} noValidate>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <Input
               label="Name"
               name="name"
-              defaultValue={community?.name}
               control={control}
               errors={errors}
               required
@@ -44,7 +39,6 @@ const CommunityForm = ({
             <Input
               label="Description"
               name="description"
-              defaultValue={community?.description ?? ''}
               control={control}
               errors={errors}
             />
@@ -53,46 +47,24 @@ const CommunityForm = ({
             <Select
               label="Status"
               name="status"
-              defaultValue={
-                community?.status
-                  ? [
-                      STATUS_SELECT_OPTIONS.find(
-                        (option) => option.value === community?.status
-                      )?.value ?? '',
-                    ]
-                  : []
-              }
               control={control}
               errors={errors}
               options={STATUS_SELECT_OPTIONS}
             />
           </GridItem>
           <GridItem>
-            <Input
-              label="Why"
-              name="why"
-              defaultValue={community?.why ?? ''}
-              control={control}
-              errors={errors}
-            />
+            <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>
           <GridItem>
             <Input
               label="Location"
               name="location"
-              defaultValue={community?.location ?? ''}
               control={control}
               errors={errors}
             />
           </GridItem>
           <GridItem>
-            <Input
-              label="Time"
-              name="time"
-              defaultValue={community?.time ?? ''}
-              control={control}
-              errors={errors}
-            />
+            <Input label="Time" name="time" control={control} errors={errors} />
           </GridItem>
         </Grid>
 
@@ -101,7 +73,7 @@ const CommunityForm = ({
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            Update Community
+            {formMode} Community
           </Button>
         </Center>
       </form>

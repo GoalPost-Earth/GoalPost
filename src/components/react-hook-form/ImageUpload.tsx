@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useRef, ChangeEventHandler } from 'react'
 import {
   Button,
