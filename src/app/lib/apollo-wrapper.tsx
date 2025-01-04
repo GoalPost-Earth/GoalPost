@@ -49,6 +49,18 @@ export function ApolloWrapper({
         }
 
         const response = await fetch('/api/auth/access-token')
+        if (!response.ok) {
+          const resJson = await response.json()
+          const error = {
+            status: response.status,
+            statusText: response.statusText,
+            message: resJson?.message,
+            code: resJson?.code,
+          }
+
+          throw error
+        }
+
         const resJson = await response?.json()
 
         if (resJson?.accessToken) {
@@ -63,10 +75,9 @@ export function ApolloWrapper({
         }
       } catch (error) {
         if ((error as { code?: string }).code === 'ERR_EXPIRED_ACCESS_TOKEN') {
-          console.debug('Access token expired, refreshing...')
+          console.warn('Access token expired, refreshing...')
+          router.push('/api/auth/login?returnTo=/')
         }
-
-        router.push('/')
 
         console.error(error)
       }
