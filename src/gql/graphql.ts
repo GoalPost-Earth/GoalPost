@@ -463,7 +463,7 @@ export type AreasConnection = {
 export type BelongsTo = {
   __typename?: 'BelongsTo'
   avatar?: Maybe<Scalars['String']['output']>
-  favourites?: Maybe<Scalars['String']['output']>
+  favorites?: Maybe<Scalars['String']['output']>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   interests?: Maybe<Scalars['String']['output']>
   passions?: Maybe<Scalars['String']['output']>
@@ -490,21 +490,21 @@ export type BelongsToAggregationWhereInput = {
   avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -569,7 +569,7 @@ export type BelongsToAggregationWhereInput = {
 
 export type BelongsToCreateInput = {
   avatar?: InputMaybe<Scalars['String']['input']>
-  favourites?: InputMaybe<Scalars['String']['input']>
+  favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   passions?: InputMaybe<Scalars['String']['input']>
@@ -579,7 +579,7 @@ export type BelongsToCreateInput = {
 
 export type BelongsToSort = {
   avatar?: InputMaybe<SortDirection>
-  favourites?: InputMaybe<SortDirection>
+  favorites?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
@@ -589,7 +589,7 @@ export type BelongsToSort = {
 
 export type BelongsToUpdateInput = {
   avatar_SET?: InputMaybe<Scalars['String']['input']>
-  favourites_SET?: InputMaybe<Scalars['String']['input']>
+  favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   passions_SET?: InputMaybe<Scalars['String']['input']>
@@ -606,11 +606,11 @@ export type BelongsToWhere = {
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
   avatar_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   avatar_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  favourites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_EQ?: InputMaybe<Scalars['String']['input']>
-  favourites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  favourites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  favorites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_EQ?: InputMaybe<Scalars['String']['input']>
+  favorites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  favorites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -4748,6 +4748,7 @@ export type Mutation = {
   deletePeople: DeleteInfo
   deleteResources: DeleteInfo
   generatePersonEmbeddings: Scalars['Boolean']['output']
+  sendMessageToChatbot: Scalars['String']['output']
   updateAreas: UpdateAreasMutationResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
@@ -4822,6 +4823,10 @@ export type MutationDeleteResourcesArgs = {
 
 export type MutationGeneratePersonEmbeddingsArgs = {
   personId: Scalars['ID']['input']
+}
+
+export type MutationSendMessageToChatbotArgs = {
+  message: Scalars['String']['input']
 }
 
 export type MutationUpdateAreasArgs = {
@@ -5238,7 +5243,7 @@ export type PersonCommunityCommunitiesAggregationSelection = {
 export type PersonCommunityCommunitiesEdgeAggregateSelection = {
   __typename?: 'PersonCommunityCommunitiesEdgeAggregateSelection'
   avatar: StringAggregateSelection
-  favourites: StringAggregateSelection
+  favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   interests: StringAggregateSelection
   passions: StringAggregateSelection
@@ -7722,6 +7727,15 @@ export type UpdateResourcesMutationResponse = {
   resources: Array<Resource>
 }
 
+export type SendMessageToChatbotMutationVariables = Exact<{
+  message: Scalars['String']['input']
+}>
+
+export type SendMessageToChatbotMutation = {
+  __typename?: 'Mutation'
+  sendMessageToChatbot: string
+}
+
 export type CreateCommunitiesMutationVariables = Exact<{
   input: Array<CommunityCreateInput> | CommunityCreateInput
 }>
@@ -8237,6 +8251,54 @@ export type GetAllResourcesQuery = {
   }>
 }
 
+export const SendMessageToChatbotDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SendMessageToChatbot' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'message' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'sendMessageToChatbot' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'message' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'message' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SendMessageToChatbotMutation,
+  SendMessageToChatbotMutationVariables
+>
 export const CreateCommunitiesDocument = {
   kind: 'Document',
   definitions: [

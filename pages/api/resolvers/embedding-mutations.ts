@@ -1,4 +1,4 @@
-import { Context } from '@apollo/client'
+import { Context } from '../types'
 import { generatePersonBio } from '../utils'
 import { Person } from '@/gql/graphql'
 

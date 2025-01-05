@@ -190,4 +190,5 @@ type Resource @node {
 
 type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
+  sendMessageToChatbot(message: String!): String!
 }
