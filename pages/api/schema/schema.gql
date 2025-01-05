@@ -58,7 +58,7 @@ type Person implements PersonInterface @node {
 type BelongsTo @relationshipProperties {
   signupDate: Date
   avatar: String
-  favourites: String
+  favorites: String
   passions: String
   traits: String
   fieldsOfCare: String
