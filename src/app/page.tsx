@@ -16,12 +16,11 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react'
-import { AvatarCarousel } from '@/components/sections'
+import { ApolloWrapper, AvatarCarousel } from '@/components/sections'
 import { Community, Person } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
 import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
 import { useQuery } from '@apollo/client'
-import ApolloWrapper from '@/components/ApolloWrapper'
 import { LoadingScreen } from '@/components/screens'
 import GoalCard from '@/components/ui/goal-card'
 import {

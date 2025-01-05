@@ -6,7 +6,7 @@ export interface RadioProps extends ChakraRadioGroup.ItemProps {
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }
 
-export const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
+export const CustomRadio = React.forwardRef<HTMLInputElement, RadioProps>(
   function Radio(props, ref) {
     const { children, inputProps, rootRef, ...rest } = props
     return (

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch as ChakraSwitch, SwitchProps } from '../ui/switch'
+import { CustomSwitch as ChakraSwitch, SwitchProps } from '../ui/switch'
 import { Controller } from 'react-hook-form'
 import { ReactHookFormComponentProps } from '../../types/form'
 import { Field } from '../ui/field'
