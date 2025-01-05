@@ -191,3 +191,60 @@ type Resource @node {
 type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
 }
+
+type Query {
+  peopleSubstringSearch(key: String!): [Person!]!
+    @cypher(
+      statement: """
+      MATCH (person:Person)
+      WHERE toLower(person.firstName) CONTAINS toLower($key) OR toLower(person.lastName) CONTAINS toLower($key)
+      RETURN person
+      """
+      columnName: "person"
+    )
+  communitySubstringSearch(key: String!): [Community!]!
+    @cypher(
+      statement: """
+      MATCH (community:Community)
+      WHERE toLower(community.name) CONTAINS toLower($key)
+      RETURN community
+      """
+      columnName: "community"
+    )
+  coreValueSubstringSearch(key: String!): [CoreValue!]!
+    @cypher(
+      statement: """
+      MATCH (coreValue:CoreValue)
+      WHERE toLower(coreValue.name) CONTAINS toLower($key)
+      RETURN coreValue
+      """
+      columnName: "coreValue"
+    )
+  goalSubstringSearch(key: String!): [Goal!]!
+    @cypher(
+      statement: """
+      MATCH (goal:Goal)
+      WHERE toLower(goal.name) CONTAINS toLower($key)
+      RETURN goal
+      """
+      columnName: "goal"
+    )
+  resourceSubstringSearch(key: String!): [Resource!]!
+    @cypher(
+      statement: """
+      MATCH (resource:Resource)
+      WHERE toLower(resource.name) CONTAINS toLower($key)
+      RETURN resource
+      """
+      columnName: "resource"
+    )
+  carePointSubstringSearch(key: String!): [CarePoint!]!
+    @cypher(
+      statement: """
+      MATCH (carePoint:CarePoint)
+      WHERE toLower(carePoint.description) CONTAINS toLower($key)
+      RETURN carePoint
+      """
+      columnName: "carePoint"
+    )
+}
