@@ -175,15 +175,17 @@ const HomeClient = () => {
                 <Heading>{user?.name}</Heading>
               </Flex>
             </Flex>
-            <VStack gap={2} alignItems={{ base: 'flex-start', lg: 'center' }}>
-              <Heading
-                fontSize={{ lg: 'md' }}
-                fontWeight={{ base: 'bolder', lg: 'light' }}
-              >
-                Your Connections
-              </Heading>
-              <AvatarCarousel people={connections as Person[]} />
-            </VStack>
+            {!!connections?.length && (
+              <VStack gap={2} alignItems={{ base: 'flex-start', lg: 'center' }}>
+                <Heading
+                  fontSize={{ lg: 'md' }}
+                  fontWeight={{ base: 'bolder', lg: 'light' }}
+                >
+                  Your Connections
+                </Heading>
+                <AvatarCarousel people={connections as Person[]} />
+              </VStack>
+            )}
           </GridItem>
           <GridItem>
             <Heading mb={2} fontWeight="bolder">

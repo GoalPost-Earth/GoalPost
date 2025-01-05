@@ -27,6 +27,9 @@ function CreateResource() {
         variables: {
           input: {
             ...data,
+            createdBy: {
+              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+            },
             providedByPerson: {
               connect: {
                 where: { node: { authId_EQ: user?.sub ?? null } },

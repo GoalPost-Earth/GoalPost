@@ -42,7 +42,7 @@ export default async function ViewCommunityPage({
           <MemberGuideDetailCard title="Location" detail={community.location} />
           <MemberGuideDetailCard title="Time" detail={community.time} />
           <MemberGuideDetailCard
-            title="Time"
+            title="Created By"
             detail={community.createdBy[0].name}
           />
         </VStack>

@@ -29,7 +29,7 @@ function CreateGoal() {
           input: {
             ...data,
             createdBy: {
-              connect: { where: { node: { authId_EQ: user?.sub } } },
+              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
           },
         },

@@ -11,6 +11,11 @@ export const GET_LOGGED_IN_USER = graphql(`
       email
       photo
       createdAt
+      connectedTo {
+        id
+        name
+        photo
+      }
       communities {
         id
         name

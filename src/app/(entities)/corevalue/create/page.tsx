@@ -28,6 +28,9 @@ function CreateCoreValue() {
         variables: {
           input: {
             ...data,
+            createdBy: {
+              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+            },
             isEmbracedBy: {
               connect: { where: { node: { authId_EQ: user?.sub } } },
             },

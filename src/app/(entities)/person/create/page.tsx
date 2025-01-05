@@ -11,6 +11,7 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { PersonForm } from '@/components'
 import { FormMode } from '@/types'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 function CreatePerson() {
   const {
@@ -19,6 +20,7 @@ function CreatePerson() {
     setValue,
     formState: { isSubmitting, errors },
   } = useForm()
+  const { user } = useUser()
   const router = useRouter()
 
   const [CreatePeople] = useMutation(CREATE_PEOPLE_MUTATION)
@@ -31,6 +33,9 @@ function CreatePerson() {
         variables: {
           input: {
             ...data,
+            createdBy: {
+              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+            },
           },
         },
       })
