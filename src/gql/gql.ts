@@ -20,6 +20,8 @@ const documents = {
     types.CreateCoreValuesDocument,
   '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.CreateGoalsDocument,
+  '\n  mutation GeneratePersonEmbeddings($personId: ID!) {\n    generatePersonEmbeddings(personId: $personId)\n  }\n':
+    types.GeneratePersonEmbeddingsDocument,
   '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
     types.CreatePeopleDocument,
   '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
@@ -84,6 +86,12 @@ export function graphql(
 export function graphql(
   source: '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation GeneratePersonEmbeddings($personId: ID!) {\n    generatePersonEmbeddings(personId: $personId)\n  }\n'
+): (typeof documents)['\n  mutation GeneratePersonEmbeddings($personId: ID!) {\n    generatePersonEmbeddings(personId: $personId)\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

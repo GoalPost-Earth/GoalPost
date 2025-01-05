@@ -1,5 +1,11 @@
 import { graphql } from '@/gql'
 
+export const GENERATE_PERSON_EMBEDDINGS_MUTATION = graphql(`
+  mutation GeneratePersonEmbeddings($personId: ID!) {
+    generatePersonEmbeddings(personId: $personId)
+  }
+`)
+
 export const CREATE_PEOPLE_MUTATION = graphql(`
   mutation CreatePeople($input: [PersonCreateInput!]!) {
     createPeople(input: $input) {

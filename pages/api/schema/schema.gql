@@ -1,3 +1,9 @@
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
 interface PersonInterface {
   id: ID!
   firstName: String!
@@ -180,4 +186,8 @@ type Resource @node {
   updatedAt: DateTime
     @timestamp(operations: [UPDATE])
     @settable(onCreate: false, onUpdate: true)
+}
+
+type Mutation {
+  generatePersonEmbeddings(personId: ID!): Boolean!
 }

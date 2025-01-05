@@ -1,8 +1,9 @@
 import { Person } from '@/gql/graphql'
+import { embeddingMutations } from './embeddingMutations'
 
 const resolvers = {
   // Resolver Parameters
-  // Object: the parent result of a previous resolver
+  // source: the parent result of a previous resolver
   // Args: Field Arguments
   // Context: Context object, database connection, API, etc
   // GraphQLResolveInfo
@@ -11,7 +12,9 @@ const resolvers = {
     name: (source: Person) => `${source.firstName} ${source.lastName}`,
   },
 
-  Mutation: {},
+  Mutation: {
+    ...embeddingMutations,
+  },
   Query: {},
 }
 

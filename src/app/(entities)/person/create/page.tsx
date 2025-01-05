@@ -1,6 +1,9 @@
 'use client'
 
-import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
+import {
+  CREATE_PEOPLE_MUTATION,
+  GENERATE_PERSON_EMBEDDINGS_MUTATION,
+} from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/form'
 import { Button } from '@/components/ui'
@@ -21,6 +24,7 @@ function CreatePerson() {
   const router = useRouter()
 
   const [CreatePeople] = useMutation(CREATE_PEOPLE_MUTATION)
+  const [GenerateEmbeddings] = useMutation(GENERATE_PERSON_EMBEDDINGS_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
@@ -32,7 +36,18 @@ function CreatePerson() {
           },
         },
       })
-      router.push('/person/' + res.data?.createPeople.people[0].id)
+
+      const personId = res.data?.createPeople.people[0].id
+      if (!personId) {
+        return
+      }
+      GenerateEmbeddings({
+        variables: {
+          personId,
+        },
+      })
+
+      router.push('/person/' + personId)
     } catch (error) {
       console.error(error)
     }

@@ -4747,6 +4747,7 @@ export type Mutation = {
   deleteGoals: DeleteInfo
   deletePeople: DeleteInfo
   deleteResources: DeleteInfo
+  generatePersonEmbeddings: Scalars['Boolean']['output']
   updateAreas: UpdateAreasMutationResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
@@ -4817,6 +4818,10 @@ export type MutationDeletePeopleArgs = {
 export type MutationDeleteResourcesArgs = {
   delete?: InputMaybe<ResourceDeleteInput>
   where?: InputMaybe<ResourceWhere>
+}
+
+export type MutationGeneratePersonEmbeddingsArgs = {
+  personId: Scalars['ID']['input']
 }
 
 export type MutationUpdateAreasArgs = {
@@ -7785,6 +7790,15 @@ export type CreateGoalsMutation = {
   }
 }
 
+export type GeneratePersonEmbeddingsMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type GeneratePersonEmbeddingsMutation = {
+  __typename?: 'Mutation'
+  generatePersonEmbeddings: boolean
+}
+
 export type CreatePeopleMutationVariables = Exact<{
   input: Array<PersonCreateInput> | PersonCreateInput
 }>
@@ -8495,6 +8509,51 @@ export const CreateGoalsDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateGoalsMutation, CreateGoalsMutationVariables>
+export const GeneratePersonEmbeddingsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'GeneratePersonEmbeddings' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'generatePersonEmbeddings' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GeneratePersonEmbeddingsMutation,
+  GeneratePersonEmbeddingsMutationVariables
+>
 export const CreatePeopleDocument = {
   kind: 'Document',
   definitions: [
