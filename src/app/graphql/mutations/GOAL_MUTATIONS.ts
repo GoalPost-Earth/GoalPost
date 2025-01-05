@@ -17,3 +17,21 @@ export const CREATE_GOAL_MUTATION = graphql(`
     }
   }
 `)
+
+export const UPDATE_GOAL_MUTATION = graphql(`
+  mutation UpdateGoal($id: ID!, $update: GoalUpdateInput!) {
+    updateGoals(where: { id_EQ: $id }, update: $update) {
+      goals {
+        id
+        name
+        description
+        successMeasures
+        photo
+        status
+        location
+        time
+        createdAt
+      }
+    }
+  }
+`)

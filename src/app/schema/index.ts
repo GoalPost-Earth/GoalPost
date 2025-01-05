@@ -1,2 +1,6 @@
 export * from './memberGuideSchema'
 export * from './communitySchema'
+export * from './goalSchema'
+export * from './coreValueSchema'
+export * from './resourceSchema'
+export * from './personSchema'

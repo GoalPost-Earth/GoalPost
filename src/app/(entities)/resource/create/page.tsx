@@ -2,21 +2,13 @@
 
 import { CREATE_RESOURCE_MUTATION } from '@/app/graphql/mutations/RESOURCE_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input, Select } from '@/components/react-hook-form'
-import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
-import {
-  Box,
-  Center,
-  Container,
-  Grid,
-  GridItem,
-  Heading,
-} from '@chakra-ui/react'
+import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { STATUS_SELECT_OPTIONS } from '@/types'
+import { FormMode } from '@/types'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import { ResourceForm } from '@/components'
 
 function CreateResource() {
   const {
@@ -52,60 +44,13 @@ function CreateResource() {
 
   return (
     <Container>
-      <Heading>Create A Resource</Heading>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-          <GridItem>
-            <Input
-              label="Name"
-              name="name"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Description"
-              name="description"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Select
-              label="Status"
-              name="status"
-              control={control}
-              errors={errors}
-              options={STATUS_SELECT_OPTIONS}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input label="Why" name="why" control={control} errors={errors} />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Location"
-              name="location"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input label="Time" name="time" control={control} errors={errors} />
-          </GridItem>
-        </Grid>
-        <Box my={5}>
-          <hr />
-        </Box>
-        <Center>
-          <Button type="submit" loading={isSubmitting}>
-            Create Resource
-          </Button>
-        </Center>
-      </form>
+      <ResourceForm
+        formMode={FormMode.Create}
+        control={control}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+      />
     </Container>
   )
 }

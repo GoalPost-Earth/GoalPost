@@ -1,5 +1,4 @@
 'use client'
-import { UPDATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
@@ -7,11 +6,11 @@ import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormMode } from '@/types'
-import { GET_COMMUNITY } from '@/app/graphql'
-import { ApolloWrapper, CommunityForm } from '@/components'
-import { CommunityFormData, communitySchema } from '@/app/schema'
+import { GET_RESOURCE, UPDATE_RESOURCE_MUTATION } from '@/app/graphql'
+import { ApolloWrapper, ResourceForm } from '@/components'
+import { ResourceFormData, resourceSchema } from '@/app/schema'
 
-export default function UpdateCommunity({
+export default function UpdateResource({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -19,23 +18,23 @@ export default function UpdateCommunity({
   const { id } = use(params)
   const router = useRouter()
 
-  const { data, loading, error } = useQuery(GET_COMMUNITY, {
+  const { data, loading, error } = useQuery(GET_RESOURCE, {
     variables: { id },
   })
-  const [UpdateCommunities] = useMutation(UPDATE_COMMUNITY_MUTATION)
+  const [UpdateResource] = useMutation(UPDATE_RESOURCE_MUTATION)
 
-  const community = data?.communities[0]
+  const resource = data?.resources[0]
 
-  const defaultValues: CommunityFormData = useMemo(
+  const defaultValues: ResourceFormData = useMemo(
     () => ({
-      name: community?.name || '',
-      description: community?.description || '',
-      status: community?.status || '',
-      why: community?.why || '',
-      location: community?.location || '',
-      time: community?.time || '',
+      name: resource?.name || '',
+      description: resource?.description || '',
+      status: resource?.status || '',
+      why: resource?.why || '',
+      location: resource?.location || '',
+      time: resource?.time || '',
     }),
-    [community]
+    [resource]
   )
 
   const {
@@ -43,33 +42,33 @@ export default function UpdateCommunity({
     handleSubmit,
     reset,
     formState: { isSubmitting, errors },
-  } = useForm<CommunityFormData>({
+  } = useForm<ResourceFormData>({
     defaultValues,
-    resolver: zodResolver(communitySchema),
+    resolver: zodResolver(resourceSchema),
   })
   useEffect(() => {
-    if (community) {
+    if (resource) {
       reset(defaultValues)
     }
-  }, [community, defaultValues, reset])
+  }, [resource, defaultValues, reset])
 
-  const onSubmit = async (formData: CommunityFormData) => {
+  const onSubmit = async (formData: ResourceFormData) => {
     try {
-      const res = await UpdateCommunities({
+      const res = await UpdateResource({
         variables: {
           id: id,
           update: {
             name_SET: formData.name,
             description_SET: formData.description,
-            status_SET: formData.status,
             why_SET: formData.why,
+            status_SET: formData.status,
             location_SET: formData.location,
             time_SET: formData.time,
           },
         },
       })
 
-      router.push('/community/' + res.data?.updateCommunities.communities[0].id)
+      router.push('/resource/' + res.data?.updateResources.resources[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -78,7 +77,7 @@ export default function UpdateCommunity({
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <CommunityForm
+        <ResourceForm
           formMode={FormMode.Update}
           control={control}
           errors={errors}

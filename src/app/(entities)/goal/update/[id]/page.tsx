@@ -1,5 +1,4 @@
 'use client'
-import { UPDATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
@@ -7,11 +6,11 @@ import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormMode } from '@/types'
-import { GET_COMMUNITY } from '@/app/graphql'
-import { ApolloWrapper, CommunityForm } from '@/components'
-import { CommunityFormData, communitySchema } from '@/app/schema'
+import { GET_GOAL, UPDATE_GOAL_MUTATION } from '@/app/graphql'
+import { ApolloWrapper, GoalForm } from '@/components'
+import { GoalFormData, goalSchema } from '@/app/schema'
 
-export default function UpdateCommunity({
+export default function UpdateGoal({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -19,23 +18,24 @@ export default function UpdateCommunity({
   const { id } = use(params)
   const router = useRouter()
 
-  const { data, loading, error } = useQuery(GET_COMMUNITY, {
+  const { data, loading, error } = useQuery(GET_GOAL, {
     variables: { id },
   })
-  const [UpdateCommunities] = useMutation(UPDATE_COMMUNITY_MUTATION)
+  const [UpdateGoal] = useMutation(UPDATE_GOAL_MUTATION)
 
-  const community = data?.communities[0]
+  const goal = data?.goals[0]
 
-  const defaultValues: CommunityFormData = useMemo(
+  const defaultValues: GoalFormData = useMemo(
     () => ({
-      name: community?.name || '',
-      description: community?.description || '',
-      status: community?.status || '',
-      why: community?.why || '',
-      location: community?.location || '',
-      time: community?.time || '',
+      name: goal?.name || '',
+      description: goal?.description || '',
+      successMeasures: goal?.successMeasures || '',
+      photo: goal?.photo || '',
+      status: goal?.status || '',
+      location: goal?.location || '',
+      time: goal?.time || '',
     }),
-    [community]
+    [goal]
   )
 
   const {
@@ -43,33 +43,34 @@ export default function UpdateCommunity({
     handleSubmit,
     reset,
     formState: { isSubmitting, errors },
-  } = useForm<CommunityFormData>({
+  } = useForm<GoalFormData>({
     defaultValues,
-    resolver: zodResolver(communitySchema),
+    resolver: zodResolver(goalSchema),
   })
   useEffect(() => {
-    if (community) {
+    if (goal) {
       reset(defaultValues)
     }
-  }, [community, defaultValues, reset])
+  }, [goal, defaultValues, reset])
 
-  const onSubmit = async (formData: CommunityFormData) => {
+  const onSubmit = async (formData: GoalFormData) => {
     try {
-      const res = await UpdateCommunities({
+      const res = await UpdateGoal({
         variables: {
           id: id,
           update: {
             name_SET: formData.name,
             description_SET: formData.description,
+            successMeasures_SET: formData.successMeasures,
+            photo_SET: formData.photo,
             status_SET: formData.status,
-            why_SET: formData.why,
             location_SET: formData.location,
             time_SET: formData.time,
           },
         },
       })
 
-      router.push('/community/' + res.data?.updateCommunities.communities[0].id)
+      router.push('/goal/' + res.data?.updateGoals.goals[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -78,7 +79,7 @@ export default function UpdateCommunity({
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <CommunityForm
+        <GoalForm
           formMode={FormMode.Update}
           control={control}
           errors={errors}

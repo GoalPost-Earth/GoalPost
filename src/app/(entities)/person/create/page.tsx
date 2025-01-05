@@ -2,14 +2,12 @@
 
 import { CREATE_PEOPLE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/react-hook-form'
-import { Button } from '@/components/ui'
 import { useMutation } from '@apollo/client'
-import { Center, Container, Grid, GridItem, Heading } from '@chakra-ui/react'
+import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { ImageUpload } from '@/components/react-hook-form'
-import { CloudinaryPresets } from '@/types'
+import { PersonForm } from '@/components'
+import { FormMode } from '@/types'
 
 function CreatePerson() {
   const {
@@ -39,81 +37,15 @@ function CreatePerson() {
   }
 
   return (
-    <Container position={'relative'} pt={2} pb={10} width={{ md: '50%' }}>
-      <Heading position={'absolute'} top={0} left={0} ml={'1rem'}>
-        Create a Member Guide
-      </Heading>
-      <form onSubmit={handleSubmit(onSubmit)} style={{ marginTop: '2rem' }}>
-        <Center pt={2}>
-          <ImageUpload
-            name="photo"
-            control={control}
-            errors={errors}
-            uploadPreset={CloudinaryPresets.MemberPhotos}
-            setValue={setValue}
-          />
-        </Center>
-        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-          <GridItem>
-            <Input
-              label="First Name"
-              name="firstName"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Last Name"
-              name="lastName"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Email"
-              name="email"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-
-          <GridItem>
-            <Input
-              label="Phone Number"
-              name="phone"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Pronouns"
-              name="pronouns"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Location"
-              name="location"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-        </Grid>
-
-        <Center my={5}>
-          <Button type="submit" loading={isSubmitting}>
-            Create Person
-          </Button>
-        </Center>
-      </form>
+    <Container>
+      <PersonForm
+        formMode={FormMode.Create}
+        control={control}
+        errors={errors}
+        setValue={setValue}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+      />
     </Container>
   )
 }

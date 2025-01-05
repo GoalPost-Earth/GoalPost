@@ -1,5 +1,4 @@
 'use client'
-import { UPDATE_COMMUNITY_MUTATION } from '@/app/graphql/mutations/COMMUNITY_MUTATIONS'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
@@ -7,9 +6,9 @@ import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormMode } from '@/types'
-import { GET_COMMUNITY } from '@/app/graphql'
-import { ApolloWrapper, CommunityForm } from '@/components'
-import { CommunityFormData, communitySchema } from '@/app/schema'
+import { GET_COREVALUE, UPDATE_COREVALUE_MUTATION } from '@/app/graphql'
+import { ApolloWrapper, CoreValueForm } from '@/components'
+import { CoreValueFormData, coreValueSchema } from '@/app/schema'
 
 export default function UpdateCommunity({
   params,
@@ -19,23 +18,23 @@ export default function UpdateCommunity({
   const { id } = use(params)
   const router = useRouter()
 
-  const { data, loading, error } = useQuery(GET_COMMUNITY, {
+  const { data, loading, error } = useQuery(GET_COREVALUE, {
     variables: { id },
   })
-  const [UpdateCommunities] = useMutation(UPDATE_COMMUNITY_MUTATION)
+  const [UpdateCoreValue] = useMutation(UPDATE_COREVALUE_MUTATION)
 
-  const community = data?.communities[0]
+  const coreValue = data?.coreValues[0]
 
-  const defaultValues: CommunityFormData = useMemo(
+  const defaultValues: CoreValueFormData = useMemo(
     () => ({
-      name: community?.name || '',
-      description: community?.description || '',
-      status: community?.status || '',
-      why: community?.why || '',
-      location: community?.location || '',
-      time: community?.time || '',
+      name: coreValue?.name || '',
+      description: coreValue?.description || '',
+      whoSupports: coreValue?.whoSupports || '',
+      why: coreValue?.why || '',
+      alignmentChallenges: coreValue?.alignmentChallenges || '',
+      alignmentExamples: coreValue?.alignmentExamples || '',
     }),
-    [community]
+    [coreValue]
   )
 
   const {
@@ -43,33 +42,33 @@ export default function UpdateCommunity({
     handleSubmit,
     reset,
     formState: { isSubmitting, errors },
-  } = useForm<CommunityFormData>({
+  } = useForm<CoreValueFormData>({
     defaultValues,
-    resolver: zodResolver(communitySchema),
+    resolver: zodResolver(coreValueSchema),
   })
   useEffect(() => {
-    if (community) {
+    if (coreValue) {
       reset(defaultValues)
     }
-  }, [community, defaultValues, reset])
+  }, [coreValue, defaultValues, reset])
 
-  const onSubmit = async (formData: CommunityFormData) => {
+  const onSubmit = async (formData: CoreValueFormData) => {
     try {
-      const res = await UpdateCommunities({
+      const res = await UpdateCoreValue({
         variables: {
           id: id,
           update: {
             name_SET: formData.name,
             description_SET: formData.description,
-            status_SET: formData.status,
+            whoSupports_SET: formData.whoSupports,
+            alignmentChallenges_SET: formData.alignmentChallenges,
+            alignmentExamples_SET: formData.alignmentExamples,
             why_SET: formData.why,
-            location_SET: formData.location,
-            time_SET: formData.time,
           },
         },
       })
 
-      router.push('/community/' + res.data?.updateCommunities.communities[0].id)
+      router.push('/corevalue/' + res.data?.updateCoreValues.coreValues[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -78,7 +77,7 @@ export default function UpdateCommunity({
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <CommunityForm
+        <CoreValueForm
           formMode={FormMode.Update}
           control={control}
           errors={errors}
