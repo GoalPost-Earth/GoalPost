@@ -12,7 +12,7 @@ import {
 import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
 import { UserProfile, useUser } from '@auth0/nextjs-auth0/client'
 import { Person } from '@/gql/graphql'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 

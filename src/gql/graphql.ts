@@ -463,7 +463,7 @@ export type AreasConnection = {
 export type BelongsTo = {
   __typename?: 'BelongsTo'
   avatar?: Maybe<Scalars['String']['output']>
-  favourites?: Maybe<Scalars['String']['output']>
+  favorites?: Maybe<Scalars['String']['output']>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   interests?: Maybe<Scalars['String']['output']>
   passions?: Maybe<Scalars['String']['output']>
@@ -490,21 +490,21 @@ export type BelongsToAggregationWhereInput = {
   avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -569,7 +569,7 @@ export type BelongsToAggregationWhereInput = {
 
 export type BelongsToCreateInput = {
   avatar?: InputMaybe<Scalars['String']['input']>
-  favourites?: InputMaybe<Scalars['String']['input']>
+  favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   passions?: InputMaybe<Scalars['String']['input']>
@@ -579,7 +579,7 @@ export type BelongsToCreateInput = {
 
 export type BelongsToSort = {
   avatar?: InputMaybe<SortDirection>
-  favourites?: InputMaybe<SortDirection>
+  favorites?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
@@ -589,7 +589,7 @@ export type BelongsToSort = {
 
 export type BelongsToUpdateInput = {
   avatar_SET?: InputMaybe<Scalars['String']['input']>
-  favourites_SET?: InputMaybe<Scalars['String']['input']>
+  favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   passions_SET?: InputMaybe<Scalars['String']['input']>
@@ -606,11 +606,11 @@ export type BelongsToWhere = {
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
   avatar_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   avatar_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  favourites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_EQ?: InputMaybe<Scalars['String']['input']>
-  favourites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  favourites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  favorites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_EQ?: InputMaybe<Scalars['String']['input']>
+  favorites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  favorites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5238,7 +5238,7 @@ export type PersonCommunityCommunitiesAggregationSelection = {
 export type PersonCommunityCommunitiesEdgeAggregateSelection = {
   __typename?: 'PersonCommunityCommunitiesEdgeAggregateSelection'
   avatar: StringAggregateSelection
-  favourites: StringAggregateSelection
+  favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   interests: StringAggregateSelection
   passions: StringAggregateSelection
@@ -7745,6 +7745,37 @@ export type CreateCommunitiesMutation = {
   }
 }
 
+export type UpdateCommunityMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: CommunityUpdateInput
+}>
+
+export type UpdateCommunityMutation = {
+  __typename?: 'Mutation'
+  updateCommunities: {
+    __typename?: 'UpdateCommunitiesMutationResponse'
+    communities: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      description?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      activities?: string | null
+      resultsAchieved?: string | null
+      status?: string | null
+    }>
+    info: {
+      __typename?: 'UpdateInfo'
+      nodesCreated: number
+      nodesDeleted: number
+      relationshipsCreated: number
+      relationshipsDeleted: number
+    }
+  }
+}
+
 export type CreateCoreValuesMutationVariables = Exact<{
   input: Array<CoreValueCreateInput> | CoreValueCreateInput
 }>
@@ -7767,6 +7798,29 @@ export type CreateCoreValuesMutation = {
   }
 }
 
+export type UpdateCoreValueMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: CoreValueUpdateInput
+}>
+
+export type UpdateCoreValueMutation = {
+  __typename?: 'Mutation'
+  updateCoreValues: {
+    __typename?: 'UpdateCoreValuesMutationResponse'
+    coreValues: Array<{
+      __typename?: 'CoreValue'
+      id: string
+      name: string
+      whoSupports?: string | null
+      alignmentChallenges?: string | null
+      alignmentExamples?: string | null
+      description?: string | null
+      why?: string | null
+      createdAt: any
+    }>
+  }
+}
+
 export type CreateGoalsMutationVariables = Exact<{
   input: Array<GoalCreateInput> | GoalCreateInput
 }>
@@ -7775,6 +7829,30 @@ export type CreateGoalsMutation = {
   __typename?: 'Mutation'
   createGoals: {
     __typename?: 'CreateGoalsMutationResponse'
+    goals: Array<{
+      __typename?: 'Goal'
+      id: string
+      name: string
+      description?: string | null
+      successMeasures?: string | null
+      photo?: string | null
+      status: string
+      location?: string | null
+      time?: string | null
+      createdAt: any
+    }>
+  }
+}
+
+export type UpdateGoalMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: GoalUpdateInput
+}>
+
+export type UpdateGoalMutation = {
+  __typename?: 'Mutation'
+  updateGoals: {
+    __typename?: 'UpdateGoalsMutationResponse'
     goals: Array<{
       __typename?: 'Goal'
       id: string
@@ -7852,6 +7930,34 @@ export type CreateResourcesMutation = {
   __typename?: 'Mutation'
   createResources: {
     __typename?: 'CreateResourcesMutationResponse'
+    resources: Array<{
+      __typename?: 'Resource'
+      id: string
+      name: string
+      description?: string | null
+      status: string
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      dependsOnResources: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+      }>
+      carePoints: Array<{ __typename?: 'CarePoint'; id: string }>
+    }>
+  }
+}
+
+export type UpdateResourceMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: ResourceUpdateInput
+}>
+
+export type UpdateResourceMutation = {
+  __typename?: 'Mutation'
+  updateResources: {
+    __typename?: 'UpdateResourcesMutationResponse'
     resources: Array<{
       __typename?: 'Resource'
       id: string
@@ -8329,6 +8435,142 @@ export const CreateCommunitiesDocument = {
   CreateCommunitiesMutation,
   CreateCommunitiesMutationVariables
 >
+export const UpdateCommunityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateCommunity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CommunityUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateCommunities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'communities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activities' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resultsAchieved' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesDeleted' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsDeleted' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateCommunityMutation,
+  UpdateCommunityMutationVariables
+>
 export const CreateCoreValuesDocument = {
   kind: 'Document',
   definitions: [
@@ -8420,6 +8662,116 @@ export const CreateCoreValuesDocument = {
   CreateCoreValuesMutation,
   CreateCoreValuesMutationVariables
 >
+export const UpdateCoreValueDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateCoreValue' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CoreValueUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateCoreValues' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'coreValues' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'whoSupports' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'alignmentChallenges' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'alignmentExamples' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateCoreValueMutation,
+  UpdateCoreValueMutationVariables
+>
 export const CreateGoalsDocument = {
   kind: 'Document',
   definitions: [
@@ -8509,6 +8861,114 @@ export const CreateGoalsDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateGoalsMutation, CreateGoalsMutationVariables>
+export const UpdateGoalDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateGoal' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'GoalUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateGoals' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'goals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'successMeasures' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateGoalMutation, UpdateGoalMutationVariables>
 export const GeneratePersonEmbeddingsDocument = {
   kind: 'Document',
   definitions: [
@@ -8859,6 +9319,139 @@ export const CreateResourcesDocument = {
 } as unknown as DocumentNode<
   CreateResourcesMutation,
   CreateResourcesMutationVariables
+>
+export const UpdateResourceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateResource' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ResourceUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateResources' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dependsOnResources' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'carePoints' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateResourceMutation,
+  UpdateResourceMutationVariables
 >
 export const GetRecentActionsDocument = {
   kind: 'Document',

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { ApolloError } from '@apollo/client'
-import { ErrorScreen, LoadingScreen } from './screens'
+import { ErrorScreen, LoadingScreen } from '../screens'
 
 type ApolloWrapperPropsType = {
   placeholder?: boolean

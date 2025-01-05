@@ -16,7 +16,7 @@ import { RetryLink } from '@apollo/client/link/retry'
 import { onError } from '@apollo/client/link/error'
 import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { Token } from '../types'
+import { Token } from '../../types'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in

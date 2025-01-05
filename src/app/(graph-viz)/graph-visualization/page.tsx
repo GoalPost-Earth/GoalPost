@@ -17,7 +17,7 @@ import { Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { useQuery } from '@apollo/client'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 import { calculateNodePositionsAsRings, getRandomPosition } from '@/utils'
 import GraphNodes from '@/components/ui/graph-nodes'
 import { Stack } from '@chakra-ui/react'

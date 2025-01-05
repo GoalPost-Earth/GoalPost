@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { GET_ALL_GOALS } from '@/app/graphql'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 import GoalCard from '@/components/ui/goal-card'
 import { useQuery } from '@apollo/client'
 import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'

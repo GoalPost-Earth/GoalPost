@@ -17,3 +17,27 @@ export const CREATE_COMMUNITY_MUTATION = graphql(`
     }
   }
 `)
+
+export const UPDATE_COMMUNITY_MUTATION = graphql(`
+  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {
+    updateCommunities(where: { id_EQ: $id }, update: $update) {
+      communities {
+        id
+        name
+        description
+        why
+        location
+        time
+        activities
+        resultsAchieved
+        status
+      }
+      info {
+        nodesCreated
+        nodesDeleted
+        relationshipsCreated
+        relationshipsDeleted
+      }
+    }
+  }
+`)

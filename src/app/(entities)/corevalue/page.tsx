@@ -1,7 +1,7 @@
 'use client'
 
 import { GET_ALL_COREVALUES } from '@/app/graphql'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 import { useQuery } from '@apollo/client'
 import { Card, Container, Heading } from '@chakra-ui/react'
 import Link from 'next/link'

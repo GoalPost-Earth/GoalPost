@@ -2,7 +2,7 @@ import { object, string } from 'zod'
 import * as z from 'zod'
 import { PHONE_NUM_REGEX, ZIP_CODE_REGEX } from '@/utils'
 
-export const createMemberGuideSchema = object({
+export const memberGuideSchema = object({
   firstName: string().min(1).trim(),
   lastName: string().min(1).trim(),
   email: string().email(),
@@ -21,4 +21,4 @@ export const createMemberGuideSchema = object({
     }),
 })
 
-export type CreateMemberGuideFormData = z.infer<typeof createMemberGuideSchema>
+export type memberGuideFormData = z.infer<typeof memberGuideSchema>

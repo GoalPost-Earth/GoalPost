@@ -16,3 +16,20 @@ export const CREATE_COREVALUE_MUTATION = graphql(`
     }
   }
 `)
+
+export const UPDATE_COREVALUE_MUTATION = graphql(`
+  mutation UpdateCoreValue($id: ID!, $update: CoreValueUpdateInput!) {
+    updateCoreValues(where: { id_EQ: $id }, update: $update) {
+      coreValues {
+        id
+        name
+        whoSupports
+        alignmentChallenges
+        alignmentExamples
+        description
+        why
+        createdAt
+      }
+    }
+  }
+`)

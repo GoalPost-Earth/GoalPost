@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useRef, ChangeEventHandler } from 'react'
 import {
   Button,
@@ -9,7 +11,7 @@ import {
   Fieldset,
 } from '@chakra-ui/react'
 import { UseFormSetValue } from 'react-hook-form'
-import { ReactHookFormComponentProps } from '../../app/types/form'
+import { ReactHookFormComponentProps } from '../../types/form'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
 export interface ImageUploadProps extends ReactHookFormComponentProps {

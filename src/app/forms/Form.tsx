@@ -1,6 +1,6 @@
 'use client'
 
-import Input from '@/components/form/Input'
+import Input from '@/components/react-hook-form/Input'
 import { Container, Grid, GridItem } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'

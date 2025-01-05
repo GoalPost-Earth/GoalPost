@@ -1,7 +1,7 @@
 'use client'
 
 import { GET_ALL_RESOURCES } from '@/app/graphql'
-import ApolloWrapper from '@/components/ApolloWrapper'
+import { ApolloWrapper } from '@/components'
 import { Avatar } from '@/components/ui'
 import { useQuery } from '@apollo/client'
 import { Card, Container, Heading, IconButton, Text } from '@chakra-ui/react'

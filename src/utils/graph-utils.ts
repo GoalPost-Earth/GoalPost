@@ -1,24 +1,11 @@
 import { Node } from '@xyflow/react'
 
-export const help = () => console.log('help')
-
-export const getHumanReadableDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-export const getHumanReadableDateTime = (date: string) => {
-  return new Date(date).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  })
+export function getRandomPosition() {
+  const viewportHeight = window.innerHeight
+  const viewportWidth = window.innerWidth
+  const x = Math.floor((Math.random() * viewportWidth * 2) / 3)
+  const y = Math.floor((Math.random() * viewportHeight * 2) / 3)
+  return { x, y }
 }
 
 export function calculateNodePositionsAsRings(

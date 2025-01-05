@@ -1,14 +1,14 @@
 import React from 'react'
-import { Checkbox as ChakraCheckbox, CheckboxProps } from '../ui/checkbox'
+import { Switch as ChakraSwitch, SwitchProps } from '../ui/switch'
 import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps } from '../../app/types/form'
+import { ReactHookFormComponentProps } from '../../types/form'
 import { Field } from '../ui/field'
 
-export type CustomCheckboxProps = ReactHookFormComponentProps
+export type CustomSwitchProps = ReactHookFormComponentProps
 
-type CheckboxPropsType = CustomCheckboxProps & CheckboxProps
+type SwitchPropsType = CustomSwitchProps & SwitchProps
 
-const Checkbox = (props: CheckboxPropsType) => {
+const Switch = (props: SwitchPropsType) => {
   const { label, name, control, errors, required, ...rest } = props
 
   return (
@@ -22,18 +22,18 @@ const Checkbox = (props: CheckboxPropsType) => {
           disabled={field.disabled}
           required={required}
         >
-          <ChakraCheckbox
+          <ChakraSwitch
             id={name}
             checked={field.value}
             onCheckedChange={({ checked }) => field.onChange(checked)}
             {...rest}
           >
             {label}
-          </ChakraCheckbox>
+          </ChakraSwitch>
         </Field>
       )}
     />
   )
 }
 
-export default Checkbox
+export default Switch
