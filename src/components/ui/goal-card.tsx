@@ -9,12 +9,14 @@ const GoalCard = ({
   id,
   photo,
   name,
+  status,
   createdAt,
   description,
 }: {
   id: string
   photo: string | null | undefined
   name: string
+  status?: string
   createdAt: string
   description: string | null | undefined
 }) => {

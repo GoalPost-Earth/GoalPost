@@ -463,7 +463,7 @@ export type AreasConnection = {
 export type BelongsTo = {
   __typename?: 'BelongsTo'
   avatar?: Maybe<Scalars['String']['output']>
-  favourites?: Maybe<Scalars['String']['output']>
+  favorites?: Maybe<Scalars['String']['output']>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   interests?: Maybe<Scalars['String']['output']>
   passions?: Maybe<Scalars['String']['output']>
@@ -490,21 +490,21 @@ export type BelongsToAggregationWhereInput = {
   avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  favourites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  favourites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favourites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -569,7 +569,7 @@ export type BelongsToAggregationWhereInput = {
 
 export type BelongsToCreateInput = {
   avatar?: InputMaybe<Scalars['String']['input']>
-  favourites?: InputMaybe<Scalars['String']['input']>
+  favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   passions?: InputMaybe<Scalars['String']['input']>
@@ -579,7 +579,7 @@ export type BelongsToCreateInput = {
 
 export type BelongsToSort = {
   avatar?: InputMaybe<SortDirection>
-  favourites?: InputMaybe<SortDirection>
+  favorites?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
@@ -589,7 +589,7 @@ export type BelongsToSort = {
 
 export type BelongsToUpdateInput = {
   avatar_SET?: InputMaybe<Scalars['String']['input']>
-  favourites_SET?: InputMaybe<Scalars['String']['input']>
+  favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   passions_SET?: InputMaybe<Scalars['String']['input']>
@@ -606,11 +606,11 @@ export type BelongsToWhere = {
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
   avatar_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   avatar_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  favourites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  favourites_EQ?: InputMaybe<Scalars['String']['input']>
-  favourites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  favourites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  favorites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  favorites_EQ?: InputMaybe<Scalars['String']['input']>
+  favorites_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  favorites_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5238,7 +5238,7 @@ export type PersonCommunityCommunitiesAggregationSelection = {
 export type PersonCommunityCommunitiesEdgeAggregateSelection = {
   __typename?: 'PersonCommunityCommunitiesEdgeAggregateSelection'
   avatar: StringAggregateSelection
-  favourites: StringAggregateSelection
+  favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   interests: StringAggregateSelection
   passions: StringAggregateSelection
@@ -6297,24 +6297,30 @@ export type Query = {
   areas: Array<Area>
   areasAggregate: AreaAggregateSelection
   areasConnection: AreasConnection
+  carePointSubstringSearch: Array<CarePoint>
   carePoints: Array<CarePoint>
   carePointsAggregate: CarePointAggregateSelection
   carePointsConnection: CarePointsConnection
   communities: Array<Community>
   communitiesAggregate: CommunityAggregateSelection
   communitiesConnection: CommunitiesConnection
+  communitySubstringSearch: Array<Community>
+  coreValueSubstringSearch: Array<CoreValue>
   coreValues: Array<CoreValue>
   coreValuesAggregate: CoreValueAggregateSelection
   coreValuesConnection: CoreValuesConnection
+  goalSubstringSearch: Array<Goal>
   goals: Array<Goal>
   goalsAggregate: GoalAggregateSelection
   goalsConnection: GoalsConnection
   people: Array<Person>
   peopleAggregate: PersonAggregateSelection
   peopleConnection: PeopleConnection
+  peopleSubstringSearch: Array<Person>
   personInterfaces: Array<PersonInterface>
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
+  resourceSubstringSearch: Array<Resource>
   resources: Array<Resource>
   resourcesAggregate: ResourceAggregateSelection
   resourcesConnection: ResourcesConnection
@@ -6336,6 +6342,10 @@ export type QueryAreasConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<AreaSort>>
   where?: InputMaybe<AreaWhere>
+}
+
+export type QueryCarePointSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryCarePointsArgs = {
@@ -6374,6 +6384,14 @@ export type QueryCommunitiesConnectionArgs = {
   where?: InputMaybe<CommunityWhere>
 }
 
+export type QueryCommunitySubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
+export type QueryCoreValueSubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
 export type QueryCoreValuesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -6390,6 +6408,10 @@ export type QueryCoreValuesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CoreValueSort>>
   where?: InputMaybe<CoreValueWhere>
+}
+
+export type QueryGoalSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryGoalsArgs = {
@@ -6428,6 +6450,10 @@ export type QueryPeopleConnectionArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type QueryPeopleSubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
 export type QueryPersonInterfacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -6444,6 +6470,10 @@ export type QueryPersonInterfacesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonInterfaceSort>>
   where?: InputMaybe<PersonInterfaceWhere>
+}
+
+export type QueryResourceSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryResourcesArgs = {
@@ -8234,6 +8264,51 @@ export type GetAllResourcesQuery = {
       phone?: string | null
       photo?: string | null
     }>
+  }>
+}
+
+export type GetMatchingEntitiesQueryVariables = Exact<{
+  key: Scalars['String']['input']
+}>
+
+export type GetMatchingEntitiesQuery = {
+  __typename?: 'Query'
+  carePointSubstringSearch: Array<{
+    __typename?: 'CarePoint'
+    id: string
+    description: string
+  }>
+  communitySubstringSearch: Array<{
+    __typename?: 'Community'
+    id: string
+    name: string
+    description?: string | null
+    members: Array<{ __typename?: 'Person'; photo?: string | null }>
+  }>
+  coreValueSubstringSearch: Array<{
+    __typename?: 'CoreValue'
+    description?: string | null
+    id: string
+    name: string
+  }>
+  peopleSubstringSearch: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    photo?: string | null
+  }>
+  resourceSubstringSearch: Array<{
+    __typename?: 'Resource'
+    id: string
+    name: string
+  }>
+  goalSubstringSearch: Array<{
+    __typename?: 'Goal'
+    id: string
+    description?: string | null
+    name: string
+    status: string
+    createdAt: any
   }>
 }
 
@@ -10059,4 +10134,177 @@ export const GetAllResourcesDocument = {
 } as unknown as DocumentNode<
   GetAllResourcesQuery,
   GetAllResourcesQueryVariables
+>
+export const GetMatchingEntitiesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMatchingEntities' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'key' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'carePointSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'communitySubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValueSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'peopleSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourceSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMatchingEntitiesQuery,
+  GetMatchingEntitiesQueryVariables
 >

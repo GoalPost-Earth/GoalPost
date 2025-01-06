@@ -6,32 +6,52 @@ import DefaultTabContent from './default-tab-content'
 interface GenericTabsProps {
   triggers: string[]
   content: React.ReactNode[]
+  onTabChange?: (tab: string) => void
+  selectedTab?: string
+  tabsDisplay: { base: string; lg: string }
   props?: any
 }
-export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
-  const [activeTab, setActiveTab] = useState(triggers[0])
+
+export const GenericTabs = ({
+  triggers,
+  content,
+  onTabChange,
+  selectedTab,
+  tabsDisplay,
+  ...props
+}: GenericTabsProps) => {
+  const [activeTab, setActiveTab] = useState(selectedTab || triggers[0])
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+
+  useEffect(() => {
+    if (selectedTab && selectedTab !== activeTab) {
+      setActiveTab(selectedTab)
+    }
+  }, [selectedTab])
 
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
-      if (window.innerWidth <= 1024) {
+      if (window.innerWidth <= 1024 && activeTab !== triggers[0]) {
         setActiveTab(triggers[0])
       }
     }
 
     window.addEventListener('resize', handleResize)
-    handleResize()
-
     return () => window.removeEventListener('resize', handleResize)
-  }, [triggers])
+  }, [activeTab, triggers])
+
   return (
     <Tabs.Root
       variant="subtle"
-      defaultValue={triggers[0]}
       value={activeTab}
-      onValueChange={(details) => setActiveTab(details.value)}
-      colorPalette={'brand'}
+      onValueChange={(details) => {
+        const newValue = details.value
+        setActiveTab(newValue)
+        onTabChange && onTabChange(newValue)
+      }}
+      display={tabsDisplay}
+      colorPalette="brand"
       width="100%"
       mt={2}
     >
@@ -39,11 +59,11 @@ export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
         mt={2}
         display="flex"
         gap={2}
-        {...props}
         overflowX="auto"
         whiteSpace="nowrap"
         scrollbarWidth="none"
         WebkitOverflowScrolling="touch"
+        {...props}
       >
         {triggers.map((trigger, index) => (
           <Tabs.Trigger
@@ -60,12 +80,13 @@ export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
           </Tabs.Trigger>
         ))}
       </Tabs.List>
+
       {triggers.map((trigger, index) => (
         <Tabs.Content
           key={`${trigger}-${index}`}
           value={trigger}
-          width={'100%'}
-          minHeight={'315px'}
+          width="100%"
+          minHeight="315px"
           borderRadius="lg"
         >
           {content[index] || <DefaultTabContent />}
