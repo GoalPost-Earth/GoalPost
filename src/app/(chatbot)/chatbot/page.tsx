@@ -2,6 +2,7 @@
 
 import { Form, Message, Thinking } from '@/components/chatbot'
 import { useChat } from '@/hooks'
+import { Text } from '@chakra-ui/react'
 import React from 'react'
 
 export default function Chatbot() {
@@ -11,6 +12,9 @@ export default function Chatbot() {
     process.env.NEXT_PUBLIC_CHATBOT_NAME || 'Chatbot'
   } is thinking...`
 
+  const CHATBOT_NAME = 'Chatbot'
+  const CHATBOT_DESCRIPTION = 'A chatbot powered by GraphRAG'
+
   return (
     <>
       <div
@@ -19,13 +23,12 @@ export default function Chatbot() {
       >
         <div className="p-4  bg-blue-800 flex flex-row justify-between">
           <h1 className="text-white">
-            <span className="font-bold">
-              {process.env.NEXT_PUBLIC_CHATBOT_NAME || 'Chatbot'} -
-            </span>
-            <span className="text-blue-100">
-              {' '}
-              {process.env.NEXT_PUBLIC_CHATBOT_DESCRIPTION}
-            </span>
+            <Text as="span" fontWeight="bold">
+              {CHATBOT_NAME} -{' '}
+            </Text>
+            <Text as="span" color="blue.400">
+              {CHATBOT_DESCRIPTION}
+            </Text>
           </h1>
         </div>
 
@@ -55,16 +58,7 @@ export default function Chatbot() {
             Powered by
             <a href="https://neo4j.com" target="_blank" className="font-bold">
               {' '}
-              Neo4j
-            </a>{' '}
-            &ndash; Learn more at
-            <a
-              href="https://graphacademy.neo4j.com"
-              target="_blank"
-              className="font-bold"
-            >
-              {' '}
-              Neo4j GraphAcademy
+              GraphRAG
             </a>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { Badge, Box, Card, Flex, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../icons/EllipseIcon'
-import { formatDate, getInitials } from '@/app/utils'
+import { formatDate, getInitials } from '@/utils'
 import { CalenderIcon } from '../icons'
 
 const GoalCard = ({

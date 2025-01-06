@@ -1,6 +1,6 @@
 'use client'
 
-import { getInitials } from '@/app/utils'
+import { getInitials } from '@/utils'
 import type { GroupProps, SlotRecipeProps } from '@chakra-ui/react'
 import { Avatar as ChakraAvatar, Group } from '@chakra-ui/react'
 import * as React from 'react'

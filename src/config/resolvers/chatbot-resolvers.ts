@@ -1,6 +1,6 @@
 // import { Context } from '../types'
 import { randomUUID } from 'crypto'
-import { call } from '../modules/agent'
+import { call } from '../../modules/agent'
 
 function getSessionId(sessionId?: string): string {
   if (typeof sessionId === 'string') {

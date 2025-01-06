@@ -21,7 +21,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/types": ["./src/app/types"],
-      "@/utils": ["./src/app/utils"],
+      "@/utils": ["./src/utils"],
       "@/icons": ["./src/components/icons"],
       "@/lib/*": ["./src/app/lib/*"],
       "@/mutations": ["./src/app/graphql/mutations"],

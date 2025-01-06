@@ -5,9 +5,9 @@ import { RunnablePassthrough } from '@langchain/core/runnables'
 import initCypherGenerationChain from './cypher-generation.chain'
 import initCypherEvaluationChain from './cypher-evaluation.chain'
 import { saveHistory } from '../../history'
-import { extractIds } from '../../../../utils'
 import initGenerateAuthoritativeAnswerChain from '../../chains/authoritative-answer-generation.chain'
 import { AgentToolInput } from '../../agent.types'
+import { extractIds } from '@/utils'
 
 // tag::input[]
 type CypherRetrievalThroughput = AgentToolInput & {

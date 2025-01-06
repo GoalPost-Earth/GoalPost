@@ -13,3 +13,7 @@ OPTIONS {indexConfig: {
  `vector.dimensions`: 1536,
  `vector.similarity_function`: 'cosine'
 }};
+
+MATCH (person:Person)
+WHERE person.firstName IS NULL
+DETACH DELETE person

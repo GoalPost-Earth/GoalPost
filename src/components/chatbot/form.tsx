@@ -22,7 +22,7 @@ export default function Form({
   const input = useRef<HTMLTextAreaElement>(null)
   const [message, setMessage] = useState<string>('')
 
-  const handleSubmit = (event?: FormEvent<HTMLFormElement> | SubmitEvent) => {
+  const handleSubmit = (event?: FormEvent<HTMLDivElement> | SubmitEvent) => {
     event?.preventDefault()
 
     if (message.trim().length > 0) {
