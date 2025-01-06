@@ -63,7 +63,7 @@ export default async function ViewResourcePage({
             </Flex>
           </Flex>
           <Box display={{ base: 'block', lg: 'none' }}>
-            <ActionButtons />
+            <ActionButtons id="" />
           </Box>
         </VStack>
         <Container
@@ -85,7 +85,7 @@ export default async function ViewResourcePage({
               email={resource?.providedByPerson[0]?.email ?? ''}
             />
             <Box display={{ base: 'none', lg: 'block' }}>
-              <ActionButtons />
+              <ActionButtons id="" />
             </Box>
           </VStack>
           {resource && <ResourceDetails resource={resource} />}
