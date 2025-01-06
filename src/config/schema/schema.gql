@@ -195,6 +195,7 @@ type Query {
       statement: """
       MATCH (community:Community)
       WHERE toLower(community.name) CONTAINS toLower($key)
+      OR toLower(community.description) CONTAINS toLower($key)
       RETURN community
       """
       columnName: "community"
@@ -204,6 +205,7 @@ type Query {
       statement: """
       MATCH (coreValue:CoreValue)
       WHERE toLower(coreValue.name) CONTAINS toLower($key)
+      OR toLower(coreValue.description) CONTAINS toLower($key)
       RETURN coreValue
       """
       columnName: "coreValue"
@@ -213,6 +215,7 @@ type Query {
       statement: """
       MATCH (goal:Goal)
       WHERE toLower(goal.name) CONTAINS toLower($key)
+      OR toLower(goal.description) CONTAINS toLower($key)
       RETURN goal
       """
       columnName: "goal"
@@ -222,6 +225,7 @@ type Query {
       statement: """
       MATCH (resource:Resource)
       WHERE toLower(resource.name) CONTAINS toLower($key)
+      OR toLower(resource.description) CONTAINS toLower($key)
       RETURN resource
       """
       columnName: "resource"
