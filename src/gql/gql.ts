@@ -14,6 +14,8 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
+  '\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n':
+    types.SendMessageToChatbotDocument,
   '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n':
     types.CreateCommunitiesDocument,
   '\n  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {\n    updateCommunities(where: { id_EQ: $id }, update: $update) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
@@ -76,6 +78,12 @@ const documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

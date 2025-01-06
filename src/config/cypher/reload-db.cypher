@@ -66,7 +66,7 @@ RETURN member, community;
 LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=951795569&single=true&output=csv" as row
 MATCH (source:Person {id: row.sourceId})
 MATCH (target:Person {id: row.targetId})
-MERGE (source)-[r:CONNECTS_TO]->(target)
+MERGE (source)-[r:CONNECTED_TO]->(target)
 SET r.why = row.why,
 r.interests = row.interests
 

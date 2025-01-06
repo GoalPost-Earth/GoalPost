@@ -1,6 +1,6 @@
-import { Context } from '@apollo/client'
-import { generatePersonBio } from '../utils'
+import { Context } from '../types'
 import { Person } from '@/gql/graphql'
+import { generatePersonBio } from '@/utils'
 
 export const embeddingMutations = {
   generatePersonEmbeddings: async (

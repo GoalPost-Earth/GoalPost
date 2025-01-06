@@ -1,6 +1,6 @@
-import initializeApolloServer from './apollo'
+import { applyCorsMiddleware } from '@/config/middleware/cors'
+import initializeApolloServer from '../../config/apollo'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { applyCorsMiddleware } from './middleware/cors'
 
 // Initialize Apollo Server
 const apolloHandler = await initializeApolloServer()

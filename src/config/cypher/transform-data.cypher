@@ -172,7 +172,6 @@ MERGE (person)-[:MOTIVATED_BY]->(goal)
 DELETE r
 RETURN person, goal LIMIT 1;
 
-// TODO: Confirm from Robert before running this
 MATCH (person:Person)-[r:`DRIVER-FOR`|`GUIDED-BY`]-(coreValue:CoreValue)
 MERGE (person)-[:GUIDED_BY]->(coreValue)
 DELETE r
