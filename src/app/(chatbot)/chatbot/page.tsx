@@ -26,7 +26,7 @@ export default function Chatbot() {
             <Text as="span" fontWeight="bold">
               {CHATBOT_NAME} -{' '}
             </Text>
-            <Text as="span" color="blue.400">
+            <Text as="span" color="orange.400">
               {CHATBOT_DESCRIPTION}
             </Text>
           </h1>

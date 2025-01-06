@@ -36,7 +36,7 @@ RETURN person;
 // Load Members
 LOAD CSV WITH HEADERS from "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsxl6zdeZRmys4qxl_MLVKGyA8Dh-O09aMdPNExTJXbUMflsxG3iiTa3_slGxZ5zn_1OwoSjWL521a/pub?gid=270681936&single=true&output=csv" AS row
 
-MERGE (member:Member:Person {id: row.id})
+MERGE (member:Person {id: row.id})
 SET member.lastName = row.lastName,
 member.pronouns = row.pronouns,
 member.status = row.status,
@@ -85,7 +85,7 @@ coreValue.why = row.why
 
 WITH coreValue, row
 MATCH (person:Person {id: row.personId})
-MERGE (person)-[:GUIDED_BY]->(coreValue)
+MERGE (person)-[:EMBRACES]->(coreValue)
 
 RETURN coreValue, person;
 

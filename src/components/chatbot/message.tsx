@@ -17,7 +17,7 @@ export default async function MessageComponent({
     message.role == 'ai'
       ? { borderBottomLeftRadius: 0 }
       : { borderBottomRightRadius: 0 }
-  const background = message.role == 'ai' ? 'blue.100' : 'gray.100'
+  const background = message.role == 'ai' ? 'orange.100' : 'gray.100'
 
   return (
     <Flex w="full" flexDirection="row" justifyContent={align}>

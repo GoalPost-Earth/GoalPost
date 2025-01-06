@@ -6,9 +6,8 @@ import {
   HomeIcon,
   PeopleIcon,
   SettingsIcon,
-  HamburgerIcon,
   InputIcon,
-  LogoutIcon,
+  CommunityIcon,
 } from '@/icons'
 import {
   AccordionItem,
@@ -19,13 +18,18 @@ import {
 import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import { useParams, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export const navItems = [
   {
     name: 'Home',
     to: '/',
     icon: HomeIcon,
+  },
+  {
+    name: 'Communities',
+    to: '/community',
+    icon: CommunityIcon,
   },
   {
     name: 'People',
@@ -41,6 +45,11 @@ export const navItems = [
     name: 'Goals',
     to: '/goal',
     icon: GoalsIcon,
+  },
+  {
+    name: 'Core Values',
+    to: '/corevalue',
+    icon: SettingsIcon,
   },
   {
     name: 'Care Points',
