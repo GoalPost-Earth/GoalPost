@@ -1,4 +1,4 @@
-import { Badge, Box, Card, Flex, Text } from '@chakra-ui/react'
+import { Badge, Box, Card, Flex, Status, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../icons/EllipseIcon'
@@ -23,7 +23,13 @@ const GoalCard = ({
   const goalDate = formatDate(createdAt)
 
   return (
-    <Card.Root key={id} height="100%" borderRadius="lg" boxShadow="sm">
+    <Card.Root
+      key={id}
+      height="100%"
+      borderRadius="lg"
+      boxShadow="sm"
+      width={'100%'}
+    >
       <Link href={'/goal/' + id}>
         <Card.Body
           flexDirection="row"
@@ -31,6 +37,7 @@ const GoalCard = ({
           gap={{ base: 4, lg: 0 }}
           height="100%"
           alignItems={{ base: 'center', lg: 'flex-start' }}
+          width={'100%'}
         >
           <Flex
             bg="#B7E0A3"
@@ -66,12 +73,13 @@ const GoalCard = ({
                 bg="inherit"
                 fontWeight="bold"
               >
-                <EllipseIcon width="14px" height="14px" /> Active
+                <EllipseIcon width="14px" height="14px" />
+                {status}
               </Badge>
             </Flex>
             <Text
               display={{ base: 'none', lg: 'block' }}
-              lineClamp={3}
+              lineClamp={2}
               fontSize="sm"
               fontWeight={300}
               mt={2}
