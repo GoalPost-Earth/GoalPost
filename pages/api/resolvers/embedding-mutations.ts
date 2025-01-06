@@ -1,6 +1,6 @@
 import { Context } from '../types'
-import { generatePersonBio } from '../utils'
 import { Person } from '@/gql/graphql'
+import { generatePersonBio } from '../utils'
 
 export const embeddingMutations = {
   generatePersonEmbeddings: async (
