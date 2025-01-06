@@ -172,7 +172,12 @@ type Resource @node {
     @settable(onCreate: false, onUpdate: true)
 }
 
+type ChatbotResponse {
+  message: String!
+  sessionId: String!
+}
+
 type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
-  sendMessageToChatbot(message: String!): String!
+  sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse!
 }

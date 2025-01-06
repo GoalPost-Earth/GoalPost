@@ -14,7 +14,7 @@ export default async function initVectorStore(
 ): Promise<Neo4jVectorStore> {
   const vectorStore = await Neo4jVectorStore.fromExistingIndex(embeddings, {
     url: process.env.NEO4J_URI as string,
-    username: process.env.NEO4J_USER as string,
+    username: process.env.NEO4J_USERNAME as string,
     password: process.env.NEO4J_PASSWORD as string,
     indexName: 'personBioVectorIndex',
     textNodeProperty: 'plot',

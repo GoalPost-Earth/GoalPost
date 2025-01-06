@@ -1401,6 +1401,64 @@ export type CarePointsConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+export type ChatbotResponse = {
+  __typename?: 'ChatbotResponse'
+  message: Scalars['String']['output']
+  sessionId: Scalars['String']['output']
+}
+
+export type ChatbotResponseAggregateSelection = {
+  __typename?: 'ChatbotResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+  sessionId: StringAggregateSelection
+}
+
+export type ChatbotResponseCreateInput = {
+  message: Scalars['String']['input']
+  sessionId: Scalars['String']['input']
+}
+
+export type ChatbotResponseEdge = {
+  __typename?: 'ChatbotResponseEdge'
+  cursor: Scalars['String']['output']
+  node: ChatbotResponse
+}
+
+/** Fields to sort ChatbotResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one ChatbotResponseSort object. */
+export type ChatbotResponseSort = {
+  message?: InputMaybe<SortDirection>
+  sessionId?: InputMaybe<SortDirection>
+}
+
+export type ChatbotResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  sessionId_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ChatbotResponseWhere = {
+  AND?: InputMaybe<Array<ChatbotResponseWhere>>
+  NOT?: InputMaybe<ChatbotResponseWhere>
+  OR?: InputMaybe<Array<ChatbotResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  sessionId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  sessionId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  sessionId_EQ?: InputMaybe<Scalars['String']['input']>
+  sessionId_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  sessionId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ChatbotResponsesConnection = {
+  __typename?: 'ChatbotResponsesConnection'
+  edges: Array<ChatbotResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 export type CommunitiesConnection = {
   __typename?: 'CommunitiesConnection'
   edges: Array<CommunityEdge>
@@ -3825,6 +3883,12 @@ export type CreateCarePointsMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateChatbotResponsesMutationResponse = {
+  __typename?: 'CreateChatbotResponsesMutationResponse'
+  chatbotResponses: Array<ChatbotResponse>
+  info: CreateInfo
+}
+
 export type CreateCommunitiesMutationResponse = {
   __typename?: 'CreateCommunitiesMutationResponse'
   communities: Array<Community>
@@ -4819,20 +4883,23 @@ export type IdAggregateSelection = {
 export type Mutation = {
   __typename?: 'Mutation'
   createCarePoints: CreateCarePointsMutationResponse
+  createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
   createCoreValues: CreateCoreValuesMutationResponse
   createGoals: CreateGoalsMutationResponse
   createPeople: CreatePeopleMutationResponse
   createResources: CreateResourcesMutationResponse
   deleteCarePoints: DeleteInfo
+  deleteChatbotResponses: DeleteInfo
   deleteCommunities: DeleteInfo
   deleteCoreValues: DeleteInfo
   deleteGoals: DeleteInfo
   deletePeople: DeleteInfo
   deleteResources: DeleteInfo
   generatePersonEmbeddings: Scalars['Boolean']['output']
-  sendMessageToChatbot: Scalars['String']['output']
+  sendMessageToChatbot: ChatbotResponse
   updateCarePoints: UpdateCarePointsMutationResponse
+  updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
   updateCoreValues: UpdateCoreValuesMutationResponse
   updateGoals: UpdateGoalsMutationResponse
@@ -4842,6 +4909,10 @@ export type Mutation = {
 
 export type MutationCreateCarePointsArgs = {
   input: Array<CarePointCreateInput>
+}
+
+export type MutationCreateChatbotResponsesArgs = {
+  input: Array<ChatbotResponseCreateInput>
 }
 
 export type MutationCreateCommunitiesArgs = {
@@ -4867,6 +4938,10 @@ export type MutationCreateResourcesArgs = {
 export type MutationDeleteCarePointsArgs = {
   delete?: InputMaybe<CarePointDeleteInput>
   where?: InputMaybe<CarePointWhere>
+}
+
+export type MutationDeleteChatbotResponsesArgs = {
+  where?: InputMaybe<ChatbotResponseWhere>
 }
 
 export type MutationDeleteCommunitiesArgs = {
@@ -4900,11 +4975,17 @@ export type MutationGeneratePersonEmbeddingsArgs = {
 
 export type MutationSendMessageToChatbotArgs = {
   message: Scalars['String']['input']
+  sessionId?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MutationUpdateCarePointsArgs = {
   update?: InputMaybe<CarePointUpdateInput>
   where?: InputMaybe<CarePointWhere>
+}
+
+export type MutationUpdateChatbotResponsesArgs = {
+  update?: InputMaybe<ChatbotResponseUpdateInput>
+  where?: InputMaybe<ChatbotResponseWhere>
 }
 
 export type MutationUpdateCommunitiesArgs = {
@@ -6514,6 +6595,9 @@ export type Query = {
   carePoints: Array<CarePoint>
   carePointsAggregate: CarePointAggregateSelection
   carePointsConnection: CarePointsConnection
+  chatbotResponses: Array<ChatbotResponse>
+  chatbotResponsesAggregate: ChatbotResponseAggregateSelection
+  chatbotResponsesConnection: ChatbotResponsesConnection
   communities: Array<Community>
   communitiesAggregate: CommunityAggregateSelection
   communitiesConnection: CommunitiesConnection
@@ -6550,6 +6634,24 @@ export type QueryCarePointsConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CarePointSort>>
   where?: InputMaybe<CarePointWhere>
+}
+
+export type QueryChatbotResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ChatbotResponseSort>>
+  where?: InputMaybe<ChatbotResponseWhere>
+}
+
+export type QueryChatbotResponsesAggregateArgs = {
+  where?: InputMaybe<ChatbotResponseWhere>
+}
+
+export type QueryChatbotResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ChatbotResponseSort>>
+  where?: InputMaybe<ChatbotResponseWhere>
 }
 
 export type QueryCommunitiesArgs = {
@@ -8065,6 +8167,12 @@ export type UpdateCarePointsMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateChatbotResponsesMutationResponse = {
+  __typename?: 'UpdateChatbotResponsesMutationResponse'
+  chatbotResponses: Array<ChatbotResponse>
+  info: UpdateInfo
+}
+
 export type UpdateCommunitiesMutationResponse = {
   __typename?: 'UpdateCommunitiesMutationResponse'
   communities: Array<Community>
@@ -8106,11 +8214,16 @@ export type UpdateResourcesMutationResponse = {
 
 export type SendMessageToChatbotMutationVariables = Exact<{
   message: Scalars['String']['input']
+  sessionId?: InputMaybe<Scalars['String']['input']>
 }>
 
 export type SendMessageToChatbotMutation = {
   __typename?: 'Mutation'
-  sendMessageToChatbot: string
+  sendMessageToChatbot: {
+    __typename?: 'ChatbotResponse'
+    sessionId: string
+    message: string
+  }
 }
 
 export type CreateCommunitiesMutationVariables = Exact<{
@@ -8650,6 +8763,14 @@ export const SendMessageToChatbotDocument = {
             },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sessionId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -8666,7 +8787,22 @@ export const SendMessageToChatbotDocument = {
                   name: { kind: 'Name', value: 'message' },
                 },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sessionId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sessionId' },
+                },
+              },
             ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
           },
         ],
       },

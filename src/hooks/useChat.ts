@@ -9,6 +9,7 @@ export type Message = {
 
 export default function useChat() {
   const [thinking, setThinking] = useState<boolean>(false)
+  const [sessionId, setSessionId] = useState<string | undefined>()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'ai',
@@ -31,13 +32,17 @@ export default function useChat() {
       const response = await SendMessage({
         variables: {
           message,
+          sessionId,
         },
       })
+      console.log('🚀 ~ file: useChat.ts:38 ~ sessionId:', sessionId)
+
+      setSessionId(response.data?.sendMessageToChatbot.sessionId)
 
       messages.push({
         role: 'ai',
         content:
-          response.data?.sendMessageToChatbot ??
+          response.data?.sendMessageToChatbot.message ??
           'Sorry, I did not understand that.',
       })
 

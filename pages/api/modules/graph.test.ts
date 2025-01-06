@@ -4,7 +4,7 @@ import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 describe('Neo4j Graph', () => {
   it('should have environment variables defined', () => {
     expect(process.env.NEO4J_URI).toBeDefined()
-    expect(process.env.NEO4J_USER).toBeDefined()
+    expect(process.env.NEO4J_USERNAME).toBeDefined()
     expect(process.env.NEO4J_PASSWORD).toBeDefined()
   })
 

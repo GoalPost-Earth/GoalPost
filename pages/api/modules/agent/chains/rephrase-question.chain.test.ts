@@ -45,7 +45,7 @@ describe('Rephrase Question Chain', () => {
 
   describe('Rephrasing Questions', () => {
     it('should handle a question with no history', async () => {
-      const input = 'Who directed the matrix?'
+      const input = 'Who is interested in anime in my network?'
 
       const response = await chain.invoke({
         input,
@@ -59,17 +59,17 @@ describe('Rephrase Question Chain', () => {
     it('should rephrase a question based on its history', async () => {
       const history = [
         {
-          input: 'Can you recommend me a film?',
-          output: 'Sure, I recommend The Matrix',
+          input: 'Can you recommend me a person interested in anime?',
+          output: 'Sure, I recommend Lara',
         },
       ]
-      const input = 'Who directed it?'
+      const input = 'What is her avatar?'
       const response = await chain.invoke({
         input,
         history,
       })
 
-      expect(response).toContain('The Matrix')
+      expect(response).toContain('Lara')
 
       const evaluation = await evalChain.invoke({ input, response })
       expect(`${evaluation.toLowerCase()} - ${response}`).toContain('yes')

@@ -5,7 +5,7 @@ import { Embeddings } from 'langchain/embeddings/base'
 import { Runnable } from '@langchain/core/runnables'
 import initVectorRetrievalChain from './vector-retrieval.chain'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
-import { AgentToolInput } from './agent.types'
+import { AgentToolInput } from '../agent.types'
 import { close } from '../../graph'
 
 describe('Vector Retrieval Chain', () => {
@@ -19,7 +19,7 @@ describe('Vector Retrieval Chain', () => {
 
     graph = await Neo4jGraph.initialize({
       url: process.env.NEO4J_URI as string,
-      username: process.env.NEO4J_USER as string,
+      username: process.env.NEO4J_USERNAME as string,
       password: process.env.NEO4J_PASSWORD as string,
       database: process.env.NEO4J_DATABASE as string | undefined,
     })

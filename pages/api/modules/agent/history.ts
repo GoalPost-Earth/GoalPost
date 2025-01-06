@@ -74,7 +74,6 @@ export async function saveHistory(
   ids: string[],
   cypher: string | null = null
 ): Promise<string> {
-  // TODO: Execute the Cypher statement from /cypher/save-response.cypher in a write transaction
   const graph = await initGraph()
   const res = await graph.query<{ id: string }>(
     `

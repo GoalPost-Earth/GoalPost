@@ -9,7 +9,7 @@ import { BaseLanguageModel } from 'langchain/base_language'
 import initVectorStore from '../vector.store'
 import { saveHistory } from '../history'
 import { DocumentInterface } from '@langchain/core/documents'
-import { AgentToolInput } from './agent.types'
+import { AgentToolInput } from '../agent.types'
 
 // tag::throughput[]
 type RetrievalChainThroughput = AgentToolInput & {
@@ -36,15 +36,15 @@ export default async function initVectorRetrievalChain(
   llm: BaseLanguageModel,
   embeddings: Embeddings
 ): Promise<Runnable<AgentToolInput, string>> {
-  // TODO: Create vector store instance
+  // Create vector store instance
   const vectorStore = await initVectorStore(embeddings)
 
-  // TODO: Initialize a retriever wrapper around the vector store
+  // Initialize a retriever wrapper around the vector store
   const vectorStoreRetriever = vectorStore.asRetriever(5)
-  // TODO: Initialize Answer chain
+  // Initialize Answer chain
   const answerChain = initGenerateAnswerChain(llm)
 
-  // TODO: Return chain
+  // Return chain
   return RunnablePassthrough.assign({
     documents: new RunnablePick('rephrasedQuestion').pipe(vectorStoreRetriever),
   })

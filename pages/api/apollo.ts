@@ -10,7 +10,7 @@ export default async function initializeApolloServer() {
   const driver = neoDriver(
     process.env.NEO4J_URI || 'bolt://localhost:7687',
     auth.basic(
-      process.env.NEO4J_USER || 'neo4j',
+      process.env.NEO4J_USERNAME || 'neo4j',
       process.env.NEO4J_PASSWORD || 'neo4j'
     )
   )

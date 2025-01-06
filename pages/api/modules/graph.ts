@@ -15,7 +15,7 @@ export async function initGraph(): Promise<Neo4jGraph> {
   if (!graph) {
     graph = await Neo4jGraph.initialize({
       url: process.env.NEO4J_URI as string,
-      username: process.env.NEO4J_USER as string,
+      username: process.env.NEO4J_USERNAME as string,
       password: process.env.NEO4J_PASSWORD as string,
       database: process.env.NEO4J_DATABASE as string | undefined,
     })

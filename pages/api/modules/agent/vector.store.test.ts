@@ -34,7 +34,7 @@ describe('Vector Store', () => {
       embeddings,
       {
         url: process.env.NEO4J_URI as string,
-        username: process.env.NEO4J_USER as string,
+        username: process.env.NEO4J_USERNAME as string,
         password: process.env.NEO4J_PASSWORD as string,
         nodeLabel: 'Test',
         embeddingNodeProperty: 'embedding',
