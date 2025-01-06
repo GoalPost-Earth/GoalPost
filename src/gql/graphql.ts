@@ -6975,6 +6975,7 @@ export type PersonWhere = {
 
 export type Query = {
   __typename?: 'Query'
+  carePointSubstringSearch: Array<CarePoint>
   carePoints: Array<CarePoint>
   carePointsAggregate: CarePointAggregateSelection
   carePointsConnection: CarePointsConnection
@@ -6984,21 +6985,30 @@ export type Query = {
   communities: Array<Community>
   communitiesAggregate: CommunityAggregateSelection
   communitiesConnection: CommunitiesConnection
+  communitySubstringSearch: Array<Community>
+  coreValueSubstringSearch: Array<CoreValue>
   coreValues: Array<CoreValue>
   coreValuesAggregate: CoreValueAggregateSelection
   coreValuesConnection: CoreValuesConnection
+  goalSubstringSearch: Array<Goal>
   goals: Array<Goal>
   goalsAggregate: GoalAggregateSelection
   goalsConnection: GoalsConnection
   people: Array<Person>
   peopleAggregate: PersonAggregateSelection
   peopleConnection: PeopleConnection
+  peopleSubstringSearch: Array<Person>
   personInterfaces: Array<PersonInterface>
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
+  resourceSubstringSearch: Array<Resource>
   resources: Array<Resource>
   resourcesAggregate: ResourceAggregateSelection
   resourcesConnection: ResourcesConnection
+}
+
+export type QueryCarePointSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryCarePointsArgs = {
@@ -7055,6 +7065,14 @@ export type QueryCommunitiesConnectionArgs = {
   where?: InputMaybe<CommunityWhere>
 }
 
+export type QueryCommunitySubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
+export type QueryCoreValueSubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
 export type QueryCoreValuesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -7071,6 +7089,10 @@ export type QueryCoreValuesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CoreValueSort>>
   where?: InputMaybe<CoreValueWhere>
+}
+
+export type QueryGoalSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryGoalsArgs = {
@@ -7109,6 +7131,10 @@ export type QueryPeopleConnectionArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type QueryPeopleSubstringSearchArgs = {
+  key: Scalars['String']['input']
+}
+
 export type QueryPersonInterfacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -7125,6 +7151,10 @@ export type QueryPersonInterfacesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonInterfaceSort>>
   where?: InputMaybe<PersonInterfaceWhere>
+}
+
+export type QueryResourceSubstringSearchArgs = {
+  key: Scalars['String']['input']
 }
 
 export type QueryResourcesArgs = {
@@ -9233,6 +9263,51 @@ export type GetAllResourcesQuery = {
       phone?: string | null
       photo?: string | null
     }>
+  }>
+}
+
+export type GetMatchingEntitiesQueryVariables = Exact<{
+  key: Scalars['String']['input']
+}>
+
+export type GetMatchingEntitiesQuery = {
+  __typename?: 'Query'
+  carePointSubstringSearch: Array<{
+    __typename?: 'CarePoint'
+    id: string
+    description: string
+  }>
+  communitySubstringSearch: Array<{
+    __typename?: 'Community'
+    id: string
+    name: string
+    description?: string | null
+    members: Array<{ __typename?: 'Person'; photo?: string | null }>
+  }>
+  coreValueSubstringSearch: Array<{
+    __typename?: 'CoreValue'
+    description?: string | null
+    id: string
+    name: string
+  }>
+  peopleSubstringSearch: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    photo?: string | null
+  }>
+  resourceSubstringSearch: Array<{
+    __typename?: 'Resource'
+    id: string
+    name: string
+  }>
+  goalSubstringSearch: Array<{
+    __typename?: 'Goal'
+    id: string
+    description?: string | null
+    name: string
+    status: string
+    createdAt: any
   }>
 }
 
@@ -11628,4 +11703,177 @@ export const GetAllResourcesDocument = {
 } as unknown as DocumentNode<
   GetAllResourcesQuery,
   GetAllResourcesQueryVariables
+>
+export const GetMatchingEntitiesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMatchingEntities' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'key' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'carePointSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'communitySubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValueSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'peopleSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourceSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalSubstringSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMatchingEntitiesQuery,
+  GetMatchingEntitiesQueryVariables
 >
