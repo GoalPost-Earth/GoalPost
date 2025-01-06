@@ -9,7 +9,7 @@ function SearchBar({
   endElement,
   ...rest
 }: {
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void
   value?: string
   startElement?: React.ReactNode
   endElement?: React.ReactNode
@@ -28,7 +28,7 @@ function SearchBar({
         borderWidth={1}
         borderColor={'brand.200'}
         value={value}
-        onChange={(event) => onChange?.(event)}
+        onChange={onChange}
       />
     </InputGroup>
   )

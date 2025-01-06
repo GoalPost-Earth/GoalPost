@@ -18,7 +18,7 @@ export default function SearchResults() {
   const [size, setSize] = useState('md')
   const [activeTabValue, setActiveTabValue] = useState('')
 
-  const { data, loading, error } = useQuery(GET_MATCHING_ENTITIES, {
+  const { data } = useQuery(GET_MATCHING_ENTITIES, {
     variables: { key: searchTerm },
     skip: !searchTerm,
   })
@@ -138,7 +138,7 @@ export default function SearchResults() {
           boxShadow={{ base: 'none', lg: 'md' }}
           borderRadius={{ base: 'none', lg: '2xl' }}
           width="100%"
-          bgColor="contrastWhite"
+          bgColor="transparent"
         >
           <VStack>
             <Flex
