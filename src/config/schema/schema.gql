@@ -47,6 +47,7 @@ type Person implements PersonInterface @node {
   interests: String
 
   coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
+  goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
   communities: [Community!]!

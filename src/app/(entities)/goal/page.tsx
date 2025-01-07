@@ -1,6 +1,6 @@
 'use client'
-import React, { useRef, createRef } from 'react'
-import { GET_ALL_GOALS, GET_ALL_PEOPLE } from '@/app/graphql'
+import React from 'react'
+import { GET_PEOPLE_AND_THEIR_GOALS } from '@/app/graphql'
 import { ApolloWrapper, PersonCard } from '@/components'
 import GoalCard from '@/components/ui/goal-card'
 import { useQuery } from '@apollo/client'
@@ -15,41 +15,16 @@ import {
 import { IoArrowForwardCircleOutline } from 'react-icons/io5'
 
 export default function AllGoals() {
-  const scrollContainerRefs = useRef(new Map())
-
-  const { data, loading, error } = useQuery(GET_ALL_GOALS, {
+  const { data, loading, error } = useQuery(GET_PEOPLE_AND_THEIR_GOALS, {
     variables: {
-      where: {
-        motivatesPeople_NONE: null,
-      },
-    },
-  })
-
-  const { data: people } = useQuery(GET_ALL_PEOPLE, {
-    variables: {
-      where: {
+      personWhere: {
         communities_NONE: null,
       },
+      goalLimit: 10,
     },
   })
 
-  const members = people?.people ?? []
-  const goals = data?.goals ?? []
-
-  const membersWithGoalsAndTheirGoals = members.map((member) => ({
-    ...member,
-    goals: goals.filter((goal) =>
-      goal.motivatesPeople.some((person) => person.id === member.id)
-    ),
-  }))
-
-  const scrollToTheLeft = (memberId: string) => {
-    const ref = scrollContainerRefs.current.get(memberId)?.current
-
-    if (ref && ref.scrollBy) {
-      ref.scrollBy({ left: 400, behavior: 'smooth' })
-    }
-  }
+  const people = data?.people ?? []
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
@@ -68,18 +43,15 @@ export default function AllGoals() {
         >
           Goals
         </Heading>
-        {membersWithGoalsAndTheirGoals.map((member) => {
-          if (!scrollContainerRefs.current.has(member.id)) {
-            scrollContainerRefs.current.set(member.id, createRef())
-          }
 
+        {people.map((person) => {
           return (
-            <VStack key={member.id} my={10} gap={4} alignItems="start">
+            <VStack key={person.id} my={10} gap={4} alignItems="start">
               <HStack justifyContent="space-between" width="100%">
                 <PersonCard
-                  id={member.id}
-                  name={member.name}
-                  photo={member.photo ?? ''}
+                  id={person.id}
+                  name={person.name}
+                  photo={person.photo ?? ''}
                 />
                 <Flex
                   fontWeight="bold"
@@ -87,21 +59,18 @@ export default function AllGoals() {
                   gap={2}
                   alignItems="center"
                   cursor="pointer"
-                  onClick={() => scrollToTheLeft(member.id)}
                 >
                   <Text>All Goals</Text>
                   <IoArrowForwardCircleOutline />
                 </Flex>
               </HStack>
               <HStack
-                ref={scrollContainerRefs.current.get(member.id)}
                 gap={6}
                 width="100%"
                 overflowX="scroll"
                 whiteSpace="nowrap"
-                scrollbarWidth="none"
               >
-                {goals.map((goal) => (
+                {person.goals.map((goal) => (
                   <Flex key={goal.id}>
                     <GoalCard
                       id={goal.id}

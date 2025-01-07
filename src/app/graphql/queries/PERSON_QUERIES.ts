@@ -46,3 +46,24 @@ export const GET_ALL_PEOPLE = graphql(`
     }
   }
 `)
+
+export const GET_PEOPLE_AND_THEIR_GOALS = graphql(`
+  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {
+    people(where: $personWhere) {
+      id
+      name
+      photo
+      goals(limit: $goalLimit) {
+        id
+        name
+        description
+        successMeasures
+        photo
+        status
+        location
+        time
+        createdAt
+      }
+    }
+  }
+`)
