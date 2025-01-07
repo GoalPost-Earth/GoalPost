@@ -27,6 +27,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         size="lg"
         disabled={loading || disabled}
         ref={ref}
+        cursor="pointer"
         {...rest}
       >
         {loading && !loadingText ? (

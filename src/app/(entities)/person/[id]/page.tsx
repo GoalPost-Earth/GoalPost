@@ -1,18 +1,20 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, Grid, GridItem, VStack } from '@chakra-ui/react'
+import { Container, Grid, GridItem, HStack, VStack } from '@chakra-ui/react'
 import React from 'react'
 import {
-  ActionButtons,
   CommunityCard,
   ConnectionsCard,
   ConnectionsInfo,
+  DeleteButton,
+  EditButton,
   GenericTabs,
   ProfileBackground,
   UserInfo,
   UserProfile,
 } from '@/components/ui'
 import { Community } from '@/gql/graphql'
+import Link from 'next/link'
 
 export default async function ViewPersonPage({
   params,
@@ -144,19 +146,13 @@ export default async function ViewPersonPage({
         tabTriggers={triggers}
         tabContent={content}
       />
-      <Box
+      <HStack
         float={'right'}
-        width={'calc(100% - 500px)'}
-        display={{ base: 'none', lg: 'block' }}
+        width={{ lg: 'calc(100% - 450px)', xl: 'calc(100% - 500px)' }}
+        display={{ base: 'none', lg: 'flex' }}
+        alignItems="flex-start"
+        gap={0}
       >
-        <Box
-          position={'absolute'}
-          top={{ lg: '260px' }}
-          right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
-          display={{ base: 'none', lg: 'block' }}
-        >
-          <ActionButtons />
-        </Box>
         <GenericTabs
           triggers={desktopTriggers}
           content={desktopContent}
@@ -166,7 +162,13 @@ export default async function ViewPersonPage({
             width: { lg: '80%', xl: '100%' },
           }}
         />
-      </Box>
+        <HStack display={{ base: 'none', lg: 'flex' }} marginTop={'55px'}>
+          <Link href={`/person/update/${id}`}>
+            <EditButton />
+          </Link>
+          <DeleteButton />
+        </HStack>
+      </HStack>
     </Container>
   )
 }

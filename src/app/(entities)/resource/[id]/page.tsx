@@ -1,13 +1,27 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_RESOURCE } from '@/app/graphql/queries'
-import { Box, Container, Flex, Heading, Text, VStack } from '@chakra-ui/react'
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  HStack,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import React from 'react'
 import { ApolloWrapper } from '@/components'
 import { LoadingScreen } from '@/components/screens'
 import ResourceDetails from '@/components/ui/resource-details'
 import EllipseIcon from '@/components/icons/EllipseIcon'
 import ResourceOwnerCard from '@/components/ui/resource-owner-card'
-import { ActionButtons, Avatar, ProfileBackground } from '@/components/ui'
+import {
+  Avatar,
+  DeleteButton,
+  EditButton,
+  ProfileBackground,
+} from '@/components/ui'
+import Link from 'next/link'
 
 export default async function ViewResourcePage({
   params,
@@ -63,7 +77,12 @@ export default async function ViewResourcePage({
             </Flex>
           </Flex>
           <Box display={{ base: 'block', lg: 'none' }}>
-            <ActionButtons />
+            <HStack>
+              <Link href={`/resource/update/${id}`}>
+                <EditButton />
+              </Link>
+              <DeleteButton />
+            </HStack>
           </Box>
         </VStack>
         <Container
@@ -84,9 +103,12 @@ export default async function ViewResourcePage({
               image={resource?.providedByPerson[0]?.photo ?? undefined}
               email={resource?.providedByPerson[0]?.email ?? ''}
             />
-            <Box display={{ base: 'none', lg: 'block' }}>
-              <ActionButtons />
-            </Box>
+            <HStack display={{ base: 'none', lg: 'block' }}>
+              <Link href={`/resource/update/${id}`}>
+                <EditButton />
+              </Link>
+              <DeleteButton />
+            </HStack>
           </VStack>
           {resource && <ResourceDetails resource={resource} />}
         </Container>
