@@ -23,13 +23,10 @@ export function DeleteButton() {
         bg="brand.50"
         color="#6F7175"
         cursor="pointer"
+        onClick={onOpen}
       >
         <DeleteIcon m={1} />
-        <Text
-          fontSize={'sm'}
-          display={{ lg: 'none', xl: 'block' }}
-          onClick={onOpen}
-        >
+        <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
           Delete
         </Text>
       </Button>
