@@ -1,4 +1,5 @@
 'use client'
+
 import { Text, useDisclosure } from '@chakra-ui/react'
 import { DeleteIcon } from '../icons'
 import { Button } from './button'
@@ -8,7 +9,7 @@ export function DeleteButton() {
   const { open, onOpen, onClose } = useDisclosure()
 
   function handleConfirmDelete() {
-    //TODO
+    //TODO: Accept a delete function as a prop
     onClose()
   }
 
@@ -16,13 +17,8 @@ export function DeleteButton() {
     <>
       <Button
         paddingX={2}
-        paddingY={0}
         height="fit-content"
-        gap={2}
-        alignItems="center"
-        bg="brand.50"
-        color="#6F7175"
-        cursor="pointer"
+        variant="ghost"
         onClick={onOpen}
       >
         <DeleteIcon m={1} />

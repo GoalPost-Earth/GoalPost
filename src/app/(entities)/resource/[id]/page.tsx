@@ -16,12 +16,12 @@ import ResourceDetails from '@/components/ui/resource-details'
 import EllipseIcon from '@/components/icons/EllipseIcon'
 import ResourceOwnerCard from '@/components/ui/resource-owner-card'
 import {
-  ActionButtons,
   Avatar,
   DeleteButton,
   EditButton,
   ProfileBackground,
 } from '@/components/ui'
+import Link from 'next/link'
 
 export default async function ViewResourcePage({
   params,
@@ -77,7 +77,12 @@ export default async function ViewResourcePage({
             </Flex>
           </Flex>
           <Box display={{ base: 'block', lg: 'none' }}>
-            <ActionButtons />
+            <HStack>
+              <Link href={`/resource/update/${id}`}>
+                <EditButton />
+              </Link>
+              <DeleteButton />
+            </HStack>
           </Box>
         </VStack>
         <Container
@@ -99,7 +104,9 @@ export default async function ViewResourcePage({
               email={resource?.providedByPerson[0]?.email ?? ''}
             />
             <HStack display={{ base: 'none', lg: 'block' }}>
-              <EditButton />
+              <Link href={`/resource/update/${id}`}>
+                <EditButton />
+              </Link>
               <DeleteButton />
             </HStack>
           </VStack>

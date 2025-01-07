@@ -14,6 +14,7 @@ import {
   UserProfile,
 } from '@/components/ui'
 import { Community } from '@/gql/graphql'
+import Link from 'next/link'
 
 export default async function ViewPersonPage({
   params,
@@ -162,7 +163,9 @@ export default async function ViewPersonPage({
           }}
         />
         <HStack display={{ base: 'none', lg: 'flex' }} marginTop={'55px'}>
-          <EditButton />
+          <Link href={`/person/update/${id}`}>
+            <EditButton />
+          </Link>
           <DeleteButton />
         </HStack>
       </HStack>
