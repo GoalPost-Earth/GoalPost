@@ -4,11 +4,13 @@ export const customTheme = createSystem(defaultConfig, {
   globalCss: {
     body: {
       bg: 'contrastWhite',
+      width: '100%',
       minHeight: '100vh',
       height: '100%',
       position: 'relative',
     },
     html: {
+      width: '100dvw',
       height: '100%',
       scrollBehavior: 'smooth',
       bg: 'contrastWhite',

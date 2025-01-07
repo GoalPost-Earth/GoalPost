@@ -1,7 +1,8 @@
-import { Box, Stack, Text, VStack } from '@chakra-ui/react'
+import { HStack, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
-import { ActionButtons } from './action-buttons'
 import { GenericTabs } from './generic-tabs'
+import { EditButton } from './edit-button'
+import { DeleteButton } from './delete-button'
 
 interface UserProfileProps {
   user: {
@@ -47,9 +48,10 @@ export function UserProfile({
           {user?.name}
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
-        <Box display={{ lg: 'none' }} my={2}>
-          <ActionButtons />
-        </Box>
+        <HStack display={{ lg: 'none' }} my={2}>
+          <EditButton />
+          <DeleteButton />
+        </HStack>
       </Stack>
       <GenericTabs
         triggers={tabTriggers}

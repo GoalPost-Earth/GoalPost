@@ -32,7 +32,7 @@ export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
       value={activeTab}
       onValueChange={(details) => setActiveTab(details.value)}
       colorPalette={'brand'}
-      width="100%"
+      width={{ base: '100%', lg: '80%', xl: '100%' }}
       mt={2}
     >
       <Tabs.List
@@ -64,7 +64,7 @@ export const GenericTabs = ({ triggers, content, props }: GenericTabsProps) => {
         <Tabs.Content
           key={`${trigger}-${index}`}
           value={trigger}
-          width={'100%'}
+          width={{ base: '100%', lg: '80%', xl: '100%' }}
           minHeight={'315px'}
           borderRadius="lg"
         >
