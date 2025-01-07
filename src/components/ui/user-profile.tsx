@@ -2,7 +2,6 @@ import { Box, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { ActionButtons } from './action-buttons'
 import { GenericTabs } from './generic-tabs'
-import { Button } from './button'
 
 interface UserProfileProps {
   user: {
@@ -49,14 +48,7 @@ export function UserProfile({
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
         <Box display={{ lg: 'none' }} my={2}>
-          {/* <ActionButtons /> */}
-          <Button
-            onClick={() => {
-              console.log('clicked')
-            }}
-          >
-            View Profile
-          </Button>
+          <ActionButtons />
         </Box>
       </Stack>
       <GenericTabs

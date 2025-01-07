@@ -155,7 +155,7 @@ export default async function ViewPersonPage({
           right={{ lg: 'clamp(0.25rem, 6.8vw - 4.1rem, 4.375rem)' }}
           display={{ base: 'none', lg: 'block' }}
         >
-          <ActionButtons id="" />
+          <ActionButtons />
         </Box>
         <GenericTabs
           triggers={desktopTriggers}
