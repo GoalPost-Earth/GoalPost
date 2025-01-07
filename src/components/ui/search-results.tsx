@@ -19,10 +19,10 @@ export default function SearchResults() {
   const [size, setSize] = useState('md')
   const [activeTabValue, setActiveTabValue] = useState('')
 
-  const debouncedTerm = useDebounce(searchTerm, 500)
+  const debouncedTerm = useDebounce(searchTerm, 300)
 
   const { data } = useQuery(GET_MATCHING_ENTITIES, {
-    variables: { key: searchTerm },
+    variables: { key: debouncedTerm },
     skip: !debouncedTerm,
   })
   const returnedEntities = data
@@ -196,7 +196,7 @@ export default function SearchResults() {
                           onClick={() => setShowSearch(false)}
                           width="100%"
                           gap={2}
-                          alignItems="start"
+                          alignItems="stretch"
                         >
                           {item}
                         </VStack>
