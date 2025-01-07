@@ -11,6 +11,7 @@ import { GET_MATCHING_ENTITIES } from '@/app/graphql/queries/SEARCH_QUERY'
 import { CommunityCard } from './community-card'
 import { ConnectionsCard } from './connections-card'
 import GoalCard from './goal-card'
+import useDebounce from '@/hooks/useDebounce'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
@@ -18,9 +19,11 @@ export default function SearchResults() {
   const [size, setSize] = useState('md')
   const [activeTabValue, setActiveTabValue] = useState('')
 
+  const debouncedTerm = useDebounce(searchTerm, 500)
+
   const { data } = useQuery(GET_MATCHING_ENTITIES, {
     variables: { key: searchTerm },
-    skip: !searchTerm,
+    skip: !debouncedTerm,
   })
   const returnedEntities = data
 
@@ -125,7 +128,7 @@ export default function SearchResults() {
         position="absolute"
         border="none"
         boxShadow="none"
-        bg="transparent"
+        bg={{ base: 'contrastWhite', lg: 'transparent' }}
         height={{ base: '100%', lg: '80dvh' }}
         inset={0}
         p={2}
@@ -135,8 +138,8 @@ export default function SearchResults() {
           gap={5}
           overflow={{ lg: 'auto' }}
           height={{ lg: 'min-content' }}
-          boxShadow={{ base: 'none', lg: 'md' }}
-          borderRadius={{ base: 'none', lg: '2xl' }}
+          boxShadow="none"
+          borderRadius="none"
           width="100%"
           bgColor="transparent"
         >

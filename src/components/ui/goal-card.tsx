@@ -1,4 +1,13 @@
-import { Badge, Box, Card, Flex, HStack, Image, Text } from '@chakra-ui/react'
+import {
+  Badge,
+  Box,
+  Card,
+  Container,
+  Flex,
+  HStack,
+  Image,
+  Text,
+} from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../icons/EllipseIcon'
@@ -43,21 +52,24 @@ const GoalCard = ({
           alt={name}
         />
       ) : (
-        <Flex
+        <Container
+          display="flex"
           alignItems="center"
           justifyContent="center"
           fontWeight="bold"
           width={{ base: '50px', lg: '100%' }}
-          height={{ base: '50px', lg: '100%' }}
-          minHeight={{ lg: '100%' }}
+          height={{ base: '50px', lg: 'auto' }}
+          alignSelf={{ base: 'flex-start', lg: 'stretch' }}
+          minHeight={{ lg: 'full' }}
           bg="#B7E0A3"
           maxW="150px"
-          fontSize="clamp(0.75rem, 5.5vw - 0.6rem, 3rem)"
+          margin={0}
+          fontSize="clamp(0.75rem, 6.7vw - 3rem, 3rem)"
           borderRadius={{ base: 'lg', lg: '0' }}
           p={{ lg: 5 }}
         >
           {getInitials(name).toUpperCase()}
-        </Flex>
+        </Container>
       )}
       <Box width="100%" height="100%">
         <Link href={`/goal/${id}`}>

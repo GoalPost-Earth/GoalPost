@@ -81,7 +81,7 @@ export function ActionCard({
           </Box>
         </Flex>
       </Card.Header>
-      <Card.Body mt={{ base: 2, lg: 0 }} p={0} pl={{ base: 0, lg: 10 }}>
+      <Card.Body mt={{ base: 2, lg: 0 }} p={0} pl={{ base: 0, xl: 10 }}>
         {content}
       </Card.Body>
       <Card.Footer
