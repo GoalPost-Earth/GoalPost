@@ -8,7 +8,7 @@ interface GenericTabsProps {
   content: React.ReactNode[]
   onTabChange?: (tab: string) => void
   selectedTab?: string
-  tabsDisplay: { base: string; lg: string }
+  tabsDisplay?: { base: string; lg: string }
   props?: any
 }
 

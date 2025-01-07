@@ -73,6 +73,7 @@ const HomeClient = () => {
           id={goal.id}
           photo={goal.photo}
           name={goal.name}
+          status={goal.status}
           createdAt={goal.createdAt}
           description={goal.description}
         />

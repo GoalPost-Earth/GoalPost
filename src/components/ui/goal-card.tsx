@@ -1,4 +1,4 @@
-import { Badge, Box, Card, Flex, Status, Text } from '@chakra-ui/react'
+import { Badge, Box, Card, Flex, HStack, Image, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../icons/EllipseIcon'
@@ -24,71 +24,78 @@ const GoalCard = ({
 
   return (
     <Card.Root
-      key={id}
-      height="100%"
+      flexDirection={{ base: 'column', lg: 'row' }}
+      overflow="hidden"
+      maxW="xl"
       borderRadius="lg"
-      boxShadow="sm"
-      width={'100%'}
+      boxShadow="md"
+      bg="brand.50"
+      p={{ base: 4, lg: 0 }}
+      gap={{ base: 4, lg: 0 }}
     >
-      <Link href={'/goal/' + id}>
-        <Card.Body
-          flexDirection="row"
-          p={{ base: 2, lg: 4 }}
-          gap={{ base: 4, lg: 0 }}
-          height="100%"
-          alignItems={{ base: 'center', lg: 'flex-start' }}
-          width={'100%'}
+      {photo ? (
+        <Image
+          objectFit="cover"
+          width={{ base: '50px', lg: '100%' }}
+          height={{ base: '50px', lg: '100%' }}
+          maxW="150px"
+          src={photo ?? ''}
+          alt={name}
+        />
+      ) : (
+        <Flex
+          alignItems="center"
+          justifyContent="center"
+          fontWeight="bold"
+          width={{ base: '50px', lg: '100%' }}
+          height={{ base: '50px', lg: '100%' }}
+          minHeight={{ lg: '100%' }}
+          bg="#B7E0A3"
+          maxW="150px"
+          fontSize="clamp(0.75rem, 5.5vw - 0.6rem, 3rem)"
+          borderRadius={{ base: 'lg', lg: '0' }}
+          p={{ lg: 5 }}
         >
-          <Flex
-            bg="#B7E0A3"
-            width="30%"
-            height="auto"
-            alignSelf="stretch"
-            margin={{ lg: '-16px' }}
-            marginRight={{ lg: '16px' }}
-            textAlign="center"
-            alignItems="center"
-            justifyContent="center"
-            fontWeight="500"
-            fontSize="clamp(0.75rem, 3.4vw + 0rem, 3rem)"
-            borderRadius="md"
-            borderTopRightRadius={{ lg: 'none' }}
-            borderBottomRightRadius={{ lg: 'none' }}
-          >
-            {getInitials(name).toUpperCase()}
-          </Flex>
-          <Box width="100%">
-            <Text fontWeight="bold">{name}</Text>
-            <Flex gap={2} mt={1} fontSize="xs">
-              <Badge colorPalette="brand" py={1} px={2} borderRadius="full">
+          {getInitials(name).toUpperCase()}
+        </Flex>
+      )}
+      <Box width="100%" height="100%">
+        <Link href={`/goal/${id}`}>
+          <Card.Body p={{ base: 0, lg: 5 }} width="100%">
+            <Card.Title mb="2" lineClamp={1} fontSize="xl" fontWeight="bolder">
+              {name}
+            </Card.Title>
+            <HStack mt="2">
+              <Badge
+                colorPalette="brand"
+                borderRadius="full"
+                p={2}
+                fontSize="xs"
+              >
                 Offer
               </Badge>
-              <Flex gap={1} alignItems="center">
+              <Flex fontSize="xs" fontWeight="bold" alignItems="center" gap={1}>
                 <CalenderIcon />
-                {goalDate}
+                <Text mt={'2px'}>{goalDate}</Text>
               </Flex>
               <Badge
-                marginLeft="auto"
+                variant="subtle"
                 color="#B7E0A3"
-                bg="inherit"
+                borderRadius="full"
+                p={2}
+                bg="none"
+                fontSize="xs"
                 fontWeight="bold"
+                ml="auto"
               >
-                <EllipseIcon width="14px" height="14px" />
+                <EllipseIcon width="12px" height="12px" />
                 {status}
               </Badge>
-            </Flex>
-            <Text
-              display={{ base: 'none', lg: 'block' }}
-              lineClamp={2}
-              fontSize="sm"
-              fontWeight={300}
-              mt={2}
-            >
-              {description}
-            </Text>
-          </Box>
-        </Card.Body>
-      </Link>
+            </HStack>
+            <Card.Description lineClamp={2}>{description}</Card.Description>
+          </Card.Body>
+        </Link>
+      </Box>
     </Card.Root>
   )
 }
