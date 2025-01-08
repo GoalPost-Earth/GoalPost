@@ -7,22 +7,27 @@ import { Avatar } from '../avatar'
 import { AppLogo } from '../app-logo'
 import { useApp } from '@/app/contexts/AppContext'
 import { GoalPostIcon, SearchIcon } from '@/components/icons'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import SearchResults from '../search-results'
 import Link from 'next/link'
 
 export default function TopNav() {
   const { user } = useApp()
   const router = useRouter()
+  const pathname = usePathname()
+
+  if (pathname === '/search') {
+    return <></>
+  }
 
   return (
     <HStack
+      as="nav"
       py={'0.5rem'}
       alignItems={'center'}
-      position={'fixed'}
+      position={'sticky'}
+      width="100%"
       top={0}
-      left={0}
-      right={0}
       zIndex={100}
       bgColor="contrastWhite"
     >

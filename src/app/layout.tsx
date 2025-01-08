@@ -36,9 +36,9 @@ export default function RootLayout({
               <ApolloWrapper>
                 <StartupScreen>
                   <AppProvider>
-                    <Navbar />
                     <Toaster />
-                    <Container mt={'65px'} pl={{ lg: '50px' }}>
+                    <Navbar />
+                    <Container pl={{ lg: '50px' }}>
                       {children}
                       <ChatBotButton />
                     </Container>
