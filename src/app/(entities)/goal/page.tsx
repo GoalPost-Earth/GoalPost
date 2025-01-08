@@ -1,8 +1,7 @@
 'use client'
 import React from 'react'
 import { GET_PEOPLE_AND_THEIR_GOALS } from '@/app/graphql'
-import { ApolloWrapper, PersonCard } from '@/components'
-import GoalCard from '@/components/ui/goal-card'
+import { ApolloWrapper, PersonCard, GoalCard } from '@/components'
 import { useQuery } from '@apollo/client'
 import {
   Container,

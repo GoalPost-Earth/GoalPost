@@ -33,10 +33,12 @@ type Person implements PersonInterface @node {
 
   # Relationships
   connectedTo: [Person!]!
-    @relationship(
-      type: "CONNECTS_TO"
-      direction: OUT
-      queryDirection: UNDIRECTED
+    @cypher(
+      statement: """
+      MATCH (this)-[:CONNECTED_TO]-(other:Person)
+      RETURN DISTINCT other
+      """
+      columnName: "other"
     )
 
   avatar: String

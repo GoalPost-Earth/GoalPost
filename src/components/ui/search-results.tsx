@@ -5,10 +5,10 @@ import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
 import { CommunityCard } from './community-card'
 import { ConnectionsCard } from './connections-card'
-import GoalCard from './goal-card'
 import { useGetSearchResults } from '@/hooks'
 import { Community } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
+import { GoalCard } from './goal-card'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
