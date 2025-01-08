@@ -1,8 +1,6 @@
-import { HStack, Stack, Text, VStack } from '@chakra-ui/react'
+import { Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
-import { EditButton } from './edit-button'
-import { DeleteButton } from './delete-button'
 import { Person } from '@/gql/graphql'
 
 interface UserProfileProps {

@@ -15,7 +15,7 @@ export function EntityOwnerCard({
 
   return (
     <Card.Root
-      my={{ base: 10, lg: 0 }}
+      my={0}
       maxWidth={'320px'}
       width="100%"
       border={{ lg: '2px solid #E19E48' }}

@@ -1,6 +1,7 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_RESOURCE } from '@/app/graphql/queries'
 import {
+  Box,
   Container,
   Flex,
   Heading,
@@ -14,6 +15,7 @@ import { ApolloWrapper } from '@/components'
 import { LoadingScreen } from '@/components/screens'
 import { Avatar, EntityPageHeader, GenericTabs } from '@/components/ui'
 import { EntityDetail, EntityOwnerCard } from '@/components'
+import Link from 'next/link'
 
 export default async function ViewResourcePage({
   params,
@@ -78,6 +80,16 @@ export default async function ViewResourcePage({
               {resource?.name}
             </Heading>
 
+            <Box
+              display={{ base: 'block', lg: 'none' }}
+              width="100%"
+              padding={0}
+            >
+              <Link href={`/person/${resource?.providedByPerson[0].id}`}>
+                <EntityOwnerCard person={resource?.providedByPerson[0]} />
+              </Link>
+            </Box>
+
             <HStack alignItems="start" gap={30} width="100%">
               <GenericTabs
                 editLink={`/resource/update/${id}`}
@@ -119,8 +131,10 @@ export default async function ViewResourcePage({
                   </VStack>,
                 ]}
               />
-              <Spacer />
-              <EntityOwnerCard person={resource?.providedByPerson[0]} />
+              <Box display={{ base: 'none', lg: 'block' }}>
+                <Spacer />
+                <EntityOwnerCard person={resource?.providedByPerson[0]} />
+              </Box>
             </HStack>
           </VStack>
         </Container>
