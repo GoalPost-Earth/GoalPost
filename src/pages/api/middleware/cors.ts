@@ -6,7 +6,7 @@ export const applyCorsMiddleware = (
   res: NextApiResponse
 ) => {
   const corsOptions = {
-    origin: false, // Use CORS_ORIGIN environment variable if set, otherwise allow requests from any origin
+    origin: process.env.CORS_ORIGIN || '*', // Use CORS_ORIGIN environment variable if set, otherwise allow requests from any origin
     methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true,
   }
