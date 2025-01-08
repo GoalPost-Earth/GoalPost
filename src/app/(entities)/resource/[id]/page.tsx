@@ -13,7 +13,6 @@ import {
 import React from 'react'
 import {
   LoadingScreen,
-  ApolloWrapper,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -29,7 +28,7 @@ export default async function ViewResourcePage({
 }) {
   const { id } = await params
 
-  const { data, loading, error } = await query({
+  const { data } = await query({
     query: GET_RESOURCE,
     variables: { id },
   })
@@ -41,7 +40,7 @@ export default async function ViewResourcePage({
   }
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
+    <>
       <EntityPageHeader entity={resource.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -134,6 +133,6 @@ export default async function ViewResourcePage({
           </HStack>
         </VStack>
       </Container>
-    </ApolloWrapper>
+    </>
   )
 }

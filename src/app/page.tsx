@@ -2,12 +2,6 @@
 
 import React from 'react'
 import {
-  ActionCard,
-  Avatar,
-  CommunityCard,
-  ConnectionsCard,
-} from '@/components/ui'
-import {
   Container,
   Flex,
   Grid,
@@ -16,19 +10,24 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react'
-import { ApolloWrapper, AvatarCarousel } from '@/components/sections'
 import { Community, Person } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
 import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
 import { useQuery } from '@apollo/client'
-import { LoadingScreen } from '@/components/screens'
-import GoalCard from '@/components/ui/goal-card'
 import {
+  ApolloWrapper,
+  AvatarCarousel,
+  ActionCard,
+  Avatar,
+  CommunityCard,
+  ConnectionsCard,
+  LoadingScreen,
+  GoalCard,
   CarePointsIcon,
   GoalsIcon,
   PeopleIcon,
   SettingsIcon,
-} from '@/components/icons'
+} from '@/components'
 
 const HomeClient = () => {
   const { user } = useApp()

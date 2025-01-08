@@ -10,11 +10,11 @@ import {
 } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import EllipseIcon from '../icons/EllipseIcon'
+import { EllipseIcon } from '../icons'
 import { formatDate, getInitials } from '@/utils'
 import { CalenderIcon } from '../icons'
 
-const GoalCard = ({
+export const GoalCard = ({
   id,
   photo,
   name,
@@ -111,5 +111,3 @@ const GoalCard = ({
     </Card.Root>
   )
 }
-
-export default GoalCard

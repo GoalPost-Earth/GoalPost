@@ -10,7 +10,7 @@ export function EntityOwnerCard({
   person: Pick<Person, 'name' | 'email' | 'photo'>
 }) {
   if (!person) {
-    return <> </>
+    return <></>
   }
 
   return (
@@ -57,7 +57,7 @@ export function EntityOwnerCard({
           <Link href={`mailto:${person.email}`}>
             <Text my={2}>{person.email}</Text>
           </Link>
-          <Text>This resource is provided by</Text>
+          <Text>This entity is created by</Text>
           <Text>{person.name}</Text>
         </Box>
       </Card.Body>

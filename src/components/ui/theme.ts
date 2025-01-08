@@ -187,38 +187,38 @@ export const customTheme = createSystem(defaultConfig, {
           },
           fg: {
             value: {
-              base: '{colors.teal.800}',
-              _dark: '{colors.teal.300}',
+              base: '{colors.yellow.800}',
+              _dark: '{colors.yellow.300}',
             },
           },
           subtle: {
             value: {
-              base: '{colors.teal.100}',
-              _dark: '{colors.teal.900}',
+              base: '{colors.yellow.100}',
+              _dark: '{colors.yellow.900}',
             },
           },
           muted: {
             value: {
-              base: '{colors.teal.200}',
-              _dark: '{colors.teal.800}',
+              base: '{colors.yellow.200}',
+              _dark: '{colors.yellow.800}',
             },
           },
           emphasized: {
             value: {
-              base: '{colors.teal.300}',
-              _dark: '{colors.teal.700}',
+              base: '{colors.yellow.300}',
+              _dark: '{colors.yellow.700}',
             },
           },
           solid: {
             value: {
-              base: '{colors.teal.300}',
-              dark: '{colors.teal.300}',
+              base: '{colors.yellow.300}',
+              dark: '{colors.yellow.300}',
             },
           },
           focusRing: {
             value: {
-              base: '{colors.teal.300}',
-              dark: '{colors.teal.300}',
+              base: '{colors.yellow.300}',
+              dark: '{colors.yellow.300}',
             },
           },
         },

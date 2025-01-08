@@ -4,7 +4,7 @@ import { Flex, Tabs, TabsContent, TabsContentGroup } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
 import { CommunityCard } from './community-card'
 import { ConnectionsCard } from './connections-card'
-import GoalCard from './goal-card'
+import { GoalCard } from './goal-card'
 
 interface SearchTabsProps {
   content: any[]
