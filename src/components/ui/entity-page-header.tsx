@@ -2,6 +2,10 @@ import { EntityType } from '@/types'
 import { Box, Flex, Heading, Text, VStack } from '@chakra-ui/react'
 
 export function EntityPageHeader({ entity }: { entity: EntityType }) {
+  let parsedEntity = entity.toLowerCase()
+  if (entity === 'CoreValue') {
+    parsedEntity = 'core value'
+  }
   return (
     <VStack display={{ base: 'none', lg: 'flex' }} mx={-8}>
       <Flex
@@ -11,14 +15,14 @@ export function EntityPageHeader({ entity }: { entity: EntityType }) {
         borderTopRadius={16}
         justifyContent="flex-end"
         alignItems="center"
-        px={8}
+        px={10}
       >
         <Heading
           fontSize="100px"
           fontWeight="black"
           color={`${entity.toLowerCase()}.emphasized`}
         >
-          {entity.toLowerCase()}
+          {parsedEntity}
         </Heading>
       </Flex>
     </VStack>

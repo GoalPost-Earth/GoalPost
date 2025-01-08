@@ -31,6 +31,9 @@ export const GenericTabs = ({
       value={activeTab}
       onValueChange={(details) => {
         const newValue = details.value
+        if (['edit', 'delete'].includes(newValue)) {
+          return
+        }
         setActiveTab(newValue)
       }}
       colorPalette="brand"
