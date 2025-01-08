@@ -3,13 +3,10 @@ import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { EditButton } from './edit-button'
 import { DeleteButton } from './delete-button'
+import { Person } from '@/gql/graphql'
 
 interface UserProfileProps {
-  user: {
-    name: string
-    email: string
-    photo: string | undefined
-  }
+  user: Person
   tabTriggers: string[]
   tabContent: React.ReactNode[]
   tabProps?: Record<string, any>
@@ -48,12 +45,10 @@ export function UserProfile({
           {user?.name}
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
-        <HStack display={{ lg: 'none' }} my={2}>
-          <EditButton />
-          <DeleteButton />
-        </HStack>
       </Stack>
       <GenericTabs
+        editLink={`/person/update/${user.id}`}
+        onDeleteEntity="Person"
         triggers={tabTriggers}
         content={tabContent}
         props={{

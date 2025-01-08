@@ -6,15 +6,12 @@ import {
   CommunityCard,
   ConnectionsCard,
   ConnectionsInfo,
-  DeleteButton,
-  EditButton,
   GenericTabs,
   ProfileBackground,
   UserInfo,
   UserProfile,
 } from '@/components'
-import { Community } from '@/gql/graphql'
-import Link from 'next/link'
+import { Community, Person } from '@/gql/graphql'
 
 export default async function ViewPersonPage({
   params,
@@ -138,11 +135,7 @@ export default async function ViewPersonPage({
     >
       <ProfileBackground />
       <UserProfile
-        user={{
-          name: person.name,
-          email: person.email ?? '',
-          photo: person.photo ?? undefined,
-        }}
+        user={person as Person}
         tabTriggers={triggers}
         tabContent={content}
       />
@@ -154,6 +147,8 @@ export default async function ViewPersonPage({
         gap={0}
       >
         <GenericTabs
+          editLink={`/person/update/${id}`}
+          onDeleteEntity="Person"
           triggers={desktopTriggers}
           content={desktopContent}
           props={{
@@ -162,12 +157,6 @@ export default async function ViewPersonPage({
             width: { lg: '80%', xl: '100%' },
           }}
         />
-        <HStack display={{ base: 'none', lg: 'flex' }} marginTop={'55px'}>
-          <Link href={`/person/update/${id}`}>
-            <EditButton />
-          </Link>
-          <DeleteButton onDeleteEntity="Resource" />
-        </HStack>
       </HStack>
     </Container>
   )
