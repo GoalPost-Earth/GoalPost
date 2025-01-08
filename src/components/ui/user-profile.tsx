@@ -56,9 +56,7 @@ export function UserProfile({
       <GenericTabs
         triggers={tabTriggers}
         content={tabContent}
-        props={{
-          display: { base: 'flex', lg: 'none' },
-        }}
+        tabsDisplay={{ base: 'flex', lg: 'none' }}
       />
     </VStack>
   )

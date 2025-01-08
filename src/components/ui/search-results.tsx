@@ -171,13 +171,6 @@ export default function SearchResults() {
                 }
               />
             </Flex>
-            <GenericTabs
-              content={content}
-              triggers={triggers}
-              onTabChange={setActiveTabValue}
-              selectedTab={activeTabValue}
-              tabsDisplay={{ base: 'block', lg: 'none' }}
-            />
             <VStack
               display={{ base: 'none', lg: 'flex' }}
               p={4}

@@ -50,14 +50,13 @@ export const GenericTabs = ({
         setActiveTab(newValue)
         onTabChange && onTabChange(newValue)
       }}
-      display={tabsDisplay}
       colorPalette="brand"
       width="100%"
       mt={2}
     >
       <Tabs.List
         mt={2}
-        display="flex"
+        display={tabsDisplay ? tabsDisplay : 'flex'}
         gap={2}
         overflowX="auto"
         whiteSpace="nowrap"
