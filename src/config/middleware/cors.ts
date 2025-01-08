@@ -13,6 +13,7 @@ export const applyCorsMiddleware = (
 
   return new Promise((resolve, reject) => {
     cors(corsOptions)(req, res, (result) => {
+      console.log('🚀 ~ file: cors.ts:16 ~ result:', result)
       if (result instanceof Error) {
         return reject(result)
       }
