@@ -1,7 +1,7 @@
 'use client'
 
 import type { GroupProps, SlotRecipeProps } from '@chakra-ui/react'
-import { Avatar as ChakraAvatar, Group } from '@chakra-ui/react'
+import { Avatar as ChakraAvatar, Group, Text } from '@chakra-ui/react'
 import * as React from 'react'
 
 type ImageProps = React.ImgHTMLAttributes<HTMLImageElement>
@@ -10,6 +10,7 @@ export interface AvatarProps extends ChakraAvatar.RootProps {
   name?: string
   src?: string
   srcSet?: string
+  fontSize?: string
   loading?: ImageProps['loading']
   icon?: React.ReactElement
   fallback?: React.ReactNode
@@ -17,11 +18,20 @@ export interface AvatarProps extends ChakraAvatar.RootProps {
 
 export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   function Avatar(props, ref) {
-    const { name, src, srcSet, loading, icon, fallback, children, ...rest } =
-      props
+    const {
+      name,
+      src,
+      srcSet,
+      loading,
+      icon,
+      fallback,
+      fontSize,
+      children,
+      ...rest
+    } = props
     return (
       <ChakraAvatar.Root ref={ref} {...rest}>
-        <AvatarFallback name={name} icon={icon}>
+        <AvatarFallback name={name} icon={icon} fontSize={fontSize?.toString()}>
           {fallback}
         </AvatarFallback>
         <ChakraAvatar.Image src={src} srcSet={srcSet} loading={loading} />
@@ -34,15 +44,18 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
 interface AvatarFallbackProps extends ChakraAvatar.FallbackProps {
   name?: string
   icon?: React.ReactElement
+  fontSize?: string
 }
 
 const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
   function AvatarFallback(props, ref) {
-    const { name, icon, children, ...rest } = props
+    const { name, icon, children, fontSize, ...rest } = props
     return (
       <ChakraAvatar.Fallback ref={ref} {...rest}>
         {children}
-        {name != null && children == null && <>{getInitials(name)}</>}
+        {name != null && children == null && (
+          <Text fontSize={fontSize}>{getInitials(name)}</Text>
+        )}
         {name == null && children == null && (
           <ChakraAvatar.Icon asChild={!!icon}>{icon}</ChakraAvatar.Icon>
         )}

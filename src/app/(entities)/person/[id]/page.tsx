@@ -12,7 +12,7 @@ import {
   ProfileBackground,
   UserInfo,
   UserProfile,
-} from '@/components/ui'
+} from '@/components'
 import { Community } from '@/gql/graphql'
 import Link from 'next/link'
 
@@ -166,7 +166,7 @@ export default async function ViewPersonPage({
           <Link href={`/person/update/${id}`}>
             <EditButton />
           </Link>
-          <DeleteButton />
+          <DeleteButton onDeleteEntity="Resource" />
         </HStack>
       </HStack>
     </Container>

@@ -78,7 +78,7 @@ export const SearchTabs = ({ content }: SearchTabsProps) => {
             console.log('🚀 ~ file: search-tabs.tsx:77 ~ trigger:', trigger)
             console.log('🚀 ~ file: search-tabs.tsx:78 ~ entity:', entity)
 
-            return entity.map((entity) => (
+            return entity.map((entity: any) => (
               <Flex key={entity.id}>{entity.description}</Flex>
             ))
           })}

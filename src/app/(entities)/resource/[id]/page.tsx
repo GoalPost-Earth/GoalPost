@@ -1,27 +1,19 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_RESOURCE } from '@/app/graphql/queries'
 import {
-  Box,
   Container,
   Flex,
   Heading,
   HStack,
+  Spacer,
   Text,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
 import { ApolloWrapper } from '@/components'
 import { LoadingScreen } from '@/components/screens'
-import ResourceDetails from '@/components/ui/resource-details'
-import EllipseIcon from '@/components/icons/EllipseIcon'
-import ResourceOwnerCard from '@/components/ui/resource-owner-card'
-import {
-  Avatar,
-  DeleteButton,
-  EditButton,
-  ProfileBackground,
-} from '@/components/ui'
-import Link from 'next/link'
+import { Avatar, EntityPageHeader, GenericTabs } from '@/components/ui'
+import { EntityDetail, EntityOwnerCard } from '@/components'
 
 export default async function ViewResourcePage({
   params,
@@ -44,7 +36,7 @@ export default async function ViewResourcePage({
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <ProfileBackground />
+        <EntityPageHeader entity={resource.__typename!} />
         <VStack alignItems={'center'} gap={3}>
           <Flex
             flexDirection={{ base: 'column', lg: 'row' }}
@@ -53,64 +45,84 @@ export default async function ViewResourcePage({
             justifyContent="center"
             position={{ lg: 'absolute' }}
             left={{ lg: '70px' }}
-            top={{ lg: '150px' }}
+            top={{ lg: '120px' }}
           >
             <Avatar
               src={undefined}
               width={200}
               height={200}
-              border={'10px solid white'}
+              border={'10px solid'}
+              colorPalette={'bg'}
+              borderColor="resource.emphasized"
               name={resource?.name}
               fontSize="60px"
             />
-            <Flex flexDirection={'column'} gap={2} pb={5}>
-              <Flex alignItems="center" gap={2}>
-                <Heading fontSize="2xl">{resource?.name}</Heading>
-                <EllipseIcon />
-              </Flex>
-              <Text
-                display={{ base: 'none', lg: 'block' }}
-                fontWeight={'light'}
-              >
-                Resource
-              </Text>
-            </Flex>
           </Flex>
-          <Box display={{ base: 'block', lg: 'none' }}>
-            <HStack>
-              <Link href={`/resource/update/${id}`}>
-                <EditButton />
-              </Link>
-              <DeleteButton />
-            </HStack>
-          </Box>
         </VStack>
+
         <Container
           display="flex"
           gap={3}
-          mt={{ base: 10, lg: '150px' }}
+          mt={{ base: 10, lg: '120px' }}
           flexDirection={{ base: 'column', lg: 'row' }}
           alignItems={{ base: 'center', lg: 'flex-start' }}
+          width="100%"
         >
           <VStack
+            width="100%"
             justifyContent="center"
+            alignItems="start"
             gap={4}
-            maxWidth={'400px'}
-            width={'100%'}
           >
-            <ResourceOwnerCard
-              name={resource?.providedByPerson[0]?.name}
-              image={resource?.providedByPerson[0]?.photo ?? undefined}
-              email={resource?.providedByPerson[0]?.email ?? ''}
-            />
-            <HStack display={{ base: 'none', lg: 'block' }}>
-              <Link href={`/resource/update/${id}`}>
-                <EditButton />
-              </Link>
-              <DeleteButton />
+            <Heading mt={5} fontSize="2xl" fontWeight="bold">
+              {resource?.name}
+            </Heading>
+
+            <HStack alignItems="start" gap={30} width="100%">
+              <GenericTabs
+                editLink={`/resource/update/${id}`}
+                onDeleteEntity="Resource"
+                triggers={['Details', 'Linked Care Points']}
+                content={[
+                  <VStack
+                    key="Details"
+                    p={4}
+                    bg={'gray.contrast'}
+                    borderRadius={'2xl'}
+                    boxShadow={'xs'}
+                    alignItems={'flex-start'}
+                  >
+                    <VStack gap={4}>
+                      <EntityDetail
+                        title="Description"
+                        entityName={resource.name}
+                        details={resource.description}
+                      />
+                      <EntityDetail title="Why" details={resource.why} />
+                      <EntityDetail
+                        title="Location"
+                        details={resource.location}
+                      />
+                      <EntityDetail title="Time" details={resource.time} />
+                      <EntityDetail title="Status" details={resource.status} />
+                    </VStack>
+                  </VStack>,
+                  <VStack
+                    key="Linked Care Points"
+                    p={4}
+                    bg={'gray.contrast'}
+                    borderRadius={'2xl'}
+                    boxShadow={'xs'}
+                    alignItems={'flex-start'}
+                  >
+                    <Text>Linked Care Points</Text>
+                  </VStack>,
+                ]}
+              />
+              <Spacer />
+              <EntityOwnerCard person={resource?.providedByPerson[0]} />
             </HStack>
           </VStack>
-          {resource && <ResourceDetails resource={resource} />}
         </Container>
       </Container>
     </ApolloWrapper>

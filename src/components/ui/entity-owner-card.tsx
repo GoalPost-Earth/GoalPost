@@ -2,16 +2,17 @@ import { Box, Card, Flex, Text } from '@chakra-ui/react'
 import { Avatar } from '.'
 import React from 'react'
 import Link from 'next/link'
+import { Person } from '@/gql/graphql'
 
-export default function ResourceOwnerCard({
-  image,
-  name,
-  email,
+export function EntityOwnerCard({
+  person,
 }: {
-  image: string | undefined
-  name: string
-  email: string
+  person: Pick<Person, 'name' | 'email' | 'photo'>
 }) {
+  if (!person) {
+    return <> </>
+  }
+
   return (
     <Card.Root
       my={{ base: 10, lg: 0 }}
@@ -31,9 +32,9 @@ export default function ResourceOwnerCard({
         justifyContent={{ lg: 'center' }}
       >
         <Avatar
-          src={image}
+          src={person.photo ?? undefined}
           size="2xl"
-          name={name}
+          name={person.name}
           width={{ lg: '200px' }}
           height={{ lg: '200px' }}
         />
@@ -45,7 +46,7 @@ export default function ResourceOwnerCard({
             fontWeight={'bold'}
             fontSize={'clamp(1.125rem, 1vw + 0.7rem, 1.313rem)'}
           >
-            {name}
+            {person.name}
           </Text>
         </Flex>
         <Box
@@ -54,11 +55,11 @@ export default function ResourceOwnerCard({
           fontWeight="light"
           display={{ base: 'none', lg: 'block' }}
         >
-          <Link href={`mailto:${email}`}>
-            <Text my={2}>{email}</Text>
+          <Link href={`mailto:${person.email}`}>
+            <Text my={2}>{person.email}</Text>
           </Link>
           <Text>This resource is provided by</Text>
-          <Text>{name}</Text>
+          <Text>{person.name}</Text>
         </Box>
       </Card.Body>
     </Card.Root>

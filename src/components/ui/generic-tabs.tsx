@@ -1,45 +1,29 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { Tabs } from '@chakra-ui/react'
+
+import React, { useState } from 'react'
+import { Box, Spacer, Tabs } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
+import Link from 'next/link'
+import { EditButton } from './edit-button'
+import { DeleteButton } from './delete-button'
+import { EntityType } from '@/types'
 
 interface GenericTabsProps {
   triggers: string[]
   content: React.ReactNode[]
-  onTabChange?: (tab: string) => void
-  selectedTab?: string
-  tabsDisplay?: { base: string; lg: string }
+  editLink: string
+  onDeleteEntity: EntityType
   props?: any
 }
 
 export const GenericTabs = ({
   triggers,
   content,
-  onTabChange,
-  selectedTab,
-  tabsDisplay,
+  editLink,
+  onDeleteEntity,
   ...props
 }: GenericTabsProps) => {
-  const [activeTab, setActiveTab] = useState(selectedTab || triggers[0])
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
-
-  useEffect(() => {
-    if (selectedTab && selectedTab !== activeTab) {
-      setActiveTab(selectedTab)
-    }
-  }, [selectedTab])
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-      if (window.innerWidth <= 1024 && activeTab !== triggers[0]) {
-        setActiveTab(triggers[0])
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [activeTab, triggers])
+  const [activeTab, setActiveTab] = useState(triggers[0])
 
   return (
     <Tabs.Root
@@ -48,38 +32,48 @@ export const GenericTabs = ({
       onValueChange={(details) => {
         const newValue = details.value
         setActiveTab(newValue)
-        onTabChange && onTabChange(newValue)
       }}
-      display={tabsDisplay}
       colorPalette="brand"
       width="100%"
       mt={2}
     >
-      <Tabs.List
-        mt={2}
-        display="flex"
-        gap={2}
-        overflowX="auto"
-        whiteSpace="nowrap"
-        scrollbarWidth="none"
-        WebkitOverflowScrolling="touch"
-        {...props}
-      >
-        {triggers.map((trigger, index) => (
+      <>
+        <Tabs.List mt={2} display="flex" gap={2} overflowX="auto" {...props}>
+          {triggers.map((trigger, index) => (
+            <Tabs.Trigger
+              key={`${trigger}-${index}`}
+              value={trigger}
+              fontSize="xs"
+              fontWeight="bold"
+              justifyContent="center"
+              borderRadius="full"
+              minWidth="fit-content"
+              bg={activeTab !== trigger ? 'gray.100' : 'brand.200'}
+            >
+              {trigger}
+            </Tabs.Trigger>
+          ))}
+          <Spacer />
           <Tabs.Trigger
-            key={`${trigger}-${index}`}
-            value={trigger}
-            fontSize="xs"
-            fontWeight="bold"
-            justifyContent="center"
-            borderRadius="full"
-            minWidth="fit-content"
-            bg={activeTab !== trigger ? 'gray.100' : 'brand.200'}
+            display={{ base: 'none', lg: 'block' }}
+            value="edit"
+            asChild
           >
-            {trigger}
+            <Link href={editLink}>
+              <EditButton />
+            </Link>
           </Tabs.Trigger>
-        ))}
-      </Tabs.List>
+          <Tabs.Trigger
+            display={{ base: 'none', lg: 'block' }}
+            value="delete"
+            asChild
+          >
+            <Box>
+              <DeleteButton onDeleteEntity={onDeleteEntity} />
+            </Box>
+          </Tabs.Trigger>
+        </Tabs.List>
+      </>
 
       {triggers.map((trigger, index) => (
         <Tabs.Content

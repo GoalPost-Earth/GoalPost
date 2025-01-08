@@ -3,9 +3,9 @@ import {
   Textarea as ChakraTextarea,
   TextareaProps as ChakraTextareaProps,
 } from '@chakra-ui/react'
-import { Controller } from 'react-hook-form'
 import { ReactHookFormComponentProps } from '../../types/form'
 import { Field } from '../ui/field'
+import { Controller } from 'react-hook-form'
 
 type TextareaPropsType = ReactHookFormComponentProps &
   Omit<ChakraTextareaProps, 'type'>
