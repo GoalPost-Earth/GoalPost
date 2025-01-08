@@ -1,19 +1,36 @@
-import { Flex } from '@chakra-ui/react'
-import { Button } from './button'
+import { Button, Flex, Heading, VStack } from '@chakra-ui/react'
+import { CommunityIcon, GoalsIcon, PeopleIcon, SettingsIcon } from '../icons'
+import { EntityInfo } from './entity-info'
+import Link from 'next/link'
+import { LuArrowRight } from 'react-icons/lu'
 
 interface GraphNode extends Node {
   data: {
     nodeName: string
   }
 }
+
+const iconMapping: Record<string, JSX.Element> = {
+  Resource: <SettingsIcon width="16px" height="16px" />,
+  Person: <PeopleIcon width="16px" height="16px" />,
+  Community: <CommunityIcon width="16px" height="16px" />,
+  Goal: <GoalsIcon width="16px" height="16px" />,
+}
+
 export default function GraphSideBar({
   nodes,
   selectedNodes,
+  selectedNodeInfo,
+  selectedNodeId,
+  selectedNodeName,
   setNodes,
   triggers,
 }: {
   nodes: any
   selectedNodes: any
+  selectedNodeInfo: any
+  selectedNodeId: string
+  selectedNodeName: any
   setNodes: any
   triggers: string[]
 }) {
@@ -21,9 +38,13 @@ export default function GraphSideBar({
     <Flex
       flexDirection={'column'}
       width={'fit-content'}
+      height="fit-content"
       padding={2}
-      background={'gray.subtle'}
+      gap={10}
+      p={4}
+      bg="white"
     >
+      <Heading fontWeight="bolder">Entities</Heading>
       <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
         {triggers.map((trigger) => {
           const nextNodes = nodes.filter(
@@ -31,7 +52,10 @@ export default function GraphSideBar({
           )
           return (
             <Button
+              colorPalette={`${trigger.toLowerCase()}`}
               key={trigger}
+              p={2}
+              borderRadius={'full'}
               onClick={() => {
                 if (
                   selectedNodes.some(
@@ -58,10 +82,33 @@ export default function GraphSideBar({
                   : 'outline'
               }
             >
+              {iconMapping[trigger]}
               {trigger}
             </Button>
           )
         })}
+      </Flex>
+      <VStack alignItems="flex-start" gap={5}>
+        <Heading mb={1}>Properties</Heading>
+        <VStack gap={5} p={2} width="100%">
+          {selectedNodeInfo !== null && (
+            <EntityInfo entity={selectedNodeInfo} />
+          )}
+        </VStack>
+      </VStack>
+      <Flex
+        justifyContent="center"
+        fontSize="sm"
+        alignItems="center"
+        textDecoration="underline"
+        _hover={{ cursor: 'pointer', gap: 2, textUnderlineOffset: 4 }}
+        alignSelf="center"
+        transition="all 0.2s ease-in-out"
+      >
+        <Link href={`/${selectedNodeName.toLowerCase()}/${selectedNodeId}`}>
+          Learn more{' '}
+        </Link>
+        <LuArrowRight />
       </Flex>
     </Flex>
   )

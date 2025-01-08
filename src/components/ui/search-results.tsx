@@ -156,7 +156,7 @@ export default function SearchResults() {
                 ))}
               </VStack>
             )}
-            {!!returnedPeople && (
+            {!!returnedPeople && returnedPeople.length > 0 && (
               <VStack
                 width="100%"
                 onClick={handleSearchedEntityClick}
@@ -199,12 +199,12 @@ export default function SearchResults() {
               </VStack>
             )}
             {loading && (
-              <Box>
+              <Flex width="100%" justifyContent="center">
                 <Spinner />
                 <Text as="span" ml={5}>
                   Fetching Results
                 </Text>
-              </Box>
+              </Flex>
             )}
             {!searchTerm && (
               <EmptyState

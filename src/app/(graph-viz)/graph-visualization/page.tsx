@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   addEdge,
   Background,
@@ -31,6 +31,8 @@ import {
 import GraphSideBar from '@/components/ui/graph-sidebar'
 
 const initialEdges: Edge[] = []
+const initialSelectedNodeInfo: Node[] = []
+
 const GraphVisualization = () => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
   const { data: people } = useQuery(GET_ALL_PEOPLE)
@@ -38,6 +40,10 @@ const GraphVisualization = () => {
   const { data: goals } = useQuery(GET_ALL_GOALS)
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
   const { data: communities } = useQuery(GET_ALL_COMMUNITIES)
+  const [selectedNodeInfo, setSelectedNodeInfo] = useState(
+    initialSelectedNodeInfo
+  )
+
   const members = people
 
   const nodeTypes = {
@@ -53,6 +59,13 @@ const GraphVisualization = () => {
         position: getRandomPosition(),
         type: 'customNode',
         data: {
+          nodeInfo: {
+            Entity: 'Person',
+            Name: person.name,
+            'First Name': person.firstName,
+            'Phone Number': person.phone,
+            Pronouns: person.pronouns,
+          },
           label: person.name,
           nodeName: person.__typename,
           id: person.id,
@@ -68,6 +81,12 @@ const GraphVisualization = () => {
         position: getRandomPosition(),
         type: 'customNode',
         data: {
+          nodeInfo: {
+            Entity: 'Core Value',
+            Name: coreValue.name,
+            'Who Supports': coreValue.whoSupports,
+            Description: coreValue.description,
+          },
           label: coreValue.name,
           nodeName: coreValue.__typename,
           id: coreValue.id,
@@ -82,7 +101,17 @@ const GraphVisualization = () => {
         id: `${goal.__typename}${goal.id}`,
         position: getRandomPosition(),
         type: 'customNode',
-        data: { label: goal.name, nodeName: goal.__typename, id: goal.id },
+        data: {
+          nodeInfo: {
+            Entity: 'Goal',
+            Name: goal.name,
+            Description: goal.description,
+            Status: goal.status,
+          },
+          label: goal.name,
+          nodeName: goal.__typename,
+          id: goal.id,
+        },
       })) ?? []
     )
   }, [goals])
@@ -94,6 +123,12 @@ const GraphVisualization = () => {
         position: getRandomPosition(),
         type: 'customNode',
         data: {
+          nodeInfo: {
+            Entity: 'Resource',
+            Name: resource.name,
+            Description: resource.description,
+            Status: resource.status,
+          },
           label: resource.name,
           nodeName: resource.__typename,
           id: resource.id,
@@ -109,6 +144,13 @@ const GraphVisualization = () => {
         position: getRandomPosition(),
         type: 'customNode',
         data: {
+          nodeInfo: {
+            Entity: 'Person',
+            Name: member.name,
+            'First Name': member.firstName,
+            'Phone Number': member.phone,
+            Pronouns: member.pronouns,
+          },
           label: `${member.firstName} ${member.lastName}`,
           nodeName: member.__typename,
           id: member.id,
@@ -124,6 +166,12 @@ const GraphVisualization = () => {
         position: getRandomPosition(),
         type: 'customNode',
         data: {
+          nodeInfo: {
+            Entity: 'Community',
+            Name: community.name,
+            Description: community.description,
+            Status: community.status,
+          },
           label: community.name,
           nodeName: community.__typename,
           id: community.id,
@@ -167,6 +215,9 @@ const GraphVisualization = () => {
     [setEdges]
   )
 
+  const onNodeClick = (event: React.MouseEvent, node: Node) =>
+    setSelectedNodeInfo([node])
+
   useEffect(() => {
     if (people && coreValues && goals && resources && members && communities) {
       const newNodes = [...selectedNodes]
@@ -183,12 +234,21 @@ const GraphVisualization = () => {
     communities,
   ])
 
+  const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo
+  const nodeId = selectedNodeInfo[0]?.id
+  const nodeName = selectedNodeInfo[0]?.data.nodeName
+
+  console.log('Node Info: ', nodeInfo)
+
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Stack direction={'row'} height={'100%'}>
         <GraphSideBar
+          selectedNodeInfo={nodeInfo}
           nodes={graphNodes}
           selectedNodes={selectedNodes}
+          selectedNodeId={nodeId}
+          selectedNodeName={nodeName}
           setNodes={setSelectedNodes}
           triggers={NodeTriggers}
         />
@@ -199,6 +259,7 @@ const GraphVisualization = () => {
             edges={edges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
+            onNodeClick={onNodeClick}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             fitView

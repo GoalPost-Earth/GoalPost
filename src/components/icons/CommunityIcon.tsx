@@ -5,53 +5,14 @@ const CommunityIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
   <Icon color={color} width="24px" height="22px" {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="35"
-      height="35"
+      width="20"
+      height="17"
       fill="none"
-      viewBox="0 0 35 35"
+      viewBox="0 0 20 17"
     >
       <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-        d="M17.896 25.417h-4.679c-1.223 0-2.196-.596-3.07-1.428-1.788-1.704 1.148-3.066 2.268-3.733a8.43 8.43 0 0 1 7.46-.554"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeWidth="1.5"
-        d="M21.063 13.146a3.563 3.563 0 1 1-7.126 0 3.563 3.563 0 0 1 7.126 0Z"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.5"
-        d="M22.646 25.417v-5.542m-2.771 2.77h5.542"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeWidth="1.5"
-        d="M18.291 13.542a3.167 3.167 0 1 1-6.333 0 3.167 3.167 0 0 1 6.333 0Z"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-        d="M19.875 16.708a3.167 3.167 0 1 0 0-6.333"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-        d="M16.708 19.084h-3.167a3.96 3.96 0 0 0-3.958 3.958c0 .874.709 1.583 1.583 1.583h7.917c.875 0 1.583-.709 1.583-1.583a3.96 3.96 0 0 0-3.958-3.959Z"
-      ></path>
-      <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-        d="M21.458 19.084a3.96 3.96 0 0 1 3.958 3.958c0 .874-.709 1.583-1.583 1.583h-1.187"
+        fill="currentColor"
+        d="M14.23 3.538c3.136-3.017 7.863 1.555 4.753 4.548-1.2 1.155-2.988 1.273-4.385.33l-3.747 3.771c2.082 2.593-1.715 5.845-4.14 3.512-1.249-1.202-1.028-3.182.441-4.1L5.707 8.58C2.94 9.501 0 7.497 0 4.646 0 .969 4.654-.893 7.348 1.723A4.07 4.07 0 0 1 8.622 4.67l4.703.424c.147-.589.465-1.13.906-1.555M8.549 5.447A4.13 4.13 0 0 1 6.466 8.25l1.421 3.017c.857-.212 1.641-.118 2.351.377l3.773-3.794a2.9 2.9 0 0 1-.76-1.956zM1.862 2.289c-3.283 3.158 1.69 7.824 4.923 4.737 3.233-3.111-1.69-7.872-4.923-4.737m8.156 10.228c-1.788-1.744-4.556.872-2.719 2.616 1.788 1.744 4.532-.895 2.719-2.616m4.8-8.413c-2.375 2.262 1.201 5.703 3.577 3.44 2.351-2.286-1.225-5.703-3.576-3.44"
       ></path>
     </svg>
   </Icon>
