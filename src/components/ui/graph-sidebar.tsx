@@ -43,6 +43,8 @@ export default function GraphSideBar({
       gap={10}
       p={4}
       bg="white"
+      borderRadius="lg"
+      boxShadow="xs"
     >
       <Heading fontWeight="bolder">Entities</Heading>
       <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
@@ -78,7 +80,7 @@ export default function GraphSideBar({
                   (selectedNode: GraphNode) =>
                     selectedNode.data.nodeName === trigger
                 )
-                  ? 'solid'
+                  ? 'subtle'
                   : 'outline'
               }
             >
@@ -88,14 +90,14 @@ export default function GraphSideBar({
           )
         })}
       </Flex>
-      <VStack alignItems="flex-start" gap={5}>
-        <Heading mb={1}>Properties</Heading>
-        <VStack gap={5} p={2} width="100%">
-          {selectedNodeInfo !== null && (
+      {selectedNodeInfo !== null && (
+        <VStack alignItems="flex-start" gap={5}>
+          <Heading mb={1}>Properties</Heading>
+          <VStack gap={5} p={2} width="100%">
             <EntityInfo entity={selectedNodeInfo} />
-          )}
+          </VStack>
         </VStack>
-      </VStack>
+      )}
       {!!selectedNodeName && (
         <Flex
           justifyContent="center"
