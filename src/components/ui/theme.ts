@@ -33,6 +33,7 @@ export const customTheme = createSystem(defaultConfig, {
           900: { value: '#652B19' },
         },
         brand: {
+          DEFAULT: { value: '#e19e48' },
           50: { value: '#FFFAF0' },
           100: { value: '#FFFFFF' },
           200: { value: '#f7c89b' },
@@ -66,7 +67,164 @@ export const customTheme = createSystem(defaultConfig, {
           emphasized: { value: '{colors.brand.300}' },
           focusRing: { value: '{colors.brand.500}' },
         },
+        community: {
+          contrast: {
+            value: { light: '{colors.white}', _dark: '{colors.white}' },
+          },
+          fg: {
+            value: {
+              light: '{colors.green.700}',
+              _dark: '{colors.green.300}',
+            },
+          },
+          subtle: {
+            value: { base: '{colors.green.100}', _dark: '{colors.green.900}' },
+          },
+          muted: {
+            value: { light: '{colors.green.200}', _dark: '{colors.green.800}' },
+          },
+          emphasized: {
+            value: { light: '{colors.green.300}', _dark: '{colors.green.700}' },
+          },
+          solid: {
+            value: {
+              light: '{colors.green.600}',
+              dark: '{colors.green.600}',
+            },
+          },
+          focusRing: {
+            value: {
+              light: '{colors.green.600}',
+              dark: '{colors.green.600}',
+            },
+          },
+        },
+        resource: {
+          contrast: {
+            value: { light: '{colors.white}', _dark: '{colors.white}' },
+          },
+          fg: {
+            value: {
+              light: '{colors.purple.700}',
+              _dark: '{colors.purple.300}',
+            },
+          },
+          subtle: {
+            value: {
+              base: '{colors.purple.100}',
+              _dark: '{colors.purple.900}',
+            },
+          },
+          muted: {
+            value: {
+              light: '{colors.purple.200}',
+              _dark: '{colors.purple.800}',
+            },
+          },
+          emphasized: {
+            value: {
+              light: '{colors.purple.300}',
+              _dark: '{colors.purple.700}',
+            },
+          },
+          solid: {
+            value: {
+              light: '{colors.purple.600}',
+              dark: '{colors.purple.600}',
+            },
+          },
+          focusRing: {
+            value: {
+              light: '{colors.purple.600}',
+              dark: '{colors.purple.600}',
+            },
+          },
+        },
+        coreValue: {
+          contrast: {
+            value: { light: '{colors.white}', _dark: '{colors.white}' },
+          },
+          fg: {
+            value: {
+              light: '{colors.teal.700}',
+              _dark: '{colors.teal.300}',
+            },
+          },
+          subtle: {
+            value: {
+              base: '{colors.teal.100}',
+              _dark: '{colors.teal.900}',
+            },
+          },
+          muted: {
+            value: {
+              light: '{colors.teal.200}',
+              _dark: '{colors.teal.800}',
+            },
+          },
+          emphasized: {
+            value: {
+              light: '{colors.teal.300}',
+              _dark: '{colors.teal.700}',
+            },
+          },
+          solid: {
+            value: {
+              light: '{colors.teal.600}',
+              dark: '{colors.teal.600}',
+            },
+          },
+          focusRing: {
+            value: {
+              light: '{colors.teal.600}',
+              dark: '{colors.teal.600}',
+            },
+          },
+        },
+        goal: {
+          contrast: {
+            value: { light: '{colors.white}', _dark: '{colors.white}' },
+          },
+          fg: {
+            value: {
+              light: '{colors.teal.800}',
+              _dark: '{colors.teal.300}',
+            },
+          },
+          subtle: {
+            value: {
+              base: '{colors.teal.100}',
+              _dark: '{colors.teal.900}',
+            },
+          },
+          muted: {
+            value: {
+              light: '{colors.teal.200}',
+              _dark: '{colors.teal.800}',
+            },
+          },
+          emphasized: {
+            value: {
+              light: '{colors.teal.300}',
+              _dark: '{colors.teal.700}',
+            },
+          },
+          solid: {
+            value: {
+              light: '{colors.teal.300}',
+              dark: '{colors.teal.300}',
+            },
+          },
+          focusRing: {
+            value: {
+              light: '{colors.teal.300}',
+              dark: '{colors.teal.300}',
+            },
+          },
+        },
       },
     },
   },
 })
+
+export default customTheme

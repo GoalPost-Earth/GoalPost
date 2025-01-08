@@ -9,6 +9,7 @@ import {
 import { Avatar } from './avatar'
 import Link from 'next/link'
 import { Community } from '@/gql/graphql'
+import { Button } from './button'
 
 export function CommunityCard({
   community,
@@ -18,13 +19,15 @@ export function CommunityCard({
 } & CardHeaderProps) {
   const { id, name, description, members } = community
   const displayedMembers = members.slice(0, 2)
+
   return (
     <Card.Root
       width="100%"
       p={3}
-      border="none"
       boxShadow="lg"
       borderRadius="md"
+      bgColor="community.subtle"
+      variant="subtle"
     >
       <Link href={`/community/${id}`}>
         <Card.Header p={2}>

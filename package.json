@@ -8,6 +8,7 @@
     "start:dev": "next start",
     "start": "node scripts/start-dev.js",
     "lint": "next lint",
+    "themegen": "npx @chakra-ui/cli typegen ./src/components/ui/theme.ts",
     "codegen": "graphql-codegen --config codegen.ts --watch",
     "prepare": "husky install",
     "test": "cross-env DOTENV_CONFIG_PATH=./.env.local jest",
