@@ -140,7 +140,7 @@ export const customTheme = createSystem(defaultConfig, {
             },
           },
         },
-        coreValue: {
+        corevalue: {
           contrast: {
             value: { base: '{colors.white}', _dark: '{colors.white}' },
           },

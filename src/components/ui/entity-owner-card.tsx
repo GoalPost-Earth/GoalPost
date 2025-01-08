@@ -57,7 +57,7 @@ export function EntityOwnerCard({
           <Link href={`mailto:${person.email}`}>
             <Text my={2}>{person.email}</Text>
           </Link>
-          <Text>This entity is created by</Text>
+          <Text>Created by</Text>
           <Text>{person.name}</Text>
         </Box>
       </Card.Body>

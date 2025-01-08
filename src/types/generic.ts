@@ -4,3 +4,4 @@ export type EntityType =
   | 'Person'
   | 'Community'
   | 'CarePoint'
+  | 'CoreValue'

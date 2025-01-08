@@ -14,7 +14,12 @@ export const GET_COREVALUE = graphql(`
         id
         name
       }
-      # createdAt
+      createdAt
+      createdBy {
+        id
+        name
+        photo
+      }
     }
   }
 `)
