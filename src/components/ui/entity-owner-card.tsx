@@ -16,8 +16,7 @@ export function EntityOwnerCard({
   return (
     <Card.Root
       my={0}
-      maxWidth={'320px'}
-      width="100%"
+      width={{ base: '100%', lg: '320px' }}
       border={{ lg: '2px solid #E19E48' }}
       borderRadius={{ base: '16px', lg: '24px' }}
       minHeight={{ lg: '45vh' }}
