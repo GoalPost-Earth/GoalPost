@@ -96,20 +96,22 @@ export default function GraphSideBar({
           )}
         </VStack>
       </VStack>
-      <Flex
-        justifyContent="center"
-        fontSize="sm"
-        alignItems="center"
-        textDecoration="underline"
-        _hover={{ cursor: 'pointer', gap: 2, textUnderlineOffset: 4 }}
-        alignSelf="center"
-        transition="all 0.2s ease-in-out"
-      >
-        <Link href={`/${selectedNodeName.toLowerCase()}/${selectedNodeId}`}>
-          Learn more{' '}
-        </Link>
-        <LuArrowRight />
-      </Flex>
+      {!!selectedNodeName && (
+        <Flex
+          justifyContent="center"
+          fontSize="sm"
+          alignItems="center"
+          textDecoration="underline"
+          _hover={{ cursor: 'pointer', gap: 2, textUnderlineOffset: 4 }}
+          alignSelf="center"
+          transition="all 0.2s ease-in-out"
+        >
+          <Link href={`/${selectedNodeName?.toLowerCase()}/${selectedNodeId}`}>
+            Learn more{' '}
+          </Link>
+          <LuArrowRight />
+        </Flex>
+      )}
     </Flex>
   )
 }
