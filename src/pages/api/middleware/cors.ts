@@ -6,14 +6,13 @@ export const applyCorsMiddleware = (
   res: NextApiResponse
 ) => {
   const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*', // Use CORS_ORIGIN environment variable if set, otherwise allow requests from any origin
+    origin: false, // Use CORS_ORIGIN environment variable if set, otherwise allow requests from any origin
     methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true,
   }
 
   return new Promise((resolve, reject) => {
     cors(corsOptions)(req, res, (result) => {
-      console.log('🚀 ~ file: cors.ts:16 ~ result:', result)
       if (result instanceof Error) {
         return reject(result)
       }
