@@ -1,4 +1,3 @@
-import { applyCorsMiddleware } from '@/config/middleware/cors'
 import initializeApolloServer from '../../config/apollo'
 import { NextApiRequest, NextApiResponse } from 'next'
 
@@ -10,7 +9,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Enable CORS
-  await applyCorsMiddleware(req, res)
+  // await applyCorsMiddleware(req, res)
 
   // Handle GraphQL requests
   if (req.method === 'OPTIONS') {
