@@ -1,4 +1,4 @@
-import { Context } from '../types'
+import { Context } from '@/config/types'
 import { Person } from '@/gql/graphql'
 import { generatePersonBio } from '@/utils'
 
