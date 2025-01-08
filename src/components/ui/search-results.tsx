@@ -1,5 +1,14 @@
 'use client'
-import { Box, Dialog, Flex, Heading, Text, VStack } from '@chakra-ui/react'
+import {
+  Box,
+  Card,
+  Dialog,
+  Flex,
+  Heading,
+  Spinner,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import { LuArrowLeft } from 'react-icons/lu'
 import SearchBar from './searchbar'
 import { GenericTabs } from './generic-tabs'
@@ -11,7 +20,8 @@ import { GET_MATCHING_ENTITIES } from '@/app/graphql/queries/SEARCH_QUERY'
 import { CommunityCard } from './community-card'
 import { ConnectionsCard } from './connections-card'
 import GoalCard from './goal-card'
-import useDebounce from '@/hooks/useDebounce'
+import { useDebounce } from '@/hooks'
+import { EmptyState } from './empty-state'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
@@ -21,7 +31,7 @@ export default function SearchResults() {
 
   const debouncedTerm = useDebounce(searchTerm, 300)
 
-  const { data } = useQuery(GET_MATCHING_ENTITIES, {
+  const { data, loading } = useQuery(GET_MATCHING_ENTITIES, {
     variables: { key: debouncedTerm },
     skip: !debouncedTerm,
   })
@@ -75,7 +85,7 @@ export default function SearchResults() {
         createdAt={entity.createdAt}
       />
     )),
-  ]
+  ].filter((item) => item !== undefined && item.length > 0)
 
   function handleSearchTermChange(event: ChangeEvent<HTMLInputElement>) {
     setSearchTerm(event.target.value.toLowerCase())
@@ -204,8 +214,27 @@ export default function SearchResults() {
                     )
                   )
                 })
+              ) : loading ? (
+                <Card.Root maxWidth="380px" width="100%" borderRadius="md">
+                  <Card.Body>
+                    <Box>
+                      <Spinner />{' '}
+                      <Text as="span" ml={5}>
+                        Fetching Results
+                      </Text>
+                    </Box>
+                  </Card.Body>
+                </Card.Root>
               ) : (
-                <Text>Try searching for anything</Text>
+                <Card.Root maxWidth="380px" width="100%" borderRadius="md">
+                  <Card.Body>
+                    <EmptyState
+                      padding={0}
+                      title="No Results"
+                      description="Try searching for anything"
+                    />
+                  </Card.Body>
+                </Card.Root>
               )}
             </VStack>
           </VStack>

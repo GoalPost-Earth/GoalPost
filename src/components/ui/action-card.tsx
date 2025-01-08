@@ -91,6 +91,7 @@ export function ActionCard({
         mt={2}
         fontSize="sm"
         textDecoration={'underline'}
+        color="GrayText"
         _hover={{
           color: 'brand.500',
           textDecorationThickness: '2px',
