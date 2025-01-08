@@ -9,7 +9,7 @@ export const PersonCard = ({
 }: {
   id: string
   name: string
-  photo: string
+  photo: string | undefined
 }) => {
   return (
     <Link href={`/person/${id}`}>

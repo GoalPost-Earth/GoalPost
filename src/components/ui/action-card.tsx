@@ -42,6 +42,7 @@ export function ActionCard({
     Goal: '#FFF0F0',
     CoreValue: '#E4FCD8',
     Community: '#D8F2FC',
+    Resource: '#FEEBCB',
   }
 
   return (

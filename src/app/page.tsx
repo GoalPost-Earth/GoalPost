@@ -6,6 +6,7 @@ import {
   Avatar,
   CommunityCard,
   ConnectionsCard,
+  ResourceCard,
 } from '@/components/ui'
 import {
   Container,
@@ -110,6 +111,15 @@ const HomeClient = () => {
       createdBy: resource.providedByPerson,
       description: resource.description,
       name: resource.name,
+      children: (
+        <ResourceCard
+          id={resource.id}
+          ownerPhoto={resource.providedByPerson[0].photo}
+          name={resource.name}
+          description={resource.description}
+          ownerName={resource.providedByPerson[0].name}
+        />
+      ),
     }
   })
 
@@ -142,6 +152,7 @@ const HomeClient = () => {
     ...recentGoals,
     ...recentCoreValues,
     ...recentCommunityMembers,
+    ...recentResources,
   ]
 
   return (

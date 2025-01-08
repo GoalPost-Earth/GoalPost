@@ -9223,6 +9223,7 @@ export type GetRecentActionsQuery = {
     __typename?: 'Resource'
     name: string
     id: string
+    status: string
     description?: string | null
     createdAt: any
     providedByPerson: Array<{
@@ -9519,6 +9520,59 @@ export type GetPeopleAndTheirGoalsQuery = {
       location?: string | null
       time?: string | null
       createdAt: any
+    }>
+  }>
+}
+
+export type GetPeopleAndTheirResourcesQueryVariables = Exact<{
+  [key: string]: never
+}>
+
+export type GetPeopleAndTheirResourcesQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    name: string
+    photo?: string | null
+    id: string
+    providesResources: Array<{
+      __typename?: 'Resource'
+      name: string
+      id: string
+      description?: string | null
+      status: string
+      providedByPerson: Array<{
+        __typename?: 'Person'
+        name: string
+        id: string
+        photo?: string | null
+      }>
+    }>
+  }>
+}
+
+export type GetPeopleAndTheirCoreValuesQueryVariables = Exact<{
+  [key: string]: never
+}>
+
+export type GetPeopleAndTheirCoreValuesQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    photo?: string | null
+    coreValues: Array<{
+      __typename?: 'CoreValue'
+      id: string
+      description?: string | null
+      name: string
+      isEmbracedBy: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        photo?: string | null
+      }>
     }>
   }>
 }
@@ -10962,6 +11016,7 @@ export const GetRecentActionsDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],
@@ -11941,6 +11996,218 @@ export const GetPeopleAndTheirGoalsDocument = {
 } as unknown as DocumentNode<
   GetPeopleAndTheirGoalsQuery,
   GetPeopleAndTheirGoalsQueryVariables
+>
+export const GetPeopleAndTheirResourcesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPeopleAndTheirResources' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'providesResources_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'NOT' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'id_EQ' },
+                                  value: {
+                                    kind: 'StringValue',
+                                    value: '',
+                                    block: false,
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'providesResources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'providedByPerson' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPeopleAndTheirResourcesQuery,
+  GetPeopleAndTheirResourcesQueryVariables
+>
+export const GetPeopleAndTheirCoreValuesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPeopleAndTheirCoreValues' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'coreValues_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'NOT' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'id_EQ' },
+                                  value: {
+                                    kind: 'StringValue',
+                                    value: '',
+                                    block: false,
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'coreValues' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'isEmbracedBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPeopleAndTheirCoreValuesQuery,
+  GetPeopleAndTheirCoreValuesQueryVariables
 >
 export const GetResourceDocument = {
   kind: 'Document',

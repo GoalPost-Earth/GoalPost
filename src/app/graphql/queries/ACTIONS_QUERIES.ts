@@ -34,6 +34,7 @@ export const GET_RECENT_ACTIONS = graphql(`
       }
       name
       id
+      status
       description
       createdAt
     }
