@@ -6,9 +6,10 @@ import ExtendedSidenav from './extended-sidenav'
 import { Avatar } from '../avatar'
 import { AppLogo } from '../app-logo'
 import { useApp } from '@/app/contexts/AppContext'
-import { GoalPostIcon } from '@/components/icons'
+import { GoalPostIcon, SearchIcon } from '@/components/icons'
 import { useRouter } from 'next/navigation'
 import SearchResults from '../search-results'
+import Link from 'next/link'
 
 export default function TopNav() {
   const { user } = useApp()
@@ -38,7 +39,14 @@ export default function TopNav() {
         <AppLogo width={'40px'} marginLeft={{ base: '15px', lg: '70px' }} />
         <GoalPostIcon display={{ base: 'none', lg: 'block' }} />
       </Flex>
-      <SearchResults />
+      <Box display={{ base: 'none', lg: 'block' }} mx="auto" width="500px">
+        <SearchResults />
+      </Box>
+      <Box p={2} pt={0} display={{ base: 'block', lg: 'none' }} ml="auto">
+        <Link href={'/search'}>
+          <SearchIcon />
+        </Link>
+      </Box>
       <Flex
         justifyContent={'center'}
         alignItems={'center'}

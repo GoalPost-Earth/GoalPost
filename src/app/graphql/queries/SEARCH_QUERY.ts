@@ -30,6 +30,7 @@ export const GET_MATCHING_ENTITIES = graphql(`
     }
     goalSubstringSearch(key: $key) {
       id
+      photo
       description
       name
       status

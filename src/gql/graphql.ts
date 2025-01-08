@@ -9624,6 +9624,7 @@ export type GetMatchingEntitiesQuery = {
   goalSubstringSearch: Array<{
     __typename?: 'Goal'
     id: string
+    photo?: string | null
     description?: string | null
     name: string
     status: string
@@ -12286,6 +12287,7 @@ export const GetMatchingEntitiesDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
