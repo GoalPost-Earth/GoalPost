@@ -5,7 +5,7 @@ import {
   ActionCard,
   Avatar,
   CommunityCard,
-  ConnectionsCard,
+  PersonCard,
   ResourceCard,
 } from '@/components/ui'
 import {
@@ -136,7 +136,7 @@ const HomeClient = () => {
         name: community.name,
         actionInfo: `joined a community`,
         children: (
-          <ConnectionsCard
+          <PersonCard
             id={member.id}
             name={member.name}
             photo={member.photo}

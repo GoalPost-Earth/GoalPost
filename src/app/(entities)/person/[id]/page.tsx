@@ -4,7 +4,7 @@ import { Container, Grid, GridItem, HStack, VStack } from '@chakra-ui/react'
 import React from 'react'
 import {
   CommunityCard,
-  ConnectionsCard,
+  PersonCard,
   ConnectionsInfo,
   DeleteButton,
   EditButton,
@@ -30,7 +30,7 @@ export default async function ViewPersonPage({
 
   const person = data?.people[0]
 
-  const isMember = person.communities.length > 0
+  const isMember = person?.communities.length > 0
 
   const bioData = [
     {
@@ -105,7 +105,7 @@ export default async function ViewPersonPage({
       >
         {person.connectedTo.map((person) => (
           <GridItem key={person.id}>
-            <ConnectionsCard
+            <PersonCard
               id={person.id}
               photo={person.photo ?? null}
               name={person.name}

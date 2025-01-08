@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { GET_PEOPLE_AND_THEIR_GOALS } from '@/app/graphql'
-import { ApolloWrapper, PersonCard } from '@/components'
+import { ApolloWrapper, PersonInfo } from '@/components'
 import GoalCard from '@/components/ui/goal-card'
 import { useQuery } from '@apollo/client'
 import {
@@ -48,7 +48,7 @@ export default function AllGoals() {
           return (
             <VStack key={person.id} my={10} gap={4} alignItems="start">
               <HStack justifyContent="space-between" width="100%">
-                <PersonCard
+                <PersonInfo
                   id={person.id}
                   name={person.name}
                   photo={person.photo ?? ''}

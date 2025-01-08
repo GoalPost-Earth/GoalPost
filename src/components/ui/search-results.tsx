@@ -11,14 +11,13 @@ import {
 } from '@chakra-ui/react'
 import { LuArrowLeft } from 'react-icons/lu'
 import SearchBar from './searchbar'
-import { GenericTabs } from './generic-tabs'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { SearchIcon } from '../icons'
 import { IoIosClose } from 'react-icons/io'
 import { useQuery } from '@apollo/client'
 import { GET_MATCHING_ENTITIES } from '@/app/graphql/queries'
 import { CommunityCard } from './community-card'
-import { ConnectionsCard } from './connections-card'
+import { PersonCard } from './person-card'
 import GoalCard from './goal-card'
 import { useDebounce } from '@/hooks'
 import { EmptyState } from './empty-state'
@@ -64,7 +63,7 @@ export default function SearchResults() {
       <Flex key={entity.id}>{entity.name}</Flex>
     )),
     returnedPeople?.map((entity: any) => (
-      <ConnectionsCard
+      <PersonCard
         key={entity.id}
         id={entity.id}
         name={entity.name}

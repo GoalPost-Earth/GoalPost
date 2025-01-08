@@ -2,7 +2,7 @@
 
 import { GET_PEOPLE_AND_THEIR_RESOURCES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components'
-import { PersonCard, ResourceCard } from '@/components/ui'
+import { PersonInfo, ResourceCard } from '@/components/ui'
 import { useQuery } from '@apollo/client'
 import {
   Container,
@@ -42,7 +42,7 @@ export default function AllResources() {
           return (
             <VStack key={person.id} my={10} gap={4} alignItems="start">
               <HStack justifyContent="space-between" width="100%">
-                <PersonCard
+                <PersonInfo
                   id={person.id}
                   name={person.name}
                   photo={person.photo ?? ''}
