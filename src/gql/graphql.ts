@@ -9258,6 +9258,51 @@ export type GetRecentActionsQuery = {
   }>
 }
 
+export type GetCarePointQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetCarePointQuery = {
+  __typename?: 'Query'
+  carePoints: Array<{
+    __typename?: 'CarePoint'
+    id: string
+    description: string
+    status: string
+    createdAt: any
+    resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
+    enabledByGoals: Array<{ __typename?: 'Goal'; id: string; name: string }>
+    caresForGoals: Array<{ __typename?: 'Goal'; id: string; name: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      photo?: string | null
+    }>
+  }>
+}
+
+export type GetAllCarePointsQueryVariables = Exact<{
+  where?: InputMaybe<CarePointWhere>
+}>
+
+export type GetAllCarePointsQuery = {
+  __typename?: 'Query'
+  carePoints: Array<{
+    __typename?: 'CarePoint'
+    id: string
+    description: string
+    status: string
+    createdAt: any
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      photo?: string | null
+    }>
+  }>
+}
+
 export type GetCommunityQueryVariables = Exact<{
   id: Scalars['ID']['input']
 }>
@@ -11110,6 +11155,174 @@ export const GetRecentActionsDocument = {
 } as unknown as DocumentNode<
   GetRecentActionsQuery,
   GetRecentActionsQueryVariables
+>
+export const GetCarePointDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getCarePoint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'carePoints' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'enabledByGoals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'caresForGoals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetCarePointQuery, GetCarePointQueryVariables>
+export const GetAllCarePointsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAllCarePoints' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'CarePointWhere' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'carePoints' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllCarePointsQuery,
+  GetAllCarePointsQueryVariables
 >
 export const GetCommunityDocument = {
   kind: 'Document',

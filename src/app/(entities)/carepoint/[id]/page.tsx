@@ -1,5 +1,5 @@
 import { query } from '@/app/lib/apollo-client'
-import { GET_COMMUNITY } from '@/app/graphql/queries'
+import { GET_CAREPOINT } from '@/app/graphql/queries'
 import {
   Box,
   Container,
@@ -21,7 +21,7 @@ import {
 } from '@/components'
 import Link from 'next/link'
 
-export default async function ViewCommunityPage({
+export default async function ViewCarePointPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -29,19 +29,19 @@ export default async function ViewCommunityPage({
   const { id } = await params
 
   const { data } = await query({
-    query: GET_COMMUNITY,
+    query: GET_CAREPOINT,
     variables: { id },
   })
 
-  const community = data?.communities[0]
+  const carepoint = data?.carePoints[0]
 
-  if (!community) {
+  if (!carepoint) {
     return <LoadingScreen />
   }
 
   return (
     <>
-      <EntityPageHeader entity={community.__typename!} />
+      <EntityPageHeader entity={carepoint.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
           flexDirection={{ base: 'column', lg: 'row' }}
@@ -58,8 +58,8 @@ export default async function ViewCommunityPage({
             height={200}
             border={'10px solid'}
             colorPalette={'bg'}
-            borderColor="community.emphasized"
-            name={community?.name}
+            borderColor="carepoint.emphasized"
+            name={carepoint?.description}
             fontSize="60px"
           />
         </Flex>
@@ -75,19 +75,19 @@ export default async function ViewCommunityPage({
       >
         <VStack width="100%" justifyContent="center" alignItems="start" gap={4}>
           <Heading mt={5} fontSize="2xl" fontWeight="bold">
-            {community?.name}
+            {carepoint?.description}
           </Heading>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
-            <Link href={`/person/${community?.createdBy[0]?.id}`}>
-              <EntityOwnerCard person={community?.createdBy[0]} />
+            <Link href={`/person/${carepoint?.createdBy[0]?.id}`}>
+              <EntityOwnerCard person={carepoint?.createdBy[0]} />
             </Link>
           </Box>
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/community/update/${id}`}
-              onDeleteEntity="Community"
+              editLink={`/carepoint/update/${id}`}
+              onDeleteEntity="CarePoint"
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack
@@ -102,15 +102,11 @@ export default async function ViewCommunityPage({
                   <VStack gap={4}>
                     <EntityDetail
                       title="Description"
-                      entityName={community.name}
-                      details={community.description}
+                      entityName={carepoint.description}
+                      details={carepoint.description}
                     />
-                    <EntityDetail
-                      title="Location"
-                      details={community.location}
-                    />
-                    <EntityDetail title="Time" details={community.time} />
-                    <EntityDetail title="Status" details={community.status} />
+
+                    <EntityDetail title="Status" details={carepoint.status} />
                   </VStack>
                 </VStack>,
                 <VStack
@@ -120,7 +116,6 @@ export default async function ViewCommunityPage({
                   borderRadius={'2xl'}
                   boxShadow={'xs'}
                   alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
                 >
                   <Text>Linked Care Points</Text>
                 </VStack>,
@@ -128,7 +123,7 @@ export default async function ViewCommunityPage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={community?.createdBy[0]} />
+              <EntityOwnerCard person={carepoint?.createdBy[0]} />
             </Box>
           </HStack>
         </VStack>
