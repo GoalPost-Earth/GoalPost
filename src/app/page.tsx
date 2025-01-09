@@ -4,7 +4,6 @@ import React from 'react'
 import {
   ActionCard,
   Avatar,
-  CarePointCard,
   CommunityCard,
   PersonCard,
   ResourceCard,
@@ -197,11 +196,6 @@ const HomeClient = () => {
                   Your Connections
                 </Heading>
                 <AvatarCarousel people={connections as Person[]} />
-                <CarePointCard
-                  id="1"
-                  status="Active"
-                  description="Something new"
-                />
               </VStack>
             )}
           </GridItem>
