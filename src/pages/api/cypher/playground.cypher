@@ -14,6 +14,18 @@ OPTIONS {indexConfig: {
  `vector.similarity_function`: 'cosine'
 }};
 
-MATCH (person:Person)
-WHERE person.firstName IS NULL
-DETACH DELETE person
+MATCH (resource:Resource)
+WHERE NOT EXISTS {
+    MATCH (resource)<-[:PROVIDES]-(person:Person)
+}
+MATCH (person:Person {firstName: "Vanessa"})
+MERGE (person)-[:PROVIDES]->(resource)
+RETURN resource.name
+
+MATCH (goal:Goal {id: "d6764f63-df6c-468c-9452-773879125322"})//<-[MOTIVATED_BY]-(motivee:Person)
+
+
+MATCH (person:Person {firstName: "Vanessa"})
+MERGE (goal)-[:CREATED_BY]->(person)
+
+RETURN goal.name, person.firstName

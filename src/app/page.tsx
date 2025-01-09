@@ -55,15 +55,17 @@ const HomeClient = () => {
   })
 
   const recentGoals = data?.goals.map((goal) => {
+    console.log('🚀 ~ file: page.tsx:58 ~ goal:', goal)
+
     return {
       actionName: goal.__typename,
       actionInfo: 'posted a new goal',
       icon: <GoalsIcon width="18px" height="18px" />,
       id: goal.id,
       createdAt: goal.createdAt,
-      personId: '', //goal.createdBy[0].id,
-      personName: '', //goal.createdBy[0].name,
-      personPhoto: '', // goal.createdBy[0].photo,
+      personId: goal.createdBy[0].id,
+      personName: goal.createdBy[0].name,
+      personPhoto: goal.createdBy[0].photo,
       description: goal.description,
       name: goal.name,
       photo: goal.photo,
