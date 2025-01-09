@@ -13,12 +13,12 @@ type Data = {
 }
 
 const NodeBgColor = {
-  Person: 'red.fg',
-  Member: 'blue.fg',
-  CoreValue: 'yellow.fg',
-  Goal: 'green.fg',
-  Resource: 'purple.fg',
-  Community: 'orange.fg',
+  Person: 'blue.fg',
+  Member: 'person.fg',
+  CoreValue: 'corevalue.fg',
+  Goal: 'goal.fg',
+  Resource: 'resource.fg',
+  Community: 'community.fg',
 }
 function GraphNodes({ data }: Data) {
   const updateNodeInternals = useUpdateNodeInternals()

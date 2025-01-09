@@ -9162,6 +9162,7 @@ export type GetAllPeopleQuery = {
     phone?: string | null
     pronouns?: string | null
     location?: string | null
+    connectedTo: Array<{ __typename?: 'Person'; id: string; name: string }>
   }>
 }
 
@@ -11681,6 +11682,17 @@ export const GetAllPeopleDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connectedTo' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
               ],
             },
           },

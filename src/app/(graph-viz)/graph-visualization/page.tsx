@@ -202,6 +202,22 @@ const GraphVisualization = () => {
     peopleNodes ?? []
   )
 
+  const personToPersonConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.connectedTo.map((connectedTo) => {
+          return {
+            id: `${person.__typename}${person.id}-${connectedTo.__typename}${connectedTo.id}`,
+            source: `${person.__typename}${person.id}`,
+            target: `${connectedTo.__typename}${connectedTo.id}`,
+            label: 'Connected To',
+            type: 'bezier',
+          }
+        })
+      }) ?? []
+    )
+  }, [people])
+
   const initNodes: Node[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -227,6 +243,7 @@ const GraphVisualization = () => {
     if (people && coreValues && goals && resources && members && communities) {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
+      setEdges(personToPersonConnection)
     }
   }, [
     selectedNodes,
@@ -238,6 +255,8 @@ const GraphVisualization = () => {
     members,
     communities,
   ])
+
+  console.log('Person to person :', personToPersonConnection)
 
   const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo
   const nodeId = selectedNodeInfo[0]?.data.id
