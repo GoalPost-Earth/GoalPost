@@ -20,13 +20,14 @@ import {
   ActionCard,
   Avatar,
   CommunityCard,
-  ConnectionsCard,
   LoadingScreen,
   GoalCard,
   CarePointsIcon,
   GoalsIcon,
   PeopleIcon,
   SettingsIcon,
+  ResourceCard,
+  PersonCard,
 } from '@/components'
 
 const HomeClient = () => {
@@ -109,6 +110,15 @@ const HomeClient = () => {
       createdBy: resource.providedByPerson,
       description: resource.description,
       name: resource.name,
+      children: (
+        <ResourceCard
+          id={resource.id}
+          ownerPhoto={resource.providedByPerson[0].photo}
+          name={resource.name}
+          description={resource.description}
+          ownerName={resource.providedByPerson[0].name}
+        />
+      ),
     }
   })
 
@@ -125,7 +135,7 @@ const HomeClient = () => {
         name: community.name,
         actionInfo: `joined a community`,
         children: (
-          <ConnectionsCard
+          <PersonCard
             id={member.id}
             name={member.name}
             photo={member.photo}
@@ -141,6 +151,7 @@ const HomeClient = () => {
     ...recentGoals,
     ...recentCoreValues,
     ...recentCommunityMembers,
+    ...recentResources,
   ]
 
   return (

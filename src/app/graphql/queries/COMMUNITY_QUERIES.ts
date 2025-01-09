@@ -46,3 +46,18 @@ export const GET_ALL_COMMUNITIES = graphql(`
     }
   }
 `)
+
+export const GET_COMMUNITIES_AND_THEIR_MEMBERS = graphql(`
+  query getCommunitiesAndTheirMembers {
+    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {
+      id
+      name
+      members {
+        email
+        name
+        id
+        photo
+      }
+    }
+  }
+`)

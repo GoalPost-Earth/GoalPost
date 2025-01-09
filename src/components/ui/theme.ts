@@ -140,7 +140,48 @@ export const customTheme = createSystem(defaultConfig, {
             },
           },
         },
-        corevalue: {
+        person: {
+          contrast: {
+            value: { base: '{colors.white}', _dark: '{colors.white}' },
+          },
+          fg: {
+            value: {
+              base: '{colors.blue.700}',
+              _dark: '{colors.blue.300}',
+            },
+          },
+          subtle: {
+            value: {
+              base: '{colors.blue.100}',
+              _dark: '{colors.blue.900}',
+            },
+          },
+          muted: {
+            value: {
+              base: '{colors.blue.200}',
+              _dark: '{colors.blue.800}',
+            },
+          },
+          emphasized: {
+            value: {
+              base: '{colors.blue.300}',
+              _dark: '{colors.blue.700}',
+            },
+          },
+          solid: {
+            value: {
+              base: '{colors.blue.600}',
+              dark: '{colors.blue.600}',
+            },
+          },
+          focusRing: {
+            value: {
+              base: '{colors.blue.600}',
+              dark: '{colors.blue.600}',
+            },
+          },
+        },
+        coreValue: {
           contrast: {
             value: { base: '{colors.white}', _dark: '{colors.white}' },
           },

@@ -67,3 +67,44 @@ export const GET_PEOPLE_AND_THEIR_GOALS = graphql(`
     }
   }
 `)
+
+export const GET_PEOPLE_AND_THEIR_RESOURCES = graphql(`
+  query getPeopleAndTheirResources {
+    people(where: { providesResources_SOME: { NOT: { id_EQ: "" } } }) {
+      name
+      photo
+      id
+      providesResources {
+        name
+        id
+        description
+        status
+        providedByPerson {
+          name
+          id
+          photo
+        }
+      }
+    }
+  }
+`)
+
+export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
+  query getPeopleAndTheirCoreValues {
+    people(where: { coreValues_SOME: { NOT: { id_EQ: "" } } }) {
+      coreValues {
+        isEmbracedBy {
+          id
+          name
+          photo
+        }
+        id
+        description
+        name
+      }
+      id
+      name
+      photo
+    }
+  }
+`)

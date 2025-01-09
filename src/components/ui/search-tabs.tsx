@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { Flex, Tabs, TabsContent, TabsContentGroup } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
 import { CommunityCard } from './community-card'
-import { ConnectionsCard } from './connections-card'
 import { GoalCard } from './goal-card'
+import { PersonCard } from './person-card'
 
 interface SearchTabsProps {
   content: any[]
@@ -114,7 +114,7 @@ export const SearchTabs = ({ content }: SearchTabsProps) => {
       <TabsContent value={TRIGGERS[3]} mb={3}>
         {!!content[3] && content[3].length > 0 ? (
           content[3].map((entity: any) => (
-            <ConnectionsCard
+            <PersonCard
               key={entity.id}
               id={entity.id}
               name={entity.name}

@@ -4,11 +4,11 @@ import SearchBar from './searchbar'
 import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
 import { CommunityCard } from './community-card'
-import { ConnectionsCard } from './connections-card'
 import { useGetSearchResults } from '@/hooks'
 import { Community } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
 import { GoalCard } from './goal-card'
+import { PersonCard } from './person-card'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
@@ -156,7 +156,7 @@ export default function SearchResults() {
                 ))}
               </VStack>
             )}
-            {!!returnedPeople && (
+            {!!returnedPeople && returnedPeople.length > 0 && (
               <VStack
                 width="100%"
                 onClick={handleSearchedEntityClick}
@@ -167,7 +167,7 @@ export default function SearchResults() {
                   People
                 </Text>
                 {returnedPeople.map((person) => (
-                  <ConnectionsCard
+                  <PersonCard
                     key={person.id}
                     id={person.id}
                     name={person.name}
@@ -199,12 +199,12 @@ export default function SearchResults() {
               </VStack>
             )}
             {loading && (
-              <Box>
+              <Flex width="100%" justifyContent="center">
                 <Spinner />
                 <Text as="span" ml={5}>
                   Fetching Results
                 </Text>
-              </Box>
+              </Flex>
             )}
             {!searchTerm && (
               <EmptyState

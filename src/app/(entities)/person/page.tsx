@@ -1,66 +1,75 @@
 'use client'
-
-import { GET_ALL_PEOPLE } from '@/app/graphql'
+import { GET_COMMUNITIES_AND_THEIR_MEMBERS } from '@/app/graphql'
 import { ApolloWrapper } from '@/components'
-import { Avatar } from '@/components/ui'
+import { PersonCard } from '@/components/ui'
 import { useQuery } from '@apollo/client'
 import {
-  Box,
-  Card,
   Container,
+  Flex,
   Heading,
   HStack,
-  IconButton,
   Text,
+  VStack,
 } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import { LuPhone } from 'react-icons/lu'
+import { IoArrowForwardCircleOutline } from 'react-icons/io5'
 
 export default function AllPeople() {
-  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
+  const { data, loading, error } = useQuery(GET_COMMUNITIES_AND_THEIR_MEMBERS)
 
-  const people = data?.people ?? []
+  const communities = data?.communities
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <Heading>All People</Heading>
-        {people.map((person) => (
-          <Link href={'/person/' + person.id} key={person.id}>
-            <Card.Root my={1}>
-              <Card.Header p={2} bgColor="gray.100">
-                <HStack>
-                  <Avatar src={person.photo ?? undefined} /> {person.name}
-                </HStack>
-              </Card.Header>
-              <Card.Body p={2}>
-                <Text>{person.email}</Text>
-                {!!person.phone && (
-                  <>
-                    <Link href={`tel:${person.phone}`}>
-                      <HStack>
-                        <IconButton
-                          colorPalette="brand"
-                          aria-label="phone"
-                          size="xs"
-                          borderRadius={100}
-                        >
-                          <LuPhone />
-                        </IconButton>
-                        <Text>{person.phone}</Text>
-                      </HStack>
-                    </Link>
-
-                    <Box my={2}>
-                      <hr />
-                    </Box>
-                  </>
-                )}
-              </Card.Body>
-            </Card.Root>
-          </Link>
-        ))}
+        <Heading
+          position="sticky"
+          left={4}
+          my={5}
+          fontSize="3xl"
+          fontWeight="extrabold"
+        >
+          People
+        </Heading>
+        {communities &&
+          communities.map((community) => (
+            <VStack key={community.id} my={10} gap={4} alignItems="start">
+              <HStack justifyContent="space-between" width="100%">
+                <Heading>
+                  <Link href={`/community/${community.id}`}>
+                    {community.name}
+                  </Link>
+                </Heading>
+                <Flex
+                  fontWeight="bold"
+                  fontSize="sm"
+                  gap={2}
+                  alignItems="center"
+                  cursor="pointer"
+                >
+                  <Text>All People</Text>
+                  <IoArrowForwardCircleOutline />
+                </Flex>
+              </HStack>
+              <HStack
+                gap={6}
+                width="100%"
+                overflowX="scroll"
+                whiteSpace="nowrap"
+              >
+                {community.members.map((member) => (
+                  <Flex key={member.id}>
+                    <PersonCard
+                      id={member.id}
+                      name={member.name}
+                      info={member.email}
+                    />
+                  </Flex>
+                ))}
+              </HStack>
+            </VStack>
+          ))}
       </Container>
     </ApolloWrapper>
   )

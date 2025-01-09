@@ -37,7 +37,7 @@ export const GenericTabs = ({
         setActiveTab(newValue)
       }}
       colorPalette="brand"
-      width="100%"
+      width={{ base: '100%', lg: '90%', xl: '100%' }}
       mt={2}
     >
       <>

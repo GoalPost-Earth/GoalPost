@@ -1,10 +1,9 @@
 'use client'
 
 import { GET_ALL_COREVALUES } from '@/app/graphql'
-import { ApolloWrapper } from '@/components'
+import { ApolloWrapper, CoreValueCard } from '@/components'
 import { useQuery } from '@apollo/client'
-import { Card, Container, Heading } from '@chakra-ui/react'
-import Link from 'next/link'
+import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 
 export default function AllCoreValues() {
@@ -14,22 +13,23 @@ export default function AllCoreValues() {
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container>
-        <Heading>All CoreValues</Heading>
-        {corevalues.map((corevalue) => (
-          <Link key={corevalue.id} href={'/corevalue/' + corevalue.id}>
-            <Card.Root key={corevalue.id} my={1}>
-              <Card.Header py={2} bgColor="gray.100">
-                {corevalue.name}
-              </Card.Header>
-              {!!corevalue.description && (
-                <Card.Body>
-                  <Card.Description>{corevalue.description}</Card.Description>
-                </Card.Body>
-              )}
-            </Card.Root>
-          </Link>
-        ))}
+      <Container p={4}>
+        <Heading
+          position="sticky"
+          left={4}
+          my={5}
+          fontSize="3xl"
+          fontWeight="extrabold"
+        >
+          Core Values
+        </Heading>
+        <Grid templateColumns="repeat(auto-fill, minmax(300px, 1fr))" gap={6}>
+          {corevalues.map((corevalue) => (
+            <GridItem key={corevalue.id} height="100%">
+              <CoreValueCard coreValue={corevalue} />
+            </GridItem>
+          ))}
+        </Grid>
       </Container>
     </ApolloWrapper>
   )
