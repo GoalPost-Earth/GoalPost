@@ -13,7 +13,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import {
-  LoadingScreen,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -30,15 +29,19 @@ export default async function ViewGoalPage({
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_GOAL,
     variables: { id },
   })
 
   const goal = data?.goals[0]
 
-  if (!goal) {
-    return <LoadingScreen />
+  if (error) {
+    throw error
+  }
+
+  if (data.goals.length === 0) {
+    throw new Error('Goal not found')
   }
 
   return (
@@ -88,8 +91,8 @@ export default async function ViewGoalPage({
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/goal/update/${id}`}
-              onDeleteEntity="Goal"
+              entityId={id}
+              entityType="Goal"
               triggers={[
                 'Details',
                 'Enables Care Points',

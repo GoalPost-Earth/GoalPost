@@ -12,7 +12,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import {
-  LoadingScreen,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -21,22 +20,26 @@ import {
 } from '@/components'
 import Link from 'next/link'
 
-export default async function ViewCorevaluePage({
+export default async function ViewCoreValuePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_COREVALUE,
     variables: { id },
   })
 
   const corevalue = data?.coreValues[0]
 
-  if (!corevalue) {
-    return <LoadingScreen />
+  if (error) {
+    throw error
+  }
+
+  if (data.coreValues.length === 0) {
+    throw new Error('Core Value not found')
   }
 
   return (
@@ -86,8 +89,8 @@ export default async function ViewCorevaluePage({
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/corevalue/update/${id}`}
-              onDeleteEntity="CoreValue"
+              entityId={id}
+              entityType="CoreValue"
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

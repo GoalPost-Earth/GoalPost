@@ -12,7 +12,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import {
-  LoadingScreen,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -28,15 +27,19 @@ export default async function ViewCarePointPage({
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_CAREPOINT,
     variables: { id },
   })
 
   const carepoint = data?.carePoints[0]
 
-  if (!carepoint) {
-    return <LoadingScreen />
+  if (error) {
+    throw error
+  }
+
+  if (data.carePoints.length === 0) {
+    throw new Error('Care Point not found')
   }
 
   return (
@@ -86,8 +89,8 @@ export default async function ViewCarePointPage({
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/carepoint/update/${id}`}
-              onDeleteEntity="CarePoint"
+              entityId={id}
+              entityType="CarePoint"
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

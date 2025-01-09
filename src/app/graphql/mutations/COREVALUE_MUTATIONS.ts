@@ -33,3 +33,11 @@ export const UPDATE_COREVALUE_MUTATION = graphql(`
     }
   }
 `)
+
+export const DELETE_COREVALUE_MUTATION = graphql(`
+  mutation DeleteCoreValue($id: ID!) {
+    deleteCoreValues(where: { id_EQ: $id }) {
+      nodesDeleted
+    }
+  }
+`)

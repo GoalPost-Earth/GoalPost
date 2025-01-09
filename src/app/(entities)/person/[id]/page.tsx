@@ -23,13 +23,19 @@ export default async function ViewPersonPage({
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_PERSON,
     variables: { id },
   })
 
   const person = data?.people[0]
+  if (error) {
+    throw error
+  }
 
+  if (data.people.length === 0) {
+    throw new Error('Person not found')
+  }
   const isMember = person?.communities.length > 0
 
   const bioData = [
@@ -191,8 +197,8 @@ export default async function ViewPersonPage({
         gap={0}
       >
         <GenericTabs
-          editLink={`/person/update/${id}`}
-          onDeleteEntity="Person"
+          entityId={id}
+          entityType="Person"
           triggers={desktopTriggers}
           content={desktopContent}
           props={{

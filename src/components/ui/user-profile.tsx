@@ -45,8 +45,8 @@ export function UserProfile({
         {user?.email && <Text>{user?.email}</Text>}
       </Stack>
       <GenericTabs
-        editLink={`/person/update/${user.id}`}
-        onDeleteEntity="Person"
+        entityId={user.id}
+        entityType="Person"
         triggers={tabTriggers}
         content={tabContent}
       />

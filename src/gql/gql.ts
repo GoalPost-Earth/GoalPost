@@ -14,30 +14,46 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
+  '\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n':
+    types.CreateCarePointsDocument,
+  '\n  mutation UpdateCarePoint($id: ID!, $update: CarePointUpdateInput!) {\n    updateCarePoints(where: { id_EQ: $id }, update: $update) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n':
+    types.UpdateCarePointDocument,
+  '\n  mutation DeleteCarePoint($id: ID!) {\n    deleteCarePoints(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeleteCarePointDocument,
   '\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n':
     types.SendMessageToChatbotDocument,
   '\n  mutation CreateCommunities($input: [CommunityCreateInput!]!) {\n    createCommunities(input: $input) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n    }\n  }\n':
     types.CreateCommunitiesDocument,
   '\n  mutation updateCommunity($id: ID!, $update: CommunityUpdateInput!) {\n    updateCommunities(where: { id_EQ: $id }, update: $update) {\n      communities {\n        id\n        name\n        description\n        why\n        location\n        time\n        activities\n        resultsAchieved\n        status\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
     types.UpdateCommunityDocument,
+  '\n  mutation DeleteCommunity($id: ID!) {\n    deleteCommunities(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeleteCommunityDocument,
   '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
     types.CreateCoreValuesDocument,
   '\n  mutation UpdateCoreValue($id: ID!, $update: CoreValueUpdateInput!) {\n    updateCoreValues(where: { id_EQ: $id }, update: $update) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n':
     types.UpdateCoreValueDocument,
+  '\n  mutation DeleteCoreValue($id: ID!) {\n    deleteCoreValues(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeleteCoreValueDocument,
   '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.CreateGoalsDocument,
   '\n  mutation UpdateGoal($id: ID!, $update: GoalUpdateInput!) {\n    updateGoals(where: { id_EQ: $id }, update: $update) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.UpdateGoalDocument,
+  '\n  mutation DeleteGoal($id: ID!) {\n    deleteGoals(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeleteGoalDocument,
   '\n  mutation GeneratePersonEmbeddings($personId: ID!) {\n    generatePersonEmbeddings(personId: $personId)\n  }\n':
     types.GeneratePersonEmbeddingsDocument,
   '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
     types.CreatePeopleDocument,
   '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
     types.UpdatePersonDocument,
+  '\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeletePersonDocument,
   '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n':
     types.CreateResourcesDocument,
   '\n  mutation UpdateResource($id: ID!, $update: ResourceUpdateInput!) {\n    updateResources(where: { id_EQ: $id }, update: $update) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n':
     types.UpdateResourceDocument,
+  '\n  mutation DeleteResource($id: ID!) {\n    deleteResources(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
+    types.DeleteResourceDocument,
   '\n  query getRecentActions {\n    carePoints(sort: { createdAt: DESC }, limit: 3, where: {}) {\n      createdAt\n      description\n      id\n      status\n      createdBy {\n        photo\n        name\n        id\n      }\n    }\n    goals(sort: { createdAt: DESC }, limit: 3) {\n      createdAt\n      id\n      description\n      photo\n      status\n      name\n      createdBy {\n        name\n        id\n        photo\n      }\n    }\n    resources(limit: 3, sort: { createdAt: DESC }) {\n      providedByPerson {\n        name\n        photo\n        id\n      }\n      name\n      id\n      status\n      description\n      createdAt\n    }\n    coreValues(limit: 3, sort: { createdAt: DESC }) {\n      isEmbracedBy {\n        name\n        id\n        photo\n      }\n      description\n      id\n      name\n      createdAt\n    }\n    communities(where: { members_SOME: { NOT: null } }, limit: 3, sort: {}) {\n      name\n      members(limit: 3, sort: { createdAt: DESC }) {\n        id\n        name\n        photo\n        createdAt\n      }\n    }\n  }\n':
     types.GetRecentActionsDocument,
   '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n      }\n      caresForGoals {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
@@ -96,6 +112,24 @@ export function graphql(source: string): unknown
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateCarePoint($id: ID!, $update: CarePointUpdateInput!) {\n    updateCarePoints(where: { id_EQ: $id }, update: $update) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation UpdateCarePoint($id: ID!, $update: CarePointUpdateInput!) {\n    updateCarePoints(where: { id_EQ: $id }, update: $update) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteCarePoint($id: ID!) {\n    deleteCarePoints(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteCarePoint($id: ID!) {\n    deleteCarePoints(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n'
 ): (typeof documents)['\n  mutation SendMessageToChatbot($message: String!, $sessionId: String) {\n    sendMessageToChatbot(message: $message, sessionId: $sessionId) {\n      sessionId\n      message\n    }\n  }\n']
 /**
@@ -114,6 +148,12 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation DeleteCommunity($id: ID!) {\n    deleteCommunities(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteCommunity($id: ID!) {\n    deleteCommunities(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateCoreValues($input: [CoreValueCreateInput!]!) {\n    createCoreValues(input: $input) {\n      coreValues {\n        id\n        name\n        whoSupports\n        alignmentChallenges\n        alignmentExamples\n        description\n        why\n        createdAt\n      }\n    }\n  }\n']
 /**
@@ -126,6 +166,12 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation DeleteCoreValue($id: ID!) {\n    deleteCoreValues(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteCoreValue($id: ID!) {\n    deleteCoreValues(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateGoals($input: [GoalCreateInput!]!) {\n    createGoals(input: $input) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
 /**
@@ -134,6 +180,12 @@ export function graphql(
 export function graphql(
   source: '\n  mutation UpdateGoal($id: ID!, $update: GoalUpdateInput!) {\n    updateGoals(where: { id_EQ: $id }, update: $update) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation UpdateGoal($id: ID!, $update: GoalUpdateInput!) {\n    updateGoals(where: { id_EQ: $id }, update: $update) {\n      goals {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteGoal($id: ID!) {\n    deleteGoals(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteGoal($id: ID!) {\n    deleteGoals(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -156,6 +208,12 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n']
 /**
@@ -164,6 +222,12 @@ export function graphql(
 export function graphql(
   source: '\n  mutation UpdateResource($id: ID!, $update: ResourceUpdateInput!) {\n    updateResources(where: { id_EQ: $id }, update: $update) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation UpdateResource($id: ID!, $update: ResourceUpdateInput!) {\n    updateResources(where: { id_EQ: $id }, update: $update) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteResource($id: ID!) {\n    deleteResources(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteResource($id: ID!) {\n    deleteResources(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -41,3 +41,11 @@ export const UPDATE_COMMUNITY_MUTATION = graphql(`
     }
   }
 `)
+
+export const DELETE_COMMUNITY_MUTATION = graphql(`
+  mutation DeleteCommunity($id: ID!) {
+    deleteCommunities(where: { id_EQ: $id }) {
+      nodesDeleted
+    }
+  }
+`)

@@ -35,3 +35,11 @@ export const UPDATE_GOAL_MUTATION = graphql(`
     }
   }
 `)
+
+export const DELETE_GOAL_MUTATION = graphql(`
+  mutation DeleteGoal($id: ID!) {
+    deleteGoals(where: { id_EQ: $id }) {
+      nodesDeleted
+    }
+  }
+`)

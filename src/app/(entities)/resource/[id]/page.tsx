@@ -13,7 +13,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import {
-  LoadingScreen,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -30,15 +29,19 @@ export default async function ViewResourcePage({
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_RESOURCE,
     variables: { id },
   })
 
   const resource = data?.resources[0]
 
-  if (!resource) {
-    return <LoadingScreen />
+  if (error) {
+    throw error
+  }
+
+  if (data.resources.length === 0) {
+    throw new Error('Resource not found')
   }
 
   return (
@@ -88,8 +91,8 @@ export default async function ViewResourcePage({
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/resource/update/${id}`}
-              onDeleteEntity="Resource"
+              entityId={id}
+              entityType="Resource"
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

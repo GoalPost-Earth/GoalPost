@@ -13,7 +13,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import {
-  LoadingScreen,
   Avatar,
   EntityPageHeader,
   GenericTabs,
@@ -33,15 +32,19 @@ export default async function ViewCommunityPage({
 }) {
   const { id } = await params
 
-  const { data } = await query({
+  const { data, error } = await query({
     query: GET_COMMUNITY,
     variables: { id },
   })
 
   const community = data?.communities[0]
 
-  if (!community) {
-    return <LoadingScreen />
+  if (error) {
+    throw error
+  }
+
+  if (data.communities.length === 0) {
+    throw new Error('Community not found')
   }
 
   return (
@@ -91,8 +94,8 @@ export default async function ViewCommunityPage({
 
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
-              editLink={`/community/update/${id}`}
-              onDeleteEntity="Community"
+              entityId={id}
+              entityType="Community"
               triggers={[
                 'Details',
                 'Related Communities',

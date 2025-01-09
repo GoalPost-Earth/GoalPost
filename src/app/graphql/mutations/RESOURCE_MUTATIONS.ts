@@ -45,3 +45,11 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
     }
   }
 `)
+
+export const DELETE_RESOURCE_MUTATION = graphql(`
+  mutation DeleteResource($id: ID!) {
+    deleteResources(where: { id_EQ: $id }) {
+      nodesDeleted
+    }
+  }
+`)

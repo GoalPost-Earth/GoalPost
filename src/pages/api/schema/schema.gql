@@ -138,6 +138,7 @@ type Goal @node {
   photo: String
   activities: String
   status: String!
+  why: String
   location: String
   time: String
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)

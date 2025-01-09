@@ -6,12 +6,12 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { FormMode } from '@/types'
 import { GoalForm } from '@/components'
+import { useApp } from '@/app/contexts'
 
 function CreateGoal() {
-  const { user } = useUser()
+  const { user } = useApp()
   const {
     control,
     handleSubmit,
@@ -29,6 +29,9 @@ function CreateGoal() {
           input: {
             ...data,
             createdBy: {
+              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+            },
+            motivatesPeople: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
           },

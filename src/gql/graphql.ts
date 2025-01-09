@@ -377,6 +377,21 @@ export type CarePointCaresForGoalsNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type CarePointCaresForGoalsRelationship = {
@@ -967,6 +982,21 @@ export type CarePointEnabledByGoalsNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type CarePointEnabledByGoalsRelationship = {
@@ -1007,6 +1037,7 @@ export type CarePointGoalCaresForGoalsNodeAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
 }
 
 export type CarePointGoalEnabledByGoalsAggregationSelection = {
@@ -1028,6 +1059,7 @@ export type CarePointGoalEnabledByGoalsNodeAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
 }
 
 export type CarePointPersonCreatedByAggregationSelection = {
@@ -3964,6 +3996,7 @@ export type Goal = {
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+  why?: Maybe<Scalars['String']['output']>
 }
 
 export type GoalCaredForByCarePointsArgs = {
@@ -4052,6 +4085,7 @@ export type GoalAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
 }
 
 export type GoalCarePointCaredForByCarePointsAggregationSelection = {
@@ -4249,6 +4283,7 @@ export type GoalCreateInput = {
   status: Scalars['String']['input']
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
+  why?: InputMaybe<Scalars['String']['input']>
 }
 
 export type GoalCreatedByAggregateInput = {
@@ -5121,6 +5156,7 @@ export type GoalSort = {
   successMeasures?: InputMaybe<SortDirection>
   time?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
+  why?: InputMaybe<SortDirection>
 }
 
 export type GoalUpdateInput = {
@@ -5138,6 +5174,7 @@ export type GoalUpdateInput = {
   status_SET?: InputMaybe<Scalars['String']['input']>
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
+  why_SET?: InputMaybe<Scalars['String']['input']>
 }
 
 export type GoalWhere = {
@@ -5269,6 +5306,11 @@ export type GoalWhere = {
   updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
   updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_EQ?: InputMaybe<Scalars['String']['input']>
+  why_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
 export type GoalsConnection = {
@@ -6459,6 +6501,7 @@ export type PersonGoalGoalsNodeAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
 }
 
 export type PersonGoalsAggregateInput = {
@@ -6669,6 +6712,21 @@ export type PersonGoalsNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type PersonGoalsRelationship = {
@@ -8939,6 +8997,50 @@ export type UpdateResourcesMutationResponse = {
   resources: Array<Resource>
 }
 
+export type CreateCarePointsMutationVariables = Exact<{
+  input: Array<CarePointCreateInput> | CarePointCreateInput
+}>
+
+export type CreateCarePointsMutation = {
+  __typename?: 'Mutation'
+  createCarePoints: {
+    __typename?: 'CreateCarePointsMutationResponse'
+    carePoints: Array<{
+      __typename?: 'CarePoint'
+      id: string
+      description: string
+      status: string
+    }>
+  }
+}
+
+export type UpdateCarePointMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+  update: CarePointUpdateInput
+}>
+
+export type UpdateCarePointMutation = {
+  __typename?: 'Mutation'
+  updateCarePoints: {
+    __typename?: 'UpdateCarePointsMutationResponse'
+    carePoints: Array<{
+      __typename?: 'CarePoint'
+      id: string
+      description: string
+      status: string
+    }>
+  }
+}
+
+export type DeleteCarePointMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteCarePointMutation = {
+  __typename?: 'Mutation'
+  deleteCarePoints: { __typename?: 'DeleteInfo'; nodesDeleted: number }
+}
+
 export type SendMessageToChatbotMutationVariables = Exact<{
   message: Scalars['String']['input']
   sessionId?: InputMaybe<Scalars['String']['input']>
@@ -9007,6 +9109,15 @@ export type UpdateCommunityMutation = {
   }
 }
 
+export type DeleteCommunityMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteCommunityMutation = {
+  __typename?: 'Mutation'
+  deleteCommunities: { __typename?: 'DeleteInfo'; nodesDeleted: number }
+}
+
 export type CreateCoreValuesMutationVariables = Exact<{
   input: Array<CoreValueCreateInput> | CoreValueCreateInput
 }>
@@ -9050,6 +9161,15 @@ export type UpdateCoreValueMutation = {
       createdAt: any
     }>
   }
+}
+
+export type DeleteCoreValueMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteCoreValueMutation = {
+  __typename?: 'Mutation'
+  deleteCoreValues: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
 export type CreateGoalsMutationVariables = Exact<{
@@ -9097,6 +9217,15 @@ export type UpdateGoalMutation = {
       createdAt: any
     }>
   }
+}
+
+export type DeleteGoalMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteGoalMutation = {
+  __typename?: 'Mutation'
+  deleteGoals: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
 export type GeneratePersonEmbeddingsMutationVariables = Exact<{
@@ -9153,6 +9282,15 @@ export type UpdatePersonMutation = {
   }
 }
 
+export type DeletePersonMutationVariables = Exact<{
+  where: PersonWhere
+}>
+
+export type DeletePersonMutation = {
+  __typename?: 'Mutation'
+  deletePeople: { __typename?: 'DeleteInfo'; nodesDeleted: number }
+}
+
 export type CreateResourcesMutationVariables = Exact<{
   input: Array<ResourceCreateInput> | ResourceCreateInput
 }>
@@ -9206,6 +9344,15 @@ export type UpdateResourceMutation = {
       carePoints: Array<{ __typename?: 'CarePoint'; id: string }>
     }>
   }
+}
+
+export type DeleteResourceMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteResourceMutation = {
+  __typename?: 'Mutation'
+  deleteResources: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
 export type GetRecentActionsQueryVariables = Exact<{ [key: string]: never }>
@@ -9872,6 +10019,239 @@ export type GetMatchingEntitiesQuery = {
   }>
 }
 
+export const CreateCarePointsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateCarePoints' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'CarePointCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createCarePoints' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'carePoints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateCarePointsMutation,
+  CreateCarePointsMutationVariables
+>
+export const UpdateCarePointDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateCarePoint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CarePointUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateCarePoints' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'carePoints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateCarePointMutation,
+  UpdateCarePointMutationVariables
+>
+export const DeleteCarePointDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteCarePoint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteCarePoints' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteCarePointMutation,
+  DeleteCarePointMutationVariables
+>
 export const SendMessageToChatbotDocument = {
   kind: 'Document',
   definitions: [
@@ -10171,6 +10551,66 @@ export const UpdateCommunityDocument = {
   UpdateCommunityMutation,
   UpdateCommunityMutationVariables
 >
+export const DeleteCommunityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteCommunity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteCommunities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteCommunityMutation,
+  DeleteCommunityMutationVariables
+>
 export const CreateCoreValuesDocument = {
   kind: 'Document',
   definitions: [
@@ -10372,6 +10812,66 @@ export const UpdateCoreValueDocument = {
   UpdateCoreValueMutation,
   UpdateCoreValueMutationVariables
 >
+export const DeleteCoreValueDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteCoreValue' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteCoreValues' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteCoreValueMutation,
+  DeleteCoreValueMutationVariables
+>
 export const CreateGoalsDocument = {
   kind: 'Document',
   definitions: [
@@ -10569,6 +11069,63 @@ export const UpdateGoalDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateGoalMutation, UpdateGoalMutationVariables>
+export const DeleteGoalDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteGoal' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteGoals' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteGoalMutation, DeleteGoalMutationVariables>
 export const GeneratePersonEmbeddingsDocument = {
   kind: 'Document',
   definitions: [
@@ -10805,6 +11362,63 @@ export const UpdatePersonDocument = {
 } as unknown as DocumentNode<
   UpdatePersonMutation,
   UpdatePersonMutationVariables
+>
+export const DeletePersonDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeletePerson' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PersonWhere' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deletePeople' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeletePersonMutation,
+  DeletePersonMutationVariables
 >
 export const CreateResourcesDocument = {
   kind: 'Document',
@@ -11052,6 +11666,66 @@ export const UpdateResourceDocument = {
 } as unknown as DocumentNode<
   UpdateResourceMutation,
   UpdateResourceMutationVariables
+>
+export const DeleteResourceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteResource' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteResources' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteResourceMutation,
+  DeleteResourceMutationVariables
 >
 export const GetRecentActionsDocument = {
   kind: 'Document',

@@ -11,16 +11,16 @@ import { EntityType } from '@/types'
 interface GenericTabsProps {
   triggers: string[]
   content: React.ReactNode[]
-  editLink: string
-  onDeleteEntity: EntityType
+  entityId: string
+  entityType: EntityType
   props?: any
 }
 
 export const GenericTabs = ({
   triggers,
   content,
-  editLink,
-  onDeleteEntity,
+  entityId,
+  entityType,
   ...props
 }: GenericTabsProps) => {
   const [activeTab, setActiveTab] = useState(triggers[0])
@@ -62,7 +62,7 @@ export const GenericTabs = ({
             value="edit"
             asChild
           >
-            <Link href={editLink}>
+            <Link href={`${entityType.toLowerCase()}/update/${entityId}`}>
               <EditButton />
             </Link>
           </Tabs.Trigger>
@@ -72,7 +72,7 @@ export const GenericTabs = ({
             asChild
           >
             <Box>
-              <DeleteButton onDeleteEntity={onDeleteEntity} />
+              <DeleteButton entityId={entityId} entityType={entityType} />
             </Box>
           </Tabs.Trigger>
         </Tabs.List>
