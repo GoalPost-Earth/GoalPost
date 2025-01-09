@@ -21,6 +21,7 @@ export default function GraphSideBar({
   nodes,
   selectedNodes,
   selectedNodeInfo,
+  setSelectedNodeInfo,
   selectedNodeId,
   selectedNodeName,
   setNodes,
@@ -29,6 +30,7 @@ export default function GraphSideBar({
   nodes: any
   selectedNodes: any
   selectedNodeInfo: any
+  setSelectedNodeInfo: any
   selectedNodeId: string
   selectedNodeName: any
   setNodes: any
@@ -46,10 +48,13 @@ export default function GraphSideBar({
       borderRadius="lg"
       boxShadow="xs"
       maxWidth="300px"
+      maxHeight="100dvh"
+      overflow="auto"
+      scrollbarWidth="none"
       position="absolute"
       top={0}
       left={0}
-      zIndex={1000}
+      zIndex={1}
     >
       <Heading fontWeight="bolder">Entities</Heading>
       <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
@@ -76,6 +81,10 @@ export default function GraphSideBar({
                         selectedNode.data.nodeName !== trigger
                     )
                   )
+                  if (selectedNodeName === trigger && selectedNodeId) {
+                    setSelectedNodeInfo([])
+                  } else {
+                  }
                 } else {
                   setNodes([...selectedNodes, ...nextNodes])
                 }
@@ -95,7 +104,7 @@ export default function GraphSideBar({
           )
         })}
       </Flex>
-      {selectedNodeInfo !== null && (
+      {!!selectedNodeInfo && (
         <VStack alignItems="flex-start" gap={5}>
           <Heading mb={1}>Properties</Heading>
           <VStack gap={5} p={2} width="100%">

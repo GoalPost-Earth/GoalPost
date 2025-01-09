@@ -215,8 +215,13 @@ const GraphVisualization = () => {
     [setEdges]
   )
 
-  const onNodeClick = (event: React.MouseEvent, node: Node) =>
+  const onNodeClick = (event: React.MouseEvent, node: Node) => {
+    if (selectedNodeInfo[0]?.id === node.id) {
+      setSelectedNodeInfo([])
+      return
+    }
     setSelectedNodeInfo([node])
+  }
 
   useEffect(() => {
     if (people && coreValues && goals && resources && members && communities) {
@@ -238,8 +243,6 @@ const GraphVisualization = () => {
   const nodeId = selectedNodeInfo[0]?.id
   const nodeName = selectedNodeInfo[0]?.data.nodeName
 
-  console.log('Node Info: ', nodeInfo)
-
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Stack direction={'row'} height={'100%'} position="relative">
@@ -247,6 +250,7 @@ const GraphVisualization = () => {
           selectedNodeInfo={nodeInfo}
           nodes={graphNodes}
           selectedNodes={selectedNodes}
+          setSelectedNodeInfo={setSelectedNodeInfo}
           selectedNodeId={nodeId}
           selectedNodeName={nodeName}
           setNodes={setSelectedNodes}

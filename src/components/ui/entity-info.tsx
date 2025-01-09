@@ -8,6 +8,7 @@ export function EntityInfo({ entity }: { entity: any }) {
         justifyContent="space-between"
         width="100%"
         flexDirection={{ base: 'column', md: 'row' }}
+        gap={2}
       >
         <Text fontWeight="bold" fontSize="xs">
           {key.toUpperCase()}:
