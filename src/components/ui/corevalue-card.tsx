@@ -12,7 +12,7 @@ export const CoreValueCard = ({
     <Card.Root
       borderRadius="lg"
       boxShadow="md"
-      bgColor="coreValue.subtle"
+      bgColor="corevalue.subtle"
       p={4}
       gap={4}
       width="100%"
