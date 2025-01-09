@@ -1,10 +1,10 @@
 'use client'
 
 import { GET_ALL_COMMUNITIES } from '@/app/graphql'
-import { ApolloWrapper } from '@/components'
+import { ApolloWrapper, CommunityCard } from '@/components'
+import { Community } from '@/gql/graphql'
 import { useQuery } from '@apollo/client'
-import { Card, Container, Heading } from '@chakra-ui/react'
-import Link from 'next/link'
+import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 
 export default function AllCommunities() {
@@ -14,21 +14,27 @@ export default function AllCommunities() {
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container>
-        <Heading>All Communities</Heading>
-        {communities.map((community) => (
-          <Link href={'/community/' + community.id} key={community.id}>
-            <Card.Root key={community.id} my={1}>
-              <Card.Header py={2} bgColor="gray.100">
-                {community.name}
-              </Card.Header>
-              <Card.Body>
-                <Card.Description>{community.description}</Card.Description>
-              </Card.Body>
-              <Card.Footer justifyContent="flex-end"></Card.Footer>
-            </Card.Root>
-          </Link>
-        ))}
+      <Container p={4}>
+        <Heading
+          position="sticky"
+          left={4}
+          my={5}
+          fontSize="3xl"
+          fontWeight="extrabold"
+        >
+          Communities
+        </Heading>
+        <Grid
+          templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
+          gap={6}
+          my={10}
+        >
+          {communities.map((community) => (
+            <GridItem key={community.id} height="200px">
+              <CommunityCard community={community as Community} height="100%" />
+            </GridItem>
+          ))}
+        </Grid>
       </Container>
     </ApolloWrapper>
   )

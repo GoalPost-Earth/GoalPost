@@ -9317,6 +9317,26 @@ export type GetAllCommunitesQuery = {
   }>
 }
 
+export type GetCommunitiesAndTheirMembersQueryVariables = Exact<{
+  [key: string]: never
+}>
+
+export type GetCommunitiesAndTheirMembersQuery = {
+  __typename?: 'Query'
+  communities: Array<{
+    __typename?: 'Community'
+    id: string
+    name: string
+    members: Array<{
+      __typename?: 'Person'
+      email?: string | null
+      name: string
+      id: string
+      photo?: string | null
+    }>
+  }>
+}
+
 export type GetCoreValueQueryVariables = Exact<{
   id: Scalars['ID']['input']
 }>
@@ -11320,6 +11340,86 @@ export const GetAllCommunitesDocument = {
 } as unknown as DocumentNode<
   GetAllCommunitesQuery,
   GetAllCommunitesQueryVariables
+>
+export const GetCommunitiesAndTheirMembersDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getCommunitiesAndTheirMembers' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'communities' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'members_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'NOT' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'id_EQ' },
+                                  value: {
+                                    kind: 'StringValue',
+                                    value: '',
+                                    block: false,
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetCommunitiesAndTheirMembersQuery,
+  GetCommunitiesAndTheirMembersQueryVariables
 >
 export const GetCoreValueDocument = {
   kind: 'Document',

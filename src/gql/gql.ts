@@ -44,6 +44,8 @@ const documents = {
     types.GetCommunityDocument,
   '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetAllCommunitesDocument,
+  '\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n':
+    types.GetCommunitiesAndTheirMembersDocument,
   '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      isEmbracedBy {\n        id\n        name\n      }\n      # createdAt\n    }\n  }\n':
     types.GetCoreValueDocument,
   '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n':
@@ -176,6 +178,12 @@ export function graphql(
 export function graphql(
   source: '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

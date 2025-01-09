@@ -35,7 +35,7 @@ export default function AllResources() {
           fontSize="3xl"
           fontWeight="extrabold"
         >
-          Goals
+          Resources
         </Heading>
 
         {people.map((person) => {
