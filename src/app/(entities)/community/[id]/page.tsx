@@ -4,10 +4,11 @@ import {
   Box,
   Container,
   Flex,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   Spacer,
-  Text,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -18,8 +19,12 @@ import {
   GenericTabs,
   EntityDetail,
   EntityOwnerCard,
+  CommunityCard,
+  ResourceCard,
+  PersonCard,
 } from '@/components'
 import Link from 'next/link'
+import { Community, Resource } from '@/gql/graphql'
 
 export default async function ViewCommunityPage({
   params,
@@ -88,7 +93,12 @@ export default async function ViewCommunityPage({
             <GenericTabs
               editLink={`/community/update/${id}`}
               onDeleteEntity="Community"
-              triggers={['Details', 'Linked Care Points']}
+              triggers={[
+                'Details',
+                'Related Communities',
+                'Resources',
+                'Members',
+              ]}
               content={[
                 <VStack
                   key="Details"
@@ -113,17 +123,43 @@ export default async function ViewCommunityPage({
                     <EntityDetail title="Status" details={community.status} />
                   </VStack>
                 </VStack>,
-                <VStack
-                  key="Linked Care Points"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
+                <Grid
+                  key="relatedCommunities"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
                 >
-                  <Text>Linked Care Points</Text>
-                </VStack>,
+                  {community.relatedCommunities.map((community) => (
+                    <GridItem key={community.id}>
+                      <CommunityCard community={community as Community} />
+                    </GridItem>
+                  ))}
+                </Grid>,
+                <Grid
+                  key="resources"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
+                >
+                  {community.resources.map((resource) => (
+                    <GridItem key={resource.id}>
+                      <ResourceCard resource={resource as Resource} />
+                    </GridItem>
+                  ))}
+                </Grid>,
+                <Grid
+                  key="members"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
+                >
+                  {community.members.map((person) => (
+                    <GridItem key={person.id}>
+                      <PersonCard
+                        id={person.id}
+                        name={person.name}
+                        photo={person.photo}
+                      />
+                    </GridItem>
+                  ))}
+                </Grid>,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">

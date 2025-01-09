@@ -12,6 +12,36 @@ export const GET_COMMUNITY = graphql(`
       activities
       resultsAchieved
       status
+
+      relatedCommunities {
+        id
+        name
+        description
+        members(limit: 5) {
+          id
+          name
+          photo
+        }
+      }
+
+      members {
+        id
+        name
+        photo
+      }
+
+      resources {
+        id
+        name
+        description
+        status
+        providedByPerson(limit: 1) {
+          id
+          name
+          photo
+        }
+      }
+
       createdBy {
         id
         name

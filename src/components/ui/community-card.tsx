@@ -10,7 +10,7 @@ export function CommunityCard({
   community: Pick<Community, 'id' | 'name' | 'description' | 'members'>
 } & CardHeaderProps) {
   const { id, name, description, members } = community
-  const displayedMembers = members.slice(0, 3)
+  const displayedMembers = members?.slice(0, 3) ?? []
 
   return (
     <Link href={`/community/${id}`} style={{ width: '100%' }}>
@@ -40,7 +40,7 @@ export function CommunityCard({
           {
             <GroupAvatars
               people={displayedMembers}
-              fallback={members.length - displayedMembers.length}
+              fallback={members?.length - displayedMembers.length}
             />
           }
         </Card.Footer>

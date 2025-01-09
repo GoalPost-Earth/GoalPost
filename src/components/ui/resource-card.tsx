@@ -7,8 +7,9 @@ import { Resource } from '@/gql/graphql'
 
 export const ResourceCard = ({ resource }: { resource: Resource }) => {
   const { id, name, description, status } = resource
-  const owner =
-    resource.providedByPerson?.length && resource.providedByPerson[0]
+  const owner = resource.providedByPerson?.length
+    ? resource.providedByPerson[0]
+    : undefined
 
   return (
     <Card.Root
