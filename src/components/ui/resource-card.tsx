@@ -3,22 +3,13 @@ import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../icons/EllipseIcon'
 import { Avatar } from './avatar'
+import { Resource } from '@/gql/graphql'
 
-export const ResourceCard = ({
-  id,
-  ownerPhoto,
-  name,
-  ownerName,
-  status,
-  description,
-}: {
-  id: string
-  ownerPhoto: string | null | undefined
-  name: string
-  ownerName: string
-  status?: string
-  description: string | null | undefined
-}) => {
+export const ResourceCard = ({ resource }: { resource: Resource }) => {
+  const { id, name, description, status } = resource
+  const owner =
+    resource.providedByPerson?.length && resource.providedByPerson[0]
+
   return (
     <Card.Root
       flexDirection={{ base: 'column', lg: 'row' }}
@@ -40,11 +31,11 @@ export const ResourceCard = ({
           <HStack justifyContent="space-between" width="100%">
             <HStack gap={2}>
               <Avatar
-                src={ownerPhoto ?? undefined}
+                src={owner?.photo ?? undefined}
                 width="10px"
                 height="10px"
               />
-              <Text fontSize="xs">{ownerName}</Text>
+              <Text fontSize="xs">{owner?.name}</Text>
             </HStack>
             <Badge
               variant="subtle"

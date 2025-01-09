@@ -74,7 +74,7 @@ export const GoalCard = ({
       <Box width="100%" height="100%">
         <Link href={`/goal/${id}`}>
           <Card.Body p={{ base: 0, lg: 5 }} width="100%">
-            <Card.Title mb="2" lineClamp={1} fontSize="xl" fontWeight="bolder">
+            <Card.Title lineClamp={1} fontSize="md" fontWeight="bolder">
               {name}
             </Card.Title>
             <HStack mt="2">

@@ -3,6 +3,7 @@
 import { GET_PEOPLE_AND_THEIR_RESOURCES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components'
 import { PersonInfo, ResourceCard } from '@/components/ui'
+import { Resource } from '@/gql/graphql'
 import { useQuery } from '@apollo/client'
 import {
   Container,
@@ -72,18 +73,7 @@ export default function AllResources() {
                     maxWidth="300px"
                     height="150px"
                   >
-                    <ResourceCard
-                      id={resource.id}
-                      name={resource.name}
-                      description={resource.description ?? ''}
-                      ownerPhoto={
-                        resource.providedByPerson[0]?.photo ?? undefined
-                      }
-                      ownerName={
-                        resource.providedByPerson[0]?.name ?? undefined
-                      }
-                      status={resource.status}
-                    />
+                    <ResourceCard resource={resource as Resource} />
                   </Flex>
                 ))}
               </HStack>

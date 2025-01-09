@@ -16,6 +16,25 @@ export const GET_PERSON = graphql(`
         name
         photo
       }
+      providesResources {
+        id
+        name
+        description
+        status
+      }
+      goals {
+        id
+        name
+        photo
+        status
+        createdAt
+        description
+      }
+      coreValues {
+        id
+        name
+        description
+      }
       location
       createdAt
       communities {

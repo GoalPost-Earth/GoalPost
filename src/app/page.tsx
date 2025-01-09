@@ -10,7 +10,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react'
-import { Community, Person } from '@/gql/graphql'
+import { Community, Person, Resource } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
 import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
 import { useQuery } from '@apollo/client'
@@ -110,15 +110,7 @@ const HomeClient = () => {
       createdBy: resource.providedByPerson,
       description: resource.description,
       name: resource.name,
-      children: (
-        <ResourceCard
-          id={resource.id}
-          ownerPhoto={resource.providedByPerson[0].photo}
-          name={resource.name}
-          description={resource.description}
-          ownerName={resource.providedByPerson[0].name}
-        />
-      ),
+      children: <ResourceCard resource={resource as Resource} />,
     }
   })
 

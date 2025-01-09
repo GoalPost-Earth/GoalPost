@@ -10,8 +10,11 @@ import {
   ProfileBackground,
   UserInfo,
   UserProfile,
+  ResourceCard,
+  GoalCard,
+  CoreValueCard,
 } from '@/components'
-import { Community, Person } from '@/gql/graphql'
+import { Community, Person, Resource } from '@/gql/graphql'
 
 export default async function ViewPersonPage({
   params,
@@ -53,7 +56,7 @@ export default async function ViewPersonPage({
     },
   ]
 
-  const memberTriggers = ['Communities', 'Goals', 'People', 'Core Values']
+  const memberTriggers = ['Communities', 'Resources', 'Goals', 'Core Values']
 
   const triggers = isMember
     ? ['About', 'Connections', ...memberTriggers]
@@ -119,6 +122,47 @@ export default async function ViewPersonPage({
       {person.communities.map((community) => (
         <GridItem key={community.id}>
           <CommunityCard community={community as Community} />
+        </GridItem>
+      ))}
+    </Grid>,
+    <Grid
+      key="resources"
+      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+      gap={6}
+    >
+      {person.providesResources.map((resource) => (
+        <GridItem key={resource.id}>
+          <ResourceCard
+            resource={{ ...resource, providedByPerson: [person] } as Resource}
+          />
+        </GridItem>
+      ))}
+    </Grid>,
+    <Grid
+      key="goals"
+      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+      gap={6}
+    >
+      {person.goals.map((goal) => (
+        <GridItem key={goal.id}>
+          <GoalCard
+            id={goal.id}
+            photo={goal.photo ?? null}
+            name={goal.name}
+            createdAt={goal.createdAt}
+            description={goal.description}
+          />
+        </GridItem>
+      ))}
+    </Grid>,
+    <Grid
+      key="coreValues"
+      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+      gap={6}
+    >
+      {person.coreValues.map((coreValue) => (
+        <GridItem key={coreValue.id}>
+          <CoreValueCard coreValue={coreValue} />
         </GridItem>
       ))}
     </Grid>,
