@@ -62,6 +62,26 @@ export const GET_ALL_PEOPLE = graphql(`
       pronouns
       location
       # createdAt
+      connectedTo {
+        id
+        name
+        communities {
+          name
+          id
+        }
+        goals {
+          id
+          name
+        }
+        coreValues {
+          name
+          id
+        }
+        providesResources {
+          name
+          id
+        }
+      }
     }
   }
 `)

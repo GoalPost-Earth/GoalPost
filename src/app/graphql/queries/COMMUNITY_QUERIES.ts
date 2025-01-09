@@ -73,6 +73,10 @@ export const GET_ALL_COMMUNITIES = graphql(`
         name
         photo
       }
+      relatedCommunities {
+        id
+        name
+      }
     }
   }
 `)

@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect } from 'react'
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react'
-import { useRouter } from 'next/navigation'
 import { Tooltip } from './tooltip'
 import { Flex } from '@chakra-ui/react'
 
@@ -14,16 +13,15 @@ type Data = {
 }
 
 const NodeBgColor = {
-  Person: 'red.fg',
-  Member: 'blue.fg',
-  CoreValue: 'yellow.fg',
-  Goal: 'green.fg',
-  Resource: 'purple.fg',
-  Community: 'orange.fg',
+  Person: 'blue.fg',
+  Member: 'person.fg',
+  CoreValue: 'corevalue.fg',
+  Goal: 'goal.fg',
+  Resource: 'resource.fg',
+  Community: 'community.fg',
+  CarePoint: 'orange.fg',
 }
 function GraphNodes({ data }: Data) {
-  const router = useRouter()
-
   const updateNodeInternals = useUpdateNodeInternals()
 
   useEffect(() => {
@@ -55,12 +53,7 @@ function GraphNodes({ data }: Data) {
           id={`${data.nodeName}` + data.id}
           style={{ top: '50%' }}
         />
-        <button
-          style={{ border: 'none', padding: 0, cursor: 'inherit' }}
-          onClick={() => {
-            router.push(`/${data.nodeName.toLowerCase()}/${data.id}`)
-          }}
-        >
+        <button style={{ border: 'none', padding: 0, cursor: 'inherit' }}>
           {data.label.length > 16
             ? `${data.label.slice(0, 16)}...`
             : data.label}
