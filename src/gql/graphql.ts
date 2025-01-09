@@ -9724,7 +9724,12 @@ export type GetResourceQuery = {
       id: string
       name: string
     }>
-    carePoints: Array<{ __typename?: 'CarePoint'; id: string }>
+    carePoints: Array<{
+      __typename?: 'CarePoint'
+      id: string
+      description: string
+      status: string
+    }>
     providedByPerson: Array<{
       __typename?: 'Person'
       id: string
@@ -12762,6 +12767,14 @@ export const GetResourceDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
                     ],
                   },
                 },

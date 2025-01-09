@@ -4,10 +4,11 @@ import {
   Box,
   Container,
   Flex,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   Spacer,
-  Text,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -18,6 +19,7 @@ import {
   GenericTabs,
   EntityDetail,
   EntityOwnerCard,
+  CarePointCard,
 } from '@/components'
 import Link from 'next/link'
 
@@ -114,16 +116,21 @@ export default async function ViewResourcePage({
                     <EntityDetail title="Status" details={resource.status} />
                   </VStack>
                 </VStack>,
-                <VStack
-                  key="Linked Care Points"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
+                <Grid
+                  key="carePoints"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
                 >
-                  <Text>Linked Care Points</Text>
-                </VStack>,
+                  {resource.carePoints.map((carePoint) => (
+                    <GridItem key={carePoint.id}>
+                      <CarePointCard
+                        id={carePoint.id}
+                        description={carePoint.description}
+                        status={carePoint.status}
+                      />
+                    </GridItem>
+                  ))}
+                </Grid>,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">

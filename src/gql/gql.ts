@@ -70,7 +70,7 @@ const documents = {
     types.GetPeopleAndTheirResourcesDocument,
   '\n  query getPeopleAndTheirCoreValues {\n    people(where: { coreValues_SOME: { NOT: { id_EQ: "" } } }) {\n      coreValues {\n        isEmbracedBy {\n          id\n          name\n          photo\n        }\n        id\n        description\n        name\n      }\n      id\n      name\n      photo\n    }\n  }\n':
     types.GetPeopleAndTheirCoreValuesDocument,
-  '\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n':
+  '\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n        description\n        status\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n':
     types.GetResourceDocument,
   '\n  query getAllResources($where: ResourceWhere) {\n    resources(where: $where) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        phone\n        photo\n      }\n    }\n  }\n':
     types.GetAllResourcesDocument,
@@ -264,8 +264,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n']
+  source: '\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n        description\n        status\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getResource($id: ID!) {\n    resources(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      status\n      why\n      location\n      time\n      dependsOnResources {\n        id\n        name\n      }\n      carePoints {\n        id\n        description\n        status\n      }\n      providedByPerson {\n        id\n        name\n        email\n        phone\n        photo\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
