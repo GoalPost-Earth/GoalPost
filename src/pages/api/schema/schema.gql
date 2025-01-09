@@ -141,6 +141,10 @@ type Goal @node {
   location: String
   time: String
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
+  enablesCarePoints: [CarePoint!]!
+    @relationship(type: "ENABLES", direction: OUT)
+  caredForByCarePoints: [CarePoint!]!
+    @relationship(type: "CARES_FOR", direction: IN)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!

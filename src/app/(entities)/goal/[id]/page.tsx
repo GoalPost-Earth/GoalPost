@@ -4,10 +4,11 @@ import {
   Box,
   Container,
   Flex,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   Spacer,
-  Text,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -18,6 +19,7 @@ import {
   GenericTabs,
   EntityDetail,
   EntityOwnerCard,
+  CarePointCard,
 } from '@/components'
 import Link from 'next/link'
 
@@ -88,7 +90,11 @@ export default async function ViewGoalPage({
             <GenericTabs
               editLink={`/goal/update/${id}`}
               onDeleteEntity="Goal"
-              triggers={['Details', 'Linked Care Points']}
+              triggers={[
+                'Details',
+                'Enables Care Points',
+                'Cared For By Care Points',
+              ]}
               content={[
                 <VStack
                   key="Details"
@@ -110,21 +116,41 @@ export default async function ViewGoalPage({
                     <EntityDetail title="Status" details={goal.status} />
                   </VStack>
                 </VStack>,
-                <VStack
-                  key="Linked Care Points"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
+                <Grid
+                  key="enablesCarePoints"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
                 >
-                  <Text>Linked Care Points</Text>
-                </VStack>,
+                  {goal.enablesCarePoints.map((carePoint) => (
+                    <GridItem key={carePoint.id}>
+                      <CarePointCard
+                        id={carePoint.id}
+                        description={carePoint.description}
+                        status={carePoint.status}
+                      />
+                    </GridItem>
+                  ))}
+                </Grid>,
+                <Grid
+                  key="caredForByCarePoints"
+                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+                  gap={6}
+                >
+                  {goal.caredForByCarePoints.map((carePoint) => (
+                    <GridItem key={carePoint.id}>
+                      <CarePointCard
+                        id={carePoint.id}
+                        description={carePoint.description}
+                        status={carePoint.status}
+                      />
+                    </GridItem>
+                  ))}
+                </Grid>,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={goal?.createdBy[0]} />
+              <EntityOwnerCard person={goal?.motivatesPeople[0]} />
             </Box>
           </HStack>
         </VStack>

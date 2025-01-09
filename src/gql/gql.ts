@@ -56,7 +56,7 @@ const documents = {
     types.GetAllCoreValuesDocument,
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      authId\n      firstName\n      lastName\n      name\n      email\n      photo\n      createdAt\n      connectedTo {\n        id\n        name\n        photo\n      }\n      communities {\n        id\n        name\n        members {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n':
     types.GetLoggedInUserDocument,
-  '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n':
+  '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      enablesCarePoints {\n        id\n        description\n        status\n      }\n      caredForByCarePoints {\n        id\n        description\n        status\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n':
     types.GetGoalDocument,
   '\n  query getAllGoals($where: GoalWhere) {\n    goals(where: $where) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetAllGoalsDocument,
@@ -222,8 +222,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n']
+  source: '\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      enablesCarePoints {\n        id\n        description\n        status\n      }\n      caredForByCarePoints {\n        id\n        description\n        status\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getGoal($id: ID!) {\n    goals(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      successMeasures\n      photo\n      status\n      location\n      time\n      createdAt\n      motivatesPeople {\n        id\n        name\n        photo\n      }\n      enablesCarePoints {\n        id\n        description\n        status\n      }\n      caredForByCarePoints {\n        id\n        description\n        status\n      }\n      createdBy {\n        id\n        name\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

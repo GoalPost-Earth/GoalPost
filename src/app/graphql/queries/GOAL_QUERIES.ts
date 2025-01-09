@@ -17,6 +17,16 @@ export const GET_GOAL = graphql(`
         name
         photo
       }
+      enablesCarePoints {
+        id
+        description
+        status
+      }
+      caredForByCarePoints {
+        id
+        description
+        status
+      }
       createdBy {
         id
         name
