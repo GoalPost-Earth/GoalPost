@@ -73,6 +73,7 @@ export const inputLinks = [
   { name: 'Add Resources', to: '/resource/create' },
   { name: 'Add Goals', to: '/goal/create' },
   { name: 'Add Community', to: '/community/create' },
+  { name: 'Add Core Value', to: '/corevalue/create' },
 ]
 
 export function NavItemLinks({
