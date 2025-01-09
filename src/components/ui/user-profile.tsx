@@ -49,7 +49,6 @@ export function UserProfile({
         onDeleteEntity="Person"
         triggers={tabTriggers}
         content={tabContent}
-        tabsDisplay={{ base: 'flex', lg: 'none' }}
       />
     </VStack>
   )
