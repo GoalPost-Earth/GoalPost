@@ -7,6 +7,7 @@ import {
   BackgroundVariant,
   Connection,
   Controls,
+  MarkerType,
   MiniMap,
   Node,
   ReactFlow,
@@ -32,6 +33,13 @@ import GraphSideBar from '@/components/ui/graph-sidebar'
 
 const initialEdges: Edge[] = []
 const initialSelectedNodeInfo: Node[] = []
+
+const EdgeMarker = {
+  type: MarkerType.ArrowClosed,
+  width: 40,
+  height: 40,
+  color: 'black',
+}
 
 const GraphVisualization = () => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
@@ -211,8 +219,92 @@ const GraphVisualization = () => {
             source: `${person.__typename}${person.id}`,
             target: `${connectedTo.__typename}${connectedTo.id}`,
             label: 'Connected To',
-            type: 'bezier',
+            markerEnd: EdgeMarker,
           }
+        })
+      }) ?? []
+    )
+  }, [people])
+
+  const personToCommunityConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.connectedTo.flatMap((connectedTo) => {
+          return (
+            connectedTo.communities &&
+            connectedTo.communities.map((community) => {
+              return {
+                id: `${person.__typename}${person.id}-${community.__typename}${community.id}`,
+                source: `${person.__typename}${person.id}`,
+                target: `${community.__typename}${community.id}`,
+                label: 'Belongs To',
+                markerEnd: EdgeMarker,
+              }
+            })
+          )
+        })
+      }) ?? []
+    )
+  }, [people])
+
+  const personToGoalsConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.connectedTo.flatMap((connectedTo) => {
+          return (
+            connectedTo.goals &&
+            connectedTo.goals.map((goal) => {
+              return {
+                id: `${person.__typename}${person.id}-${goal.__typename}${goal.id}`,
+                source: `${person.__typename}${person.id}`,
+                target: `${goal.__typename}${goal.id}`,
+                label: 'Motivated By',
+                markerEnd: EdgeMarker,
+              }
+            })
+          )
+        })
+      }) ?? []
+    )
+  }, [people])
+
+  const personToCoreValueConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.connectedTo.flatMap((connectedTo) => {
+          return (
+            connectedTo.coreValues &&
+            connectedTo.coreValues.map((coreValue) => {
+              return {
+                id: `${person.__typename}${person.id}-${coreValue.__typename}${coreValue.id}`,
+                source: `${person.__typename}${person.id}`,
+                target: `${coreValue.__typename}${coreValue.id}`,
+                label: 'Guided By',
+                markerEnd: EdgeMarker,
+              }
+            })
+          )
+        })
+      }) ?? []
+    )
+  }, [])
+
+  const personToResourceConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.connectedTo.flatMap((connectedTo) => {
+          return (
+            connectedTo.providesResources &&
+            connectedTo.providesResources.map((resource) => {
+              return {
+                id: `${person.__typename}${person.id}-${resource.__typename}${resource.id}`,
+                source: `${person.__typename}${person.id}`,
+                target: `${resource.__typename}${resource.id}`,
+                label: 'Provides',
+                markerEnd: EdgeMarker,
+              }
+            })
+          )
         })
       }) ?? []
     )
@@ -243,7 +335,13 @@ const GraphVisualization = () => {
     if (people && coreValues && goals && resources && members && communities) {
       const newNodes = [...selectedNodes]
       setNodes(newNodes)
-      setEdges(personToPersonConnection)
+      setEdges([
+        ...personToPersonConnection,
+        ...personToCommunityConnection,
+        ...personToGoalsConnection,
+        ...personToCoreValueConnection,
+        ...personToResourceConnection,
+      ])
     }
   }, [
     selectedNodes,
@@ -255,8 +353,6 @@ const GraphVisualization = () => {
     members,
     communities,
   ])
-
-  console.log('Person to person :', personToPersonConnection)
 
   const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo
   const nodeId = selectedNodeInfo[0]?.data.id

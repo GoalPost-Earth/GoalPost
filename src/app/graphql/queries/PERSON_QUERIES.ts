@@ -46,6 +46,22 @@ export const GET_ALL_PEOPLE = graphql(`
       connectedTo {
         id
         name
+        communities {
+          name
+          id
+        }
+        goals {
+          id
+          name
+        }
+        coreValues {
+          name
+          id
+        }
+        providesResources {
+          name
+          id
+        }
       }
     }
   }
