@@ -1,36 +1,17 @@
-'use client'
+import { Container, Heading } from '@chakra-ui/react'
 
-import { GET_ALL_COREVALUES } from '@/app/graphql'
-import { ApolloWrapper } from '@/components'
-import { useQuery } from '@apollo/client'
-import { Card, Container, Heading } from '@chakra-ui/react'
-import Link from 'next/link'
-import React from 'react'
-
-export default function AllCoreValues() {
-  const { data, loading, error } = useQuery(GET_ALL_COREVALUES)
-
-  const corevalues = data?.coreValues ?? []
-
+export default function AllCarePoints() {
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container>
-        <Heading>All CoreValues</Heading>
-        {corevalues.map((corevalue) => (
-          <Link key={corevalue.id} href={'/corevalue/' + corevalue.id}>
-            <Card.Root key={corevalue.id} my={1}>
-              <Card.Header py={2} bgColor="gray.100">
-                {corevalue.name}
-              </Card.Header>
-              {!!corevalue.description && (
-                <Card.Body>
-                  <Card.Description>{corevalue.description}</Card.Description>
-                </Card.Body>
-              )}
-            </Card.Root>
-          </Link>
-        ))}
-      </Container>
-    </ApolloWrapper>
+    <Container p={4}>
+      <Heading
+        position="sticky"
+        left={4}
+        my={5}
+        fontSize="3xl"
+        fontWeight="extrabold"
+      >
+        Care Points
+      </Heading>
+    </Container>
   )
 }
