@@ -240,7 +240,7 @@ const GraphVisualization = () => {
   ])
 
   const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo
-  const nodeId = selectedNodeInfo[0]?.id
+  const nodeId = selectedNodeInfo[0]?.data.id
   const nodeName = selectedNodeInfo[0]?.data.nodeName
 
   return (

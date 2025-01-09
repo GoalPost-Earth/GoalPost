@@ -31,7 +31,7 @@ export default function GraphSideBar({
   selectedNodes: any
   selectedNodeInfo: any
   setSelectedNodeInfo: any
-  selectedNodeId: string
+  selectedNodeId: any
   selectedNodeName: any
   setNodes: any
   triggers: string[]
