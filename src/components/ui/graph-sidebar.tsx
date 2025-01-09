@@ -45,6 +45,11 @@ export default function GraphSideBar({
       bg="white"
       borderRadius="lg"
       boxShadow="xs"
+      maxWidth="300px"
+      position="absolute"
+      top={0}
+      left={0}
+      zIndex={1000}
     >
       <Heading fontWeight="bolder">Entities</Heading>
       <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>

@@ -242,7 +242,7 @@ const GraphVisualization = () => {
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <Stack direction={'row'} height={'100%'}>
+      <Stack direction={'row'} height={'100%'} position="relative">
         <GraphSideBar
           selectedNodeInfo={nodeInfo}
           nodes={graphNodes}
