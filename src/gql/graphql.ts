@@ -8917,6 +8917,7 @@ export type GetAllCarePointsQuery = {
       name: string
       photo?: string | null
     }>
+    enabledByGoals: Array<{ __typename?: 'Goal'; name: string; id: string }>
   }>
 }
 
@@ -8975,6 +8976,11 @@ export type GetAllCommunitesQuery = {
       name: string
       photo?: string | null
     }>
+    relatedCommunities: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+    }>
   }>
 }
 
@@ -9019,6 +9025,10 @@ export type GetAllCoreValuesQuery = {
     alignmentExamples?: string | null
     description?: string | null
     why?: string | null
+    isEmbracedBy: Array<{
+      __typename?: 'Person'
+      goals: Array<{ __typename?: 'Goal'; id: string; name: string }>
+    }>
   }>
 }
 
@@ -10943,6 +10953,17 @@ export const GetAllCarePointsDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'enabledByGoals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -11106,6 +11127,17 @@ export const GetAllCommunitesDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'relatedCommunities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -11259,6 +11291,32 @@ export const GetAllCoreValuesDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'isEmbracedBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'goals' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },

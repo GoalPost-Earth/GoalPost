@@ -35,6 +35,12 @@ export const GET_ALL_COREVALUES = graphql(`
       description
       why
       # createdAt
+      isEmbracedBy {
+        goals {
+          id
+          name
+        }
+      }
     }
   }
 `)

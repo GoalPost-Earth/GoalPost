@@ -42,15 +42,15 @@ const documents = {
     types.GetRecentActionsDocument,
   '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n      }\n      caresForGoals {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetCarePointDocument,
-  '\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
+  '\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n      enabledByGoals {\n        name\n        id\n      }\n    }\n  }\n':
     types.GetAllCarePointsDocument,
   '\n  query getCommunity($id: ID!) {\n    communities(where: { id_EQ: $id }) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetCommunityDocument,
-  '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
+  '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n      relatedCommunities {\n        id\n        name\n      }\n    }\n  }\n':
     types.GetAllCommunitesDocument,
   '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      isEmbracedBy {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetCoreValueDocument,
-  '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n':
+  '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n      isEmbracedBy {\n        goals {\n          id\n          name\n        }\n      }\n    }\n  }\n':
     types.GetAllCoreValuesDocument,
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      authId\n      firstName\n      lastName\n      name\n      email\n      photo\n      createdAt\n      connectedTo {\n        id\n        name\n        photo\n      }\n      communities {\n        id\n        name\n        members {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n':
     types.GetLoggedInUserDocument,
@@ -174,8 +174,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
+  source: '\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n      enabledByGoals {\n        name\n        id\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n      enabledByGoals {\n        name\n        id\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -186,8 +186,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
+  source: '\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n      relatedCommunities {\n        id\n        name\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getAllCommunites($where: CommunityWhere) {\n    communities(where: $where) {\n      id\n      name\n      description\n      why\n      location\n      time\n      activities\n      resultsAchieved\n      status\n      createdBy {\n        id\n        name\n        photo\n      }\n      members {\n        id\n        name\n        photo\n      }\n      relatedCommunities {\n        id\n        name\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -198,8 +198,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n'
-): (typeof documents)['\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n    }\n  }\n']
+  source: '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n      isEmbracedBy {\n        goals {\n          id\n          name\n        }\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n      isEmbracedBy {\n        goals {\n          id\n          name\n        }\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

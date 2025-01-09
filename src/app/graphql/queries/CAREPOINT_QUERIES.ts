@@ -41,6 +41,10 @@ export const GET_ALL_CAREPOINTS = graphql(`
         name
         photo
       }
+      enabledByGoals {
+        name
+        id
+      }
     }
   }
 `)

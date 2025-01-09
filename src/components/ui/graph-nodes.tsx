@@ -19,6 +19,7 @@ const NodeBgColor = {
   Goal: 'goal.fg',
   Resource: 'resource.fg',
   Community: 'community.fg',
+  CarePoint: 'orange.fg',
 }
 function GraphNodes({ data }: Data) {
   const updateNodeInternals = useUpdateNodeInternals()

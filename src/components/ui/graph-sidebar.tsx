@@ -1,5 +1,11 @@
 import { Button, Flex, Heading, VStack } from '@chakra-ui/react'
-import { CommunityIcon, GoalsIcon, PeopleIcon, SettingsIcon } from '../icons'
+import {
+  CarePointsIcon,
+  CommunityIcon,
+  GoalsIcon,
+  PeopleIcon,
+  SettingsIcon,
+} from '../icons'
 import { EntityInfo } from './entity-info'
 import Link from 'next/link'
 import { LuArrowRight } from 'react-icons/lu'
@@ -15,6 +21,7 @@ const iconMapping: Record<string, JSX.Element> = {
   Person: <PeopleIcon width="16px" height="16px" />,
   Community: <CommunityIcon width="16px" height="16px" />,
   Goal: <GoalsIcon width="16px" height="16px" />,
+  CarePoint: <CarePointsIcon width="16px" height="16px" />,
 }
 
 export default function GraphSideBar({

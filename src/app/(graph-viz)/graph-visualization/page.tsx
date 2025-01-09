@@ -28,11 +28,21 @@ import {
   GET_ALL_GOALS,
   GET_ALL_RESOURCES,
   GET_ALL_COMMUNITIES,
+  GET_ALL_CAREPOINTS,
 } from '@/app/graphql'
 import GraphSideBar from '@/components/ui/graph-sidebar'
 
 const initialEdges: Edge[] = []
 const initialSelectedNodeInfo: Node[] = []
+
+const NodeTriggers = [
+  'Resource',
+  'Person',
+  'Community',
+  'CoreValue',
+  'Goal',
+  'CarePoint',
+]
 
 const EdgeMarker = {
   type: MarkerType.ArrowClosed,
@@ -48,6 +58,7 @@ const GraphVisualization = () => {
   const { data: goals } = useQuery(GET_ALL_GOALS)
   const { data: resources } = useQuery(GET_ALL_RESOURCES)
   const { data: communities } = useQuery(GET_ALL_COMMUNITIES)
+  const { data: carePoints } = useQuery(GET_ALL_CAREPOINTS)
   const [selectedNodeInfo, setSelectedNodeInfo] = useState(
     initialSelectedNodeInfo
   )
@@ -57,8 +68,6 @@ const GraphVisualization = () => {
   const nodeTypes = {
     customNode: GraphNodes,
   }
-
-  const NodeTriggers = ['Resource', 'Person', 'Community', 'CoreValue', 'Goal']
 
   const peopleNodes = useMemo(() => {
     return (
@@ -123,6 +132,26 @@ const GraphVisualization = () => {
       })) ?? []
     )
   }, [goals])
+
+  const carePointsNodes = useMemo(() => {
+    return (
+      carePoints?.carePoints.map((carePoint, index) => ({
+        id: `${carePoint.__typename}${carePoint.id}`,
+        position: getRandomPosition(),
+        type: 'customNode',
+        data: {
+          nodeInfo: {
+            Entity: 'Care Point',
+            Description: carePoint.description,
+            Status: carePoint.status,
+          },
+          label: `Care Point- ${index}`,
+          nodeName: carePoint.__typename,
+          id: carePoint.id,
+        },
+      })) ?? []
+    )
+  }, [carePoints])
 
   const resourceNodes = useMemo(() => {
     return (
@@ -196,6 +225,7 @@ const GraphVisualization = () => {
       coreValuesNodes,
       goalNodes,
       communityNodes,
+      carePointsNodes,
     ])
   }, [
     resourceNodes,
@@ -204,6 +234,7 @@ const GraphVisualization = () => {
     coreValuesNodes,
     goalNodes,
     communityNodes,
+    carePointsNodes,
   ])
 
   const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
@@ -287,7 +318,7 @@ const GraphVisualization = () => {
         })
       }) ?? []
     )
-  }, [])
+  }, [people])
 
   const personToResourceConnection = useMemo(() => {
     return (
@@ -309,6 +340,65 @@ const GraphVisualization = () => {
       }) ?? []
     )
   }, [people])
+
+  const goalToCoreValueConnection = useMemo(() => {
+    return (
+      coreValues?.coreValues.flatMap((coreValue) => {
+        return coreValue.isEmbracedBy.flatMap((isEmbracedBy) => {
+          return (
+            isEmbracedBy.goals &&
+            isEmbracedBy.goals.map((goal) => {
+              return {
+                id: `${goal.__typename}${goal.id}-${coreValue.__typename}${coreValue.id}`,
+                source: `${goal.__typename}${goal.id}`,
+                target: `${coreValue.__typename}${coreValue.id}`,
+                label: 'Guided By',
+                markerEnd: EdgeMarker,
+              }
+            })
+          )
+        })
+      }) ?? []
+    )
+  }, [coreValues])
+
+  const goalToCarePointConnection = useMemo(() => {
+    return (
+      carePoints?.carePoints.flatMap((carePoint) => {
+        return (
+          carePoint.enabledByGoals &&
+          carePoint.enabledByGoals.map((goal) => {
+            return {
+              id: `${goal.__typename}${goal.id}-${carePoint.__typename}${carePoint.id}`,
+              source: `${goal.__typename}${goal.id}`,
+              target: `${carePoint.__typename}${carePoint.id}`,
+              label: 'Enables Care',
+              markerEnd: EdgeMarker,
+            }
+          })
+        )
+      }) ?? []
+    )
+  }, [carePoints])
+
+  const communityToCommunityConnection = useMemo(() => {
+    return (
+      communities?.communities.flatMap((community) => {
+        return (
+          community.relatedCommunities &&
+          community.relatedCommunities.flatMap((relatedCommunity) => {
+            return {
+              id: `${community.__typename}${community.id}-${relatedCommunity.__typename}${relatedCommunity.id}`,
+              source: `${community.__typename}${community.id}`,
+              target: `${relatedCommunity.__typename}${relatedCommunity.id}`,
+              label: 'Relate To',
+              markerEnd: EdgeMarker,
+            }
+          })
+        )
+      }) ?? []
+    )
+  }, [communities])
 
   const initNodes: Node[] = []
 
@@ -341,6 +431,9 @@ const GraphVisualization = () => {
         ...personToGoalsConnection,
         ...personToCoreValueConnection,
         ...personToResourceConnection,
+        ...goalToCoreValueConnection,
+        ...goalToCarePointConnection,
+        ...communityToCommunityConnection,
       ])
     }
   }, [
