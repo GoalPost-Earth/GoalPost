@@ -101,6 +101,7 @@ type Community @node {
   relatedCommunities: [Community!]!
     @relationship(type: "RELATES_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
+  goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
@@ -142,6 +143,8 @@ type Goal @node {
   location: String
   time: String
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
+  motivatesCommunities: [Community!]!
+    @relationship(type: "MOTIVATED_BY", direction: IN)
   coreValues: [CoreValue!]! @relationship(type: "ALIGNED_TO", direction: OUT)
   enablesCarePoints: [CarePoint!]!
     @relationship(type: "ENABLED_BY", direction: IN)

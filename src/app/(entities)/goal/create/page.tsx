@@ -9,6 +9,8 @@ import { useForm } from 'react-hook-form'
 import { GoalForm } from '@/components'
 import { useApp } from '@/app/contexts'
 import { FormMode } from '@/constants'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { GoalFormData, goalSchema } from '@/app/schema'
 
 function CreateGoal() {
   const { user } = useApp()
@@ -17,24 +19,37 @@ function CreateGoal() {
     handleSubmit,
     register,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<GoalFormData>({
+    resolver: zodResolver(goalSchema),
+  })
   const router = useRouter()
 
   const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: GoalFormData) => {
     try {
+      const { personLink, linkTo, communityLink, ...rest } = data
+
       const res = await CreateGoal({
         variables: {
           input: {
-            ...data,
+            ...rest,
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
-            motivatesPeople: {
-              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
-            },
+            motivatesPeople:
+              linkTo === 'personLink'
+                ? {
+                    connect: [{ where: { node: { id_EQ: personLink } } }],
+                  }
+                : undefined,
+            motivatesCommunities:
+              linkTo === 'communityLink'
+                ? {
+                    connect: [{ where: { node: { id_EQ: communityLink } } }],
+                  }
+                : undefined,
           },
         },
       })

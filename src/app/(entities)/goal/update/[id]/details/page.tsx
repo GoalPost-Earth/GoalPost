@@ -42,6 +42,7 @@ export default function UpdateGoalDetails({
     control,
     handleSubmit,
     reset,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<GoalFormData>({
     defaultValues,
@@ -83,6 +84,7 @@ export default function UpdateGoalDetails({
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}
         />

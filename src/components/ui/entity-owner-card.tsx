@@ -2,16 +2,20 @@ import { Box, Card, Flex, Text } from '@chakra-ui/react'
 import { Avatar } from '.'
 import React from 'react'
 import Link from 'next/link'
-import { Person } from '@/gql/graphql'
+import { Community, Person } from '@/gql/graphql'
 
 export function EntityOwnerCard({
   person,
+  community,
 }: {
-  person: Pick<Person, 'id' | 'name' | 'email' | 'photo'>
+  person: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
+  community: Pick<Community, '__typename' | 'id' | 'name'>
 }) {
-  if (!person) {
+  if (!person && !community) {
     return <></>
   }
+
+  const owner = person || community
 
   return (
     <Card.Root
@@ -31,13 +35,13 @@ export function EntityOwnerCard({
         justifyContent={{ lg: 'center' }}
       >
         <Avatar
-          src={person.photo ?? undefined}
+          src={owner.photo ?? undefined}
           size="2xl"
-          name={person.name}
+          name={owner.name}
           width={{ lg: '200px' }}
           height={{ lg: '200px' }}
         />
-        <Link href={`/person/${person.id}`}>
+        <Link href={`/${owner.__typename?.toLowerCase()}/${owner.id}`}>
           <Flex flexDirection={'column'}>
             <Text display={{ base: 'block', lg: 'none' }} fontWeight={'light'}>
               Resource Owner
@@ -46,7 +50,7 @@ export function EntityOwnerCard({
               fontWeight={'bold'}
               fontSize={'clamp(1.125rem, 1vw + 0.7rem, 1.313rem)'}
             >
-              {person.name}
+              {owner.name}
             </Text>
           </Flex>
         </Link>
@@ -56,11 +60,11 @@ export function EntityOwnerCard({
           fontWeight="light"
           display={{ base: 'none', lg: 'block' }}
         >
-          <Link href={`mailto:${person.email}`}>
-            <Text my={2}>{person.email}</Text>
+          <Link href={`mailto:${owner.email}`}>
+            <Text my={2}>{owner.email}</Text>
           </Link>
           <Text>Created by</Text>
-          <Text>{person.name}</Text>
+          <Text>{owner.name}</Text>
         </Box>
       </Card.Body>
     </Card.Root>

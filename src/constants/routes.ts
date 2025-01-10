@@ -13,7 +13,8 @@ export const TRIGGERS = {
 
 // Define a type that includes all the values under GOAL and CAREPOINTS
 export type TriggerValues =
-  (typeof TRIGGERS)[keyof typeof TRIGGERS][keyof (typeof TRIGGERS)[keyof typeof TRIGGERS]]
+  | (typeof TRIGGERS.GOAL)[keyof typeof TRIGGERS.GOAL]
+  | (typeof TRIGGERS.CAREPOINTS)[keyof typeof TRIGGERS.CAREPOINTS]
 
 export const EDIT_ROUTES = {
   GOAL: {

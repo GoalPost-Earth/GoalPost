@@ -13,6 +13,34 @@ export const CREATE_GOAL_MUTATION = graphql(`
         location
         time
         createdAt
+        coreValues {
+          id
+          name
+          description
+        }
+        motivatesPeople {
+          id
+          name
+          photo
+        }
+        motivatesCommunities {
+          id
+          name
+        }
+        enablesCarePoints {
+          id
+          description
+          status
+        }
+        caredForByCarePoints {
+          id
+          description
+          status
+        }
+        createdBy {
+          id
+          name
+        }
       }
     }
   }
@@ -31,11 +59,33 @@ export const UPDATE_GOAL_MUTATION = graphql(`
         location
         time
         createdAt
-
         coreValues {
           id
           name
           description
+        }
+        motivatesPeople {
+          id
+          name
+          photo
+        }
+        motivatesCommunities {
+          id
+          name
+        }
+        enablesCarePoints {
+          id
+          description
+          status
+        }
+        caredForByCarePoints {
+          id
+          description
+          status
+        }
+        createdBy {
+          id
+          name
         }
       }
     }

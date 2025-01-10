@@ -41,7 +41,7 @@ const Select = (props: SelectPropsType) => {
         <NativeSelectField
           {...register(name)}
           placeholder={placeholder}
-          items={options.map((options) => options.value)}
+          items={options}
         />
       </NativeSelectRoot>
     </Field>

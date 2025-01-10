@@ -89,7 +89,10 @@ export default async function ViewGoalPage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${goal?.motivatesPeople[0]?.id}`}>
-              <EntityOwnerCard person={goal?.motivatesPeople[0]} />
+              <EntityOwnerCard
+                person={goal?.motivatesPeople[0]}
+                community={goal?.motivatesCommunities[0]}
+              />
             </Link>
           </Box>
 
@@ -123,7 +126,10 @@ export default async function ViewGoalPage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={goal?.motivatesPeople[0]} />
+              <EntityOwnerCard
+                person={goal?.motivatesPeople[0]}
+                community={goal?.motivatesCommunities[0]}
+              />
             </Box>
           </HStack>
         </VStack>
