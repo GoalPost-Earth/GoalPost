@@ -144,7 +144,7 @@ type Goal @node {
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   coreValues: [CoreValue!]! @relationship(type: "ALIGNED_TO", direction: OUT)
   enablesCarePoints: [CarePoint!]!
-    @relationship(type: "ENABLES", direction: OUT)
+    @relationship(type: "ENABLED_BY", direction: IN)
   caredForByCarePoints: [CarePoint!]!
     @relationship(type: "CARES_FOR", direction: IN)
 

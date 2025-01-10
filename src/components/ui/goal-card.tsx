@@ -73,14 +73,14 @@ export const GoalCard = ({
               {name}
             </Card.Title>
             <HStack mt="2">
-              <Badge
+              {/* <Badge
                 colorPalette="brand"
                 borderRadius="full"
                 p={2}
                 fontSize="xs"
               >
                 Offer
-              </Badge>
+              </Badge> */}
               <Flex fontSize="xs" fontWeight="bold" alignItems="center" gap={1}>
                 <CalenderIcon />
                 <Text mt={'2px'}>{goalDate}</Text>
