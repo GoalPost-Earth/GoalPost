@@ -3,12 +3,10 @@ import { Box, Dialog, Flex, Spinner, Text, VStack } from '@chakra-ui/react'
 import SearchBar from './searchbar'
 import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
-import { CommunityCard } from './community-card'
 import { useGetSearchResults } from '@/hooks'
 import { Community } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
-import { GoalCard } from './goal-card'
-import { PersonCard } from './person-card'
+import { CommunityCard, GoalCard, PersonCard } from './entity-cards'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)

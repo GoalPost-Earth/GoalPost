@@ -1,6 +1,6 @@
 import { Badge, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
-import EllipseIcon from '../icons/EllipseIcon'
+import EllipseIcon from '../../icons/EllipseIcon'
 import { CarePoint } from '@/gql/graphql'
 
 export function CarePointCard({

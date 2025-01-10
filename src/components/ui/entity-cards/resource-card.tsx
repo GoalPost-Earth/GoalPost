@@ -1,8 +1,8 @@
 import { Badge, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import EllipseIcon from '../icons/EllipseIcon'
-import { Avatar } from './avatar'
+import EllipseIcon from '../../icons/EllipseIcon'
+import { Avatar } from '../avatar'
 import { Resource } from '@/gql/graphql'
 
 export const ResourceCard = ({ resource }: { resource: Resource }) => {

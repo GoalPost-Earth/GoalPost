@@ -10,9 +10,9 @@ import {
 } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
-import { EllipseIcon } from '../icons'
+import { EllipseIcon } from '../../icons'
 import { formatDate, getInitials } from '@/utils'
-import { CalenderIcon } from '../icons'
+import { CalenderIcon } from '../../icons'
 import { Goal } from '@/gql/graphql'
 
 export const GoalCard = ({

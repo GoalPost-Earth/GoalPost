@@ -1,10 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Flex, Tabs, TabsContent, TabsContentGroup } from '@chakra-ui/react'
+import { Flex, Tabs, TabsContent } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
-import { CommunityCard } from './community-card'
-import { GoalCard } from './goal-card'
-import { PersonCard } from './person-card'
+import { CommunityCard, GoalCard, PersonCard } from './entity-cards'
 
 interface SearchTabsProps {
   content: any[]

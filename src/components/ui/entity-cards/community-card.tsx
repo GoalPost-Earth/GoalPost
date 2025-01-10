@@ -1,7 +1,7 @@
 import { Card, CardHeaderProps, Heading, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import { Community } from '@/gql/graphql'
-import { GroupAvatars } from './group-avatars'
+import { GroupAvatars } from '../group-avatars'
 
 export function CommunityCard({
   community,
