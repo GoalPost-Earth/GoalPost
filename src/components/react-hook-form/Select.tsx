@@ -53,6 +53,7 @@ const Select = (props: SelectPropsType) => {
         >
           <SelectRoot
             id={name}
+            value={field.value}
             border="1px solid #CBD5E1"
             variant="subtle"
             onValueChange={({ value }) => field.onChange(value)}

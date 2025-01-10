@@ -12,7 +12,7 @@ export type TriggerValues = (typeof TRIGGERS.GOAL)[keyof typeof TRIGGERS.GOAL]
 export const EDIT_ROUTES = {
   GOAL: {
     DETAILS: '/details',
-    CORE_VALUES: '/core-values',
+    CORE_VALUES: '',
     ENABLES_CAREPOINTS: '',
     CARED_FOR_BY_CAREPOINTS: '/cared-for-by-carepoints',
   },

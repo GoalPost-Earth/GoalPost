@@ -19,7 +19,7 @@ import {
   EntityDetail,
   EntityOwnerCard,
   CarePointCard,
-  GoalEnablesCarePoint,
+  GoalCoreValueUpdate,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -120,7 +120,8 @@ export default async function ViewGoalPage({
                     <EntityDetail title="Status" details={goal.status} />
                   </VStack>
                 </VStack>,
-                <GoalEnablesCarePoint
+                <GoalCoreValueUpdate key="coreValues" goal={goal as Goal} />,
+                <GoalCoreValueUpdate
                   key="enablesCarePoints"
                   goal={goal as Goal}
                 />,

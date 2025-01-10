@@ -1,1 +1,1 @@
-export { default as GoalEnablesCarePoint } from './goal/update-enable-carepoint'
+export { default as GoalCoreValueUpdate } from './goal/update-corevalues'

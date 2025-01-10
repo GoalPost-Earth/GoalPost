@@ -1,7 +1,7 @@
 import { graphql } from '@/gql'
 
 export const CREATE_GOAL_MUTATION = graphql(`
-  mutation CreateGoals($input: [GoalCreateInput!]!) {
+  mutation createGoals($input: [GoalCreateInput!]!) {
     createGoals(input: $input) {
       goals {
         id
@@ -19,7 +19,7 @@ export const CREATE_GOAL_MUTATION = graphql(`
 `)
 
 export const UPDATE_GOAL_MUTATION = graphql(`
-  mutation UpdateGoal($id: ID!, $update: GoalUpdateInput!) {
+  mutation updateGoal($id: ID!, $update: GoalUpdateInput!) {
     updateGoals(where: { id_EQ: $id }, update: $update) {
       goals {
         id
@@ -31,13 +31,19 @@ export const UPDATE_GOAL_MUTATION = graphql(`
         location
         time
         createdAt
+
+        coreValues {
+          id
+          name
+          description
+        }
       }
     }
   }
 `)
 
 export const DELETE_GOAL_MUTATION = graphql(`
-  mutation DeleteGoal($id: ID!) {
+  mutation deleteGoal($id: ID!) {
     deleteGoals(where: { id_EQ: $id }) {
       nodesDeleted
     }

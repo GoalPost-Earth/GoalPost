@@ -12,6 +12,11 @@ export const GET_GOAL = graphql(`
       location
       time
       createdAt
+      coreValues {
+        id
+        name
+        description
+      }
       motivatesPeople {
         id
         name
