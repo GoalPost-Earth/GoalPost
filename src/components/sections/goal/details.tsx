@@ -76,10 +76,6 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
       })
     } catch (error) {
       console.error('🚀 ~ file: details.tsx:68 ~ error:', error)
-      toaster.error({
-        title: 'Error',
-        description: error.message,
-      })
     }
   }
 
