@@ -23,8 +23,10 @@ import { ApolloWrapper } from '@/components/layout'
 
 export interface GoalFormProps {
   formMode: string
-  control: Control<never>
-  register: UseFormRegister<never>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void
