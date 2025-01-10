@@ -13,10 +13,18 @@ export const GET_CAREPOINT = graphql(`
       enabledByGoals {
         id
         name
+        photo
+        status
+        createdAt
+        description
       }
       caresForGoals {
         id
         name
+        photo
+        status
+        createdAt
+        description
       }
       createdAt
       createdBy {

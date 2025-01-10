@@ -14,10 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBackdrop,
-  CoreValueCard,
+  Select,
   toaster,
   EditButton,
-  MultiSelect,
+  CarePointCard,
 } from '@/components'
 import { Goal } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
@@ -26,7 +26,7 @@ import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { EntityEnum } from '@/constants'
 
-export default function UpdateGoalCoreValue({
+export default function GoalEnablesCarePoints({
   key,
   goal: fromParent,
 }: {
@@ -88,7 +88,10 @@ export default function UpdateGoalCoreValue({
       }
 
       setGoal(response.data.updateGoals.goals[0] as Goal)
-      setOpen(false)
+
+      if (cancelButtonRef.current) {
+        cancelButtonRef.current.click()
+      }
 
       toaster.create({
         title: 'Updated Goal Core Values',
@@ -116,7 +119,7 @@ export default function UpdateGoalCoreValue({
         <DialogTrigger asChild>
           <EditButton
             colorPalette={EntityEnum.Goal.toLowerCase()}
-            text="Edit Core Values"
+            text="Edit Care Points"
             mb={5}
           />
         </DialogTrigger>
@@ -126,7 +129,7 @@ export default function UpdateGoalCoreValue({
               <DialogTitle>{goal.name} Core Values</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <MultiSelect
+              <Select
                 name="corevalues"
                 label="What core values are aligned to this goal?"
                 control={control}
@@ -157,9 +160,9 @@ export default function UpdateGoalCoreValue({
       </DialogRoot>
 
       <Grid templateColumns="repeat(auto-fill, minmax(360px, 1fr))" gap={6}>
-        {goal.coreValues.map((coreValue) => (
-          <GridItem key={coreValue.id}>
-            <CoreValueCard coreValue={coreValue} />
+        {goal.enablesCarePoints.map((carePoint) => (
+          <GridItem key={carePoint.id}>
+            <CarePointCard carePoint={carePoint} />
           </GridItem>
         ))}
       </Grid>

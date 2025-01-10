@@ -17,9 +17,11 @@ import {
   GenericTabs,
   EntityDetail,
   EntityOwnerCard,
+  CarePointLinkedGoals,
 } from '@/components'
 import Link from 'next/link'
-import { EntityEnum } from '@/constants'
+import { EntityEnum, TRIGGERS } from '@/constants'
+import { CarePoint } from '@/gql/graphql'
 
 export default async function ViewCarePointPage({
   params,
@@ -93,7 +95,10 @@ export default async function ViewCarePointPage({
               entityId={id}
               entityType={EntityEnum.CarePoint}
               entityName={carepoint.description}
-              triggers={['Details', 'Linked Care Points']}
+              triggers={Object.keys(TRIGGERS.CAREPOINTS).map(
+                (key) =>
+                  TRIGGERS.CAREPOINTS[key as keyof typeof TRIGGERS.CAREPOINTS]
+              )}
               content={[
                 <VStack
                   key="Details"
@@ -114,16 +119,10 @@ export default async function ViewCarePointPage({
                     <EntityDetail title="Status" details={carepoint.status} />
                   </VStack>
                 </VStack>,
-                <VStack
-                  key="Linked Care Points"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                >
-                  <Text>Linked Care Points</Text>
-                </VStack>,
+                <CarePointLinkedGoals
+                  key="linkedGoals"
+                  carePoint={carepoint as CarePoint}
+                />,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">

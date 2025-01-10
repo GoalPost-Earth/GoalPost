@@ -50,7 +50,6 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
         variables: {
           input: {
             ...data,
-            status: ['yes'] as unknown as string,
             enabledByGoals: {
               connect: [{ where: { node: { id_EQ: goal.id } } }],
             },

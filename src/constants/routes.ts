@@ -1,13 +1,19 @@
 export const TRIGGERS = {
   GOAL: {
-    DETAILS: 'Details',
+    DETAILS: 'Goal Details',
     CORE_VALUES: 'Core Values',
     ENABLES_CAREPOINTS: 'Enables Care Points',
     CARED_FOR_BY_CAREPOINTS: 'Cared For By Care Points',
   },
+  CAREPOINTS: {
+    DETAILS: 'Care Point Details',
+    LINKED_GOALS: 'Enabling Goals',
+  },
 } as const
 
-export type TriggerValues = (typeof TRIGGERS.GOAL)[keyof typeof TRIGGERS.GOAL]
+// Define a type that includes all the values under GOAL and CAREPOINTS
+export type TriggerValues =
+  (typeof TRIGGERS)[keyof typeof TRIGGERS][keyof (typeof TRIGGERS)[keyof typeof TRIGGERS]]
 
 export const EDIT_ROUTES = {
   GOAL: {
@@ -15,6 +21,10 @@ export const EDIT_ROUTES = {
     CORE_VALUES: '',
     ENABLES_CAREPOINTS: '',
     CARED_FOR_BY_CAREPOINTS: '/cared-for-by-carepoints',
+  },
+  CAREPOINTS: {
+    DETAILS: '/details',
+    LINKED_GOALS: '',
   },
 } as const
 
@@ -27,9 +37,13 @@ export const TRIGGER_TO_ROUTE_MAP = {
   [TRIGGERS.GOAL.ENABLES_CAREPOINTS]: EDIT_ROUTES.GOAL.ENABLES_CAREPOINTS,
   [TRIGGERS.GOAL.CARED_FOR_BY_CAREPOINTS]:
     EDIT_ROUTES.GOAL.CARED_FOR_BY_CAREPOINTS,
+
+  [TRIGGERS.CAREPOINTS.DETAILS]: EDIT_ROUTES.CAREPOINTS.DETAILS,
+  [TRIGGERS.CAREPOINTS.LINKED_GOALS]: EDIT_ROUTES.CAREPOINTS.LINKED_GOALS,
 }
 
 export type EditRoutesType = typeof EDIT_ROUTES
 export type GoalRoutesType = typeof EDIT_ROUTES.GOAL
+export type CarePointRoutesType = typeof EDIT_ROUTES.CAREPOINTS
 
 export type RoutesType = GoalRoutesType

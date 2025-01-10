@@ -24,7 +24,7 @@ interface GenericTabsProps {
 
 const parseEditLink = (trigger: TriggerValues, entityId: string) => {
   const baseURL = `update/${entityId}`
-  const parsedTrigger: EditRouteValues = TRIGGER_TO_ROUTE_MAP[trigger]
+  const parsedTrigger = TRIGGER_TO_ROUTE_MAP[trigger]
 
   if (!parsedTrigger) {
     return ''

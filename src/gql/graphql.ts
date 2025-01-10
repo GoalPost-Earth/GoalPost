@@ -9711,8 +9711,24 @@ export type GetCarePointQuery = {
     status: string
     createdAt: any
     resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
-    enabledByGoals: Array<{ __typename?: 'Goal'; id: string; name: string }>
-    caresForGoals: Array<{ __typename?: 'Goal'; id: string; name: string }>
+    enabledByGoals: Array<{
+      __typename?: 'Goal'
+      id: string
+      name: string
+      photo?: string | null
+      status: string
+      createdAt: any
+      description?: string | null
+    }>
+    caresForGoals: Array<{
+      __typename?: 'Goal'
+      id: string
+      name: string
+      photo?: string | null
+      status: string
+      createdAt: any
+      description?: string | null
+    }>
     createdBy: Array<{
       __typename?: 'Person'
       id: string
@@ -10302,7 +10318,7 @@ export const CreateCarePointsDocument = {
     {
       kind: 'OperationDefinition',
       operation: 'mutation',
-      name: { kind: 'Name', value: 'CreateCarePoints' },
+      name: { kind: 'Name', value: 'createCarePoints' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -12387,6 +12403,19 @@ export const GetCarePointDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },
@@ -12398,6 +12427,19 @@ export const GetCarePointDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },

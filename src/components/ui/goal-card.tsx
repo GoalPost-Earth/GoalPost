@@ -13,22 +13,17 @@ import React from 'react'
 import { EllipseIcon } from '../icons'
 import { formatDate, getInitials } from '@/utils'
 import { CalenderIcon } from '../icons'
+import { Goal } from '@/gql/graphql'
 
 export const GoalCard = ({
-  id,
-  photo,
-  name,
-  status,
-  createdAt,
-  description,
+  goal,
 }: {
-  id: string
-  photo: string | null | undefined
-  name: string
-  status?: string
-  createdAt: string
-  description: string | null | undefined
+  goal: Pick<
+    Goal,
+    'id' | 'photo' | 'name' | 'status' | 'createdAt' | 'description'
+  >
 }) => {
+  const { id, photo, name, status, createdAt, description } = goal
   const goalDate = formatDate(createdAt)
 
   return (
@@ -42,7 +37,7 @@ export const GoalCard = ({
       p={{ base: 4, lg: 0 }}
       gap={{ base: 4, lg: 0 }}
     >
-      {photo ? (
+      {!!photo ? (
         <Image
           objectFit="cover"
           width={{ base: '50px', lg: '100%' }}

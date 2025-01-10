@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
-  '\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n':
+  '\n  mutation createCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n':
     types.CreateCarePointsDocument,
   '\n  mutation UpdateCarePoint($id: ID!, $update: CarePointUpdateInput!) {\n    updateCarePoints(where: { id_EQ: $id }, update: $update) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n':
     types.UpdateCarePointDocument,
@@ -56,7 +56,7 @@ const documents = {
     types.DeleteResourceDocument,
   '\n  query getRecentActions {\n    carePoints(sort: { createdAt: DESC }, limit: 3, where: {}) {\n      createdAt\n      description\n      id\n      status\n      createdBy {\n        photo\n        name\n        id\n      }\n    }\n    goals(sort: { createdAt: DESC }, limit: 3) {\n      createdAt\n      id\n      description\n      photo\n      status\n      name\n      createdBy {\n        name\n        id\n        photo\n      }\n    }\n    resources(limit: 3, sort: { createdAt: DESC }) {\n      providedByPerson {\n        name\n        photo\n        id\n      }\n      name\n      id\n      status\n      description\n      createdAt\n    }\n    coreValues(limit: 3, sort: { createdAt: DESC }) {\n      isEmbracedBy {\n        name\n        id\n        photo\n      }\n      description\n      id\n      name\n      createdAt\n    }\n    communities(where: { members_SOME: { NOT: null } }, limit: 3, sort: {}) {\n      name\n      members(limit: 3, sort: { createdAt: DESC }) {\n        id\n        name\n        photo\n        createdAt\n      }\n    }\n  }\n':
     types.GetRecentActionsDocument,
-  '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n      }\n      caresForGoals {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
+  '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      caresForGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetCarePointDocument,
   '\n  query getAllCarePoints($where: CarePointWhere) {\n    carePoints(where: $where) {\n      id\n      description\n      status\n\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n      enabledByGoals {\n        name\n        id\n      }\n    }\n  }\n':
     types.GetAllCarePointsDocument,
@@ -112,8 +112,8 @@ export function graphql(source: string): unknown
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n'
-): (typeof documents)['\n  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n']
+  source: '\n  mutation createCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation createCarePoints($input: [CarePointCreateInput!]!) {\n    createCarePoints(input: $input) {\n      carePoints {\n        id\n        description\n        status\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -238,8 +238,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n      }\n      caresForGoals {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n      }\n      caresForGoals {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
+  source: '\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      caresForGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getCarePoint($id: ID!) {\n    carePoints(where: { id_EQ: $id }) {\n      id\n      description\n      status\n      resources {\n        id\n        name\n      }\n      enabledByGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      caresForGoals {\n        id\n        name\n        photo\n        status\n        createdAt\n        description\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

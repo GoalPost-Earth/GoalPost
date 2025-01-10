@@ -1,7 +1,7 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { ImageUpload, Input } from '../react-hook-form'
-import { Button } from '../ui'
+import { ImageUpload, Input } from '../../react-hook-form'
+import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import { CloudinaryPresets } from '@/constants'
 

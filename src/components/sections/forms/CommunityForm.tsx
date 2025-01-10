@@ -1,10 +1,11 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input } from '../react-hook-form'
-import { Button } from '../ui'
+import { Input, Select } from '../../react-hook-form'
+import { STATUS_SELECT_OPTIONS } from '@/constants'
+import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 
-export interface CoreValueFormProps {
+export interface CommunityFormProps {
   formMode: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
@@ -13,16 +14,16 @@ export interface CoreValueFormProps {
   onSubmit: () => void
 }
 
-const CoreValueForm = ({
+const CommunityForm = ({
   formMode,
   control,
   errors,
   isSubmitting,
   onSubmit,
-}: CoreValueFormProps) => {
+}: CommunityFormProps) => {
   return (
     <>
-      <Heading>{formMode} CoreValue</Heading>
+      <Heading>{formMode} Community</Heading>
       <form onSubmit={onSubmit} noValidate>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
@@ -43,39 +44,36 @@ const CoreValueForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input
-              label="Alignment Examples"
-              name="alignmentExamples"
+            <Select
+              label="Status"
+              name="status"
               control={control}
               errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Alignment Challenges"
-              name="alignmentChallenges"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Who Supports"
-              name="whoSupports"
-              control={control}
-              errors={errors}
+              options={STATUS_SELECT_OPTIONS}
             />
           </GridItem>
           <GridItem>
             <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>
+          <GridItem>
+            <Input
+              label="Location"
+              name="location"
+              control={control}
+              errors={errors}
+            />
+          </GridItem>
+          <GridItem>
+            <Input label="Time" name="time" control={control} errors={errors} />
+          </GridItem>
         </Grid>
+
         <Box my={5}>
           <hr />
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            {formMode} CoreValue
+            {formMode} Community
           </Button>
         </Center>
       </form>
@@ -83,4 +81,4 @@ const CoreValueForm = ({
   )
 }
 
-export default CoreValueForm
+export default CommunityForm

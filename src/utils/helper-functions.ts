@@ -21,6 +21,8 @@ export const getHumanReadableDateTime = (date: string) => {
 
 // TODO: Move this out and use Chakra default Avatar component
 export function getInitials(name: string) {
+  if (!name) return ''
+
   const names = name.trim().split(' ')
   const firstName = names[0] != null ? names[0] : ''
   const lastName = names.length > 1 ? names[names.length - 1] : ''

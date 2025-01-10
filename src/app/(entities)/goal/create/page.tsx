@@ -15,6 +15,7 @@ function CreateGoal() {
   const {
     control,
     handleSubmit,
+    register,
     formState: { isSubmitting, errors },
   } = useForm()
   const router = useRouter()
@@ -50,6 +51,7 @@ function CreateGoal() {
         formMode={FormMode.Create}
         control={control}
         errors={errors}
+        register={register}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
       />

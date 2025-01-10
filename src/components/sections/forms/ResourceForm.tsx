@@ -1,7 +1,7 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input, Select } from '../react-hook-form'
-import { Button } from '../ui'
+import { Input, Select } from '../../react-hook-form'
+import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 

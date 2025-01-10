@@ -1,18 +1,16 @@
 import { Badge, Card, HStack } from '@chakra-ui/react'
 import Link from 'next/link'
 import EllipseIcon from '../icons/EllipseIcon'
+import { CarePoint } from '@/gql/graphql'
 
 export function CarePointCard({
-  id,
-  description,
-  status,
+  carePoint,
+  ...rest
 }: {
-  id: string
-  description: string
-  status: string
+  carePoint: Pick<CarePoint, 'id' | 'description' | 'status'>
 }) {
   return (
-    <Link href={`/carepoint/${id}`} style={{ width: '100%' }}>
+    <Link href={`/carepoint/${carePoint.id}`} style={{ width: '100%' }}>
       <Card.Root width="100%" bgColor="carepoints.subtle">
         <Card.Body width="100%">
           <Badge
@@ -24,9 +22,9 @@ export function CarePointCard({
             ml="auto"
           >
             <EllipseIcon width="12px" height="12px" />
-            {status}
+            {carePoint.status}
           </Badge>
-          <HStack>{description}</HStack>
+          <HStack>{carePoint.description}</HStack>
         </Card.Body>
       </Card.Root>
     </Link>

@@ -5,10 +5,10 @@ import { Container } from '@chakra-ui/react'
 import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FormMode } from '@/types'
-import { GET_COREVALUE, UPDATE_COREVALUE_MUTATION } from '@/app/graphql'
-import { ApolloWrapper, CoreValueForm } from '@/components'
-import { CoreValueFormData, coreValueSchema } from '@/app/schema'
+import { GET_CAREPOINT, UPDATE_CAREPOINT_MUTATION } from '@/app/graphql'
+import { ApolloWrapper } from '@/components'
+import { CarePointFormData, carePointSchema } from '@/app/schema'
+import { FormMode } from '@/constants'
 
 export default function UpdateCommunity({
   params,
@@ -18,23 +18,24 @@ export default function UpdateCommunity({
   const { id } = use(params)
   const router = useRouter()
 
-  const { data, loading, error } = useQuery(GET_COREVALUE, {
+  const { data, loading, error } = useQuery(GET_CAREPOINT, {
     variables: { id },
   })
-  const [UpdateCoreValue] = useMutation(UPDATE_COREVALUE_MUTATION)
+  const [UpdateCarePoint] = useMutation(UPDATE_CAREPOINT_MUTATION)
 
-  const coreValue = data?.coreValues[0]
+  const carePoint = data?.carePoints[0]
+  console.log('🚀 ~ file: page.tsx:27 ~ carePoint:', carePoint)
 
-  const defaultValues: CoreValueFormData = useMemo(
+  const defaultValues: CarePointFormData = useMemo(
     () => ({
-      name: coreValue?.name || '',
-      description: coreValue?.description || '',
-      whoSupports: coreValue?.whoSupports || '',
-      why: coreValue?.why || '',
-      alignmentChallenges: coreValue?.alignmentChallenges || '',
-      alignmentExamples: coreValue?.alignmentExamples || '',
+      name: carePoint?.name || '',
+      description: carePoint?.description || '',
+      whoSupports: carePoint?.whoSupports || '',
+      why: carePoint?.why || '',
+      alignmentChallenges: carePoint?.alignmentChallenges || '',
+      alignmentExamples: carePoint?.alignmentExamples || '',
     }),
-    [coreValue]
+    [carePoint]
   )
 
   const {
@@ -42,23 +43,22 @@ export default function UpdateCommunity({
     handleSubmit,
     reset,
     formState: { isSubmitting, errors },
-  } = useForm<CoreValueFormData>({
+  } = useForm<CarePointFormData>({
     defaultValues,
-    resolver: zodResolver(coreValueSchema),
+    resolver: zodResolver(carePointSchema),
   })
   useEffect(() => {
-    if (coreValue) {
+    if (carePoint) {
       reset(defaultValues)
     }
-  }, [coreValue, defaultValues, reset])
+  }, [carePoint, defaultValues, reset])
 
-  const onSubmit = async (formData: CoreValueFormData) => {
+  const onSubmit = async (formData: CarePointFormData) => {
     try {
-      const res = await UpdateCoreValue({
+      const res = await UpdateCarePoint({
         variables: {
           id: id,
           update: {
-            name_SET: formData.name,
             description_SET: formData.description,
             whoSupports_SET: formData.whoSupports,
             alignmentChallenges_SET: formData.alignmentChallenges,
@@ -68,7 +68,7 @@ export default function UpdateCommunity({
         },
       })
 
-      router.push('/corevalue/' + res.data?.updateCoreValues.coreValues[0].id)
+      router.push('/carepoint/' + res.data?.updateCarePoints.carePoints[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -77,7 +77,7 @@ export default function UpdateCommunity({
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
-        <CoreValueForm
+        <CarePointForm
           formMode={FormMode.Update}
           control={control}
           errors={errors}

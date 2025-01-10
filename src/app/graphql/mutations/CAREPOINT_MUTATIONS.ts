@@ -1,7 +1,7 @@
 import { graphql } from '@/gql'
 
 export const CREATE_CAREPOINT_MUTATION = graphql(`
-  mutation CreateCarePoints($input: [CarePointCreateInput!]!) {
+  mutation createCarePoints($input: [CarePointCreateInput!]!) {
     createCarePoints(input: $input) {
       carePoints {
         id

@@ -1,29 +1,36 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input, Select } from '../react-hook-form'
+import { Input, NativeSelect } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
-import { Button } from '../ui'
-import { Control, FieldErrors, FieldValues } from 'react-hook-form'
+import { Button } from '../../ui'
+import {
+  Control,
+  FieldErrors,
+  FieldValues,
+  UseFormRegister,
+} from 'react-hook-form'
 
-export interface CommunityFormProps {
+export interface GoalFormProps {
   formMode: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
+  register: UseFormRegister<FieldValues>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void
 }
 
-const CommunityForm = ({
+const GoalForm = ({
   formMode,
   control,
   errors,
+  register,
   isSubmitting,
   onSubmit,
-}: CommunityFormProps) => {
+}: GoalFormProps) => {
   return (
     <>
-      <Heading>{formMode} Community</Heading>
+      <Heading>{formMode} Goal</Heading>
       <form onSubmit={onSubmit} noValidate>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
@@ -44,10 +51,10 @@ const CommunityForm = ({
             />
           </GridItem>
           <GridItem>
-            <Select
+            <NativeSelect
               label="Status"
               name="status"
-              control={control}
+              register={register}
               errors={errors}
               options={STATUS_SELECT_OPTIONS}
             />
@@ -73,7 +80,7 @@ const CommunityForm = ({
         </Box>
         <Center>
           <Button type="submit" loading={isSubmitting}>
-            {formMode} Community
+            {formMode} Goal
           </Button>
         </Center>
       </form>
@@ -81,4 +88,4 @@ const CommunityForm = ({
   )
 }
 
-export default CommunityForm
+export default GoalForm

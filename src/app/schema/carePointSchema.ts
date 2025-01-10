@@ -3,7 +3,7 @@ import * as z from 'zod'
 
 export const carePointSchema = object({
   description: string().min(1).trim(),
-  status: string().min(1).trim().optional(),
+  status: string().min(1).trim(),
 })
 
 export type CarePointFormData = z.infer<typeof carePointSchema>

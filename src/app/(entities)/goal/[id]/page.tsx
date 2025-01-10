@@ -18,8 +18,9 @@ import {
   GenericTabs,
   EntityOwnerCard,
   CarePointCard,
-  GoalCoreValueUpdate,
   GoalDetails,
+  GoalCoreValues,
+  GoalEnablesCarePoints,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -102,8 +103,8 @@ export default async function ViewGoalPage({
               )}
               content={[
                 <GoalDetails key="details" goal={goal as Goal} />,
-                <GoalCoreValueUpdate key="coreValues" goal={goal as Goal} />,
-                <GoalCoreValueUpdate
+                <GoalCoreValues key="coreValues" goal={goal as Goal} />,
+                <GoalEnablesCarePoints
                   key="enablesCarePoints"
                   goal={goal as Goal}
                 />,
@@ -114,11 +115,7 @@ export default async function ViewGoalPage({
                 >
                   {goal.caredForByCarePoints.map((carePoint) => (
                     <GridItem key={carePoint.id}>
-                      <CarePointCard
-                        id={carePoint.id}
-                        description={carePoint.description}
-                        status={carePoint.status}
-                      />
+                      <CarePointCard carePoint={carePoint} />
                     </GridItem>
                   ))}
                 </Grid>,

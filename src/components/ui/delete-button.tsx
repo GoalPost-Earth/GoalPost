@@ -90,7 +90,7 @@ export function DeleteButton({
 
       toaster.create({
         title: 'Entity deleted',
-        description: 'The entity',
+        description: `The ${entityType.toLowerCase()} named ${entityName} has been deleted`,
         type: 'success',
       })
       onClose()
@@ -98,7 +98,7 @@ export function DeleteButton({
       console.error(error)
       toaster.create({
         title: 'Error',
-        description: 'An error occurred while deleting the entity',
+        description: `An error occurred while deleting the ${entityType.toLowerCase()} named ${entityName}`,
         type: 'error',
       })
     } finally {

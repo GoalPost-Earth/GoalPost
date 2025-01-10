@@ -14,10 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBackdrop,
-  Select,
   CoreValueCard,
   toaster,
   EditButton,
+  MultiSelect,
 } from '@/components'
 import { Goal } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
@@ -26,7 +26,7 @@ import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { EntityEnum } from '@/constants'
 
-export default function GoalEnablesCarePointsUpdate({
+export default function GoalCoreValues({
   key,
   goal: fromParent,
 }: {
@@ -88,10 +88,7 @@ export default function GoalEnablesCarePointsUpdate({
       }
 
       setGoal(response.data.updateGoals.goals[0] as Goal)
-
-      if (cancelButtonRef.current) {
-        cancelButtonRef.current.click()
-      }
+      setOpen(false)
 
       toaster.create({
         title: 'Updated Goal Core Values',
@@ -129,7 +126,7 @@ export default function GoalEnablesCarePointsUpdate({
               <DialogTitle>{goal.name} Core Values</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <Select
+              <MultiSelect
                 name="corevalues"
                 label="What core values are aligned to this goal?"
                 control={control}
