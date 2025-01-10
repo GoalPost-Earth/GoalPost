@@ -19,7 +19,7 @@ import {
   EntityOwnerCard,
 } from '@/components'
 import Link from 'next/link'
-import { EntityEnum } from '@/constants'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewCoreValuePage({
   params,
@@ -92,7 +92,10 @@ export default async function ViewCoreValuePage({
               entityId={id}
               entityType={EntityEnum.CoreValue}
               entityName={corevalue.name}
-              triggers={['Details', 'Linked Care Points']}
+              triggers={Object.keys(TRIGGERS.COREVALUE).map(
+                (key) =>
+                  TRIGGERS.COREVALUE[key as keyof typeof TRIGGERS.COREVALUE]
+              )}
               content={[
                 <VStack
                   key="Details"

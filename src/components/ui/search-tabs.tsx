@@ -134,15 +134,7 @@ export const SearchTabs = ({ content }: SearchTabsProps) => {
       <TabsContent width="100%" value={TRIGGERS[5]}>
         {!!content[5] && content[5].length > 0 ? (
           content[5].map((entity: any) => (
-            <GoalCard
-              key={entity.id}
-              id={entity.id}
-              description={entity.description}
-              name={entity.name}
-              status={entity.status}
-              photo={entity.photo}
-              createdAt={entity.createdAt}
-            />
+            <GoalCard key={entity.id} goal={entity} />
           ))
         ) : (
           <DefaultTabContent />

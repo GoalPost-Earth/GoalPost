@@ -10,7 +10,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react'
-import { Community, Person, Resource } from '@/gql/graphql'
+import { Community, Goal, Person, Resource } from '@/gql/graphql'
 import { useApp } from './contexts/AppContext'
 import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
 import { useQuery } from '@apollo/client'
@@ -68,16 +68,7 @@ const HomeClient = () => {
       name: goal.name,
       photo: goal.photo,
       status: goal.status,
-      children: (
-        <GoalCard
-          id={goal.id}
-          photo={goal.photo}
-          name={goal.name}
-          status={goal.status}
-          createdAt={goal.createdAt}
-          description={goal.description}
-        />
-      ),
+      children: <GoalCard goal={goal as Goal} />,
     }
   })
   const recentCoreValues = data?.coreValues.map((coreValue) => {

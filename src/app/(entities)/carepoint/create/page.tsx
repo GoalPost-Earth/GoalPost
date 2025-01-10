@@ -8,7 +8,7 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { CoreValueForm } from '@/components'
-import { FormMode } from '@/types'
+import { FormMode } from '@/constants'
 
 function CreateCoreValue() {
   const {

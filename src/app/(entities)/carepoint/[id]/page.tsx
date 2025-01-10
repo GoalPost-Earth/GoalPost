@@ -94,9 +94,9 @@ export default async function ViewCarePointPage({
               entityId={id}
               entityType={EntityEnum.CarePoint}
               entityName={carepoint.description}
-              triggers={Object.keys(TRIGGERS.CAREPOINTS).map(
+              triggers={Object.keys(TRIGGERS.CAREPOINT).map(
                 (key) =>
-                  TRIGGERS.CAREPOINTS[key as keyof typeof TRIGGERS.CAREPOINTS]
+                  TRIGGERS.CAREPOINT[key as keyof typeof TRIGGERS.CAREPOINT]
               )}
               content={[
                 <VStack

@@ -71,14 +71,7 @@ export default function AllGoals() {
               >
                 {person.goals.map((goal) => (
                   <Flex key={goal.id}>
-                    <GoalCard
-                      id={goal.id}
-                      photo={goal.photo}
-                      status={goal.status}
-                      name={goal.name}
-                      createdAt={goal.createdAt}
-                      description={goal.description}
-                    />
+                    <GoalCard goal={goal} />
                   </Flex>
                 ))}
               </HStack>

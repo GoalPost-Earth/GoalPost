@@ -6,11 +6,11 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { FormMode } from '@/types'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { CommunityForm } from '@/components'
 import { CommunityFormData, communitySchema } from '@/app/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FormMode } from '@/constants'
 
 function CreateCommunity() {
   const {

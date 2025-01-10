@@ -21,7 +21,7 @@ import {
   CarePointCard,
 } from '@/components'
 import Link from 'next/link'
-import { EntityEnum } from '@/constants'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewResourcePage({
   params,
@@ -95,7 +95,10 @@ export default async function ViewResourcePage({
               entityId={id}
               entityType={EntityEnum.Resource}
               entityName={resource.name}
-              triggers={['Details', 'Linked Care Points']}
+              triggers={Object.keys(TRIGGERS.RESOURCE).map(
+                (key) =>
+                  TRIGGERS.RESOURCE[key as keyof typeof TRIGGERS.RESOURCE]
+              )}
               content={[
                 <VStack
                   key="Details"
@@ -128,11 +131,7 @@ export default async function ViewResourcePage({
                 >
                   {resource.carePoints.map((carePoint) => (
                     <GridItem key={carePoint.id}>
-                      <CarePointCard
-                        id={carePoint.id}
-                        description={carePoint.description}
-                        status={carePoint.status}
-                      />
+                      <CarePointCard carePoint={carePoint} />
                     </GridItem>
                   ))}
                 </Grid>,

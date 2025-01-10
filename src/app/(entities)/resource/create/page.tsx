@@ -6,7 +6,7 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { FormMode } from '@/types'
+import { FormMode } from '@/constants'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { ResourceForm } from '@/components'
 

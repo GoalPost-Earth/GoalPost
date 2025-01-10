@@ -27,6 +27,7 @@ export default function UpdateGoalEnablesCarePoints({
 
   const defaultValues: GoalFormData = useMemo(
     () => ({
+      linkTo: 'person',
       name: goal?.name || '',
       description: goal?.description || '',
       successMeasures: goal?.successMeasures || '',
@@ -42,6 +43,7 @@ export default function UpdateGoalEnablesCarePoints({
     control,
     handleSubmit,
     reset,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<GoalFormData>({
     defaultValues,
@@ -83,6 +85,7 @@ export default function UpdateGoalEnablesCarePoints({
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}
         />

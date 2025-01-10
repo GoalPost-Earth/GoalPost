@@ -2,6 +2,7 @@ import { Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { Person } from '@/gql/graphql'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 interface UserProfileProps {
   user: Person
@@ -46,8 +47,16 @@ export function UserProfile({
       </Stack>
       <GenericTabs
         entityId={user.id}
-        entityType="Person"
-        triggers={tabTriggers}
+        entityType={EntityEnum.Person}
+        entityName={user.name}
+        triggers={[
+          ...Object.keys(TRIGGERS.PERSON).map(
+            (key) => TRIGGERS.PERSON[key as keyof typeof TRIGGERS.PERSON]
+          ),
+          ...Object.keys(TRIGGERS.MEMBER).map(
+            (key) => TRIGGERS.MEMBER[key as keyof typeof TRIGGERS.MEMBER]
+          ),
+        ]}
         content={tabContent}
       />
     </VStack>

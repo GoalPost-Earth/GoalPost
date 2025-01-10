@@ -15,7 +15,7 @@ import {
   CoreValueCard,
 } from '@/components'
 import { Community, Person, Resource } from '@/gql/graphql'
-import { EntityEnum } from '@/constants'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewPersonPage({
   params,
@@ -63,15 +63,15 @@ export default async function ViewPersonPage({
     },
   ]
 
-  const memberTriggers = ['Communities', 'Resources', 'Goals', 'Core Values']
-
+  const personTriggers = Object.keys(TRIGGERS.PERSON).map(
+    (key) => TRIGGERS.PERSON[key as keyof typeof TRIGGERS.PERSON]
+  )
+  const memberTriggers = Object.keys(TRIGGERS.MEMBER).map(
+    (key) => TRIGGERS.MEMBER[key as keyof typeof TRIGGERS.MEMBER]
+  )
   const triggers = isMember
-    ? ['About', 'Connections', ...memberTriggers]
-    : ['About', 'Connections']
-
-  const desktopTriggers = isMember
-    ? ['Recents', 'Connections', ...memberTriggers]
-    : ['Recents', 'Connections']
+    ? [...personTriggers, ...memberTriggers]
+    : personTriggers
 
   const content = [
     <UserInfo data={bioData} key="bio" />,
@@ -152,13 +152,7 @@ export default async function ViewPersonPage({
     >
       {person.goals.map((goal) => (
         <GridItem key={goal.id}>
-          <GoalCard
-            id={goal.id}
-            photo={goal.photo ?? null}
-            name={goal.name}
-            createdAt={goal.createdAt}
-            description={goal.description}
-          />
+          <GoalCard goal={goal} />
         </GridItem>
       ))}
     </Grid>,
@@ -201,7 +195,7 @@ export default async function ViewPersonPage({
           entityId={id}
           entityType={EntityEnum.Person}
           entityName={person.name}
-          triggers={desktopTriggers}
+          triggers={triggers}
           content={desktopContent}
           props={{
             justifyContent: 'flex-start',

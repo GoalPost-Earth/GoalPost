@@ -24,7 +24,7 @@ import {
 } from '@/components'
 import Link from 'next/link'
 import { Community, Resource } from '@/gql/graphql'
-import { EntityEnum } from '@/constants'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewCommunityPage({
   params,
@@ -98,12 +98,10 @@ export default async function ViewCommunityPage({
               entityId={id}
               entityType={EntityEnum.Community}
               entityName={community.name}
-              triggers={[
-                'Details',
-                'Related Communities',
-                'Resources',
-                'Members',
-              ]}
+              triggers={Object.keys(TRIGGERS.COMMUNITY).map(
+                (key) =>
+                  TRIGGERS.COMMUNITY[key as keyof typeof TRIGGERS.COMMUNITY]
+              )}
               content={[
                 <VStack
                   key="Details"
