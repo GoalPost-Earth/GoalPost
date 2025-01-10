@@ -1,6 +1,6 @@
 'use client'
 
-import { DialogRoot, Text, useDisclosure } from '@chakra-ui/react'
+import { DialogRoot, Heading, Text, useDisclosure } from '@chakra-ui/react'
 import { DeleteIcon } from '../icons'
 import { Button } from './button'
 import { EntityType } from '@/types'
@@ -35,9 +35,11 @@ import {
 export function DeleteButton({
   entityId,
   entityType,
+  entityName,
 }: {
   entityId: string
   entityType: EntityType
+  entityName: string
 }) {
   const router = useRouter()
   const { open, onOpen, onClose } = useDisclosure()
@@ -121,16 +123,24 @@ export function DeleteButton({
 
       <DialogRoot
         motionPreset="slide-in-bottom"
+        placement="center"
         onOpenChange={onClose}
         open={open}
       >
         <DialogBackdrop />
 
         <DialogContent>
-          <DialogHeader>Delete this {entityType}</DialogHeader>
+          <DialogHeader>
+            <Heading>Delete {entityName}</Heading>
+          </DialogHeader>
           <DialogCloseTrigger />
           <DialogBody>
-            Are you sure you want to continue? This cannot be undone
+            Are you sure you want to delete{' '}
+            <Text color="brandIcons.500" as="span" fontWeight="bold">
+              {entityName}
+            </Text>{' '}
+            from the database?
+            <Text marginTop={5}>This cannot be undone...</Text>
           </DialogBody>
           <DialogFooter>
             <Button onClick={onClose} variant="subtle">

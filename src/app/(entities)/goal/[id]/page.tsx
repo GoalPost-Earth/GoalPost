@@ -96,6 +96,7 @@ export default async function ViewGoalPage({
             <GenericTabs
               entityId={id}
               entityType={EntityEnum.Goal}
+              entityName={goal.name}
               triggers={Object.keys(TRIGGERS.GOAL).map(
                 (key) => TRIGGERS.GOAL[key as keyof typeof TRIGGERS.GOAL]
               )}

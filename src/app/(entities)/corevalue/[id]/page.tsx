@@ -19,6 +19,7 @@ import {
   EntityOwnerCard,
 } from '@/components'
 import Link from 'next/link'
+import { EntityEnum } from '@/constants'
 
 export default async function ViewCoreValuePage({
   params,
@@ -32,15 +33,16 @@ export default async function ViewCoreValuePage({
     variables: { id },
   })
 
-  const corevalue = data?.coreValues[0]
-
   if (error) {
     throw error
   }
 
+  console.log('🚀 ~ file: page.tsx:31 ~ data:', data)
   if (data.coreValues.length === 0) {
     throw new Error('Core Value not found')
   }
+  const corevalue = data?.coreValues[0]
+  console.log('🚀 ~ file: page.tsx:36 ~ corevalue:', corevalue)
 
   return (
     <>
@@ -90,7 +92,8 @@ export default async function ViewCoreValuePage({
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
               entityId={id}
-              entityType="CoreValue"
+              entityType={EntityEnum.CoreValue}
+              entityName={corevalue.name}
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

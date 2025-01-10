@@ -24,6 +24,7 @@ import {
 } from '@/components'
 import Link from 'next/link'
 import { Community, Resource } from '@/gql/graphql'
+import { EntityEnum } from '@/constants'
 
 export default async function ViewCommunityPage({
   params,
@@ -95,7 +96,8 @@ export default async function ViewCommunityPage({
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
               entityId={id}
-              entityType="Community"
+              entityType={EntityEnum.Community}
+              entityName={community.name}
               triggers={[
                 'Details',
                 'Related Communities',

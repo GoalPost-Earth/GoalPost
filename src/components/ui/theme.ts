@@ -62,6 +62,15 @@ export const customTheme = createSystem(defaultConfig, {
           emphasized: { value: '{colors.brand.300}' },
           focusRing: { value: '{colors.brand.500}' },
         },
+        brandIcons: {
+          solid: { value: '{colors.brandIcons.500}' },
+          contrast: { value: '{colors.brandIcons.100}' },
+          fg: { value: '{colors.brandIcons.700}' },
+          muted: { value: '{colors.brandIcons.100}' },
+          subtle: { value: '{colors.brandIcons.200}' },
+          emphasized: { value: '{colors.brandIcons.300}' },
+          focusRing: { value: '{colors.brandIcons.500}' },
+        },
         community: {
           contrast: {
             value: { base: '{colors.white}', _dark: '{colors.white}' },

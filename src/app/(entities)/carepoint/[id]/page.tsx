@@ -92,6 +92,7 @@ export default async function ViewCarePointPage({
             <GenericTabs
               entityId={id}
               entityType={EntityEnum.CarePoint}
+              entityName={carepoint.description}
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

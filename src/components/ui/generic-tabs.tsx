@@ -18,6 +18,7 @@ interface GenericTabsProps {
   content: React.ReactNode[]
   entityId: string
   entityType: EntityEnum
+  entityName: string
   props?: any
 }
 
@@ -36,6 +37,7 @@ export const GenericTabs = ({
   content,
   entityId,
   entityType,
+  entityName,
   ...props
 }: GenericTabsProps) => {
   const [activeTab, setActiveTab] = useState(triggers[0])
@@ -79,7 +81,11 @@ export const GenericTabs = ({
             asChild
           >
             <Box>
-              <DeleteButton entityId={entityId} entityType={entityType} />
+              <DeleteButton
+                entityId={entityId}
+                entityType={entityType}
+                entityName={entityName}
+              />
             </Box>
           </Tabs.Trigger>
         </Tabs.List>

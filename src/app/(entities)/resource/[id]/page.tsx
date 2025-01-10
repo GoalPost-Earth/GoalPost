@@ -21,6 +21,7 @@ import {
   CarePointCard,
 } from '@/components'
 import Link from 'next/link'
+import { EntityEnum } from '@/constants'
 
 export default async function ViewResourcePage({
   params,
@@ -92,7 +93,8 @@ export default async function ViewResourcePage({
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
               entityId={id}
-              entityType="Resource"
+              entityType={EntityEnum.Resource}
+              entityName={resource.name}
               triggers={['Details', 'Linked Care Points']}
               content={[
                 <VStack

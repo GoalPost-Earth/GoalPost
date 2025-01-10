@@ -15,6 +15,7 @@ import {
   CoreValueCard,
 } from '@/components'
 import { Community, Person, Resource } from '@/gql/graphql'
+import { EntityEnum } from '@/constants'
 
 export default async function ViewPersonPage({
   params,
@@ -198,7 +199,8 @@ export default async function ViewPersonPage({
       >
         <GenericTabs
           entityId={id}
-          entityType="Person"
+          entityType={EntityEnum.Person}
+          entityName={person.name}
           triggers={desktopTriggers}
           content={desktopContent}
           props={{
