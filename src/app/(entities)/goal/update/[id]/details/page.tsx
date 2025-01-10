@@ -10,7 +10,7 @@ import { GET_GOAL, UPDATE_GOAL_MUTATION } from '@/app/graphql'
 import { ApolloWrapper, GoalForm } from '@/components'
 import { GoalFormData, goalSchema } from '@/app/schema'
 
-export default function UpdateGoal({
+export default function UpdateGoalDetails({
   params,
 }: {
   params: Promise<{ id: string }>

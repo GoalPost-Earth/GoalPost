@@ -7,7 +7,7 @@ import { Person } from '@/gql/graphql'
 export function EntityOwnerCard({
   person,
 }: {
-  person: Pick<Person, 'name' | 'email' | 'photo'>
+  person: Pick<Person, 'id' | 'name' | 'email' | 'photo'>
 }) {
   if (!person) {
     return <></>
@@ -37,17 +37,19 @@ export function EntityOwnerCard({
           width={{ lg: '200px' }}
           height={{ lg: '200px' }}
         />
-        <Flex flexDirection={'column'}>
-          <Text display={{ base: 'block', lg: 'none' }} fontWeight={'light'}>
-            Resource Owner
-          </Text>
-          <Text
-            fontWeight={'bold'}
-            fontSize={'clamp(1.125rem, 1vw + 0.7rem, 1.313rem)'}
-          >
-            {person.name}
-          </Text>
-        </Flex>
+        <Link href={`/person/${person.id}`}>
+          <Flex flexDirection={'column'}>
+            <Text display={{ base: 'block', lg: 'none' }} fontWeight={'light'}>
+              Resource Owner
+            </Text>
+            <Text
+              fontWeight={'bold'}
+              fontSize={'clamp(1.125rem, 1vw + 0.7rem, 1.313rem)'}
+            >
+              {person.name}
+            </Text>
+          </Flex>
+        </Link>
         <Box
           textAlign={'center'}
           fontSize="sm"

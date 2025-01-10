@@ -109,6 +109,7 @@ export function DeleteButton({
       <Button
         paddingX={2}
         height="fit-content"
+        colorPalette="red"
         variant="ghost"
         onClick={onOpen}
       >

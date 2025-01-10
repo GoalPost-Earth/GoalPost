@@ -6,14 +6,25 @@ import DefaultTabContent from './default-tab-content'
 import Link from 'next/link'
 import { EditButton } from './edit-button'
 import { DeleteButton } from './delete-button'
-import { EntityType } from '@/types'
+import {
+  EditRouteValues,
+  EntityEnum,
+  TRIGGER_TO_ROUTE_MAP,
+  TriggerValues,
+} from '@/constants'
 
 interface GenericTabsProps {
-  triggers: string[]
+  triggers: TriggerValues[]
   content: React.ReactNode[]
   entityId: string
-  entityType: EntityType
+  entityType: EntityEnum
   props?: any
+}
+
+const parseEditLink = (trigger: TriggerValues, entityId: string) => {
+  const baseURL = `update/${entityId}`
+  const parsedTrigger: EditRouteValues = TRIGGER_TO_ROUTE_MAP[trigger]
+  return baseURL + parsedTrigger
 }
 
 export const GenericTabs = ({
@@ -30,7 +41,7 @@ export const GenericTabs = ({
       variant="subtle"
       value={activeTab}
       onValueChange={(details) => {
-        const newValue = details.value
+        const newValue = details.value as TriggerValues
         if (['edit', 'delete'].includes(newValue)) {
           return
         }
@@ -57,15 +68,7 @@ export const GenericTabs = ({
             </Tabs.Trigger>
           ))}
           <Spacer />
-          <Tabs.Trigger
-            display={{ base: 'none', lg: 'block' }}
-            value="edit"
-            asChild
-          >
-            <Link href={`${entityType.toLowerCase()}/update/${entityId}`}>
-              <EditButton />
-            </Link>
-          </Tabs.Trigger>
+
           <Tabs.Trigger
             display={{ base: 'none', lg: 'block' }}
             value="delete"
@@ -86,6 +89,14 @@ export const GenericTabs = ({
           minHeight="315px"
           borderRadius="lg"
         >
+          <Link href={parseEditLink(trigger, entityId)}>
+            <EditButton
+              colorPalette={entityType.toLowerCase()}
+              text={`Edit ${trigger}`}
+              size="xl"
+              mb={5}
+            />
+          </Link>
           {content[index] || <DefaultTabContent />}
         </Tabs.Content>
       ))}

@@ -2,14 +2,17 @@
 
 import { Text } from '@chakra-ui/react'
 import { EditIcon } from '../icons'
-import { Button } from './button'
+import { Button, ButtonProps } from './button'
 
-export function EditButton() {
+export function EditButton({
+  text,
+  ...props
+}: { text?: string } & ButtonProps) {
   return (
-    <Button paddingX={2} height="fit-content" variant="ghost">
+    <Button paddingX={2} height="fit-content" {...props}>
       <EditIcon m={1} />
       <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
-        Edit
+        {text ?? 'Edit'}
       </Text>
     </Button>
   )

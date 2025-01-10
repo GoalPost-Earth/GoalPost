@@ -21,6 +21,7 @@ import {
   CarePointCard,
 } from '@/components'
 import Link from 'next/link'
+import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewGoalPage({
   params,
@@ -92,12 +93,10 @@ export default async function ViewGoalPage({
           <HStack alignItems="start" gap={30} width="100%">
             <GenericTabs
               entityId={id}
-              entityType="Goal"
-              triggers={[
-                'Details',
-                'Enables Care Points',
-                'Cared For By Care Points',
-              ]}
+              entityType={EntityEnum.Goal}
+              triggers={Object.keys(TRIGGERS.GOAL).map(
+                (key) => TRIGGERS.GOAL[key as keyof typeof TRIGGERS.GOAL]
+              )}
               content={[
                 <VStack
                   key="Details"
