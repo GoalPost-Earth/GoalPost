@@ -23,8 +23,10 @@ import { ApolloWrapper } from '@/components/layout'
 
 export interface GoalFormProps {
   formMode: string
-  control: Control<never>
-  register: UseFormRegister<never>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void
@@ -47,13 +49,13 @@ const GoalForm = ({
   } = useQuery(GET_ALL_COMMUNITIES)
 
   const peopleOptions: SelectOptions =
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?.people.map((person: any) => ({
       value: person.id,
       label: `${person.firstName} ${person.lastName}`,
     })) || []
   const communityOptions: SelectOptions =
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     communityData?.communities.map((community: any) => ({
       value: community.id,
       label: community.name,
