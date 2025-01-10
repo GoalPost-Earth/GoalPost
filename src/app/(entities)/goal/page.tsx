@@ -68,6 +68,7 @@ export default function AllGoals() {
                 width="100%"
                 overflowX="scroll"
                 whiteSpace="nowrap"
+                alignItems="stretch"
               >
                 {person.goals.map((goal) => (
                   <Flex key={goal.id}>
