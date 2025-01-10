@@ -1,2 +1,1 @@
-export { default as AvatarCarousel } from './AvatarCarousel'
-export { default as ApolloWrapper } from './ApolloWrapper'
+export { default as GoalEnablesCarePoint } from './goal/update-enable-carepoint'

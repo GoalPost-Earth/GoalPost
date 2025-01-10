@@ -19,9 +19,11 @@ import {
   EntityDetail,
   EntityOwnerCard,
   CarePointCard,
+  GoalEnablesCarePoint,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
+import { Goal } from '@/gql/graphql'
 
 export default async function ViewGoalPage({
   params,
@@ -118,21 +120,10 @@ export default async function ViewGoalPage({
                     <EntityDetail title="Status" details={goal.status} />
                   </VStack>
                 </VStack>,
-                <Grid
+                <GoalEnablesCarePoint
                   key="enablesCarePoints"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {goal.enablesCarePoints.map((carePoint) => (
-                    <GridItem key={carePoint.id}>
-                      <CarePointCard
-                        id={carePoint.id}
-                        description={carePoint.description}
-                        status={carePoint.status}
-                      />
-                    </GridItem>
-                  ))}
-                </Grid>,
+                  goal={goal as Goal}
+                />,
                 <Grid
                   key="caredForByCarePoints"
                   templateColumns="repeat(auto-fill, minmax(360px, 1fr))"

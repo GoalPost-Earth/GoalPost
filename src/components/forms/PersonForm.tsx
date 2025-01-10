@@ -3,7 +3,7 @@ import React from 'react'
 import { ImageUpload, Input } from '../react-hook-form'
 import { Button } from '../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
-import { CloudinaryPresets } from '@/types'
+import { CloudinaryPresets } from '@/constants'
 
 export interface PersonFormProps {
   formMode: string

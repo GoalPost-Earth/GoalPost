@@ -13,7 +13,7 @@ export const EDIT_ROUTES = {
   GOAL: {
     DETAILS: '/details',
     CORE_VALUES: '/core-values',
-    ENABLES_CAREPOINTS: '/enables-carepoints',
+    ENABLES_CAREPOINTS: '',
     CARED_FOR_BY_CAREPOINTS: '/cared-for-by-carepoints',
   },
 } as const

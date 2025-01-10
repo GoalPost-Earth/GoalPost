@@ -10,7 +10,7 @@ import { ApolloWrapper, GoalForm } from '@/components'
 import { GoalFormData, goalSchema } from '@/app/schema'
 import { FormMode } from '@/constants'
 
-export default function UpdateGoalDetails({
+export default function UpdateGoalEnablesCarePoints({
   params,
 }: {
   params: Promise<{ id: string }>

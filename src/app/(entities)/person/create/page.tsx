@@ -10,8 +10,8 @@ import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { PersonForm } from '@/components'
-import { FormMode } from '@/types'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import { FormMode } from '@/constants'
 
 function CreatePerson() {
   const {
