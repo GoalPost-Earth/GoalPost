@@ -6,7 +6,7 @@ import {
   Heading,
   Separator,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { useState } from 'react'
 import { Input, NativeSelect } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { Button } from '../../ui'
@@ -41,7 +41,7 @@ const GoalForm = ({
   onSubmit,
 }: GoalFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
-  const [linkType, setLinkType] = React.useState('personLink')
+  const [linkType, setLinkType] = useState('personLink')
   const {
     data: communityData,
     loading: communityLoading,

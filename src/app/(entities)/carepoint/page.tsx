@@ -6,12 +6,10 @@ import { useQuery } from '@apollo/client'
 import { Container, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
 
-export default function AllCommunities() {
+export default function AllCarePoints() {
   const { data, loading, error } = useQuery(GET_ALL_CAREPOINTS)
 
   const carepoints = data?.carePoints ?? []
-
-  console.log('Care Points: ', carepoints)
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
