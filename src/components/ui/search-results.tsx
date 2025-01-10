@@ -187,14 +187,7 @@ export default function SearchResults() {
                   Goals
                 </Text>
                 {returnedGoals.map((goal) => (
-                  <GoalCard
-                    id={goal.id}
-                    photo={goal.photo ?? null}
-                    name={goal.name}
-                    status={goal.status}
-                    createdAt={goal.createdAt}
-                    description={goal.description}
-                  />
+                  <GoalCard goal={goal} />
                 ))}
               </VStack>
             )}

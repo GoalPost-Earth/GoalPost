@@ -23,7 +23,9 @@ export const GoalCard = ({
     'id' | 'photo' | 'name' | 'status' | 'createdAt' | 'description'
   >
 }) => {
+  if (!goal) return null
   const { id, photo, name, status, createdAt, description } = goal
+
   const goalDate = formatDate(createdAt)
 
   return (
