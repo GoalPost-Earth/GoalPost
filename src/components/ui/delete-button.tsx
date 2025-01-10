@@ -135,7 +135,11 @@ export function DeleteButton({
           </DialogHeader>
           <DialogCloseTrigger />
           <DialogBody>
-            Are you sure you want to delete{' '}
+            Are you sure you want to delete the{' '}
+            <Text color="brandIcons.500" as="span" fontWeight="bold">
+              {entityType}
+            </Text>
+            <Text as="span"> named </Text>
             <Text color="brandIcons.500" as="span" fontWeight="bold">
               {entityName}
             </Text>{' '}
