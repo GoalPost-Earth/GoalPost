@@ -47,11 +47,13 @@ const GoalForm = ({
   } = useQuery(GET_ALL_COMMUNITIES)
 
   const peopleOptions: SelectOptions =
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?.people.map((person: any) => ({
       value: person.id,
       label: `${person.firstName} ${person.lastName}`,
     })) || []
   const communityOptions: SelectOptions =
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     communityData?.communities.map((community: any) => ({
       value: community.id,
       label: community.name,
