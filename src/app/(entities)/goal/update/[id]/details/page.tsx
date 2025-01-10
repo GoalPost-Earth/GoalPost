@@ -27,11 +27,12 @@ export default function UpdateGoalDetails({
 
   const defaultValues: GoalFormData = useMemo(
     () => ({
-      name: goal?.name || undefined,
+      linkTo: 'personLink',
+      name: goal?.name || '',
       description: goal?.description || undefined,
       successMeasures: goal?.successMeasures || undefined,
       photo: goal?.photo || undefined,
-      status: goal?.status || undefined,
+      status: goal?.status || 'Active',
       location: goal?.location || undefined,
       time: goal?.time || undefined,
     }),

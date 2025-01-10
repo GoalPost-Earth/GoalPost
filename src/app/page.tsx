@@ -55,8 +55,6 @@ const HomeClient = () => {
   })
 
   const recentGoals = data?.goals.map((goal) => {
-    console.log('🚀 ~ file: page.tsx:58 ~ goal:', goal)
-
     return {
       actionName: goal.__typename,
       actionInfo: 'posted a new goal',

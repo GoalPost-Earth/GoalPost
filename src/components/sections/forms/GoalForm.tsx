@@ -1,7 +1,6 @@
 import {
   Box,
   Center,
-  FieldLabel,
   Grid,
   GridItem,
   Heading,
@@ -10,29 +9,22 @@ import {
 import React from 'react'
 import { Input, NativeSelect } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
-import { Button, Field, SelectLabel } from '../../ui'
+import { Button } from '../../ui'
 import {
   Control,
   FieldErrors,
   FieldValues,
-  set,
   UseFormRegister,
 } from 'react-hook-form'
 import { useQuery } from '@apollo/client'
 import { GET_ALL_COMMUNITIES, GET_ALL_PEOPLE } from '@/app/graphql'
 import { SelectOptions } from '@/types'
 import { ApolloWrapper } from '@/components/layout'
-import {
-  NativeSelectField,
-  NativeSelectRoot,
-} from '@/components/ui/native-select'
 
 export interface GoalFormProps {
   formMode: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  register: UseFormRegister<any>
+  control: Control<never>
+  register: UseFormRegister<never>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void

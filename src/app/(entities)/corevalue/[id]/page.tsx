@@ -37,12 +37,10 @@ export default async function ViewCoreValuePage({
     throw error
   }
 
-  console.log('🚀 ~ file: page.tsx:31 ~ data:', data)
   if (data.coreValues.length === 0) {
     throw new Error('Core Value not found')
   }
   const corevalue = data?.coreValues[0]
-  console.log('🚀 ~ file: page.tsx:36 ~ corevalue:', corevalue)
 
   return (
     <>
