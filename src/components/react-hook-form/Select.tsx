@@ -13,7 +13,6 @@ import {
 
 export interface RHFSelectProps extends ReactHookFormComponentProps {
   portalRef?: React.RefObject<HTMLDivElement>
-  defaultOption?: string
   options: SelectOptions
 }
 
@@ -27,17 +26,13 @@ const Select = (props: SelectPropsType) => {
     errors,
     required,
     options,
-    portalRef,
-    multiple,
-    // defaultOption,
     placeholder,
+    portalRef,
     ...rest
   } = props
 
   const chakraOptions = createListCollection({
     items: options,
-    // itemToString: (item) => item.name,
-    // itemToValue: (item) => item.name,
   })
 
   return (
@@ -52,18 +47,17 @@ const Select = (props: SelectPropsType) => {
           required={required}
         >
           <SelectRoot
-            id={name}
+            id={field.name}
+            defaultValue={props.defaultValue}
+            border="1px solid #000"
             value={field.value}
-            border="1px solid #CBD5E1"
-            variant="subtle"
             onValueChange={({ value }) => field.onChange(value)}
             onInteractOutside={() => field.onBlur()}
-            multiple={multiple}
+            multiple={false}
             collection={chakraOptions}
-            // {...field}
+            variant="subtle"
             {...rest}
           >
-            {/* <SelectLabel>{label}</SelectLabel> */}
             <SelectTrigger>
               <SelectValueText placeholder={placeholder} />
             </SelectTrigger>

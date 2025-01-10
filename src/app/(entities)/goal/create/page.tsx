@@ -6,9 +6,9 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { FormMode } from '@/types'
 import { GoalForm } from '@/components'
 import { useApp } from '@/app/contexts'
+import { FormMode } from '@/constants'
 
 function CreateGoal() {
   const { user } = useApp()

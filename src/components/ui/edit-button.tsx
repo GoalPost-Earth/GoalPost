@@ -11,7 +11,7 @@ export function EditButton({
   return (
     <Button paddingX={2} height="fit-content" {...props}>
       <EditIcon m={1} />
-      <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
+      <Text fontSize={'sm'} display={{ base: 'none', lg: 'block' }}>
         {text ?? 'Edit'}
       </Text>
     </Button>

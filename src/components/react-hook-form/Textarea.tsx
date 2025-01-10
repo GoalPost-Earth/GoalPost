@@ -14,20 +14,20 @@ const Textarea = (props: TextareaPropsType) => {
   const { label, name, control, errors, required, ...rest } = props
 
   return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <Field
-          label={label}
-          invalid={!!errors[name]}
-          errorText={errors[name]?.message as string}
-          required={required}
-        >
+    <Field
+      label={label}
+      invalid={!!errors[name]}
+      errorText={errors[name]?.message as string}
+      required={required}
+    >
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
           <ChakraTextarea id={name} {...field} {...rest} />
-        </Field>
-      )}
-    />
+        )}
+      />
+    </Field>
   )
 }
 

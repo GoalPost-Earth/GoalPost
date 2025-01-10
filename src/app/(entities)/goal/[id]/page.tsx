@@ -16,10 +16,10 @@ import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
-  EntityDetail,
   EntityOwnerCard,
   CarePointCard,
   GoalCoreValueUpdate,
+  GoalDetails,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -100,26 +100,7 @@ export default async function ViewGoalPage({
                 (key) => TRIGGERS.GOAL[key as keyof typeof TRIGGERS.GOAL]
               )}
               content={[
-                <VStack
-                  key="Details"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
-                >
-                  <VStack gap={4}>
-                    <EntityDetail
-                      title="Description"
-                      entityName={goal.name}
-                      details={goal.description}
-                    />
-                    <EntityDetail title="Location" details={goal.location} />
-                    <EntityDetail title="Time" details={goal.time} />
-                    <EntityDetail title="Status" details={goal.status} />
-                  </VStack>
-                </VStack>,
+                <GoalDetails key="details" goal={goal as Goal} />,
                 <GoalCoreValueUpdate key="coreValues" goal={goal as Goal} />,
                 <GoalCoreValueUpdate
                   key="enablesCarePoints"

@@ -6,6 +6,11 @@ export function EntityPageHeader({ entity }: { entity: EntityType }) {
   if (entity === 'CoreValue') {
     parsedEntity = 'core value'
   }
+
+  if (entity === 'CarePoint') {
+    parsedEntity = 'care point'
+  }
+
   return (
     <VStack display={{ base: 'none', lg: 'flex' }} mx={-8}>
       <Flex

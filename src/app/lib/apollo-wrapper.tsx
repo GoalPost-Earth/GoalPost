@@ -17,6 +17,7 @@ import { onError } from '@apollo/client/link/error'
 import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
+import { toaster } from '@/components'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in
@@ -128,6 +129,10 @@ export function ApolloWrapper({
             `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
           )
         )
+        toaster.error({
+          title: 'GraphQL Error',
+          description: graphQLErrors[0].message,
+        })
       }
       if (networkError) {
         console.error('[Network error]:', networkError)

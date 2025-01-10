@@ -217,13 +217,13 @@ export const customTheme = createSystem(defaultConfig, {
             },
           },
         },
-        carepoints: {
+        carepoint: {
           contrast: {
-            value: { light: '{colors.white}', _dark: '{colors.white}' },
+            value: { base: '{colors.white}', _dark: '{colors.white}' },
           },
           fg: {
             value: {
-              light: '{colors.cyan.700}',
+              base: '{colors.cyan.700}',
               _dark: '{colors.cyan.300}',
             },
           },
@@ -235,25 +235,25 @@ export const customTheme = createSystem(defaultConfig, {
           },
           muted: {
             value: {
-              light: '{colors.cyan.200}',
+              base: '{colors.cyan.200}',
               _dark: '{colors.cyan.800}',
             },
           },
           emphasized: {
             value: {
-              light: '{colors.cyan.300}',
+              base: '{colors.cyan.300}',
               _dark: '{colors.cyan.700}',
             },
           },
           solid: {
             value: {
-              light: '{colors.cyan.600}',
+              base: '{colors.cyan.600}',
               dark: '{colors.cyan.600}',
             },
           },
           focusRing: {
             value: {
-              light: '{colors.cyan.600}',
+              base: '{colors.cyan.600}',
               dark: '{colors.cyan.600}',
             },
           },
