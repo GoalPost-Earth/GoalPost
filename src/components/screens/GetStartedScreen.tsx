@@ -6,14 +6,14 @@ const GetStartedScreen = () => {
   return (
     <>
       <Box
-        height="100vh"
+        height="60vh"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
         backgroundImage="url(/assets/images/onboarding-bg.png)"
         display={{ base: 'block', lg: 'none' }}
       >
         <Box
-          height="100vh"
+          height="60vh"
           bgGradient="to-t"
           gradientFrom="rgba(0, 0, 0, 0.7)"
           gradientTo="rgba(0, 0, 0, 0)"
@@ -22,21 +22,25 @@ const GetStartedScreen = () => {
           position="absolute"
           bottom={0}
           width="100%"
-          height="50%"
+          height="40%"
           display="flex"
           flexDirection="column"
           justifyContent="center"
           padding="25px"
           gap="50px"
           alignItems="center"
-          bgGradient="linear(to-t, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0))"
         >
+          <AppLogo
+            width={100}
+            height={100}
+            position="absolute"
+            top={'-100px'}
+          />
           <VStack width="100%" textAlign="center" gap={5}>
-            <AppLogo width={100} height={100} />
-            <Text fontSize="2rem" fontWeight="bold" color="brand.100">
+            <Text fontSize="2rem" fontWeight="bold">
               Hello and Welcome!
             </Text>
-            <Text fontSize="sm" color="brand.100" opacity={0.6}>
+            <Text fontSize="sm" opacity={0.6}>
               Connect with and care for your community.
             </Text>
           </VStack>
