@@ -46,7 +46,7 @@ const documents = {
     types.CreatePeopleDocument,
   '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
     types.UpdatePersonDocument,
-  '\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n':
+  '\n  mutation DeletePerson($id: ID!) {\n    deletePeople(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
     types.DeletePersonDocument,
   '\n  mutation CreateResources($input: [ResourceCreateInput!]!) {\n    createResources(input: $input) {\n      resources {\n        id\n        name\n        description\n        status\n        why\n        location\n        time\n        dependsOnResources {\n          id\n          name\n        }\n        carePoints {\n          id\n        }\n      }\n    }\n  }\n':
     types.CreateResourcesDocument,
@@ -208,8 +208,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n'
-): (typeof documents)['\n  mutation DeletePerson($where: PersonWhere!) {\n    deletePeople(where: $where) {\n      nodesDeleted\n    }\n  }\n']
+  source: '\n  mutation DeletePerson($id: ID!) {\n    deletePeople(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeletePerson($id: ID!) {\n    deletePeople(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

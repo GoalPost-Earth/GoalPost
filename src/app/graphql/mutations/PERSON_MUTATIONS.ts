@@ -41,8 +41,8 @@ export const UPDATE_PERSON_MUTATION = graphql(`
 `)
 
 export const DELETE_PERSON_MUTATION = graphql(`
-  mutation DeletePerson($where: PersonWhere!) {
-    deletePeople(where: $where) {
+  mutation DeletePerson($id: ID!) {
+    deletePeople(where: { id_EQ: $id }) {
       nodesDeleted
     }
   }
