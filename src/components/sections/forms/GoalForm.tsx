@@ -6,7 +6,7 @@ import {
   Heading,
   Separator,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { useState } from 'react'
 import { Input, NativeSelect } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { Button } from '../../ui'
@@ -41,7 +41,7 @@ const GoalForm = ({
   onSubmit,
 }: GoalFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
-  const [linkType, setLinkType] = React.useState('personLink')
+  const [linkType, setLinkType] = useState('personLink')
   const {
     data: communityData,
     loading: communityLoading,
@@ -49,11 +49,13 @@ const GoalForm = ({
   } = useQuery(GET_ALL_COMMUNITIES)
 
   const peopleOptions: SelectOptions =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?.people.map((person: any) => ({
       value: person.id,
       label: `${person.firstName} ${person.lastName}`,
     })) || []
   const communityOptions: SelectOptions =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     communityData?.communities.map((community: any) => ({
       value: community.id,
       label: community.name,

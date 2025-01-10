@@ -9,7 +9,7 @@ export function EntityOwnerCard({
   community,
 }: {
   person: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
-  community: Pick<Community, '__typename' | 'id' | 'name'>
+  community?: Pick<Community, '__typename' | 'id' | 'name'>
 }) {
   if (!person && !community) {
     return <></>
