@@ -2,6 +2,7 @@
 
 import { useApp } from '@/app/contexts'
 import { CREATE_CAREPOINT_MUTATION } from '@/app/graphql'
+import { CarePointFormData, carePointSchema } from '@/app/schema'
 import {
   Button,
   DialogActionTrigger,
@@ -23,6 +24,7 @@ import { EntityEnum, STATUS_SELECT_OPTIONS } from '@/constants'
 import { Goal } from '@/gql/graphql'
 import { useMutation } from '@apollo/client'
 import { DialogFooter, VStack } from '@chakra-ui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -36,17 +38,19 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
     register,
     control,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<CarePointFormData>({
+    resolver: zodResolver(carePointSchema),
+  })
   const router = useRouter()
   const [CreateCarePoint] = useMutation(CREATE_CAREPOINT_MUTATION)
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: CarePointFormData) => {
     try {
       const response = await CreateCarePoint({
         variables: {
           input: {
             ...data,
-            status: ['yes'],
+            status: ['yes'] as unknown as string,
             enabledByGoals: {
               connect: [{ where: { node: { id_EQ: goal.id } } }],
             },
