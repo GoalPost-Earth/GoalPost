@@ -10982,8 +10982,16 @@ export type GetMatchingEntitiesQuery = {
   }>
   resourceSubstringSearch: Array<{
     __typename?: 'Resource'
-    id: string
     name: string
+    id: string
+    description?: string | null
+    status: string
+    providedByPerson: Array<{
+      __typename?: 'Person'
+      name: string
+      id: string
+      photo?: string | null
+    }>
   }>
   goalSubstringSearch: Array<{
     __typename?: 'Goal'
@@ -15308,8 +15316,22 @@ export const GetMatchingEntitiesDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'providedByPerson' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
               ],
             },
           },

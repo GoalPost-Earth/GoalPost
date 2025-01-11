@@ -1,8 +1,17 @@
+'use client'
 import React from 'react'
 import { ChatBotIcon } from '../icons'
 import { Button } from './button'
+import { usePathname } from 'next/navigation'
 
 const ChatBotButton = () => {
+  const pathname = usePathname()
+  const isSearchPage = pathname === '/search'
+
+  if (isSearchPage) {
+    return <></>
+  }
+
   return (
     <Button
       display={'flex'}
