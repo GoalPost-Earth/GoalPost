@@ -4,6 +4,7 @@ import React from 'react'
 import EllipseIcon from '../../icons/EllipseIcon'
 import { Avatar } from '../avatar'
 import { Resource } from '@/gql/graphql'
+import { AutoLink } from '../autolink'
 
 export const ResourceCard = ({ resource }: { resource: Resource }) => {
   const { id, name, description, status } = resource
@@ -50,7 +51,9 @@ export const ResourceCard = ({ resource }: { resource: Resource }) => {
               {status}
             </Badge>
           </HStack>
-          <Card.Description lineClamp={2}>{description}</Card.Description>
+          <Card.Description lineClamp={2}>
+            <AutoLink text={description as string} />
+          </Card.Description>
         </Card.Body>
       </Link>
     </Card.Root>

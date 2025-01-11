@@ -2,6 +2,7 @@ import { Card } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import { CoreValue } from '@/gql/graphql'
+import { AutoLink } from '../autolink'
 
 export const CoreValueCard = ({
   coreValue,
@@ -23,7 +24,9 @@ export const CoreValueCard = ({
           {coreValue.name}
         </Card.Title>
         {!!coreValue.description && (
-          <Card.Body p={{ base: 0, lg: 5 }}>{coreValue.description}</Card.Body>
+          <Card.Body p={{ base: 0, lg: 5 }}>
+            <AutoLink text={coreValue.description} />
+          </Card.Body>
         )}
       </Link>
     </Card.Root>

@@ -14,6 +14,7 @@ import {
 } from './dialog'
 import { Button } from './button'
 import { useEffect, useRef, useState } from 'react'
+import { AutoLink } from './autolink'
 
 export function EntityDetail({
   title,
@@ -48,7 +49,7 @@ export function EntityDetail({
         {title}
       </Text>
       <Text as="span" ref={textRef} lineClamp={2}>
-        {details}
+        <AutoLink text={details} />
       </Text>
       {isClamped && (
         <DialogRoot placement="center" motionPreset="slide-in-bottom">
@@ -62,7 +63,7 @@ export function EntityDetail({
               <DialogTitle>{entityName}</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <p>{details}</p>
+              <AutoLink text={details} />
             </DialogBody>
             <DialogCloseTrigger />
           </DialogContent>

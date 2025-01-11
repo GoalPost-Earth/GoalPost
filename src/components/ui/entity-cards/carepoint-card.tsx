@@ -2,6 +2,7 @@ import { Badge, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import EllipseIcon from '../../icons/EllipseIcon'
 import { CarePoint } from '@/gql/graphql'
+import { AutoLink } from '../autolink'
 
 export function CarePointCard({
   carePoint,
@@ -33,7 +34,7 @@ export function CarePointCard({
             </Badge>
           </HStack>
           <HStack lineClamp={3} mt={4} fontSize="md">
-            {carePoint.description}
+            <AutoLink text={carePoint.description} />
           </HStack>
         </Card.Body>
       </Card.Root>
