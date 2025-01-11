@@ -4,9 +4,16 @@ import SearchBar from './searchbar'
 import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
 import { useGetSearchResults } from '@/hooks'
-import { Community } from '@/gql/graphql'
+import { CarePoint, Community, CoreValue, Resource } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
-import { CommunityCard, GoalCard, PersonCard } from './entity-cards'
+import {
+  CarePointCard,
+  CommunityCard,
+  CoreValueCard,
+  GoalCard,
+  PersonCard,
+  ResourceCard,
+} from './entity-cards'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
@@ -102,7 +109,10 @@ export default function SearchResults() {
                   Core Values
                 </Text>
                 {returnedCoreValues.map((coreValue) => (
-                  <Flex key={coreValue.id}>{coreValue.name}</Flex>
+                  <CoreValueCard
+                    key={coreValue.id}
+                    coreValue={coreValue as CoreValue}
+                  />
                 ))}
               </VStack>
             )}
@@ -135,7 +145,10 @@ export default function SearchResults() {
                   Resources
                 </Text>
                 {returnedResources.map((resource) => (
-                  <Flex key={resource.id}>{resource.name}</Flex>
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource as Resource}
+                  />
                 ))}
               </VStack>
             )}
@@ -150,7 +163,10 @@ export default function SearchResults() {
                   Care Points
                 </Text>
                 {returnedCarePoints.map((carePoint) => (
-                  <Flex key={carePoint.id}>{carePoint.description}</Flex>
+                  <CarePointCard
+                    key={carePoint.id}
+                    carePoint={carePoint as CarePoint}
+                  />
                 ))}
               </VStack>
             )}

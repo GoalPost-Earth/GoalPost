@@ -18,6 +18,8 @@ export default function MobileSearch() {
     returnedCoreValues,
     returnedPeople,
     returnedResources,
+    returnedGoals,
+    loading,
   } = useGetSearchResults({ searchTerm })
 
   function handleSearchTermChange(event: ChangeEvent<HTMLInputElement>) {
@@ -43,19 +45,14 @@ export default function MobileSearch() {
           </Flex>
           <SearchTabs
             content={[
-              [
-                ...returnedCarePoints,
-                ...returnedCommunities,
-                ...returnedCoreValues,
-                ...returnedPeople,
-                ...returnedResources,
-              ],
               returnedCarePoints,
               returnedCommunities,
               returnedCoreValues,
               returnedPeople,
               returnedResources,
+              returnedGoals,
             ]}
+            loading={loading}
           />
         </VStack>
       </Box>
