@@ -1,4 +1,4 @@
-Issue tracker is **ONLY** used for reporting bugs.
+<!-- Issue tracker is **ONLY** used for reporting bugs. -->
 
 <!--- Provide a general summary of the issue in the Title above -->
 
