@@ -1,4 +1,5 @@
-import { Box, Flex, Text } from '@chakra-ui/react'
+import { Flex, Text } from '@chakra-ui/react'
+import { AutoLink } from './autolink'
 
 export function EntityInfo({ entity }: { entity: any }) {
   if (typeof entity === 'object' && entity !== null) {
@@ -14,7 +15,7 @@ export function EntityInfo({ entity }: { entity: any }) {
           {key.toUpperCase()}:
         </Text>{' '}
         <Text fontSize="sm" textAlign="start" width="60%">
-          {value?.toString()}
+          <AutoLink text={value as string} />
         </Text>
       </Flex>
     ))

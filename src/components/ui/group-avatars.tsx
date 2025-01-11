@@ -12,7 +12,11 @@ export const GroupAvatars = ({
   return (
     <AvatarGroup size="sm">
       {people.map((person) => (
-        <Avatar src={person.photo ?? undefined} name={person.name} />
+        <Avatar
+          key={person.id}
+          src={person.photo ?? undefined}
+          name={person.name}
+        />
       ))}
       {fallback > 0 && <Avatar variant="solid" fallback={fallback} />}
     </AvatarGroup>

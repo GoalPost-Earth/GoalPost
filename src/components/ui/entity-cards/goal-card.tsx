@@ -15,6 +15,7 @@ import { EllipseIcon } from '../../icons'
 import { formatDate, getInitials } from '@/utils'
 import { CalenderIcon } from '../../icons'
 import { Goal } from '@/gql/graphql'
+import { AutoLink } from '../autolink'
 
 export const GoalCard = ({
   goal,
@@ -106,7 +107,7 @@ export const GoalCard = ({
                 </Badge>
               </HStack>
               <Card.Description lineClamp={2} maxWidth="250px" width="100%">
-                {description}
+                <AutoLink text={description as string} />
               </Card.Description>
             </Card.Body>
           </Box>

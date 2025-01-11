@@ -2,6 +2,7 @@ import { Card, CardHeaderProps, Heading, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import { Community } from '@/gql/graphql'
 import { GroupAvatars } from '../group-avatars'
+import { AutoLink } from '../autolink'
 
 export function CommunityCard({
   community,
@@ -28,7 +29,7 @@ export function CommunityCard({
         </Card.Header>
         <Card.Body p={2}>
           <Text fontWeight={300} lineClamp={{ base: 2, lg: 3 }}>
-            {description}
+            <AutoLink text={description as string} />
           </Text>
         </Card.Body>
         <Card.Footer
