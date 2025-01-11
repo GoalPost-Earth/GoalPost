@@ -2,6 +2,7 @@ import {
   Badge,
   Box,
   Card,
+  CardRootProps,
   Container,
   Flex,
   HStack,
@@ -17,12 +18,13 @@ import { Goal } from '@/gql/graphql'
 
 export const GoalCard = ({
   goal,
+  ...rest
 }: {
   goal: Pick<
     Goal,
     'id' | 'photo' | 'name' | 'status' | 'createdAt' | 'description'
   >
-}) => {
+} & CardRootProps) => {
   if (!goal) return null
   const { id, photo, name, status, createdAt, description } = goal
 
@@ -37,6 +39,7 @@ export const GoalCard = ({
       bg="brand.50"
       p={{ base: 4, lg: 0 }}
       gap={{ base: 4, lg: 0 }}
+      {...rest}
     >
       {!!photo ? (
         <Image

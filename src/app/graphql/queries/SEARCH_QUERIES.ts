@@ -25,8 +25,15 @@ export const GET_MATCHING_ENTITIES = graphql(`
       photo
     }
     resourceSubstringSearch(key: $key) {
-      id
       name
+      id
+      description
+      status
+      providedByPerson {
+        name
+        id
+        photo
+      }
     }
     goalSubstringSearch(key: $key) {
       id

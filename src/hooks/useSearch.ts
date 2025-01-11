@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client'
 import { GET_MATCHING_ENTITIES } from '@/app/graphql/queries'
 import useDebounce from '@/hooks/useDebounce'
 
-export default function useGetSearchResults({
+export default function useSearch({
   searchTerm,
 }: Readonly<{ searchTerm: string }>) {
   const debouncedTerm = useDebounce(searchTerm, 300)

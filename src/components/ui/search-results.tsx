@@ -3,7 +3,6 @@ import { Box, Dialog, Flex, Spinner, Text, VStack } from '@chakra-ui/react'
 import SearchBar from './searchbar'
 import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
-import { useGetSearchResults } from '@/hooks'
 import { CarePoint, Community, CoreValue, Resource } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
 import {
@@ -14,6 +13,7 @@ import {
   PersonCard,
   ResourceCard,
 } from './entity-cards'
+import { useSearch } from '@/hooks'
 
 export default function SearchResults() {
   const [showSearch, setShowSearch] = useState(false)
@@ -27,7 +27,7 @@ export default function SearchResults() {
     returnedResources,
     returnedGoals,
     loading,
-  } = useGetSearchResults({ searchTerm })
+  } = useSearch({ searchTerm })
 
   function handleSearchTermChange(event: ChangeEvent<HTMLInputElement>) {
     setSearchTerm(event.target.value.toLowerCase())
@@ -201,7 +201,7 @@ export default function SearchResults() {
                   Goals
                 </Text>
                 {returnedGoals.map((goal) => (
-                  <GoalCard goal={goal} />
+                  <GoalCard width="100%" goal={goal} />
                 ))}
               </VStack>
             )}

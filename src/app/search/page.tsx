@@ -1,7 +1,7 @@
 'use client'
 import { SearchTabs } from '@/components'
 import SearchBar from '@/components/ui/searchbar'
-import { useGetSearchResults } from '@/hooks'
+import { useSearch } from '@/hooks'
 import { Box, Flex, Portal, VStack } from '@chakra-ui/react'
 import { useRouter } from 'next/navigation'
 import { ChangeEvent, useState } from 'react'
@@ -20,7 +20,7 @@ export default function MobileSearch() {
     returnedResources,
     returnedGoals,
     loading,
-  } = useGetSearchResults({ searchTerm })
+  } = useSearch({ searchTerm })
 
   function handleSearchTermChange(event: ChangeEvent<HTMLInputElement>) {
     setSearchTerm(event.target.value.toLowerCase())
