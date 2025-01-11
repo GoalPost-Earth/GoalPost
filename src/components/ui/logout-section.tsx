@@ -1,7 +1,7 @@
 import { Flex, HStack, Stack, Text, VStack } from '@chakra-ui/react'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { LogoutIcon } from '../icons'
 import { Avatar } from './avatar'
+import { useApp } from '@/app/contexts'
 
 export function LogoutSection({
   extendable,
@@ -10,7 +10,7 @@ export function LogoutSection({
   extendable: boolean
   isExtended: boolean
 }) {
-  const { user } = useUser()
+  const { user } = useApp()
 
   return (
     <VStack
@@ -31,6 +31,7 @@ export function LogoutSection({
       </HStack>
       <Flex
         gap={2}
+        cursor="pointer"
         borderTop="2px solid"
         borderTopColor="gray.subtle"
         justifyContent="flex-start"

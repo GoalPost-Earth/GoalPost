@@ -1,18 +1,7 @@
 'use client'
 
-import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  HStack,
-  IconButton,
-  Spacer,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
+import { Heading, HStack, IconButton, Spacer } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { ColorModeButton } from '../color-mode'
 import {
   DrawerBackdrop,
@@ -23,10 +12,9 @@ import {
   DrawerRoot,
   DrawerTrigger,
 } from '../drawer'
-import { Avatar } from '../avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
-import { HamburgerIcon, LogoutIcon } from '@/icons'
+import { HamburgerIcon } from '@/icons'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { LogoutSection } from '../logout-section'
 
