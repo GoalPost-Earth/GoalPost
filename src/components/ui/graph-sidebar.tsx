@@ -17,11 +17,11 @@ interface GraphNode extends Node {
 }
 
 const iconMapping: Record<string, JSX.Element> = {
-  Resource: <SettingsIcon width="16px" height="16px" />,
-  Person: <PeopleIcon width="16px" height="16px" />,
-  Community: <CommunityIcon width="16px" height="16px" />,
-  Goal: <GoalsIcon width="16px" height="16px" />,
-  CarePoint: <CarePointsIcon width="16px" height="16px" />,
+  Resource: <SettingsIcon color="" width="16px" height="16px" />,
+  Person: <PeopleIcon color="" width="16px" height="16px" />,
+  Community: <CommunityIcon color="" width="16px" height="16px" />,
+  Goal: <GoalsIcon color="" width="16px" height="16px" />,
+  CarePoint: <CarePointsIcon color="" width="16px" height="16px" />,
 }
 
 export default function GraphSideBar({
