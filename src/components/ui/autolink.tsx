@@ -1,3 +1,4 @@
+import { Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -15,14 +16,16 @@ export const AutoLink = ({ text }: { text: string }) => {
             <Link
               key={`url-${index}`}
               href={url.startsWith('http') ? url : `http://${url}`}
-              style={{
-                fontWeight: 'bold',
-                fontStyle: 'italic',
-                textDecoration: 'underline',
-                color: 'blue',
-              }}
             >
-              {url}
+              <Text
+                as="span"
+                textDecoration="underline"
+                fontWeight="bold"
+                color="blue.400"
+                fontStyle="italic"
+              >
+                {url}
+              </Text>
             </Link>
           )
         }
