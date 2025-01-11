@@ -16,6 +16,7 @@ export const customTheme = createSystem(defaultConfig, {
       colors: {
         contrastWhite: { value: '#F9FBFD' },
         brandIcons: {
+          DEFAULT: { value: '#DD6B20' },
           50: { value: '#FFFAF0' },
           100: { value: '#FEEBCB' },
           200: { value: '#FBD38D' },
