@@ -25,23 +25,23 @@ export function EntityOwnerCard({
       borderRadius={{ base: '16px', lg: '24px' }}
       minHeight={{ lg: '45vh' }}
     >
-      <Card.Body
-        padding={4}
-        height={{ base: 'fit-content', lg: '100%' }}
-        flexGrow="1"
-        gap={2}
-        flexDirection={{ base: 'row', lg: 'column' }}
-        alignItems={{ lg: 'center' }}
-        justifyContent={{ lg: 'center' }}
-      >
-        <Avatar
-          src={owner.photo ?? undefined}
-          size="2xl"
-          name={owner.name}
-          width={{ lg: '200px' }}
-          height={{ lg: '200px' }}
-        />
-        <Link href={`/${owner.__typename?.toLowerCase()}/${owner.id}`}>
+      <Link href={`/${owner.__typename?.toLowerCase()}/${owner.id}`}>
+        <Card.Body
+          padding={4}
+          height={{ base: 'fit-content', lg: '100%' }}
+          flexGrow="1"
+          gap={2}
+          flexDirection={{ base: 'row', lg: 'column' }}
+          alignItems={{ lg: 'center' }}
+          justifyContent={{ lg: 'center' }}
+        >
+          <Avatar
+            src={owner.photo ?? undefined}
+            size="2xl"
+            name={owner.name}
+            width={{ lg: '200px' }}
+            height={{ lg: '200px' }}
+          />
           <Flex flexDirection={'column'}>
             <Text display={{ base: 'block', lg: 'none' }} fontWeight={'light'}>
               Resource Owner
@@ -53,20 +53,20 @@ export function EntityOwnerCard({
               {owner.name}
             </Text>
           </Flex>
-        </Link>
-        <Box
-          textAlign={'center'}
-          fontSize="sm"
-          fontWeight="light"
-          display={{ base: 'none', lg: 'block' }}
-        >
-          <Link href={`mailto:${owner.email}`}>
-            <Text my={2}>{owner.email}</Text>
-          </Link>
-          <Text>Created by</Text>
-          <Text>{owner.name}</Text>
-        </Box>
-      </Card.Body>
+          <Box
+            textAlign={'center'}
+            fontSize="sm"
+            fontWeight="light"
+            display={{ base: 'none', lg: 'block' }}
+          >
+            <Link href={`mailto:${owner.email}`}>
+              <Text my={2}>{owner.email}</Text>
+            </Link>
+            <Text>Created by</Text>
+            <Text>{owner.name}</Text>
+          </Box>
+        </Card.Body>
+      </Link>
     </Card.Root>
   )
 }
