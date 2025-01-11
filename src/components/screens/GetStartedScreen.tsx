@@ -9,7 +9,7 @@ const GetStartedScreen = () => {
         height="60vh"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
-        backgroundImage="url(/assets/images/onboarding-bg.png)"
+        backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.png)"
         display={{ base: 'block', lg: 'none' }}
       >
         <Box
@@ -37,10 +37,10 @@ const GetStartedScreen = () => {
             top={'-100px'}
           />
           <VStack width="100%" textAlign="center" gap={5}>
-            <Text fontSize="2rem" fontWeight="bold">
+            <Heading color="brandIcons" fontWeight="bold" size="xl">
               Hello and Welcome!
-            </Text>
-            <Text fontSize="sm" opacity={0.6}>
+            </Heading>
+            <Text fontSize="md" opacity={0.6}>
               Connect with and care for your community.
             </Text>
           </VStack>
