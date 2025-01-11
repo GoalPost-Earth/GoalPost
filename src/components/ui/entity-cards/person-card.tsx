@@ -17,7 +17,7 @@ export function PersonCard({
   return (
     <Card.Root
       key={id}
-      maxWidth="380px"
+      // maxWidth="380px"
       width="100%"
       height="100%"
       borderRadius="md"

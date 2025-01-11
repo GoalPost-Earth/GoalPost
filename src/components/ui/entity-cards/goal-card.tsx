@@ -32,7 +32,6 @@ export const GoalCard = ({
     <Card.Root
       flexDirection={{ base: 'column', lg: 'row' }}
       overflow="hidden"
-      maxW="xl"
       borderRadius="lg"
       boxShadow="md"
       bg="brand.50"
