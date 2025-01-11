@@ -28,6 +28,7 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
 import { HamburgerIcon, LogoutIcon } from '@/icons'
 import { InputAccordion, NavItemLinks } from './navItems'
+import { LogoutSection } from '../logout-section'
 
 const NavHamburgerButton = () => {
   const { user } = useUser()
@@ -64,36 +65,9 @@ const NavHamburgerButton = () => {
         <DrawerBody paddingX={0}>
           <NavItemLinks setOpen={setOpen} extendable isExtended />
           <InputAccordion setOpen={setOpen} />
-          <Link href="/api/auth/logout?returnTo=/">
-            <Button
-              marginTop={50}
-              paddingY={8}
-              as="a"
-              variant="ghost"
-              width="100%"
-            >
-              <Flex gap="30px" alignItems="center" width="100%" px={6}>
-                <Box rounded="full" bg="red" padding={2}>
-                  <LogoutIcon />
-                </Box>
-                <Text color="red.500" fontSize="1rem">
-                  Logout
-                </Text>
-              </Flex>
-            </Button>
-          </Link>
         </DrawerBody>
         <DrawerFooter>
-          <HStack gap="4">
-            <Avatar
-              name={user?.name ?? ''}
-              size="lg"
-              src={user?.picture ?? undefined}
-            />
-            <Stack gap="0">
-              {user?.name && <Text fontWeight="medium">{user?.name}</Text>}
-            </Stack>
-          </HStack>
+          <LogoutSection extendable isExtended />
           <Spacer />
           <ColorModeButton justifySelf="flex-end" />
         </DrawerFooter>

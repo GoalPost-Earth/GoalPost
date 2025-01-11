@@ -4,6 +4,7 @@ import { HamburgerIcon } from '@/components/icons'
 import { Portal, VStack, Box } from '@chakra-ui/react'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { Button } from '../button'
+import { LogoutSection } from '../logout-section'
 
 export default function ExtendedSideNav() {
   const [isExtended, setExtended] = useState(false)
@@ -90,6 +91,7 @@ export default function ExtendedSideNav() {
           isExtended={isExtended}
           extendable
         />
+        <LogoutSection extendable isExtended={isExtended} />
       </VStack>
     </Portal>
   )

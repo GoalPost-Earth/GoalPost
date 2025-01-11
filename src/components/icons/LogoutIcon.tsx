@@ -5,23 +5,18 @@ const LogoutIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
   <Icon color={color} width="24px" height="22px" {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width="16"
+      height="16"
       fill="none"
-      viewBox="0 0 24 24"
+      viewBox="0 0 16 16"
     >
       <path
-        stroke="#fff"
-        strokeLinecap="round"
-        strokeWidth="1.5"
-        d="M9 6.375c.074-1.852 1.617-3.424 3.684-3.374.481.012 1.076.18 2.265.515 2.861.807 5.345 2.164 5.941 5.203.11.558.11 1.187.11 2.444v1.674c0 1.257 0 1.886-.11 2.444-.596 3.04-3.08 4.396-5.941 5.203-1.19.335-1.784.503-2.265.515-2.067.05-3.61-1.522-3.684-3.374"
+        fill="currentColor"
+        d="M13.835.5H2.168C1.25.5.502 1.248.502 2.167V5.5h1.666V2.167h11.667v11.666H2.168V10.5H.502v3.333c0 .92.747 1.667 1.666 1.667h11.667c.92 0 1.667-.748 1.667-1.667V2.167c0-.92-.749-1.667-1.667-1.667"
       ></path>
       <path
-        stroke="#fff"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-        d="M3 12h11M3 12c0 .7 1.994 2.008 2.5 2.5M3 12c0-.7 1.994-2.008 2.5-2.5"
+        fill="currentColor"
+        d="M7.167 11.334 11.333 8 7.167 4.667v2.5H.5v1.667h6.667z"
       ></path>
     </svg>
   </Icon>

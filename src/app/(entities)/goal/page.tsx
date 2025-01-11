@@ -47,11 +47,7 @@ export default function AllGoals() {
           return (
             <VStack key={person.id} my={10} gap={4} alignItems="start">
               <HStack justifyContent="space-between" width="100%">
-                <PersonInfo
-                  id={person.id}
-                  name={person.name}
-                  photo={person.photo ?? ''}
-                />
+                <PersonInfo person={person} />
                 <Flex
                   fontWeight="bold"
                   fontSize="sm"
