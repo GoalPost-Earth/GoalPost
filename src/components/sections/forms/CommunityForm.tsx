@@ -1,6 +1,6 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input, Select } from '../../react-hook-form'
+import { Input, Select, Textarea } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
@@ -36,14 +36,6 @@ const CommunityForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input
-              label="Description"
-              name="description"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
             <Select
               label="Status"
               name="status"
@@ -52,6 +44,15 @@ const CommunityForm = ({
               options={STATUS_SELECT_OPTIONS}
             />
           </GridItem>
+          <GridItem>
+            <Textarea
+              label="Description"
+              name="description"
+              control={control}
+              errors={errors}
+            />
+          </GridItem>
+
           <GridItem>
             <Input label="Why" name="why" control={control} errors={errors} />
           </GridItem>

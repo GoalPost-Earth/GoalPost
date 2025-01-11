@@ -16,8 +16,8 @@ import {
   DialogTrigger,
   EditButton,
   EntityDetail,
-  Input,
   NativeSelect,
+  Textarea,
   toaster,
 } from '@/components'
 import { EntityEnum, STATUS_SELECT_OPTIONS } from '@/constants'
@@ -99,7 +99,7 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
               <DialogTitle>Generate Care Point</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <Input
+              <Textarea
                 name="description"
                 label="Description"
                 control={control}

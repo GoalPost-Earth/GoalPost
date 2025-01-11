@@ -9,7 +9,7 @@ import {
   Separator,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { Input, NativeSelect } from '../../react-hook-form'
+import { Input, NativeSelect, Textarea } from '../../react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { Button } from '../../ui'
 import {
@@ -82,7 +82,7 @@ const GoalForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input
+            <Textarea
               label="Description"
               name="description"
               control={control}

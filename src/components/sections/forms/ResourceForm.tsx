@@ -1,6 +1,6 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input, Select } from '../../react-hook-form'
+import { Input, Select, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
@@ -36,7 +36,7 @@ const ResourceForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input
+            <Textarea
               label="Description"
               name="description"
               control={control}

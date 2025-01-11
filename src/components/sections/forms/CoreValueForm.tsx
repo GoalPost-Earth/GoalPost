@@ -1,6 +1,6 @@
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input } from '../../react-hook-form'
+import { Input, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
 import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 
@@ -35,7 +35,7 @@ const CoreValueForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input
+            <Textarea
               label="Description"
               name="description"
               control={control}
