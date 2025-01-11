@@ -1,19 +1,28 @@
 import Link from 'next/link'
 import { Avatar } from '@/components/ui'
-import { Card, CardBodyProps, Flex, Text } from '@chakra-ui/react'
+import {
+  Card,
+  CardBodyProps,
+  CardHeaderProps,
+  Flex,
+  Text,
+} from '@chakra-ui/react'
+import { Person } from '@/gql/graphql'
 
 export function PersonCard({
   id,
   name,
   photo,
   info,
+  person,
   ...rest
 }: {
   id: string
   name: string
   photo?: string | null
   info?: string | null
-} & CardBodyProps) {
+  person?: Pick<Person, 'id' | 'name' | 'photo'>
+} & CardHeaderProps) {
   return (
     <Card.Root
       key={id}
@@ -22,6 +31,7 @@ export function PersonCard({
       height="100%"
       borderRadius="md"
       bg="person.subtle"
+      {...rest}
     >
       <Link href={`/person/${id}`} style={{ height: '100%' }}>
         <Card.Body
@@ -32,7 +42,6 @@ export function PersonCard({
           gap={4}
           height="100%"
           boxShadow="sm"
-          {...rest}
         >
           <Avatar src={photo ?? undefined} />
           <Flex flexDirection="column">

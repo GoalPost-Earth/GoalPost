@@ -95,3 +95,14 @@ export const GET_COMMUNITIES_AND_THEIR_MEMBERS = graphql(`
     }
   }
 `)
+
+export const GET_PEOPLE_NOT_IN_COMMUNITIES = graphql(`
+  query getPeopleNotInCommunities {
+    people(where: { communitiesAggregate: { count_EQ: 0 } }) {
+      id
+      name
+      photo
+      email
+    }
+  }
+`)

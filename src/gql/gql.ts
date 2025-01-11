@@ -66,6 +66,8 @@ const documents = {
     types.GetAllCommunitesDocument,
   '\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n':
     types.GetCommunitiesAndTheirMembersDocument,
+  '\n  query getPeopleNotInCommunities {\n    people(where: { communitiesAggregate: { count_EQ: 0 } }) {\n      id\n      name\n      photo\n      email\n    }\n  }\n':
+    types.GetPeopleNotInCommunitiesDocument,
   '\n  query getCoreValue($id: ID!) {\n    coreValues(where: { id_EQ: $id }) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      isEmbracedBy {\n        id\n        name\n      }\n      createdAt\n      createdBy {\n        id\n        name\n        photo\n      }\n    }\n  }\n':
     types.GetCoreValueDocument,
   '\n  query getAllCoreValues($where: CoreValueWhere) {\n    coreValues(where: $where) {\n      id\n      name\n      whoSupports\n      alignmentChallenges\n      alignmentExamples\n      description\n      why\n      # createdAt\n      isEmbracedBy {\n        goals {\n          id\n          name\n        }\n      }\n    }\n  }\n':
@@ -264,6 +266,12 @@ export function graphql(
 export function graphql(
   source: '\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  query getCommunitiesAndTheirMembers {\n    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {\n      id\n      name\n      members {\n        email\n        name\n        id\n        photo\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getPeopleNotInCommunities {\n    people(where: { communitiesAggregate: { count_EQ: 0 } }) {\n      id\n      name\n      photo\n      email\n    }\n  }\n'
+): (typeof documents)['\n  query getPeopleNotInCommunities {\n    people(where: { communitiesAggregate: { count_EQ: 0 } }) {\n      id\n      name\n      photo\n      email\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
