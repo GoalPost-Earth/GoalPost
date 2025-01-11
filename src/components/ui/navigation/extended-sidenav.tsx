@@ -36,19 +36,23 @@ export default function ExtendedSideNav() {
 
   return (
     <Portal>
-      {isExtended && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          width="100vw"
-          height="100vh"
-          bg="rgba(0, 0, 0, 0.5)"
-          zIndex={999}
-          onClick={() => setExtended(false)}
-        />
-      )}
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        width="100vw"
+        height="100vh"
+        bg={'rgba(0, 0, 0, 0.5)'}
+        zIndex={999}
+        onClick={() => setExtended(false)}
+        opacity={isExtended ? 1 : 0}
+        visibility={isExtended ? 'visible' : 'hidden'}
+        transition="all 0.3s ease-in-out"
+      />
+
       <VStack
+        onMouseEnter={() => setExtended(true)}
+        onMouseLeave={() => setExtended(false)}
         ref={navRef}
         display={{ base: 'none', lg: 'flex' }}
         width={isExtended ? '300px' : '50px'}
