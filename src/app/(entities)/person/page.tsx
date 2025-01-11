@@ -52,49 +52,55 @@ export default function AllPeople() {
           People
         </Heading>
         {communities &&
-          communities.map((community) => (
-            <VStack key={community.id} my={10} gap={4} alignItems="start">
-              <HStack justifyContent="space-between" width="100%">
-                <Heading>
-                  <Link
-                    href={
-                      community?.id === '' ? '' : `/community/${community.id}`
-                    }
+          communities.map((community) => {
+            if (community.members.length === 0) {
+              return <></>
+            }
+
+            return (
+              <VStack key={community.id} my={10} gap={4} alignItems="start">
+                <HStack justifyContent="space-between" width="100%">
+                  <Heading>
+                    <Link
+                      href={
+                        community?.id === '' ? '' : `/community/${community.id}`
+                      }
+                    >
+                      {community.name}
+                    </Link>
+                  </Heading>
+                  <Flex
+                    fontWeight="bold"
+                    fontSize="sm"
+                    gap={2}
+                    alignItems="center"
+                    cursor="pointer"
                   >
-                    {community.name}
-                  </Link>
-                </Heading>
-                <Flex
-                  fontWeight="bold"
-                  fontSize="sm"
-                  gap={2}
-                  alignItems="center"
-                  cursor="pointer"
-                >
-                  <Text>All People</Text>
-                  <IoArrowForwardCircleOutline />
-                </Flex>
-              </HStack>
-              <HStack
-                gap={6}
-                width="100%"
-                overflowX="scroll"
-                whiteSpace="nowrap"
-              >
-                {community.members.map((member) => (
-                  <Flex key={member.id}>
-                    <PersonCard
-                      id={member.id}
-                      name={member.name}
-                      info={member.email}
-                      photo={member.photo ?? ''}
-                      person={member}
-                    />
+                    <Text>All People</Text>
+                    <IoArrowForwardCircleOutline />
                   </Flex>
-                ))}
-              </HStack>
-            </VStack>
-          ))}
+                </HStack>
+                <HStack
+                  gap={6}
+                  width="100%"
+                  overflowX="scroll"
+                  whiteSpace="nowrap"
+                >
+                  {community.members.map((member) => (
+                    <Flex key={member.id}>
+                      <PersonCard
+                        id={member.id}
+                        name={member.name}
+                        info={member.email}
+                        photo={member.photo ?? ''}
+                        person={member}
+                      />
+                    </Flex>
+                  ))}
+                </HStack>
+              </VStack>
+            )
+          })}
       </Container>
     </ApolloWrapper>
   )
