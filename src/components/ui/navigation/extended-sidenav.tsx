@@ -46,6 +46,7 @@ export default function ExtendedSideNav() {
           bg="rgba(0, 0, 0, 0.5)"
           zIndex={999}
           onClick={() => setExtended(false)}
+          transition="all 0.3s ease-in-out"
         />
       )}
       <VStack
@@ -71,6 +72,8 @@ export default function ExtendedSideNav() {
         <Button
           cursor="pointer"
           onClick={() => setExtended(!isExtended)}
+          onMouseEnter={() => setExtended(true)}
+          onMouseLeave={() => setExtended(false)}
           background="none"
           padding={4}
         >
