@@ -21,13 +21,10 @@ export const CoreValueCard = ({
     >
       <Link href={`/corevalue/${coreValue.id}`} style={{ width: '100%' }}>
         <Card.Title mb="2">
-          <Text as="span" fontSize="sm" fontWeight="light">
-            core value
-          </Text>
           <Text fontWeight="bold">{coreValue.name}</Text>
         </Card.Title>
         {!!coreValue.description && (
-          <Card.Body lineClamp={{ base: 2, lg: 3 }}>
+          <Card.Body padding={0} lineClamp={{ base: 2, lg: 3 }}>
             <AutoLink text={coreValue.description} />
           </Card.Body>
         )}
