@@ -10,6 +10,7 @@ import { GoalPostIcon, SearchIcon } from '@/components/icons'
 import { usePathname, useRouter } from 'next/navigation'
 import SearchResults from '../search-results'
 import Link from 'next/link'
+import { BrandedGoalPostText } from '../branded-goalpost-text'
 
 export default function TopNav() {
   const { user } = useApp()
@@ -42,7 +43,10 @@ export default function TopNav() {
         }}
       >
         <AppLogo width={'40px'} marginLeft={{ base: '15px', lg: '70px' }} />
-        <GoalPostIcon display={{ base: 'none', lg: 'block' }} />
+        <BrandedGoalPostText
+          display={{ base: 'none', lg: 'block' }}
+          fontSize="xl"
+        />
       </Flex>
       <Box display={{ base: 'none', lg: 'block' }} mx="auto" width="500px">
         <SearchResults />

@@ -1,5 +1,5 @@
 import { Box, Container, Heading, HStack, Text, VStack } from '@chakra-ui/react'
-import { AppLogo, Button } from '@/components/ui'
+import { AppLogo, BrandedGoalPostText, Button } from '@/components'
 import Image from 'next/image'
 
 const GetStartedScreen = () => {
@@ -9,7 +9,7 @@ const GetStartedScreen = () => {
         height="60vh"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
-        backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.png)"
+        backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.webp)"
         display={{ base: 'block', lg: 'none' }}
       >
         <Box
@@ -70,7 +70,7 @@ function DesktopGetStartedScreen() {
         overflow="hidden"
       >
         <Image
-          src="/assets/images/bottom-view-group-diverse-friends-posing.png"
+          src="/assets/images/bottom-view-group-diverse-friends-posing.webp"
           fill
           objectFit="cover"
           alt="get started"
@@ -87,7 +87,7 @@ function DesktopGetStartedScreen() {
       >
         <HStack alignSelf="start">
           <AppLogo />
-          <Heading>GoalPost</Heading>
+          <BrandedGoalPostText fontSize="4xl" />
         </HStack>
         <Container>
           <Heading fontWeight="bold" alignSelf="start">
