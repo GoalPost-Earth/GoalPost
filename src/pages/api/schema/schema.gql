@@ -40,6 +40,12 @@ type Person implements PersonInterface @node {
       """
       columnName: "other"
     )
+  connections: [Person!]!
+    @relationship(
+      type: "CONNECTED_TO"
+      direction: OUT
+      queryDirection: UNDIRECTED
+    )
 
   status: String
   careManual: String

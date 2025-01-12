@@ -34,6 +34,16 @@ export default function UpdatePerson({
       phone: person?.phone || '',
       pronouns: person?.pronouns || '',
       location: person?.location || '',
+      community: person?.communities[0]?.id || [],
+
+      status: person?.status || '',
+      avatar: person?.avatar || '',
+      careManual: person?.careManual || '',
+      favorites: person?.favorites || '',
+      passions: person?.passions || '',
+      traits: person?.traits || '',
+      fieldsOfCare: person?.fieldsOfCare || '',
+      interests: person?.interests || '',
     }),
     [person]
   )
@@ -43,6 +53,7 @@ export default function UpdatePerson({
     handleSubmit,
     setValue,
     reset,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<PersonFormData>({
     defaultValues,
@@ -84,6 +95,7 @@ export default function UpdatePerson({
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          register={register}
           setValue={setValue}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}

@@ -35,7 +35,7 @@ export const GoalCard = ({
     <Card.Root
       borderRadius="lg"
       boxShadow="md"
-      bg="goal.50"
+      bg="brand.50"
       p={{ base: 4, lg: 0 }}
       gap={{ base: 4, lg: 0 }}
       {...rest}

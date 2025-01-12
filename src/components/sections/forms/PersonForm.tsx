@@ -15,7 +15,7 @@ import {
   FieldValues,
   UseFormRegister,
 } from 'react-hook-form'
-import { CloudinaryPresets } from '@/constants'
+import { CloudinaryPresets, FormMode } from '@/constants'
 import { useQuery } from '@apollo/client'
 import { GET_ALL_COMMUNITIES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components/layout'
@@ -33,59 +33,6 @@ export interface PersonFormProps {
   onSubmit: () => void
 }
 
-const memberFormFields = [
-  {
-    name: 'status',
-    label: 'Status',
-    type: NativeSelect,
-    options: [
-      { value: 'Active', label: 'Active' },
-      { value: 'Inactive', label: 'Inactive' },
-    ],
-  },
-  {
-    name: 'avatar',
-    label: 'Avatar',
-    type: Input,
-  },
-  {
-    name: 'signupDate',
-    label: 'Signup Date',
-    type: Input,
-    inputType: 'date',
-  } as const,
-  {
-    name: 'careManual',
-    label: 'Care Manual (Paste a link here)',
-    type: Input,
-  },
-  {
-    name: 'favorites',
-    label: 'Favorites',
-    type: Textarea,
-  },
-  {
-    name: 'passions',
-    label: 'Passions',
-    type: Textarea,
-  },
-  {
-    name: 'traits',
-    label: 'Traits',
-    type: Textarea,
-  },
-  {
-    name: 'fieldsOfCare',
-    label: 'Fields of Care',
-    type: Textarea,
-  },
-  {
-    name: 'interests',
-    label: 'Interests',
-    type: Textarea,
-  },
-]
-
 const PersonForm = ({
   formMode,
   control,
@@ -95,7 +42,7 @@ const PersonForm = ({
   isSubmitting,
   onSubmit,
 }: PersonFormProps) => {
-  const [isMember, setIsMember] = useState(false)
+  const [isMember, setIsMember] = useState(control._formValues.community !== '')
   const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
 
   const communities = data?.communities
@@ -116,6 +63,67 @@ const PersonForm = ({
     { name: 'pronouns', label: 'Pronouns', type: Input },
     { name: 'location', label: 'Location', type: Input },
   ]
+
+  const memberFormFields = [
+    {
+      name: 'status',
+      label: 'Status',
+      type: NativeSelect,
+      options: [
+        { value: 'Active', label: 'Active' },
+        { value: 'Inactive', label: 'Inactive' },
+      ],
+    },
+    {
+      name: 'avatar',
+      label: 'Avatar',
+      type: Input,
+    },
+    {
+      name: 'signupDate',
+      label: 'Signup Date',
+      type: Input,
+      inputType: 'date',
+    } as const,
+    {
+      name: 'careManual',
+      label: 'Care Manual (Paste a link here)',
+      type: Input,
+    },
+    {
+      name: 'favorites',
+      label: 'Favorites',
+      type: Textarea,
+    },
+    {
+      name: 'passions',
+      label: 'Passions',
+      type: Textarea,
+    },
+    {
+      name: 'traits',
+      label: 'Traits',
+      type: Textarea,
+    },
+    {
+      name: 'fieldsOfCare',
+      label: 'Fields of Care',
+      type: Textarea,
+    },
+    {
+      name: 'interests',
+      label: 'Interests',
+      type: Textarea,
+    },
+  ]
+
+  // Remove the form field named signupDate if FormMode is not Create
+  if (formMode === FormMode.Update) {
+    memberFormFields.splice(
+      memberFormFields.findIndex((field) => field.name === 'signupDate'),
+      1
+    )
+  }
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
@@ -143,20 +151,22 @@ const PersonForm = ({
             </GridItem>
           ))}
 
-          <GridItem>
-            <NativeSelect
-              label="Community"
-              name="community"
-              errors={errors}
-              register={register}
-              onChange={(e) => {
-                if ((e.target as HTMLSelectElement).value === '') {
-                  setIsMember(false)
-                } else setIsMember(true)
-              }}
-              options={communityOptions}
-            />
-          </GridItem>
+          {formMode === FormMode.Create && (
+            <GridItem>
+              <NativeSelect
+                label="Community"
+                name="community"
+                errors={errors}
+                register={register}
+                onChange={(e) => {
+                  if ((e.target as HTMLSelectElement).value === '') {
+                    setIsMember(false)
+                  } else setIsMember(true)
+                }}
+                options={communityOptions}
+              />
+            </GridItem>
+          )}
 
           {isMember && (
             <>

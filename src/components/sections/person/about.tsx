@@ -1,6 +1,6 @@
-import { EntityDetail } from '@/components'
+import { EditButton, EntityDetail } from '@/components'
 import { Person } from '@/gql/graphql'
-import { VStack } from '@chakra-ui/react'
+import { HStack, Link, Spacer, VStack } from '@chakra-ui/react'
 import React from 'react'
 
 export default function PersonAbout({ person }: { person: Person }) {
@@ -15,6 +15,12 @@ export default function PersonAbout({ person }: { person: Person }) {
       alignItems={'flex-start'}
       width={{ lg: '70%' }}
     >
+      <HStack width="100%" justifyContent="space-between">
+        <Spacer />
+        <Link href={`/person/update/${person.id}`}>
+          <EditButton colorPalette="person" size="xl" />
+        </Link>
+      </HStack>
       <EntityDetail
         title="Status"
         entityName={person.name + `'s Status`}
