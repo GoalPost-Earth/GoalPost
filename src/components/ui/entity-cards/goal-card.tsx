@@ -40,11 +40,22 @@ export const GoalCard = ({
       gap={{ base: 4, lg: 0 }}
       {...rest}
     >
-      <Link href={`/goal/${id}`} asChild _hover={{ textDecoration: 'none' }}>
+      <Link
+        href={`/goal/${id}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          textDecoration: 'none',
+          display: 'flex',
+        }}
+      >
         <Box
+          display="flex"
           flexDirection={{ base: 'column', lg: 'row' }}
           overflow="hidden"
           alignItems={{ base: 'flex-start', lg: 'center' }}
+          height="100%"
+          width="100%"
         >
           {!!photo ? (
             <Image
@@ -54,7 +65,7 @@ export const GoalCard = ({
               maxW="150px"
               borderRadius={{ base: 'sm', lg: 'lg' }}
               borderRightRadius={{ base: 'sm', lg: '0' }}
-              src={photo ?? ''}
+              src={photo ?? undefined}
               alt={name}
             />
           ) : (
@@ -78,7 +89,7 @@ export const GoalCard = ({
             </Container>
           )}
           <Box width="100%" height="100%">
-            <Card.Body p={{ base: 0, lg: 5 }} width="100%">
+            <Card.Body p={{ base: 0, lg: 5 }} width="100%" height="100%">
               <Card.Title lineClamp={1} fontSize="md" fontWeight="bolder">
                 {name}
               </Card.Title>
