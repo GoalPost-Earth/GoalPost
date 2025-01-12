@@ -25,9 +25,11 @@ export interface ReactHookFormComponentProps {
 export interface EntityFormProps {
   formMode: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<FieldValues, any>
-  setValue?: UseFormSetValue<FieldValues>
-  register: UseFormRegister<FieldValues>
+  control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue?: UseFormSetValue<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void

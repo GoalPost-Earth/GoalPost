@@ -11,6 +11,7 @@ export const personSchema = object({
   phone: string().min(1).trim().regex(PHONE_NUM_REGEX).optional(),
   pronouns: string().min(1).optional(),
   location: string().min(1).optional(),
+  // MEMBERS ONLY
   status: string().min(1).optional(),
   avatar: string().min(1).optional(),
   careManual: string().url().optional(),

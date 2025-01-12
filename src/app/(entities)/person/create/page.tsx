@@ -12,6 +12,8 @@ import { useForm } from 'react-hook-form'
 import { PersonForm } from '@/components'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { FormMode } from '@/constants'
+import { PersonFormData, personSchema } from '@/app/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function CreatePerson() {
   const {
@@ -20,7 +22,9 @@ function CreatePerson() {
     register,
     setValue,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<PersonFormData>({
+    resolver: zodResolver(personSchema),
+  })
   const { user } = useUser()
   const router = useRouter()
 

@@ -14,7 +14,8 @@ import { useQuery } from '@apollo/client'
 import { GET_ALL_COMMUNITIES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components/layout'
 import { EntityFormProps } from '@/types'
-import { FieldValues, UseFormSetValue } from 'react-hook-form'
+import { UseFormSetValue } from 'react-hook-form'
+import { PersonFormData } from '@/app/schema'
 
 const PersonForm = ({
   formMode,
@@ -24,7 +25,7 @@ const PersonForm = ({
   register,
   isSubmitting,
   onSubmit,
-}: EntityFormProps & { setValue: UseFormSetValue<FieldValues> }) => {
+}: EntityFormProps & { setValue: UseFormSetValue<PersonFormData> }) => {
   const [isMember, setIsMember] = useState(control._formValues.community !== '')
   const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
 
