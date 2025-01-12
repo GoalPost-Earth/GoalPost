@@ -44,7 +44,7 @@ const documents = {
     types.GeneratePersonEmbeddingsDocument,
   '\n  mutation CreatePeople($input: [PersonCreateInput!]!) {\n    createPeople(input: $input) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n      }\n    }\n  }\n':
     types.CreatePeopleDocument,
-  '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n':
+  '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n\n        communities {\n          id\n          name\n          description\n          members {\n            id\n            name\n            photo\n          }\n        }\n      }\n    }\n  }\n':
     types.UpdatePersonDocument,
   '\n  mutation DeletePerson($id: ID!) {\n    deletePeople(where: { id_EQ: $id }) {\n      nodesDeleted\n    }\n  }\n':
     types.DeletePersonDocument,
@@ -204,8 +204,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n'
-): (typeof documents)['\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n      }\n    }\n  }\n']
+  source: '\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n\n        communities {\n          id\n          name\n          description\n          members {\n            id\n            name\n            photo\n          }\n        }\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation UpdatePerson($where: PersonWhere!, $update: PersonUpdateInput!) {\n    updatePeople(where: $where, update: $update) {\n      people {\n        id\n        firstName\n        lastName\n        email\n        phone\n        photo\n        location\n        pronouns\n\n        connectedTo {\n          id\n          name\n          photo\n        }\n\n        communities {\n          id\n          name\n          description\n          members {\n            id\n            name\n            photo\n          }\n        }\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

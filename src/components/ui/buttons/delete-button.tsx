@@ -1,8 +1,8 @@
 'use client'
 
 import { DialogRoot, Heading, Text, useDisclosure } from '@chakra-ui/react'
-import { DeleteIcon } from '../icons'
-import { Button } from './button'
+import { DeleteIcon } from '../../icons'
+import { Button } from '../button'
 import { EntityType } from '@/types'
 import { useMutation } from '@apollo/client'
 import {
@@ -20,7 +20,7 @@ import {
   GET_ALL_RESOURCES,
   GET_PEOPLE_AND_THEIR_RESOURCES,
 } from '@/app/graphql'
-import { toaster } from './toaster'
+import { toaster } from '../toaster'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
@@ -30,7 +30,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-} from './dialog'
+} from '../dialog'
 
 export function DeleteButton({
   entityId,

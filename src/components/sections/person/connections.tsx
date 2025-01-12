@@ -16,6 +16,8 @@ import {
   MultiSelect,
   ApolloWrapper,
   toaster,
+  ConfirmButton,
+  CancelButton,
 } from '@/components'
 import { Person } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
@@ -87,10 +89,9 @@ export default function PersonConnections({ person }: { person: Person }) {
         },
       })
 
-      if (!response.data)
-        if (!response.data) {
-          throw new Error('No data returned')
-        }
+      if (!response.data) {
+        throw new Error('No data returned')
+      }
 
       setConnections(
         response.data.updatePeople.people[0].connectedTo as Person[]
@@ -147,18 +148,12 @@ export default function PersonConnections({ person }: { person: Person }) {
               </DialogBody>
               <DialogFooter>
                 <DialogActionTrigger asChild>
-                  <Button variant="outline" ref={cancelButtonRef}>
-                    Cancel
-                  </Button>
+                  <CancelButton ref={cancelButtonRef} />
                 </DialogActionTrigger>
-                <Button
-                  colorPalette="green"
-                  type="submit"
+                <ConfirmButton
                   loading={isSubmitting}
                   onClick={handleSubmit(onSubmit)}
-                >
-                  Save
-                </Button>
+                />
               </DialogFooter>
               <DialogCloseTrigger />
             </DialogContent>

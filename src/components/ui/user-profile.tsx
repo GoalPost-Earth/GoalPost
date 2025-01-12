@@ -3,8 +3,7 @@ import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { Person } from '@/gql/graphql'
 import { EntityEnum, TriggerValues } from '@/constants'
-import { EditButton } from './edit-button'
-import { DeleteButton } from './delete-button'
+import { DeleteButton, EditButton } from './buttons'
 
 interface UserProfileProps {
   user: Person

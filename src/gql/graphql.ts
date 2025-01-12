@@ -11177,6 +11177,18 @@ export type UpdatePersonMutation = {
         name: string
         photo?: string | null
       }>
+      communities: Array<{
+        __typename?: 'Community'
+        id: string
+        name: string
+        description?: string | null
+        members: Array<{
+          __typename?: 'Person'
+          id: string
+          name: string
+          photo?: string | null
+        }>
+      }>
     }>
   }
 }
@@ -13564,6 +13576,48 @@ export const UpdatePersonDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'communities' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'members' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'photo' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },

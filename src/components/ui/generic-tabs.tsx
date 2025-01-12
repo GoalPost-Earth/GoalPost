@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Spacer, Tabs } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
 import Link from 'next/link'
-import { EditButton } from './edit-button'
+import { EditButton } from './buttons/edit-button'
 import { EntityEnum, TRIGGER_TO_ROUTE_MAP, TriggerValues } from '@/constants'
 import { Button } from './button'
 

@@ -41,6 +41,17 @@ export const UPDATE_PERSON_MUTATION = graphql(`
           name
           photo
         }
+
+        communities {
+          id
+          name
+          description
+          members {
+            id
+            name
+            photo
+          }
+        }
       }
     }
   }
