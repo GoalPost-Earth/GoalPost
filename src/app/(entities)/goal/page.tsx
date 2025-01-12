@@ -3,15 +3,7 @@ import React from 'react'
 import { GET_PEOPLE_AND_THEIR_GOALS } from '@/app/graphql'
 import { ApolloWrapper, GoalCard, PersonInfo } from '@/components'
 import { useQuery } from '@apollo/client'
-import {
-  Container,
-  Flex,
-  Heading,
-  HStack,
-  Text,
-  VStack,
-} from '@chakra-ui/react'
-import { IoArrowForwardCircleOutline } from 'react-icons/io5'
+import { Container, Flex, Heading, HStack, VStack } from '@chakra-ui/react'
 
 export default function AllGoals() {
   const { data, loading, error } = useQuery(GET_PEOPLE_AND_THEIR_GOALS, {
@@ -46,19 +38,7 @@ export default function AllGoals() {
         {people.map((person) => {
           return (
             <VStack key={person.id} my={10} gap={4} alignItems="start">
-              <HStack justifyContent="space-between" width="100%">
-                <PersonInfo person={person} />
-                <Flex
-                  fontWeight="bold"
-                  fontSize="sm"
-                  gap={2}
-                  alignItems="center"
-                  cursor="pointer"
-                >
-                  <Text>All Goals</Text>
-                  <IoArrowForwardCircleOutline />
-                </Flex>
-              </HStack>
+              <PersonInfo person={person} />
               <HStack
                 gap={6}
                 width="100%"

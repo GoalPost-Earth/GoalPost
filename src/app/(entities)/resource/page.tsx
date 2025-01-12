@@ -5,16 +5,8 @@ import { ApolloWrapper } from '@/components'
 import { PersonInfo, ResourceCard } from '@/components/ui'
 import { Resource } from '@/gql/graphql'
 import { useQuery } from '@apollo/client'
-import {
-  Container,
-  Flex,
-  Heading,
-  HStack,
-  Text,
-  VStack,
-} from '@chakra-ui/react'
+import { Container, Flex, Heading, HStack, VStack } from '@chakra-ui/react'
 import React from 'react'
-import { IoArrowForwardCircleOutline } from 'react-icons/io5'
 
 export default function AllResources() {
   const { data, loading, error } = useQuery(GET_PEOPLE_AND_THEIR_RESOURCES)
@@ -42,19 +34,7 @@ export default function AllResources() {
         {people.map((person) => {
           return (
             <VStack key={person.id} my={10} gap={4} alignItems="start">
-              <HStack justifyContent="space-between" width="100%">
-                <PersonInfo person={person} />
-                <Flex
-                  fontWeight="bold"
-                  fontSize="sm"
-                  gap={2}
-                  alignItems="center"
-                  cursor="pointer"
-                >
-                  <Text>All Resources</Text>
-                  <IoArrowForwardCircleOutline />
-                </Flex>
-              </HStack>
+              <PersonInfo person={person} />
               <HStack
                 gap={6}
                 width="100%"
