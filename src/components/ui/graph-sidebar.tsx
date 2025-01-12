@@ -5,6 +5,7 @@ import {
   GoalsIcon,
   PeopleIcon,
   SettingsIcon,
+  CoreValuesIcon,
 } from '../icons'
 import { EntityInfo } from './entity-info'
 import Link from 'next/link'
@@ -20,6 +21,7 @@ const iconMapping: Record<string, JSX.Element> = {
   Resource: <SettingsIcon color="" width="16px" height="16px" />,
   Person: <PeopleIcon color="" width="16px" height="16px" />,
   Community: <CommunityIcon color="" width="16px" height="16px" />,
+  CoreValue: <CoreValuesIcon color="" width="16px" height="16px" />,
   Goal: <GoalsIcon color="" width="16px" height="16px" />,
   CarePoint: <CarePointsIcon color="" width="16px" height="16px" />,
 }

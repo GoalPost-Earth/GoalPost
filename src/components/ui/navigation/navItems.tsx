@@ -8,6 +8,7 @@ import {
   SettingsIcon,
   InputIcon,
   CommunityIcon,
+  CoreValuesIcon,
 } from '@/icons'
 import {
   AccordionItem,
@@ -49,7 +50,7 @@ export const navItems = [
   {
     name: 'Core Values',
     to: '/corevalue',
-    icon: SettingsIcon,
+    icon: CoreValuesIcon,
   },
   {
     name: 'Care Points',

@@ -43,6 +43,7 @@ export function ActionCard({
     CoreValue: '#E4FCD8',
     Community: '#D8F2FC',
     Resource: '#FEEBCB',
+    CarePoint: '#FED7D7',
   }
 
   return (

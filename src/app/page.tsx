@@ -28,6 +28,9 @@ import {
   SettingsIcon,
   ResourceCard,
   PersonCard,
+  CoreValuesIcon,
+  CarePointCard,
+  CoreValueCard,
 } from '@/components'
 
 const HomeClient = () => {
@@ -48,9 +51,13 @@ const HomeClient = () => {
     return {
       actionName: carePoint.__typename,
       id: carePoint.id,
+      actionInfo: 'added a new care point',
+      icon: <CarePointsIcon width="18px" height="18px" />,
       createdAt: carePoint.createdAt,
-      createdBy: carePoint.createdBy,
-      children: '',
+      personId: carePoint.createdBy[0].id,
+      personName: carePoint.createdBy[0].name,
+      personPhoto: carePoint.createdBy[0].photo,
+      children: <CarePointCard carePoint={carePoint} />,
     }
   })
 
@@ -75,7 +82,7 @@ const HomeClient = () => {
     return {
       actionName: coreValue.__typename,
       actionInfo: 'embraced a new core value',
-      icon: <CarePointsIcon width="18px" height="18px" />,
+      icon: <CoreValuesIcon width="18px" height="18px" />,
       id: coreValue.id,
       createdAt: coreValue.createdAt,
       createdBy: coreValue.isEmbracedBy,
@@ -83,7 +90,7 @@ const HomeClient = () => {
       personId: coreValue.isEmbracedBy[0]?.id,
       personName: coreValue.isEmbracedBy[0]?.name,
       personPhoto: coreValue.isEmbracedBy[0]?.photo,
-      children: '',
+      children: <CoreValueCard coreValue={coreValue} />,
     }
   })
 
@@ -135,6 +142,7 @@ const HomeClient = () => {
     ...recentCoreValues,
     ...recentCommunityMembers,
     ...recentResources,
+    ...recentCarePoints,
   ]
 
   return (
@@ -197,10 +205,10 @@ const HomeClient = () => {
                   <ActionCard
                     photo={action.personPhoto ?? undefined}
                     actionInfo={action.actionInfo}
-                    personId={action.personId}
+                    personId={action?.personId}
                     id={action.id}
                     key={action.id}
-                    name={action.personName}
+                    name={action?.personName}
                     actionName={action.actionName}
                     createdAt={action.createdAt}
                     icon={action.icon}
