@@ -10,7 +10,7 @@ export const UserInfo = ({
   }[]
 }) => {
   return (
-    <Container paddingY={3} bg="gray.contrast" borderRadius={2}>
+    <Container bg="gray.contrast" borderRadius={2} paddingX={0}>
       {data?.map((info) => (
         <Flex
           key={info.key}
@@ -24,7 +24,9 @@ export const UserInfo = ({
           <Text fontSize={'sm'} fontWeight={300}>
             {info.key}
           </Text>
-          <Text fontWeight={'medium'}>{info.value}</Text>
+          <Text fontWeight={'medium'} fontSize="sm">
+            {info.value}
+          </Text>
         </Flex>
       ))}
     </Container>

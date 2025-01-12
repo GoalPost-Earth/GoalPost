@@ -78,7 +78,6 @@ export default async function ViewPersonPage({
     person.connectedTo.length > 0 ? (
       <VStack
         key="connections"
-        padding={4}
         borderRadius="md"
         border="1px"
         borderColor="gray.200"
@@ -107,7 +106,7 @@ export default async function ViewPersonPage({
     person.connectedTo.length > 0 ? (
       <Grid
         key="connections"
-        templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+        templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
         gap={6}
       >
         {person.connectedTo.map((person) => (
@@ -121,9 +120,10 @@ export default async function ViewPersonPage({
         ))}
       </Grid>
     ) : null,
+    null,
     <Grid
       key="communities"
-      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+      templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
       gap={6}
     >
       {person.communities.map((community) => (

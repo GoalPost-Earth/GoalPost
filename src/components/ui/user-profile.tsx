@@ -1,12 +1,14 @@
-import { Stack, Text, VStack } from '@chakra-ui/react'
+import { HStack, Link, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { Person } from '@/gql/graphql'
-import { EntityEnum, TRIGGERS } from '@/constants'
+import { EntityEnum, TriggerValues } from '@/constants'
+import { EditButton } from './edit-button'
+import { DeleteButton } from './delete-button'
 
 interface UserProfileProps {
   user: Person
-  tabTriggers: string[]
+  tabTriggers: TriggerValues[]
   tabContent: React.ReactNode[]
   tabProps?: Record<string, any>
 }
@@ -44,19 +46,24 @@ export function UserProfile({
           {user?.name}
         </Text>
         {user?.email && <Text>{user?.email}</Text>}
+
+        <HStack justifyContent={'center'} gap={5}>
+          <Link asChild href={'/update/person/' + user.id}>
+            <EditButton colorPalette={'person'} text={`Edit`} size="xl" />
+          </Link>
+
+          <DeleteButton
+            entityId={user.id}
+            entityType={'Person'}
+            entityName={user.name}
+          />
+        </HStack>
       </Stack>
       <GenericTabs
         entityId={user.id}
         entityType={EntityEnum.Person}
         entityName={user.name}
-        triggers={[
-          ...Object.keys(TRIGGERS.PERSON).map(
-            (key) => TRIGGERS.PERSON[key as keyof typeof TRIGGERS.PERSON]
-          ),
-          ...Object.keys(TRIGGERS.MEMBER).map(
-            (key) => TRIGGERS.MEMBER[key as keyof typeof TRIGGERS.MEMBER]
-          ),
-        ]}
+        triggers={tabTriggers}
         content={tabContent}
       />
     </VStack>

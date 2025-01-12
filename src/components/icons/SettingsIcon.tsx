@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Icon, IconProps } from '@chakra-ui/react'
 
-const SettingsIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
+const SettingsIcon = ({ color = '', ...rest }: IconProps) => (
   <Icon color={color} width="24px" height="22px" {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -17,6 +17,7 @@ function CreatePerson() {
   const {
     control,
     handleSubmit,
+    register,
     setValue,
     formState: { isSubmitting, errors },
   } = useForm()
@@ -28,11 +29,20 @@ function CreatePerson() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
+    const { signupDate, community, ...rest } = data
     try {
       const res = await CreatePeople({
         variables: {
           input: {
-            ...data,
+            ...rest,
+            communities: {
+              connect: [
+                {
+                  where: { node: { id_EQ: community } },
+                  edge: { signupDate },
+                },
+              ],
+            },
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
@@ -62,6 +72,7 @@ function CreatePerson() {
         formMode={FormMode.Create}
         control={control}
         errors={errors}
+        register={register}
         setValue={setValue}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}

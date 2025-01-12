@@ -1,7 +1,7 @@
 import { Icon, IconProps } from '@chakra-ui/react'
 import * as React from 'react'
 
-const ChatBotIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
+const ChatBotIcon = ({ color = '', ...rest }: IconProps) => (
   <Icon
     color={color}
     width="24px"

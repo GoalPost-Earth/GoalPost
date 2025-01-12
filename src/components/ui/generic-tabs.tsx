@@ -74,20 +74,6 @@ export const GenericTabs = ({
             </Tabs.Trigger>
           ))}
           <Spacer />
-
-          <Tabs.Trigger
-            display={{ base: 'none', lg: 'block' }}
-            value="delete"
-            asChild
-          >
-            <Box>
-              <DeleteButton
-                entityId={entityId}
-                entityType={entityType}
-                entityName={entityName}
-              />
-            </Box>
-          </Tabs.Trigger>
         </Tabs.List>
       </>
 
