@@ -24,8 +24,12 @@ export const UserInfo = ({
           <Text fontSize={'sm'} fontWeight={300}>
             {info.key}
           </Text>
-          <Text fontWeight={'medium'} fontSize="sm">
-            {info.value}
+          <Text
+            fontWeight={'medium'}
+            fontSize="sm"
+            color={info.value ? 'fg' : 'bg'}
+          >
+            {info.value ?? 'No data'}
           </Text>
         </Flex>
       ))}

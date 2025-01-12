@@ -1,0 +1,7 @@
+export { default as PersonAbout } from './about'
+export { default as PersonConnections } from './connections'
+export { default as PersonCommunities } from './communities'
+export { default as PersonResources } from './resources'
+export { default as PersonGoals } from './goals'
+export { default as PersonCoreValues } from './corevalues'
+export { default as PersonCarePoints } from './carepoints'

@@ -11,6 +11,16 @@ export const GET_PERSON = graphql(`
       photo
       phone
       pronouns
+
+      status
+      avatar
+      careManual
+      favorites
+      passions
+      traits
+      fieldsOfCare
+      interests
+
       connectedTo {
         id
         name
@@ -28,6 +38,11 @@ export const GET_PERSON = graphql(`
         photo
         status
         createdAt
+        description
+      }
+      carePoints {
+        id
+        # name
         description
       }
       coreValues {

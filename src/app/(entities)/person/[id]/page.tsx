@@ -1,20 +1,23 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Container, Grid, GridItem, HStack, VStack } from '@chakra-ui/react'
+import { Container, HStack, VStack } from '@chakra-ui/react'
 import React from 'react'
 import {
   CommunityCard,
-  PersonCard,
   ConnectionsInfo,
   GenericTabs,
   ProfileBackground,
   UserInfo,
   UserProfile,
-  ResourceCard,
-  GoalCard,
-  CoreValueCard,
+  PersonAbout,
+  PersonConnections,
+  PersonCommunities,
+  PersonResources,
+  PersonGoals,
+  PersonCoreValues,
+  PersonCarePoints,
 } from '@/components'
-import { Community, Person, Resource } from '@/gql/graphql'
+import { Community, Person } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewPersonPage({
@@ -30,6 +33,7 @@ export default async function ViewPersonPage({
   })
 
   const person = data?.people[0]
+
   if (error) {
     throw error
   }
@@ -37,6 +41,7 @@ export default async function ViewPersonPage({
   if (data.people.length === 0) {
     throw new Error('Person not found')
   }
+
   const isMember = person?.communities.length > 0
 
   const bioData = [
@@ -50,16 +55,16 @@ export default async function ViewPersonPage({
     },
     {
       key: 'Phone Number',
-      value: person.phone ?? 'n/a',
+      value: person.phone,
     },
     {
       key: 'Pronouns',
-      value: person.pronouns ?? 'n/a',
+      value: person.pronouns,
     },
 
     {
       key: 'Location',
-      value: person.location ?? 'n/a',
+      value: person.location,
     },
   ]
 
@@ -72,102 +77,6 @@ export default async function ViewPersonPage({
   const triggers = isMember
     ? [...personTriggers, ...memberTriggers]
     : personTriggers
-
-  const content = [
-    <UserInfo data={bioData} key="bio" />,
-    person.connectedTo.length > 0 ? (
-      <VStack
-        key="connections"
-        borderRadius="md"
-        border="1px"
-        borderColor="gray.200"
-        gap={2}
-        bg="gray.contrast"
-      >
-        {person.connectedTo.map((person) => (
-          <ConnectionsInfo
-            key={person.id}
-            photo={person.photo ?? undefined}
-            name={person.name}
-            id={person.id}
-          />
-        ))}
-      </VStack>
-    ) : null,
-    <VStack gap={4} key="communities">
-      {person.communities.map((community) => (
-        <CommunityCard key={community.id} community={community as Community} />
-      ))}
-    </VStack>,
-  ]
-
-  const desktopContent = [
-    null,
-    person.connectedTo.length > 0 ? (
-      <Grid
-        key="connections"
-        templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
-        gap={6}
-      >
-        {person.connectedTo.map((person) => (
-          <GridItem key={person.id}>
-            <PersonCard
-              id={person.id}
-              photo={person.photo ?? null}
-              name={person.name}
-            />
-          </GridItem>
-        ))}
-      </Grid>
-    ) : null,
-    null,
-    <Grid
-      key="communities"
-      templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
-      gap={6}
-    >
-      {person.communities.map((community) => (
-        <GridItem key={community.id}>
-          <CommunityCard community={community as Community} />
-        </GridItem>
-      ))}
-    </Grid>,
-    <Grid
-      key="resources"
-      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-      gap={6}
-    >
-      {person.providesResources.map((resource) => (
-        <GridItem key={resource.id}>
-          <ResourceCard
-            resource={{ ...resource, providedByPerson: [person] } as Resource}
-          />
-        </GridItem>
-      ))}
-    </Grid>,
-    <Grid
-      key="goals"
-      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-      gap={6}
-    >
-      {person.goals.map((goal) => (
-        <GridItem key={goal.id}>
-          <GoalCard goal={goal} />
-        </GridItem>
-      ))}
-    </Grid>,
-    <Grid
-      key="coreValues"
-      templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-      gap={6}
-    >
-      {person.coreValues.map((coreValue) => (
-        <GridItem key={coreValue.id}>
-          <CoreValueCard coreValue={coreValue} />
-        </GridItem>
-      ))}
-    </Grid>,
-  ]
 
   return (
     <Container
@@ -182,7 +91,38 @@ export default async function ViewPersonPage({
       <UserProfile
         user={person as Person}
         tabTriggers={triggers}
-        tabContent={content}
+        tabContent={[
+          <UserInfo data={bioData} key="bio" />,
+          <>
+            {person.connectedTo.length > 0 ? (
+              <VStack
+                key="connections"
+                borderRadius="md"
+                border="1px"
+                borderColor="gray.200"
+                gap={2}
+                bg="gray.contrast"
+              >
+                {person.connectedTo.map((person) => (
+                  <ConnectionsInfo
+                    key={person.id}
+                    photo={person.photo ?? undefined}
+                    name={person.name}
+                    id={person.id}
+                  />
+                ))}
+              </VStack>
+            ) : null}
+          </>,
+          <VStack gap={4} key="communities">
+            {person.communities.map((community) => (
+              <CommunityCard
+                key={community.id}
+                community={community as Community}
+              />
+            ))}
+          </VStack>,
+        ]}
       />
       <HStack
         float={'right'}
@@ -196,7 +136,15 @@ export default async function ViewPersonPage({
           entityType={EntityEnum.Person}
           entityName={person.name}
           triggers={triggers}
-          content={desktopContent}
+          content={[
+            <PersonAbout key="about" person={person as Person} />,
+            <PersonConnections key="connections" person={person as Person} />,
+            <PersonCommunities key="communities" person={person as Person} />,
+            <PersonResources key="resources" person={person as Person} />,
+            <PersonGoals key="goals" person={person as Person} />,
+            <PersonCarePoints key="carepoints" person={person as Person} />,
+            <PersonCoreValues key="corevalues" person={person as Person} />,
+          ]}
           props={{
             justifyContent: 'flex-start',
             marginTop: '40px',

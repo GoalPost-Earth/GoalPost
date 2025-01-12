@@ -56,7 +56,7 @@ const memberFormFields = [
   } as const,
   {
     name: 'careManual',
-    label: 'Care Manual',
+    label: 'Care Manual (Paste a link here)',
     type: Input,
   },
   {

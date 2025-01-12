@@ -29,15 +29,25 @@ export function EntityDetail({
   const [isClamped, setIsClamped] = useState(false)
 
   useEffect(() => {
-    const textElement = textRef.current
-    if (textElement) {
-      const lineHeight = parseFloat(getComputedStyle(textElement).lineHeight)
-      const maxHeight = lineHeight * 2 // Height for 2 lines
-      if (textElement.scrollHeight > maxHeight) {
-        setIsClamped(true)
+    // Add a small delay to ensure DOM is ready
+    const checkClamping = () => {
+      const textElement = textRef.current
+      if (textElement) {
+        const lineHeight = parseFloat(getComputedStyle(textElement).lineHeight)
+        const maxHeight = lineHeight * 2
+        setIsClamped(textElement.scrollHeight > maxHeight)
       }
     }
-  }, [details])
+
+    // Run initial check
+    checkClamping()
+
+    // Add resize listener to handle window size changes
+    window.addEventListener('resize', checkClamping)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkClamping)
+  }, [details]) // Only depend on details
 
   if (!details) {
     return <></>

@@ -6579,6 +6579,9 @@ export type Person = PersonInterface & {
   authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
   careManual?: Maybe<Scalars['String']['output']>
+  carePoints: Array<CarePoint>
+  carePointsAggregate?: Maybe<PersonCarePointCarePointsAggregationSelection>
+  carePointsConnection: PersonCarePointsConnection
   communities: Array<Community>
   communitiesAggregate?: Maybe<PersonCommunityCommunitiesAggregationSelection>
   communitiesConnection: PersonCommunitiesConnection
@@ -6612,6 +6615,24 @@ export type Person = PersonInterface & {
   status?: Maybe<Scalars['String']['output']>
   traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+export type PersonCarePointsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CarePointSort>>
+  where?: InputMaybe<CarePointWhere>
+}
+
+export type PersonCarePointsAggregateArgs = {
+  where?: InputMaybe<CarePointWhere>
+}
+
+export type PersonCarePointsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonCarePointsConnectionSort>>
+  where?: InputMaybe<PersonCarePointsConnectionWhere>
 }
 
 export type PersonCommunitiesArgs = {
@@ -6726,6 +6747,160 @@ export type PersonAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type PersonCarePointCarePointsAggregationSelection = {
+  __typename?: 'PersonCarePointCarePointsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<PersonCarePointCarePointsNodeAggregateSelection>
+}
+
+export type PersonCarePointCarePointsNodeAggregateSelection = {
+  __typename?: 'PersonCarePointCarePointsNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  id: IdAggregateSelection
+  status: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type PersonCarePointsAggregateInput = {
+  AND?: InputMaybe<Array<PersonCarePointsAggregateInput>>
+  NOT?: InputMaybe<PersonCarePointsAggregateInput>
+  OR?: InputMaybe<Array<PersonCarePointsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonCarePointsNodeAggregationWhereInput>
+}
+
+export type PersonCarePointsConnectFieldInput = {
+  connect?: InputMaybe<Array<CarePointConnectInput>>
+  where?: InputMaybe<CarePointConnectWhere>
+}
+
+export type PersonCarePointsConnection = {
+  __typename?: 'PersonCarePointsConnection'
+  edges: Array<PersonCarePointsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type PersonCarePointsConnectionSort = {
+  node?: InputMaybe<CarePointSort>
+}
+
+export type PersonCarePointsConnectionWhere = {
+  AND?: InputMaybe<Array<PersonCarePointsConnectionWhere>>
+  NOT?: InputMaybe<PersonCarePointsConnectionWhere>
+  OR?: InputMaybe<Array<PersonCarePointsConnectionWhere>>
+  node?: InputMaybe<CarePointWhere>
+}
+
+export type PersonCarePointsCreateFieldInput = {
+  node: CarePointCreateInput
+}
+
+export type PersonCarePointsDeleteFieldInput = {
+  delete?: InputMaybe<CarePointDeleteInput>
+  where?: InputMaybe<PersonCarePointsConnectionWhere>
+}
+
+export type PersonCarePointsDisconnectFieldInput = {
+  disconnect?: InputMaybe<CarePointDisconnectInput>
+  where?: InputMaybe<PersonCarePointsConnectionWhere>
+}
+
+export type PersonCarePointsFieldInput = {
+  connect?: InputMaybe<Array<PersonCarePointsConnectFieldInput>>
+  create?: InputMaybe<Array<PersonCarePointsCreateFieldInput>>
+}
+
+export type PersonCarePointsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonCarePointsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonCarePointsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonCarePointsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type PersonCarePointsRelationship = {
+  __typename?: 'PersonCarePointsRelationship'
+  cursor: Scalars['String']['output']
+  node: CarePoint
+}
+
+export type PersonCarePointsUpdateConnectionInput = {
+  node?: InputMaybe<CarePointUpdateInput>
+}
+
+export type PersonCarePointsUpdateFieldInput = {
+  connect?: InputMaybe<Array<PersonCarePointsConnectFieldInput>>
+  create?: InputMaybe<Array<PersonCarePointsCreateFieldInput>>
+  delete?: InputMaybe<Array<PersonCarePointsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<PersonCarePointsDisconnectFieldInput>>
+  update?: InputMaybe<PersonCarePointsUpdateConnectionInput>
+  where?: InputMaybe<PersonCarePointsConnectionWhere>
 }
 
 export type PersonCommunitiesAggregateInput = {
@@ -6985,6 +7160,7 @@ export type PersonCommunityCommunitiesNodeAggregateSelection = {
 }
 
 export type PersonConnectInput = {
+  carePoints?: InputMaybe<Array<PersonCarePointsConnectFieldInput>>
   communities?: InputMaybe<Array<PersonCommunitiesConnectFieldInput>>
   coreValues?: InputMaybe<Array<PersonCoreValuesConnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByConnectFieldInput>>
@@ -7224,6 +7400,7 @@ export type PersonCreateInput = {
   authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
+  carePoints?: InputMaybe<PersonCarePointsFieldInput>
   communities?: InputMaybe<PersonCommunitiesFieldInput>
   coreValues?: InputMaybe<PersonCoreValuesFieldInput>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
@@ -7594,6 +7771,7 @@ export type PersonCreatedByUpdateFieldInput = {
 }
 
 export type PersonDeleteInput = {
+  carePoints?: InputMaybe<Array<PersonCarePointsDeleteFieldInput>>
   communities?: InputMaybe<Array<PersonCommunitiesDeleteFieldInput>>
   coreValues?: InputMaybe<Array<PersonCoreValuesDeleteFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
@@ -7602,6 +7780,7 @@ export type PersonDeleteInput = {
 }
 
 export type PersonDisconnectInput = {
+  carePoints?: InputMaybe<Array<PersonCarePointsDisconnectFieldInput>>
   communities?: InputMaybe<Array<PersonCommunitiesDisconnectFieldInput>>
   coreValues?: InputMaybe<Array<PersonCoreValuesDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
@@ -8283,6 +8462,7 @@ export type PersonUpdateInput = {
   authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   careManual_SET?: InputMaybe<Scalars['String']['input']>
+  carePoints?: InputMaybe<Array<PersonCarePointsUpdateFieldInput>>
   communities?: InputMaybe<Array<PersonCommunitiesUpdateFieldInput>>
   coreValues?: InputMaybe<Array<PersonCoreValuesUpdateFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
@@ -8322,6 +8502,23 @@ export type PersonWhere = {
   careManual_EQ?: InputMaybe<Scalars['String']['input']>
   careManual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   careManual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  carePointsAggregate?: InputMaybe<PersonCarePointsAggregateInput>
+  /** Return People where all of the related PersonCarePointsConnections match this filter */
+  carePointsConnection_ALL?: InputMaybe<PersonCarePointsConnectionWhere>
+  /** Return People where none of the related PersonCarePointsConnections match this filter */
+  carePointsConnection_NONE?: InputMaybe<PersonCarePointsConnectionWhere>
+  /** Return People where one of the related PersonCarePointsConnections match this filter */
+  carePointsConnection_SINGLE?: InputMaybe<PersonCarePointsConnectionWhere>
+  /** Return People where some of the related PersonCarePointsConnections match this filter */
+  carePointsConnection_SOME?: InputMaybe<PersonCarePointsConnectionWhere>
+  /** Return People where all of the related CarePoints match this filter */
+  carePoints_ALL?: InputMaybe<CarePointWhere>
+  /** Return People where none of the related CarePoints match this filter */
+  carePoints_NONE?: InputMaybe<CarePointWhere>
+  /** Return People where one of the related CarePoints match this filter */
+  carePoints_SINGLE?: InputMaybe<CarePointWhere>
+  /** Return People where some of the related CarePoints match this filter */
+  carePoints_SOME?: InputMaybe<CarePointWhere>
   communitiesAggregate?: InputMaybe<PersonCommunitiesAggregateInput>
   /** Return People where all of the related PersonCommunitiesConnections match this filter */
   communitiesConnection_ALL?: InputMaybe<PersonCommunitiesConnectionWhere>
@@ -11069,6 +11266,14 @@ export type GetPersonQuery = {
     photo?: string | null
     phone?: string | null
     pronouns?: string | null
+    status?: string | null
+    avatar?: string | null
+    careManual?: string | null
+    favorites?: string | null
+    passions?: string | null
+    traits?: string | null
+    fieldsOfCare?: string | null
+    interests?: string | null
     location?: string | null
     createdAt: any
     connectedTo: Array<{
@@ -11092,6 +11297,11 @@ export type GetPersonQuery = {
       status: string
       createdAt: any
       description?: string | null
+    }>
+    carePoints: Array<{
+      __typename?: 'CarePoint'
+      id: string
+      description: string
     }>
     coreValues: Array<{
       __typename?: 'CoreValue'
@@ -14767,6 +14977,17 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'avatar' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'favorites' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldsOfCare' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'connectedTo' },
@@ -14815,6 +15036,20 @@ export const GetPersonDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'carePoints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },

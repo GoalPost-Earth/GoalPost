@@ -1,4 +1,4 @@
-import { HStack, Link, Stack, Text, VStack } from '@chakra-ui/react'
+import { Box, HStack, Link, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { Person } from '@/gql/graphql'
@@ -59,6 +59,7 @@ export function UserProfile({
           />
         </HStack>
       </Stack>
+
       <GenericTabs
         entityId={user.id}
         entityType={EntityEnum.Person}
