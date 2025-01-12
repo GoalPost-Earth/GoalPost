@@ -87,71 +87,81 @@ export default async function ViewPersonPage({
       width={'100%'}
       isolation={'isolate'}
     >
-      <ProfileBackground />
-      <UserProfile
-        user={person as Person}
-        tabTriggers={triggers}
-        tabContent={[
-          <UserInfo data={bioData} key="bio" />,
-          <>
-            {person.connectedTo.length > 0 ? (
-              <VStack
-                key="connections"
-                borderRadius="md"
-                border="1px"
-                borderColor="gray.200"
-                gap={2}
-                bg="gray.contrast"
-              >
-                {person.connectedTo.map((person) => (
-                  <ConnectionsInfo
-                    key={person.id}
-                    photo={person.photo ?? undefined}
-                    name={person.name}
-                    id={person.id}
-                  />
-                ))}
-              </VStack>
-            ) : null}
-          </>,
-          <VStack gap={4} key="communities">
-            {person.communities.map((community) => (
-              <CommunityCard
-                key={community.id}
-                community={community as Community}
-              />
-            ))}
-          </VStack>,
-        ]}
-      />
-      <HStack
-        float={'right'}
-        width={{ lg: 'calc(100% - 450px)', xl: 'calc(100% - 500px)' }}
-        display={{ base: 'none', lg: 'flex' }}
-        alignItems="flex-start"
-        gap={0}
-      >
-        <GenericTabs
-          entityId={id}
-          entityType={EntityEnum.Person}
-          entityName={person.name}
-          triggers={triggers}
-          content={[
-            <PersonAbout key="about" person={person as Person} />,
-            <PersonConnections key="connections" person={person as Person} />,
-            <PersonCommunities key="communities" person={person as Person} />,
-            <PersonResources key="resources" person={person as Person} />,
-            <PersonGoals key="goals" person={person as Person} />,
-            <PersonCarePoints key="carepoints" person={person as Person} />,
-            <PersonCoreValues key="corevalues" person={person as Person} />,
+      <>
+        <ProfileBackground />{' '}
+        <UserProfile
+          user={person as Person}
+          tabTriggers={triggers}
+          tabContent={[
+            <UserInfo data={bioData} key="bio" />,
+            <>
+              {person.connectedTo.length > 0 ? (
+                <VStack
+                  key="connections"
+                  borderRadius="md"
+                  border="1px"
+                  borderColor="gray.200"
+                  gap={2}
+                  bg="gray.contrast"
+                >
+                  {person.connectedTo.map((person) => (
+                    <ConnectionsInfo
+                      key={person.id}
+                      photo={person.photo ?? undefined}
+                      name={person.name}
+                      id={person.id}
+                    />
+                  ))}
+                </VStack>
+              ) : null}
+            </>,
+            <VStack gap={4} key="communities">
+              {person.communities.map((community) => (
+                <CommunityCard
+                  key={community.id}
+                  community={community as Community}
+                />
+              ))}
+            </VStack>,
           ]}
-          props={{
-            justifyContent: 'flex-start',
-            marginTop: '40px',
-            width: { lg: '80%', xl: '100%' },
-          }}
-        />
-      </HStack>
+        />{' '}
+        <HStack
+          float={'right'}
+          width={{ lg: 'calc(100% - 450px)', xl: 'calc(100% - 500px)' }}
+          display={{ base: 'none', lg: 'flex' }}
+          alignItems="flex-start"
+          gap={0}
+        >
+          <>
+            <GenericTabs
+              entityId={id}
+              entityType={EntityEnum.Person}
+              entityName={person.name}
+              triggers={triggers}
+              content={[
+                <PersonAbout key="about" person={person as Person} />,
+                <PersonConnections
+                  key="connections"
+                  person={person as Person}
+                />,
+                <PersonCommunities
+                  key="communities"
+                  person={person as Person}
+                />,
+                <PersonResources key="resources" person={person as Person} />,
+                <PersonGoals key="goals" person={person as Person} />,
+                <PersonCarePoints key="carepoints" person={person as Person} />,
+                <PersonCoreValues key="corevalues" person={person as Person} />,
+              ]}
+              props={{
+                justifyContent: 'flex-start',
+                marginTop: '40px',
+                width: { lg: '80%', xl: '100%' },
+              }}
+            />
+          </>
+        </HStack>
+      </>
     </Container>
   )
 }

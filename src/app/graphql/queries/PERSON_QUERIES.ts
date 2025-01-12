@@ -56,6 +56,7 @@ export const GET_PERSON = graphql(`
         id
         name
         members {
+          id
           photo
         }
         description

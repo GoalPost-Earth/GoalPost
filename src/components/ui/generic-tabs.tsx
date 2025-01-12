@@ -98,7 +98,7 @@ export const GenericTabs = ({
               />
             </Link>
           )}
-          {content[index] || <DefaultTabContent />}
+          <>{content[index] || <DefaultTabContent />}</>
         </Tabs.Content>
       ))}
     </Tabs.Root>

@@ -117,9 +117,9 @@ export default function PersonCommunities({ person }: { person: Person }) {
           {/* <DialogTrigger asChild> */}
           <HStack width="100%" justifyContent="space-between">
             <Spacer />
-            {person.connectedTo.length > 0 && (
+            {person.communities.length > 0 && (
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Add Connection
+                Update Communities
               </Button>
             )}
           </HStack>
@@ -154,13 +154,13 @@ export default function PersonCommunities({ person }: { person: Person }) {
           </form>
         </DialogRoot>
 
-        {person.connectedTo.length === 0 && (
+        {person.communities.length === 0 && (
           <EmptyState
             title="No Communities"
             description="Click here to add some"
           >
             <Button variant="surface" onClick={() => setOpen(true)}>
-              Add Communities
+              Add A Community
             </Button>
           </EmptyState>
         )}

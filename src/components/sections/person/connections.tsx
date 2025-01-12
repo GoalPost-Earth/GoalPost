@@ -121,14 +121,14 @@ export default function PersonConnections({ person }: { person: Person }) {
         >
           <DialogBackdrop />
           {/* <DialogTrigger asChild> */}
-          <HStack width="100%" justifyContent="space-between">
-            <Spacer />
-            {person.connectedTo.length > 0 && (
+          {person.connectedTo.length > 0 && (
+            <HStack width="100%" justifyContent="space-between">
+              <Spacer />
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Add Connection
+                Update Connections
               </Button>
-            )}
-          </HStack>
+            </HStack>
+          )}
           {/* </DialogTrigger> */}
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogContent ref={contentRef}>
@@ -166,7 +166,7 @@ export default function PersonConnections({ person }: { person: Person }) {
             description="Click here to add some"
           >
             <Button variant="surface" onClick={() => setOpen(true)}>
-              Add Connection
+              Add A Connection
             </Button>
           </EmptyState>
         )}

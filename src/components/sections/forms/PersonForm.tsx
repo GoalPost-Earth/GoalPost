@@ -9,29 +9,12 @@ import {
   Textarea,
 } from '../../react-hook-form'
 import { Button } from '../../ui'
-import {
-  Control,
-  FieldErrors,
-  FieldValues,
-  UseFormRegister,
-} from 'react-hook-form'
 import { CloudinaryPresets, FormMode } from '@/constants'
 import { useQuery } from '@apollo/client'
 import { GET_ALL_COMMUNITIES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components/layout'
-
-export interface PersonFormProps {
-  formMode: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setValue: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  register: UseFormRegister<any>
-  errors: FieldErrors<FieldValues>
-  isSubmitting: boolean
-  onSubmit: () => void
-}
+import { EntityFormProps } from '@/types'
+import { FieldValues, UseFormSetValue } from 'react-hook-form'
 
 const PersonForm = ({
   formMode,
@@ -41,7 +24,7 @@ const PersonForm = ({
   register,
   isSubmitting,
   onSubmit,
-}: PersonFormProps) => {
+}: EntityFormProps & { setValue: UseFormSetValue<FieldValues> }) => {
   const [isMember, setIsMember] = useState(control._formValues.community !== '')
   const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
 

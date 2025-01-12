@@ -3,8 +3,6 @@ import { Button, ButtonProps } from '../button'
 
 export function ConfirmButton({
   children,
-  loading,
-  onClick,
   ...rest
 }: { children?: ReactNode } & ButtonProps) {
   return (

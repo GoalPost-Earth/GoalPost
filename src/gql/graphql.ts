@@ -11753,7 +11753,11 @@ export type GetPersonQuery = {
       id: string
       name: string
       description?: string | null
-      members: Array<{ __typename?: 'Person'; photo?: string | null }>
+      members: Array<{
+        __typename?: 'Person'
+        id: string
+        photo?: string | null
+      }>
     }>
   }>
 }
@@ -15590,6 +15594,10 @@ export const GetPersonDocument = {
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
