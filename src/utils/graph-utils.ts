@@ -1,4 +1,4 @@
-import { Node } from '@xyflow/react'
+import * as d3 from 'd3-force'
 
 export function getRandomPosition() {
   const viewportHeight = window.innerHeight
@@ -8,37 +8,21 @@ export function getRandomPosition() {
   return { x, y }
 }
 
-export function calculateNodePositionsAsRings(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  collections: any,
-  radiusStep = 300,
-  centerX = 100,
-  centerY = 100
-) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodesWithPositions: any = []
-  let currentRadius = radiusStep
+export const createForceLayout = (
+  nodes: d3.SimulationNodeDatum[]
+): d3.SimulationNodeDatum[] => {
+  const simulation = d3
+    .forceSimulation(nodes)
+    .force('charge', d3.forceManyBody().strength(1000))
+    .force('center', d3.forceCenter(200, 200))
+    .force('collision', d3.forceCollide(80))
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  collections.forEach((collection: any) => {
-    const numberOfNodes = collection.length
-    const angleStep = (2 * Math.PI) / numberOfNodes
+  for (let i = 0; i < 300; i++) simulation.tick()
 
-    collection.forEach((node: Node, index: number) => {
-      const angle = index * angleStep + 10
-      const x = centerX + currentRadius * Math.cos(angle)
-      const y = centerY + currentRadius * Math.sin(angle)
-
-      nodesWithPositions.push({
-        ...node,
-        position: { x, y },
-      })
-    })
-
-    currentRadius += radiusStep / 2
-  })
-
-  return nodesWithPositions
+  return nodes.map((node) => ({
+    ...node,
+    position: { x: node.x ?? 0, y: node.y ?? 0 },
+  }))
 }
 
 export function formatDate(inputDate: string) {

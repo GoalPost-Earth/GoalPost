@@ -19,7 +19,7 @@ import '@xyflow/react/dist/style.css'
 
 import { useQuery } from '@apollo/client'
 import { ApolloWrapper } from '@/components'
-import { calculateNodePositionsAsRings, getRandomPosition } from '@/utils'
+import { createForceLayout, getRandomPosition } from '@/utils'
 import GraphNodes from '@/components/ui/graph-nodes'
 import { Stack } from '@chakra-ui/react'
 import {
@@ -31,6 +31,7 @@ import {
   GET_ALL_CAREPOINTS,
 } from '@/app/graphql'
 import GraphSideBar from '@/components/ui/graph-sidebar'
+import { SimulationNodeDatum } from 'd3'
 
 const initialEdges: Edge[] = []
 const initialSelectedNodeInfo: Node[] = []
@@ -72,7 +73,7 @@ const GraphVisualization = () => {
   const peopleNodes = useMemo(() => {
     return (
       people?.people.map((person) => ({
-        id: `${person.__typename}${person.id}`,
+        id: person.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -94,7 +95,7 @@ const GraphVisualization = () => {
   const coreValuesNodes = useMemo(() => {
     return (
       coreValues?.coreValues.map((coreValue) => ({
-        id: `${coreValue.__typename}${coreValue.id}`,
+        id: coreValue.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -115,7 +116,7 @@ const GraphVisualization = () => {
   const goalNodes = useMemo(() => {
     return (
       goals?.goals.map((goal) => ({
-        id: `${goal.__typename}${goal.id}`,
+        id: goal.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -136,7 +137,7 @@ const GraphVisualization = () => {
   const carePointsNodes = useMemo(() => {
     return (
       carePoints?.carePoints.map((carePoint, index) => ({
-        id: `${carePoint.__typename}${carePoint.id}`,
+        id: carePoint.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -156,7 +157,7 @@ const GraphVisualization = () => {
   const resourceNodes = useMemo(() => {
     return (
       resources?.resources.map((resource) => ({
-        id: `${resource.__typename}${resource.id}`,
+        id: resource.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -174,32 +175,10 @@ const GraphVisualization = () => {
     )
   }, [resources])
 
-  const memberNodes = useMemo(() => {
-    return (
-      members?.people.map((member) => ({
-        id: `${member.__typename}${member.id}`,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
-          nodeInfo: {
-            Entity: 'Person',
-            Name: member.name,
-            'First Name': member.firstName,
-            'Phone Number': member.phone,
-            Pronouns: member.pronouns,
-          },
-          label: `${member.firstName} ${member.lastName}`,
-          nodeName: member.__typename,
-          id: member.id,
-        },
-      })) ?? []
-    )
-  }, [members])
-
   const communityNodes = useMemo(() => {
     return (
       communities?.communities.map((community) => ({
-        id: `${community.__typename}${community.id}`,
+        id: community.id,
         position: getRandomPosition(),
         type: 'customNode',
         data: {
@@ -218,18 +197,16 @@ const GraphVisualization = () => {
   }, [communities])
 
   const graphNodes = useMemo(() => {
-    return calculateNodePositionsAsRings([
-      resourceNodes,
-      memberNodes,
-      peopleNodes,
-      coreValuesNodes,
-      goalNodes,
-      communityNodes,
-      carePointsNodes,
-    ])
+    return [
+      ...resourceNodes,
+      ...peopleNodes,
+      ...coreValuesNodes,
+      ...goalNodes,
+      ...communityNodes,
+      ...carePointsNodes,
+    ]
   }, [
     resourceNodes,
-    memberNodes,
     peopleNodes,
     coreValuesNodes,
     goalNodes,
@@ -244,15 +221,17 @@ const GraphVisualization = () => {
   const personToPersonConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo.map((connectedTo) => {
-          return {
-            id: `${person.__typename}${person.id}-${connectedTo.__typename}${connectedTo.id}`,
-            source: `${person.__typename}${person.id}`,
-            target: `${connectedTo.__typename}${connectedTo.id}`,
-            label: 'Connected To',
-            markerEnd: EdgeMarker,
-          }
-        })
+        return person.connectedTo
+          ? person.connectedTo.map((personConnectedTo) => {
+              return {
+                id: `${person.id}-${personConnectedTo.id}`,
+                source: person.id,
+                target: personConnectedTo.id,
+                label: 'Connected To',
+                markerEnd: EdgeMarker,
+              }
+            })
+          : []
       }) ?? []
     )
   }, [people])
@@ -260,20 +239,15 @@ const GraphVisualization = () => {
   const personToCommunityConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo.flatMap((connectedTo) => {
-          return (
-            connectedTo.communities &&
-            connectedTo.communities.map((community) => {
-              return {
-                id: `${person.__typename}${person.id}-${community.__typename}${community.id}`,
-                source: `${person.__typename}${person.id}`,
-                target: `${community.__typename}${community.id}`,
-                label: 'Belongs To',
-                markerEnd: EdgeMarker,
-              }
-            })
-          )
-        })
+        return person.communities
+          ? person.communities.map((community) => ({
+              id: `${person.id}-${community.id}`,
+              source: `${person.id}`,
+              target: `${community.id}`,
+              label: 'Belongs To',
+              markerEnd: EdgeMarker,
+            }))
+          : []
       }) ?? []
     )
   }, [people])
@@ -281,20 +255,15 @@ const GraphVisualization = () => {
   const personToGoalsConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo.flatMap((connectedTo) => {
-          return (
-            connectedTo.goals &&
-            connectedTo.goals.map((goal) => {
-              return {
-                id: `${person.__typename}${person.id}-${goal.__typename}${goal.id}`,
-                source: `${person.__typename}${person.id}`,
-                target: `${goal.__typename}${goal.id}`,
-                label: 'Motivated By',
-                markerEnd: EdgeMarker,
-              }
-            })
-          )
-        })
+        return person.goals
+          ? person.goals.map((goal) => ({
+              id: `${person.id}-${goal.id}`,
+              source: person.id,
+              target: goal.id,
+              label: 'Motivated By',
+              markerEnd: EdgeMarker,
+            }))
+          : []
       }) ?? []
     )
   }, [people])
@@ -302,20 +271,15 @@ const GraphVisualization = () => {
   const personToCoreValueConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo.flatMap((connectedTo) => {
-          return (
-            connectedTo.coreValues &&
-            connectedTo.coreValues.map((coreValue) => {
-              return {
-                id: `${person.__typename}${person.id}-${coreValue.__typename}${coreValue.id}`,
-                source: `${person.__typename}${person.id}`,
-                target: `${coreValue.__typename}${coreValue.id}`,
-                label: 'Guided By',
-                markerEnd: EdgeMarker,
-              }
-            })
-          )
-        })
+        return person.coreValues
+          ? person.coreValues.map((coreValue) => ({
+              id: `${person.id}-${coreValue.id}`,
+              source: person.id,
+              target: coreValue.id,
+              label: 'Guided By',
+              markerEnd: EdgeMarker,
+            }))
+          : []
       }) ?? []
     )
   }, [people])
@@ -323,60 +287,31 @@ const GraphVisualization = () => {
   const personToResourceConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo.flatMap((connectedTo) => {
-          return (
-            connectedTo.providesResources &&
-            connectedTo.providesResources.map((resource) => {
-              return {
-                id: `${person.__typename}${person.id}-${resource.__typename}${resource.id}`,
-                source: `${person.__typename}${person.id}`,
-                target: `${resource.__typename}${resource.id}`,
-                label: 'Provides',
-                markerEnd: EdgeMarker,
-              }
-            })
-          )
-        })
+        return person.providesResources
+          ? person.providesResources.map((resource) => ({
+              id: `${person.id}-${resource.id}`,
+              source: person.id,
+              target: resource.id,
+              label: 'Provides',
+              markerEnd: EdgeMarker,
+            }))
+          : []
       }) ?? []
     )
   }, [people])
 
-  const goalToCoreValueConnection = useMemo(() => {
-    return (
-      coreValues?.coreValues.flatMap((coreValue) => {
-        return coreValue.isEmbracedBy.flatMap((isEmbracedBy) => {
-          return (
-            isEmbracedBy.goals &&
-            isEmbracedBy.goals.map((goal) => {
-              return {
-                id: `${goal.__typename}${goal.id}-${coreValue.__typename}${coreValue.id}`,
-                source: `${goal.__typename}${goal.id}`,
-                target: `${coreValue.__typename}${coreValue.id}`,
-                label: 'Guided By',
-                markerEnd: EdgeMarker,
-              }
-            })
-          )
-        })
-      }) ?? []
-    )
-  }, [coreValues])
-
   const goalToCarePointConnection = useMemo(() => {
     return (
       carePoints?.carePoints.flatMap((carePoint) => {
-        return (
-          carePoint.enabledByGoals &&
-          carePoint.enabledByGoals.map((goal) => {
-            return {
-              id: `${goal.__typename}${goal.id}-${carePoint.__typename}${carePoint.id}`,
-              source: `${goal.__typename}${goal.id}`,
-              target: `${carePoint.__typename}${carePoint.id}`,
+        return carePoint.enabledByGoals
+          ? carePoint.enabledByGoals.map((goal) => ({
+              id: `${goal.id}-${carePoint.id}`,
+              source: goal.id,
+              target: carePoint.id,
               label: 'Enables Care',
               markerEnd: EdgeMarker,
-            }
-          })
-        )
+            }))
+          : []
       }) ?? []
     )
   }, [carePoints])
@@ -384,18 +319,15 @@ const GraphVisualization = () => {
   const communityToCommunityConnection = useMemo(() => {
     return (
       communities?.communities.flatMap((community) => {
-        return (
-          community.relatedCommunities &&
-          community.relatedCommunities.flatMap((relatedCommunity) => {
-            return {
-              id: `${community.__typename}${community.id}-${relatedCommunity.__typename}${relatedCommunity.id}`,
-              source: `${community.__typename}${community.id}`,
-              target: `${relatedCommunity.__typename}${relatedCommunity.id}`,
+        return community.relatedCommunities
+          ? community.relatedCommunities.map((relatedCommunity) => ({
+              id: `${community.id}-${relatedCommunity.id}`,
+              source: community.id,
+              target: relatedCommunity.id,
               label: 'Relate To',
               markerEnd: EdgeMarker,
-            }
-          })
-        )
+            }))
+          : []
       }) ?? []
     )
   }, [communities])
@@ -423,18 +355,29 @@ const GraphVisualization = () => {
 
   useEffect(() => {
     if (people && coreValues && goals && resources && members && communities) {
-      const newNodes = [...selectedNodes]
-      setNodes(newNodes)
-      setEdges([
-        ...personToPersonConnection,
-        ...personToCommunityConnection,
-        ...personToGoalsConnection,
-        ...personToCoreValueConnection,
-        ...personToResourceConnection,
-        ...goalToCoreValueConnection,
-        ...goalToCarePointConnection,
-        ...communityToCommunityConnection,
-      ])
+      const simulationNodes: SimulationNodeDatum[] = selectedNodes.map(
+        (node) => ({
+          ...node,
+          x: node.position.x || 0,
+          y: node.position.y || 0,
+          vx: 0,
+          vy: 0,
+        })
+      )
+
+      const newNodes = createForceLayout(simulationNodes)
+      setNodes(newNodes as Node[])
+      setEdges(
+        [
+          ...personToPersonConnection,
+          ...personToCommunityConnection,
+          ...personToGoalsConnection,
+          ...personToCoreValueConnection,
+          ...personToResourceConnection,
+          ...goalToCarePointConnection,
+          ...communityToCommunityConnection,
+        ].flatMap((edge) => (edge ? [edge] : []))
+      )
     }
   }, [
     selectedNodes,
