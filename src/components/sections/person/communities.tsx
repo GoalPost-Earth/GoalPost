@@ -160,8 +160,8 @@ export default function PersonCommunities({ person }: { person: Person }) {
                 },
                 update: {
                   edge: {
-                    totem: data.totem,
-                    signupDate: data.signupDate,
+                    totem_SET: data.totem,
+                    signupDate_SET: data.signupDate,
                   },
                 },
               },
