@@ -2,14 +2,13 @@ import { Box, HStack, Link, Stack, Text, VStack } from '@chakra-ui/react'
 import { Avatar } from './avatar'
 import { GenericTabs } from './generic-tabs'
 import { Person } from '@/gql/graphql'
-import { EntityEnum, TriggerValues } from '@/constants'
+import { EntityEnum, TRIGGERS, TriggerValues } from '@/constants'
 import { DeleteButton, EditButton } from './buttons'
 
 interface UserProfileProps {
   user: Person
   tabTriggers: TriggerValues[]
   tabContent: React.ReactNode[]
-  tabProps?: Record<string, any>
 }
 
 export function UserProfile({
@@ -64,6 +63,7 @@ export function UserProfile({
           entityId={user.id}
           entityType={EntityEnum.Person}
           entityName={user.name}
+          removeTriggers
           triggers={tabTriggers}
           content={tabContent}
         />

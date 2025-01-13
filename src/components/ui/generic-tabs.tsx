@@ -11,6 +11,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 interface GenericTabsProps {
   triggers: TriggerValues[]
+  removeTriggers?: boolean
   content: React.ReactNode[]
   entityId: string
   entityType: EntityEnum
@@ -30,6 +31,7 @@ const parseEditLink = (trigger: TriggerValues, entityId: string) => {
 
 export const GenericTabs = ({
   triggers,
+  removeTriggers = false,
   content,
   entityId,
   entityType,
@@ -40,12 +42,29 @@ export const GenericTabs = ({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TriggerValues>(
-    (searchParams?.get('tab') as TriggerValues) || triggers[0]
+    removeTriggers
+      ? triggers[0]
+      : (searchParams?.get('tab') as TriggerValues) || triggers[0]
   )
 
   useEffect(() => {
     router.replace(`${pathname}?tab=${activeTab}`, { scroll: false })
   }, [activeTab, router])
+
+  useEffect(() => {
+    function handleSetTab() {
+      if (removeTriggers && window.innerWidth > 1023) {
+        setActiveTab(triggers[0])
+      } else {
+        setActiveTab((searchParams?.get('tab') as TriggerValues) || triggers[0])
+      }
+    }
+
+    handleSetTab()
+    window.addEventListener('resize', handleSetTab)
+
+    return () => window.removeEventListener('resize', handleSetTab)
+  }, [])
 
   return (
     <Tabs.Root
@@ -63,7 +82,13 @@ export const GenericTabs = ({
       mt={2}
     >
       <>
-        <Tabs.List mt={2} display="flex" gap={2} overflowX="auto" {...props}>
+        <Tabs.List
+          mt={2}
+          display={removeTriggers ? { base: 'flex', lg: 'none' } : 'flex'}
+          gap={2}
+          overflowX="auto"
+          {...props}
+        >
           {triggers.map((trigger, index) => (
             <Tabs.Trigger
               asChild
