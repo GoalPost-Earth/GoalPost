@@ -1,27 +1,38 @@
 'use client'
 
 import { CREATE_RESOURCE_MUTATION } from '@/app/graphql/mutations/RESOURCE_MUTATIONS'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { FormMode } from '@/constants'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { ResourceForm } from '@/components'
+import { useApp } from '@/app/contexts'
+import { ResourceFormData, resourceSchema } from '@/app/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function CreateResource() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const personId = searchParams?.get('personId')
+  const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
+  const { user } = useApp()
+
   const {
     control,
     handleSubmit,
+    register,
     formState: { isSubmitting, errors },
-  } = useForm()
-  const router = useRouter()
-  const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
-  const { user } = useUser()
+  } = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
+    defaultValues: {
+      providedByPerson: personId ?? undefined,
+    },
+  })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ResourceFormData) => {
+    const { providedByPerson } = data
     try {
       const res = await CreateResources({
         variables: {
@@ -31,9 +42,13 @@ function CreateResource() {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
             providedByPerson: {
-              connect: {
-                where: { node: { authId_EQ: user?.sub ?? null } },
-              },
+              connect: [
+                {
+                  where: {
+                    node: { id_EQ: providedByPerson ?? (user?.id || '') },
+                  },
+                },
+              ],
             },
           },
         },
@@ -51,6 +66,7 @@ function CreateResource() {
         formMode={FormMode.Create}
         control={control}
         errors={errors}
+        register={register}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
       />

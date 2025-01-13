@@ -1,31 +1,116 @@
-import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
-import React from 'react'
-import { ImageUpload, Input } from '../../react-hook-form'
-import { Button } from '../../ui'
-import { Control, FieldErrors, FieldValues } from 'react-hook-form'
-import { CloudinaryPresets } from '@/constants'
+'use client'
 
-export interface PersonFormProps {
-  formMode: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setValue: any
-  errors: FieldErrors<FieldValues>
-  isSubmitting: boolean
-  onSubmit: () => void
-}
+import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
+import React, { useState } from 'react'
+import {
+  ImageUpload,
+  Input,
+  NativeSelect,
+  Textarea,
+} from '../../react-hook-form'
+import { Button } from '../../ui'
+import { CloudinaryPresets, FormMode } from '@/constants'
+import { useQuery } from '@apollo/client'
+import { GET_ALL_COMMUNITIES } from '@/app/graphql'
+import { ApolloWrapper } from '@/components/layout'
+import { EntityFormProps } from '@/types'
+import { UseFormSetValue } from 'react-hook-form'
+import { PersonFormData } from '@/app/schema'
 
 const PersonForm = ({
   formMode,
   control,
   errors,
   setValue,
+  register,
   isSubmitting,
   onSubmit,
-}: PersonFormProps) => {
+}: EntityFormProps & { setValue: UseFormSetValue<PersonFormData> }) => {
+  const [isMember, setIsMember] = useState(control._formValues.community !== '')
+  const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
+
+  const communities = data?.communities
+
+  const communityOptions =
+    communities?.map((community) => ({
+      value: community.id,
+      label: community.name,
+    })) ?? []
+  communityOptions?.unshift({ value: '', label: 'None' })
+  communityOptions?.unshift({ value: '', label: 'Select a Community' })
+
+  const formFields = [
+    { name: 'firstName', label: 'First Name', required: true, type: Input },
+    { name: 'lastName', label: 'Last Name', required: true, type: Input },
+    { name: 'email', label: 'Email', required: true, type: Input },
+    { name: 'phone', label: 'Phone Number', type: Input },
+    { name: 'pronouns', label: 'Pronouns', type: Input },
+    { name: 'location', label: 'Location', type: Input },
+  ]
+
+  const memberFormFields = [
+    {
+      name: 'status',
+      label: 'Status',
+      type: NativeSelect,
+      options: [
+        { value: 'Active', label: 'Active' },
+        { value: 'Inactive', label: 'Inactive' },
+      ],
+    },
+    {
+      name: 'avatar',
+      label: 'Avatar',
+      type: Input,
+    },
+    {
+      name: 'signupDate',
+      label: 'Signup Date',
+      type: Input,
+      inputType: 'date',
+    } as const,
+    {
+      name: 'careManual',
+      label: 'Care Manual (Paste a link here)',
+      type: Input,
+    },
+    {
+      name: 'favorites',
+      label: 'Favorites',
+      type: Textarea,
+    },
+    {
+      name: 'passions',
+      label: 'Passions',
+      type: Textarea,
+    },
+    {
+      name: 'traits',
+      label: 'Traits',
+      type: Textarea,
+    },
+    {
+      name: 'fieldsOfCare',
+      label: 'Fields of Care',
+      type: Textarea,
+    },
+    {
+      name: 'interests',
+      label: 'Interests',
+      type: Textarea,
+    },
+  ]
+
+  // Remove the form field named signupDate if FormMode is not Create
+  if (formMode === FormMode.Update) {
+    memberFormFields.splice(
+      memberFormFields.findIndex((field) => field.name === 'signupDate'),
+      1
+    )
+  }
+
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <Heading>{formMode} Person</Heading>
       <form onSubmit={onSubmit} noValidate>
         <Center pt={2}>
@@ -38,58 +123,52 @@ const PersonForm = ({
           />
         </Center>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-          <GridItem>
-            <Input
-              label="First Name"
-              name="firstName"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Last Name"
-              name="lastName"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Email"
-              name="email"
-              control={control}
-              errors={errors}
-              required
-            />
-          </GridItem>
+          {formFields.map((field) => (
+            <GridItem key={field.name}>
+              <field.type
+                label={field.label}
+                name={field.name}
+                control={control}
+                errors={errors}
+                required={field.required}
+              />
+            </GridItem>
+          ))}
 
-          <GridItem>
-            <Input
-              label="Phone Number"
-              name="phone"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Pronouns"
-              name="pronouns"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
-          <GridItem>
-            <Input
-              label="Location"
-              name="location"
-              control={control}
-              errors={errors}
-            />
-          </GridItem>
+          {formMode === FormMode.Create && (
+            <GridItem>
+              <NativeSelect
+                label="Community"
+                name="community"
+                errors={errors}
+                register={register}
+                onChange={(e) => {
+                  if ((e.target as HTMLSelectElement).value === '') {
+                    setIsMember(false)
+                  } else setIsMember(true)
+                }}
+                options={communityOptions}
+              />
+            </GridItem>
+          )}
+
+          {isMember && (
+            <>
+              {memberFormFields.map((field) => (
+                <GridItem key={field.name}>
+                  <field.type
+                    label={field.label}
+                    name={field.name}
+                    control={control}
+                    errors={errors}
+                    register={register}
+                    options={field.options ?? []}
+                    type={field.inputType}
+                  />
+                </GridItem>
+              ))}
+            </>
+          )}
         </Grid>
         <Box my={5}>
           <hr />
@@ -100,7 +179,7 @@ const PersonForm = ({
           </Button>
         </Center>
       </form>
-    </>
+    </ApolloWrapper>
   )
 }
 

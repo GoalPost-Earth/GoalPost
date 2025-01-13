@@ -35,6 +35,29 @@ export const UPDATE_PERSON_MUTATION = graphql(`
         photo
         location
         pronouns
+
+        connectedTo {
+          id
+          name
+          photo
+        }
+
+        communities {
+          id
+          name
+          description
+          members {
+            id
+            name
+            photo
+          }
+        }
+
+        coreValues {
+          id
+          name
+          description
+        }
       }
     }
   }

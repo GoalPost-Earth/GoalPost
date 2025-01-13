@@ -1,6 +1,6 @@
 import { Icon, IconProps } from '@chakra-ui/react'
 
-const HomeIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
+const HomeIcon = ({ color = '', ...rest }: IconProps) => (
   <Icon color={color} width="24px" height="22px" {...rest}>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 22">
       <path

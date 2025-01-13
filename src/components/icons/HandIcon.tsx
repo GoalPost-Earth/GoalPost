@@ -1,7 +1,7 @@
 import { Icon, IconProps } from '@chakra-ui/react'
 import * as React from 'react'
 
-const HandIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
+const HandIcon = ({ color = '', ...rest }: IconProps) => (
   <Icon color={color} width={85} height={105} {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"

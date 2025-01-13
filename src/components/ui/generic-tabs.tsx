@@ -1,17 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Box, Spacer, Tabs } from '@chakra-ui/react'
+import { Spacer, Tabs } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
 import Link from 'next/link'
-import { EditButton } from './edit-button'
-import { DeleteButton } from './delete-button'
-import {
-  EditRouteValues,
-  EntityEnum,
-  TRIGGER_TO_ROUTE_MAP,
-  TriggerValues,
-} from '@/constants'
+import { EditButton } from './buttons/edit-button'
+import { EntityEnum, TRIGGER_TO_ROUTE_MAP, TriggerValues } from '@/constants'
+import { Button } from './button'
 
 interface GenericTabsProps {
   triggers: TriggerValues[]
@@ -61,6 +56,7 @@ export const GenericTabs = ({
         <Tabs.List mt={2} display="flex" gap={2} overflowX="auto" {...props}>
           {triggers.map((trigger, index) => (
             <Tabs.Trigger
+              asChild
               key={`${trigger}-${index}`}
               value={trigger}
               fontSize="xs"
@@ -68,26 +64,17 @@ export const GenericTabs = ({
               justifyContent="center"
               borderRadius="full"
               minWidth="fit-content"
-              bg={activeTab !== trigger ? 'gray.100' : 'brand.200'}
             >
-              {trigger}
+              <Button
+                colorPalette={activeTab !== trigger ? 'gray' : 'brandIcons'}
+                color={activeTab !== trigger ? 'gray.fg' : 'brand.fg'}
+                variant="surface"
+              >
+                {trigger}
+              </Button>
             </Tabs.Trigger>
           ))}
           <Spacer />
-
-          <Tabs.Trigger
-            display={{ base: 'none', lg: 'block' }}
-            value="delete"
-            asChild
-          >
-            <Box>
-              <DeleteButton
-                entityId={entityId}
-                entityType={entityType}
-                entityName={entityName}
-              />
-            </Box>
-          </Tabs.Trigger>
         </Tabs.List>
       </>
 
@@ -111,7 +98,7 @@ export const GenericTabs = ({
               />
             </Link>
           )}
-          {content[index] || <DefaultTabContent />}
+          <>{content[index] || <DefaultTabContent />}</>
         </Tabs.Content>
       ))}
     </Tabs.Root>

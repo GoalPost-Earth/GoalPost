@@ -40,10 +40,10 @@ export function LogoutSection({
         px={3}
         alignItems="center"
       >
-        <LogoutIcon width="16px" height="16px" />
+        <LogoutIcon width="16px" height="16px" color="brandIcons" />
         <Text
           fontSize="sm"
-          color="#C05621"
+          color="brandIcons"
           display={extendable && !isExtended ? 'none' : 'block'}
         >
           Sign Out

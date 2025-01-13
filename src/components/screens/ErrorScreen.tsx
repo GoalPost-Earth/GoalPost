@@ -44,7 +44,7 @@ const ErrorScreen = ({ error }: ErrorScreenProps) => {
 
   return (
     <Center height="100vh">
-      <Container textAlign="center">
+      <Container textAlign="center" maxWidth="container.sm">
         <Text marginBottom={6}>There seems to be an error loading data</Text>
         <Card.Root>
           <CardHeader paddingY={4}>

@@ -1,0 +1,53 @@
+'use client'
+
+import { Button, EmptyState, ResourceCard } from '@/components/ui'
+import { Person, Resource } from '@/gql/graphql'
+import { Grid, GridItem, HStack, Link, Spacer, VStack } from '@chakra-ui/react'
+import React from 'react'
+
+export default function PersonResources({ person }: { person: Person }) {
+  return (
+    <VStack
+      key="Resources"
+      p={4}
+      gap={4}
+      bg={'gray.contrast'}
+      borderRadius={'2xl'}
+      boxShadow={'xs'}
+      alignItems={'flex-start'}
+    >
+      {person.providesResources.length > 0 && (
+        <HStack width="100%" justifyContent="space-between">
+          <Spacer />
+          <Link href={`/resource/create?personId=${person.id}`}>
+            <Button size="sm" variant="surface">
+              Add A Resource
+            </Button>
+          </Link>
+        </HStack>
+      )}
+      {person.providesResources.length === 0 && (
+        <EmptyState title="No Resources" description="Click here to add some">
+          <Link href={`/resource/create?personId=${person.id}`}>
+            <Button variant="surface">Add A Resource</Button>
+          </Link>
+        </EmptyState>
+      )}
+
+      <Grid
+        key="resources"
+        templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+        gap={6}
+        width="100%"
+      >
+        {person.providesResources.map((resource) => (
+          <GridItem key={resource.id}>
+            <ResourceCard
+              resource={{ ...resource, providedByPerson: [person] } as Resource}
+            />
+          </GridItem>
+        ))}
+      </Grid>
+    </VStack>
+  )
+}

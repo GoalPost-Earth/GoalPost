@@ -85,14 +85,14 @@ const ImageUpload = (props: ImageUploadProps) => {
         <Fieldset.Legend textAlign="center">{label}</Fieldset.Legend>
       ) : null}
 
-      <Container padding={0} width="350px" height="350px" marginBottom={4}>
+      <Container padding={0} width="150px" height="150px" marginBottom={4}>
         <Center height="100%">
           {props.loading || loading ? (
             <Spinner data-testid="loading-spinner" color="grey" />
           ) : (
             <Image
-              width={350}
-              height={350}
+              width={150}
+              height={150}
               objectFit="cover"
               data-testid="image-loaded"
               src={image || initialValue}

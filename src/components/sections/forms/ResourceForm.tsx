@@ -1,28 +1,34 @@
+'use client'
+
 import { Box, Center, Grid, GridItem, Heading } from '@chakra-ui/react'
 import React from 'react'
-import { Input, Select, Textarea } from '../../react-hook-form'
+import { Input, NativeSelect, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
-import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
-
-export interface ResourceFormProps {
-  formMode: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>
-  errors: FieldErrors<FieldValues>
-  isSubmitting: boolean
-  onSubmit: () => void
-}
+import { GET_ALL_PEOPLE } from '@/app/graphql'
+import { useQuery } from '@apollo/client'
+import { ApolloWrapper } from '@/components/layout'
+import { EntityFormProps } from '@/types'
 
 const ResourceForm = ({
   formMode,
   control,
   errors,
   isSubmitting,
+  register,
   onSubmit,
-}: ResourceFormProps) => {
+}: EntityFormProps) => {
+  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
+  const people = data?.people
+
+  const peopleOptions =
+    people?.map((person) => ({
+      value: person.id,
+      label: person.name,
+    })) ?? []
+
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <Heading>{formMode} Resource</Heading>
       <form onSubmit={onSubmit} noValidate>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
@@ -44,10 +50,10 @@ const ResourceForm = ({
             />
           </GridItem>
           <GridItem>
-            <Select
+            <NativeSelect
               label="Status"
               name="status"
-              control={control}
+              register={register}
               errors={errors}
               options={STATUS_SELECT_OPTIONS}
             />
@@ -66,6 +72,15 @@ const ResourceForm = ({
           <GridItem>
             <Input label="Time" name="time" control={control} errors={errors} />
           </GridItem>
+          <GridItem>
+            <NativeSelect
+              register={register}
+              errors={errors}
+              label="Provided By"
+              name="providedByPerson"
+              options={peopleOptions}
+            />
+          </GridItem>
         </Grid>
 
         <Box my={5}>
@@ -77,7 +92,7 @@ const ResourceForm = ({
           </Button>
         </Center>
       </form>
-    </>
+    </ApolloWrapper>
   )
 }
 

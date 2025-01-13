@@ -62,7 +62,7 @@ export default function GoalCoreValues({
     try {
       // Find coreValues to delete and connect
       const coreValues = goal.coreValues?.map((coreValue) => coreValue.id) ?? []
-      const toDelete = coreValues.filter(
+      const toDisconnect = coreValues.filter(
         (coreValue) => !data.corevalues.includes(coreValue)
       )
       const toConnect = data.corevalues.filter(
@@ -76,7 +76,7 @@ export default function GoalCoreValues({
             coreValues: [
               {
                 connect: [{ where: { node: { id_IN: toConnect } } }],
-                disconnect: [{ where: { node: { id_IN: toDelete } } }],
+                disconnect: [{ where: { node: { id_IN: toDisconnect } } }],
               },
             ],
           },

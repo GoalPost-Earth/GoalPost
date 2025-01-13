@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Control, FieldErrors } from 'react-hook-form'
+import {
+  Control,
+  FieldErrors,
+  FieldValues,
+  UseFormRegister,
+  UseFormSetValue,
+} from 'react-hook-form'
 
 export type SelectOptions = {
   label: string
@@ -14,4 +20,17 @@ export interface ReactHookFormComponentProps {
   options?: SelectOptions
   control: Control<any>
   errors: FieldErrors<any>
+}
+
+export interface EntityFormProps {
+  formMode: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue?: UseFormSetValue<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
+  errors: FieldErrors<FieldValues>
+  isSubmitting: boolean
+  onSubmit: () => void
 }

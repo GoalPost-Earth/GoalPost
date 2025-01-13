@@ -12,14 +12,19 @@ import { useForm } from 'react-hook-form'
 import { PersonForm } from '@/components'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { FormMode } from '@/constants'
+import { PersonFormData, personSchema } from '@/app/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function CreatePerson() {
   const {
     control,
     handleSubmit,
+    register,
     setValue,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<PersonFormData>({
+    resolver: zodResolver(personSchema),
+  })
   const { user } = useUser()
   const router = useRouter()
 
@@ -28,11 +33,20 @@ function CreatePerson() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
+    const { signupDate, community, ...rest } = data
     try {
       const res = await CreatePeople({
         variables: {
           input: {
-            ...data,
+            ...rest,
+            communities: {
+              connect: [
+                {
+                  where: { node: { id_EQ: community } },
+                  edge: { signupDate },
+                },
+              ],
+            },
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
@@ -62,6 +76,7 @@ function CreatePerson() {
         formMode={FormMode.Create}
         control={control}
         errors={errors}
+        register={register}
         setValue={setValue}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}

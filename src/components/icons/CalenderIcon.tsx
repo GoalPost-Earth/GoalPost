@@ -1,7 +1,7 @@
 import { Icon, IconProps } from '@chakra-ui/react'
 import * as React from 'react'
 
-const CalenderIcon = ({ color = 'brandIcons', ...rest }: IconProps) => (
+const CalenderIcon = ({ color = '', ...rest }: IconProps) => (
   <Icon color={color} {...rest}>
     <svg
       xmlns="http://www.w3.org/2000/svg"

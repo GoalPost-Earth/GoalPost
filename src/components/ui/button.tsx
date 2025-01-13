@@ -22,7 +22,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <ChakraButton
         colorPalette="brand"
-        // color="white"
         borderRadius={10}
         size="lg"
         disabled={loading || disabled}

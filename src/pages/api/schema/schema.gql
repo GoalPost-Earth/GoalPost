@@ -40,7 +40,15 @@ type Person implements PersonInterface @node {
       """
       columnName: "other"
     )
+  connections: [Person!]!
+    @relationship(
+      type: "CONNECTED_TO"
+      direction: OUT
+      queryDirection: UNDIRECTED
+    )
 
+  status: String
+  careManual: String
   avatar: String
   favorites: String
   passions: String
@@ -49,6 +57,19 @@ type Person implements PersonInterface @node {
   interests: String
 
   coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
+  carePoints: [CarePoint!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:MOTIVATED_BY]->(:Goal)-[:ENABLED_BY|CARES_FOR]-(goalCarePoints:CarePoint)
+      WITH goalCarePoints AS carePoint
+      RETURN DISTINCT carePoint
+      UNION
+      MATCH (this)-[:PROVIDES]->(resource:Resource)-[:APPLIED_IN]->(resourceCarePoint:CarePoint)
+      WITH resourceCarePoint AS carePoint
+      RETURN DISTINCT carePoint
+      """
+      columnName: "carePoint"
+    )
   goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
   providesResources: [Resource!]!
     @relationship(type: "PROVIDES", direction: OUT)
@@ -138,7 +159,7 @@ type Goal @node {
   successMeasures: String
   photo: String
   activities: String
-  status: String!
+  status: String
   why: String
   location: String
   time: String
@@ -164,7 +185,7 @@ type Resource @node {
   id: ID! @id
   name: String!
   description: String
-  status: String!
+  status: String
   why: String
   location: String
   time: String
