@@ -86,6 +86,7 @@ type Person implements PersonInterface @node {
 }
 
 type BelongsTo @relationshipProperties {
+  totem: String
   signupDate: Date
 }
 

@@ -52,14 +52,27 @@ export const GET_PERSON = graphql(`
       }
       location
       createdAt
-      communities {
-        id
-        name
-        members {
-          id
-          photo
+
+      communitiesConnection {
+        edges {
+          node {
+            id
+            name
+            description
+            members(limit: 3) {
+              id
+              photo
+            }
+            membersAggregate {
+              count
+            }
+            description
+          }
+          properties {
+            totem
+            signupDate
+          }
         }
-        description
       }
     }
   }

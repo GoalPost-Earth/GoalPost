@@ -6,14 +6,17 @@ import { Button, ButtonProps } from '../button'
 
 export function EditButton({
   text,
+  iconOnly,
   ...props
-}: { text?: string } & ButtonProps) {
+}: { text?: string; iconOnly?: boolean } & ButtonProps) {
   return (
     <Button variant="surface" paddingX={2} height="fit-content" {...props}>
       <EditIcon m={1} color="" />
-      <Text fontSize={'sm'} display={{ base: 'none', lg: 'block' }}>
-        {text ?? 'Edit'}
-      </Text>
+      {!iconOnly && (
+        <Text fontSize={'sm'} display={{ base: 'none', lg: 'block' }}>
+          {text ?? 'Edit'}
+        </Text>
+      )}
     </Button>
   )
 }

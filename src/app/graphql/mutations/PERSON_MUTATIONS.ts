@@ -30,33 +30,72 @@ export const UPDATE_PERSON_MUTATION = graphql(`
         id
         firstName
         lastName
+        name
         email
-        phone
         photo
-        location
+        phone
         pronouns
+
+        status
+        avatar
+        careManual
+        favorites
+        passions
+        traits
+        fieldsOfCare
+        interests
 
         connectedTo {
           id
           name
           photo
         }
-
-        communities {
+        providesResources {
           id
           name
           description
-          members {
-            id
-            name
-            photo
-          }
+          status
         }
-
+        goals {
+          id
+          name
+          photo
+          status
+          createdAt
+          description
+        }
+        carePoints {
+          id
+          # name
+          description
+        }
         coreValues {
           id
           name
           description
+        }
+        location
+        createdAt
+
+        communitiesConnection {
+          edges {
+            node {
+              id
+              name
+              members(limit: 3) {
+                id
+                photo
+              }
+              membersAggregate {
+                count
+              }
+              description
+            }
+            properties {
+              totem
+              signupDate
+            }
+          }
         }
       }
     }

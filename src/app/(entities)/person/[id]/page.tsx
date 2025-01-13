@@ -42,7 +42,7 @@ export default async function ViewPersonPage({
     throw new Error('Person not found')
   }
 
-  const isMember = person?.communities.length > 0
+  const isMember = person?.communitiesConnection.edges.length > 0
 
   const bioData = [
     {
@@ -116,10 +116,10 @@ export default async function ViewPersonPage({
               ) : null}
             </>,
             <VStack gap={4} key="communities">
-              {person.communities.map((community) => (
+              {person.communitiesConnection.edges.map((edge) => (
                 <CommunityCard
-                  key={community.id}
-                  community={community as Community}
+                  key={edge.node.id}
+                  community={edge.node as Community}
                 />
               ))}
             </VStack>,

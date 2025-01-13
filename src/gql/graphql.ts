@@ -40,18 +40,43 @@ export type Scalars = {
 export type BelongsTo = {
   __typename?: 'BelongsTo'
   signupDate?: Maybe<Scalars['Date']['output']>
+  totem?: Maybe<Scalars['String']['output']>
+}
+
+export type BelongsToAggregationWhereInput = {
+  AND?: InputMaybe<Array<BelongsToAggregationWhereInput>>
+  NOT?: InputMaybe<BelongsToAggregationWhereInput>
+  OR?: InputMaybe<Array<BelongsToAggregationWhereInput>>
+  totem_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  totem_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  totem_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  totem_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  totem_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  totem_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  totem_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  totem_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  totem_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  totem_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  totem_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  totem_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  totem_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  totem_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  totem_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type BelongsToCreateInput = {
   signupDate?: InputMaybe<Scalars['Date']['input']>
+  totem?: InputMaybe<Scalars['String']['input']>
 }
 
 export type BelongsToSort = {
   signupDate?: InputMaybe<SortDirection>
+  totem?: InputMaybe<SortDirection>
 }
 
 export type BelongsToUpdateInput = {
   signupDate_SET?: InputMaybe<Scalars['Date']['input']>
+  totem_SET?: InputMaybe<Scalars['String']['input']>
 }
 
 export type BelongsToWhere = {
@@ -64,6 +89,11 @@ export type BelongsToWhere = {
   signupDate_IN?: InputMaybe<Array<InputMaybe<Scalars['Date']['input']>>>
   signupDate_LT?: InputMaybe<Scalars['Date']['input']>
   signupDate_LTE?: InputMaybe<Scalars['Date']['input']>
+  totem_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  totem_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  totem_EQ?: InputMaybe<Scalars['String']['input']>
+  totem_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  totem_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
 export type CarePoint = {
@@ -6759,6 +6789,7 @@ export type PersonCommunitiesAggregateInput = {
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
+  edge?: InputMaybe<BelongsToAggregationWhereInput>
   node?: InputMaybe<PersonCommunitiesNodeAggregationWhereInput>
 }
 
@@ -6988,7 +7019,13 @@ export type PersonCommunitiesUpdateFieldInput = {
 export type PersonCommunityCommunitiesAggregationSelection = {
   __typename?: 'PersonCommunityCommunitiesAggregationSelection'
   count: Scalars['Int']['output']
+  edge?: Maybe<PersonCommunityCommunitiesEdgeAggregateSelection>
   node?: Maybe<PersonCommunityCommunitiesNodeAggregateSelection>
+}
+
+export type PersonCommunityCommunitiesEdgeAggregateSelection = {
+  __typename?: 'PersonCommunityCommunitiesEdgeAggregateSelection'
+  totem: StringAggregateSelection
 }
 
 export type PersonCommunityCommunitiesNodeAggregateSelection = {
@@ -10975,28 +11012,47 @@ export type UpdatePersonMutation = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
-      phone?: string | null
       photo?: string | null
-      location?: string | null
+      phone?: string | null
       pronouns?: string | null
+      status?: string | null
+      avatar?: string | null
+      careManual?: string | null
+      favorites?: string | null
+      passions?: string | null
+      traits?: string | null
+      fieldsOfCare?: string | null
+      interests?: string | null
+      location?: string | null
+      createdAt: any
       connectedTo: Array<{
         __typename?: 'Person'
         id: string
         name: string
         photo?: string | null
       }>
-      communities: Array<{
-        __typename?: 'Community'
+      providesResources: Array<{
+        __typename?: 'Resource'
         id: string
         name: string
         description?: string | null
-        members: Array<{
-          __typename?: 'Person'
-          id: string
-          name: string
-          photo?: string | null
-        }>
+        status?: string | null
+      }>
+      goals: Array<{
+        __typename?: 'Goal'
+        id: string
+        name: string
+        photo?: string | null
+        status?: string | null
+        createdAt: any
+        description?: string | null
+      }>
+      carePoints: Array<{
+        __typename?: 'CarePoint'
+        id: string
+        description: string
       }>
       coreValues: Array<{
         __typename?: 'CoreValue'
@@ -11004,6 +11060,32 @@ export type UpdatePersonMutation = {
         name: string
         description?: string | null
       }>
+      communitiesConnection: {
+        __typename?: 'PersonCommunitiesConnection'
+        edges: Array<{
+          __typename?: 'PersonCommunitiesRelationship'
+          node: {
+            __typename?: 'Community'
+            id: string
+            name: string
+            description?: string | null
+            members: Array<{
+              __typename?: 'Person'
+              id: string
+              photo?: string | null
+            }>
+            membersAggregate?: {
+              __typename?: 'CommunityPersonMembersAggregationSelection'
+              count: number
+            } | null
+          }
+          properties: {
+            __typename?: 'BelongsTo'
+            totem?: string | null
+            signupDate?: any | null
+          }
+        }>
+      }
     }>
   }
 }
@@ -11563,17 +11645,32 @@ export type GetPersonQuery = {
       name: string
       description?: string | null
     }>
-    communities: Array<{
-      __typename?: 'Community'
-      id: string
-      name: string
-      description?: string | null
-      members: Array<{
-        __typename?: 'Person'
-        id: string
-        photo?: string | null
+    communitiesConnection: {
+      __typename?: 'PersonCommunitiesConnection'
+      edges: Array<{
+        __typename?: 'PersonCommunitiesRelationship'
+        node: {
+          __typename?: 'Community'
+          id: string
+          name: string
+          description?: string | null
+          members: Array<{
+            __typename?: 'Person'
+            id: string
+            photo?: string | null
+          }>
+          membersAggregate?: {
+            __typename?: 'CommunityPersonMembersAggregationSelection'
+            count: number
+          } | null
+        }
+        properties: {
+          __typename?: 'BelongsTo'
+          totem?: string | null
+          signupDate?: any | null
+        }
       }>
-    }>
+    }
   }>
 }
 
@@ -13363,16 +13460,45 @@ export const UpdatePersonDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'location' },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'pronouns' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'avatar' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'careManual' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'favorites' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'passions' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'traits' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'fieldsOfCare' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
                       },
                       {
                         kind: 'Field',
@@ -13397,7 +13523,7 @@ export const UpdatePersonDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'communities' },
+                        name: { kind: 'Name', value: 'providesResources' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
@@ -13415,24 +13541,57 @@ export const UpdatePersonDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'members' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'photo' },
-                                  },
-                                ],
-                              },
+                              name: { kind: 'Name', value: 'status' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'goals' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'carePoints' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
                             },
                           ],
                         },
@@ -13454,6 +13613,137 @@ export const UpdatePersonDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'communitiesConnection' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'edges' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'node' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'name' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'members',
+                                          },
+                                          arguments: [
+                                            {
+                                              kind: 'Argument',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'limit',
+                                              },
+                                              value: {
+                                                kind: 'IntValue',
+                                                value: '3',
+                                              },
+                                            },
+                                          ],
+                                          selectionSet: {
+                                            kind: 'SelectionSet',
+                                            selections: [
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'id',
+                                                },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'photo',
+                                                },
+                                              },
+                                            ],
+                                          },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'membersAggregate',
+                                          },
+                                          selectionSet: {
+                                            kind: 'SelectionSet',
+                                            selections: [
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'count',
+                                                },
+                                              },
+                                            ],
+                                          },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'description',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'properties' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'totem',
+                                          },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'signupDate',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -15414,32 +15704,112 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'communities' },
+                  name: { kind: 'Name', value: 'communitiesConnection' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'members' },
+                        name: { kind: 'Name', value: 'edges' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'description',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'members' },
+                                    arguments: [
+                                      {
+                                        kind: 'Argument',
+                                        name: { kind: 'Name', value: 'limit' },
+                                        value: { kind: 'IntValue', value: '3' },
+                                      },
+                                    ],
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'photo',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'membersAggregate',
+                                    },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'count',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'description',
+                                    },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'photo' },
+                              name: { kind: 'Name', value: 'properties' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'totem' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'signupDate' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
                       },
                     ],
                   },

@@ -18,24 +18,40 @@ import {
   CommunityCard,
   ConfirmButton,
   CancelButton,
+  Input,
+  EditButton,
+  EntityDetail,
+  PopoverRoot,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  PopoverTitle,
 } from '@/components'
-import { Community, Person } from '@/gql/graphql'
+import { Community, Person, PersonCommunitiesRelationship } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import {
+  Box,
   DialogBackdrop,
   Grid,
   GridItem,
   HStack,
   Spacer,
+  Text,
   VStack,
 } from '@chakra-ui/react'
 import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { IoMdCloudyNight } from 'react-icons/io'
+
 export default function PersonCommunities({ person }: { person: Person }) {
-  const [communities, setCommunities] = useState<Community[]>(
-    person.communities as Community[]
-  )
+  const [edges, setEdges] = useState(person.communitiesConnection.edges)
+
   const [open, setOpen] = useState(false)
+  const [openCommunityProps, setOpenCommunityProps] = useState(false)
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(
+    null
+  )
   const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
   const [UpdatePerson] = useMutation(UPDATE_PERSON_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -50,6 +66,10 @@ export default function PersonCommunities({ person }: { person: Person }) {
   type FormData = {
     communities: string[]
   }
+  type CommunityPropsData = {
+    totem: string
+    signupDate: string
+  }
 
   const {
     handleSubmit,
@@ -61,10 +81,25 @@ export default function PersonCommunities({ person }: { person: Person }) {
     },
   })
 
+  const {
+    handleSubmit: handleSubmitCommunityProps,
+    control: controlCommunityProps,
+    setValue,
+    formState: {
+      isSubmitting: isSubmittingCommunityProps,
+      errors: errorsCommunityProps,
+    },
+  } = useForm<CommunityPropsData>({
+    defaultValues: {
+      totem: '',
+      signupDate: '',
+    },
+  })
+
   const onSubmit = async (data: FormData) => {
     try {
       // Find communities to delete and connect
-      const communityIds = communities.map((community) => community.id)
+      const communityIds = edges.map((edge) => edge.node.id)
       const toDisconnect = communityIds.filter(
         (communityId) => !data.communities.includes(communityId)
       )
@@ -92,8 +127,56 @@ export default function PersonCommunities({ person }: { person: Person }) {
         throw new Error('No data returned')
       }
 
-      setCommunities(
-        response.data.updatePeople.people[0].communities as Community[]
+      setEdges(
+        response.data.updatePeople.people[0].communitiesConnection
+          .edges as PersonCommunitiesRelationship[]
+      )
+      setOpen(false)
+      toaster.success({
+        title: 'Updated Communities',
+        description: 'The communities for the person have been updated',
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const onSubmitCommunityProps = async (data: CommunityPropsData) => {
+    try {
+      // Find communities to delete and connect
+
+      const response = await UpdatePerson({
+        variables: {
+          where: {
+            id_EQ: person.id,
+          },
+          update: {
+            communities: [
+              {
+                where: {
+                  node: {
+                    id_EQ: selectedCommunity?.id,
+                  },
+                },
+                update: {
+                  edge: {
+                    totem: data.totem,
+                    signupDate: data.signupDate,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      })
+
+      if (!response.data) {
+        throw new Error('No data returned')
+      }
+
+      setEdges(
+        response.data.updatePeople.people[0].communitiesConnection
+          .edges as PersonCommunitiesRelationship[]
       )
       setOpen(false)
       toaster.success({
@@ -117,7 +200,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
           {/* <DialogTrigger asChild> */}
           <HStack width="100%" justifyContent="space-between">
             <Spacer />
-            {person.communities.length > 0 && (
+            {person.communitiesConnection.edges.length > 0 && (
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
                 Update Communities
               </Button>
@@ -154,7 +237,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
           </form>
         </DialogRoot>
 
-        {person.communities.length === 0 && (
+        {person.communitiesConnection.edges.length === 0 && (
           <EmptyState
             title="No Communities"
             description="Click here to add some"
@@ -173,12 +256,111 @@ export default function PersonCommunities({ person }: { person: Person }) {
           gap={6}
           width="100%"
         >
-          {communities.map((community) => (
-            <GridItem key={community.id}>
-              <CommunityCard height="100%" community={community} />
-            </GridItem>
+          {edges.map((edge) => (
+            <>
+              <GridItem key={edge.node.id}>
+                <Box>
+                  <CommunityCard height="100%" community={edge.node} />
+
+                  <HStack alignItems="center">
+                    <PopoverRoot
+                      portalled
+                      positioning={{ placement: 'bottom-end' }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          fontSize="x-small"
+                          size="xs"
+                          variant="ghost"
+                          _hover={{
+                            bgColor: 'transparent',
+                          }}
+                        >
+                          <IoMdCloudyNight /> {`${person.firstName}'s Totem`}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <PopoverArrow />
+                        <PopoverBody>
+                          <PopoverTitle fontWeight="medium">
+                            {edge.node.name} Totem
+                          </PopoverTitle>
+                          <EntityDetail
+                            title="Totem"
+                            entityName={
+                              person.name + "'s Totem for " + edge.node.name
+                            }
+                            details={edge.properties.totem}
+                          />
+                        </PopoverBody>
+                      </PopoverContent>
+                    </PopoverRoot>
+
+                    <Spacer />
+                    <EditButton
+                      variant="ghost"
+                      size="2xs"
+                      iconOnly
+                      onClick={() => {
+                        setValue('totem', edge.properties.totem ?? '')
+                        setValue('signupDate', edge.properties.signupDate ?? '')
+                        setSelectedCommunity(edge.node)
+                        setOpenCommunityProps(true)
+                      }}
+                    />
+                  </HStack>
+                </Box>
+              </GridItem>
+            </>
           ))}
         </Grid>
+
+        <DialogRoot
+          placement="center"
+          open={openCommunityProps}
+          onOpenChange={(e) => setOpenCommunityProps(e.open)}
+        >
+          <DialogBackdrop />
+          {/* <DialogTrigger asChild> */}
+          <HStack width="100%" justifyContent="space-between">
+            <Spacer />
+            <Text></Text>
+          </HStack>
+          {/* </DialogTrigger> */}
+          <form onSubmit={handleSubmitCommunityProps(onSubmitCommunityProps)}>
+            <DialogContent ref={contentRef}>
+              <DialogHeader>
+                <DialogTitle>{`${person.name} ${selectedCommunity?.name} Details`}</DialogTitle>
+              </DialogHeader>
+              <DialogBody>
+                <Input
+                  name="totem"
+                  label="Totem"
+                  control={controlCommunityProps}
+                  errors={errorsCommunityProps}
+                />
+
+                <Input
+                  name="signupDate"
+                  label="Signup Date"
+                  control={controlCommunityProps}
+                  errors={errorsCommunityProps}
+                  type="date"
+                />
+              </DialogBody>
+              <DialogFooter>
+                <DialogActionTrigger asChild>
+                  <CancelButton ref={cancelButtonRef} />
+                </DialogActionTrigger>
+                <ConfirmButton
+                  loading={isSubmittingCommunityProps}
+                  onClick={handleSubmitCommunityProps(onSubmitCommunityProps)}
+                />
+              </DialogFooter>
+              <DialogCloseTrigger />
+            </DialogContent>
+          </form>
+        </DialogRoot>
       </VStack>
     </ApolloWrapper>
   )
