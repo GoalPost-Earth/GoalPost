@@ -42,11 +42,12 @@ export default function TopNav() {
           router.push('/')
         }}
       >
-        <AppLogo width={'40px'} marginLeft={{ base: '15px', lg: '70px' }} />
-        <BrandedGoalPostText
+        <AppLogo
+          width={'40px'}
+          marginLeft={{ base: '15px', lg: '70px' }}
           display={{ base: 'none', lg: 'block' }}
-          fontSize="xl"
         />
+        <BrandedGoalPostText fontSize="xl" />
       </Flex>
       <Box display={{ base: 'none', lg: 'block' }} mx="auto" width="500px">
         <SearchResults />

@@ -1,14 +1,22 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { HamburgerIcon } from '@/components/icons'
-import { Portal, VStack, Box } from '@chakra-ui/react'
+import { Portal, VStack, Box, HStack } from '@chakra-ui/react'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { Button } from '../button'
 import { LogoutSection } from '../logout-section'
+import { BrandedGoalPostText } from '../branded-goalpost-text'
 
 export default function ExtendedSideNav() {
   const [isExtended, setExtended] = useState(false)
+  const [disableHover, setDisableHover] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
+
+  const handleNavItemClick = () => {
+    setDisableHover(true)
+    setExtended(false)
+    setTimeout(() => setDisableHover(false), 300)
+  }
 
   useEffect(() => {
     if (isExtended) {
@@ -52,8 +60,8 @@ export default function ExtendedSideNav() {
       />
 
       <VStack
-        onMouseEnter={() => setExtended(true)}
-        onMouseLeave={() => setExtended(false)}
+        onMouseEnter={() => !disableHover && setExtended(true)}
+        onMouseLeave={() => !disableHover && setExtended(false)}
         ref={navRef}
         display={{ base: 'none', lg: 'flex' }}
         width={isExtended ? '300px' : '50px'}
@@ -73,21 +81,26 @@ export default function ExtendedSideNav() {
         scrollbarWidth="none"
         WebkitOverflowScrolling="touch"
       >
-        <Button
-          cursor="pointer"
-          onClick={() => setExtended(!isExtended)}
-          background="none"
-          padding={4}
-        >
-          <HamburgerIcon />
-        </Button>
+        <HStack gap={1} alignItems="center">
+          <Button
+            cursor="pointer"
+            // onClick={() => setExtended(!isExtended)}
+            background="none"
+            padding={4}
+            paddingLeft={3}
+            paddingBottom={3}
+          >
+            <HamburgerIcon />
+          </Button>
+          <BrandedGoalPostText fontSize="lg" mt={1} />
+        </HStack>
         <NavItemLinks
-          setOpen={setExtended}
+          setOpen={handleNavItemClick}
           isExtended={isExtended}
           extendable
         />
         <InputAccordion
-          setOpen={setExtended}
+          setOpen={handleNavItemClick}
           isExtended={isExtended}
           extendable
         />

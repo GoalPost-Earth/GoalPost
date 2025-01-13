@@ -25,7 +25,7 @@ export function LogoutSection({
           size="md"
           src={user?.picture ?? undefined}
         />
-        <Stack gap="0">
+        <Stack gap="0" display={extendable && !isExtended ? 'none' : 'block'}>
           {user?.name && <Text fontWeight="medium">{user?.name}</Text>}
         </Stack>
       </HStack>
