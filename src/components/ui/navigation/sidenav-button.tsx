@@ -17,6 +17,7 @@ import { AppLogo } from '../app-logo'
 import { HamburgerIcon } from '@/icons'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { LogoutSection } from '../logout-section'
+import { BrandedGoalPostText } from '../branded-goalpost-text'
 
 const NavHamburgerButton = () => {
   const { user } = useUser()
@@ -45,8 +46,8 @@ const NavHamburgerButton = () => {
       <DrawerContent>
         <DrawerHeader>
           <Heading>
-            <HStack justifyContent="center">
-              <AppLogo height={20} width={20} />
+            <HStack>
+              <AppLogo height={10} width={10} /> <BrandedGoalPostText />
             </HStack>
           </Heading>
         </DrawerHeader>
