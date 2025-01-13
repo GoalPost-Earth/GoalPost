@@ -19,7 +19,7 @@ export default function PersonResources({ person }: { person: Person }) {
       {person.providesResources.length > 0 && (
         <HStack width="100%" justifyContent="space-between">
           <Spacer />
-          <Link href={`/resource/create?providedByPerson=${person.id}`}>
+          <Link href={`/resource/create?personId=${person.id}`}>
             <Button size="sm" variant="surface">
               Add A Resource
             </Button>
@@ -28,7 +28,7 @@ export default function PersonResources({ person }: { person: Person }) {
       )}
       {person.providesResources.length === 0 && (
         <EmptyState title="No Resources" description="Click here to add some">
-          <Link href={`/resource/create?providedByPerson=${person.id}`}>
+          <Link href={`/resource/create?personId=${person.id}`}>
             <Button variant="surface">Add A Resource</Button>
           </Link>
         </EmptyState>

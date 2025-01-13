@@ -52,6 +52,12 @@ export const UPDATE_PERSON_MUTATION = graphql(`
             photo
           }
         }
+
+        coreValues {
+          id
+          name
+          description
+        }
       }
     }
   }

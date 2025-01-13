@@ -9,11 +9,13 @@ import { useForm } from 'react-hook-form'
 import { FormMode } from '@/constants'
 import { ResourceForm } from '@/components'
 import { useApp } from '@/app/contexts'
+import { ResourceFormData, resourceSchema } from '@/app/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function CreateResource() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const personId = searchParams?.get('providedByPerson')
+  const personId = searchParams?.get('personId')
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
   const { user } = useApp()
 
@@ -22,18 +24,14 @@ function CreateResource() {
     handleSubmit,
     register,
     formState: { isSubmitting, errors },
-  } = useForm({
+  } = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
     defaultValues: {
-      name: '',
-      providedByPerson: personId ?? '',
-      description: '',
-      status: '',
-      why: '',
+      providedByPerson: personId ?? undefined,
     },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ResourceFormData) => {
     const { providedByPerson } = data
     try {
       const res = await CreateResources({
@@ -44,11 +42,13 @@ function CreateResource() {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
             providedByPerson: {
-              connect: {
-                where: {
-                  node: { id_EQ: providedByPerson ?? (user?.id || '') },
+              connect: [
+                {
+                  where: {
+                    node: { id_EQ: providedByPerson ?? (user?.id || '') },
+                  },
                 },
-              },
+              ],
             },
           },
         },
