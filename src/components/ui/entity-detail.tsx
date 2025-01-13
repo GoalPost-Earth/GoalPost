@@ -75,6 +75,11 @@ export function EntityDetail({
           <Button
             p={0}
             ref={dialogRef}
+            onClick={() => {
+              if (dialogRef.current) {
+                dialogRef.current.click()
+              }
+            }}
             display={isClamped ? 'block' : 'none'}
             size="xs"
             as="span"
