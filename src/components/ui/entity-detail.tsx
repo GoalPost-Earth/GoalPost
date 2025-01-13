@@ -27,6 +27,7 @@ export function EntityDetail({
 }) {
   const textRef = useRef<HTMLParagraphElement>(null)
   const [isClamped, setIsClamped] = useState(false)
+  const dialogRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     // Add a small delay to ensure DOM is ready
@@ -54,31 +55,45 @@ export function EntityDetail({
   }
 
   return (
-    <Container width="100%">
+    <Container
+      width="100%"
+      onClick={() => {
+        if (dialogRef.current) {
+          dialogRef.current.click()
+        }
+      }}
+    >
       <Text fontSize="sm" fontWeight="light">
         {title}
       </Text>
       <Text as="span" ref={textRef} lineClamp={2}>
         <AutoLink text={details} />
       </Text>
-      {isClamped && (
-        <DialogRoot placement="center" motionPreset="slide-in-bottom">
-          <DialogTrigger asChild>
-            <Button p={0} size="xs" as="span" fontSize="xs" variant="plain">
-              Read More
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{entityName}</DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              <AutoLink text={details} />
-            </DialogBody>
-            <DialogCloseTrigger />
-          </DialogContent>
-        </DialogRoot>
-      )}
+
+      <DialogRoot placement="center" motionPreset="slide-in-bottom">
+        <DialogTrigger asChild>
+          <Button
+            p={0}
+            ref={dialogRef}
+            display={isClamped ? 'block' : 'none'}
+            size="xs"
+            as="span"
+            fontSize="xs"
+            variant="plain"
+          >
+            Read More
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{entityName}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <AutoLink text={details} />
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
     </Container>
   )
 }

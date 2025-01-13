@@ -55,7 +55,7 @@ export const GenericTabs = ({
     function handleSetTab() {
       if (removeTriggers && window.innerWidth > 1023) {
         setActiveTab(triggers[0])
-      } else {
+      } else if (removeTriggers) {
         setActiveTab((searchParams?.get('tab') as TriggerValues) || triggers[0])
       }
     }
