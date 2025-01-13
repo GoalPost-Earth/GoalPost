@@ -388,6 +388,13 @@ const GraphVisualization = () => {
     resources,
     members,
     communities,
+    personToPersonConnection,
+    personToCommunityConnection,
+    personToGoalsConnection,
+    personToCoreValueConnection,
+    personToResourceConnection,
+    goalToCarePointConnection,
+    communityToCommunityConnection,
   ])
 
   const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo

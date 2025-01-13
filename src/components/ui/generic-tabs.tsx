@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Spacer, Tabs } from '@chakra-ui/react'
 import DefaultTabContent from './default-tab-content'
 import Link from 'next/link'
 import { EditButton } from './buttons/edit-button'
 import { EntityEnum, TRIGGER_TO_ROUTE_MAP, TriggerValues } from '@/constants'
 import { Button } from './button'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 interface GenericTabsProps {
   triggers: TriggerValues[]
@@ -35,7 +36,16 @@ export const GenericTabs = ({
   entityName,
   ...props
 }: GenericTabsProps) => {
-  const [activeTab, setActiveTab] = useState(triggers[0])
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<TriggerValues>(
+    (searchParams?.get('tab') as TriggerValues) || triggers[0]
+  )
+
+  useEffect(() => {
+    router.replace(`${pathname}?tab=${activeTab}`, { scroll: false })
+  }, [activeTab, router])
 
   return (
     <Tabs.Root
