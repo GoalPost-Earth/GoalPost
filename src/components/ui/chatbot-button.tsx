@@ -2,10 +2,11 @@
 import React from 'react'
 import { ChatBotIcon } from '../icons'
 import { Button } from './button'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const ChatBotButton = () => {
   const pathname = usePathname()
+  const router = useRouter()
   const isSearchPage = pathname === '/search'
 
   if (isSearchPage) {
@@ -26,6 +27,9 @@ const ChatBotButton = () => {
       justifyContent={'center'}
       alignItems={'center'}
       transform={'translate(-50%, -50%)'}
+      onClick={() => {
+        router.push('/chatbot')
+      }}
     >
       <ChatBotIcon color="white" />
     </Button>
