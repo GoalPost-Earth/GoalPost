@@ -1,14 +1,12 @@
 import { query } from '@/app/lib/apollo-client'
 import { GET_PERSON } from '@/app/graphql/queries'
-import { Container, HStack, VStack } from '@chakra-ui/react'
+import { Box, Container, HStack, Text } from '@chakra-ui/react'
 import React from 'react'
 import {
-  CommunityCard,
-  ConnectionsInfo,
   GenericTabs,
   ProfileBackground,
   UserInfo,
-  UserProfile,
+  PersonProfile,
   PersonAbout,
   PersonConnections,
   PersonCommunities,
@@ -17,7 +15,7 @@ import {
   PersonCoreValues,
   PersonCarePoints,
 } from '@/components'
-import { Community, Person } from '@/gql/graphql'
+import { Person } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
 
 export default async function ViewPersonPage({
@@ -89,40 +87,26 @@ export default async function ViewPersonPage({
     >
       <>
         <ProfileBackground />{' '}
-        <UserProfile
+        <PersonProfile
           user={person as Person}
           tabTriggers={triggers}
           tabContent={[
-            <UserInfo data={bioData} key="bio" />,
             <>
-              {person.connectedTo.length > 0 ? (
-                <VStack
-                  key="connections"
-                  borderRadius="md"
-                  border="1px"
-                  borderColor="gray.200"
-                  gap={2}
-                  bg="gray.contrast"
-                >
-                  {person.connectedTo.map((person) => (
-                    <ConnectionsInfo
-                      key={person.id}
-                      photo={person.photo ?? undefined}
-                      name={person.name}
-                      id={person.id}
-                    />
-                  ))}
-                </VStack>
-              ) : null}
+              <UserInfo data={bioData} key="bio" />
+              <Box mt={5} display={{ base: 'block', lg: 'none' }}>
+                <Text fontSize="sm" fontWeight="bold" my={5}>
+                  Membership Data
+                </Text>
+                <PersonAbout key="about" person={person as Person} />
+              </Box>
             </>,
-            <VStack gap={4} key="communities">
-              {person.communitiesConnection.edges.map((edge) => (
-                <CommunityCard
-                  key={edge.node.id}
-                  community={edge.node as Community}
-                />
-              ))}
-            </VStack>,
+
+            <PersonConnections key="connections" person={person as Person} />,
+            <PersonCommunities key="communities" person={person as Person} />,
+            <PersonResources key="resources" person={person as Person} />,
+            <PersonGoals key="goals" person={person as Person} />,
+            <PersonCarePoints key="carepoints" person={person as Person} />,
+            <PersonCoreValues key="corevalues" person={person as Person} />,
           ]}
         />{' '}
         <HStack

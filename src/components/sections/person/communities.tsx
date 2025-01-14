@@ -29,6 +29,7 @@ import {
   PopoverTitle,
 } from '@/components'
 import { Community, Person, PersonCommunitiesRelationship } from '@/gql/graphql'
+import { getHumanReadableDate } from '@/utils'
 import { useMutation, useQuery } from '@apollo/client'
 import {
   Box,
@@ -269,9 +270,11 @@ export default function PersonCommunities({ person }: { person: Person }) {
                     >
                       <PopoverTrigger asChild>
                         <Button
+                          padding={0}
                           fontSize="x-small"
                           size="xs"
                           variant="ghost"
+                          textAlign="left"
                           _hover={{
                             bgColor: 'transparent',
                           }}
@@ -309,6 +312,16 @@ export default function PersonCommunities({ person }: { person: Person }) {
                       }}
                     />
                   </HStack>
+                  {edge.properties.signupDate && (
+                    <Box>
+                      <Text as="span" fontSize="2xs">
+                        Since{' '}
+                      </Text>
+                      <Text as="span" fontSize="xs" fontWeight="bold">
+                        {getHumanReadableDate(edge.properties.signupDate)}
+                      </Text>
+                    </Box>
+                  )}
                 </Box>
               </GridItem>
             </>

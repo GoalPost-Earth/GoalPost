@@ -11,7 +11,7 @@ interface UserProfileProps {
   tabContent: React.ReactNode[]
 }
 
-export function UserProfile({
+export function PersonProfile({
   user,
   tabTriggers,
   tabContent,
