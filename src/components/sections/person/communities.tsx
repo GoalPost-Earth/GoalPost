@@ -31,7 +31,6 @@ import {
 import { Community, Person, PersonCommunitiesRelationship } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import {
-  Box,
   DialogBackdrop,
   Grid,
   GridItem,
@@ -251,7 +250,8 @@ export default function PersonCommunities({ person }: { person: Person }) {
           key="communities"
           templateColumns={{
             base: '1fr',
-            lg: 'repeat(2, 1fr)',
+            lg: 'repeat(auto-fill, minmax(250px, 1fr))',
+            xl: 'repeat(auto-fill, minmax(360px, 1fr)))',
           }}
           gap={6}
           width="100%"
@@ -259,10 +259,10 @@ export default function PersonCommunities({ person }: { person: Person }) {
           {edges.map((edge) => (
             <>
               <GridItem key={edge.node.id}>
-                <Box>
+                <VStack height="100%">
                   <CommunityCard height="100%" community={edge.node} />
 
-                  <HStack alignItems="center">
+                  <HStack alignItems="center" mt="auto" width="100%">
                     <PopoverRoot
                       portalled
                       positioning={{ placement: 'bottom-end' }}
@@ -309,7 +309,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
                       }}
                     />
                   </HStack>
-                </Box>
+                </VStack>
               </GridItem>
             </>
           ))}

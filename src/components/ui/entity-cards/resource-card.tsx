@@ -16,7 +16,6 @@ export const ResourceCard = ({ resource }: { resource: Resource }) => {
     <Card.Root
       flexDirection={{ base: 'column', lg: 'row' }}
       overflow="hidden"
-      maxW="xl"
       borderRadius="lg"
       boxShadow="md"
       bgColor="resource.subtle"

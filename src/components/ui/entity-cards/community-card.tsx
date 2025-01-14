@@ -14,7 +14,7 @@ export function CommunityCard({
   const displayedMembers = members?.slice(0, 3) ?? []
 
   return (
-    <Link href={`/community/${id}`} style={{ width: '100%' }}>
+    <Link href={`/community/${id}`} style={{ width: '100%', height: '100%' }}>
       <Card.Root
         width="100%"
         p={3}
@@ -22,6 +22,7 @@ export function CommunityCard({
         borderRadius="md"
         bgColor="community.subtle"
         variant="subtle"
+        height="100%"
         {...rest}
       >
         <Card.Header p={2}>

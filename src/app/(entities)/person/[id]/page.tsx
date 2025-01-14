@@ -123,11 +123,14 @@ export default async function ViewPersonPage({
                 />
               ))}
             </VStack>,
+            <VStack gap={4} key="resources">
+              <PersonResources key="resources" person={person as Person} />,
+            </VStack>,
           ]}
-        />{' '}
+        />
         <HStack
           float={'right'}
-          width={{ lg: 'calc(100% - 450px)', xl: 'calc(100% - 500px)' }}
+          width="calc(100% - 500px)"
           display={{ base: 'none', lg: 'flex' }}
           alignItems="flex-start"
           gap={0}

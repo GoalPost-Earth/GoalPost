@@ -15,6 +15,7 @@ export default function PersonResources({ person }: { person: Person }) {
       borderRadius={'2xl'}
       boxShadow={'xs'}
       alignItems={'flex-start'}
+      width="100%"
     >
       {person.providesResources.length > 0 && (
         <HStack width="100%" justifyContent="space-between">
@@ -36,7 +37,11 @@ export default function PersonResources({ person }: { person: Person }) {
 
       <Grid
         key="resources"
-        templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+        templateColumns={{
+          base: '1fr',
+          lg: 'repeat(auto-fill, minmax(250px, 1fr))',
+          xl: 'repeat(auto-fill, minmax(360px, 1fr)))',
+        }}
         gap={6}
         width="100%"
       >

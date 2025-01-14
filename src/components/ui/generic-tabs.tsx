@@ -70,6 +70,7 @@ export const GenericTabs = ({
     <Tabs.Root
       variant="subtle"
       value={activeTab}
+      width="100%"
       onValueChange={(details) => {
         const newValue = details.value as TriggerValues
         if (['edit', 'delete'].includes(newValue)) {
@@ -78,7 +79,6 @@ export const GenericTabs = ({
         setActiveTab(newValue)
       }}
       colorPalette="brand"
-      width={{ base: '100%', lg: '90%', xl: '100%' }}
       mt={2}
     >
       <>
