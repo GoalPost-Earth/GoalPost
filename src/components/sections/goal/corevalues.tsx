@@ -128,7 +128,7 @@ export default function GoalCoreValues({
             <DialogBody>
               <MultiSelect
                 name="corevalues"
-                label="What core values are aligned to this goal?"
+                label="To what core values is this goal aligned?"
                 control={control}
                 errors={errors}
                 options={valueOptions}
