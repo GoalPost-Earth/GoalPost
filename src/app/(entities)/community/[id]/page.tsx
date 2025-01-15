@@ -4,8 +4,6 @@ import {
   Box,
   Container,
   Flex,
-  Grid,
-  GridItem,
   Heading,
   HStack,
   Spacer,
@@ -16,15 +14,18 @@ import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
-  EntityDetail,
   EntityOwnerCard,
-  CommunityCard,
-  ResourceCard,
-  PersonCard,
 } from '@/components'
 import Link from 'next/link'
-import { Community, Resource } from '@/gql/graphql'
+import { Community } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
+import {
+  CommunityDetails,
+  CommunityGoals,
+  CommunityMembers,
+  CommunityResources,
+  RelatedCommunities,
+} from '@/components/sections/community'
 
 export default async function ViewCommunityPage({
   params,
@@ -103,66 +104,26 @@ export default async function ViewCommunityPage({
                   TRIGGERS.COMMUNITY[key as keyof typeof TRIGGERS.COMMUNITY]
               )}
               content={[
-                <VStack
-                  key="Details"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
-                >
-                  <VStack gap={4}>
-                    <EntityDetail
-                      title="Description"
-                      entityName={community.name}
-                      details={community.description}
-                    />
-                    <EntityDetail
-                      title="Location"
-                      details={community.location}
-                    />
-                    <EntityDetail title="Time" details={community.time} />
-                    <EntityDetail title="Status" details={community.status} />
-                  </VStack>
-                </VStack>,
-                <Grid
-                  key="relatedCommunities"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {community.relatedCommunities.map((community) => (
-                    <GridItem key={community.id}>
-                      <CommunityCard community={community as Community} />
-                    </GridItem>
-                  ))}
-                </Grid>,
-                <Grid
+                <CommunityDetails
+                  key="details"
+                  community={community as Community}
+                />,
+                <RelatedCommunities
+                  key="related-communities"
+                  community={community as Community}
+                />,
+                <CommunityResources
                   key="resources"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {community.resources.map((resource) => (
-                    <GridItem key={resource.id}>
-                      <ResourceCard resource={resource as Resource} />
-                    </GridItem>
-                  ))}
-                </Grid>,
-                <Grid
+                  community={community as Community}
+                />,
+                <CommunityGoals
+                  key="goals"
+                  community={community as Community}
+                />,
+                <CommunityMembers
                   key="members"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {community.members.map((person) => (
-                    <GridItem key={person.id}>
-                      <PersonCard
-                        id={person.id}
-                        name={person.name}
-                        photo={person.photo}
-                      />
-                    </GridItem>
-                  ))}
-                </Grid>,
+                  community={community as Community}
+                />,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">

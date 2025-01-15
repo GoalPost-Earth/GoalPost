@@ -395,6 +395,7 @@ const GraphVisualization = () => {
     personToResourceConnection,
     goalToCarePointConnection,
     communityToCommunityConnection,
+    setEdges,
   ])
 
   const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo

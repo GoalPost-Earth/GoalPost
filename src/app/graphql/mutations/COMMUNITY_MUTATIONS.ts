@@ -31,6 +31,15 @@ export const UPDATE_COMMUNITY_MUTATION = graphql(`
         activities
         resultsAchieved
         status
+        relatedCommunities {
+          id
+          name
+          members(limit: 5) {
+            id
+            name
+            photo
+          }
+        }
       }
       info {
         nodesCreated

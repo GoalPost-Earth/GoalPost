@@ -121,7 +121,7 @@ export const GenericTabs = ({
           minHeight="315px"
           borderRadius="lg"
         >
-          {parseEditLink(trigger, entityId) === '' ? (
+          {/* {parseEditLink(trigger, entityId) === '' ? (
             <></>
           ) : (
             <Link href={parseEditLink(trigger, entityId)}>
@@ -132,7 +132,7 @@ export const GenericTabs = ({
                 mb={5}
               />
             </Link>
-          )}
+          )} */}
           <>{content[index] || <DefaultTabContent />}</>
         </Tabs.Content>
       ))}
