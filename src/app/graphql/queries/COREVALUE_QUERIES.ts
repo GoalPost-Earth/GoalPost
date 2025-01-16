@@ -14,6 +14,17 @@ export const GET_COREVALUE = graphql(`
         id
         name
       }
+      communities {
+        id
+        name
+        description
+      }
+      goals {
+        id
+        name
+        description
+        status
+      }
       createdAt
       createdBy {
         id
@@ -40,6 +51,17 @@ export const GET_ALL_COREVALUES = graphql(`
           id
           name
         }
+      }
+      communities {
+        id
+        name
+        description
+      }
+      goals {
+        id
+        name
+        description
+        status
       }
     }
   }

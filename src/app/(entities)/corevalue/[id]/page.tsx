@@ -7,7 +7,6 @@ import {
   Heading,
   HStack,
   Spacer,
-  Text,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -15,11 +14,17 @@ import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
-  EntityDetail,
   EntityOwnerCard,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
+import {
+  CoreValueAlignedGoals,
+  CoreValueCommunitiesGuided,
+  CoreValueDetails,
+  CoreValueRelatedMembers,
+} from '@/components/sections/corevalues'
+import { CoreValue } from '@/gql/graphql'
 
 export default async function ViewCoreValuePage({
   params,
@@ -97,46 +102,22 @@ export default async function ViewCoreValuePage({
                   TRIGGERS.COREVALUE[key as keyof typeof TRIGGERS.COREVALUE]
               )}
               content={[
-                <VStack
+                <CoreValueDetails
                   key="Details"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
-                >
-                  <VStack gap={4}>
-                    <EntityDetail
-                      title="Description"
-                      entityName={corevalue.name}
-                      details={corevalue.description}
-                    />
-                    <EntityDetail
-                      title="Who Supports"
-                      details={corevalue.whoSupports}
-                    />
-                    <EntityDetail
-                      title="Alignment Challenges"
-                      details={corevalue.alignmentChallenges}
-                    />
-                    <EntityDetail
-                      title="Alignment Examples"
-                      details={corevalue.alignmentExamples}
-                    />
-                    <EntityDetail title="Why" details={corevalue.why} />
-                  </VStack>
-                </VStack>,
-                <VStack
-                  key="Linked Care Points"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                >
-                  <Text>Linked Care Points</Text>
-                </VStack>,
+                  corevalue={corevalue as CoreValue}
+                />,
+                <CoreValueAlignedGoals
+                  key="Aligned Goals"
+                  corevalue={corevalue as CoreValue}
+                />,
+                <CoreValueRelatedMembers
+                  key="Related Members"
+                  corevalue={corevalue as CoreValue}
+                />,
+                <CoreValueCommunitiesGuided
+                  key="Communities Guided"
+                  corevalue={corevalue as CoreValue}
+                />,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
