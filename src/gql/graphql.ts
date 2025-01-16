@@ -11777,6 +11777,7 @@ export type CreateGoalsMutation = {
         __typename?: 'Community'
         id: string
         name: string
+        description?: string | null
       }>
       enablesCarePoints: Array<{
         __typename?: 'CarePoint'
@@ -11831,6 +11832,7 @@ export type UpdateGoalMutation = {
         __typename?: 'Community'
         id: string
         name: string
+        description?: string | null
       }>
       enablesCarePoints: Array<{
         __typename?: 'CarePoint'
@@ -12440,6 +12442,7 @@ export type GetGoalQuery = {
       __typename?: 'Community'
       id: string
       name: string
+      description?: string | null
     }>
     enablesCarePoints: Array<{
       __typename?: 'CarePoint'
@@ -13880,6 +13883,10 @@ export const CreateGoalsDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
                           ],
                         },
                       },
@@ -14105,6 +14112,10 @@ export const UpdateGoalDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
                             },
                           ],
                         },
@@ -16426,6 +16437,10 @@ export const GetGoalDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },

@@ -60,7 +60,7 @@ export const GenericTabs = ({
     <Tabs.Root
       variant="subtle"
       value={activeTab}
-      width="100%"
+      width={{ base: '100%', lg: '70%' }}
       onValueChange={(details) => {
         const newValue = details.value as TriggerValues
         if (['edit', 'delete'].includes(newValue)) {

@@ -26,6 +26,7 @@ export const CREATE_GOAL_MUTATION = graphql(`
         motivatesCommunities {
           id
           name
+          description
         }
         enablesCarePoints {
           id
@@ -72,6 +73,7 @@ export const UPDATE_GOAL_MUTATION = graphql(`
         motivatesCommunities {
           id
           name
+          description
         }
         enablesCarePoints {
           id
