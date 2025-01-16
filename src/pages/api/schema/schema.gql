@@ -124,6 +124,7 @@ type Community @node {
     @relationship(type: "RELATES_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
   goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
+  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!

@@ -199,7 +199,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
           {/* <DialogTrigger asChild> */}
           <HStack width="100%" justifyContent="space-between">
             <Spacer />
-            {person.communitiesConnection.edges.length > 0 && (
+            {edges.length > 0 && (
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
                 Update Communities
               </Button>
@@ -236,7 +236,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
           </form>
         </DialogRoot>
 
-        {person.communitiesConnection.edges.length === 0 && (
+        {edges.length === 0 && (
           <EmptyState
             title="No Communities"
             description="Click here to add some"

@@ -19,16 +19,6 @@ interface GenericTabsProps {
   props?: any
 }
 
-const parseEditLink = (trigger: TriggerValues, entityId: string) => {
-  const baseURL = `update/${entityId}`
-  const parsedTrigger = TRIGGER_TO_ROUTE_MAP[trigger]
-
-  if (!parsedTrigger) {
-    return ''
-  }
-  return baseURL + parsedTrigger
-}
-
 export const GenericTabs = ({
   triggers,
   removeTriggers = false,
@@ -121,18 +111,6 @@ export const GenericTabs = ({
           minHeight="315px"
           borderRadius="lg"
         >
-          {/* {parseEditLink(trigger, entityId) === '' ? (
-            <></>
-          ) : (
-            <Link href={parseEditLink(trigger, entityId)}>
-              <EditButton
-                colorPalette={entityType.toLowerCase()}
-                text={`Edit ${trigger}`}
-                size="xl"
-                mb={5}
-              />
-            </Link>
-          )} */}
           <>{content[index] || <DefaultTabContent />}</>
         </Tabs.Content>
       ))}
