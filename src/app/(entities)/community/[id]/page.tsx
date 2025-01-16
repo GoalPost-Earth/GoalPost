@@ -26,7 +26,7 @@ import {
   CommunityMembers,
   CommunityResources,
   RelatedCommunities,
-} from '@/components/sections/community'
+} from '@/components'
 
 export default async function ViewCommunityPage({
   params,
