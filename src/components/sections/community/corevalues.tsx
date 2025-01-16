@@ -152,10 +152,7 @@ export default function CommunityCoreValues({
         </DialogRoot>
         <Grid
           key="coreValues"
-          templateColumns={{
-            base: '1fr',
-            lg: 'repeat(auto-fill, minmax(250px, 1fr)',
-          }}
+          templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
           gap={6}
           width="100%"
         >
