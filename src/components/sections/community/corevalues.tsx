@@ -1,51 +1,53 @@
 'use client'
-import { GET_ALL_PEOPLE, UPDATE_COMMUNITY_MUTATION } from '@/app/graphql'
 
+import { GET_ALL_COREVALUES, UPDATE_COMMUNITY_MUTATION } from '@/app/graphql'
+import { ApolloWrapper } from '@/components/layout'
+import { MultiSelect } from '@/components/react-hook-form'
 import {
   Button,
-  EmptyState,
-  DialogRoot,
+  CancelButton,
+  ConfirmButton,
+  CoreValueCard,
   DialogActionTrigger,
+  DialogBackdrop,
   DialogBody,
   DialogCloseTrigger,
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogRoot,
   DialogTitle,
-  MultiSelect,
+  EmptyState,
   toaster,
-  ConfirmButton,
-  CancelButton,
-  PersonCard,
-  ApolloWrapper,
-} from '@/components'
-import { Community, Person } from '@/gql/graphql'
+} from '@/components/ui'
+import { CoreValue, Community } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
-import { DialogBackdrop, Grid, HStack, Spacer, VStack } from '@chakra-ui/react'
+import { Grid, GridItem, HStack, Spacer, VStack } from '@chakra-ui/react'
 import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-export default function CommunityMembers({
+export default function CommunityCoreValues({
   community,
 }: {
   community: Community
 }) {
+  const [coreValues, setCoreValues] = useState<CoreValue[]>(
+    community.coreValues as CoreValue[]
+  )
   const [open, setOpen] = useState(false)
-
-  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
-  const [UpdateCommunity] = useMutation(UPDATE_COMMUNITY_MUTATION)
-  const [members, setMembers] = useState<Person[]>(community.members)
+  const { data, loading, error } = useQuery(GET_ALL_COREVALUES)
+  const [Updatecommunity] = useMutation(UPDATE_COMMUNITY_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
 
   const valueOptions =
-    data?.people.map((person) => ({
-      label: person.name,
-      value: person.id,
+    data?.coreValues.map((coreValue) => ({
+      label: coreValue.name,
+      value: coreValue.id,
     })) ?? []
 
   type FormData = {
-    members: string[]
+    coreValues: string[]
   }
 
   const {
@@ -54,27 +56,28 @@ export default function CommunityMembers({
     formState: { isSubmitting, errors },
   } = useForm<FormData>({
     defaultValues: {
-      members: members.map((member) => member.id) ?? [],
+      coreValues: community.coreValues?.map((coreValue) => coreValue.id) ?? [],
     },
   })
 
   const onSubmit = async (data: FormData) => {
     try {
-      // find members to disconnect and connect
-      const initialMembers = members.map((member) => member.id)
-
-      const toDisconnect = initialMembers.filter(
-        (member) => !data.members.includes(member)
+      // Find corevalues to delete and connect
+      const coreValueIds = coreValues.map((coreValue) => coreValue.id)
+      const toDisconnect = coreValueIds.filter(
+        (coreValue) => !data.coreValues.includes(coreValue)
       )
-      const toConnect = data.members.filter(
-        (member) => !initialMembers.map((p) => p).includes(member)
+      const toConnect = data.coreValues.filter(
+        (coreValue) => !coreValueIds.includes(coreValue)
       )
 
-      const response = await UpdateCommunity({
+      const response = await Updatecommunity({
         variables: {
-          id: community.id,
+          where: {
+            id_EQ: community.id,
+          },
           update: {
-            members: [
+            coreValues: [
               {
                 connect: [{ where: { node: { id_IN: toConnect } } }],
                 disconnect: [{ where: { node: { id_IN: toDisconnect } } }],
@@ -85,17 +88,16 @@ export default function CommunityMembers({
       })
 
       if (!response.data) {
-        throw new Error('No data returned')
+        throw new Error('Failed to update core values')
       }
 
-      setMembers(
-        response.data.updateCommunities.communities[0].members as Person[]
+      setCoreValues(
+        response.data.updatePeople.people[0].coreValues as CoreValue[]
       )
-      console.log(response.data.updateCommunities.communities[0].members)
       setOpen(false)
       toaster.success({
-        title: 'Updated Members',
-        description: `The members of ${community.name} have been updated`,
+        title: 'Core Values Updated',
+        description: 'Core Values have been updated successfully',
       })
     } catch (error) {
       console.error(error)
@@ -111,12 +113,11 @@ export default function CommunityMembers({
           onOpenChange={(e) => setOpen(e.open)}
         >
           <DialogBackdrop />
-          {/* <DialogTrigger asChild> */}
           <HStack width="100%" justifyContent="space-between">
             <Spacer />
-            {members.length > 0 && (
+            {coreValues.length > 0 && (
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Update Members
+                Update Core Values
               </Button>
             )}
           </HStack>
@@ -124,12 +125,12 @@ export default function CommunityMembers({
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogContent ref={contentRef}>
               <DialogHeader>
-                <DialogTitle>{`${community.name}'s Members`}</DialogTitle>
+                <DialogTitle>{`${community.name}'s Core Values`}</DialogTitle>
               </DialogHeader>
               <DialogBody>
                 <MultiSelect
-                  name="members"
-                  label="Add some members"
+                  name="coreValues"
+                  label="Choose your core values"
                   control={control}
                   errors={errors}
                   options={valueOptions}
@@ -150,29 +151,32 @@ export default function CommunityMembers({
             </DialogContent>
           </form>
         </DialogRoot>
-        {members.length === 0 ? (
-          <EmptyState title="No Members" description="Click here to add some">
+
+        {coreValues.length === 0 && (
+          <EmptyState
+            title="No Core Values"
+            description="Click here to add some"
+          >
             <Button variant="surface" onClick={() => setOpen(true)}>
-              Add A Member
+              Choose Your Core Values
             </Button>
           </EmptyState>
-        ) : (
-          <Grid
-            key="members"
-            templateColumns="repeat(auto-fill, minmax(200px, 1fr))"
-            gap={6}
-            width="100%"
-          >
-            {members.map((member) => (
-              <PersonCard
-                key={member.id}
-                id={member.id}
-                name={member.name}
-                photo={member.photo}
-              />
-            ))}
-          </Grid>
         )}
+        <Grid
+          key="coreValues"
+          templateColumns={{
+            base: '1fr',
+            lg: 'repeat(2, 1fr)',
+          }}
+          gap={6}
+          width="100%"
+        >
+          {coreValues.map((corevalue) => (
+            <GridItem key={corevalue.id}>
+              <CoreValueCard coreValue={corevalue} />
+            </GridItem>
+          ))}
+        </Grid>
       </VStack>
     </ApolloWrapper>
   )

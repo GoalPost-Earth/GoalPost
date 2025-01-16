@@ -34,11 +34,17 @@ export const UPDATE_COMMUNITY_MUTATION = graphql(`
         relatedCommunities {
           id
           name
+          description
           members(limit: 5) {
             id
             name
             photo
           }
+        }
+        members {
+          id
+          name
+          photo
         }
       }
       info {

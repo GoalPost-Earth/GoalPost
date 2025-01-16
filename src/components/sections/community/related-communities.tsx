@@ -39,6 +39,9 @@ export default function RelatedCommunities({
   const [open, setOpen] = useState(false)
 
   const { data: allCommunities } = useQuery(GET_ALL_COMMUNITIES)
+  const [relatedCommunities, setRelatedCommunities] = useState<Community[]>(
+    community.relatedCommunities
+  )
   const [UpdateCommunity] = useMutation(UPDATE_COMMUNITY_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
@@ -66,11 +69,17 @@ export default function RelatedCommunities({
 
   const onSubmit = async (data: FormData) => {
     try {
-      const newRelatedCommunitiesIds = data.communities.filter(
-        (communityId) =>
-          !community.relatedCommunities
-            ?.map((community) => community.id)
-            .includes(communityId)
+      const initialRelatedCommunities = relatedCommunities.map(
+        (community) => community.id
+      )
+
+      const toDisconnect = initialRelatedCommunities.filter(
+        (community) => !data.communities.includes(community)
+      )
+
+      const toConnect = data.communities.filter(
+        (community) =>
+          !initialRelatedCommunities.map((p) => p).includes(community)
       )
 
       const response = await UpdateCommunity({
@@ -79,20 +88,8 @@ export default function RelatedCommunities({
           update: {
             relatedCommunities: [
               {
-                connect: [
-                  { where: { node: { id_IN: newRelatedCommunitiesIds } } },
-                ],
-                disconnect: [
-                  {
-                    where: {
-                      node: {
-                        id_IN: community.relatedCommunities?.map(
-                          (community) => community.id
-                        ),
-                      },
-                    },
-                  },
-                ],
+                connect: [{ where: { node: { id_IN: toConnect } } }],
+                disconnect: [{ where: { node: { id_IN: toDisconnect } } }],
               },
             ],
           },
@@ -102,6 +99,11 @@ export default function RelatedCommunities({
       if (!response.data) {
         throw new Error('No data returned')
       }
+
+      setRelatedCommunities(
+        response.data.updateCommunities.communities[0]
+          .relatedCommunities as Community[]
+      )
 
       setOpen(false)
       toaster.success({
@@ -124,7 +126,7 @@ export default function RelatedCommunities({
         {/* <DialogTrigger asChild> */}
         <HStack width="100%" justifyContent="space-between">
           <Spacer />
-          {community.relatedCommunities.length > 0 && (
+          {relatedCommunities?.length > 0 && (
             <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
               Update Communities
             </Button>
@@ -160,7 +162,7 @@ export default function RelatedCommunities({
           </DialogContent>
         </form>
       </DialogRoot>
-      {community.relatedCommunities.length === 0 ? (
+      {relatedCommunities.length === 0 ? (
         <EmptyState title="No Communities" description="Click here to add some">
           <Button variant="surface" onClick={() => setOpen(true)}>
             Add A Community
@@ -172,7 +174,7 @@ export default function RelatedCommunities({
           templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
           gap={6}
         >
-          {community.relatedCommunities.map((community) => (
+          {relatedCommunities.map((community) => (
             <GridItem key={community.id}>
               <CommunityCard community={community as Community} />
             </GridItem>

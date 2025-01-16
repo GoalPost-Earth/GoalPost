@@ -10781,12 +10781,19 @@ export type UpdateCommunityMutation = {
         __typename?: 'Community'
         id: string
         name: string
+        description?: string | null
         members: Array<{
           __typename?: 'Person'
           id: string
           name: string
           photo?: string | null
         }>
+      }>
+      members: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        photo?: string | null
       }>
     }>
     info: {
@@ -12425,6 +12432,10 @@ export const UpdateCommunityDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'members' },
                               arguments: [
                                 {
@@ -12450,6 +12461,27 @@ export const UpdateCommunityDocument = {
                                   },
                                 ],
                               },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'members' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
                             },
                           ],
                         },
