@@ -40,6 +40,8 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
         }
         carePoints {
           id
+          description
+          status
         }
       }
     }

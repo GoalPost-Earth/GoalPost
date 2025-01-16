@@ -4,8 +4,6 @@ import {
   Box,
   Container,
   Flex,
-  Grid,
-  GridItem,
   Heading,
   HStack,
   Spacer,
@@ -16,12 +14,15 @@ import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
-  EntityDetail,
   EntityOwnerCard,
-  CarePointCard,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
+import {
+  ResourceCarePoints,
+  ResourceDetails,
+} from '@/components/sections/resource'
+import { Resource } from '@/gql/graphql'
 
 export default async function ViewResourcePage({
   params,
@@ -100,41 +101,16 @@ export default async function ViewResourcePage({
                   TRIGGERS.RESOURCE[key as keyof typeof TRIGGERS.RESOURCE]
               )}
               content={[
-                <VStack
+                <ResourceDetails
                   key="Details"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
-                >
-                  <VStack gap={4}>
-                    <EntityDetail
-                      title="Description"
-                      entityName={resource.name}
-                      details={resource.description}
-                    />
-                    <EntityDetail title="Why" details={resource.why} />
-                    <EntityDetail
-                      title="Location"
-                      details={resource.location}
-                    />
-                    <EntityDetail title="Time" details={resource.time} />
-                    <EntityDetail title="Status" details={resource.status} />
-                  </VStack>
-                </VStack>,
-                <Grid
-                  key="carePoints"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {resource.carePoints.map((carePoint) => (
-                    <GridItem key={carePoint.id}>
-                      <CarePointCard carePoint={carePoint} />
-                    </GridItem>
-                  ))}
-                </Grid>,
+                  resource={resource as Resource}
+                />,
+                null,
+                null,
+                <ResourceCarePoints
+                  key="CarePoints"
+                  resource={resource as Resource}
+                />,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
