@@ -92,8 +92,9 @@ type BelongsTo @relationshipProperties {
 
 type CarePoint @node {
   id: ID! @id
-  description: String!
-  status: String!
+  name: String!
+  description: String
+  status: String
 
   resources: [Resource!]! @relationship(type: "APPLIED_IN", direction: OUT)
   enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
@@ -167,6 +168,8 @@ type Goal @node {
   why: String
   location: String
   time: String
+
+  resources: [Resource!]! @relationship(type: "ENABLED_BY", direction: OUT)
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   motivatesCommunities: [Community!]!
     @relationship(type: "MOTIVATED_BY", direction: IN)
