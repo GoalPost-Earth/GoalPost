@@ -47,6 +47,11 @@ export const GET_COMMUNITY = graphql(`
         name
         photo
       }
+      coreValues {
+        id
+        name
+        description
+      }
     }
   }
 `)

@@ -20,6 +20,7 @@ import Link from 'next/link'
 import { Community } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
 import {
+  CommunityCoreValues,
   CommunityDetails,
   CommunityGoals,
   CommunityMembers,
@@ -122,6 +123,10 @@ export default async function ViewCommunityPage({
                 />,
                 <CommunityMembers
                   key="members"
+                  community={community as Community}
+                />,
+                <CommunityCoreValues
+                  key="corevalues"
                   community={community as Community}
                 />,
               ]}

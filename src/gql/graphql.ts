@@ -11060,6 +11060,12 @@ export type UpdateCommunityMutation = {
         name: string
         photo?: string | null
       }>
+      coreValues: Array<{
+        __typename?: 'CoreValue'
+        id: string
+        name: string
+        description?: string | null
+      }>
     }>
     info: {
       __typename?: 'UpdateInfo'
@@ -11633,6 +11639,12 @@ export type GetCommunityQuery = {
       id: string
       name: string
       photo?: string | null
+    }>
+    coreValues: Array<{
+      __typename?: 'CoreValue'
+      id: string
+      name: string
+      description?: string | null
     }>
   }>
 }
@@ -12747,6 +12759,27 @@ export const UpdateCommunityDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'coreValues' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
                             },
                           ],
                         },
@@ -15147,6 +15180,21 @@ export const GetCommunityDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'coreValues' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },

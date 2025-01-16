@@ -21,6 +21,7 @@ export const TRIGGERS = {
     RESOURCES: 'Resources',
     GOALS: 'Goals',
     MEMBERS: 'Members',
+    COREVALUES: 'Core Values',
   },
   COREVALUE: {
     DETAILS: 'Core Value Details',

@@ -46,6 +46,11 @@ export const UPDATE_COMMUNITY_MUTATION = graphql(`
           name
           photo
         }
+        coreValues {
+          id
+          name
+          description
+        }
       }
       info {
         nodesCreated

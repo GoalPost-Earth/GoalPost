@@ -57,7 +57,12 @@ const MultiSelect = (props: SelectPropsType) => {
             <MultiSelectTrigger>
               <MultiSelectValueText placeholder={placeholder} />
             </MultiSelectTrigger>
-            <MultiSelectContent portalRef={portalRef}>
+            <MultiSelectContent
+              portalRef={portalRef}
+              height="200px"
+              overflow="auto"
+              scrollbarWidth="thin"
+            >
               {chakraOptions.items.map((option) => (
                 <MultiSelectItem item={option} key={option.value}>
                   {option.label}
