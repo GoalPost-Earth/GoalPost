@@ -95,7 +95,6 @@ type CarePoint @node {
   description: String!
   status: String!
 
-  resources: [Resource!]! @relationship(type: "APPLIED_IN", direction: OUT)
   enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
   caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
 
@@ -168,7 +167,7 @@ type Goal @node {
   location: String
   time: String
 
-  resources: [Resource!]! @relationship(type: "ENABLED_BY", direction: OUT)
+  resources: [Resource!]! @relationship(type: "APPLIED_TO", direction: IN)
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   motivatesCommunities: [Community!]!
     @relationship(type: "MOTIVATED_BY", direction: IN)
@@ -196,12 +195,11 @@ type Resource @node {
   location: String
   time: String
 
-  goals: [Goal!]! @relationship(type: "ENABLED_BY", direction: IN)
+  goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
   provededByCommunity: [Community!]!
     @relationship(type: "PROVIDES", direction: IN)
-  carePoints: [CarePoint!]! @relationship(type: "APPLIED_TO", direction: IN)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
