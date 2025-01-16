@@ -144,6 +144,8 @@ type CoreValue @node {
   description: String
   why: String
   isEmbracedBy: [Person!]! @relationship(type: "EMBRACES", direction: IN)
+  goals: [Goal!]! @relationship(type: "ALIGNED_TO", direction: IN)
+  communities: [Community!]! @relationship(type: "EMBRACES", direction: IN)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!
