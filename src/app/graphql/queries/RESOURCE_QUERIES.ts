@@ -10,7 +10,7 @@ export const GET_RESOURCE = graphql(`
       why
       location
       time
-      dependsOnResources {
+      resources {
         id
         name
       }
@@ -40,7 +40,7 @@ export const GET_ALL_RESOURCES = graphql(`
       why
       location
       time
-      dependsOnResources {
+      resources {
         id
         name
       }

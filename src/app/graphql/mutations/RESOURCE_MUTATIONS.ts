@@ -11,12 +11,19 @@ export const CREATE_RESOURCE_MUTATION = graphql(`
         why
         location
         time
-        dependsOnResources {
+        resources {
           id
           name
         }
-        carePoints {
+        goals {
           id
+          name
+          description
+        }
+
+        providedByPerson {
+          id
+          name
         }
       }
     }
@@ -34,14 +41,9 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
         why
         location
         time
-        dependsOnResources {
+        resources {
           id
           name
-        }
-        carePoints {
-          id
-          description
-          status
         }
       }
     }

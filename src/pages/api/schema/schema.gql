@@ -95,6 +95,7 @@ type CarePoint @node {
   description: String!
   status: String!
 
+  resources: [Resource!]!
   enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
   caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
 
@@ -195,6 +196,7 @@ type Resource @node {
   location: String
   time: String
 
+  carePoints: [CarePoint!]!
   goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
