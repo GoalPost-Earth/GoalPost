@@ -64,7 +64,7 @@ export default async function ViewCarePointPage({
             border={'10px solid'}
             colorPalette={'bg'}
             borderColor="carepoint.emphasized"
-            name={carepoint?.description}
+            name={carepoint.name}
             fontSize="60px"
           />
         </Flex>
@@ -93,7 +93,7 @@ export default async function ViewCarePointPage({
             <GenericTabs
               entityId={id}
               entityType={EntityEnum.CarePoint}
-              entityName={carepoint.description}
+              entityName={carepoint.name}
               triggers={Object.keys(TRIGGERS.CAREPOINT).map(
                 (key) =>
                   TRIGGERS.CAREPOINT[key as keyof typeof TRIGGERS.CAREPOINT]
@@ -111,7 +111,7 @@ export default async function ViewCarePointPage({
                   <VStack gap={4}>
                     <EntityDetail
                       title="Description"
-                      entityName={carepoint.description}
+                      entityName={carepoint.name}
                       details={carepoint.description}
                     />
 

@@ -28,11 +28,13 @@ export const GET_GOAL = graphql(`
       }
       enablesCarePoints {
         id
+        name
         description
         status
       }
       caredForByCarePoints {
         id
+        name
         description
         status
       }

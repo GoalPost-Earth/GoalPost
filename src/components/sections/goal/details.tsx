@@ -51,7 +51,10 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
           input: {
             ...data,
             enabledByGoals: {
-              connect: [{ where: { node: { id_EQ: goal.id } } }],
+              connect: [{ where: { node: { id_EQ: data.enabledByGoals } } }],
+            },
+            caresForGoals: {
+              connect: [{ where: { node: { id_EQ: data.caresForGoals } } }],
             },
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],

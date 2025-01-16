@@ -1,3 +1,4 @@
-MATCH (jd:Person {email: "jaedagy@gmail.com"})-[r:BELONGS_TO]->(community)
-DELETE r
-RETURN jd
+MATCH (care:CarePoint) WHERE care.name IS NULL
+SET care.name = "CarePoint " + id(care)
+
+RETURN care.name

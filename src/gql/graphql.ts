@@ -12381,6 +12381,7 @@ export type GetRecentActionsQuery = {
     __typename?: 'CarePoint'
     createdAt: any
     description?: string | null
+    name: string
     id: string
     status?: string | null
     createdBy: Array<{
@@ -12454,6 +12455,7 @@ export type GetCarePointQuery = {
   carePoints: Array<{
     __typename?: 'CarePoint'
     id: string
+    name: string
     description?: string | null
     status?: string | null
     createdAt: any
@@ -12494,6 +12496,7 @@ export type GetAllCarePointsQuery = {
   carePoints: Array<{
     __typename?: 'CarePoint'
     id: string
+    name: string
     description?: string | null
     status?: string | null
     createdAt: any
@@ -12763,12 +12766,14 @@ export type GetGoalQuery = {
     enablesCarePoints: Array<{
       __typename?: 'CarePoint'
       id: string
+      name: string
       description?: string | null
       status?: string | null
     }>
     caredForByCarePoints: Array<{
       __typename?: 'CarePoint'
       id: string
+      name: string
       description?: string | null
       status?: string | null
     }>
@@ -13022,6 +13027,7 @@ export type GetResourceQuery = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
+      name: string
       description?: string | null
       status?: string | null
     }>
@@ -15480,6 +15486,7 @@ export const GetRecentActionsDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
@@ -15774,6 +15781,7 @@ export const GetCarePointDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
@@ -15896,6 +15904,7 @@ export const GetAllCarePointsDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
@@ -16755,6 +16764,7 @@ export const GetGoalDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
@@ -16773,6 +16783,7 @@ export const GetGoalDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
@@ -17641,6 +17652,7 @@ export const GetResourceDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },

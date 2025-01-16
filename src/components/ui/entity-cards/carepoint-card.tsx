@@ -1,4 +1,4 @@
-import { Badge, Card, HStack, Text } from '@chakra-ui/react'
+import { Badge, Box, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import EllipseIcon from '../../icons/EllipseIcon'
 import { CarePoint } from '@/gql/graphql'
@@ -8,7 +8,7 @@ export function CarePointCard({
   carePoint,
   ...rest
 }: {
-  carePoint: Pick<CarePoint, 'id' | 'description' | 'status'>
+  carePoint: Pick<CarePoint, 'id' | 'name' | 'description' | 'status'>
 }) {
   return (
     <Link
@@ -16,10 +16,10 @@ export function CarePointCard({
       style={{ width: '100%', height: '100%', display: 'block' }}
     >
       <Card.Root width="100%" height="100%" bgColor="carepoint.subtle">
-        <Card.Body width="100%" height="100%">
+        <Card.Header>
           <HStack>
-            <Text fontWeight="bold" fontSize="sm">
-              Care Point
+            <Text lineClamp={1} fontWeight="bold">
+              {carePoint.name}
             </Text>
             <Badge
               variant="subtle"
@@ -33,9 +33,13 @@ export function CarePointCard({
               {carePoint.status}
             </Badge>
           </HStack>
-          <HStack lineClamp={3} mt={4} fontSize="md">
-            <AutoLink text={carePoint.description} />
-          </HStack>
+        </Card.Header>
+        <Card.Body width="100%" height="100%">
+          {!!carePoint.description && (
+            <Box padding={0} lineClamp={{ base: 2, lg: 3 }}>
+              <AutoLink text={carePoint.description} />
+            </Box>
+          )}
         </Card.Body>
       </Card.Root>
     </Link>
