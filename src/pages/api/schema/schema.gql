@@ -167,6 +167,8 @@ type Goal @node {
   why: String
   location: String
   time: String
+
+  resources: [Resource!]! @relationship(type: "ENABLED_BY", direction: OUT)
   motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
   motivatesCommunities: [Community!]!
     @relationship(type: "MOTIVATED_BY", direction: IN)
@@ -193,9 +195,12 @@ type Resource @node {
   why: String
   location: String
   time: String
+
+  goals: [Goal!]! @relationship(type: "ENABLED_BY", direction: IN)
+  resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
-  dependsOnResources: [Resource!]!
-    @relationship(type: "DEPENDS_ON", direction: OUT)
+  provededByCommunity: [Community!]!
+    @relationship(type: "PROVIDES", direction: IN)
   carePoints: [CarePoint!]! @relationship(type: "APPLIED_TO", direction: IN)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
