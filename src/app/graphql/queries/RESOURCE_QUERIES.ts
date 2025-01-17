@@ -33,6 +33,7 @@ export const GET_RESOURCE = graphql(`
         description
         createdAt
       }
+      createdAt
       providedByCommunity {
         name
         id

@@ -13051,6 +13051,7 @@ export type GetCommunityQuery = {
     activities?: string | null
     resultsAchieved?: string | null
     status?: string | null
+    createdAt: any
     relatedCommunities: Array<{
       __typename?: 'Community'
       id: string
@@ -13287,6 +13288,7 @@ export type GetGoalQuery = {
       id: string
       name: string
       description?: string | null
+      createdAt: any
     }>
     enablesCarePoints: Array<{
       __typename?: 'CarePoint'
@@ -13551,6 +13553,7 @@ export type GetResourceQuery = {
     why?: string | null
     location?: string | null
     time?: string | null
+    createdAt: any
     resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
     carePoints: Array<{
       __typename?: 'CarePoint'
@@ -16803,6 +16806,7 @@ export const GetCommunityDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'createdBy' },
@@ -17459,6 +17463,10 @@ export const GetGoalDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
                       },
                     ],
                   },
@@ -18422,6 +18430,7 @@ export const GetResourceDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'providedByCommunity' },

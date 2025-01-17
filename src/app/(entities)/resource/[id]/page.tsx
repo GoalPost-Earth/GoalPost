@@ -89,7 +89,10 @@ export default async function ViewResourcePage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${resource?.providedByPerson[0].id}`}>
-              <EntityOwnerCard person={resource?.providedByPerson[0]} />
+              <EntityOwnerCard
+                owner={resource?.providedByPerson[0]}
+                entity={resource}
+              />
             </Link>
           </Box>
 
@@ -123,7 +126,10 @@ export default async function ViewResourcePage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={resource?.providedByPerson[0]} />
+              <EntityOwnerCard
+                owner={resource?.providedByPerson[0]}
+                entity={resource}
+              />
             </Box>
           </HStack>
         </VStack>

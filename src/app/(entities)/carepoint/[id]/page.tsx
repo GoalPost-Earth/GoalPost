@@ -85,7 +85,10 @@ export default async function ViewCarePointPage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${carepoint?.createdBy[0]?.id}`}>
-              <EntityOwnerCard person={carepoint?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={carepoint?.createdBy[0]}
+                entity={carepoint}
+              />
             </Link>
           </Box>
 
@@ -111,7 +114,10 @@ export default async function ViewCarePointPage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={carepoint?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={carepoint?.createdBy[0]}
+                entity={carepoint}
+              />
             </Box>
           </HStack>
         </VStack>

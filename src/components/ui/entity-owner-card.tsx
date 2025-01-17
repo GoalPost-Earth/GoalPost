@@ -11,7 +11,7 @@ export function EntityOwnerCard({
 }: {
   owner: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
   entity?: {
-    __typename: string
+    __typename?: string
     id: string
     name: string
     createdAt: string

@@ -91,7 +91,10 @@ export default async function ViewCommunityPage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${community?.createdBy[0]?.id}`}>
-              <EntityOwnerCard person={community?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={community?.createdBy[0]}
+                entity={community}
+              />
             </Link>
           </Box>
 
@@ -133,7 +136,10 @@ export default async function ViewCommunityPage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={community?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={community?.createdBy[0]}
+                entity={community}
+              />
             </Box>
           </HStack>
         </VStack>

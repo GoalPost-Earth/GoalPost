@@ -42,6 +42,7 @@ export const GET_COMMUNITY = graphql(`
         }
       }
 
+      createdAt
       createdBy {
         id
         name

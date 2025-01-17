@@ -26,6 +26,7 @@ export const GET_GOAL = graphql(`
         id
         name
         description
+        createdAt
       }
       enablesCarePoints {
         id
