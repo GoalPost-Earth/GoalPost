@@ -165,7 +165,7 @@ export default function RelatedCommunities({
       {relatedCommunities.length === 0 ? (
         <EmptyState title="No Communities" description="Click here to add some">
           <Button variant="surface" onClick={() => setOpen(true)}>
-            Add A Community
+            Choose Some Communities
           </Button>
         </EmptyState>
       ) : (

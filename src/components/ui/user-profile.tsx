@@ -48,7 +48,12 @@ export function UserProfile({
 
           <HStack justifyContent={'center'} gap={5}>
             <Link asChild href={'/update/person/' + user.id}>
-              <EditButton colorPalette={'person'} text={`Edit`} size="xl" />
+              <EditButton
+                display={{ lg: 'none' }}
+                colorPalette={'person'}
+                text={`Edit`}
+                size="xl"
+              />
             </Link>
 
             <DeleteButton

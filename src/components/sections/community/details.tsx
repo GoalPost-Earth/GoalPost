@@ -21,7 +21,7 @@ export default function CommunityDetails({
     >
       <HStack width="100%" justifyContent="space-between">
         <Spacer />
-        <Link href={`/community/update/${community.id}/details`}>
+        <Link href={`/community/update/${community.id}`}>
           <EditButton
             colorPalette="community"
             size="xl"

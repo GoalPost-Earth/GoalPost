@@ -28,11 +28,12 @@ export default function UpdateResource({
   const defaultValues: ResourceFormData = useMemo(
     () => ({
       name: resource?.name || '',
-      description: resource?.description || '',
-      status: resource?.status || '',
-      why: resource?.why || '',
-      location: resource?.location || '',
-      time: resource?.time || '',
+      description: resource?.description || undefined,
+      status: resource?.status || undefined,
+      why: resource?.why || undefined,
+      location: resource?.location || undefined,
+      time: resource?.time || undefined,
+      linkTo: 'personLink',
     }),
     [resource]
   )
