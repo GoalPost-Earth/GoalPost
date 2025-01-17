@@ -12460,12 +12460,19 @@ export type UpdateResourceMutation = {
       why?: string | null
       location?: string | null
       time?: string | null
-      resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
+      resources: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+        description?: string | null
+        status?: string | null
+      }>
       goals: Array<{
         __typename?: 'Goal'
         id: string
         name: string
         description?: string | null
+        status?: string | null
       }>
       carePoints: Array<{
         __typename?: 'CarePoint'
@@ -12478,6 +12485,12 @@ export type UpdateResourceMutation = {
         name: string
         id: string
         description?: string | null
+        members: Array<{
+          __typename?: 'Person'
+          id: string
+          name: string
+          photo?: string | null
+        }>
       }>
       providedByPerson: Array<{
         __typename?: 'Person'
@@ -15507,6 +15520,14 @@ export const UpdateResourceDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
+                            },
                           ],
                         },
                       },
@@ -15527,6 +15548,10 @@ export const UpdateResourceDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
                             },
                           ],
                         },
@@ -15569,6 +15594,34 @@ export const UpdateResourceDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'members' },
+                              arguments: [
+                                {
+                                  kind: 'Argument',
+                                  name: { kind: 'Name', value: 'limit' },
+                                  value: { kind: 'IntValue', value: '5' },
+                                },
+                              ],
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'photo' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },

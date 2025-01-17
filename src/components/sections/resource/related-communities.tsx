@@ -164,7 +164,7 @@ export default function ResourceRelatedCommunities({
       {relatedCommunities.length === 0 ? (
         <EmptyState title="No Communities" description="Click here to add some">
           <Button variant="surface" onClick={() => setOpen(true)}>
-            Add A resource
+            Add a community
           </Button>
         </EmptyState>
       ) : (
