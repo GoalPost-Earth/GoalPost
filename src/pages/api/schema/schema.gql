@@ -96,6 +96,13 @@ type CarePoint @node {
   status: String!
 
   resources: [Resource!]!
+    @cypher(
+      statement: """
+      MATCH (resource:Resource)
+      RETURN DISTINCT resource
+      """
+      columnName: "resource"
+    )
   enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
   caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
 
@@ -197,6 +204,13 @@ type Resource @node {
   time: String
 
   carePoints: [CarePoint!]!
+    @cypher(
+      statement: """
+      MATCH (carePoint:CarePoint)
+      RETURN carePoint
+      """
+      columnName: "carePoint"
+    )
   goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
