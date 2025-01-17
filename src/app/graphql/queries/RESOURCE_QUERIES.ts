@@ -30,6 +30,7 @@ export const GET_RESOURCE = graphql(`
         id
         name
         description
+        createdAt
       }
       provededByCommunity {
         name

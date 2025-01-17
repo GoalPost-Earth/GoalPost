@@ -17,7 +17,7 @@ export default function ResourceDetails({ resource }: { resource: Resource }) {
     >
       <HStack width="100%" justifyContent="space-between">
         <Spacer />
-        <Link href={`/resource/update/${resource.id}/details`}>
+        <Link href={`/resource/update/${resource.id}`}>
           <EditButton
             colorPalette="resource"
             size="xl"

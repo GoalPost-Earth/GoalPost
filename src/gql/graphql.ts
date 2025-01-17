@@ -13161,6 +13161,7 @@ export type GetResourceQuery = {
       id: string
       name: string
       description?: string | null
+      createdAt: any
     }>
     provededByCommunity: Array<{
       __typename?: 'Community'
@@ -17917,6 +17918,10 @@ export const GetResourceDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
                       },
                     ],
                   },
