@@ -29,11 +29,11 @@ export default function UpdateCommunity({
   const defaultValues: CommunityFormData = useMemo(
     () => ({
       name: community?.name || '',
-      description: community?.description || '',
-      status: community?.status || '',
-      why: community?.why || '',
-      location: community?.location || '',
-      time: community?.time || '',
+      description: community?.description || undefined,
+      status: community?.status || 'Active',
+      why: community?.why || undefined,
+      location: community?.location || undefined,
+      time: community?.time || undefined,
     }),
     [community]
   )
@@ -42,6 +42,7 @@ export default function UpdateCommunity({
     control,
     handleSubmit,
     reset,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<CommunityFormData>({
     defaultValues,
@@ -82,6 +83,7 @@ export default function UpdateCommunity({
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}
         />

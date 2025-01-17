@@ -16,6 +16,7 @@ function CreateCommunity() {
   const {
     control,
     handleSubmit,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<CommunityFormData>({
     resolver: zodResolver(communitySchema),
@@ -53,6 +54,7 @@ function CreateCommunity() {
         formMode={FormMode.Create}
         control={control}
         errors={errors}
+        register={register}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
       />

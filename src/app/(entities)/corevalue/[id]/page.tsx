@@ -108,10 +108,7 @@ export default async function ViewCoreValuePage({
             <Link href={`/person/${corevalue?.createdBy[0]?.id}`}>
               <EntityOwnerCard
                 owner={corevalue?.createdBy[0]}
-                entity={{
-                  ...corevalue,
-                  __typename: corevalue.__typename ?? '',
-                }}
+                entity={corevalue}
               />
             </Link>
           </Box>
