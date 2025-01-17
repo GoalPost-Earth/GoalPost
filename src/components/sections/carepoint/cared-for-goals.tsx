@@ -6,7 +6,7 @@ import React from 'react'
 import { Grid, GridItem, VStack } from '@chakra-ui/react'
 import { CarePoint } from '@/gql/graphql'
 
-export default function CarePointEnablingGoals({
+export default function CarePointGoalsCaredFor({
   carePoint,
 }: {
   key: string
@@ -14,10 +14,10 @@ export default function CarePointEnablingGoals({
 }) {
   return (
     <VStack bg={'bg'} p={4} borderRadius={'2xl'} boxShadow={'xs'}>
-      {carePoint.enabledByGoals.length === 0 && (
+      {carePoint.caresForGoals.length === 0 && (
         <EmptyState
-          title="No enabling goals"
-          description="This care point is not enabled by any goals."
+          title="No goals cared for"
+          description="This care point is not caring for any goals."
         />
       )}
       <Grid
@@ -25,7 +25,7 @@ export default function CarePointEnablingGoals({
         gap={6}
         width="100%"
       >
-        {carePoint.enabledByGoals.map((goal) => (
+        {carePoint.caresForGoals.map((goal) => (
           <GridItem key={goal.id}>
             <GoalCard goal={goal} />
           </GridItem>

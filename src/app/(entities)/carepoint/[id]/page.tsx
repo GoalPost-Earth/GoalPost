@@ -15,8 +15,9 @@ import {
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
-  CarePointLinkedGoals,
+  CarePointEnablingGoals,
   CarePointDetails,
+  CarePointGoalsCaredFor,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -106,8 +107,12 @@ export default async function ViewCarePointPage({
                   key="details"
                   carepoint={carepoint as CarePoint}
                 />,
-                <CarePointLinkedGoals
+                <CarePointEnablingGoals
                   key="linkedGoals"
+                  carePoint={carepoint as CarePoint}
+                />,
+                <CarePointGoalsCaredFor
+                  key="goalsCaredFor"
                   carePoint={carepoint as CarePoint}
                 />,
               ]}
