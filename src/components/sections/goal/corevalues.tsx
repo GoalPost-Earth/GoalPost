@@ -124,7 +124,7 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
             <HStack width="100%" justifyContent="space-between">
               <Spacer />
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Update corevalues
+                Update Core Values
               </Button>
             </HStack>
           )}
