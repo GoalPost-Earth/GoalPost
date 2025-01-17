@@ -1,3 +1,64 @@
+#### 1.0.4 (2025-01-17)
+
+##### Chores
+
+*  merge branch 'feat/corevalues-crud' into jd-main ([01b3e18f](https://github.com/rdamashek/GoalPost/commit/01b3e18fbb5406d0292cbba8a83ad1940050689d))
+*  merge branch 'refactor/entity-owner-card' into jd-main ([9160723a](https://github.com/rdamashek/GoalPost/commit/9160723a3ad23568881c7799da18e23f6aa5d761))
+*  merge branch 'feat/goal-entity-crud' into main ([19166361](https://github.com/rdamashek/GoalPost/commit/19166361d99b1f06fd9ce519b19fa95d1f4e62be))
+*  merge branch 'feat/carepoint-form' into feat/goal-entity-crud ([fb8028b3](https://github.com/rdamashek/GoalPost/commit/fb8028b39298e038bbbd4464901f81e6937ae6fd))
+*  tweak grid layout ([64089901](https://github.com/rdamashek/GoalPost/commit/6408990179f1655f33d9fe27398f86659ef2b55f))
+
+##### New Features
+
+*  enhance resource update mutation with additional fields for description, status, and members ([e89b9631](https://github.com/rdamashek/GoalPost/commit/e89b963125da6ffb26699461d54fb9ce227ce59a))
+*  rename and refactor care point goal components; add Goals Cared For section ([0571cbd3](https://github.com/rdamashek/GoalPost/commit/0571cbd39decc4d10e9c4f19e1a12c1bf293026e))
+*  add createdAt field to community, goal, and resource queries; update EntityOwnerCard usage ([90534b55](https://github.com/rdamashek/GoalPost/commit/90534b55dfc42b7391d23bda1515354710ad8f5a))
+*  add detailed fields to care point schema and implement CarePointDetails component ([0b877590](https://github.com/rdamashek/GoalPost/commit/0b8775905d5f64fdd28fd2a3db2be5426a7dc592))
+*  implement care point update functionality with form handling and validation ([6d0e3f91](https://github.com/rdamashek/GoalPost/commit/6d0e3f9139c56fa9d02188f82f0ac124ac716f2c))
+*  enhance care points display with add button and empty state ([e87f857e](https://github.com/rdamashek/GoalPost/commit/e87f857e05980935d5e1a2e7d75e6e67cd56d465))
+*  enhance community details with signup date and improve totem display ([1bc811f4](https://github.com/rdamashek/GoalPost/commit/1bc811f4e3b107ae6c6a1f4ead28142cbbd47b6e))
+*  update resource form to use undefined for optional fields and improve community details link ([555cb1db](https://github.com/rdamashek/GoalPost/commit/555cb1db508509bff8178d0c8cb1a5d50600f7e4))
+*  add resource tab to goal page ([255c581c](https://github.com/rdamashek/GoalPost/commit/255c581c8315f058ecc9804750773a2f40a06865))
+*  add createdAt field to resource queries and update related components ([1d5fa5f7](https://github.com/rdamashek/GoalPost/commit/1d5fa5f7d0d8175f17e6dd24ed1ad55a022aa803))
+*  show default tab page if data does not exist ([f71323fd](https://github.com/rdamashek/GoalPost/commit/f71323fd72387d6d6ef5c924bb3a225af571fded))
+*  add remaining tabs to resource page ([983c180b](https://github.com/rdamashek/GoalPost/commit/983c180bb30891f746182b1dc2de3aae1e391447))
+*  add related goals and edit functionality ([7e4ed2aa](https://github.com/rdamashek/GoalPost/commit/7e4ed2aa59c8d5f7a14e331b5ba77385335c779d))
+*  add cypher queries for resources and carePoints in GraphQL schema ([1b7985fe](https://github.com/rdamashek/GoalPost/commit/1b7985fe7bf519420b75ea8b366b8eb7da1536ef))
+*  add name field to care points in queries and components ([1c76e29b](https://github.com/rdamashek/GoalPost/commit/1c76e29b0076cee6509049711f960c6ca4cd989b))
+*  implement care point create form ([980cacfa](https://github.com/rdamashek/GoalPost/commit/980cacfa353521c1d4473bc439a34d565a17bad7))
+*  add graphql support for resource -> resource, community, people, goals ([4a3b9172](https://github.com/rdamashek/GoalPost/commit/4a3b91720a245a5cdc802e506aa7b68bc6fcd3d7))
+*  add tabs to selcted goal page ([19798546](https://github.com/rdamashek/GoalPost/commit/19798546a010eb3e5996f94ae0d8955311f95d9d))
+*  add tabs for detaiils and carepoints on resource page ([be66eb06](https://github.com/rdamashek/GoalPost/commit/be66eb067e8284476f9c99a8cc60bc63752624cf))
+*  add entity tabs to core value page ([f35921c8](https://github.com/rdamashek/GoalPost/commit/f35921c8b9251b8e9c0f1de659c5fdf9a8af97e5))
+*  add core value tab to community entity ([500435d3](https://github.com/rdamashek/GoalPost/commit/500435d38c5536526e075b3a2a439e3cfd9dc7ce))
+*  add relationships for goals and communities to CoreValue type ([7b7e0eb6](https://github.com/rdamashek/GoalPost/commit/7b7e0eb68cf5978b9f123f31c249566234cd7a82))
+*  add coreValues relationship to Community type and simplify community edges usage ([138fccda](https://github.com/rdamashek/GoalPost/commit/138fccdad56b874bb6d08be31b979a0782926f3d))
+*  add signup date to community display ([8cbe1632](https://github.com/rdamashek/GoalPost/commit/8cbe163259f30af0fccc59bfc319ff40c289b60b))
+
+##### Bug Fixes
+
+*  typos on community tab ([bf457a10](https://github.com/rdamashek/GoalPost/commit/bf457a1008b458be41ab1f0d7529d5ec5626a30b))
+*  typo in success toast ([c2a73bd5](https://github.com/rdamashek/GoalPost/commit/c2a73bd5aa3fb5336df0861ef2ae34ae554fae91))
+*  update relationship directions for resources, goals, and care points in GraphQL schema ([9241fc21](https://github.com/rdamashek/GoalPost/commit/9241fc21682bbad77d35425581b5c780b25738a9))
+*  update EntityOwnerCard to accept owner and entity props for improved data handling ([d3b49fcd](https://github.com/rdamashek/GoalPost/commit/d3b49fcd53f6ff558205000175c810e6e972bd74))
+*  fix lint errors ([d1a2b6f0](https://github.com/rdamashek/GoalPost/commit/d1a2b6f05625a3af25e909c2f13f06e6ff6cc5e2))
+*  fix bugs in mutation logic and tab updates ([14f44e96](https://github.com/rdamashek/GoalPost/commit/14f44e969e50b3588a232d460739f591e199c21c))
+*  update label for core values selection in GoalCoreValues component ([55e6ea89](https://github.com/rdamashek/GoalPost/commit/55e6ea89a9041a90127654c2678950eba5895e9e))
+*  overflow on resource and community cards ([080c7f40](https://github.com/rdamashek/GoalPost/commit/080c7f402421797287df4911694cf57c15f66f74))
+
+##### Other Changes
+
+*  add link options for person and community in resource form ([39816077](https://github.com/rdamashek/GoalPost/commit/39816077b5906e34df17da53c87ffe91b730d95b))
+
+##### Refactors
+
+*  userProfile to PersonProfile and improve button text display ([43fe34b2](https://github.com/rdamashek/GoalPost/commit/43fe34b25c43881da242dad3a8a5319930d7b529))
+*  core value page on goal entity ([6176f5b8](https://github.com/rdamashek/GoalPost/commit/6176f5b8cef6c93e29957939ba4ea844295bc32d))
+*  update gql schema to replace 'dependsOnResources' with 'resources' ([4d3064aa](https://github.com/rdamashek/GoalPost/commit/4d3064aaef16d68091727b9e00f1026368a31c7a))
+*  change aligned goals logic to select goal from existing goals ([44ddb9f6](https://github.com/rdamashek/GoalPost/commit/44ddb9f6b355de9943fe68eb7905f61f5c98901c))
+*  reorganize community component imports ([d081394d](https://github.com/rdamashek/GoalPost/commit/d081394d01e4de220dcd064ce2b97467f63a1489))
+*  redesign community tabs ([676e9ea5](https://github.com/rdamashek/GoalPost/commit/676e9ea59cc6babf7f0b5a1ea4f02609d3d963a6))
+
 #### 1.0.3 (2025-01-13)
 
 ##### Chores
