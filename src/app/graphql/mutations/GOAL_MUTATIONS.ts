@@ -85,6 +85,12 @@ export const UPDATE_GOAL_MUTATION = graphql(`
           description
           status
         }
+        resources {
+          id
+          name
+          description
+          status
+        }
         createdBy {
           id
           name

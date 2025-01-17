@@ -21,6 +21,7 @@ import {
   GoalCaredForByCarePoints,
   GoalMotivatesPeople,
   GoalMotivatesCommunities,
+  GoalRelatedResources,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -121,6 +122,10 @@ export default async function ViewGoalPage({
                 />,
                 <GoalMotivatesCommunities
                   key="motivatesCommunities"
+                  goal={goal as Goal}
+                />,
+                <GoalRelatedResources
+                  key="relatedResources"
                   goal={goal as Goal}
                 />,
               ]}

@@ -6,6 +6,7 @@ export const TRIGGERS = {
     CARED_FOR_BY_CAREPOINTS: 'Cared For By Care Points',
     MOTIVATES_PEOPLE: 'Motivates People',
     MOTIVATES_COMMUNITIES: 'Motivates Communities',
+    RELATED_RESOURCES: 'Related Resources',
   },
   RESOURCE: {
     DETAILS: 'Resource Details',

@@ -39,6 +39,12 @@ export const GET_GOAL = graphql(`
         description
         status
       }
+      resources {
+        id
+        name
+        description
+        status
+      }
       createdBy {
         id
         name

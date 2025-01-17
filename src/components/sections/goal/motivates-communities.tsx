@@ -42,8 +42,6 @@ export default function GoalMotivatesCommunities({ goal }: { goal: Goal }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
 
-  console.log('Motivates communities', motivatesCommunities)
-
   const valueOptions =
     data?.communities.map((goal) => ({
       label: goal.name,
@@ -98,8 +96,6 @@ export default function GoalMotivatesCommunities({ goal }: { goal: Goal }) {
       setMotivatesCommunities(
         response.data.updateGoals.goals[0].motivatesCommunities as Community[]
       )
-
-      console.log(response.data.updateGoals.goals[0].motivatesCommunities)
 
       setOpen(false)
       toaster.success({
