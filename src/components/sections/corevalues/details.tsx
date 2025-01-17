@@ -21,7 +21,7 @@ export default function CoreValueDetails({
     >
       <HStack width="100%" justifyContent="space-between">
         <Spacer />
-        <Link href={`/corevalue/update/${corevalue.id}/details`}>
+        <Link href={`/corevalue/update/${corevalue.id}`}>
           <EditButton
             colorPalette="corevalue"
             size="xl"

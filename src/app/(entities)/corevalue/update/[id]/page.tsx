@@ -29,10 +29,10 @@ export default function UpdateCommunity({
     () => ({
       name: coreValue?.name || '',
       description: coreValue?.description || '',
-      whoSupports: coreValue?.whoSupports || '',
-      why: coreValue?.why || '',
-      alignmentChallenges: coreValue?.alignmentChallenges || '',
-      alignmentExamples: coreValue?.alignmentExamples || '',
+      whoSupports: coreValue?.whoSupports || undefined,
+      why: coreValue?.why || undefined,
+      alignmentChallenges: coreValue?.alignmentChallenges || undefined,
+      alignmentExamples: coreValue?.alignmentExamples || undefined,
     }),
     [coreValue]
   )

@@ -149,7 +149,7 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
       >
         <HStack width="100%" justifyContent="space-between">
           <Spacer />
-          <Link href={`/goal/update/${goal.id}/details`}>
+          <Link href={`/goal/update/${goal.id}`}>
             <EditButton
               colorPalette="goal"
               size="xl"
