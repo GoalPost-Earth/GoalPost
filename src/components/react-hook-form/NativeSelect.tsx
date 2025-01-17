@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useEffect, useState } from 'react'
 import { SelectRootProps } from '@chakra-ui/react'
 import { ReactHookFormComponentProps, SelectOptions } from '../../types/form'
 import { Field } from '../ui/field'
@@ -8,6 +10,7 @@ interface RHFSelectProps extends ReactHookFormComponentProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register: UseFormRegister<any>
   options: SelectOptions
+  defaultMessage?: string
 }
 
 type SelectPropsType = Omit<RHFSelectProps, 'control'> &
@@ -17,6 +20,7 @@ const Select = (props: SelectPropsType) => {
   const {
     label,
     name,
+    defaultMessage,
     placeholder,
     errors,
     required,
@@ -24,6 +28,16 @@ const Select = (props: SelectPropsType) => {
     options,
     ...rest
   } = props
+
+  const [selectOptions, setSelectOptions] = useState<SelectOptions>([])
+
+  useEffect(() => {
+    const initialOptions = [...options]
+    if (defaultMessage) {
+      initialOptions.unshift({ value: '', label: defaultMessage })
+    }
+    setSelectOptions(initialOptions)
+  }, [options, defaultMessage])
 
   return (
     <Field
@@ -41,7 +55,7 @@ const Select = (props: SelectPropsType) => {
         <NativeSelectField
           {...register(name)}
           placeholder={placeholder}
-          items={options}
+          items={selectOptions}
         />
       </NativeSelectRoot>
     </Field>

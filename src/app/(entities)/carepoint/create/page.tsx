@@ -1,44 +1,59 @@
 'use client'
 
-import { CREATE_COREVALUE_MUTATION } from '@/app/graphql/mutations'
+import { CREATE_CAREPOINT_MUTATION } from '@/app/graphql/mutations'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import { CoreValueForm } from '@/components'
+import { CarePointForm } from '@/components'
 import { FormMode } from '@/constants'
+import { CarePointFormData, carePointSchema } from '@/app/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-function CreateCoreValue() {
+function CreateCarePoint() {
   const {
     control,
+    register,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<CarePointFormData>({
+    resolver: zodResolver(carePointSchema),
+    defaultValues: {
+      status: 'Active',
+      enabledByGoals: undefined,
+      caresForGoals: undefined,
+    },
+  })
   const router = useRouter()
   const { user } = useUser()
 
-  const [CreateCoreValue] = useMutation(CREATE_COREVALUE_MUTATION)
+  const [CreateCarePoint] = useMutation(CREATE_CAREPOINT_MUTATION)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: CarePointFormData) => {
+    const { enabledByGoals, caresForGoals, ...rest } = data
+
     try {
-      const res = await CreateCoreValue({
+      const res = await CreateCarePoint({
         variables: {
           input: {
-            ...data,
+            ...rest,
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
-            isEmbracedBy: {
-              connect: { where: { node: { authId_EQ: user?.sub } } },
+
+            enabledByGoals: {
+              connect: [{ where: { node: { id_EQ: enabledByGoals } } }],
+            },
+            caresForGoals: {
+              connect: [{ where: { node: { id_EQ: caresForGoals } } }],
             },
           },
         },
       })
 
-      router.push('/corevalue/' + res.data?.createCoreValues.coreValues[0].id)
+      router.push('/carepoint/' + res.data?.createCarePoints.carePoints[0].id)
     } catch (error) {
       console.error(error)
     }
@@ -46,9 +61,10 @@ function CreateCoreValue() {
 
   return (
     <Container>
-      <CoreValueForm
+      <CarePointForm
         formMode={FormMode.Create}
         control={control}
+        register={register}
         errors={errors}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
@@ -57,4 +73,4 @@ function CreateCoreValue() {
   )
 }
 
-export default CreateCoreValue
+export default CreateCarePoint

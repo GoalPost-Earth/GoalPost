@@ -4,6 +4,7 @@ export const GET_CAREPOINT = graphql(`
   query getCarePoint($id: ID!) {
     carePoints(where: { id_EQ: $id }) {
       id
+      name
       description
       status
       resources {
@@ -40,6 +41,7 @@ export const GET_ALL_CAREPOINTS = graphql(`
   query getAllCarePoints($where: CarePointWhere) {
     carePoints(where: $where) {
       id
+      name
       description
       status
 
