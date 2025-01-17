@@ -44,11 +44,14 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
         resources {
           id
           name
+          description
+          status
         }
         goals {
           id
           name
           description
+          status
         }
         carePoints {
           id
@@ -59,6 +62,11 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
           name
           id
           description
+          members(limit: 5) {
+            id
+            name
+            photo
+          }
         }
         providedByPerson {
           id
