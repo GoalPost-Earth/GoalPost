@@ -97,8 +97,8 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
       setOpen(false)
 
       toaster.success({
-        title: 'Updated People Motivated',
-        description: 'The people motivated by goal have been updated',
+        title: 'Updated Related Resources',
+        description: 'The resources related to goal have been updated',
       })
     } catch (error) {
       console.error(error)
