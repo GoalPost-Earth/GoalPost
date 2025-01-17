@@ -12451,6 +12451,12 @@ export type UpdateResourceMutation = {
       location?: string | null
       time?: string | null
       resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
+      goals: Array<{
+        __typename?: 'Goal'
+        id: string
+        name: string
+        description?: string | null
+      }>
     }>
   }
 }
@@ -13119,6 +13125,12 @@ export type GetResourceQuery = {
       email?: string | null
       phone?: string | null
       photo?: string | null
+    }>
+    goals: Array<{
+      __typename?: 'Goal'
+      id: string
+      name: string
+      description?: string | null
     }>
   }>
 }
@@ -15462,6 +15474,27 @@ export const UpdateResourceDocument = {
                           ],
                         },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'goals' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -17763,6 +17796,21 @@ export const GetResourceDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'goals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },

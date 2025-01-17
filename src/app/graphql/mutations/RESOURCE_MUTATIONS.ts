@@ -45,6 +45,11 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
           id
           name
         }
+        goals {
+          id
+          name
+          description
+        }
       }
     }
   }

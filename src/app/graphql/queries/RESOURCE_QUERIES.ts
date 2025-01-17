@@ -26,6 +26,11 @@ export const GET_RESOURCE = graphql(`
         phone
         photo
       }
+      goals {
+        id
+        name
+        description
+      }
     }
   }
 `)

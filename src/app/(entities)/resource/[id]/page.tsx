@@ -21,6 +21,7 @@ import { EntityEnum, TRIGGERS } from '@/constants'
 import {
   ResourceCarePoints,
   ResourceDetails,
+  ResourceRelatedGoals,
 } from '@/components/sections/resource'
 import { Resource } from '@/gql/graphql'
 
@@ -42,7 +43,7 @@ export default async function ViewResourcePage({
     throw error
   }
 
-  if (data.resources.length === 0) {
+  if (data.resources?.length === 0) {
     throw new Error('Resource not found')
   }
 
@@ -105,8 +106,11 @@ export default async function ViewResourcePage({
                   key="Details"
                   resource={resource as Resource}
                 />,
-                null,
-                null,
+                <ResourceRelatedGoals
+                  key="Goals"
+                  resource={resource as Resource}
+                />,
+                <></>,
                 <ResourceCarePoints
                   key="CarePoints"
                   resource={resource as Resource}
