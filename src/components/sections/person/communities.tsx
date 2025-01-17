@@ -20,15 +20,16 @@ import {
   CancelButton,
   Input,
   EditButton,
-  EntityDetail,
   PopoverRoot,
   PopoverTrigger,
   PopoverContent,
   PopoverArrow,
   PopoverBody,
   PopoverTitle,
+  CalenderIcon,
 } from '@/components'
 import { Community, Person, PersonCommunitiesRelationship } from '@/gql/graphql'
+import { getHumanReadableDate } from '@/utils'
 import { useMutation, useQuery } from '@apollo/client'
 import {
   DialogBackdrop,
@@ -263,39 +264,50 @@ export default function PersonCommunities({ person }: { person: Person }) {
                   <CommunityCard height="100%" community={edge.node} />
 
                   <HStack alignItems="center" mt="auto" width="100%">
-                    <PopoverRoot
-                      portalled
-                      positioning={{ placement: 'bottom-end' }}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          fontSize="x-small"
-                          size="xs"
-                          variant="ghost"
-                          _hover={{
-                            bgColor: 'transparent',
-                          }}
-                        >
-                          <IoMdCloudyNight /> {`${person.firstName}'s Totem`}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <PopoverArrow />
-                        <PopoverBody>
-                          <PopoverTitle fontWeight="medium">
-                            {edge.node.name} Totem
-                          </PopoverTitle>
-                          <EntityDetail
-                            title="Totem"
-                            entityName={
-                              person.name + "'s Totem for " + edge.node.name
-                            }
-                            details={edge.properties.totem}
-                          />
-                        </PopoverBody>
-                      </PopoverContent>
-                    </PopoverRoot>
-
+                    <VStack>
+                      <PopoverRoot
+                        portalled
+                        positioning={{ placement: 'bottom-end' }}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            fontSize="x-small"
+                            size="xs"
+                            variant="ghost"
+                            _hover={{
+                              bgColor: 'transparent',
+                            }}
+                          >
+                            <IoMdCloudyNight /> {`${person.firstName}'s Totem`}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                          <PopoverArrow />
+                          <PopoverBody>
+                            <PopoverTitle fontWeight="medium">
+                              {person.firstName +
+                                "'s Totem for " +
+                                edge.node.name +
+                                ' is '}
+                              <Text mt={5} fontWeight="bold" fontSize="lg">
+                                {edge.properties.totem}
+                              </Text>
+                            </PopoverTitle>
+                          </PopoverBody>
+                        </PopoverContent>
+                      </PopoverRoot>
+                      <Button
+                        fontSize="x-small"
+                        size="xs"
+                        variant="ghost"
+                        _hover={{
+                          bgColor: 'transparent',
+                        }}
+                      >
+                        <CalenderIcon color="brandIcons.500" />{' '}
+                        {`Since ${getHumanReadableDate(edge.properties.signupDate, true)}`}
+                      </Button>
+                    </VStack>
                     <Spacer />
                     <EditButton
                       variant="ghost"

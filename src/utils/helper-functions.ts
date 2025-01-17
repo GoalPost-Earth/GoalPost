@@ -1,9 +1,9 @@
 export const help = () => console.log('help')
 
-export const getHumanReadableDate = (date: string) => {
+export const getHumanReadableDate = (date: string, short?: boolean) => {
   return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
+    year: short ? '2-digit' : 'numeric',
+    month: short ? 'short' : 'long',
     day: 'numeric',
   })
 }
