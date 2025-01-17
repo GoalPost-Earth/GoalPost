@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { CustomSwitch as ChakraSwitch, SwitchProps } from '../ui/switch'
 import { Controller } from 'react-hook-form'

@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { createListCollection, SelectRootProps } from '@chakra-ui/react'
 import { Controller } from 'react-hook-form'

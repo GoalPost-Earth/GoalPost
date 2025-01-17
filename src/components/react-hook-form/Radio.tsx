@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { HStack, Fieldset } from '@chakra-ui/react'
 import { Controller } from 'react-hook-form'
