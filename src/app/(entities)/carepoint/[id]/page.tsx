@@ -7,6 +7,7 @@ import {
   Heading,
   HStack,
   Spacer,
+  Stack,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -18,6 +19,7 @@ import {
   CarePointEnablingGoals,
   CarePointDetails,
   CarePointGoalsCaredFor,
+  DeleteButton,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -80,9 +82,25 @@ export default async function ViewCarePointPage({
         width="100%"
       >
         <VStack width="100%" justifyContent="center" alignItems="start" gap={4}>
-          <Heading mt={5} fontSize="2xl" fontWeight="bold">
-            {carepoint?.name}
-          </Heading>
+          <Stack
+            mt={5}
+            width="100%"
+            flexDirection={{ base: 'column', lg: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ base: 'center' }}
+          >
+            <Heading fontSize="2xl" fontWeight="bold">
+              {carepoint?.name}
+            </Heading>
+
+            <Box>
+              <DeleteButton
+                entityId={carepoint.id}
+                entityType={EntityEnum.CarePoint}
+                entityName={carepoint.name}
+              />
+            </Box>
+          </Stack>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${carepoint?.createdBy[0]?.id}`}>

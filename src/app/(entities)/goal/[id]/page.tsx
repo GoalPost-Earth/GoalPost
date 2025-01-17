@@ -7,6 +7,7 @@ import {
   Heading,
   HStack,
   Spacer,
+  Stack,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -22,6 +23,7 @@ import {
   GoalMotivatesPeople,
   GoalMotivatesCommunities,
   GoalRelatedResources,
+  DeleteButton,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -84,9 +86,25 @@ export default async function ViewGoalPage({
         width="100%"
       >
         <VStack width="100%" justifyContent="center" alignItems="start" gap={4}>
-          <Heading mt={5} fontSize="2xl" fontWeight="bold">
-            {goal?.name}
-          </Heading>
+          <Stack
+            mt={5}
+            width="100%"
+            flexDirection={{ base: 'column', lg: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ base: 'center' }}
+          >
+            <Heading fontSize="2xl" fontWeight="bold">
+              {goal?.name}
+            </Heading>
+
+            <Box>
+              <DeleteButton
+                entityId={goal.id}
+                entityType={EntityEnum.Goal}
+                entityName={goal.name}
+              />
+            </Box>
+          </Stack>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${goal?.motivatesPeople[0]?.id}`}>

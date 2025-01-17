@@ -58,7 +58,7 @@ export function PersonProfile({
 
             <DeleteButton
               entityId={user.id}
-              entityType={'Person'}
+              entityType={EntityEnum.Person}
               entityName={user.name}
             />
           </HStack>

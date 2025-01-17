@@ -7,6 +7,7 @@ import {
   Heading,
   HStack,
   Spacer,
+  Stack,
   VStack,
 } from '@chakra-ui/react'
 import React from 'react'
@@ -15,6 +16,7 @@ import {
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
+  DeleteButton,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -82,9 +84,25 @@ export default async function ViewCoreValuePage({
         width="100%"
       >
         <VStack width="100%" justifyContent="center" alignItems="start" gap={4}>
-          <Heading mt={5} fontSize="2xl" fontWeight="bold">
-            {corevalue?.name}
-          </Heading>
+          <Stack
+            mt={5}
+            width="100%"
+            flexDirection={{ base: 'column', lg: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ base: 'center' }}
+          >
+            <Heading fontSize="2xl" fontWeight="bold">
+              {corevalue?.name}
+            </Heading>
+
+            <Box>
+              <DeleteButton
+                entityId={corevalue.id}
+                entityType={EntityEnum.CoreValue}
+                entityName={corevalue.name}
+              />
+            </Box>
+          </Stack>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${corevalue?.createdBy[0]?.id}`}>

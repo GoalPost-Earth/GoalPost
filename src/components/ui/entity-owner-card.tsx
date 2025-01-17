@@ -9,7 +9,7 @@ export function EntityOwnerCard({
   owner,
   entity,
 }: {
-  owner: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
+  owner?: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
   entity?: {
     __typename?: string
     id: string
@@ -17,7 +17,7 @@ export function EntityOwnerCard({
     createdAt: string
   }
 }) {
-  if (!owner && !entity) {
+  if (!owner || !entity) {
     return <></>
   }
 
