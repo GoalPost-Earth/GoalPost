@@ -1,3 +1,7 @@
-export { default as GoalCoreValues } from './corevalues'
+export { default as GoalRelatedCorevalues } from './corevalues'
 export { default as GoalEnablesCarePoints } from './enables-carepoints'
+export { default as GoalCaredForByCarePoints } from './cared-for-by-carepoints'
 export { default as GoalDetails } from './details'
+export { default as GoalMotivatesPeople } from './motivates-people'
+export { default as GoalMotivatesCommunities } from './motivates-communities'
+export { default as GoalRelatedResources } from './related-resources'

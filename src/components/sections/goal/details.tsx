@@ -23,8 +23,9 @@ import {
 import { EntityEnum, STATUS_SELECT_OPTIONS } from '@/constants'
 import { Goal } from '@/gql/graphql'
 import { useMutation } from '@apollo/client'
-import { DialogFooter, VStack } from '@chakra-ui/react'
+import { DialogFooter, HStack, Spacer, VStack } from '@chakra-ui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -51,7 +52,10 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
           input: {
             ...data,
             enabledByGoals: {
-              connect: [{ where: { node: { id_EQ: goal.id } } }],
+              connect: [{ where: { node: { id_EQ: data.enabledByGoals } } }],
+            },
+            caresForGoals: {
+              connect: [{ where: { node: { id_EQ: data.caresForGoals } } }],
             },
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
@@ -143,6 +147,16 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
         alignItems={'flex-start'}
         width={{ lg: '70%' }}
       >
+        <HStack width="100%" justifyContent="space-between">
+          <Spacer />
+          <Link href={`/goal/update/${goal.id}/details`}>
+            <EditButton
+              colorPalette="goal"
+              size="xl"
+              text="Edit Goal Details"
+            />
+          </Link>
+        </HStack>
         <VStack gap={4}>
           <EntityDetail
             title="Description"

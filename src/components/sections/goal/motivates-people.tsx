@@ -1,8 +1,9 @@
 'use client'
 
-import { GET_ALL_COREVALUES, UPDATE_GOAL_MUTATION } from '@/app/graphql'
+import { GET_ALL_PEOPLE, UPDATE_GOAL_MUTATION } from '@/app/graphql'
 import {
   Button,
+  PersonCard,
   EmptyState,
   DialogRoot,
   DialogActionTrigger,
@@ -17,9 +18,8 @@ import {
   toaster,
   ConfirmButton,
   CancelButton,
-  CoreValueCard,
 } from '@/components'
-import { CoreValue, Goal } from '@/gql/graphql'
+import { Goal, Person } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import {
   DialogBackdrop,
@@ -32,24 +32,24 @@ import {
 import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
-  const [relatedCorevalues, setRelatedCorevalues] = useState<CoreValue[]>(
-    goal.coreValues
+export default function GoalMotivatesPeople({ goal }: { goal: Goal }) {
+  const [motivatesPeople, setMotivatesPeople] = useState<Person[]>(
+    goal.motivatesPeople
   )
   const [open, setOpen] = useState(false)
-  const { data, loading, error } = useQuery(GET_ALL_COREVALUES)
+  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
   const [UpdateGoal] = useMutation(UPDATE_GOAL_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
 
   const valueOptions =
-    data?.coreValues.map((corevalue) => ({
-      label: corevalue.name,
-      value: corevalue.id,
+    data?.people.map((connection) => ({
+      label: connection.name,
+      value: connection.id,
     })) ?? []
 
   type FormData = {
-    relatedCorevalues: string[]
+    motivatesPeople: string[]
   }
 
   const {
@@ -58,27 +58,26 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
     formState: { isSubmitting, errors },
   } = useForm<FormData>({
     defaultValues: {
-      relatedCorevalues:
-        relatedCorevalues.map((corevalue) => corevalue.id) ?? [],
+      motivatesPeople: motivatesPeople.map((person) => person.id) ?? [],
     },
   })
 
   const onSubmit = async (data: FormData) => {
     try {
-      // find corevalues to disconnect and connect
-      const initialPeople = relatedCorevalues.map((corevalue) => corevalue.id)
+      // find connections to disconnect and connect
+      const initialPeople = motivatesPeople.map((person) => person.id)
       const toDisconnect = initialPeople.filter(
-        (corevalue) => !data.relatedCorevalues.includes(corevalue)
+        (person) => !data.motivatesPeople.includes(person)
       )
-      const toConnect = data.relatedCorevalues.filter(
-        (corevalue) => !initialPeople.map((p) => p).includes(corevalue)
+      const toConnect = data.motivatesPeople.filter(
+        (person) => !initialPeople.map((p) => p).includes(person)
       )
 
       const response = await UpdateGoal({
         variables: {
           id: goal.id,
           update: {
-            coreValues: [
+            motivatesPeople: [
               {
                 connect: [{ where: { node: { id_IN: toConnect } } }],
                 disconnect: [{ where: { node: { id_IN: toDisconnect } } }],
@@ -92,20 +91,20 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
         throw new Error('No data returned')
       }
 
-      setRelatedCorevalues(
-        response.data.updateGoals.goals[0].coreValues as CoreValue[]
+      setMotivatesPeople(
+        response.data.updateGoals.goals[0].motivatesPeople as Person[]
       )
       setOpen(false)
 
       toaster.success({
-        title: 'Updated Related corevalues',
-        description: 'The corevalues related to goal have been updated',
+        title: 'Updated People Motivated',
+        description: 'The people motivated by goal have been updated',
       })
     } catch (error) {
       console.error(error)
       toaster.error({
         title: 'Error',
-        description: 'An error occurred while updating the corevalues',
+        description: 'An error occurred while updating the connections',
       })
     }
   }
@@ -120,11 +119,11 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
         >
           <DialogBackdrop />
           {/* <DialogTrigger asChild> */}
-          {relatedCorevalues.length > 0 && (
+          {motivatesPeople.length > 0 && (
             <HStack width="100%" justifyContent="space-between">
               <Spacer />
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Update Core Values
+                Update Motivated People
               </Button>
             </HStack>
           )}
@@ -136,8 +135,8 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
               </DialogHeader>
               <DialogBody>
                 <MultiSelect
-                  name="relatedCorevalues"
-                  label="Choose corevalues related to goal"
+                  name="motivatesPeople"
+                  label="Choose people motivated by goal"
                   control={control}
                   errors={errors}
                   options={valueOptions}
@@ -159,18 +158,18 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
           </form>
         </DialogRoot>
 
-        {relatedCorevalues.length === 0 && (
+        {motivatesPeople.length === 0 && (
           <EmptyState
-            title="No Core Values"
+            title="No Connections"
             description="Click here to add some"
           >
             <Button variant="surface" onClick={() => setOpen(true)}>
-              Add A Core Value
+              Add A Connection
             </Button>
           </EmptyState>
         )}
         <Grid
-          key="corevalues"
+          key="connections"
           templateColumns={{
             base: '1fr',
             lg: 'repeat(3, 1fr)',
@@ -178,9 +177,13 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
           gap={6}
           width="100%"
         >
-          {relatedCorevalues.map((corevalue) => (
-            <GridItem key={corevalue.id}>
-              <CoreValueCard coreValue={corevalue} />
+          {motivatesPeople.map((person) => (
+            <GridItem key={person.id}>
+              <PersonCard
+                id={person.id}
+                name={person.name}
+                person={person as Person}
+              />
             </GridItem>
           ))}
         </Grid>

@@ -5,6 +5,7 @@ export const GET_RECENT_ACTIONS = graphql(`
     carePoints(sort: { createdAt: DESC }, limit: 3, where: {}) {
       createdAt
       description
+      name
       id
       status
       createdBy {

@@ -16,6 +16,7 @@ export const GET_RESOURCE = graphql(`
       }
       carePoints {
         id
+        name
         description
         status
       }

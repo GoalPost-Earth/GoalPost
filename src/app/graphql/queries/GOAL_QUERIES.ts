@@ -25,14 +25,23 @@ export const GET_GOAL = graphql(`
       motivatesCommunities {
         id
         name
+        description
       }
       enablesCarePoints {
         id
+        name
         description
         status
       }
       caredForByCarePoints {
         id
+        name
+        description
+        status
+      }
+      resources {
+        id
+        name
         description
         status
       }

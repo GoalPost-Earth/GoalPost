@@ -4,8 +4,6 @@ import {
   Box,
   Container,
   Flex,
-  Grid,
-  GridItem,
   Heading,
   HStack,
   Spacer,
@@ -17,10 +15,13 @@ import {
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
-  CarePointCard,
   GoalDetails,
-  GoalCoreValues,
+  GoalRelatedCorevalues,
   GoalEnablesCarePoints,
+  GoalCaredForByCarePoints,
+  GoalMotivatesPeople,
+  GoalMotivatesCommunities,
+  GoalRelatedResources,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -106,22 +107,27 @@ export default async function ViewGoalPage({
               )}
               content={[
                 <GoalDetails key="details" goal={goal as Goal} />,
-                <GoalCoreValues key="coreValues" goal={goal as Goal} />,
+                <GoalRelatedCorevalues key="coreValues" goal={goal as Goal} />,
                 <GoalEnablesCarePoints
                   key="enablesCarePoints"
                   goal={goal as Goal}
                 />,
-                <Grid
+                <GoalCaredForByCarePoints
                   key="caredForByCarePoints"
-                  templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
-                  gap={6}
-                >
-                  {goal.caredForByCarePoints.map((carePoint) => (
-                    <GridItem key={carePoint.id}>
-                      <CarePointCard carePoint={carePoint} />
-                    </GridItem>
-                  ))}
-                </Grid>,
+                  goal={goal as Goal}
+                />,
+                <GoalMotivatesPeople
+                  key="motivatesPeople"
+                  goal={goal as Goal}
+                />,
+                <GoalMotivatesCommunities
+                  key="motivatesCommunities"
+                  goal={goal as Goal}
+                />,
+                <GoalRelatedResources
+                  key="relatedResources"
+                  goal={goal as Goal}
+                />,
               ]}
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">

@@ -105,13 +105,14 @@ export type CarePoint = {
   createdBy: Array<Person>
   createdByAggregate?: Maybe<CarePointPersonCreatedByAggregationSelection>
   createdByConnection: CarePointCreatedByConnection
-  description: Scalars['String']['output']
+  description?: Maybe<Scalars['String']['output']>
   enabledByGoals: Array<Goal>
   enabledByGoalsAggregate?: Maybe<CarePointGoalEnabledByGoalsAggregationSelection>
   enabledByGoalsConnection: CarePointEnabledByGoalsConnection
   id: Scalars['ID']['output']
+  name: Scalars['String']['output']
   resources: Array<Resource>
-  status: Scalars['String']['output']
+  status?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
@@ -175,6 +176,7 @@ export type CarePointAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
+  name: StringAggregateSelection
   status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
@@ -436,9 +438,10 @@ export type CarePointConnectWhere = {
 export type CarePointCreateInput = {
   caresForGoals?: InputMaybe<CarePointCaresForGoalsFieldInput>
   createdBy?: InputMaybe<CarePointCreatedByFieldInput>
-  description: Scalars['String']['input']
+  description?: InputMaybe<Scalars['String']['input']>
   enabledByGoals?: InputMaybe<CarePointEnabledByGoalsFieldInput>
-  status: Scalars['String']['input']
+  name: Scalars['String']['input']
+  status?: InputMaybe<Scalars['String']['input']>
 }
 
 export type CarePointCreatedByAggregateInput = {
@@ -1132,6 +1135,7 @@ export type CarePointSort = {
   createdAt?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  name?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
 }
@@ -1141,6 +1145,7 @@ export type CarePointUpdateInput = {
   createdBy?: InputMaybe<Array<CarePointCreatedByUpdateFieldInput>>
   description_SET?: InputMaybe<Scalars['String']['input']>
   enabledByGoals?: InputMaybe<Array<CarePointEnabledByGoalsUpdateFieldInput>>
+  name_SET?: InputMaybe<Scalars['String']['input']>
   status_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -1191,7 +1196,7 @@ export type CarePointWhere = {
   description_CONTAINS?: InputMaybe<Scalars['String']['input']>
   description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   description_EQ?: InputMaybe<Scalars['String']['input']>
-  description_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   enabledByGoalsAggregate?: InputMaybe<CarePointEnabledByGoalsAggregateInput>
   /** Return CarePoints where all of the related CarePointEnabledByGoalsConnections match this filter */
@@ -1215,6 +1220,11 @@ export type CarePointWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  name_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  name_EQ?: InputMaybe<Scalars['String']['input']>
+  name_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   resources?: InputMaybe<ResourceWhere>
   resources_ALL?: InputMaybe<ResourceWhere>
   resources_NONE?: InputMaybe<ResourceWhere>
@@ -1223,7 +1233,7 @@ export type CarePointWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -5273,6 +5283,7 @@ export type GoalCarePointCaredForByCarePointsNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
+  name: StringAggregateSelection
   status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
@@ -5288,6 +5299,7 @@ export type GoalCarePointEnablesCarePointsNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   id: IdAggregateSelection
+  name: StringAggregateSelection
   status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
@@ -5385,6 +5397,21 @@ export type GoalCaredForByCarePointsNodeAggregationWhereInput = {
   id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6189,6 +6216,21 @@ export type GoalEnablesCarePointsNodeAggregationWhereInput = {
   id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11973,8 +12015,8 @@ export type CreateCarePointsMutation = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      description?: string | null
+      status?: string | null
     }>
   }
 }
@@ -11991,8 +12033,8 @@ export type UpdateCarePointMutation = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      description?: string | null
+      status?: string | null
     }>
   }
 }
@@ -12196,18 +12238,19 @@ export type CreateGoalsMutation = {
         __typename?: 'Community'
         id: string
         name: string
+        description?: string | null
       }>
       enablesCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
-        status: string
+        description?: string | null
+        status?: string | null
       }>
       caredForByCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
-        status: string
+        description?: string | null
+        status?: string | null
       }>
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     }>
@@ -12250,18 +12293,26 @@ export type UpdateGoalMutation = {
         __typename?: 'Community'
         id: string
         name: string
+        description?: string | null
       }>
       enablesCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
-        status: string
+        description?: string | null
+        status?: string | null
       }>
       caredForByCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
-        status: string
+        description?: string | null
+        status?: string | null
+      }>
+      resources: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+        description?: string | null
+        status?: string | null
       }>
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     }>
@@ -12362,7 +12413,7 @@ export type UpdatePersonMutation = {
       carePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
+        description?: string | null
       }>
       coreValues: Array<{
         __typename?: 'CoreValue'
@@ -12470,8 +12521,8 @@ export type UpdateResourceMutation = {
       carePoints: Array<{
         __typename?: 'CarePoint'
         id: string
-        description: string
-        status: string
+        description?: string | null
+        status?: string | null
       }>
       providedByCommunity: Array<{
         __typename?: 'Community'
@@ -12507,9 +12558,10 @@ export type GetRecentActionsQuery = {
   carePoints: Array<{
     __typename?: 'CarePoint'
     createdAt: any
-    description: string
+    description?: string | null
+    name: string
     id: string
-    status: string
+    status?: string | null
     createdBy: Array<{
       __typename?: 'Person'
       photo?: string | null
@@ -12581,8 +12633,9 @@ export type GetCarePointQuery = {
   carePoints: Array<{
     __typename?: 'CarePoint'
     id: string
-    description: string
-    status: string
+    name: string
+    description?: string | null
+    status?: string | null
     createdAt: any
     resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
     enabledByGoals: Array<{
@@ -12621,8 +12674,9 @@ export type GetAllCarePointsQuery = {
   carePoints: Array<{
     __typename?: 'CarePoint'
     id: string
-    description: string
-    status: string
+    name: string
+    description?: string | null
+    status?: string | null
     createdAt: any
     createdBy: Array<{
       __typename?: 'Person'
@@ -12886,18 +12940,28 @@ export type GetGoalQuery = {
       __typename?: 'Community'
       id: string
       name: string
+      description?: string | null
     }>
     enablesCarePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      name: string
+      description?: string | null
+      status?: string | null
     }>
     caredForByCarePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      name: string
+      description?: string | null
+      status?: string | null
+    }>
+    resources: Array<{
+      __typename?: 'Resource'
+      id: string
+      name: string
+      description?: string | null
+      status?: string | null
     }>
     createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
   }>
@@ -12980,7 +13044,7 @@ export type GetPersonQuery = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
+      description?: string | null
     }>
     coreValues: Array<{
       __typename?: 'CoreValue'
@@ -13145,8 +13209,9 @@ export type GetResourceQuery = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      name: string
+      description?: string | null
+      status?: string | null
     }>
     providedByPerson: Array<{
       __typename?: 'Person'
@@ -13191,8 +13256,8 @@ export type GetAllResourcesQuery = {
     carePoints: Array<{
       __typename?: 'CarePoint'
       id: string
-      description: string
-      status: string
+      description?: string | null
+      status?: string | null
     }>
     providedByPerson: Array<{
       __typename?: 'Person'
@@ -13213,7 +13278,7 @@ export type GetMatchingEntitiesQuery = {
   carePointSubstringSearch: Array<{
     __typename?: 'CarePoint'
     id: string
-    description: string
+    description?: string | null
   }>
   communitySubstringSearch: Array<{
     __typename?: 'Community'
@@ -14336,6 +14401,10 @@ export const CreateGoalsDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
                           ],
                         },
                       },
@@ -14562,6 +14631,10 @@ export const UpdateGoalDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
                           ],
                         },
                       },
@@ -14595,6 +14668,31 @@ export const UpdateGoalDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resources' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
                             },
                             {
                               kind: 'Field',
@@ -15721,6 +15819,7 @@ export const GetRecentActionsDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
@@ -16015,6 +16114,7 @@ export const GetCarePointDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
@@ -16137,6 +16237,7 @@ export const GetAllCarePointsDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
@@ -16986,6 +17087,10 @@ export const GetGoalDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
                     ],
                   },
                 },
@@ -16996,6 +17101,7 @@ export const GetGoalDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
@@ -17014,6 +17120,26 @@ export const GetGoalDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
@@ -17882,6 +18008,7 @@ export const GetResourceDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },

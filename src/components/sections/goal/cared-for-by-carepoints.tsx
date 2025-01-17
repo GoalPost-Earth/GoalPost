@@ -5,7 +5,7 @@ import { Goal } from '@/gql/graphql'
 import { Grid, GridItem, HStack, Link, Spacer, VStack } from '@chakra-ui/react'
 import React from 'react'
 
-export default function GoalEnablesCarePoints({ goal }: { goal: Goal }) {
+export default function GoalCaredForByCarePoints({ goal }: { goal: Goal }) {
   return (
     <VStack
       key="carePoints"
@@ -17,7 +17,7 @@ export default function GoalEnablesCarePoints({ goal }: { goal: Goal }) {
       alignItems={'flex-start'}
       width="100%"
     >
-      {goal.enablesCarePoints.length > 0 && (
+      {goal.caredForByCarePoints.length > 0 && (
         <HStack width="100%" justifyContent="space-between">
           <Spacer />
           <Link href={`/carepoint/create?goalId=${goal.id}`}>
@@ -27,7 +27,7 @@ export default function GoalEnablesCarePoints({ goal }: { goal: Goal }) {
           </Link>
         </HStack>
       )}
-      {goal.enablesCarePoints.length === 0 && (
+      {goal.caredForByCarePoints.length === 0 && (
         <EmptyState title="No Care Points" description="Click here to add ">
           <Link href={`/carepoint/create?goalId=${goal.id}`}>
             <Button variant="surface">Add A Care Point</Button>
@@ -45,7 +45,7 @@ export default function GoalEnablesCarePoints({ goal }: { goal: Goal }) {
         gap={6}
         width="100%"
       >
-        {goal.enablesCarePoints.map((carePoint) => (
+        {goal.caredForByCarePoints.map((carePoint) => (
           <GridItem key={carePoint.id}>
             <CarePointCard carePoint={carePoint} />
           </GridItem>

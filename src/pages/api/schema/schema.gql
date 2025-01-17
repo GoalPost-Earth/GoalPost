@@ -92,8 +92,9 @@ type BelongsTo @relationshipProperties {
 
 type CarePoint @node {
   id: ID! @id
-  description: String!
-  status: String!
+  name: String!
+  description: String
+  status: String
 
   resources: [Resource!]!
     @cypher(
