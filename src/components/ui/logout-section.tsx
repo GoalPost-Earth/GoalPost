@@ -1,8 +1,18 @@
-import { Flex, HStack, Stack, Text, VStack } from '@chakra-ui/react'
+'use client'
+
+import {
+  Flex,
+  HStack,
+  Link,
+  Spinner,
+  Stack,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import { LogoutIcon } from '../icons'
 import { Avatar } from './avatar'
 import { useApp } from '@/app/contexts'
-import Link from 'next/link'
+import { useState } from 'react'
 
 export function LogoutSection({
   extendable,
@@ -12,6 +22,7 @@ export function LogoutSection({
   isExtended: boolean
 }) {
   const { user } = useApp()
+  const [loading, setLoading] = useState(false)
 
   return (
     <VStack
@@ -31,7 +42,9 @@ export function LogoutSection({
         </Stack>
       </HStack>
       <Link
+        as="a"
         href="/api/auth/logout?returnTo=/"
+        onClick={() => setLoading(true)}
         style={{ display: 'block', width: '100%' }}
       >
         <Flex
@@ -51,7 +64,14 @@ export function LogoutSection({
             color="brandIcons"
             display={extendable && !isExtended ? 'none' : 'block'}
           >
-            Sign Out
+            {loading ? (
+              <HStack>
+                <Spinner />
+                <Text>'Signing Out'</Text>
+              </HStack>
+            ) : (
+              'Sign Out'
+            )}
           </Text>
         </Flex>
       </Link>
