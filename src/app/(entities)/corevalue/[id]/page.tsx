@@ -83,7 +83,13 @@ export default async function ViewCoreValuePage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${corevalue?.createdBy[0]?.id}`}>
-              <EntityOwnerCard person={corevalue?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={corevalue?.createdBy[0]}
+                entity={{
+                  ...corevalue,
+                  __typename: corevalue.__typename ?? '',
+                }}
+              />
             </Link>
           </Box>
 
@@ -141,7 +147,13 @@ export default async function ViewCoreValuePage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard person={corevalue?.createdBy[0]} />
+              <EntityOwnerCard
+                owner={corevalue?.createdBy[0]}
+                entity={{
+                  ...corevalue,
+                  __typename: corevalue.__typename ?? '',
+                }}
+              />
             </Box>
           </HStack>
         </VStack>

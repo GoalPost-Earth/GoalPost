@@ -2,20 +2,24 @@ import { Box, Card, Flex, Text } from '@chakra-ui/react'
 import { Avatar } from '.'
 import React from 'react'
 import Link from 'next/link'
-import { Community, Person } from '@/gql/graphql'
+import { Person } from '@/gql/graphql'
+import { getHumanReadableDate } from '@/utils'
 
 export function EntityOwnerCard({
-  person,
-  community,
+  owner,
+  entity,
 }: {
-  person: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
-  community?: Pick<Community, '__typename' | 'id' | 'name'>
+  owner: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
+  entity?: {
+    __typename: string
+    id: string
+    name: string
+    createdAt: string
+  }
 }) {
-  if (!person && !community) {
+  if (!owner && !entity) {
     return <></>
   }
-
-  const owner = person || community
 
   return (
     <Card.Root
@@ -62,8 +66,14 @@ export function EntityOwnerCard({
             <Link href={`mailto:${owner.email}`}>
               <Text my={2}>{owner.email}</Text>
             </Link>
-            <Text>Created by</Text>
-            <Text>{owner.name}</Text>
+            <Text>Created this {entity?.__typename}</Text>
+
+            {entity?.createdAt ? (
+              <>
+                <Text>On</Text>
+                <Text>{getHumanReadableDate(entity.createdAt)}</Text>
+              </>
+            ) : null}
           </Box>
         </Card.Body>
       </Link>
