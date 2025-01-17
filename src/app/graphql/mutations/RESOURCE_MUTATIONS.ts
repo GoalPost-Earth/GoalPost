@@ -55,7 +55,7 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
           description
           status
         }
-        provededByCommunity {
+        providedByCommunity {
           name
           id
           description

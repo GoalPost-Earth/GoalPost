@@ -17,10 +17,10 @@ export const TRIGGERS = {
   },
   COMMUNITY: {
     DETAILS: 'Community Details',
-    RELATED_COMMUNITIES: 'Related Communities',
-    RESOURCES: 'Resources',
-    GOALS: 'Goals',
     MEMBERS: 'Members',
+    GOALS: 'Goals',
+    RESOURCES: 'Resources',
+    RELATED_COMMUNITIES: 'Related Communities',
     COREVALUES: 'Core Values',
   },
   COREVALUE: {

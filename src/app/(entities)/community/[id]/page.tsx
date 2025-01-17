@@ -109,20 +109,20 @@ export default async function ViewCommunityPage({
                   key="details"
                   community={community as Community}
                 />,
-                <RelatedCommunities
-                  key="related-communities"
-                  community={community as Community}
-                />,
-                <CommunityResources
-                  key="resources"
+                <CommunityMembers
+                  key="members"
                   community={community as Community}
                 />,
                 <CommunityGoals
                   key="goals"
                   community={community as Community}
                 />,
-                <CommunityMembers
-                  key="members"
+                <CommunityResources
+                  key="resources"
+                  community={community as Community}
+                />,
+                <RelatedCommunities
+                  key="related-communities"
                   community={community as Community}
                 />,
                 <CommunityCoreValues

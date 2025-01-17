@@ -27,29 +27,32 @@ function CreateResource() {
   } = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
     defaultValues: {
-      providedByPerson: personId ?? undefined,
+      personLink: personId ?? undefined,
     },
   })
 
   const onSubmit = async (data: ResourceFormData) => {
-    const { providedByPerson } = data
+    const { personLink, linkTo, communityLink, ...rest } = data
     try {
       const res = await CreateResources({
         variables: {
           input: {
-            ...data,
+            ...rest,
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },
-            providedByPerson: {
-              connect: [
-                {
-                  where: {
-                    node: { id_EQ: providedByPerson ?? (user?.id || '') },
-                  },
-                },
-              ],
-            },
+            providedByPerson:
+              linkTo === 'personLink'
+                ? {
+                    connect: [{ where: { node: { id_EQ: personLink } } }],
+                  }
+                : undefined,
+            providedByCommunity:
+              linkTo === 'communityLink'
+                ? {
+                    connect: [{ where: { node: { id_EQ: communityLink } } }],
+                  }
+                : undefined,
           },
         },
       })

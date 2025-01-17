@@ -10049,9 +10049,9 @@ export type Resource = {
   id: Scalars['ID']['output']
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
-  provededByCommunity: Array<Community>
-  provededByCommunityAggregate?: Maybe<ResourceCommunityProvededByCommunityAggregationSelection>
-  provededByCommunityConnection: ResourceProvededByCommunityConnection
+  providedByCommunity: Array<Community>
+  providedByCommunityAggregate?: Maybe<ResourceCommunityProvidedByCommunityAggregationSelection>
+  providedByCommunityConnection: ResourceProvidedByCommunityConnection
   providedByPerson: Array<Person>
   providedByPersonAggregate?: Maybe<ResourcePersonProvidedByPersonAggregationSelection>
   providedByPersonConnection: ResourceProvidedByPersonConnection
@@ -10100,22 +10100,22 @@ export type ResourceGoalsConnectionArgs = {
   where?: InputMaybe<ResourceGoalsConnectionWhere>
 }
 
-export type ResourceProvededByCommunityArgs = {
+export type ResourceProvidedByCommunityArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CommunitySort>>
   where?: InputMaybe<CommunityWhere>
 }
 
-export type ResourceProvededByCommunityAggregateArgs = {
+export type ResourceProvidedByCommunityAggregateArgs = {
   where?: InputMaybe<CommunityWhere>
 }
 
-export type ResourceProvededByCommunityConnectionArgs = {
+export type ResourceProvidedByCommunityConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResourceProvededByCommunityConnectionSort>>
-  where?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
+  sort?: InputMaybe<Array<ResourceProvidedByCommunityConnectionSort>>
+  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
 export type ResourceProvidedByPersonArgs = {
@@ -10168,14 +10168,14 @@ export type ResourceAggregateSelection = {
   why: StringAggregateSelection
 }
 
-export type ResourceCommunityProvededByCommunityAggregationSelection = {
-  __typename?: 'ResourceCommunityProvededByCommunityAggregationSelection'
+export type ResourceCommunityProvidedByCommunityAggregationSelection = {
+  __typename?: 'ResourceCommunityProvidedByCommunityAggregationSelection'
   count: Scalars['Int']['output']
-  node?: Maybe<ResourceCommunityProvededByCommunityNodeAggregateSelection>
+  node?: Maybe<ResourceCommunityProvidedByCommunityNodeAggregateSelection>
 }
 
-export type ResourceCommunityProvededByCommunityNodeAggregateSelection = {
-  __typename?: 'ResourceCommunityProvededByCommunityNodeAggregateSelection'
+export type ResourceCommunityProvidedByCommunityNodeAggregateSelection = {
+  __typename?: 'ResourceCommunityProvidedByCommunityNodeAggregateSelection'
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
@@ -10192,8 +10192,8 @@ export type ResourceCommunityProvededByCommunityNodeAggregateSelection = {
 export type ResourceConnectInput = {
   createdBy?: InputMaybe<Array<ResourceCreatedByConnectFieldInput>>
   goals?: InputMaybe<Array<ResourceGoalsConnectFieldInput>>
-  provededByCommunity?: InputMaybe<
-    Array<ResourceProvededByCommunityConnectFieldInput>
+  providedByCommunity?: InputMaybe<
+    Array<ResourceProvidedByCommunityConnectFieldInput>
   >
   providedByPerson?: InputMaybe<
     Array<ResourceProvidedByPersonConnectFieldInput>
@@ -10211,7 +10211,7 @@ export type ResourceCreateInput = {
   goals?: InputMaybe<ResourceGoalsFieldInput>
   location?: InputMaybe<Scalars['String']['input']>
   name: Scalars['String']['input']
-  provededByCommunity?: InputMaybe<ResourceProvededByCommunityFieldInput>
+  providedByCommunity?: InputMaybe<ResourceProvidedByCommunityFieldInput>
   providedByPerson?: InputMaybe<ResourceProvidedByPersonFieldInput>
   resources?: InputMaybe<ResourceResourcesFieldInput>
   status?: InputMaybe<Scalars['String']['input']>
@@ -10571,8 +10571,8 @@ export type ResourceCreatedByUpdateFieldInput = {
 export type ResourceDeleteInput = {
   createdBy?: InputMaybe<Array<ResourceCreatedByDeleteFieldInput>>
   goals?: InputMaybe<Array<ResourceGoalsDeleteFieldInput>>
-  provededByCommunity?: InputMaybe<
-    Array<ResourceProvededByCommunityDeleteFieldInput>
+  providedByCommunity?: InputMaybe<
+    Array<ResourceProvidedByCommunityDeleteFieldInput>
   >
   providedByPerson?: InputMaybe<Array<ResourceProvidedByPersonDeleteFieldInput>>
   resources?: InputMaybe<Array<ResourceResourcesDeleteFieldInput>>
@@ -10581,8 +10581,8 @@ export type ResourceDeleteInput = {
 export type ResourceDisconnectInput = {
   createdBy?: InputMaybe<Array<ResourceCreatedByDisconnectFieldInput>>
   goals?: InputMaybe<Array<ResourceGoalsDisconnectFieldInput>>
-  provededByCommunity?: InputMaybe<
-    Array<ResourceProvededByCommunityDisconnectFieldInput>
+  providedByCommunity?: InputMaybe<
+    Array<ResourceProvidedByCommunityDisconnectFieldInput>
   >
   providedByPerson?: InputMaybe<
     Array<ResourceProvidedByPersonDisconnectFieldInput>
@@ -10920,64 +10920,64 @@ export type ResourcePersonProvidedByPersonNodeAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
-export type ResourceProvededByCommunityAggregateInput = {
-  AND?: InputMaybe<Array<ResourceProvededByCommunityAggregateInput>>
-  NOT?: InputMaybe<ResourceProvededByCommunityAggregateInput>
-  OR?: InputMaybe<Array<ResourceProvededByCommunityAggregateInput>>
+export type ResourceProvidedByCommunityAggregateInput = {
+  AND?: InputMaybe<Array<ResourceProvidedByCommunityAggregateInput>>
+  NOT?: InputMaybe<ResourceProvidedByCommunityAggregateInput>
+  OR?: InputMaybe<Array<ResourceProvidedByCommunityAggregateInput>>
   count_EQ?: InputMaybe<Scalars['Int']['input']>
   count_GT?: InputMaybe<Scalars['Int']['input']>
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<ResourceProvededByCommunityNodeAggregationWhereInput>
+  node?: InputMaybe<ResourceProvidedByCommunityNodeAggregationWhereInput>
 }
 
-export type ResourceProvededByCommunityConnectFieldInput = {
+export type ResourceProvidedByCommunityConnectFieldInput = {
   connect?: InputMaybe<Array<CommunityConnectInput>>
   where?: InputMaybe<CommunityConnectWhere>
 }
 
-export type ResourceProvededByCommunityConnection = {
-  __typename?: 'ResourceProvededByCommunityConnection'
-  edges: Array<ResourceProvededByCommunityRelationship>
+export type ResourceProvidedByCommunityConnection = {
+  __typename?: 'ResourceProvidedByCommunityConnection'
+  edges: Array<ResourceProvidedByCommunityRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
-export type ResourceProvededByCommunityConnectionSort = {
+export type ResourceProvidedByCommunityConnectionSort = {
   node?: InputMaybe<CommunitySort>
 }
 
-export type ResourceProvededByCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<ResourceProvededByCommunityConnectionWhere>>
-  NOT?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
-  OR?: InputMaybe<Array<ResourceProvededByCommunityConnectionWhere>>
+export type ResourceProvidedByCommunityConnectionWhere = {
+  AND?: InputMaybe<Array<ResourceProvidedByCommunityConnectionWhere>>
+  NOT?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
+  OR?: InputMaybe<Array<ResourceProvidedByCommunityConnectionWhere>>
   node?: InputMaybe<CommunityWhere>
 }
 
-export type ResourceProvededByCommunityCreateFieldInput = {
+export type ResourceProvidedByCommunityCreateFieldInput = {
   node: CommunityCreateInput
 }
 
-export type ResourceProvededByCommunityDeleteFieldInput = {
+export type ResourceProvidedByCommunityDeleteFieldInput = {
   delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
+  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
-export type ResourceProvededByCommunityDisconnectFieldInput = {
+export type ResourceProvidedByCommunityDisconnectFieldInput = {
   disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
+  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
-export type ResourceProvededByCommunityFieldInput = {
-  connect?: InputMaybe<Array<ResourceProvededByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<ResourceProvededByCommunityCreateFieldInput>>
+export type ResourceProvidedByCommunityFieldInput = {
+  connect?: InputMaybe<Array<ResourceProvidedByCommunityConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceProvidedByCommunityCreateFieldInput>>
 }
 
-export type ResourceProvededByCommunityNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<ResourceProvededByCommunityNodeAggregationWhereInput>>
-  NOT?: InputMaybe<ResourceProvededByCommunityNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<ResourceProvededByCommunityNodeAggregationWhereInput>>
+export type ResourceProvidedByCommunityNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourceProvidedByCommunityNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourceProvidedByCommunityNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourceProvidedByCommunityNodeAggregationWhereInput>>
   activities_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   activities_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   activities_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11130,25 +11130,25 @@ export type ResourceProvededByCommunityNodeAggregationWhereInput = {
   why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type ResourceProvededByCommunityRelationship = {
-  __typename?: 'ResourceProvededByCommunityRelationship'
+export type ResourceProvidedByCommunityRelationship = {
+  __typename?: 'ResourceProvidedByCommunityRelationship'
   cursor: Scalars['String']['output']
   node: Community
 }
 
-export type ResourceProvededByCommunityUpdateConnectionInput = {
+export type ResourceProvidedByCommunityUpdateConnectionInput = {
   node?: InputMaybe<CommunityUpdateInput>
 }
 
-export type ResourceProvededByCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResourceProvededByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<ResourceProvededByCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<ResourceProvededByCommunityDeleteFieldInput>>
+export type ResourceProvidedByCommunityUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourceProvidedByCommunityConnectFieldInput>>
+  create?: InputMaybe<Array<ResourceProvidedByCommunityCreateFieldInput>>
+  delete?: InputMaybe<Array<ResourceProvidedByCommunityDeleteFieldInput>>
   disconnect?: InputMaybe<
-    Array<ResourceProvededByCommunityDisconnectFieldInput>
+    Array<ResourceProvidedByCommunityDisconnectFieldInput>
   >
-  update?: InputMaybe<ResourceProvededByCommunityUpdateConnectionInput>
-  where?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
+  update?: InputMaybe<ResourceProvidedByCommunityUpdateConnectionInput>
+  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
 export type ResourceProvidedByPersonAggregateInput = {
@@ -11737,8 +11737,8 @@ export type ResourceUpdateInput = {
   goals?: InputMaybe<Array<ResourceGoalsUpdateFieldInput>>
   location_SET?: InputMaybe<Scalars['String']['input']>
   name_SET?: InputMaybe<Scalars['String']['input']>
-  provededByCommunity?: InputMaybe<
-    Array<ResourceProvededByCommunityUpdateFieldInput>
+  providedByCommunity?: InputMaybe<
+    Array<ResourceProvidedByCommunityUpdateFieldInput>
   >
   providedByPerson?: InputMaybe<Array<ResourceProvidedByPersonUpdateFieldInput>>
   resources?: InputMaybe<Array<ResourceResourcesUpdateFieldInput>>
@@ -11816,23 +11816,23 @@ export type ResourceWhere = {
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  provededByCommunityAggregate?: InputMaybe<ResourceProvededByCommunityAggregateInput>
-  /** Return Resources where all of the related ResourceProvededByCommunityConnections match this filter */
-  provededByCommunityConnection_ALL?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
-  /** Return Resources where none of the related ResourceProvededByCommunityConnections match this filter */
-  provededByCommunityConnection_NONE?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
-  /** Return Resources where one of the related ResourceProvededByCommunityConnections match this filter */
-  provededByCommunityConnection_SINGLE?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
-  /** Return Resources where some of the related ResourceProvededByCommunityConnections match this filter */
-  provededByCommunityConnection_SOME?: InputMaybe<ResourceProvededByCommunityConnectionWhere>
+  providedByCommunityAggregate?: InputMaybe<ResourceProvidedByCommunityAggregateInput>
+  /** Return Resources where all of the related ResourceProvidedByCommunityConnections match this filter */
+  providedByCommunityConnection_ALL?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
+  /** Return Resources where none of the related ResourceProvidedByCommunityConnections match this filter */
+  providedByCommunityConnection_NONE?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
+  /** Return Resources where one of the related ResourceProvidedByCommunityConnections match this filter */
+  providedByCommunityConnection_SINGLE?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
+  /** Return Resources where some of the related ResourceProvidedByCommunityConnections match this filter */
+  providedByCommunityConnection_SOME?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
   /** Return Resources where all of the related Communities match this filter */
-  provededByCommunity_ALL?: InputMaybe<CommunityWhere>
+  providedByCommunity_ALL?: InputMaybe<CommunityWhere>
   /** Return Resources where none of the related Communities match this filter */
-  provededByCommunity_NONE?: InputMaybe<CommunityWhere>
+  providedByCommunity_NONE?: InputMaybe<CommunityWhere>
   /** Return Resources where one of the related Communities match this filter */
-  provededByCommunity_SINGLE?: InputMaybe<CommunityWhere>
+  providedByCommunity_SINGLE?: InputMaybe<CommunityWhere>
   /** Return Resources where some of the related Communities match this filter */
-  provededByCommunity_SOME?: InputMaybe<CommunityWhere>
+  providedByCommunity_SOME?: InputMaybe<CommunityWhere>
   providedByPersonAggregate?: InputMaybe<ResourceProvidedByPersonAggregateInput>
   /** Return Resources where all of the related ResourceProvidedByPersonConnections match this filter */
   providedByPersonConnection_ALL?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
@@ -12473,7 +12473,7 @@ export type UpdateResourceMutation = {
         description: string
         status: string
       }>
-      provededByCommunity: Array<{
+      providedByCommunity: Array<{
         __typename?: 'Community'
         name: string
         id: string
@@ -13163,7 +13163,7 @@ export type GetResourceQuery = {
       description?: string | null
       createdAt: any
     }>
-    provededByCommunity: Array<{
+    providedByCommunity: Array<{
       __typename?: 'Community'
       name: string
       id: string
@@ -15555,7 +15555,7 @@ export const UpdateResourceDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'provededByCommunity' },
+                        name: { kind: 'Name', value: 'providedByCommunity' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
@@ -17928,7 +17928,7 @@ export const GetResourceDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'provededByCommunity' },
+                  name: { kind: 'Name', value: 'providedByCommunity' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [

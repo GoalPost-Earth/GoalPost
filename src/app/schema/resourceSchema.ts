@@ -8,7 +8,9 @@ export const resourceSchema = object({
   why: string().trim().optional(),
   location: string().trim().optional(),
   time: string().trim().optional(),
-  providedByPerson: string().trim().optional(),
+  linkTo: string().min(1).trim(),
+  communityLink: string().min(1).trim().optional(),
+  personLink: string().min(1).trim().optional(),
 })
 
 export type ResourceFormData = z.infer<typeof resourceSchema>

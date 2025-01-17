@@ -214,7 +214,7 @@ type Resource @node {
   goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
-  provededByCommunity: [Community!]!
+  providedByCommunity: [Community!]!
     @relationship(type: "PROVIDES", direction: IN)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
