@@ -1215,6 +1215,11 @@ export type CarePointWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  resources?: InputMaybe<ResourceWhere>
+  resources_ALL?: InputMaybe<ResourceWhere>
+  resources_NONE?: InputMaybe<ResourceWhere>
+  resources_SINGLE?: InputMaybe<ResourceWhere>
+  resources_SOME?: InputMaybe<ResourceWhere>
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
@@ -11746,6 +11751,11 @@ export type ResourceWhere = {
   AND?: InputMaybe<Array<ResourceWhere>>
   NOT?: InputMaybe<ResourceWhere>
   OR?: InputMaybe<Array<ResourceWhere>>
+  carePoints?: InputMaybe<CarePointWhere>
+  carePoints_ALL?: InputMaybe<CarePointWhere>
+  carePoints_NONE?: InputMaybe<CarePointWhere>
+  carePoints_SINGLE?: InputMaybe<CarePointWhere>
+  carePoints_SOME?: InputMaybe<CarePointWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -12457,6 +12467,26 @@ export type UpdateResourceMutation = {
         name: string
         description?: string | null
       }>
+      carePoints: Array<{
+        __typename?: 'CarePoint'
+        id: string
+        description: string
+        status: string
+      }>
+      provededByCommunity: Array<{
+        __typename?: 'Community'
+        name: string
+        id: string
+        description?: string | null
+      }>
+      providedByPerson: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        email?: string | null
+        phone?: string | null
+        photo?: string | null
+      }>
     }>
   }
 }
@@ -13130,6 +13160,12 @@ export type GetResourceQuery = {
       __typename?: 'Goal'
       id: string
       name: string
+      description?: string | null
+    }>
+    provededByCommunity: Array<{
+      __typename?: 'Community'
+      name: string
+      id: string
       description?: string | null
     }>
   }>
@@ -15495,6 +15531,77 @@ export const UpdateResourceDocument = {
                           ],
                         },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'carePoints' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'provededByCommunity' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'providedByPerson' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'phone' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -17807,6 +17914,21 @@ export const GetResourceDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'provededByCommunity' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },

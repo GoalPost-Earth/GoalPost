@@ -50,6 +50,23 @@ export const UPDATE_RESOURCE_MUTATION = graphql(`
           name
           description
         }
+        carePoints {
+          id
+          description
+          status
+        }
+        provededByCommunity {
+          name
+          id
+          description
+        }
+        providedByPerson {
+          id
+          name
+          email
+          phone
+          photo
+        }
       }
     }
   }

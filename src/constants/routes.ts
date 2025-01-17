@@ -10,6 +10,8 @@ export const TRIGGERS = {
     RELATED_GOALS: 'Related Goals',
     RELATED_COMMUNITIES: 'Communities With Access',
     RELATED_CARE_POINTS: 'Related Care Points',
+    RELATED_RESOURCES: 'Related Resources',
+    RELATED_PERSONS: 'Related People',
   },
   CAREPOINT: {
     DETAILS: 'Care Point Details',

@@ -31,6 +31,11 @@ export const GET_RESOURCE = graphql(`
         name
         description
       }
+      provededByCommunity {
+        name
+        id
+        description
+      }
     }
   }
 `)

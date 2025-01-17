@@ -21,7 +21,10 @@ import { EntityEnum, TRIGGERS } from '@/constants'
 import {
   ResourceCarePoints,
   ResourceDetails,
+  ResourceProvidedBy,
+  ResourceRelatedCommunities,
   ResourceRelatedGoals,
+  ResourceRelatedResources,
 } from '@/components/sections/resource'
 import { Resource } from '@/gql/graphql'
 
@@ -110,9 +113,20 @@ export default async function ViewResourcePage({
                   key="Goals"
                   resource={resource as Resource}
                 />,
-                <></>,
+                <ResourceRelatedCommunities
+                  key="Communities"
+                  resource={resource as Resource}
+                />,
                 <ResourceCarePoints
                   key="CarePoints"
+                  resource={resource as Resource}
+                />,
+                <ResourceRelatedResources
+                  key="Resources"
+                  resource={resource as Resource}
+                />,
+                <ResourceProvidedBy
+                  key="ProvidedBy"
                   resource={resource as Resource}
                 />,
               ]}

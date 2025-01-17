@@ -12,7 +12,7 @@ export default function ResourceCarePoints({
 }) {
   return (
     <VStack
-      key="Goals"
+      key="CarePoint"
       p={4}
       gap={4}
       bg={'gray.contrast'}
@@ -23,9 +23,9 @@ export default function ResourceCarePoints({
       {resource.carePoints.length === 0 && (
         <EmptyState
           title="No Care Points"
-          description="Click here to add a care point"
+          description="Click here to add a care point by choosing a goal"
         >
-          <Link href={`/carepoint/create?resourceId=${resource.id}`}>
+          <Link href={`/goal`}>
             <Button variant="surface">Add A Care Point</Button>
           </Link>
         </EmptyState>
