@@ -75,7 +75,17 @@ export default function UpdateCommunity({
         variables: {
           id,
           update: {
-            ...rest,
+            name_SET: rest.name,
+            description_SET: rest.description,
+            status_SET: rest.status,
+            why_SET: rest.why,
+            location_SET: rest.location,
+            time_SET: rest.time,
+            levelFulfilled_SET: rest.levelFulfilled,
+            fulfillmentDate_SET: rest.fulfillmentDate,
+            successMeasures_SET: rest.successMeasures,
+            issuesIdentified_SET: rest.issuesIdentified,
+            issuesResolved_SET: rest.issuesResolved,
 
             enabledByGoals: [
               {
@@ -109,7 +119,7 @@ export default function UpdateCommunity({
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container>
         <CarePointForm
-          formMode={FormMode.Create}
+          formMode={FormMode.Update}
           control={control}
           register={register}
           errors={errors}

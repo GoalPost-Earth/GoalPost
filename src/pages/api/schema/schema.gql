@@ -95,6 +95,14 @@ type CarePoint @node {
   name: String!
   description: String
   status: String
+  why: String
+  location: String
+  time: String
+  levelFulfilled: String
+  fulfillmentDate: String
+  successMeasures: String
+  issuesIdentified: String
+  issuesResolved: String
 
   resources: [Resource!]!
     @cypher(

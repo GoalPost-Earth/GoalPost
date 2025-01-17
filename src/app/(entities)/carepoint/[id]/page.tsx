@@ -14,9 +14,9 @@ import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
-  EntityDetail,
   EntityOwnerCard,
   CarePointLinkedGoals,
+  CarePointDetails,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -80,7 +80,7 @@ export default async function ViewCarePointPage({
       >
         <VStack width="100%" justifyContent="center" alignItems="start" gap={4}>
           <Heading mt={5} fontSize="2xl" fontWeight="bold">
-            {carepoint?.description}
+            {carepoint?.name}
           </Heading>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
@@ -99,25 +99,10 @@ export default async function ViewCarePointPage({
                   TRIGGERS.CAREPOINT[key as keyof typeof TRIGGERS.CAREPOINT]
               )}
               content={[
-                <VStack
-                  key="Details"
-                  p={4}
-                  bg={'gray.contrast'}
-                  borderRadius={'2xl'}
-                  boxShadow={'xs'}
-                  alignItems={'flex-start'}
-                  width={{ lg: '70%' }}
-                >
-                  <VStack gap={4}>
-                    <EntityDetail
-                      title="Description"
-                      entityName={carepoint.name}
-                      details={carepoint.description}
-                    />
-
-                    <EntityDetail title="Status" details={carepoint.status} />
-                  </VStack>
-                </VStack>,
+                <CarePointDetails
+                  key="details"
+                  carepoint={carepoint as CarePoint}
+                />,
                 <CarePointLinkedGoals
                   key="linkedGoals"
                   carePoint={carepoint as CarePoint}

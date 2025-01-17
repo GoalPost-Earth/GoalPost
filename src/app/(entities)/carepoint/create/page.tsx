@@ -44,10 +44,10 @@ function CreateCarePoint() {
             },
 
             enabledByGoals: {
-              connect: [{ where: { node: { id_EQ: enabledByGoals } } }],
+              connect: [{ where: { node: { id_IN: enabledByGoals } } }],
             },
             caresForGoals: {
-              connect: [{ where: { node: { id_EQ: caresForGoals } } }],
+              connect: [{ where: { node: { id_IN: caresForGoals } } }],
             },
           },
         },

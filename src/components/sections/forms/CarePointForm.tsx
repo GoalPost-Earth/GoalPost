@@ -7,7 +7,7 @@ import {
   Separator,
 } from '@chakra-ui/react'
 import React from 'react'
-import { Input, NativeSelect, Textarea } from '../../react-hook-form'
+import { Input, NativeSelect, Select, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
 import {
   Control,
@@ -148,23 +148,21 @@ const CarePointForm = ({
 
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
-            <NativeSelect
+            <Select
               label="What goals enable this care point?"
               name="enabledByGoals"
-              register={register}
               errors={errors}
+              control={control}
               options={goalOptions}
-              defaultMessage="Choose from the list of goals"
             />
           </GridItem>
           <GridItem>
-            <NativeSelect
+            <Select
               label="What goals does this care point care for?"
               name="caresForGoals"
-              register={register}
               errors={errors}
+              control={control}
               options={goalOptions}
-              defaultMessage="Choose from the list of goals"
             />
           </GridItem>
         </Grid>

@@ -7,6 +7,14 @@ export const GET_CAREPOINT = graphql(`
       name
       description
       status
+      why
+      location
+      time
+      levelFulfilled
+      fulfillmentDate
+      successMeasures
+      issuesIdentified
+      issuesResolved
       resources {
         id
         name
