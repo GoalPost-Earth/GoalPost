@@ -12,11 +12,7 @@ export function EditButton({
   return (
     <Button variant="surface" paddingX={2} height="fit-content" {...props}>
       <EditIcon m={1} color="" />
-      {!iconOnly && (
-        <Text fontSize={'sm'} display={{ base: 'none', lg: 'block' }}>
-          {text ?? 'Edit'}
-        </Text>
-      )}
+      {!iconOnly && <Text fontSize={'sm'}>{text ?? 'Edit'}</Text>}
     </Button>
   )
 }

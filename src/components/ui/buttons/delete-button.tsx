@@ -15,10 +15,7 @@ import {
   GET_ALL_CAREPOINTS,
   GET_ALL_COMMUNITIES,
   GET_ALL_COREVALUES,
-  GET_ALL_GOALS,
   GET_ALL_PEOPLE,
-  GET_ALL_RESOURCES,
-  GET_PEOPLE_AND_THEIR_RESOURCES,
 } from '@/app/graphql'
 import { toaster } from '../toaster'
 import { useRouter } from 'next/navigation'
@@ -116,9 +113,7 @@ export function DeleteButton({
         onClick={onOpen}
       >
         <DeleteIcon m={1} />
-        <Text fontSize={'sm'} display={{ lg: 'none', xl: 'block' }}>
-          Delete
-        </Text>
+        <Text fontSize={'sm'}>Delete</Text>
       </Button>
 
       <DialogRoot

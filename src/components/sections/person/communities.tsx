@@ -296,17 +296,19 @@ export default function PersonCommunities({ person }: { person: Person }) {
                           </PopoverBody>
                         </PopoverContent>
                       </PopoverRoot>
-                      <Button
-                        fontSize="x-small"
-                        size="xs"
-                        variant="ghost"
-                        _hover={{
-                          bgColor: 'transparent',
-                        }}
-                      >
-                        <CalenderIcon color="brandIcons.500" />{' '}
-                        {`Since ${getHumanReadableDate(edge.properties.signupDate, true)}`}
-                      </Button>
+                      {edge.properties.signupDate && (
+                        <Button
+                          fontSize="x-small"
+                          size="xs"
+                          variant="ghost"
+                          _hover={{
+                            bgColor: 'transparent',
+                          }}
+                        >
+                          <CalenderIcon color="brandIcons.500" />{' '}
+                          {`Since ${getHumanReadableDate(edge.properties.signupDate, true)}`}
+                        </Button>
+                      )}
                     </VStack>
                     <Spacer />
                     <EditButton
