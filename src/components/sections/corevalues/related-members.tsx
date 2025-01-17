@@ -142,7 +142,7 @@ export default function CoreValueRelatedMembers({
               <DialogBody>
                 <MultiSelect
                   name="relatedMembers"
-                  label="Add some members"
+                  label={`Choose members who embrace ${corevalue.name}`}
                   control={control}
                   errors={errors}
                   options={valueOptions}

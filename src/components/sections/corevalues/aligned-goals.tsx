@@ -142,7 +142,7 @@ export default function CoreValueAlignedGoals({
               <DialogBody>
                 <MultiSelect
                   name="alignedGoals"
-                  label="Align core value with goals"
+                  label={`Choose goals aligned with ${corevalue.name}`}
                   control={control}
                   errors={errors}
                   options={valueOptions}

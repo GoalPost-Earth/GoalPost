@@ -1,5 +1,6 @@
-import { EditButton, EntityDetail } from '@/components'
+import { DeleteButton, EditButton, EntityDetail } from '@/components'
 import { Person } from '@/gql/graphql'
+import { EntityEnum } from '@/constants'
 import { Box, HStack, Link, Spacer, VStack } from '@chakra-ui/react'
 import React from 'react'
 
@@ -21,6 +22,11 @@ export default function PersonAbout({ person }: { person: Person }) {
           <Link href={`/person/update/${person.id}`}>
             <EditButton colorPalette="person" size="xl" />
           </Link>
+          <DeleteButton
+            entityId={person.id}
+            entityType={EntityEnum.Person}
+            entityName={person.name}
+          />
         </HStack>
       </Box>
       <EntityDetail

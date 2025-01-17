@@ -55,12 +55,13 @@ export function PersonProfile({
                 size="xl"
               />
             </Link>
-
-            <DeleteButton
-              entityId={user.id}
-              entityType={EntityEnum.Person}
-              entityName={user.name}
-            />
+            <Box display={{ base: 'block', lg: 'none' }}>
+              <DeleteButton
+                entityId={user.id}
+                entityType={EntityEnum.Person}
+                entityName={user.name}
+              />
+            </Box>
           </HStack>
         </Stack>
 

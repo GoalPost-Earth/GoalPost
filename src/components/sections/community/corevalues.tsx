@@ -129,7 +129,7 @@ export default function CommunityCoreValues({
               <DialogBody>
                 <MultiSelect
                   name="coreValues"
-                  label="Choose core values"
+                  label="Choose core values which this community embraces"
                   control={control}
                   errors={errors}
                   options={valueOptions}

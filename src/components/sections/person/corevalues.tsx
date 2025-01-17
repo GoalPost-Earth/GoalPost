@@ -126,7 +126,7 @@ export default function PersonCoreValues({ person }: { person: Person }) {
               <DialogBody>
                 <MultiSelect
                   name="coreValues"
-                  label="Choose your core values"
+                  label="Choose core values which you embrace"
                   control={control}
                   errors={errors}
                   options={valueOptions}

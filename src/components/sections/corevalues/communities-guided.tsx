@@ -138,7 +138,7 @@ export default function CoreValueCommunitiesGuided({
               <DialogBody>
                 <MultiSelect
                   name="communities"
-                  label="Choose some communities"
+                  label={`Choose communities guided by ${corevalue.name}`}
                   control={control}
                   errors={errors}
                   options={valueOptions}

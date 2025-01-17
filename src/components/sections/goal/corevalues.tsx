@@ -137,7 +137,7 @@ export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
               <DialogBody>
                 <MultiSelect
                   name="relatedCorevalues"
-                  label="Choose corevalues related to goal"
+                  label="Choose core values to which this goal is aligned"
                   control={control}
                   errors={errors}
                   options={valueOptions}
