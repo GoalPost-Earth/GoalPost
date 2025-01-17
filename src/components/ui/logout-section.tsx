@@ -2,6 +2,7 @@ import { Flex, HStack, Stack, Text, VStack } from '@chakra-ui/react'
 import { LogoutIcon } from '../icons'
 import { Avatar } from './avatar'
 import { useApp } from '@/app/contexts'
+import Link from 'next/link'
 
 export function LogoutSection({
   extendable,
@@ -29,26 +30,31 @@ export function LogoutSection({
           {user?.name && <Text fontWeight="medium">{user?.name}</Text>}
         </Stack>
       </HStack>
-      <Flex
-        gap={2}
-        cursor="pointer"
-        borderTop="2px solid"
-        borderTopColor="gray.subtle"
-        justifyContent="flex-start"
-        width="100%"
-        paddingY={2}
-        px={3}
-        alignItems="center"
+      <Link
+        href="/api/auth/logout?returnTo=/"
+        style={{ display: 'block', width: '100%' }}
       >
-        <LogoutIcon width="16px" height="16px" color="brandIcons" />
-        <Text
-          fontSize="sm"
-          color="brandIcons"
-          display={extendable && !isExtended ? 'none' : 'block'}
+        <Flex
+          gap={2}
+          cursor="pointer"
+          borderTop="2px solid"
+          borderTopColor="gray.subtle"
+          justifyContent="flex-start"
+          width="100%"
+          paddingY={2}
+          px={3}
+          alignItems="center"
         >
-          Sign Out
-        </Text>
-      </Flex>
+          <LogoutIcon width="16px" height="16px" color="brandIcons" />
+          <Text
+            fontSize="sm"
+            color="brandIcons"
+            display={extendable && !isExtended ? 'none' : 'block'}
+          >
+            Sign Out
+          </Text>
+        </Flex>
+      </Link>
     </VStack>
   )
 }
