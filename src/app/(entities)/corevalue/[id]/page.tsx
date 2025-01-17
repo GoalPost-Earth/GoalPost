@@ -148,10 +148,7 @@ export default async function ViewCoreValuePage({
               <Spacer />
               <EntityOwnerCard
                 owner={corevalue?.createdBy[0]}
-                entity={{
-                  ...corevalue,
-                  __typename: corevalue.__typename ?? '',
-                }}
+                entity={corevalue}
               />
             </Box>
           </HStack>
