@@ -29,6 +29,22 @@ export const UPDATE_COREVALUE_MUTATION = graphql(`
         description
         why
         createdAt
+        isEmbracedBy {
+          id
+          name
+          photo
+        }
+        communities {
+          id
+          name
+          description
+        }
+        goals {
+          id
+          name
+          description
+          status
+        }
       }
     }
   }
