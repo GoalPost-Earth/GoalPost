@@ -1,0 +1,122 @@
+'use client'
+import { GET_CAREPOINT, UPDATE_CAREPOINT_MUTATION } from '@/app/graphql'
+import { CarePointFormData, carePointSchema } from '@/app/schema'
+import { ApolloWrapper, CarePointForm } from '@/components'
+import { FormMode } from '@/constants'
+import { useMutation, useQuery } from '@apollo/client'
+import { Container } from '@chakra-ui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
+import React, { use, useEffect, useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+
+export default function UpdateCommunity({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = use(params)
+  const router = useRouter()
+
+  const { data, loading, error } = useQuery(GET_CAREPOINT, {
+    variables: { id },
+  })
+
+  const [UpdateCarePoint] = useMutation(UPDATE_CAREPOINT_MUTATION)
+
+  const carePoint = data?.carePoints[0]
+
+  const defaultValues: CarePointFormData = useMemo(
+    () => ({
+      name: carePoint?.name || '',
+      description: carePoint?.description || undefined,
+      status: carePoint?.status || 'Active',
+      enabledByGoals: carePoint?.enabledByGoals.map((goal) => goal.id) || [],
+      caresForGoals: carePoint?.caresForGoals.map((goal) => goal.id) || [],
+    }),
+    [carePoint]
+  )
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    register,
+    formState: { isSubmitting, errors },
+  } = useForm<CarePointFormData>({
+    defaultValues,
+    resolver: zodResolver(carePointSchema),
+  })
+  useEffect(() => {
+    if (carePoint) {
+      reset(defaultValues)
+    }
+  }, [carePoint, defaultValues, reset])
+
+  const onSubmit = async (data: CarePointFormData) => {
+    const { enabledByGoals, caresForGoals, ...rest } = data
+
+    try {
+      const toConnectEnableGoals = enabledByGoals.filter(
+        (coreValue) => !defaultValues.enabledByGoals.includes(coreValue)
+      )
+
+      const toDisconnectEnableGoals = defaultValues.enabledByGoals.filter(
+        (coreValue) => !enabledByGoals.includes(coreValue)
+      )
+      const toConnectCaresForGoals = caresForGoals.filter(
+        (coreValue) => !defaultValues.caresForGoals.includes(coreValue)
+      )
+      const toDisconnectCaresForGoals = defaultValues.caresForGoals.filter(
+        (coreValue) => !caresForGoals.includes(coreValue)
+      )
+
+      const res = await UpdateCarePoint({
+        variables: {
+          id,
+          update: {
+            ...rest,
+
+            enabledByGoals: [
+              {
+                connect: [{ where: { node: { id_IN: toConnectEnableGoals } } }],
+                disconnect: [
+                  { where: { node: { id_IN: toDisconnectEnableGoals } } },
+                ],
+              },
+            ],
+            caresForGoals: [
+              {
+                connect: [
+                  { where: { node: { id_IN: toConnectCaresForGoals } } },
+                ],
+                disconnect: [
+                  { where: { node: { id_IN: toDisconnectCaresForGoals } } },
+                ],
+              },
+            ],
+          },
+        },
+      })
+
+      router.push('/carepoint/' + res.data?.updateCarePoints.carePoints[0].id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  return (
+    <ApolloWrapper data={data} loading={loading} error={error}>
+      <Container>
+        <CarePointForm
+          formMode={FormMode.Create}
+          control={control}
+          register={register}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit(onSubmit)}
+        />
+      </Container>
+    </ApolloWrapper>
+  )
+}
