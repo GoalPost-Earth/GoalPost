@@ -16,7 +16,7 @@ import {
   GenericTabs,
   EntityOwnerCard,
   GoalDetails,
-  GoalCoreValues,
+  GoalRelatedCorevalues,
   GoalEnablesCarePoints,
   GoalCaredForByCarePoints,
   GoalMotivatesPeople,
@@ -107,7 +107,7 @@ export default async function ViewGoalPage({
               )}
               content={[
                 <GoalDetails key="details" goal={goal as Goal} />,
-                <GoalCoreValues key="coreValues" goal={goal as Goal} />,
+                <GoalRelatedCorevalues key="coreValues" goal={goal as Goal} />,
                 <GoalEnablesCarePoints
                   key="enablesCarePoints"
                   goal={goal as Goal}

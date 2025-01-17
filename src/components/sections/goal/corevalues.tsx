@@ -1,11 +1,10 @@
 'use client'
 
 import { GET_ALL_COREVALUES, UPDATE_GOAL_MUTATION } from '@/app/graphql'
-import { ApolloWrapper } from '@/components/layout'
 import {
   Button,
+  EmptyState,
   DialogRoot,
-  DialogTrigger,
   DialogActionTrigger,
   DialogBody,
   DialogCloseTrigger,
@@ -13,60 +12,66 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogBackdrop,
-  CoreValueCard,
-  toaster,
-  EditButton,
   MultiSelect,
+  ApolloWrapper,
+  toaster,
+  ConfirmButton,
+  CancelButton,
+  CoreValueCard,
 } from '@/components'
-import { Goal } from '@/gql/graphql'
+import { CoreValue, Goal } from '@/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
-import { Grid, GridItem } from '@chakra-ui/react'
+import {
+  DialogBackdrop,
+  Grid,
+  GridItem,
+  HStack,
+  Spacer,
+  VStack,
+} from '@chakra-ui/react'
 import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { EntityEnum } from '@/constants'
 
-export default function GoalCoreValues({
-  key,
-  goal: fromParent,
-}: {
-  key: string
-  goal: Goal
-}) {
+export default function GoalRelatedCorevalues({ goal }: { goal: Goal }) {
+  const [relatedCorevalues, setRelatedCorevalues] = useState<CoreValue[]>(
+    goal.coreValues
+  )
   const [open, setOpen] = useState(false)
-  const [goal, setGoal] = useState<Goal>(fromParent)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const { data, loading, error } = useQuery(GET_ALL_COREVALUES)
   const [UpdateGoal] = useMutation(UPDATE_GOAL_MUTATION)
-  const corevalues = data?.coreValues ?? []
-  const valueOptions = corevalues.map((corevalue) => ({
-    label: corevalue.name,
-    value: corevalue.id,
-  }))
+  const contentRef = useRef<HTMLDivElement>(null)
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+
+  const valueOptions =
+    data?.coreValues.map((corevalue) => ({
+      label: corevalue.name,
+      value: corevalue.id,
+    })) ?? []
 
   type FormData = {
-    corevalues: string[]
+    relatedCorevalues: string[]
   }
+
   const {
     handleSubmit,
     control,
     formState: { isSubmitting, errors },
   } = useForm<FormData>({
     defaultValues: {
-      corevalues: goal.coreValues?.map((coreValue) => coreValue.id) ?? [],
+      relatedCorevalues:
+        relatedCorevalues.map((corevalue) => corevalue.id) ?? [],
     },
   })
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Find coreValues to delete and connect
-      const coreValues = goal.coreValues?.map((coreValue) => coreValue.id) ?? []
-      const toDisconnect = coreValues.filter(
-        (coreValue) => !data.corevalues.includes(coreValue)
+      // find corevalues to disconnect and connect
+      const initialPeople = relatedCorevalues.map((corevalue) => corevalue.id)
+      const toDisconnect = initialPeople.filter(
+        (corevalue) => !data.relatedCorevalues.includes(corevalue)
       )
-      const toConnect = data.corevalues.filter(
-        (coreValue) => !coreValues.includes(coreValue)
+      const toConnect = data.relatedCorevalues.filter(
+        (corevalue) => !initialPeople.map((p) => p).includes(corevalue)
       )
 
       const response = await UpdateGoal({
@@ -87,82 +92,99 @@ export default function GoalCoreValues({
         throw new Error('No data returned')
       }
 
-      setGoal(response.data.updateGoals.goals[0] as Goal)
+      setRelatedCorevalues(
+        response.data.updateGoals.goals[0].coreValues as CoreValue[]
+      )
       setOpen(false)
 
-      toaster.create({
-        title: 'Updated Goal Core Values',
-        description: 'The core values for the goal have been updated',
-        type: 'success',
+      toaster.success({
+        title: 'Updated Related corevalues',
+        description: 'The corevalues related to goal have been updated',
       })
     } catch (error) {
       console.error(error)
-      toaster.create({
+      toaster.error({
         title: 'Error',
-        description: 'An error occurred while updating the goal core values',
-        type: 'error',
+        description: 'An error occurred while updating the corevalues',
       })
     }
   }
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error} key={key}>
-      <DialogRoot
-        placement="center"
-        open={open}
-        onOpenChange={(e) => setOpen(e.open)}
-      >
-        <DialogBackdrop />
-        <DialogTrigger asChild>
-          <EditButton
-            colorPalette={EntityEnum.Goal.toLowerCase()}
-            text="Edit Core Values"
-            mb={5}
-          />
-        </DialogTrigger>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent ref={contentRef}>
-            <DialogHeader>
-              <DialogTitle>{goal.name} Core Values</DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              <MultiSelect
-                name="corevalues"
-                label="To what core values is this goal aligned?"
-                control={control}
-                errors={errors}
-                options={valueOptions}
-                portalRef={contentRef}
-                multiple
-              />
-            </DialogBody>
-            <DialogFooter>
-              <DialogActionTrigger asChild>
-                <Button variant="outline" ref={cancelButtonRef}>
-                  Cancel
-                </Button>
-              </DialogActionTrigger>
-              <Button
-                colorPalette="green"
-                type="submit"
-                loading={isSubmitting}
-                onClick={handleSubmit(onSubmit)}
-              >
-                Save
+    <ApolloWrapper data={data} loading={loading} error={error}>
+      <VStack bg={'bg'} p={4} borderRadius={'2xl'} boxShadow={'xs'}>
+        <DialogRoot
+          placement="center"
+          open={open}
+          onOpenChange={(e) => setOpen(e.open)}
+        >
+          <DialogBackdrop />
+          {/* <DialogTrigger asChild> */}
+          {relatedCorevalues.length > 0 && (
+            <HStack width="100%" justifyContent="space-between">
+              <Spacer />
+              <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
+                Update corevalues
               </Button>
-            </DialogFooter>
-            <DialogCloseTrigger />
-          </DialogContent>
-        </form>
-      </DialogRoot>
+            </HStack>
+          )}
+          {/* </DialogTrigger> */}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogContent ref={contentRef}>
+              <DialogHeader>
+                <DialogTitle>{`People motivated by ${goal.name}`}</DialogTitle>
+              </DialogHeader>
+              <DialogBody>
+                <MultiSelect
+                  name="relatedCorevalues"
+                  label="Choose corevalues related to goal"
+                  control={control}
+                  errors={errors}
+                  options={valueOptions}
+                  portalRef={contentRef}
+                  multiple
+                />
+              </DialogBody>
+              <DialogFooter>
+                <DialogActionTrigger asChild>
+                  <CancelButton ref={cancelButtonRef} />
+                </DialogActionTrigger>
+                <ConfirmButton
+                  loading={isSubmitting}
+                  onClick={handleSubmit(onSubmit)}
+                />
+              </DialogFooter>
+              <DialogCloseTrigger />
+            </DialogContent>
+          </form>
+        </DialogRoot>
 
-      <Grid templateColumns="repeat(auto-fill, minmax(360px, 1fr))" gap={6}>
-        {goal.coreValues.map((coreValue) => (
-          <GridItem key={coreValue.id}>
-            <CoreValueCard coreValue={coreValue} />
-          </GridItem>
-        ))}
-      </Grid>
+        {relatedCorevalues.length === 0 && (
+          <EmptyState
+            title="No Core Values"
+            description="Click here to add some"
+          >
+            <Button variant="surface" onClick={() => setOpen(true)}>
+              Add A Core Value
+            </Button>
+          </EmptyState>
+        )}
+        <Grid
+          key="corevalues"
+          templateColumns={{
+            base: '1fr',
+            lg: 'repeat(3, 1fr)',
+          }}
+          gap={6}
+          width="100%"
+        >
+          {relatedCorevalues.map((corevalue) => (
+            <GridItem key={corevalue.id}>
+              <CoreValueCard coreValue={corevalue} />
+            </GridItem>
+          ))}
+        </Grid>
+      </VStack>
     </ApolloWrapper>
   )
 }
