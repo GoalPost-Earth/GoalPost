@@ -37,7 +37,7 @@ export default function PersonGoals({ person }: { person: Person }) {
 
       <Grid
         key="goals"
-        templateColumns="repeat(auto-fill, minmax(360px, 1fr))"
+        templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
         gap={6}
         width="100%"
       >
