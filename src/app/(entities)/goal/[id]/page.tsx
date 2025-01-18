@@ -1,4 +1,5 @@
-import { query } from '@/app/lib/apollo-client'
+'use client'
+
 import { GET_GOAL } from '@/app/graphql/queries'
 import {
   Box,
@@ -10,7 +11,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { use } from 'react'
 import {
   Avatar,
   EntityPageHeader,
@@ -24,20 +25,21 @@ import {
   GoalMotivatesCommunities,
   GoalRelatedResources,
   DeleteButton,
+  ApolloWrapper,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
 import { Goal } from '@/gql/graphql'
+import { useQuery } from '@apollo/client'
 
-export default async function ViewGoalPage({
+export default function ViewGoalPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
 
-  const { data, error } = await query({
-    query: GET_GOAL,
+  const { data, loading, error } = useQuery(GET_GOAL, {
     variables: { id },
   })
 
@@ -46,13 +48,10 @@ export default async function ViewGoalPage({
   if (error) {
     throw error
   }
-
-  if (data.goals.length === 0) {
-    throw new Error('Goal not found')
-  }
+  if (!goal) return <></>
 
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <EntityPageHeader entity={goal.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -152,6 +151,6 @@ export default async function ViewGoalPage({
           </HStack>
         </VStack>
       </Container>
-    </>
+    </ApolloWrapper>
   )
 }

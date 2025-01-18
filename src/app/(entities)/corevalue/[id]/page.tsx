@@ -43,7 +43,7 @@ export default function ViewCoreValuePage({
   })
 
   const corevalue = data?.coreValues[0]
-  if (!corevalue) return null
+  if (!corevalue) return <></>
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>

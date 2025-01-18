@@ -1,4 +1,5 @@
-import { query } from '@/app/lib/apollo-client'
+'use client'
+
 import { GET_RESOURCE } from '@/app/graphql/queries'
 import {
   Box,
@@ -10,13 +11,14 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { use } from 'react'
 import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
   DeleteButton,
+  ApolloWrapper,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -27,16 +29,16 @@ import {
   ResourceRelatedResources,
 } from '@/components/sections/resource'
 import { Resource } from '@/gql/graphql'
+import { useQuery } from '@apollo/client'
 
-export default async function ViewResourcePage({
+export default function ViewResourcePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
 
-  const { data, error } = await query({
-    query: GET_RESOURCE,
+  const { data, loading, error } = useQuery(GET_RESOURCE, {
     variables: { id },
   })
 
@@ -46,12 +48,10 @@ export default async function ViewResourcePage({
     throw error
   }
 
-  if (data.resources?.length === 0) {
-    throw new Error('Resource not found')
-  }
+  if (!resource) return <></>
 
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <EntityPageHeader entity={resource.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -152,6 +152,6 @@ export default async function ViewResourcePage({
           </HStack>
         </VStack>
       </Container>
-    </>
+    </ApolloWrapper>
   )
 }

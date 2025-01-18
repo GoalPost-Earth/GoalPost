@@ -1,4 +1,5 @@
-import { query } from '@/app/lib/apollo-client'
+'use client'
+
 import { GET_CAREPOINT } from '@/app/graphql/queries'
 import {
   Box,
@@ -10,7 +11,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { use } from 'react'
 import {
   Avatar,
   EntityPageHeader,
@@ -20,20 +21,21 @@ import {
   CarePointDetails,
   CarePointGoalsCaredFor,
   DeleteButton,
+  ApolloWrapper,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
 import { CarePoint } from '@/gql/graphql'
+import { useQuery } from '@apollo/client'
 
-export default async function ViewCarePointPage({
+export default function ViewCarePointPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
 
-  const { data, error } = await query({
-    query: GET_CAREPOINT,
+  const { data, loading, error } = useQuery(GET_CAREPOINT, {
     variables: { id },
   })
 
@@ -43,12 +45,10 @@ export default async function ViewCarePointPage({
     throw error
   }
 
-  if (data.carePoints.length === 0) {
-    throw new Error('Care Point not found')
-  }
+  if (!carepoint) return <></>
 
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <EntityPageHeader entity={carepoint.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -145,6 +145,6 @@ export default async function ViewCarePointPage({
           </HStack>
         </VStack>
       </Container>
-    </>
+    </ApolloWrapper>
   )
 }

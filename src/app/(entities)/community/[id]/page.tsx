@@ -1,4 +1,5 @@
-import { query } from '@/app/lib/apollo-client'
+'use client'
+
 import { GET_COMMUNITY } from '@/app/graphql/queries'
 import {
   Box,
@@ -10,13 +11,14 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { use } from 'react'
 import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
   DeleteButton,
+  ApolloWrapper,
 } from '@/components'
 import Link from 'next/link'
 import { Community } from '@/gql/graphql'
@@ -29,16 +31,16 @@ import {
   CommunityResources,
   RelatedCommunities,
 } from '@/components'
+import { useQuery } from '@apollo/client'
 
-export default async function ViewCommunityPage({
+export default function ViewCommunityPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
 
-  const { data, error } = await query({
-    query: GET_COMMUNITY,
+  const { data, loading, error } = useQuery(GET_COMMUNITY, {
     variables: { id },
   })
 
@@ -48,12 +50,10 @@ export default async function ViewCommunityPage({
     throw error
   }
 
-  if (data.communities.length === 0) {
-    throw new Error('Community not found')
-  }
+  if (!community) return <></>
 
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <EntityPageHeader entity={community.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -162,6 +162,6 @@ export default async function ViewCommunityPage({
           </HStack>
         </VStack>
       </Container>
-    </>
+    </ApolloWrapper>
   )
 }
