@@ -27,6 +27,7 @@ import {
   PopoverBody,
   PopoverTitle,
   CalenderIcon,
+  AutoLink,
 } from '@/components'
 import { Community, Person, PersonCommunitiesRelationship } from '@/gql/graphql'
 import { getHumanReadableDate } from '@/utils'
@@ -290,7 +291,7 @@ export default function PersonCommunities({ person }: { person: Person }) {
                                 edge.node.name +
                                 ' is '}
                               <Text mt={5} fontWeight="bold" fontSize="lg">
-                                {edge.properties.totem}
+                                <AutoLink text={edge.properties.totem ?? ''} />
                               </Text>
                             </PopoverTitle>
                           </PopoverBody>
