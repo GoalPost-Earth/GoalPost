@@ -117,7 +117,7 @@ export type CarePoint = {
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
   resources: Array<Resource>
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -462,7 +462,7 @@ export type CarePointCreateInput = {
   levelFulfilled?: InputMaybe<Scalars['String']['input']>
   location?: InputMaybe<Scalars['String']['input']>
   name: Scalars['String']['input']
-  status?: InputMaybe<Scalars['String']['input']>
+  status: Scalars['String']['input']
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
@@ -1300,7 +1300,7 @@ export type CarePointWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   successMeasures_CONTAINS?: InputMaybe<Scalars['String']['input']>
   successMeasures_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -1424,7 +1424,7 @@ export type Community = {
   resourcesAggregate?: Maybe<CommunityResourceResourcesAggregationSelection>
   resourcesConnection: CommunityResourcesConnection
   resultsAchieved?: Maybe<Scalars['String']['output']>
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
   why?: Maybe<Scalars['String']['output']>
@@ -1824,7 +1824,7 @@ export type CommunityCreateInput = {
   relatedCommunities?: InputMaybe<CommunityRelatedCommunitiesFieldInput>
   resources?: InputMaybe<CommunityResourcesFieldInput>
   resultsAchieved?: InputMaybe<Scalars['String']['input']>
-  status?: InputMaybe<Scalars['String']['input']>
+  status: Scalars['String']['input']
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
@@ -3507,7 +3507,7 @@ export type CommunityWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   time_CONTAINS?: InputMaybe<Scalars['String']['input']>
   time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -5204,7 +5204,7 @@ export type Goal = {
   resources: Array<Resource>
   resourcesAggregate?: Maybe<GoalResourceResourcesAggregationSelection>
   resourcesConnection: GoalResourcesConnection
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -5950,7 +5950,7 @@ export type GoalCreateInput = {
   name: Scalars['String']['input']
   photo?: InputMaybe<Scalars['String']['input']>
   resources?: InputMaybe<GoalResourcesFieldInput>
-  status?: InputMaybe<Scalars['String']['input']>
+  status: Scalars['String']['input']
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
@@ -7670,7 +7670,7 @@ export type GoalWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   successMeasures_CONTAINS?: InputMaybe<Scalars['String']['input']>
   successMeasures_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -7896,7 +7896,7 @@ export type Person = PersonInterface & {
   providesResources: Array<Resource>
   providesResourcesAggregate?: Maybe<PersonResourceProvidesResourcesAggregationSelection>
   providesResourcesConnection: PersonProvidesResourcesConnection
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
   traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
@@ -8903,7 +8903,7 @@ export type PersonCreateInput = {
   photo?: InputMaybe<Scalars['String']['input']>
   pronouns?: InputMaybe<Scalars['String']['input']>
   providesResources?: InputMaybe<PersonProvidesResourcesFieldInput>
-  status?: InputMaybe<Scalars['String']['input']>
+  status: Scalars['String']['input']
   traits?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -10198,7 +10198,7 @@ export type PersonWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   traits_CONTAINS?: InputMaybe<Scalars['String']['input']>
   traits_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -10438,7 +10438,7 @@ export type Resource = {
   resources: Array<Resource>
   resourcesAggregate?: Maybe<ResourceResourceResourcesAggregationSelection>
   resourcesConnection: ResourceResourcesConnection
-  status?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
   time?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
   why?: Maybe<Scalars['String']['output']>
@@ -10594,7 +10594,7 @@ export type ResourceCreateInput = {
   providedByCommunity?: InputMaybe<ResourceProvidedByCommunityFieldInput>
   providedByPerson?: InputMaybe<ResourceProvidedByPersonFieldInput>
   resources?: InputMaybe<ResourceResourcesFieldInput>
-  status?: InputMaybe<Scalars['String']['input']>
+  status: Scalars['String']['input']
   time?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
@@ -12250,7 +12250,7 @@ export type ResourceWhere = {
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
-  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_IN?: InputMaybe<Array<Scalars['String']['input']>>
   status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   time_CONTAINS?: InputMaybe<Scalars['String']['input']>
   time_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
@@ -12354,7 +12354,7 @@ export type CreateCarePointsMutation = {
       __typename?: 'CarePoint'
       id: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
   }
 }
@@ -12372,7 +12372,7 @@ export type UpdateCarePointMutation = {
       __typename?: 'CarePoint'
       id: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
   }
 }
@@ -12418,7 +12418,7 @@ export type CreateCommunitiesMutation = {
       time?: string | null
       activities?: string | null
       resultsAchieved?: string | null
-      status?: string | null
+      status: string
     }>
   }
 }
@@ -12442,7 +12442,7 @@ export type UpdateCommunityMutation = {
       time?: string | null
       activities?: string | null
       resultsAchieved?: string | null
-      status?: string | null
+      status: string
       relatedCommunities: Array<{
         __typename?: 'Community'
         id: string
@@ -12545,7 +12545,7 @@ export type UpdateCoreValueMutation = {
         id: string
         name: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
     }>
   }
@@ -12575,7 +12575,7 @@ export type CreateGoalsMutation = {
       description?: string | null
       successMeasures?: string | null
       photo?: string | null
-      status?: string | null
+      status: string
       location?: string | null
       time?: string | null
       createdAt: any
@@ -12601,13 +12601,13 @@ export type CreateGoalsMutation = {
         __typename?: 'CarePoint'
         id: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       caredForByCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     }>
@@ -12630,7 +12630,7 @@ export type UpdateGoalMutation = {
       description?: string | null
       successMeasures?: string | null
       photo?: string | null
-      status?: string | null
+      status: string
       location?: string | null
       time?: string | null
       createdAt: any
@@ -12656,20 +12656,20 @@ export type UpdateGoalMutation = {
         __typename?: 'CarePoint'
         id: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       caredForByCarePoints: Array<{
         __typename?: 'CarePoint'
         id: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       resources: Array<{
         __typename?: 'Resource'
         id: string
         name: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     }>
@@ -12735,7 +12735,7 @@ export type UpdatePersonMutation = {
       photo?: string | null
       phone?: string | null
       pronouns?: string | null
-      status?: string | null
+      status: string
       avatar?: string | null
       careManual?: string | null
       favorites?: string | null
@@ -12756,14 +12756,14 @@ export type UpdatePersonMutation = {
         id: string
         name: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       goals: Array<{
         __typename?: 'Goal'
         id: string
         name: string
         photo?: string | null
-        status?: string | null
+        status: string
         createdAt: any
         description?: string | null
       }>
@@ -12830,7 +12830,7 @@ export type CreateResourcesMutation = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
       why?: string | null
       location?: string | null
       time?: string | null
@@ -12864,7 +12864,7 @@ export type UpdateResourceMutation = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
       why?: string | null
       location?: string | null
       time?: string | null
@@ -12873,20 +12873,20 @@ export type UpdateResourceMutation = {
         id: string
         name: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       goals: Array<{
         __typename?: 'Goal'
         id: string
         name: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       carePoints: Array<{
         __typename?: 'CarePoint'
         id: string
         description?: string | null
-        status?: string | null
+        status: string
       }>
       providedByCommunity: Array<{
         __typename?: 'Community'
@@ -12931,7 +12931,7 @@ export type GetRecentActionsQuery = {
     description?: string | null
     name: string
     id: string
-    status?: string | null
+    status: string
     createdBy: Array<{
       __typename?: 'Person'
       photo?: string | null
@@ -12945,7 +12945,7 @@ export type GetRecentActionsQuery = {
     id: string
     description?: string | null
     photo?: string | null
-    status?: string | null
+    status: string
     name: string
     createdBy: Array<{
       __typename?: 'Person'
@@ -12958,7 +12958,7 @@ export type GetRecentActionsQuery = {
     __typename?: 'Resource'
     name: string
     id: string
-    status?: string | null
+    status: string
     description?: string | null
     createdAt: any
     providedByPerson: Array<{
@@ -13005,7 +13005,7 @@ export type GetCarePointQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: string
     why?: string | null
     location?: string | null
     time?: string | null
@@ -13021,7 +13021,7 @@ export type GetCarePointQuery = {
       id: string
       name: string
       photo?: string | null
-      status?: string | null
+      status: string
       createdAt: any
       description?: string | null
     }>
@@ -13030,7 +13030,7 @@ export type GetCarePointQuery = {
       id: string
       name: string
       photo?: string | null
-      status?: string | null
+      status: string
       createdAt: any
       description?: string | null
     }>
@@ -13054,7 +13054,7 @@ export type GetAllCarePointsQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: string
     createdAt: any
     createdBy: Array<{
       __typename?: 'Person'
@@ -13082,7 +13082,7 @@ export type GetCommunityQuery = {
     time?: string | null
     activities?: string | null
     resultsAchieved?: string | null
-    status?: string | null
+    status: string
     createdAt: any
     relatedCommunities: Array<{
       __typename?: 'Community'
@@ -13107,7 +13107,7 @@ export type GetCommunityQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
       providedByPerson: Array<{
         __typename?: 'Person'
         id: string
@@ -13146,7 +13146,7 @@ export type GetAllCommunitesQuery = {
     time?: string | null
     activities?: string | null
     resultsAchieved?: string | null
-    status?: string | null
+    status: string
     createdBy: Array<{
       __typename?: 'Person'
       id: string
@@ -13230,7 +13230,7 @@ export type GetCoreValueQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -13271,7 +13271,7 @@ export type GetAllCoreValuesQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
   }>
 }
@@ -13325,7 +13325,7 @@ export type GetGoalQuery = {
     description?: string | null
     successMeasures?: string | null
     photo?: string | null
-    status?: string | null
+    status: string
     location?: string | null
     time?: string | null
     createdAt: any
@@ -13353,21 +13353,21 @@ export type GetGoalQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     caredForByCarePoints: Array<{
       __typename?: 'CarePoint'
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     resources: Array<{
       __typename?: 'Resource'
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
   }>
@@ -13386,7 +13386,7 @@ export type GetAllGoalsQuery = {
     description?: string | null
     successMeasures?: string | null
     photo?: string | null
-    status?: string | null
+    status: string
     location?: string | null
     time?: string | null
     createdAt: any
@@ -13415,7 +13415,7 @@ export type GetPersonQuery = {
     photo?: string | null
     phone?: string | null
     pronouns?: string | null
-    status?: string | null
+    status: string
     avatar?: string | null
     careManual?: string | null
     favorites?: string | null
@@ -13436,14 +13436,14 @@ export type GetPersonQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     goals: Array<{
       __typename?: 'Goal'
       id: string
       name: string
       photo?: string | null
-      status?: string | null
+      status: string
       createdAt: any
       description?: string | null
     }>
@@ -13535,7 +13535,7 @@ export type GetPeopleAndTheirGoalsQuery = {
       description?: string | null
       successMeasures?: string | null
       photo?: string | null
-      status?: string | null
+      status: string
       location?: string | null
       time?: string | null
       createdAt: any
@@ -13559,7 +13559,7 @@ export type GetPeopleAndTheirResourcesQuery = {
       name: string
       id: string
       description?: string | null
-      status?: string | null
+      status: string
       providedByPerson: Array<{
         __typename?: 'Person'
         name: string
@@ -13607,7 +13607,7 @@ export type GetResourceQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: string
     why?: string | null
     location?: string | null
     time?: string | null
@@ -13618,7 +13618,7 @@ export type GetResourceQuery = {
       id: string
       name: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     providedByPerson: Array<{
       __typename?: 'Person'
@@ -13655,7 +13655,7 @@ export type GetAllResourcesQuery = {
     id: string
     name: string
     description?: string | null
-    status?: string | null
+    status: string
     why?: string | null
     location?: string | null
     time?: string | null
@@ -13664,7 +13664,7 @@ export type GetAllResourcesQuery = {
       __typename?: 'CarePoint'
       id: string
       description?: string | null
-      status?: string | null
+      status: string
     }>
     providedByPerson: Array<{
       __typename?: 'Person'
@@ -13711,7 +13711,7 @@ export type GetMatchingEntitiesQuery = {
     name: string
     id: string
     description?: string | null
-    status?: string | null
+    status: string
     providedByPerson: Array<{
       __typename?: 'Person'
       name: string
@@ -13725,7 +13725,7 @@ export type GetMatchingEntitiesQuery = {
     photo?: string | null
     description?: string | null
     name: string
-    status?: string | null
+    status: string
     createdAt: any
   }>
 }

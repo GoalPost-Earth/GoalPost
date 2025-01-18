@@ -32,12 +32,20 @@ export default async function initCypherGenerationChain(
     for example the traits, passions, favorites, fieldsOfCare.
   * Limit the maximum number of results to 10.
   * Respond with only a Cypher statement.  No preamble.
+  * The use of the term member is synonymous with person.
+  * When comparing strings always trim the search term and the comparable name of leading and trailing whitespaces and use the \`toLower()\` function to make the comparison case-insensitive.
 
 
   Example Question: Who are the members that belong to the SeedCoC Community ?
   Example Cypher:
-  MATCH (community:Community {{name: 'SeedCoC'}})<-[:BELONGS_TO]-(person:Person)
+  MATCH (community:Community)<-[:BELONGS_TO]-(person:Person) WHERE toLower(trim(community.name)) CONTAINS toLower(trim('SeedCoC'))
   RETURN person.firstName + ' ' + person.lastName AS name, elementId(person) AS _id, person.avatar AS avatar
+
+  Example Question: What can you tell me about the core value of Vulnerability?
+  Example Cypher:
+  MATCH (coreValue:CoreValue) 
+  WHERE toLower(trim(coreValue.name)) CONTAINS toLower(trim('Vulnerability'))
+  RETURN coreValue.name AS name, elementId(coreValue) AS _id, coreValue.description AS description
 
   Schema:
   {schema}
