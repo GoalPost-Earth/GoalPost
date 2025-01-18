@@ -18,6 +18,7 @@ export const TRIGGERS = {
     DETAILS: 'Care Point Details',
     ENABLING_GOALS: 'Enabling Goals',
     GOALS_CARED_FOR: 'Goals Cared For',
+    APPLIED_RESOURCES: 'Applied Resources',
   },
   COMMUNITY: {
     DETAILS: 'Community Details',

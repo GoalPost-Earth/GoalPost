@@ -27,6 +27,7 @@ import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
 import { CarePoint } from '@/gql/graphql'
 import { useQuery } from '@apollo/client'
+import CarePointLinkedResources from '@/components/sections/carepoint/resources'
 
 export default function ViewCarePointPage({
   params,
@@ -131,6 +132,10 @@ export default function ViewCarePointPage({
                 />,
                 <CarePointGoalsCaredFor
                   key="goalsCaredFor"
+                  carePoint={carepoint as CarePoint}
+                />,
+                <CarePointLinkedResources
+                  key="linkedResources"
                   carePoint={carepoint as CarePoint}
                 />,
               ]}

@@ -105,8 +105,8 @@ type CarePoint @node {
   issuesResolved: String
 
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: OUT)
-  enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: OUT)
-  caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: IN)
+  enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: IN)
+  caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: OUT)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   createdAt: DateTime!

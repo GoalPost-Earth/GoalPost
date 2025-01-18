@@ -32,7 +32,7 @@ function CreateCarePoint() {
   const [CreateCarePoint] = useMutation(CREATE_CAREPOINT_MUTATION)
 
   const onSubmit = async (data: CarePointFormData) => {
-    const { enabledByGoals, caresForGoals, ...rest } = data
+    const { enabledByGoals, caresForGoals, resources, ...rest } = data
 
     try {
       const res = await CreateCarePoint({
@@ -48,6 +48,9 @@ function CreateCarePoint() {
             },
             caresForGoals: {
               connect: [{ where: { node: { id_IN: caresForGoals } } }],
+            },
+            resources: {
+              connect: [{ where: { node: { id_IN: resources } } }],
             },
           },
         },

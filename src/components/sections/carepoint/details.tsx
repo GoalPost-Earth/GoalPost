@@ -1,5 +1,6 @@
 import { EditButton, EntityDetail } from '@/components'
 import { CarePoint } from '@/gql/graphql'
+import { getHumanReadableDate } from '@/utils'
 import { HStack, Link, Spacer, VStack } from '@chakra-ui/react'
 import React from 'react'
 
@@ -46,7 +47,11 @@ export default function CarePointDetails({
         />
         <EntityDetail
           title="Fulfillment Date"
-          details={carepoint.fulfillmentDate}
+          details={
+            carepoint.fulfillmentDate
+              ? getHumanReadableDate(carepoint.fulfillmentDate ?? '')
+              : undefined
+          }
         />
         <EntityDetail
           title="Success Measures"

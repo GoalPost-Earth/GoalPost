@@ -35,6 +35,12 @@ export const GET_CAREPOINT = graphql(`
         createdAt
         description
       }
+      resources {
+        id
+        name
+        description
+        status
+      }
       createdAt
       createdBy {
         id

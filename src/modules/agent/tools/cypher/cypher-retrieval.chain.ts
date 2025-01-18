@@ -65,7 +65,7 @@ export async function recursivelyEvaluate(
       }
     }
   }
-  // Bug fix: gpt-3.5-turbo is adamant that it should use id() regardless of
+  // Bug fix: gpt-4 is adamant that it should use id() regardless of
   // the instructions in the prompt.  As a quick fix, replace it here
   cypher = cypher.replace(/\sid\(([^)]+)\)/g, ' elementId($1)')
 

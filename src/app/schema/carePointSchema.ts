@@ -16,6 +16,7 @@ export const carePointSchema = object({
 
   enabledByGoals: z.array(string().min(1).trim()),
   caresForGoals: z.array(string().min(1).trim()),
+  resources: z.array(string().min(1).trim()),
 })
 
 export type CarePointFormData = z.infer<typeof carePointSchema>

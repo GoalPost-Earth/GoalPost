@@ -33,6 +33,7 @@ export default function UpdateCommunity({
       status: carePoint?.status || 'Active',
       enabledByGoals: carePoint?.enabledByGoals.map((goal) => goal.id) || [],
       caresForGoals: carePoint?.caresForGoals.map((goal) => goal.id) || [],
+      resources: carePoint?.resources.map((resource) => resource.id) || [],
     }),
     [carePoint]
   )
@@ -54,7 +55,7 @@ export default function UpdateCommunity({
   }, [carePoint, defaultValues, reset])
 
   const onSubmit = async (data: CarePointFormData) => {
-    const { enabledByGoals, caresForGoals, ...rest } = data
+    const { enabledByGoals, caresForGoals, resources, ...rest } = data
 
     try {
       const toConnectEnableGoals = enabledByGoals.filter(
@@ -69,6 +70,13 @@ export default function UpdateCommunity({
       )
       const toDisconnectCaresForGoals = defaultValues.caresForGoals.filter(
         (coreValue) => !caresForGoals.includes(coreValue)
+      )
+
+      const toConnectResources = resources.filter(
+        (resource) => !defaultValues.resources.includes(resource)
+      )
+      const toDisconnectResources = defaultValues.resources.filter(
+        (resource) => !resources.includes(resource)
       )
 
       const res = await UpdateCarePoint({
@@ -102,6 +110,14 @@ export default function UpdateCommunity({
                 ],
                 disconnect: [
                   { where: { node: { id_IN: toDisconnectCaresForGoals } } },
+                ],
+              },
+            ],
+            resources: [
+              {
+                connect: [{ where: { node: { id_IN: toConnectResources } } }],
+                disconnect: [
+                  { where: { node: { id_IN: toDisconnectResources } } },
                 ],
               },
             ],
