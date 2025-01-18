@@ -5,7 +5,6 @@ import { Box, Container, HStack, Text } from '@chakra-ui/react'
 import React, { use } from 'react'
 import {
   GenericTabs,
-  ProfileBackground,
   UserInfo,
   PersonProfile,
   PersonAbout,
@@ -16,6 +15,7 @@ import {
   PersonCoreValues,
   PersonCarePoints,
   ApolloWrapper,
+  EntityPageHeader,
 } from '@/components'
 import { Person } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -87,7 +87,7 @@ export default function ViewPersonPage({
         isolation={'isolate'}
       >
         <>
-          <ProfileBackground />{' '}
+          <EntityPageHeader entity={EntityEnum.Person} />{' '}
           <PersonProfile
             user={person as Person}
             tabTriggers={triggers}
