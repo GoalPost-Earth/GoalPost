@@ -11,7 +11,7 @@ export const GET_LOGGED_IN_USER = graphql(`
       email
       photo
       createdAt
-      connectedTo {
+      connections {
         id
         name
         photo

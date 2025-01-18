@@ -21,11 +21,6 @@ export const GET_PERSON = graphql(`
       fieldsOfCare
       interests
 
-      connectedTo {
-        id
-        name
-        photo
-      }
       providesResources {
         id
         name
@@ -52,6 +47,20 @@ export const GET_PERSON = graphql(`
       }
       location
       createdAt
+
+      connectionsConnection {
+        edges {
+          node {
+            id
+            name
+            photo
+          }
+          properties {
+            why
+            interests
+          }
+        }
+      }
 
       communitiesConnection {
         edges {
@@ -91,7 +100,7 @@ export const GET_ALL_PEOPLE = graphql(`
       pronouns
       location
       # createdAt
-      connectedTo {
+      connections {
         id
         name
       }

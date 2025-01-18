@@ -45,11 +45,6 @@ export const UPDATE_PERSON_MUTATION = graphql(`
         fieldsOfCare
         interests
 
-        connectedTo {
-          id
-          name
-          photo
-        }
         providesResources {
           id
           name
@@ -76,6 +71,20 @@ export const UPDATE_PERSON_MUTATION = graphql(`
         }
         location
         createdAt
+
+        connectionsConnection {
+          edges {
+            node {
+              id
+              name
+              photo
+            }
+            properties {
+              why
+              interests
+            }
+          }
+        }
 
         communitiesConnection {
           edges {

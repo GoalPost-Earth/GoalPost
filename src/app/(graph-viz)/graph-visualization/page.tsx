@@ -221,12 +221,12 @@ const GraphVisualization = () => {
   const personToPersonConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connectedTo
-          ? person.connectedTo.map((personConnectedTo) => {
+        return person.connections
+          ? person.connections.map((personconnections) => {
               return {
-                id: `${person.id}-${personConnectedTo.id}`,
+                id: `${person.id}-${personconnections.id}`,
                 source: person.id,
-                target: personConnectedTo.id,
+                target: personconnections.id,
                 label: 'Connected To',
                 markerEnd: EdgeMarker,
               }

@@ -3766,6 +3766,83 @@ export type CommunityWhere = {
   why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
+/**
+ * The edge properties for the following fields:
+ * * Person.connections
+ */
+export type ConnectedTo = {
+  __typename?: 'ConnectedTo'
+  interests?: Maybe<Scalars['String']['output']>
+  why?: Maybe<Scalars['String']['output']>
+}
+
+export type ConnectedToAggregationWhereInput = {
+  AND?: InputMaybe<Array<ConnectedToAggregationWhereInput>>
+  NOT?: InputMaybe<ConnectedToAggregationWhereInput>
+  OR?: InputMaybe<Array<ConnectedToAggregationWhereInput>>
+  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ConnectedToCreateInput = {
+  interests?: InputMaybe<Scalars['String']['input']>
+  why?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ConnectedToSort = {
+  interests?: InputMaybe<SortDirection>
+  why?: InputMaybe<SortDirection>
+}
+
+export type ConnectedToUpdateInput = {
+  interests_SET?: InputMaybe<Scalars['String']['input']>
+  why_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type ConnectedToWhere = {
+  AND?: InputMaybe<Array<ConnectedToWhere>>
+  NOT?: InputMaybe<ConnectedToWhere>
+  OR?: InputMaybe<Array<ConnectedToWhere>>
+  interests_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  interests_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  interests_EQ?: InputMaybe<Scalars['String']['input']>
+  interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_EQ?: InputMaybe<Scalars['String']['input']>
+  why_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
 export type CoreValue = {
   __typename?: 'CoreValue'
   alignmentChallenges?: Maybe<Scalars['String']['output']>
@@ -8079,7 +8156,6 @@ export type Person = PersonInterface & {
   communities: Array<Community>
   communitiesAggregate?: Maybe<PersonCommunityCommunitiesAggregationSelection>
   communitiesConnection: PersonCommunitiesConnection
-  connectedTo: Array<Person>
   connections: Array<Person>
   connectionsAggregate?: Maybe<PersonPersonConnectionsAggregationSelection>
   connectionsConnection: PersonConnectionsConnection
@@ -8533,11 +8609,13 @@ export type PersonConnectionsAggregateInput = {
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
+  edge?: InputMaybe<ConnectedToAggregationWhereInput>
   node?: InputMaybe<PersonConnectionsNodeAggregationWhereInput>
 }
 
 export type PersonConnectionsConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  edge?: InputMaybe<ConnectedToCreateInput>
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -8549,6 +8627,7 @@ export type PersonConnectionsConnection = {
 }
 
 export type PersonConnectionsConnectionSort = {
+  edge?: InputMaybe<ConnectedToSort>
   node?: InputMaybe<PersonSort>
 }
 
@@ -8556,10 +8635,12 @@ export type PersonConnectionsConnectionWhere = {
   AND?: InputMaybe<Array<PersonConnectionsConnectionWhere>>
   NOT?: InputMaybe<PersonConnectionsConnectionWhere>
   OR?: InputMaybe<Array<PersonConnectionsConnectionWhere>>
+  edge?: InputMaybe<ConnectedToWhere>
   node?: InputMaybe<PersonWhere>
 }
 
 export type PersonConnectionsCreateFieldInput = {
+  edge?: InputMaybe<ConnectedToCreateInput>
   node: PersonCreateInput
 }
 
@@ -8858,9 +8939,11 @@ export type PersonConnectionsRelationship = {
   __typename?: 'PersonConnectionsRelationship'
   cursor: Scalars['String']['output']
   node: Person
+  properties: ConnectedTo
 }
 
 export type PersonConnectionsUpdateConnectionInput = {
+  edge?: InputMaybe<ConnectedToUpdateInput>
   node?: InputMaybe<PersonUpdateInput>
 }
 
@@ -9874,7 +9957,14 @@ export type PersonInterfacesConnection = {
 export type PersonPersonConnectionsAggregationSelection = {
   __typename?: 'PersonPersonConnectionsAggregationSelection'
   count: Scalars['Int']['output']
+  edge?: Maybe<PersonPersonConnectionsEdgeAggregateSelection>
   node?: Maybe<PersonPersonConnectionsNodeAggregateSelection>
+}
+
+export type PersonPersonConnectionsEdgeAggregateSelection = {
+  __typename?: 'PersonPersonConnectionsEdgeAggregateSelection'
+  interests: StringAggregateSelection
+  why: StringAggregateSelection
 }
 
 export type PersonPersonConnectionsNodeAggregateSelection = {
@@ -10236,11 +10326,6 @@ export type PersonWhere = {
   communities_SINGLE?: InputMaybe<CommunityWhere>
   /** Return People where some of the related Communities match this filter */
   communities_SOME?: InputMaybe<CommunityWhere>
-  connectedTo?: InputMaybe<PersonWhere>
-  connectedTo_ALL?: InputMaybe<PersonWhere>
-  connectedTo_NONE?: InputMaybe<PersonWhere>
-  connectedTo_SINGLE?: InputMaybe<PersonWhere>
-  connectedTo_SOME?: InputMaybe<PersonWhere>
   connectionsAggregate?: InputMaybe<PersonConnectionsAggregateInput>
   /** Return People where all of the related PersonConnectionsConnections match this filter */
   connectionsConnection_ALL?: InputMaybe<PersonConnectionsConnectionWhere>
@@ -13357,12 +13442,6 @@ export type UpdatePersonMutation = {
       interests?: string | null
       location?: string | null
       createdAt: any
-      connectedTo: Array<{
-        __typename?: 'Person'
-        id: string
-        name: string
-        photo?: string | null
-      }>
       providesResources: Array<{
         __typename?: 'Resource'
         id: string
@@ -13390,6 +13469,23 @@ export type UpdatePersonMutation = {
         name: string
         description?: string | null
       }>
+      connectionsConnection: {
+        __typename?: 'PersonConnectionsConnection'
+        edges: Array<{
+          __typename?: 'PersonConnectionsRelationship'
+          node: {
+            __typename?: 'Person'
+            id: string
+            name: string
+            photo?: string | null
+          }
+          properties: {
+            __typename?: 'ConnectedTo'
+            why?: string | null
+            interests?: string | null
+          }
+        }>
+      }
       communitiesConnection: {
         __typename?: 'PersonCommunitiesConnection'
         edges: Array<{
@@ -13910,7 +14006,7 @@ export type GetLoggedInUserQuery = {
     email?: string | null
     photo?: string | null
     createdAt: any
-    connectedTo: Array<{
+    connections: Array<{
       __typename?: 'Person'
       id: string
       name: string
@@ -14043,12 +14139,6 @@ export type GetPersonQuery = {
     interests?: string | null
     location?: string | null
     createdAt: any
-    connectedTo: Array<{
-      __typename?: 'Person'
-      id: string
-      name: string
-      photo?: string | null
-    }>
     providesResources: Array<{
       __typename?: 'Resource'
       id: string
@@ -14076,6 +14166,23 @@ export type GetPersonQuery = {
       name: string
       description?: string | null
     }>
+    connectionsConnection: {
+      __typename?: 'PersonConnectionsConnection'
+      edges: Array<{
+        __typename?: 'PersonConnectionsRelationship'
+        node: {
+          __typename?: 'Person'
+          id: string
+          name: string
+          photo?: string | null
+        }
+        properties: {
+          __typename?: 'ConnectedTo'
+          why?: string | null
+          interests?: string | null
+        }
+      }>
+    }
     communitiesConnection: {
       __typename?: 'PersonCommunitiesConnection'
       edges: Array<{
@@ -14122,7 +14229,7 @@ export type GetAllPeopleQuery = {
     phone?: string | null
     pronouns?: string | null
     location?: string | null
-    connectedTo: Array<{ __typename?: 'Person'; id: string; name: string }>
+    connections: Array<{ __typename?: 'Person'; id: string; name: string }>
     communities: Array<{ __typename?: 'Community'; name: string; id: string }>
     goals: Array<{ __typename?: 'Goal'; id: string; name: string }>
     coreValues: Array<{ __typename?: 'CoreValue'; name: string; id: string }>
@@ -16448,27 +16555,6 @@ export const UpdatePersonDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'connectedTo' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'photo' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
                         name: { kind: 'Name', value: 'providesResources' },
                         selectionSet: {
                           kind: 'SelectionSet',
@@ -16570,6 +16656,68 @@ export const UpdatePersonDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectionsConnection' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'edges' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'node' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'name' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'photo',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'properties' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'why' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'interests',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
                       },
                       {
                         kind: 'Field',
@@ -18507,7 +18655,7 @@ export const GetLoggedInUserDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'connectedTo' },
+                  name: { kind: 'Name', value: 'connections' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -18876,18 +19024,6 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'connectedTo' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
                   name: { kind: 'Name', value: 'providesResources' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -18960,6 +19096,62 @@ export const GetPersonDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connectionsConnection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'photo' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'properties' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'why' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'interests' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'communitiesConnection' },
@@ -19130,7 +19322,7 @@ export const GetAllPeopleDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'connectedTo' },
+                  name: { kind: 'Name', value: 'connections' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [

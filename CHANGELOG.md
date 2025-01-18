@@ -304,7 +304,7 @@
 ##### New Features
 
 *  add createdBy field to Community schema and update related queries and components ([77886a37](https://github.com/rdamashek/GoalPost/commit/77886a37c2d122594fcebca3de20106b24513e55))
-*  add connectedTo field to Person queries and update related components ([86465f18](https://github.com/rdamashek/GoalPost/commit/86465f18eef1e7e591f6309a11bae60bae21372c))
+*  add connections field to Person queries and update related components ([86465f18](https://github.com/rdamashek/GoalPost/commit/86465f18eef1e7e591f6309a11bae60bae21372c))
 
 ##### Bug Fixes
 

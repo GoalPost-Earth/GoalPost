@@ -35,7 +35,7 @@ import {
 
 const HomeClient = () => {
   const { user } = useApp()
-  const connections = user?.connectedTo
+  const connections = user?.connections
 
   const { data, loading, error } = useQuery(GET_RECENT_ACTIONS)
   const { data: communityData } = useQuery(GET_ALL_COMMUNITIES)
