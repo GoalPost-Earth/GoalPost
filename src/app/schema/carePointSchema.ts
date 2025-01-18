@@ -4,7 +4,7 @@ import * as z from 'zod'
 export const carePointSchema = object({
   name: string().min(1).trim(),
   description: string().min(1).trim().optional(),
-  status: string().min(1).trim().optional(),
+  status: string().min(1).trim(),
   why: string().min(1).trim().optional(),
   location: string().min(1).trim().optional(),
   time: string().min(1).trim().optional(),

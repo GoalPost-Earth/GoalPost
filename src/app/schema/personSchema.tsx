@@ -12,7 +12,7 @@ export const personSchema = object({
   pronouns: string().min(1).optional(),
   location: string().min(1).optional(),
   // MEMBERS ONLY
-  status: string().min(1).optional(),
+  status: string().min(1),
   avatar: string().min(1).optional(),
   careManual: string().url().optional(),
   favorites: string().min(1).optional(),

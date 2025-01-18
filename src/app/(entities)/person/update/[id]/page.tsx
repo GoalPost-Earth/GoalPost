@@ -36,7 +36,7 @@ export default function UpdatePerson({
       location: person?.location || '',
       community: person?.communitiesConnection.edges[0]?.node.id || [],
 
-      status: person?.status || '',
+      status: person?.status || 'Active',
       avatar: person?.avatar || '',
       careManual: person?.careManual || '',
       favorites: person?.favorites || '',

@@ -6,7 +6,7 @@ export const goalSchema = object({
   description: string().min(1).trim().optional(),
   successMeasures: string().min(1).trim().optional(),
   photo: string().min(1).trim().optional(),
-  status: string().min(1).trim().optional(),
+  status: string().min(1).trim(),
   location: string().min(1).trim().optional(),
   why: string().min(1).trim().optional(),
   time: string().min(1).trim().optional(),

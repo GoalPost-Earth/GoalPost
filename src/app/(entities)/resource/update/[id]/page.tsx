@@ -29,7 +29,7 @@ export default function UpdateResource({
     () => ({
       name: resource?.name || '',
       description: resource?.description || undefined,
-      status: resource?.status || undefined,
+      status: resource?.status || 'Active',
       why: resource?.why || undefined,
       location: resource?.location || undefined,
       time: resource?.time || undefined,

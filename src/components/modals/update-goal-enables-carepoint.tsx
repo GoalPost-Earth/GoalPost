@@ -32,7 +32,7 @@ export default function UpdateGoalEnablesCarePoints({
       description: goal?.description || '',
       successMeasures: goal?.successMeasures || '',
       photo: goal?.photo || '',
-      status: goal?.status || '',
+      status: goal?.status || 'Active',
       location: goal?.location || '',
       time: goal?.time || '',
     }),
