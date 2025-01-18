@@ -12984,6 +12984,7 @@ export type GetRecentActionsQuery = {
   communities: Array<{
     __typename?: 'Community'
     name: string
+    id: string
     members: Array<{
       __typename?: 'Person'
       id: string
@@ -16534,6 +16535,7 @@ export const GetRecentActionsDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'members' },
