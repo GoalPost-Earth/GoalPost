@@ -13873,6 +13873,7 @@ export type GetAllCoreValuesQuery = {
     alignmentExamples?: string | null
     description?: string | null
     why?: string | null
+    createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     people: Array<{
       __typename?: 'Person'
       goals: Array<{ __typename?: 'Goal'; id: string; name: string }>
@@ -18363,6 +18364,17 @@ export const GetAllCoreValuesDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'people' },

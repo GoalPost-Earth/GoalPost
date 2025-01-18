@@ -102,7 +102,7 @@ const GraphVisualization = () => {
           nodeInfo: {
             Entity: 'Core Value',
             Name: coreValue.name,
-            'Who Supports': coreValue.whoSupports,
+            'Created By': coreValue.createdBy[0].name,
             Description: coreValue.description,
           },
           label: coreValue.name,
