@@ -131,7 +131,7 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogContent ref={contentRef}>
               <DialogHeader>
-                <DialogTitle>{`People motivated by ${goal.name}`}</DialogTitle>
+                <DialogTitle>{`${goal.name}'s related resources`}</DialogTitle>
               </DialogHeader>
               <DialogBody>
                 <MultiSelect

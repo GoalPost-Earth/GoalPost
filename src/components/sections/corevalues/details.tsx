@@ -35,7 +35,7 @@ export default function CoreValueDetails({
           entityName={corevalue.name}
           details={corevalue.description}
         />
-        <EntityDetail title="Who Supports" details={corevalue.whoSupports} />
+        {/* <EntityDetail title="Who Supports" details={corevalue.whoSupports} /> */}
         <EntityDetail
           title="Alignment Challenges"
           details={corevalue.alignmentChallenges}
