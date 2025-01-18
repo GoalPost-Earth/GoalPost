@@ -163,6 +163,7 @@ export default function PersonCoreValues({ person }: { person: Person }) {
           templateColumns={{
             base: '1fr',
             lg: 'repeat(auto-fill, minmax(250px, 1fr))',
+            xl: 'repeat(auto-fill, minmax(360px, 1fr)))',
           }}
           gap={6}
           width="100%"
