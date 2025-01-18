@@ -73,7 +73,8 @@ export default function SearchResults() {
         border="none"
         boxShadow="none"
         bg={{ base: 'contrastWhite', lg: 'transparent' }}
-        height={{ base: '100%', lg: '80dvh' }}
+        height="min-content"
+        maxHeight={{ base: '100%', lg: '80dvh' }}
         inset={0}
         p={2}
       >
