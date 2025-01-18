@@ -47,7 +47,7 @@ type Person implements PersonInterface @node {
       queryDirection: UNDIRECTED
     )
 
-  status: String
+  status: String!
   careManual: String
   avatar: String
   favorites: String
@@ -94,7 +94,7 @@ type CarePoint @node {
   id: ID! @id
   name: String!
   description: String
-  status: String
+  status: String!
   why: String
   location: String
   time: String
@@ -133,7 +133,7 @@ type Community @node {
   time: String
   activities: String
   resultsAchieved: String
-  status: String
+  status: String!
 
   members: [Person!]! @relationship(type: "BELONGS_TO", direction: IN)
   relatedCommunities: [Community!]!
@@ -179,7 +179,7 @@ type Goal @node {
   successMeasures: String
   photo: String
   activities: String
-  status: String
+  status: String!
   why: String
   location: String
   time: String
@@ -207,7 +207,7 @@ type Resource @node {
   id: ID! @id
   name: String!
   description: String
-  status: String
+  status: String!
   why: String
   location: String
   time: String

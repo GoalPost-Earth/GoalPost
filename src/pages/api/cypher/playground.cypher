@@ -1,4 +1,19 @@
-MATCH (care:CarePoint) WHERE care.name IS NULL
-SET care.name = "CarePoint " + id(care)
+MATCH (person:Person)
+SET person.status = "Active"
+RETURN person;
 
-RETURN care.name
+MATCH (carePoint:CarePoint)
+SET carePoint.status = "Active"
+RETURN carePoint;
+
+MATCH (community:Community)
+SET community.status = "Active"
+RETURN community;
+
+MATCH (goal:Goal)
+SET goal.status = "Active"
+RETURN goal;
+
+MATCH (resource:Resource)
+SET resource.status = "Active"
+RETURN resource;
