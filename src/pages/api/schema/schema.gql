@@ -137,7 +137,11 @@ type Community @node {
 
   members: [Person!]! @relationship(type: "BELONGS_TO", direction: IN)
   relatedCommunities: [Community!]!
-    @relationship(type: "RELATES_TO", direction: OUT)
+    @relationship(
+      type: "RELATES_TO"
+      direction: OUT
+      queryDirection: UNDIRECTED
+    )
   resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
   goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
   coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
