@@ -1,4 +1,5 @@
-import { query } from '@/app/lib/apollo-client'
+'use client'
+
 import { GET_COREVALUE } from '@/app/graphql/queries'
 import {
   Box,
@@ -10,13 +11,14 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { use } from 'react'
 import {
   Avatar,
   EntityPageHeader,
   GenericTabs,
   EntityOwnerCard,
   DeleteButton,
+  ApolloWrapper,
 } from '@/components'
 import Link from 'next/link'
 import { EntityEnum, TRIGGERS } from '@/constants'
@@ -27,30 +29,24 @@ import {
   CoreValueRelatedMembers,
 } from '@/components/sections/corevalues'
 import { CoreValue } from '@/gql/graphql'
+import { useQuery } from '@apollo/client'
 
-export default async function ViewCoreValuePage({
+export default function ViewCoreValuePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
 
-  const { data, error } = await query({
-    query: GET_COREVALUE,
+  const { data, loading, error } = useQuery(GET_COREVALUE, {
     variables: { id },
   })
 
-  if (error) {
-    throw error
-  }
-
-  if (data.coreValues.length === 0) {
-    throw new Error('Core Value not found')
-  }
   const corevalue = data?.coreValues[0]
+  if (!corevalue) return null
 
   return (
-    <>
+    <ApolloWrapper data={data} loading={loading} error={error}>
       <EntityPageHeader entity={corevalue.__typename!} />
       <VStack alignItems={'center'} gap={3}>
         <Flex
@@ -108,10 +104,7 @@ export default async function ViewCoreValuePage({
             <Link href={`/person/${corevalue?.createdBy[0]?.id}`}>
               <EntityOwnerCard
                 owner={corevalue?.createdBy[0]}
-                entity={{
-                  ...corevalue,
-                  __typename: corevalue.__typename ?? '',
-                }}
+                entity={corevalue}
               />
             </Link>
           </Box>
@@ -148,15 +141,12 @@ export default async function ViewCoreValuePage({
               <Spacer />
               <EntityOwnerCard
                 owner={corevalue?.createdBy[0]}
-                entity={{
-                  ...corevalue,
-                  __typename: corevalue.__typename ?? '',
-                }}
+                entity={corevalue}
               />
             </Box>
           </HStack>
         </VStack>
       </Container>
-    </>
+    </ApolloWrapper>
   )
 }
