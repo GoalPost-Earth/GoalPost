@@ -7,7 +7,12 @@ import {
   Separator,
 } from '@chakra-ui/react'
 import React from 'react'
-import { Input, NativeSelect, Select, Textarea } from '../../react-hook-form'
+import {
+  Input,
+  MultiSelect,
+  NativeSelect,
+  Textarea,
+} from '../../react-hook-form'
 import { Button } from '../../ui'
 import {
   Control,
@@ -17,7 +22,7 @@ import {
 } from 'react-hook-form'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { useQuery } from '@apollo/client'
-import { GET_ALL_GOALS } from '@/app/graphql'
+import { GET_ALL_GOALS, GET_ALL_RESOURCES } from '@/app/graphql'
 import { ApolloWrapper } from '@/components/layout'
 
 export interface CarePointFormProps {
@@ -40,6 +45,11 @@ const CarePointForm = ({
   onSubmit,
 }: CarePointFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_GOALS)
+  const {
+    data: resourceData,
+    loading: resourceLoading,
+    error: resourceError,
+  } = useQuery(GET_ALL_RESOURCES)
 
   const goalOptions =
     data?.goals.map((goal) => ({
@@ -47,8 +57,18 @@ const CarePointForm = ({
       label: goal.motivatesPeople[0]?.name + ' - ' + goal.name,
     })) || []
 
+  const resourceOptions =
+    resourceData?.resources.map((resource) => ({
+      value: resource.id,
+      label: resource.name,
+    })) || []
+
   return (
-    <ApolloWrapper loading={loading} error={error} data={data}>
+    <ApolloWrapper
+      loading={loading || resourceLoading}
+      error={error || resourceError}
+      data={data || resourceData}
+    >
       <Heading>{formMode} CarePoint</Heading>
       <form onSubmit={onSubmit} noValidate>
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
@@ -148,21 +168,36 @@ const CarePointForm = ({
 
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
-            <Select
+            <MultiSelect
               label="What goals enable this care point?"
               name="enabledByGoals"
+              placeholder="Select Goals"
               errors={errors}
               control={control}
               options={goalOptions}
+              multiple
             />
           </GridItem>
           <GridItem>
-            <Select
+            <MultiSelect
               label="What goals does this care point care for?"
               name="caresForGoals"
+              placeholder="Select Goals"
               errors={errors}
               control={control}
               options={goalOptions}
+              multiple
+            />
+          </GridItem>
+          <GridItem>
+            <MultiSelect
+              label="Which resources are needed for this care point?"
+              name="resources"
+              placeholder="Select Resources"
+              errors={errors}
+              control={control}
+              options={resourceOptions}
+              multiple
             />
           </GridItem>
         </Grid>

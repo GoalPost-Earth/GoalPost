@@ -41,6 +41,7 @@ export default function UpdateCommunity({
     control,
     handleSubmit,
     reset,
+    register,
     formState: { isSubmitting, errors },
   } = useForm<CoreValueFormData>({
     defaultValues,
@@ -60,7 +61,6 @@ export default function UpdateCommunity({
           update: {
             name_SET: formData.name,
             description_SET: formData.description,
-            whoSupports_SET: formData.whoSupports,
             alignmentChallenges_SET: formData.alignmentChallenges,
             alignmentExamples_SET: formData.alignmentExamples,
             why_SET: formData.why,
@@ -81,6 +81,7 @@ export default function UpdateCommunity({
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}
         />
