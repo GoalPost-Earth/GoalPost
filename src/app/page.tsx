@@ -116,7 +116,7 @@ const HomeClient = () => {
     return community.members.flatMap((member) => {
       return {
         actionName: community.__typename,
-        id: member.id,
+        id: community.id,
         personId: member.id,
         icon: <PeopleIcon width="18px" height="18px" />,
         createdAt: member.createdAt,

@@ -52,6 +52,7 @@ export const GET_RECENT_ACTIONS = graphql(`
     }
     communities(where: { members_SOME: { NOT: null } }, limit: 3, sort: {}) {
       name
+      id
       members(limit: 3, sort: { createdAt: DESC }) {
         id
         name
