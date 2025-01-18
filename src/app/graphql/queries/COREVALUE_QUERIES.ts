@@ -5,12 +5,11 @@ export const GET_COREVALUE = graphql(`
     coreValues(where: { id_EQ: $id }) {
       id
       name
-      whoSupports
       alignmentChallenges
       alignmentExamples
       description
       why
-      isEmbracedBy {
+      people {
         id
         name
       }
@@ -40,13 +39,12 @@ export const GET_ALL_COREVALUES = graphql(`
     coreValues(where: $where) {
       id
       name
-      whoSupports
       alignmentChallenges
       alignmentExamples
       description
       why
       # createdAt
-      isEmbracedBy {
+      people {
         goals {
           id
           name

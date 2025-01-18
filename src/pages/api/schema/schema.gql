@@ -158,12 +158,11 @@ type Community @node {
 type CoreValue @node {
   id: ID! @id
   name: String!
-  whoSupports: String
   alignmentChallenges: String
   alignmentExamples: String
   description: String
   why: String
-  isEmbracedBy: [Person!]! @relationship(type: "EMBRACES", direction: IN)
+  people: [Person!]! @relationship(type: "EMBRACES", direction: IN)
   goals: [Goal!]! @relationship(type: "ALIGNED_TO", direction: IN)
   communities: [Community!]! @relationship(type: "EMBRACES", direction: IN)
 

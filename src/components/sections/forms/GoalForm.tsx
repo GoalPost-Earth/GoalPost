@@ -136,6 +136,7 @@ const GoalForm = ({
               <NativeSelect
                 label="Link to a Person"
                 name="personLink"
+                placeholder="Select a Person"
                 register={register}
                 errors={errors}
                 options={peopleOptions}
@@ -147,6 +148,7 @@ const GoalForm = ({
               <NativeSelect
                 label="Link to a Community"
                 name="communityLink"
+                placeholder="Select a Community"
                 register={register}
                 errors={errors}
                 options={communityOptions}

@@ -6,7 +6,6 @@ export const CREATE_COREVALUE_MUTATION = graphql(`
       coreValues {
         id
         name
-        whoSupports
         alignmentChallenges
         alignmentExamples
         description
@@ -23,13 +22,12 @@ export const UPDATE_COREVALUE_MUTATION = graphql(`
       coreValues {
         id
         name
-        whoSupports
         alignmentChallenges
         alignmentExamples
         description
         why
         createdAt
-        isEmbracedBy {
+        people {
           id
           name
           photo

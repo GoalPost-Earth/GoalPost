@@ -40,7 +40,7 @@ export const GET_RECENT_ACTIONS = graphql(`
       createdAt
     }
     coreValues(limit: 3, sort: { createdAt: DESC }) {
-      isEmbracedBy {
+      people {
         name
         id
         photo

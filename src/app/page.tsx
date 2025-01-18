@@ -85,11 +85,11 @@ const HomeClient = () => {
       icon: <CoreValuesIcon width="18px" height="18px" />,
       id: coreValue.id,
       createdAt: coreValue.createdAt,
-      createdBy: coreValue.isEmbracedBy,
+      createdBy: coreValue.people,
       description: coreValue.description,
-      personId: coreValue.isEmbracedBy[0]?.id,
-      personName: coreValue.isEmbracedBy[0]?.name,
-      personPhoto: coreValue.isEmbracedBy[0]?.photo,
+      personId: coreValue.people[0]?.id,
+      personName: coreValue.people[0]?.name,
+      personPhoto: coreValue.people[0]?.photo,
       children: <CoreValueCard coreValue={coreValue} />,
     }
   })

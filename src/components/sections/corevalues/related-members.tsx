@@ -37,7 +37,7 @@ export default function CoreValueRelatedMembers({
   corevalue: CoreValue
 }) {
   const [relatedMembers, setRelatedMembers] = useState<Person[]>(
-    corevalue.isEmbracedBy
+    corevalue.people
   )
   const [open, setOpen] = useState(false)
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
@@ -69,7 +69,7 @@ export default function CoreValueRelatedMembers({
   const onSubmit = async (data: FormData) => {
     try {
       // find connections to disconnect and connect
-      const initialRelatedMembers = corevalue.isEmbracedBy.map(
+      const initialRelatedMembers = corevalue.people.map(
         (relatedMember) => relatedMember.id
       )
       const toDisconnect = initialRelatedMembers.filter(
@@ -83,7 +83,7 @@ export default function CoreValueRelatedMembers({
         variables: {
           id: corevalue.id,
           update: {
-            isEmbracedBy: [
+            people: [
               {
                 connect: [{ where: { node: { id_IN: toConnect } } }],
                 disconnect: [{ where: { node: { id_IN: toDisconnect } } }],
@@ -98,7 +98,7 @@ export default function CoreValueRelatedMembers({
       }
 
       setRelatedMembers(
-        response.data.updateCoreValues.coreValues[0].isEmbracedBy as Person[]
+        response.data.updateCoreValues.coreValues[0].people as Person[]
       )
       setOpen(false)
 

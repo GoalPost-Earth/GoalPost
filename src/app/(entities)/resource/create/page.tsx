@@ -4,7 +4,7 @@ import { CREATE_RESOURCE_MUTATION } from '@/app/graphql/mutations/RESOURCE_MUTAT
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { FormMode } from '@/constants'
 import { ResourceForm } from '@/components'
@@ -19,17 +19,28 @@ function CreateResource() {
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
   const { user } = useApp()
 
+  const defaultValues = React.useMemo(
+    () => ({
+      status: 'Active',
+      linkTo: 'personLink',
+      personLink: personId ?? undefined,
+    }),
+    [personId]
+  )
+
   const {
     control,
     handleSubmit,
     register,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
-    defaultValues: {
-      personLink: personId ?? undefined,
-    },
+    defaultValues,
   })
+  useEffect(() => {
+    reset(defaultValues)
+  }, [defaultValues, reset])
 
   const onSubmit = async (data: ResourceFormData) => {
     const { personLink, linkTo, communityLink, ...rest } = data

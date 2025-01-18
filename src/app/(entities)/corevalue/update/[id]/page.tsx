@@ -28,8 +28,8 @@ export default function UpdateCommunity({
   const defaultValues: CoreValueFormData = useMemo(
     () => ({
       name: coreValue?.name || '',
+      linkTo: 'personLink',
       description: coreValue?.description || '',
-      whoSupports: coreValue?.whoSupports || undefined,
       why: coreValue?.why || undefined,
       alignmentChallenges: coreValue?.alignmentChallenges || undefined,
       alignmentExamples: coreValue?.alignmentExamples || undefined,

@@ -161,7 +161,7 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
   query getPeopleAndTheirCoreValues {
     people(where: { coreValues_SOME: { NOT: { id_EQ: "" } } }) {
       coreValues {
-        isEmbracedBy {
+        people {
           id
           name
           photo

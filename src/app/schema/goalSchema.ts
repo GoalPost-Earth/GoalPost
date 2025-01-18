@@ -11,8 +11,11 @@ export const goalSchema = object({
   why: string().min(1).trim().optional(),
   time: string().min(1).trim().optional(),
   linkTo: string().min(1).trim(),
-  communityLink: string().min(1).trim().optional(),
-  personLink: string().min(1).trim().optional(),
+  communityLink: string()
+    .min(1, 'You must choose a community')
+    .trim()
+    .optional(),
+  personLink: string().min(1, 'You must choose a person').trim().optional(),
 })
 
 export type GoalFormData = z.infer<typeof goalSchema>

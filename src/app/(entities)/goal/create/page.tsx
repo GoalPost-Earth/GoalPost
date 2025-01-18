@@ -4,7 +4,7 @@ import { CREATE_GOAL_MUTATION } from '@/app/graphql/mutations'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { GoalForm } from '@/components'
 import { useApp } from '@/app/contexts'
@@ -18,17 +18,28 @@ function CreateGoal() {
   const personId = searchParams?.get('personId')
   const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
   const { user } = useApp()
+
+  const defaultValues = React.useMemo(
+    () => ({
+      status: 'Active',
+      linkTo: 'personLink',
+      personLink: personId ?? undefined,
+    }),
+    [personId]
+  )
   const {
     control,
     handleSubmit,
     register,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
-    defaultValues: {
-      personLink: personId ?? undefined,
-    },
+    defaultValues,
   })
+  useEffect(() => {
+    reset(defaultValues)
+  }, [defaultValues, reset])
 
   const onSubmit = async (data: GoalFormData) => {
     try {

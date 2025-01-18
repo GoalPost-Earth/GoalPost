@@ -1605,7 +1605,6 @@ export type CommunityCoreValueCoreValuesNodeAggregateSelection = {
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -1761,21 +1760,6 @@ export type CommunityCoreValuesNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  whoSupports_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3543,12 +3527,11 @@ export type CoreValue = {
   goalsAggregate?: Maybe<CoreValueGoalGoalsAggregationSelection>
   goalsConnection: CoreValueGoalsConnection
   id: Scalars['ID']['output']
-  isEmbracedBy: Array<Person>
-  isEmbracedByAggregate?: Maybe<CoreValuePersonIsEmbracedByAggregationSelection>
-  isEmbracedByConnection: CoreValueIsEmbracedByConnection
   name: Scalars['String']['output']
+  people: Array<Person>
+  peopleAggregate?: Maybe<CoreValuePersonPeopleAggregationSelection>
+  peopleConnection: CoreValuePeopleConnection
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-  whoSupports?: Maybe<Scalars['String']['output']>
   why?: Maybe<Scalars['String']['output']>
 }
 
@@ -3606,22 +3589,22 @@ export type CoreValueGoalsConnectionArgs = {
   where?: InputMaybe<CoreValueGoalsConnectionWhere>
 }
 
-export type CoreValueIsEmbracedByArgs = {
+export type CoreValuePeopleArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonSort>>
   where?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueIsEmbracedByAggregateArgs = {
+export type CoreValuePeopleAggregateArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueIsEmbracedByConnectionArgs = {
+export type CoreValuePeopleConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<CoreValueIsEmbracedByConnectionSort>>
-  where?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
+  sort?: InputMaybe<Array<CoreValuePeopleConnectionSort>>
+  where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
 export type CoreValueAggregateSelection = {
@@ -3634,7 +3617,6 @@ export type CoreValueAggregateSelection = {
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -3892,7 +3874,7 @@ export type CoreValueConnectInput = {
   communities?: InputMaybe<Array<CoreValueCommunitiesConnectFieldInput>>
   createdBy?: InputMaybe<Array<CoreValueCreatedByConnectFieldInput>>
   goals?: InputMaybe<Array<CoreValueGoalsConnectFieldInput>>
-  isEmbracedBy?: InputMaybe<Array<CoreValueIsEmbracedByConnectFieldInput>>
+  people?: InputMaybe<Array<CoreValuePeopleConnectFieldInput>>
 }
 
 export type CoreValueConnectWhere = {
@@ -3906,9 +3888,8 @@ export type CoreValueCreateInput = {
   createdBy?: InputMaybe<CoreValueCreatedByFieldInput>
   description?: InputMaybe<Scalars['String']['input']>
   goals?: InputMaybe<CoreValueGoalsFieldInput>
-  isEmbracedBy?: InputMaybe<CoreValueIsEmbracedByFieldInput>
   name: Scalars['String']['input']
-  whoSupports?: InputMaybe<Scalars['String']['input']>
+  people?: InputMaybe<CoreValuePeopleFieldInput>
   why?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -4265,14 +4246,14 @@ export type CoreValueDeleteInput = {
   communities?: InputMaybe<Array<CoreValueCommunitiesDeleteFieldInput>>
   createdBy?: InputMaybe<Array<CoreValueCreatedByDeleteFieldInput>>
   goals?: InputMaybe<Array<CoreValueGoalsDeleteFieldInput>>
-  isEmbracedBy?: InputMaybe<Array<CoreValueIsEmbracedByDeleteFieldInput>>
+  people?: InputMaybe<Array<CoreValuePeopleDeleteFieldInput>>
 }
 
 export type CoreValueDisconnectInput = {
   communities?: InputMaybe<Array<CoreValueCommunitiesDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<CoreValueCreatedByDisconnectFieldInput>>
   goals?: InputMaybe<Array<CoreValueGoalsDisconnectFieldInput>>
-  isEmbracedBy?: InputMaybe<Array<CoreValueIsEmbracedByDisconnectFieldInput>>
+  people?: InputMaybe<Array<CoreValuePeopleDisconnectFieldInput>>
 }
 
 export type CoreValueEdge = {
@@ -4547,64 +4528,64 @@ export type CoreValueGoalsUpdateFieldInput = {
   where?: InputMaybe<CoreValueGoalsConnectionWhere>
 }
 
-export type CoreValueIsEmbracedByAggregateInput = {
-  AND?: InputMaybe<Array<CoreValueIsEmbracedByAggregateInput>>
-  NOT?: InputMaybe<CoreValueIsEmbracedByAggregateInput>
-  OR?: InputMaybe<Array<CoreValueIsEmbracedByAggregateInput>>
+export type CoreValuePeopleAggregateInput = {
+  AND?: InputMaybe<Array<CoreValuePeopleAggregateInput>>
+  NOT?: InputMaybe<CoreValuePeopleAggregateInput>
+  OR?: InputMaybe<Array<CoreValuePeopleAggregateInput>>
   count_EQ?: InputMaybe<Scalars['Int']['input']>
   count_GT?: InputMaybe<Scalars['Int']['input']>
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<CoreValueIsEmbracedByNodeAggregationWhereInput>
+  node?: InputMaybe<CoreValuePeopleNodeAggregationWhereInput>
 }
 
-export type CoreValueIsEmbracedByConnectFieldInput = {
+export type CoreValuePeopleConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
   where?: InputMaybe<PersonConnectWhere>
 }
 
-export type CoreValueIsEmbracedByConnection = {
-  __typename?: 'CoreValueIsEmbracedByConnection'
-  edges: Array<CoreValueIsEmbracedByRelationship>
+export type CoreValuePeopleConnection = {
+  __typename?: 'CoreValuePeopleConnection'
+  edges: Array<CoreValuePeopleRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
-export type CoreValueIsEmbracedByConnectionSort = {
+export type CoreValuePeopleConnectionSort = {
   node?: InputMaybe<PersonSort>
 }
 
-export type CoreValueIsEmbracedByConnectionWhere = {
-  AND?: InputMaybe<Array<CoreValueIsEmbracedByConnectionWhere>>
-  NOT?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
-  OR?: InputMaybe<Array<CoreValueIsEmbracedByConnectionWhere>>
+export type CoreValuePeopleConnectionWhere = {
+  AND?: InputMaybe<Array<CoreValuePeopleConnectionWhere>>
+  NOT?: InputMaybe<CoreValuePeopleConnectionWhere>
+  OR?: InputMaybe<Array<CoreValuePeopleConnectionWhere>>
   node?: InputMaybe<PersonWhere>
 }
 
-export type CoreValueIsEmbracedByCreateFieldInput = {
+export type CoreValuePeopleCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type CoreValueIsEmbracedByDeleteFieldInput = {
+export type CoreValuePeopleDeleteFieldInput = {
   delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
+  where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
-export type CoreValueIsEmbracedByDisconnectFieldInput = {
+export type CoreValuePeopleDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
+  where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
-export type CoreValueIsEmbracedByFieldInput = {
-  connect?: InputMaybe<Array<CoreValueIsEmbracedByConnectFieldInput>>
-  create?: InputMaybe<Array<CoreValueIsEmbracedByCreateFieldInput>>
+export type CoreValuePeopleFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePeopleConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePeopleCreateFieldInput>>
 }
 
-export type CoreValueIsEmbracedByNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<CoreValueIsEmbracedByNodeAggregationWhereInput>>
-  NOT?: InputMaybe<CoreValueIsEmbracedByNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<CoreValueIsEmbracedByNodeAggregationWhereInput>>
+export type CoreValuePeopleNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CoreValuePeopleNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CoreValuePeopleNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CoreValuePeopleNodeAggregationWhereInput>>
   authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4877,23 +4858,23 @@ export type CoreValueIsEmbracedByNodeAggregationWhereInput = {
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
-export type CoreValueIsEmbracedByRelationship = {
-  __typename?: 'CoreValueIsEmbracedByRelationship'
+export type CoreValuePeopleRelationship = {
+  __typename?: 'CoreValuePeopleRelationship'
   cursor: Scalars['String']['output']
   node: Person
 }
 
-export type CoreValueIsEmbracedByUpdateConnectionInput = {
+export type CoreValuePeopleUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
 }
 
-export type CoreValueIsEmbracedByUpdateFieldInput = {
-  connect?: InputMaybe<Array<CoreValueIsEmbracedByConnectFieldInput>>
-  create?: InputMaybe<Array<CoreValueIsEmbracedByCreateFieldInput>>
-  delete?: InputMaybe<Array<CoreValueIsEmbracedByDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<CoreValueIsEmbracedByDisconnectFieldInput>>
-  update?: InputMaybe<CoreValueIsEmbracedByUpdateConnectionInput>
-  where?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
+export type CoreValuePeopleUpdateFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePeopleConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePeopleCreateFieldInput>>
+  delete?: InputMaybe<Array<CoreValuePeopleDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<CoreValuePeopleDisconnectFieldInput>>
+  update?: InputMaybe<CoreValuePeopleUpdateConnectionInput>
+  where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
 export type CoreValuePersonCreatedByAggregationSelection = {
@@ -4925,14 +4906,14 @@ export type CoreValuePersonCreatedByNodeAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
-export type CoreValuePersonIsEmbracedByAggregationSelection = {
-  __typename?: 'CoreValuePersonIsEmbracedByAggregationSelection'
+export type CoreValuePersonPeopleAggregationSelection = {
+  __typename?: 'CoreValuePersonPeopleAggregationSelection'
   count: Scalars['Int']['output']
-  node?: Maybe<CoreValuePersonIsEmbracedByNodeAggregateSelection>
+  node?: Maybe<CoreValuePersonPeopleNodeAggregateSelection>
 }
 
-export type CoreValuePersonIsEmbracedByNodeAggregateSelection = {
-  __typename?: 'CoreValuePersonIsEmbracedByNodeAggregateSelection'
+export type CoreValuePersonPeopleNodeAggregateSelection = {
+  __typename?: 'CoreValuePersonPeopleNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
@@ -4963,7 +4944,6 @@ export type CoreValueSort = {
   id?: InputMaybe<SortDirection>
   name?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
-  whoSupports?: InputMaybe<SortDirection>
   why?: InputMaybe<SortDirection>
 }
 
@@ -4974,9 +4954,8 @@ export type CoreValueUpdateInput = {
   createdBy?: InputMaybe<Array<CoreValueCreatedByUpdateFieldInput>>
   description_SET?: InputMaybe<Scalars['String']['input']>
   goals?: InputMaybe<Array<CoreValueGoalsUpdateFieldInput>>
-  isEmbracedBy?: InputMaybe<Array<CoreValueIsEmbracedByUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
-  whoSupports_SET?: InputMaybe<Scalars['String']['input']>
+  people?: InputMaybe<Array<CoreValuePeopleUpdateFieldInput>>
   why_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -5065,39 +5044,34 @@ export type CoreValueWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  isEmbracedByAggregate?: InputMaybe<CoreValueIsEmbracedByAggregateInput>
-  /** Return CoreValues where all of the related CoreValueIsEmbracedByConnections match this filter */
-  isEmbracedByConnection_ALL?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
-  /** Return CoreValues where none of the related CoreValueIsEmbracedByConnections match this filter */
-  isEmbracedByConnection_NONE?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
-  /** Return CoreValues where one of the related CoreValueIsEmbracedByConnections match this filter */
-  isEmbracedByConnection_SINGLE?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
-  /** Return CoreValues where some of the related CoreValueIsEmbracedByConnections match this filter */
-  isEmbracedByConnection_SOME?: InputMaybe<CoreValueIsEmbracedByConnectionWhere>
-  /** Return CoreValues where all of the related People match this filter */
-  isEmbracedBy_ALL?: InputMaybe<PersonWhere>
-  /** Return CoreValues where none of the related People match this filter */
-  isEmbracedBy_NONE?: InputMaybe<PersonWhere>
-  /** Return CoreValues where one of the related People match this filter */
-  isEmbracedBy_SINGLE?: InputMaybe<PersonWhere>
-  /** Return CoreValues where some of the related People match this filter */
-  isEmbracedBy_SOME?: InputMaybe<PersonWhere>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  peopleAggregate?: InputMaybe<CoreValuePeopleAggregateInput>
+  /** Return CoreValues where all of the related CoreValuePeopleConnections match this filter */
+  peopleConnection_ALL?: InputMaybe<CoreValuePeopleConnectionWhere>
+  /** Return CoreValues where none of the related CoreValuePeopleConnections match this filter */
+  peopleConnection_NONE?: InputMaybe<CoreValuePeopleConnectionWhere>
+  /** Return CoreValues where one of the related CoreValuePeopleConnections match this filter */
+  peopleConnection_SINGLE?: InputMaybe<CoreValuePeopleConnectionWhere>
+  /** Return CoreValues where some of the related CoreValuePeopleConnections match this filter */
+  peopleConnection_SOME?: InputMaybe<CoreValuePeopleConnectionWhere>
+  /** Return CoreValues where all of the related People match this filter */
+  people_ALL?: InputMaybe<PersonWhere>
+  /** Return CoreValues where none of the related People match this filter */
+  people_NONE?: InputMaybe<PersonWhere>
+  /** Return CoreValues where one of the related People match this filter */
+  people_SINGLE?: InputMaybe<PersonWhere>
+  /** Return CoreValues where some of the related People match this filter */
+  people_SOME?: InputMaybe<PersonWhere>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
   updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  whoSupports_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  whoSupports_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  whoSupports_EQ?: InputMaybe<Scalars['String']['input']>
-  whoSupports_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  whoSupports_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   why_CONTAINS?: InputMaybe<Scalars['String']['input']>
   why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   why_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5730,7 +5704,6 @@ export type GoalCoreValueCoreValuesNodeAggregateSelection = {
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -5886,21 +5859,6 @@ export type GoalCoreValuesNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  whoSupports_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8675,7 +8633,6 @@ export type PersonCoreValueCoreValuesNodeAggregateSelection = {
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
-  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -8831,21 +8788,6 @@ export type PersonCoreValuesNodeAggregationWhereInput = {
   updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  whoSupports_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  whoSupports_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  whoSupports_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12499,7 +12441,6 @@ export type CreateCoreValuesMutation = {
       __typename?: 'CoreValue'
       id: string
       name: string
-      whoSupports?: string | null
       alignmentChallenges?: string | null
       alignmentExamples?: string | null
       description?: string | null
@@ -12522,13 +12463,12 @@ export type UpdateCoreValueMutation = {
       __typename?: 'CoreValue'
       id: string
       name: string
-      whoSupports?: string | null
       alignmentChallenges?: string | null
       alignmentExamples?: string | null
       description?: string | null
       why?: string | null
       createdAt: any
-      isEmbracedBy: Array<{
+      people: Array<{
         __typename?: 'Person'
         id: string
         name: string
@@ -12974,7 +12914,7 @@ export type GetRecentActionsQuery = {
     id: string
     name: string
     createdAt: any
-    isEmbracedBy: Array<{
+    people: Array<{
       __typename?: 'Person'
       name: string
       id: string
@@ -13213,13 +13153,12 @@ export type GetCoreValueQuery = {
     __typename?: 'CoreValue'
     id: string
     name: string
-    whoSupports?: string | null
     alignmentChallenges?: string | null
     alignmentExamples?: string | null
     description?: string | null
     why?: string | null
     createdAt: any
-    isEmbracedBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+    people: Array<{ __typename?: 'Person'; id: string; name: string }>
     communities: Array<{
       __typename?: 'Community'
       id: string
@@ -13252,12 +13191,11 @@ export type GetAllCoreValuesQuery = {
     __typename?: 'CoreValue'
     id: string
     name: string
-    whoSupports?: string | null
     alignmentChallenges?: string | null
     alignmentExamples?: string | null
     description?: string | null
     why?: string | null
-    isEmbracedBy: Array<{
+    people: Array<{
       __typename?: 'Person'
       goals: Array<{ __typename?: 'Goal'; id: string; name: string }>
     }>
@@ -13587,7 +13525,7 @@ export type GetPeopleAndTheirCoreValuesQuery = {
       id: string
       description?: string | null
       name: string
-      isEmbracedBy: Array<{
+      people: Array<{
         __typename?: 'Person'
         id: string
         name: string
@@ -14472,10 +14410,6 @@ export const CreateCoreValuesDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'whoSupports' },
-                      },
-                      {
-                        kind: 'Field',
                         name: { kind: 'Name', value: 'alignmentChallenges' },
                       },
                       {
@@ -14582,10 +14516,6 @@ export const UpdateCoreValueDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'whoSupports' },
-                      },
-                      {
-                        kind: 'Field',
                         name: { kind: 'Name', value: 'alignmentChallenges' },
                       },
                       {
@@ -14603,7 +14533,7 @@ export const UpdateCoreValueDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'isEmbracedBy' },
+                        name: { kind: 'Name', value: 'people' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
@@ -16476,7 +16406,7 @@ export const GetRecentActionsDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'isEmbracedBy' },
+                  name: { kind: 'Name', value: 'people' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -17289,7 +17219,6 @@ export const GetCoreValueDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'whoSupports' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'alignmentChallenges' },
@@ -17302,7 +17231,7 @@ export const GetCoreValueDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'isEmbracedBy' },
+                  name: { kind: 'Name', value: 'people' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -17407,7 +17336,6 @@ export const GetAllCoreValuesDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'whoSupports' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'alignmentChallenges' },
@@ -17420,7 +17348,7 @@ export const GetAllCoreValuesDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'isEmbracedBy' },
+                  name: { kind: 'Name', value: 'people' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -18508,7 +18436,7 @@ export const GetPeopleAndTheirCoreValuesDocument = {
                     selections: [
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'isEmbracedBy' },
+                        name: { kind: 'Name', value: 'people' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
