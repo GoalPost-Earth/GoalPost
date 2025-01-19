@@ -1,4 +1,3 @@
-import { PHONE_NUM_REGEX } from '@/utils'
 import { object, string } from 'zod'
 import * as z from 'zod'
 
@@ -8,13 +7,17 @@ export const personSchema = object({
   email: string().email().optional(),
   pronoun: string().min(1).trim().optional(),
   photo: string().url().optional(),
-  phone: string().min(1).trim().regex(PHONE_NUM_REGEX).optional(),
+  phone: string()
+    .min(1)
+    .trim()
+    // .regex(PHONE_NUM_REGEX, 'Please enter your phone number with country code')
+    .optional(),
   pronouns: string().min(1).optional(),
   location: string().min(1).optional(),
   // MEMBERS ONLY
   status: string().min(1),
   avatar: string().min(1).optional(),
-  careManual: string().url().optional(),
+  careManual: string().optional(),
   favorites: string().min(1).optional(),
   passions: string().min(1).optional(),
   traits: string().min(1).optional(),
