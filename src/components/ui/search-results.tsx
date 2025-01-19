@@ -1,10 +1,20 @@
 'use client'
-import { Box, Dialog, Flex, Spinner, Text, VStack } from '@chakra-ui/react'
+import { Box, Flex, Spinner, Text, VStack } from '@chakra-ui/react'
 import SearchBar from './searchbar'
 import { ChangeEvent, useState } from 'react'
 import { SearchIcon } from '../icons'
 import { CarePoint, Community, CoreValue, Resource } from '@/gql/graphql'
 import { EmptyState } from './empty-state'
+import {
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   CarePointCard,
   CommunityCard,
@@ -42,7 +52,7 @@ export default function SearchResults() {
   }
 
   return (
-    <Dialog.Root
+    <DialogRoot
       open={showSearch}
       closeOnEscape
       onOpenChange={(event) => {
@@ -50,7 +60,7 @@ export default function SearchResults() {
       }}
       trapFocus={false}
     >
-      <Dialog.Trigger
+      <DialogTrigger
         ml="auto"
         mx={{ lg: 'auto' }}
         maxWidth={600}
@@ -67,9 +77,9 @@ export default function SearchResults() {
             onClick={() => setShowSearch(true)}
           />
         </Box>
-      </Dialog.Trigger>
-      <Dialog.Content
-        position="absolute"
+      </DialogTrigger>
+      <DialogContent
+        backdrop={false}
         border="none"
         boxShadow="none"
         bg={{ base: 'contrastWhite', lg: 'transparent' }}
@@ -78,7 +88,7 @@ export default function SearchResults() {
         inset={0}
         p={2}
       >
-        <Dialog.Body
+        <DialogBody
           p={2}
           gap={5}
           overflow={{ lg: 'auto' }}
@@ -222,8 +232,8 @@ export default function SearchResults() {
               />
             )}
           </VStack>
-        </Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+        </DialogBody>
+      </DialogContent>
+    </DialogRoot>
   )
 }
