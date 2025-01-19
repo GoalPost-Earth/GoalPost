@@ -45,7 +45,7 @@ export const UserInfo = ({
                   {info.value ?? ' '}
                 </Text>
                 <Spacer />
-                <IconButton aria-label="Call support" rounded="full">
+                <IconButton size="xs" aria-label="Call support" rounded="full">
                   <LuPhone />
                 </IconButton>
               </HStack>
