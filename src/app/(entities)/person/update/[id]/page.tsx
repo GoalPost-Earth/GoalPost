@@ -77,7 +77,7 @@ export default function UpdatePerson({
             email_SET: formData.email,
             photo_SET: formData.photo,
             phone_SET: formData.phone,
-            pronouns_SET: formData.pronoun,
+            pronouns_SET: formData.pronouns,
             location_SET: formData.location,
 
             status_SET: formData.status,

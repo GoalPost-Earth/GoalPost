@@ -19,6 +19,17 @@ export const getHumanReadableDateTime = (date: string) => {
   })
 }
 
+export const parsePhoneNumber = (phoneNumber?: string | number | null) => {
+  if (!phoneNumber) return ''
+  // Remove all non-numeric characters
+  const cleaned = phoneNumber.toString().replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)
+  if (match) {
+    return '(' + match[1] + ') ' + match[2] + '-' + match[3]
+  }
+  return cleaned
+}
+
 // TODO: Move this out and use Chakra default Avatar component
 export function getInitials(name: string) {
   if (!name) return ''

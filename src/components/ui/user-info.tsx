@@ -1,5 +1,15 @@
-import { Container, Flex, Text } from '@chakra-ui/react'
+import { parsePhoneNumber } from '@/utils'
+import {
+  Container,
+  Flex,
+  HStack,
+  IconButton,
+  Link,
+  Spacer,
+  Text,
+} from '@chakra-ui/react'
 import React from 'react'
+import { LuPhone } from 'react-icons/lu'
 
 export const UserInfo = ({
   data,
@@ -24,13 +34,31 @@ export const UserInfo = ({
           <Text fontSize={'sm'} fontWeight={300}>
             {info.key}
           </Text>
-          <Text
-            fontWeight={'medium'}
-            fontSize="sm"
-            color={info.value ? 'fg' : 'bg'}
-          >
-            {info.value ?? 'No data'}
-          </Text>
+          {info.key === 'Phone Number' ? (
+            <Link href={`tel:${parsePhoneNumber(info.value)}`}>
+              <HStack width="100%">
+                <Text
+                  fontWeight={'medium'}
+                  fontSize="sm"
+                  color={info.value ? 'fg' : 'bg'}
+                >
+                  {info.value ?? ' '}
+                </Text>
+                <Spacer />
+                <IconButton aria-label="Call support" rounded="full">
+                  <LuPhone />
+                </IconButton>
+              </HStack>
+            </Link>
+          ) : (
+            <Text
+              fontWeight={'medium'}
+              fontSize="sm"
+              color={info.value ? 'fg' : 'bg'}
+            >
+              {info.value ?? ' '}
+            </Text>
+          )}
         </Flex>
       ))}
     </Container>
