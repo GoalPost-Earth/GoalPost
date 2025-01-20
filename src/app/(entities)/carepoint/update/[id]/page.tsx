@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import React, { use, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 
-export default function UpdateCommunity({
+export default function UpdateCarePoint({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -31,6 +31,15 @@ export default function UpdateCommunity({
       name: carePoint?.name || '',
       description: carePoint?.description || undefined,
       status: carePoint?.status || 'Active',
+      why: carePoint?.why || undefined,
+      location: carePoint?.location || undefined,
+      time: carePoint?.time || undefined,
+      levelFulfilled: carePoint?.levelFulfilled || undefined,
+      fulfillmentDate: carePoint?.fulfillmentDate || undefined,
+      successMeasures: carePoint?.successMeasures || undefined,
+      issuesIdentified: carePoint?.issuesIdentified || undefined,
+      issuesResolved: carePoint?.issuesResolved || undefined,
+
       enabledByGoals: carePoint?.enabledByGoals.map((goal) => goal.id) || [],
       caresForGoals: carePoint?.caresForGoals.map((goal) => goal.id) || [],
       resources: carePoint?.resources.map((resource) => resource.id) || [],

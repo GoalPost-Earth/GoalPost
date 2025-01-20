@@ -22,8 +22,9 @@ function CreateCarePoint() {
     resolver: zodResolver(carePointSchema),
     defaultValues: {
       status: 'Active',
-      enabledByGoals: undefined,
-      caresForGoals: undefined,
+      enabledByGoals: [],
+      caresForGoals: [],
+      resources: [],
     },
   })
   const router = useRouter()
