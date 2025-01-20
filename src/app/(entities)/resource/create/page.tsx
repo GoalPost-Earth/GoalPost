@@ -24,6 +24,7 @@ function CreateResource() {
       status: 'Active',
       linkTo: 'personLink',
       personLink: personId ?? undefined,
+      communityLink: undefined,
     }),
     [personId]
   )

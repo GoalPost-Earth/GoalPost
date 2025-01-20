@@ -146,7 +146,7 @@ export default function ViewGoalPage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard owner={goal?.motivatesPeople[0]} entity={goal} />
+              <EntityOwnerCard owner={goal?.createdBy[0]} entity={goal} />
             </Box>
           </HStack>
         </VStack>

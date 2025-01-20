@@ -23,6 +23,7 @@ function CreateCoreValue() {
       status: 'Active',
       linkTo: 'personLink',
       personLink: personId ?? undefined,
+      communityLink: undefined,
     }),
     [personId]
   )
