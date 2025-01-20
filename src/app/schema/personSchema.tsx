@@ -7,21 +7,20 @@ export const personSchema = object({
   email: string().email().optional(),
   photo: string().url().optional(),
   phone: string()
-    .min(1)
     .trim()
     // .regex(PHONE_NUM_REGEX, 'Please enter your phone number with country code')
     .optional(),
-  pronouns: string().min(1).optional(),
-  location: string().min(1).optional(),
+  pronouns: string().optional(),
+  location: string().optional(),
   // MEMBERS ONLY
   status: string().min(1),
-  avatar: string().min(1).optional(),
+  avatar: string().optional(),
   careManual: string().optional(),
-  favorites: string().min(1).optional(),
-  passions: string().min(1).optional(),
-  traits: string().min(1).optional(),
-  fieldsOfCare: string().min(1).optional(),
-  interests: string().min(1).optional(),
+  favorites: string().optional(),
+  passions: string().optional(),
+  traits: string().optional(),
+  fieldsOfCare: string().optional(),
+  interests: string().optional(),
 })
 
 export type PersonFormData = z.infer<typeof personSchema>

@@ -3,10 +3,10 @@ import * as z from 'zod'
 
 export const coreValueSchema = object({
   name: string().min(1).trim(),
-  description: string().min(1).trim().optional(),
-  alignmentExamples: string().min(1).trim().optional(),
-  alignmentChallenges: string().min(1).trim().optional(),
-  why: string().min(1).trim().optional(),
+  description: string().trim().optional(),
+  alignmentExamples: string().trim().optional(),
+  alignmentChallenges: string().trim().optional(),
+  why: string().trim().optional(),
   linkTo: string().min(1).trim(),
   communityLink: string()
     .min(1, 'You must choose a community')

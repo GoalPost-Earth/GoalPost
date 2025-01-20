@@ -21,46 +21,54 @@ export const UserInfo = ({
 }) => {
   return (
     <Container bg="gray.contrast" borderRadius={2} paddingX={0}>
-      {data?.map((info) => (
-        <Flex
-          key={info.key}
-          padding={2}
-          flexDirection={'column'}
-          _notLast={{
-            borderBottom: '1px solid',
-            borderColor: 'gray.200',
-          }}
-        >
-          <Text fontSize={'sm'} fontWeight={300}>
-            {info.key}
-          </Text>
-          {info.key === 'Phone Number' ? (
-            <Link href={`tel:${parsePhoneNumber(info.value)}`}>
-              <HStack width="100%">
-                <Text
-                  fontWeight={'medium'}
-                  fontSize="sm"
-                  color={info.value ? 'fg' : 'bg'}
-                >
-                  {info.value ?? ' '}
-                </Text>
-                <Spacer />
-                <IconButton size="xs" aria-label="Call support" rounded="full">
-                  <LuPhone />
-                </IconButton>
-              </HStack>
-            </Link>
-          ) : (
-            <Text
-              fontWeight={'medium'}
-              fontSize="sm"
-              color={info.value ? 'fg' : 'bg'}
-            >
-              {info.value ?? ' '}
+      {data?.map((info) => {
+        if (!info?.value || info?.value?.toString().trim() === '') return <></>
+
+        return (
+          <Flex
+            key={info.key}
+            padding={2}
+            flexDirection={'column'}
+            _notLast={{
+              borderBottom: '1px solid',
+              borderColor: 'gray.200',
+            }}
+          >
+            <Text fontSize={'sm'} fontWeight={300}>
+              {info.key}
             </Text>
-          )}
-        </Flex>
-      ))}
+            {info.key === 'Phone Number' ? (
+              <Link href={`tel:${parsePhoneNumber(info.value)}`}>
+                <HStack width="100%">
+                  <Text
+                    fontWeight={'medium'}
+                    fontSize="sm"
+                    color={info.value ? 'fg' : 'bg'}
+                  >
+                    {info.value ?? ' '}
+                  </Text>
+                  <Spacer />
+                  <IconButton
+                    size="xs"
+                    aria-label="Call support"
+                    rounded="full"
+                  >
+                    <LuPhone />
+                  </IconButton>
+                </HStack>
+              </Link>
+            ) : (
+              <Text
+                fontWeight={'medium'}
+                fontSize="sm"
+                color={info.value ? 'fg' : 'bg'}
+              >
+                {info.value ?? ' '}
+              </Text>
+            )}
+          </Flex>
+        )
+      })}
     </Container>
   )
 }

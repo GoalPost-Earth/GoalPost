@@ -3,13 +3,13 @@ import * as z from 'zod'
 
 export const goalSchema = object({
   name: string().min(1).trim(),
-  description: string().min(1).trim().optional(),
-  successMeasures: string().min(1).trim().optional(),
-  photo: string().min(1).trim().optional(),
+  description: string().trim().optional(),
+  successMeasures: string().trim().optional(),
+  photo: string().trim().optional(),
   status: string().min(1).trim(),
-  location: string().min(1).trim().optional(),
-  why: string().min(1).trim().optional(),
-  time: string().min(1).trim().optional(),
+  location: string().trim().optional(),
+  why: string().trim().optional(),
+  time: string().trim().optional(),
   linkTo: string().min(1).trim(),
   communityLink: string()
     .min(1, 'You must choose a community')
