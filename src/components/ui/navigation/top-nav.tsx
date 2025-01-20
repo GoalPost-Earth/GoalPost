@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Flex, HStack, Text } from '@chakra-ui/react'
+import { Box, Flex, HStack, Link, Text } from '@chakra-ui/react'
 import NavHamburgerButton from './sidenav-button'
 import ExtendedSidenav from './extended-sidenav'
 import { Avatar } from '../avatar'
@@ -9,7 +9,6 @@ import { useApp } from '@/app/contexts/AppContext'
 import { SearchIcon } from '@/components/icons'
 import { usePathname, useRouter } from 'next/navigation'
 import SearchResults from '../search-results'
-import Link from 'next/link'
 import { BrandedGoalPostText } from '../branded-goalpost-text'
 
 export default function TopNav() {
@@ -57,18 +56,20 @@ export default function TopNav() {
           <SearchIcon />
         </Link>
       </Box>
-      <Flex
-        justifyContent={'center'}
-        alignItems={'center'}
-        gap={2}
-        mr={2}
-        ml={{ base: 'auto', lg: '0px' }}
-        display={{ base: 'none', lg: 'flex' }}
-        width={{ base: '100%', lg: 'fit-content' }}
-      >
-        <Text width="fit-content">{user?.name}</Text>
-        <Avatar src={user?.photo ?? undefined} />
-      </Flex>
+      <Link href={`/person/${user?.id}`} cursor="pointer">
+        <Flex
+          justifyContent={'center'}
+          alignItems={'center'}
+          gap={2}
+          mr={2}
+          ml={{ base: 'auto', lg: '0px' }}
+          display={{ base: 'none', lg: 'flex' }}
+          width={{ base: '100%', lg: 'fit-content' }}
+        >
+          <Text width="fit-content">{user?.name}</Text>
+          <Avatar src={user?.photo ?? undefined} />
+        </Flex>
+      </Link>
     </HStack>
   )
 }
