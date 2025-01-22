@@ -103,8 +103,8 @@ export default function ViewPersonPage({
               </>,
 
               <PersonConnections key="connections" person={person as Person} />,
-              <PersonCommunities key="communities" person={person as Person} />,
               <PersonResources key="resources" person={person as Person} />,
+              <PersonCommunities key="communities" person={person as Person} />,
               <PersonGoals key="goals" person={person as Person} />,
               <PersonCarePoints key="carepoints" person={person as Person} />,
               <PersonCoreValues key="corevalues" person={person as Person} />,
@@ -129,11 +129,11 @@ export default function ViewPersonPage({
                     key="connections"
                     person={person as Person}
                   />,
+                  <PersonResources key="resources" person={person as Person} />,
                   <PersonCommunities
                     key="communities"
                     person={person as Person}
                   />,
-                  <PersonResources key="resources" person={person as Person} />,
                   <PersonGoals key="goals" person={person as Person} />,
                   <PersonCarePoints
                     key="carepoints"

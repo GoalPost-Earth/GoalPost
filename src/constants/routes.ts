@@ -37,10 +37,10 @@ export const TRIGGERS = {
   PERSON: {
     ABOUT: 'About',
     CONNECTIONS: 'Connections',
+    RESOURCES: 'My Resources',
   },
   MEMBER: {
     COMMUNITIES: 'My Communities',
-    RESOURCES: 'My Resources',
     GOALS: 'My Goals',
     CARE_POINTS: 'My Care Points',
     CORE_VALUES: 'My Core Values',
