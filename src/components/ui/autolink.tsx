@@ -1,11 +1,9 @@
 'use client'
 
-import { Link, Text } from '@chakra-ui/react'
-import { useRouter } from 'next/navigation'
-import React, { RefObject } from 'react'
+import { Text } from '@chakra-ui/react'
+import React from 'react'
 
 export const AutoLink = ({ text }: { text: string }) => {
-  const router = useRouter()
   const delimiter =
     /((?:https?:\/\/)?(?:(?:[a-z0-9]?(?:[a-z0-9\-]{1,61}[a-z0-9])?\.[^\.|\s])+[a-z\.]*[a-z]+|(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})(?::\d{1,5})?[a-z0-9.,_\/~#&=;%+?\-\\(\)@$!*'[\]{}]*)/gi
 
@@ -13,8 +11,12 @@ export const AutoLink = ({ text }: { text: string }) => {
     <>
       {text?.split(delimiter).map((word, index) => {
         const match = word.match(delimiter)
+
         if (match) {
           const url = match[0]
+            .replace(/[,]/g, '')
+            .replace(/[^a-zA-Z0-9-._~:/?#@!$&'()*+,;=%]/g, '')
+
           return (
             <Text
               key={`url-${index}`}
@@ -25,7 +27,10 @@ export const AutoLink = ({ text }: { text: string }) => {
               fontStyle="italic"
               cursor="pointer"
               onClick={() =>
-                router.push(url.startsWith('http') ? url : `http://${url}`)
+                window.open(
+                  url.startsWith('http') ? url : `http://${url}`,
+                  '_blank'
+                )
               }
             >
               {url}
