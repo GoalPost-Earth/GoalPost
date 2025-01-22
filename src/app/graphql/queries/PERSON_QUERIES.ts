@@ -130,7 +130,7 @@ export const GET_PEOPLE_AND_THEIR_GOALS = graphql(`
       id
       name
       photo
-      goals(limit: $goalLimit) {
+      goals(limit: $goalLimit, sort: { createdAt: DESC }) {
         id
         name
         description

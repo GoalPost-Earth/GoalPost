@@ -39,7 +39,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 export default function PersonConnections({ person }: { person: Person }) {
@@ -64,15 +64,28 @@ export default function PersonConnections({ person }: { person: Person }) {
     connections: string[]
   }
 
+  const defaultValues = useMemo(
+    () => ({
+      connections:
+        person.connectionsConnection.edges?.map((edge) => edge.node.id) ?? [],
+    }),
+    [person.connectionsConnection.edges]
+  )
+
   const {
     handleSubmit,
+    reset,
     control,
     formState: { isSubmitting, errors },
   } = useForm<FormData>({
-    defaultValues: {
-      connections: person.connections?.map((connection) => connection.id) ?? [],
-    },
+    defaultValues,
   })
+
+  useEffect(() => {
+    if (person) {
+      reset(defaultValues)
+    }
+  }, [reset, person, data, defaultValues])
 
   const {
     handleSubmit: handleSubmitConnectionProps,
@@ -222,6 +235,7 @@ export default function PersonConnections({ person }: { person: Person }) {
                   errors={errors}
                   options={valueOptions}
                   portalRef={contentRef}
+                  defaultValue={defaultValues.connections}
                   multiple
                 />
               </DialogBody>

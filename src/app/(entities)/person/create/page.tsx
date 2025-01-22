@@ -24,7 +24,11 @@ function CreatePerson() {
     formState: { isSubmitting, errors },
   } = useForm<PersonFormData>({
     resolver: zodResolver(personSchema),
+    defaultValues: {
+      status: 'Active',
+    },
   })
+
   const { user } = useUser()
   const router = useRouter()
 
@@ -34,19 +38,22 @@ function CreatePerson() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
     const { signupDate, community, ...rest } = data
+    console.log('🚀 ~ file: page.tsx:41 ~ community:', community)
     try {
       const res = await CreatePeople({
         variables: {
           input: {
             ...rest,
-            communities: {
-              connect: [
-                {
-                  where: { node: { id_EQ: community } },
-                  edge: { signupDate },
+            communities: !community
+              ? undefined
+              : {
+                  connect: [
+                    {
+                      where: { node: { id_EQ: community } },
+                      edge: { signupDate },
+                    },
+                  ],
                 },
-              ],
-            },
             createdBy: {
               connect: [{ where: { node: { authId_EQ: user?.sub } } }],
             },

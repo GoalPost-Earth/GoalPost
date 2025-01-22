@@ -105,7 +105,12 @@ const CoreValueForm = ({
           </GridItem>
 
           <GridItem>
-            <Input label="Why" name="why" control={control} errors={errors} />
+            <Textarea
+              label="Why"
+              name="why"
+              control={control}
+              errors={errors}
+            />
           </GridItem>
         </Grid>
 
