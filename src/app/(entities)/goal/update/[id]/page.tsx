@@ -27,7 +27,6 @@ export default function UpdateGoalDetails({
 
   const defaultValues: GoalFormData = useMemo(
     () => ({
-      linkTo: 'personLink',
       name: goal?.name || '',
       description: goal?.description || undefined,
       successMeasures: goal?.successMeasures || undefined,
@@ -35,6 +34,9 @@ export default function UpdateGoalDetails({
       status: goal?.status || 'Active',
       location: goal?.location || undefined,
       time: goal?.time || undefined,
+      linkTo: !!goal?.createdBy.length ? 'personLink' : 'communityLink',
+      personLink: goal?.createdBy.length ? goal.createdBy[0].id : undefined,
+      communityLink: goal?.createdBy.length ? goal.createdBy[0].id : undefined,
     }),
     [goal]
   )
