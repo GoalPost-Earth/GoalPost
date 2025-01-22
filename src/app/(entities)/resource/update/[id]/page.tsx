@@ -33,7 +33,15 @@ export default function UpdateResource({
       why: resource?.why || undefined,
       location: resource?.location || undefined,
       time: resource?.time || undefined,
-      linkTo: 'personLink',
+      linkTo: !!resource?.providedByPerson.length
+        ? 'personLink'
+        : 'communityLink',
+      personLink: resource?.providedByPerson.length
+        ? resource.providedByPerson[0].id
+        : undefined,
+      communityLink: resource?.providedByCommunity.length
+        ? resource.providedByCommunity[0].id
+        : undefined,
     }),
     [resource]
   )
@@ -52,9 +60,42 @@ export default function UpdateResource({
     if (resource) {
       reset(defaultValues)
     }
-  }, [resource, defaultValues, reset])
+  }, [resource, defaultValues, reset, resource?.providedByPerson.length])
 
   const onSubmit = async (formData: ResourceFormData) => {
+    const toConnectPeople = []
+    const toConnectCommunity = []
+
+    if (
+      formData.linkTo === 'personLink' &&
+      formData.personLink &&
+      formData.personLink !== resource?.providedByPerson[0].id
+    ) {
+      toConnectPeople.push({
+        connect: [{ where: { node: { id_EQ: formData.personLink } } }],
+      })
+      toConnectPeople.push({
+        disconnect: [
+          { where: { node: { id_EQ: resource?.providedByPerson[0].id } } },
+        ],
+      })
+    }
+
+    if (
+      formData.linkTo === 'communityLink' &&
+      formData.communityLink &&
+      formData.communityLink !== resource?.providedByCommunity[0].id
+    ) {
+      toConnectCommunity.push({
+        connect: [{ where: { node: { id_EQ: formData.communityLink } } }],
+      })
+      toConnectCommunity.push({
+        disconnect: [
+          { where: { node: { id_EQ: resource?.providedByCommunity[0].id } } },
+        ],
+      })
+    }
+
     try {
       const res = await UpdateResource({
         variables: {
@@ -66,6 +107,9 @@ export default function UpdateResource({
             status_SET: formData.status,
             location_SET: formData.location,
             time_SET: formData.time,
+
+            providedByPerson: toConnectPeople,
+            providedByCommunity: toConnectCommunity,
           },
         },
       })
@@ -77,12 +121,13 @@ export default function UpdateResource({
   }
 
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
+    <ApolloWrapper data={data} loading={loading || !resource} error={error}>
       <Container>
         <ResourceForm
           formMode={FormMode.Update}
           control={control}
           errors={errors}
+          resetDefaults={reset}
           register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}

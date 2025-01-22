@@ -8,7 +8,7 @@ import {
   Heading,
   Separator,
 } from '@chakra-ui/react'
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Input, NativeSelect, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
@@ -23,6 +23,7 @@ const ResourceForm = ({
   errors,
   isSubmitting,
   register,
+  resetDefaults,
   onSubmit,
 }: EntityFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
@@ -34,17 +35,29 @@ const ResourceForm = ({
   } = useQuery(GET_ALL_COMMUNITIES)
   const people = data?.people
 
-  const peopleOptions =
-    people?.map((person) => ({
-      value: person.id,
-      label: person.name,
-    })) ?? []
+  const peopleOptions = useMemo(
+    () =>
+      people?.map((person) => ({
+        value: person.id,
+        label: person.name,
+      })) ?? [],
+    [people]
+  )
 
-  const communityOptions: SelectOptions =
-    communityData?.communities.map((community) => ({
-      value: community.id,
-      label: community.name,
-    })) || []
+  const communityOptions: SelectOptions = useMemo(
+    () =>
+      communityData?.communities.map((community) => ({
+        value: community.id,
+        label: community.name,
+      })) || [],
+    [communityData]
+  )
+
+  useEffect(() => {
+    if (resetDefaults) {
+      resetDefaults()
+    }
+  }, [peopleOptions, communityOptions, resetDefaults])
 
   return (
     <ApolloWrapper
@@ -82,7 +95,12 @@ const ResourceForm = ({
             />
           </GridItem>
           <GridItem>
-            <Input label="Why" name="why" control={control} errors={errors} />
+            <Textarea
+              label="Why"
+              name="why"
+              control={control}
+              errors={errors}
+            />
           </GridItem>
           <GridItem>
             <Input

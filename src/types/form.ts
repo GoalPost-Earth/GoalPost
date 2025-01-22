@@ -29,6 +29,7 @@ export interface EntityFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setValue?: UseFormSetValue<any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  resetDefaults?: () => void
   register: UseFormRegister<any>
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
