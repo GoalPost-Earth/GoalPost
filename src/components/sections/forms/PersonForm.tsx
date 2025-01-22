@@ -26,7 +26,10 @@ const PersonForm = ({
   isSubmitting,
   onSubmit,
 }: EntityFormProps & { setValue: UseFormSetValue<PersonFormData> }) => {
-  const [isMember, setIsMember] = useState(control._formValues.community !== '')
+  const [isMember, setIsMember] = useState(
+    control._formValues.community !== '' ||
+      control._formValues.community !== 'none'
+  )
   const { data, loading, error } = useQuery(GET_ALL_COMMUNITIES)
 
   const communities = data?.communities
@@ -36,7 +39,7 @@ const PersonForm = ({
       value: community.id,
       label: community.name,
     })) ?? []
-  communityOptions?.unshift({ value: '', label: 'None' })
+  communityOptions?.unshift({ value: 'none', label: 'None' })
   communityOptions?.unshift({ value: '', label: 'Select a Community' })
 
   const formFields = [
@@ -46,9 +49,6 @@ const PersonForm = ({
     { name: 'phone', label: 'Phone Number', type: Input },
     { name: 'pronouns', label: 'Pronouns', type: Input },
     { name: 'location', label: 'Location', type: Input },
-  ]
-
-  const memberFormFields = [
     {
       name: 'status',
       label: 'Status',
@@ -58,6 +58,9 @@ const PersonForm = ({
         { value: 'Inactive', label: 'Inactive' },
       ],
     },
+  ]
+
+  const memberFormFields = [
     {
       name: 'avatar',
       label: 'Avatar',
@@ -130,6 +133,8 @@ const PersonForm = ({
                 name={field.name}
                 control={control}
                 errors={errors}
+                register={register}
+                options={field.options ?? []}
                 required={field.required}
               />
             </GridItem>
@@ -143,7 +148,10 @@ const PersonForm = ({
                 errors={errors}
                 register={register}
                 onChange={(e) => {
-                  if ((e.target as HTMLSelectElement).value === '') {
+                  if (
+                    (e.target as HTMLSelectElement).value === '' ||
+                    (e.target as HTMLSelectElement).value === 'none'
+                  ) {
                     setIsMember(false)
                   } else setIsMember(true)
                 }}
@@ -161,8 +169,6 @@ const PersonForm = ({
                     name={field.name}
                     control={control}
                     errors={errors}
-                    register={register}
-                    options={field.options ?? []}
                     type={field.inputType}
                   />
                 </GridItem>

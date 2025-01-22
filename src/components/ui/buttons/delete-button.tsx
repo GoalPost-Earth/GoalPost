@@ -18,7 +18,9 @@ import {
   GET_ALL_GOALS,
   GET_ALL_PEOPLE,
   GET_ALL_RESOURCES,
+  GET_COMMUNITIES_AND_THEIR_MEMBERS,
   GET_PEOPLE_AND_THEIR_RESOURCES,
+  GET_PEOPLE_NOT_IN_COMMUNITIES,
 } from '@/app/graphql'
 import { toaster } from '../toaster'
 import { useRouter } from 'next/navigation'
@@ -57,7 +59,11 @@ export function DeleteButton({
     refetchQueries: [GET_ALL_COREVALUES],
   })
   const [DeletePerson] = useMutation(DELETE_PERSON_MUTATION, {
-    refetchQueries: [GET_ALL_PEOPLE],
+    refetchQueries: [
+      GET_ALL_PEOPLE,
+      GET_COMMUNITIES_AND_THEIR_MEMBERS,
+      GET_PEOPLE_NOT_IN_COMMUNITIES,
+    ],
   })
   const [DeleteCarePoint] = useMutation(DELETE_CAREPOINT_MUTATION, {
     refetchQueries: [GET_ALL_CAREPOINTS],
