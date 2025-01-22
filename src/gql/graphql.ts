@@ -19445,6 +19445,20 @@ export const GetPeopleAndTheirGoalsDocument = {
                         name: { kind: 'Name', value: 'goalLimit' },
                       },
                     },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'sort' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'createdAt' },
+                            value: { kind: 'EnumValue', value: 'DESC' },
+                          },
+                        ],
+                      },
+                    },
                   ],
                   selectionSet: {
                     kind: 'SelectionSet',

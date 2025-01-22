@@ -82,7 +82,7 @@ const documents = {
     types.GetPersonDocument,
   '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      phone\n      pronouns\n      location\n      # createdAt\n      connections {\n        id\n        name\n      }\n      communities {\n        name\n        id\n      }\n      goals {\n        id\n        name\n      }\n      coreValues {\n        name\n        id\n      }\n      providesResources {\n        name\n        id\n      }\n    }\n  }\n':
     types.GetAllPeopleDocument,
-  '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
+  '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit, sort: { createdAt: DESC }) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n':
     types.GetPeopleAndTheirGoalsDocument,
   '\n  query getPeopleAndTheirResources {\n    people(where: { providesResources_SOME: { NOT: { id_EQ: "" } } }) {\n      name\n      photo\n      id\n      providesResources {\n        name\n        id\n        description\n        status\n        providedByPerson {\n          name\n          id\n          photo\n        }\n      }\n    }\n  }\n':
     types.GetPeopleAndTheirResourcesDocument,
@@ -318,8 +318,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
+  source: '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit, sort: { createdAt: DESC }) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      photo\n      goals(limit: $goalLimit, sort: { createdAt: DESC }) {\n        id\n        name\n        description\n        successMeasures\n        photo\n        status\n        location\n        time\n        createdAt\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
