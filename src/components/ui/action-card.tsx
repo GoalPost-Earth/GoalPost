@@ -50,6 +50,7 @@ export function ActionCard({
     <Card.Root
       p={{ base: 2, lg: 4 }}
       width="100%"
+      maxWidth={{ base: '100%', md: '520px' }}
       bgColor={cardColors[actionName as keyof typeof cardColors]}
       position="relative"
       borderRadius="lg"

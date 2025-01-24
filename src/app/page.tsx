@@ -96,16 +96,20 @@ const HomeClient = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recentResources = data?.resources.map((resource) => {
+    const owner = resource.providedByPerson.length
+      ? resource.providedByPerson[0]
+      : resource.providedByCommunity[0]
+
     return {
       actionName: resource.__typename,
       actionInfo: 'added a new resource',
       icon: <SettingsIcon width="18px" height="18px" />,
-      personName: resource.providedByPerson[0].name,
-      personPhoto: resource.providedByPerson[0].photo,
-      personId: resource.providedByPerson[0].id,
+      personName: owner.name,
+      personPhoto: 'photo' in owner ? (owner.photo ?? '') : '',
+      personId: owner.id,
       id: resource.id,
       createdAt: resource.createdAt,
-      createdBy: resource.providedByPerson,
+      createdBy: resource.createdBy,
       description: resource.description,
       name: resource.name,
       children: <ResourceCard resource={resource as Resource} />,

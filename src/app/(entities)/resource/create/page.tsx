@@ -40,7 +40,6 @@ function CreateResource() {
     resolver: zodResolver(resourceSchema),
     defaultValues,
   })
-  console.log('🚀 ~ file: page.tsx:38 ~ errors:', errors)
   useEffect(() => {
     reset(defaultValues)
   }, [defaultValues, reset])

@@ -1,4 +1,4 @@
-import { Badge, Card, HStack, Text } from '@chakra-ui/react'
+import { Badge, Box, Card, HStack, Text } from '@chakra-ui/react'
 import Link from 'next/link'
 import React from 'react'
 import EllipseIcon from '../../icons/EllipseIcon'
@@ -15,7 +15,6 @@ export const ResourceCard = ({ resource }: { resource: Resource }) => {
   return (
     <Card.Root
       flexDirection={{ base: 'column', lg: 'row' }}
-      overflow="hidden"
       borderRadius="lg"
       boxShadow="md"
       bgColor="resource.subtle"
@@ -24,8 +23,8 @@ export const ResourceCard = ({ resource }: { resource: Resource }) => {
       width="100%"
       height="100%"
     >
-      <Link href={`/resource/${id}`} style={{ width: '100%' }}>
-        <Card.Body p={{ base: 0, lg: 5 }}>
+      <Link href={`/resource/${id}`} style={{ width: '100%', height: '100%' }}>
+        <Card.Body>
           <Card.Title mb="2" lineClamp={1} fontSize="xl" fontWeight="bolder">
             {name}
           </Card.Title>
@@ -50,7 +49,7 @@ export const ResourceCard = ({ resource }: { resource: Resource }) => {
               {status}
             </Badge>
           </HStack>
-          <Card.Description lineClamp={2}>
+          <Card.Description width="100%" lineClamp={{ base: 2, lg: 3 }}>
             <AutoLink text={description as string} />
           </Card.Description>
         </Card.Body>

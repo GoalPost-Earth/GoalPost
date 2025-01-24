@@ -33,6 +33,15 @@ export const GET_RECENT_ACTIONS = graphql(`
         photo
         id
       }
+      providedByCommunity {
+        id
+        name
+      }
+      createdBy {
+        id
+        name
+        photo
+      }
       name
       id
       status
