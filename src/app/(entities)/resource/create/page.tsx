@@ -35,6 +35,7 @@ function CreateResource() {
     register,
     reset,
     setValue,
+    watch,
     formState: { isSubmitting, errors },
   } = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
@@ -84,6 +85,7 @@ function CreateResource() {
         errors={errors}
         register={register}
         setValue={setValue}
+        watch={watch}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
       />
