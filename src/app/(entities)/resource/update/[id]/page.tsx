@@ -51,6 +51,7 @@ export default function UpdateResource({
     handleSubmit,
     reset,
     setValue,
+    watch,
     register,
     formState: { isSubmitting, errors },
   } = useForm<ResourceFormData>({
@@ -61,7 +62,13 @@ export default function UpdateResource({
     if (resource) {
       reset(defaultValues)
     }
-  }, [resource, defaultValues, reset, resource?.providedByPerson.length])
+  }, [
+    resource,
+    defaultValues,
+    reset,
+    resource?.providedByPerson.length,
+    resource?.providedByCommunity.length,
+  ])
 
   const onSubmit = async (formData: ResourceFormData) => {
     const toConnectPeople = []
@@ -130,6 +137,7 @@ export default function UpdateResource({
           errors={errors}
           resetDefaults={reset}
           setValue={setValue}
+          watch={watch}
           register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}

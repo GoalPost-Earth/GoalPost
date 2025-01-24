@@ -5,6 +5,7 @@ import {
   FieldValues,
   UseFormRegister,
   UseFormSetValue,
+  UseFormWatch,
 } from 'react-hook-form'
 
 export type SelectOptions = {
@@ -29,9 +30,15 @@ export interface EntityFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setValue?: UseFormSetValue<any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  resetDefaults?: () => void
   register: UseFormRegister<any>
+  resetDefaults?: () => void
   errors: FieldErrors<FieldValues>
   isSubmitting: boolean
   onSubmit: () => void
+}
+
+export type EntityFormPropsWithLinkTo = EntityFormProps & {
+  setValue: UseFormSetValue<any>
+  watch: UseFormWatch<any>
+  register: UseFormRegister<any>
 }

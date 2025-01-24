@@ -8,14 +8,14 @@ import {
   Heading,
   Separator,
 } from '@chakra-ui/react'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Input, NativeSelect, Textarea } from '../../react-hook-form'
 import { Button } from '../../ui'
 import { STATUS_SELECT_OPTIONS } from '@/constants'
 import { GET_ALL_COMMUNITIES, GET_ALL_PEOPLE } from '@/app/graphql'
 import { useQuery } from '@apollo/client'
 import { ApolloWrapper } from '@/components/layout'
-import { EntityFormProps, SelectOptions } from '@/types'
+import { EntityFormPropsWithLinkTo, SelectOptions } from '@/types'
 
 const ResourceForm = ({
   formMode,
@@ -25,10 +25,10 @@ const ResourceForm = ({
   register,
   resetDefaults,
   setValue,
+  watch,
   onSubmit,
-}: EntityFormProps) => {
+}: EntityFormPropsWithLinkTo) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
-  const [linkType, setLinkType] = useState('personLink')
   const {
     data: communityData,
     loading: communityLoading,
@@ -126,8 +126,8 @@ const ResourceForm = ({
               register={register}
               errors={errors}
               onChange={(e) => {
-                setLinkType((e.target as HTMLSelectElement).value)
                 if (setValue) {
+                  setValue('linkTo', (e.target as HTMLSelectElement).value)
                   setValue('personLink', undefined)
                   setValue('communityLink', undefined)
                 }
@@ -139,7 +139,7 @@ const ResourceForm = ({
             />
           </GridItem>
 
-          {linkType === 'personLink' && (
+          {watch('linkTo') === 'personLink' && (
             <GridItem>
               <NativeSelect
                 label="Link to a Person"
@@ -151,7 +151,7 @@ const ResourceForm = ({
               />
             </GridItem>
           )}
-          {linkType === 'communityLink' && (
+          {watch('linkTo') === 'communityLink' && (
             <GridItem>
               <NativeSelect
                 label="Link to a Community"
