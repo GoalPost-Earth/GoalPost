@@ -35,6 +35,7 @@ export default function GoalDetails({ goal }: { goal: Goal }) {
             details={goal.description}
           />
           <EntityDetail title="Location" details={goal.location} />
+          <EntityDetail title="Why" details={goal.why} />
           <EntityDetail title="Time" details={goal.time} />
           <EntityDetail title="Status" details={goal.status} />
         </VStack>

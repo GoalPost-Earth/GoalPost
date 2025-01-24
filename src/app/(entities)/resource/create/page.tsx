@@ -23,7 +23,7 @@ function CreateResource() {
     () => ({
       status: 'Active',
       linkTo: 'personLink',
-      personLink: personId ?? undefined,
+      personLink: personId || undefined,
       communityLink: undefined,
     }),
     [personId]
@@ -34,11 +34,13 @@ function CreateResource() {
     handleSubmit,
     register,
     reset,
+    setValue,
     formState: { isSubmitting, errors },
   } = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
     defaultValues,
   })
+  console.log('🚀 ~ file: page.tsx:38 ~ errors:', errors)
   useEffect(() => {
     reset(defaultValues)
   }, [defaultValues, reset])
@@ -82,6 +84,7 @@ function CreateResource() {
         control={control}
         errors={errors}
         register={register}
+        setValue={setValue}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit(onSubmit)}
       />

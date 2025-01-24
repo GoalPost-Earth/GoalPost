@@ -43,6 +43,10 @@ export default function ViewResourcePage({
   })
 
   const resource = data?.resources[0]
+  const owner =
+    (resource?.providedByPerson?.length ?? 0) > 0
+      ? resource?.providedByPerson[0]
+      : resource?.providedByCommunity[0]
 
   if (error) {
     throw error
@@ -106,11 +110,14 @@ export default function ViewResourcePage({
           </Stack>
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
-            <Link href={`/person/${resource?.providedByPerson[0].id}`}>
-              <EntityOwnerCard
-                owner={resource?.providedByPerson[0]}
-                entity={resource}
-              />
+            <Link
+              href={
+                owner?.__typename === 'Person'
+                  ? `/person/${owner.id}`
+                  : `/community/${owner?.id}`
+              }
+            >
+              <EntityOwnerCard owner={owner} entity={resource} />
             </Link>
           </Box>
 
@@ -144,10 +151,7 @@ export default function ViewResourcePage({
             />
             <Box display={{ base: 'none', lg: 'block' }} width="30%">
               <Spacer />
-              <EntityOwnerCard
-                owner={resource?.providedByPerson[0]}
-                entity={resource}
-              />
+              <EntityOwnerCard owner={owner} entity={resource} />
             </Box>
           </HStack>
         </VStack>

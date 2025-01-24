@@ -24,6 +24,7 @@ const ResourceForm = ({
   isSubmitting,
   register,
   resetDefaults,
+  setValue,
   onSubmit,
 }: EntityFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
@@ -124,9 +125,13 @@ const ResourceForm = ({
               name="linkTo"
               register={register}
               errors={errors}
-              onChange={(e) =>
+              onChange={(e) => {
                 setLinkType((e.target as HTMLSelectElement).value)
-              }
+                if (setValue) {
+                  setValue('personLink', undefined)
+                  setValue('communityLink', undefined)
+                }
+              }}
               options={[
                 { value: 'personLink', label: 'Link to a Person' },
                 { value: 'communityLink', label: 'Link to a Community' },
