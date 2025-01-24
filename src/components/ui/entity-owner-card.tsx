@@ -2,14 +2,16 @@ import { Box, Card, Flex, Text } from '@chakra-ui/react'
 import { Avatar } from '.'
 import React from 'react'
 import Link from 'next/link'
-import { Person } from '@/gql/graphql'
+import { Community, Person } from '@/gql/graphql'
 import { getHumanReadableDate } from '@/utils'
 
 export function EntityOwnerCard({
-  owner,
+  owner: propOwner,
   entity,
 }: {
-  owner?: Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
+  owner?:
+    | Pick<Person, '__typename' | 'id' | 'name' | 'email' | 'photo'>
+    | Pick<Community, '__typename' | 'id' | 'name'>
   entity?: {
     __typename?: string
     id: string
@@ -17,8 +19,25 @@ export function EntityOwnerCard({
     createdAt: string
   }
 }) {
-  if (!owner || !entity) {
+  if (!propOwner || !entity) {
     return <></>
+  }
+
+  let owner = propOwner as unknown as {
+    __typename?: string
+    id: string
+    name: string
+    email?: string
+    photo?: string
+  }
+
+  if (propOwner.__typename === 'Community') {
+    owner = {
+      __typename: propOwner.__typename,
+      id: propOwner.id,
+      name: propOwner.name,
+      photo: undefined,
+    }
   }
 
   return (

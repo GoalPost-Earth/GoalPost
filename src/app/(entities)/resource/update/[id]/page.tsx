@@ -50,6 +50,7 @@ export default function UpdateResource({
     control,
     handleSubmit,
     reset,
+    setValue,
     register,
     formState: { isSubmitting, errors },
   } = useForm<ResourceFormData>({
@@ -128,6 +129,7 @@ export default function UpdateResource({
           control={control}
           errors={errors}
           resetDefaults={reset}
+          setValue={setValue}
           register={register}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit(onSubmit)}
