@@ -10,6 +10,7 @@ export const GET_GOAL = graphql(`
       photo
       status
       location
+      why
       time
       createdAt
       coreValues {

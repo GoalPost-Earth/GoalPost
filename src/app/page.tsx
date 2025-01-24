@@ -149,7 +149,7 @@ const HomeClient = () => {
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container p={{ base: 0 }}>
         <Grid
-          templateColumns={{ base: 'repeat(1, 1fr)', lg: '0.8fr 1.5fr 1.2fr' }}
+          templateColumns={{ base: 'repeat(1, 1fr)', lg: '0.6fr 1.5fr 1fr' }}
           gap={20}
           mt={5}
           position="relative"

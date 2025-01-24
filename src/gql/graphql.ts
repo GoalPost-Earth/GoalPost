@@ -13329,6 +13329,7 @@ export type UpdateGoalMutation = {
       photo?: string | null
       status: string
       location?: string | null
+      why?: string | null
       time?: string | null
       createdAt: any
       coreValues: Array<{
@@ -14041,6 +14042,7 @@ export type GetGoalQuery = {
     photo?: string | null
     status: string
     location?: string | null
+    why?: string | null
     time?: string | null
     createdAt: any
     coreValues: Array<{
@@ -16081,6 +16083,7 @@ export const UpdateGoalDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'location' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'time' } },
                       {
                         kind: 'Field',
@@ -18763,6 +18766,7 @@ export const GetGoalDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'time' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {

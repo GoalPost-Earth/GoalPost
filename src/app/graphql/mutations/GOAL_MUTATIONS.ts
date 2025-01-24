@@ -58,6 +58,7 @@ export const UPDATE_GOAL_MUTATION = graphql(`
         photo
         status
         location
+        why
         time
         createdAt
         coreValues {
