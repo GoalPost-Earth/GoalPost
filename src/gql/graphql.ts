@@ -204,6 +204,7 @@ export type CarePointAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   fulfillmentDate: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   issuesIdentified: StringAggregateSelection
   issuesResolved: StringAggregateSelection
@@ -315,16 +316,6 @@ export type CarePointCaresForGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -663,16 +654,6 @@ export type CarePointCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -959,16 +940,6 @@ export type CarePointEnabledByGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1116,6 +1087,7 @@ export type CarePointGoalCaresForGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -1138,6 +1110,7 @@ export type CarePointGoalEnabledByGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -1165,6 +1138,7 @@ export type CarePointPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -1188,6 +1162,7 @@ export type CarePointResourceResourcesNodeAggregateSelection = {
   __typename?: 'CarePointResourceResourcesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -1280,16 +1255,6 @@ export type CarePointResourcesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1799,6 +1764,7 @@ export type CommunityAggregateSelection = {
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -1820,6 +1786,7 @@ export type CommunityCommunityRelatedCommunitiesNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -1857,6 +1824,7 @@ export type CommunityCoreValueCoreValuesNodeAggregateSelection = {
   alignmentExamples: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -1980,16 +1948,6 @@ export type CommunityCoreValuesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2241,16 +2199,6 @@ export type CommunityCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2456,6 +2404,7 @@ export type CommunityGoalGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -2565,16 +2514,6 @@ export type CommunityGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2884,16 +2823,6 @@ export type CommunityMembersNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3076,6 +3005,7 @@ export type CommunityPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -3105,6 +3035,7 @@ export type CommunityPersonMembersNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -3216,16 +3147,6 @@ export type CommunityRelatedCommunitiesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3359,6 +3280,7 @@ export type CommunityResourceResourcesNodeAggregateSelection = {
   __typename?: 'CommunityResourceResourcesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -3451,16 +3373,6 @@ export type CommunityResourcesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3946,6 +3858,7 @@ export type CoreValueAggregateSelection = {
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -4050,16 +3963,6 @@ export type CoreValueCommunitiesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4192,6 +4095,7 @@ export type CoreValueCommunityCommunitiesNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -4398,16 +4302,6 @@ export type CoreValueCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4605,6 +4499,7 @@ export type CoreValueGoalGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -4714,16 +4609,6 @@ export type CoreValueGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5033,16 +4918,6 @@ export type CoreValuePeopleNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5225,6 +5100,7 @@ export type CoreValuePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -5254,6 +5130,7 @@ export type CoreValuePersonPeopleNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -5649,6 +5526,7 @@ export type GoalAggregateSelection = {
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -5671,6 +5549,7 @@ export type GoalCarePointCaredForByCarePointsNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   fulfillmentDate: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   issuesIdentified: StringAggregateSelection
   issuesResolved: StringAggregateSelection
@@ -5695,6 +5574,7 @@ export type GoalCarePointEnablesCarePointsNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   fulfillmentDate: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   issuesIdentified: StringAggregateSelection
   issuesResolved: StringAggregateSelection
@@ -5806,16 +5686,6 @@ export type GoalCaredForByCarePointsNodeAggregationWhereInput = {
   fulfillmentDate_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   issuesIdentified_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5993,6 +5863,7 @@ export type GoalCommunityMotivatesCommunitiesNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -6033,6 +5904,7 @@ export type GoalCoreValueCoreValuesNodeAggregateSelection = {
   alignmentExamples: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -6156,16 +6028,6 @@ export type GoalCoreValuesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6419,16 +6281,6 @@ export type GoalCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6729,16 +6581,6 @@ export type GoalEnablesCarePointsNodeAggregationWhereInput = {
   fulfillmentDate_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   issuesIdentified_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7003,16 +6845,6 @@ export type GoalMotivatesCommunitiesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7307,16 +7139,6 @@ export type GoalMotivatesPeopleNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7499,6 +7321,7 @@ export type GoalPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -7528,6 +7351,7 @@ export type GoalPersonMotivatesPeopleNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -7551,6 +7375,7 @@ export type GoalResourceResourcesNodeAggregateSelection = {
   __typename?: 'GoalResourceResourcesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -7643,16 +7468,6 @@ export type GoalResourcesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8309,6 +8124,7 @@ export type PersonAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -8425,16 +8241,6 @@ export type PersonCommunitiesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8575,6 +8381,7 @@ export type PersonCommunityCommunitiesNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -8778,16 +8585,6 @@ export type PersonConnectionsNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8968,6 +8765,7 @@ export type PersonCoreValueCoreValuesNodeAggregateSelection = {
   alignmentExamples: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   name: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -9091,16 +8889,6 @@ export type PersonCoreValuesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9360,16 +9148,6 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9573,6 +9351,7 @@ export type PersonGoalGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -9682,16 +9461,6 @@ export type PersonGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9848,6 +9617,7 @@ export type PersonInterfaceAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
@@ -9938,7 +9708,7 @@ export type PersonInterfaceWhere = {
   pronouns_EQ?: InputMaybe<Scalars['String']['input']>
   pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  typename_IN?: InputMaybe<Array<PersonInterfaceImplementation>>
+  typename?: InputMaybe<Array<PersonInterfaceImplementation>>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -9977,6 +9747,7 @@ export type PersonPersonConnectionsNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -10006,6 +9777,7 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -10102,16 +9874,6 @@ export type PersonProvidesResourcesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10228,6 +9990,7 @@ export type PersonResourceProvidesResourcesNodeAggregateSelection = {
   __typename?: 'PersonResourceProvidesResourcesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -10841,6 +10604,7 @@ export type ResourceAggregateSelection = {
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -10861,6 +10625,7 @@ export type ResourceCarePointCarePointsNodeAggregateSelection = {
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
   fulfillmentDate: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   issuesIdentified: StringAggregateSelection
   issuesResolved: StringAggregateSelection
@@ -10972,16 +10737,6 @@ export type ResourceCarePointsNodeAggregationWhereInput = {
   fulfillmentDate_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   fulfillmentDate_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   issuesIdentified_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11159,6 +10914,7 @@ export type ResourceCommunityProvidedByCommunityNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -11374,16 +11130,6 @@ export type ResourceCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11591,6 +11337,7 @@ export type ResourceGoalGoalsNodeAggregateSelection = {
   activities: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -11700,16 +11447,6 @@ export type ResourceGoalsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11862,6 +11599,7 @@ export type ResourcePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -11891,6 +11629,7 @@ export type ResourcePersonProvidedByPersonNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
   lastName: StringAggregateSelection
@@ -12002,16 +11741,6 @@ export type ResourceProvidedByCommunityNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12308,16 +12037,6 @@ export type ResourceProvidedByPersonNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12494,6 +12213,7 @@ export type ResourceResourceResourcesNodeAggregateSelection = {
   __typename?: 'ResourceResourceResourcesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   location: StringAggregateSelection
   name: StringAggregateSelection
@@ -12586,16 +12306,6 @@ export type ResourceResourcesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
-  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13165,6 +12875,13 @@ export type UpdateCommunityMutation = {
         id: string
         name: string
         description?: string | null
+      }>
+      resources: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+        description?: string | null
+        status: string
       }>
     }>
     info: {
@@ -15355,6 +15072,31 @@ export const UpdateCommunityDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resources' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
                             },
                           ],
                         },

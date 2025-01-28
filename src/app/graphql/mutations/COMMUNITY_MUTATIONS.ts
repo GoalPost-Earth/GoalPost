@@ -51,6 +51,12 @@ export const UPDATE_COMMUNITY_MUTATION = graphql(`
           name
           description
         }
+        resources {
+          id
+          name
+          description
+          status
+        }
       }
       info {
         nodesCreated
