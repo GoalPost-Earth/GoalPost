@@ -222,6 +222,18 @@ type Resource @node {
     @settable(onCreate: false, onUpdate: true)
 }
 
+type Log {
+  id: ID! @id
+  description: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  goals: [Goal!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+  carePoints: [CarePoint!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+  resources: [Resource!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+}
+
 type ChatbotResponse {
   message: String!
   sessionId: String!

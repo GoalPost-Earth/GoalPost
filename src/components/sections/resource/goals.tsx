@@ -1,6 +1,11 @@
 'use client'
 
-import { GET_ALL_GOALS, UPDATE_RESOURCE_MUTATION } from '@/app/graphql'
+import { useApp } from '@/app/contexts'
+import {
+  CREATE_LOG_MUTATION,
+  GET_ALL_GOALS,
+  UPDATE_RESOURCE_MUTATION,
+} from '@/app/graphql'
 import { ApolloWrapper } from '@/components/layout'
 import { MultiSelect } from '@/components/react-hook-form'
 import {
@@ -34,9 +39,11 @@ export default function ResourceRelatedGoals({
   const [open, setOpen] = useState(false)
   const { data, loading, error } = useQuery(GET_ALL_GOALS)
   const [relatedGoals, setRelatedGoals] = useState<Goal[]>(resource.goals ?? [])
+  const [CreateLog] = useMutation(CREATE_LOG_MUTATION)
   const [UpdateResource] = useMutation(UPDATE_RESOURCE_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  const { user } = useApp()
 
   const valueOptions =
     data?.goals.map((goal) => ({
@@ -69,6 +76,9 @@ export default function ResourceRelatedGoals({
       const toConnect = data.relatedGoals.filter(
         (goal) => !initialRelatedGoals.includes(goal)
       )
+      const toConnectNames = toConnect.map(
+        (id) => valueOptions.find((option) => option.value === id)?.label
+      )
 
       const response = await UpdateResource({
         variables: {
@@ -86,6 +96,27 @@ export default function ResourceRelatedGoals({
 
       if (!response.data) {
         throw new Error('No data returned')
+      }
+
+      if (toConnectNames.length > 0) {
+        await CreateLog({
+          variables: {
+            input: [
+              {
+                description: `${user?.name} linked goal(s) \n\n${toConnectNames.join('\n')}\n\n to Resource: ${resource.name}`,
+                resources: {
+                  connect: [{ where: { node: { id_EQ: resource.id } } }],
+                },
+                goals: {
+                  connect: [{ where: { node: { id_IN: toConnect } } }],
+                },
+                createdBy: {
+                  connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+                },
+              },
+            ],
+          },
+        })
       }
 
       setRelatedGoals(
