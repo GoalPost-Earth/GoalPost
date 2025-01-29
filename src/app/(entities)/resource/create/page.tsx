@@ -16,17 +16,23 @@ function CreateResource() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const personId = searchParams?.get('personId')
+  const communityId = searchParams?.get('communityId')
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
   const { user } = useApp()
 
   const defaultValues = React.useMemo(
-    () => ({
-      status: 'Active',
-      linkTo: 'personLink',
-      personLink: personId || undefined,
-      communityLink: undefined,
-    }),
-    [personId]
+    () =>
+      ({
+        status: 'Active',
+        linkTo: personId
+          ? 'personLink'
+          : communityId
+            ? 'communityLink'
+            : 'personLink',
+        personLink: personId ?? undefined,
+        communityLink: communityId ?? undefined,
+      }) as ResourceFormData,
+    [personId, communityId]
   )
 
   const {
