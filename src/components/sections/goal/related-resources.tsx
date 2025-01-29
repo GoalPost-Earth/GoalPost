@@ -1,6 +1,11 @@
 'use client'
 
-import { GET_ALL_RESOURCES, UPDATE_GOAL_MUTATION } from '@/app/graphql'
+import { useApp } from '@/app/contexts'
+import {
+  CREATE_LOG_MUTATION,
+  GET_ALL_RESOURCES,
+  UPDATE_GOAL_MUTATION,
+} from '@/app/graphql'
 import {
   Button,
   EmptyState,
@@ -36,7 +41,9 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
   const [relatedResources, setRelatedResources] = useState<Resource[]>(
     goal.resources
   )
+  const { user } = useApp()
   const [open, setOpen] = useState(false)
+  const [CreateLog] = useMutation(CREATE_LOG_MUTATION)
   const { data, loading, error } = useQuery(GET_ALL_RESOURCES)
   const [UpdateGoal] = useMutation(UPDATE_GOAL_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -73,6 +80,10 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
         (resource) => !initialPeople.map((p) => p).includes(resource)
       )
 
+      const toConnectNames = toConnect.map(
+        (id) => valueOptions.find((option) => option.value === id)?.label
+      )
+
       const response = await UpdateGoal({
         variables: {
           id: goal.id,
@@ -89,6 +100,27 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
 
       if (!response.data) {
         throw new Error('No data returned')
+      }
+
+      if (toConnectNames.length > 0) {
+        await CreateLog({
+          variables: {
+            input: [
+              {
+                description: `${user?.name} linked resource(s) \n${toConnectNames.join('\n')})\n\n to goal ${goal.name}`,
+                resources: {
+                  connect: [{ where: { node: { id_IN: toConnect } } }],
+                },
+                goals: {
+                  connect: [{ where: { node: { id_EQ: goal.id } } }],
+                },
+                createdBy: {
+                  connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+                },
+              },
+            ],
+          },
+        })
       }
 
       setRelatedResources(

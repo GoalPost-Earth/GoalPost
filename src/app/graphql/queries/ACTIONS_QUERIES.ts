@@ -2,7 +2,17 @@ import { graphql } from '@/gql'
 
 export const GET_RECENT_ACTIONS = graphql(`
   query getRecentActions {
-    carePoints(sort: { createdAt: DESC }, limit: 3, where: {}) {
+    logs(sort: { createdAt: DESC }, limit: 10) {
+      id
+      description
+      createdAt
+      createdBy {
+        id
+        name
+        photo
+      }
+    }
+    carePoints(sort: { createdAt: DESC }, limit: 10, where: {}) {
       createdAt
       description
       name
@@ -14,7 +24,7 @@ export const GET_RECENT_ACTIONS = graphql(`
         id
       }
     }
-    goals(sort: { createdAt: DESC }, limit: 3) {
+    goals(sort: { createdAt: DESC }, limit: 10) {
       createdAt
       id
       description
@@ -27,7 +37,7 @@ export const GET_RECENT_ACTIONS = graphql(`
         photo
       }
     }
-    resources(limit: 3, sort: { createdAt: DESC }) {
+    resources(limit: 10, sort: { createdAt: DESC }) {
       providedByPerson {
         name
         photo
@@ -48,7 +58,7 @@ export const GET_RECENT_ACTIONS = graphql(`
       description
       createdAt
     }
-    coreValues(limit: 3, sort: { createdAt: DESC }) {
+    coreValues(limit: 10, sort: { createdAt: DESC }) {
       people {
         name
         id
@@ -59,10 +69,10 @@ export const GET_RECENT_ACTIONS = graphql(`
       name
       createdAt
     }
-    communities(where: { members_SOME: { NOT: null } }, limit: 3, sort: {}) {
+    communities(where: { members_SOME: { NOT: null } }, limit: 10, sort: {}) {
       name
       id
-      members(limit: 3, sort: { createdAt: DESC }) {
+      members(limit: 10, sort: { createdAt: DESC }) {
         id
         name
         photo
