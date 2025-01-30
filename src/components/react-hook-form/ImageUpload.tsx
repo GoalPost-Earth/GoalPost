@@ -5,7 +5,6 @@ import {
   Button,
   Center,
   Container,
-  Image,
   Input,
   Spinner,
   Fieldset,
@@ -13,6 +12,7 @@ import {
 import { UseFormSetValue } from 'react-hook-form'
 import { ReactHookFormComponentProps } from '../../types/form'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import { Avatar } from '../ui'
 
 export interface ImageUploadProps extends ReactHookFormComponentProps {
   uploadPreset: string
@@ -28,7 +28,6 @@ const ImageUpload = (props: ImageUploadProps) => {
   const {
     label,
     name,
-    initialValue,
     uploadPreset,
     tags,
     setValue,
@@ -41,10 +40,15 @@ const ImageUpload = (props: ImageUploadProps) => {
   const handleButtonClick = () => {
     fileInputRef.current?.click()
   }
+
+  console.log('Props:', props)
+
   const { user } = useUser()
 
   const [loading, setLoading] = useState(false)
-  const [image, setImage] = useState('')
+  const [image, setImage] = useState(
+    props.control._defaultValues['photo'] || undefined
+  )
 
   const uploadImage: ChangeEventHandler<HTMLInputElement> = async (e) => {
     const files = e.target.files ?? []
@@ -86,18 +90,17 @@ const ImageUpload = (props: ImageUploadProps) => {
       ) : null}
 
       <Container padding={0} width="150px" height="150px" marginBottom={4}>
-        <Center height="100%">
+        <Center height="100%" borderRadius="md">
           {props.loading || loading ? (
             <Spinner data-testid="loading-spinner" color="grey" />
           ) : (
-            <Image
+            <Avatar
               width={150}
               height={150}
               objectFit="cover"
               data-testid="image-loaded"
-              src={image || initialValue}
-              rounded="md"
-              alt="Uploaded Image"
+              src={image}
+              rounded="full"
             />
           )}
         </Center>
