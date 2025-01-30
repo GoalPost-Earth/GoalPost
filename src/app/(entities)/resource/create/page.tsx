@@ -20,17 +20,15 @@ function CreateResource() {
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
   const { user } = useApp()
 
+  console.log('personId', personId)
+
   const defaultValues = React.useMemo(
     () =>
       ({
         status: 'Active',
-        linkTo: personId
-          ? 'personLink'
-          : communityId
-            ? 'communityLink'
-            : 'personLink',
-        personLink: personId ?? undefined,
-        communityLink: communityId ?? undefined,
+        linkTo: personId ? 'personLink' : 'communityLink',
+        personLink: personId,
+        communityLink: communityId,
       }) as ResourceFormData,
     [personId, communityId]
   )
@@ -48,7 +46,11 @@ function CreateResource() {
     defaultValues,
   })
   useEffect(() => {
-    reset(defaultValues)
+    const timeout = setTimeout(() => {
+      reset(defaultValues)
+    }, 1000)
+
+    return () => clearTimeout(timeout)
   }, [defaultValues, reset])
 
   const onSubmit = async (data: ResourceFormData) => {
