@@ -60,23 +60,9 @@ export default function UpdatePerson({
     resolver: zodResolver(personSchema),
   })
 
-  console.log(
-    '🚀 ~ file: page.tsx:54 ~ UpdatePerson ~ person photo:',
-    person?.photo
-  )
-
-  console.log(
-    '🚀 ~ file: page.tsx:54 ~ UpdatePerson ~ Default Values:',
-    defaultValues
-  )
-
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (person) {
       reset(defaultValues)
-    }, 500)
-
-    return () => {
-      clearTimeout(timer)
     }
   }, [person, defaultValues, reset])
 

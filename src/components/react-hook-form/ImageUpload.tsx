@@ -41,8 +41,6 @@ const ImageUpload = (props: ImageUploadProps) => {
     fileInputRef.current?.click()
   }
 
-  console.log('Props:', props)
-
   const { user } = useUser()
 
   const [loading, setLoading] = useState(false)
