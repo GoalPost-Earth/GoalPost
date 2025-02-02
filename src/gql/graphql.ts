@@ -14283,6 +14283,13 @@ export type UpdateCommunityMutation = {
         name: string
         description?: string | null
       }>
+      resources: Array<{
+        __typename?: 'Resource'
+        id: string
+        name: string
+        description?: string | null
+        status: string
+      }>
     }>
     info: {
       __typename?: 'UpdateInfo'
@@ -16549,6 +16556,31 @@ export const UpdateCommunityDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resources' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
                             },
                           ],
                         },
