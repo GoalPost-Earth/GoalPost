@@ -43,7 +43,7 @@ const CoreValueForm = ({
 }: CoreValueFormProps) => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
 
-  const [linkType, setLinkType] = useState('personLink')
+  const [linkType, setLinkType] = useState(control._defaultValues['linkTo'])
   const {
     data: communityData,
     loading: communityLoading,

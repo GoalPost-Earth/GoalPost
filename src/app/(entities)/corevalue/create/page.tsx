@@ -16,16 +16,21 @@ function CreateCoreValue() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const personId = searchParams?.get('personId')
+  const communityId = searchParams?.get('communityId')
   const { user } = useApp()
 
   const defaultValues = React.useMemo(
     () => ({
       status: 'Active',
-      linkTo: 'personLink',
+      linkTo: personId
+        ? 'personLink'
+        : communityId
+          ? 'communityLink'
+          : 'personLink',
       personLink: personId ?? undefined,
-      communityLink: undefined,
+      communityLink: communityId ?? undefined,
     }),
-    [personId]
+    [personId, communityId]
   )
 
   const {
@@ -39,16 +44,20 @@ function CreateCoreValue() {
     defaultValues,
   })
   useEffect(() => {
-    reset(defaultValues)
+    const timeout = setTimeout(() => {
+      reset(defaultValues)
+    }, 1000)
+
+    return () => clearTimeout(timeout)
   }, [defaultValues, reset])
 
-  const [CreateCoreValue] = useMutation(CREATE_COREVALUE_MUTATION)
+  const [CreateCoreValues] = useMutation(CREATE_COREVALUE_MUTATION)
 
   const onSubmit = async (data: CoreValueFormData) => {
     const { personLink, linkTo, communityLink, ...rest } = data
 
     try {
-      const res = await CreateCoreValue({
+      const res = await CreateCoreValues({
         variables: {
           input: {
             ...rest,

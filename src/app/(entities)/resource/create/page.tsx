@@ -26,7 +26,11 @@ function CreateResource() {
     () =>
       ({
         status: 'Active',
-        linkTo: personId ? 'personLink' : 'communityLink',
+        linkTo: personId
+          ? 'personLink'
+          : communityId
+            ? 'communityLink'
+            : 'personLink',
         personLink: personId,
         communityLink: communityId,
       }) as ResourceFormData,
