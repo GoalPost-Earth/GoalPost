@@ -16,17 +16,19 @@ function CreateGoal() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const personId = searchParams?.get('personId')
+  const communityId = searchParams?.get('communityId')
   const [CreateGoal] = useMutation(CREATE_GOAL_MUTATION)
   const { user } = useApp()
 
   const defaultValues = React.useMemo(
-    () => ({
-      status: 'Active',
-      linkTo: 'personLink',
-      personLink: personId ?? undefined,
-      communityLink: undefined,
-    }),
-    [personId]
+    () =>
+      ({
+        status: 'Active',
+        linkTo: personId ? 'personLink' : 'communityLink',
+        personLink: personId,
+        communityLink: communityId,
+      }) as GoalFormData,
+    [personId, communityId]
   )
   const {
     control,
@@ -39,7 +41,11 @@ function CreateGoal() {
     defaultValues,
   })
   useEffect(() => {
-    reset(defaultValues)
+    const timeout = setTimeout(() => {
+      reset(defaultValues)
+    }, 1000)
+
+    return () => clearTimeout(timeout)
   }, [defaultValues, reset])
 
   const onSubmit = async (data: GoalFormData) => {
