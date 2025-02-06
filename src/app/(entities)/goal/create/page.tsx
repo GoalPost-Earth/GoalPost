@@ -29,8 +29,8 @@ function CreateGoal() {
           : communityId
             ? 'communityLink'
             : 'personLink',
-        personLink: personId,
-        communityLink: communityId,
+        personLink: personId ?? undefined,
+        communityLink: communityId ?? undefined,
       }) as GoalFormData,
     [personId, communityId]
   )
