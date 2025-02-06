@@ -136,6 +136,7 @@ const ResourceForm = ({
                 { value: 'personLink', label: 'Link to a Person' },
                 { value: 'communityLink', label: 'Link to a Community' },
               ]}
+              required
             />
           </GridItem>
 
@@ -148,6 +149,7 @@ const ResourceForm = ({
                 register={register}
                 errors={errors}
                 options={peopleOptions}
+                required
               />
             </GridItem>
           )}
@@ -160,6 +162,7 @@ const ResourceForm = ({
                 register={register}
                 errors={errors}
                 options={communityOptions}
+                required
               />
             </GridItem>
           )}

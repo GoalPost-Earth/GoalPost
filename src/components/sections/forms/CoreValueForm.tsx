@@ -130,6 +130,7 @@ const CoreValueForm = ({
                 { value: 'personLink', label: 'Link to a Person' },
                 { value: 'communityLink', label: 'Link to a Community' },
               ]}
+              required
             />
           </GridItem>
 
@@ -142,6 +143,7 @@ const CoreValueForm = ({
                 register={register}
                 errors={errors}
                 options={peopleOptions}
+                required
               />
             </GridItem>
           )}
@@ -154,6 +156,7 @@ const CoreValueForm = ({
                 register={register}
                 errors={errors}
                 options={communityOptions}
+                required
               />
             </GridItem>
           )}

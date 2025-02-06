@@ -133,6 +133,7 @@ const GoalForm = ({
                 { value: 'personLink', label: 'Link to a Person' },
                 { value: 'communityLink', label: 'Link to a Community' },
               ]}
+              required
             />
           </GridItem>
 
@@ -145,6 +146,7 @@ const GoalForm = ({
                 register={register}
                 errors={errors}
                 options={peopleOptions}
+                required
               />
             </GridItem>
           )}
@@ -157,6 +159,7 @@ const GoalForm = ({
                 register={register}
                 errors={errors}
                 options={communityOptions}
+                required
               />
             </GridItem>
           )}
