@@ -57,9 +57,8 @@ function CreateResource() {
 
   const onSubmit = async (data: ResourceFormData) => {
     const { personLink, linkTo, communityLink, ...rest } = data
-    console.log('data', data)
+
     try {
-      console.log('Saving Data')
       const res = await CreateResources({
         variables: {
           input: {
@@ -83,7 +82,13 @@ function CreateResource() {
         },
       })
 
-      router.push('/resource/' + res.data?.createResources.resources[0].id)
+      if (personId) {
+        router.push('/person/' + personId + '?tab=My%20Resources')
+      } else if (communityId) {
+        router.push('/community/' + communityId + '?tab=Resources')
+      } else {
+        router.push('/resource/' + res.data?.createResources.resources[0].id)
+      }
     } catch (error) {
       console.error(error)
     }
