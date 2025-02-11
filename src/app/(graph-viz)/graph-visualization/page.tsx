@@ -1,27 +1,9 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  addEdge,
-  Background,
-  BackgroundVariant,
-  Connection,
-  Controls,
-  MarkerType,
-  MiniMap,
-  Node,
-  ReactFlow,
-  useEdgesState,
-  useNodesState,
-} from '@xyflow/react'
-import { Edge } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-
+import React, { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client'
 import { ApolloWrapper } from '@/components'
-import { createForceLayout, getRandomPosition } from '@/utils'
-import GraphNodes from '@/components/ui/graph-nodes'
-import { Stack } from '@chakra-ui/react'
+import { Box, Stack } from '@chakra-ui/react'
 import {
   GET_ALL_PEOPLE,
   GET_ALL_COREVALUES,
@@ -31,10 +13,23 @@ import {
   GET_ALL_CAREPOINTS,
 } from '@/app/graphql'
 import GraphSideBar from '@/components/ui/graph-sidebar'
-import { SimulationNodeDatum } from 'd3'
 
-const initialEdges: Edge[] = []
-const initialSelectedNodeInfo: Node[] = []
+import type { Node, Relationship } from '@neo4j-nvl/base'
+import { InteractiveNvlWrapper } from '@neo4j-nvl/react'
+import type { MouseEventCallbacks } from '@neo4j-nvl/react'
+import GraphControls from '@/components/ui/graph-controls'
+import styles from './graph-viz.module.css'
+
+interface SelectedNodeInfo extends Node {
+  properties?: {
+    id: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    nodeInfo: any
+    nodeName: string
+  }
+}
+
+const initialSelectedNodeInfo: SelectedNodeInfo[] = []
 
 const NodeTriggers = [
   'Resource',
@@ -44,13 +39,6 @@ const NodeTriggers = [
   'Goal',
   'CarePoint',
 ]
-
-const EdgeMarker = {
-  type: MarkerType.ArrowClosed,
-  width: 40,
-  height: 40,
-  color: 'black',
-}
 
 const GraphVisualization = () => {
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
@@ -63,20 +51,18 @@ const GraphVisualization = () => {
   const [selectedNodeInfo, setSelectedNodeInfo] = useState(
     initialSelectedNodeInfo
   )
+  const [relationships, setRelationships] = useState<Relationship[]>([])
 
-  const members = people
-
-  const nodeTypes = {
-    customNode: GraphNodes,
-  }
+  const graphControlsRef = React.useRef<HTMLDivElement>(null)
 
   const peopleNodes = useMemo(() => {
     return (
       people?.people.map((person) => ({
-        id: person.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+        id: `Person-${person.id}`,
+        color: '#173da6',
+        size: 20,
+        caption: person.name,
+        properties: {
           nodeInfo: {
             Entity: 'Person',
             Name: person.name,
@@ -84,7 +70,6 @@ const GraphVisualization = () => {
             'Phone Number': person.phone,
             Pronouns: person.pronouns,
           },
-          label: person.name,
           nodeName: person.__typename,
           id: person.id,
         },
@@ -95,16 +80,16 @@ const GraphVisualization = () => {
   const coreValuesNodes = useMemo(() => {
     return (
       coreValues?.coreValues.map((coreValue) => ({
-        id: coreValue.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+        id: `CoreValue-${coreValue.id}`,
+        color: '#0a786f',
+        size: 20,
+        caption: coreValue.name,
+        properties: {
           nodeInfo: {
             Entity: 'Core Value',
             Name: coreValue.name,
             Description: coreValue.description,
           },
-          label: coreValue.name,
           nodeName: coreValue.__typename,
           id: coreValue.id,
         },
@@ -115,17 +100,17 @@ const GraphVisualization = () => {
   const goalNodes = useMemo(() => {
     return (
       goals?.goals.map((goal) => ({
-        id: goal.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+        id: `Goal-${goal.id}`,
+        color: '#713f12',
+        size: 20,
+        caption: goal.name,
+        properties: {
           nodeInfo: {
             Entity: 'Goal',
             Name: goal.name,
             Description: goal.description,
             Status: goal.status,
           },
-          label: goal.name,
           nodeName: goal.__typename,
           id: goal.id,
         },
@@ -135,17 +120,17 @@ const GraphVisualization = () => {
 
   const carePointsNodes = useMemo(() => {
     return (
-      carePoints?.carePoints.map((carePoint, index) => ({
-        id: carePoint.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+      carePoints?.carePoints.map((carePoint) => ({
+        id: `CarePoint-${carePoint.id}`,
+        color: '#347081',
+        size: 20,
+        caption: carePoint.name,
+        properties: {
           nodeInfo: {
             Entity: 'Care Point',
             Description: carePoint.description,
             Status: carePoint.status,
           },
-          label: `Care Point- ${index}`,
           nodeName: carePoint.__typename,
           id: carePoint.id,
         },
@@ -156,17 +141,17 @@ const GraphVisualization = () => {
   const resourceNodes = useMemo(() => {
     return (
       resources?.resources.map((resource) => ({
-        id: resource.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+        id: `Resource-${resource.id}`,
+        color: '#641ba3',
+        size: 20,
+        caption: resource.name,
+        properties: {
           nodeInfo: {
             Entity: 'Resource',
             Name: resource.name,
             Description: resource.description,
             Status: resource.status,
           },
-          label: resource.name,
           nodeName: resource.__typename,
           id: resource.id,
         },
@@ -177,17 +162,17 @@ const GraphVisualization = () => {
   const communityNodes = useMemo(() => {
     return (
       communities?.communities.map((community) => ({
-        id: community.id,
-        position: getRandomPosition(),
-        type: 'customNode',
-        data: {
+        id: `Community-${community.id}`,
+        color: '#116932',
+        size: 20,
+        caption: community.name,
+        properties: {
           nodeInfo: {
             Entity: 'Community',
             Name: community.name,
             Description: community.description,
             Status: community.status,
           },
-          label: community.name,
           nodeName: community.__typename,
           id: community.id,
         },
@@ -213,21 +198,18 @@ const GraphVisualization = () => {
     carePointsNodes,
   ])
 
-  const [selectedNodes, setSelectedNodes] = React.useState<Node[]>(
-    peopleNodes ?? []
-  )
+  const [selectedNodes, setSelectedNodes] = useState<SelectedNodeInfo[]>([])
 
   const personToPersonConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
         return person.connections
-          ? person.connections.map((personconnections) => {
+          ? person.connections.map((personConnections) => {
               return {
-                id: `${person.id}-${personconnections.id}`,
-                source: person.id,
-                target: personconnections.id,
-                label: 'Connected To',
-                markerEnd: EdgeMarker,
+                id: `${person.id}-${personConnections.id}`,
+                from: `Person-${person.id}`,
+                to: `Person-${personConnections.id}`,
+                caption: 'Connected to',
               }
             })
           : []
@@ -241,10 +223,9 @@ const GraphVisualization = () => {
         return person.communities
           ? person.communities.map((community) => ({
               id: `${person.id}-${community.id}`,
-              source: `${person.id}`,
-              target: `${community.id}`,
-              label: 'Belongs To',
-              markerEnd: EdgeMarker,
+              from: `Person-${person.id}`,
+              to: `Community-${community.id}`,
+              caption: 'Belongs to',
             }))
           : []
       }) ?? []
@@ -257,10 +238,9 @@ const GraphVisualization = () => {
         return person.goals
           ? person.goals.map((goal) => ({
               id: `${person.id}-${goal.id}`,
-              source: person.id,
-              target: goal.id,
-              label: 'Motivated By',
-              markerEnd: EdgeMarker,
+              from: `Person-${person.id}`,
+              to: `Goal-${goal.id}`,
+              caption: 'Motivated by',
             }))
           : []
       }) ?? []
@@ -273,12 +253,11 @@ const GraphVisualization = () => {
         return person.coreValues
           ? person.coreValues.map((coreValue) => ({
               id: `${person.id}-${coreValue.id}`,
-              source: person.id,
-              target: coreValue.id,
-              label: 'Guided By',
-              markerEnd: EdgeMarker,
+              from: `Person-${person.id}`,
+              to: `CoreValue-${coreValue.id}`,
+              caption: 'Guided by',
             }))
-          : []
+          : ([] as Relationship[])
       }) ?? []
     )
   }, [people])
@@ -289,10 +268,9 @@ const GraphVisualization = () => {
         return person.providesResources
           ? person.providesResources.map((resource) => ({
               id: `${person.id}-${resource.id}`,
-              source: person.id,
-              target: resource.id,
-              label: 'Provides',
-              markerEnd: EdgeMarker,
+              from: `Person-${person.id}`,
+              to: `Resource-${resource.id}`,
+              caption: 'Provides',
             }))
           : []
       }) ?? []
@@ -305,10 +283,9 @@ const GraphVisualization = () => {
         return carePoint.enabledByGoals
           ? carePoint.enabledByGoals.map((goal) => ({
               id: `${goal.id}-${carePoint.id}`,
-              source: goal.id,
-              target: carePoint.id,
-              label: 'Enables Care',
-              markerEnd: EdgeMarker,
+              from: `Goal-${goal.id}`,
+              to: `CarePoint-${carePoint.id}`,
+              caption: 'Enables Care',
             }))
           : []
       }) ?? []
@@ -321,89 +298,107 @@ const GraphVisualization = () => {
         return community.relatedCommunities
           ? community.relatedCommunities.map((relatedCommunity) => ({
               id: `${community.id}-${relatedCommunity.id}`,
-              source: community.id,
-              target: relatedCommunity.id,
-              label: 'Relate To',
-              markerEnd: EdgeMarker,
+              from: `Community-${community.id}`,
+              to: `Community-${relatedCommunity.id}`,
+              caption: 'Relates to',
             }))
           : []
       }) ?? []
     )
   }, [communities])
 
-  const initNodes: Node[] = []
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [nodes, setNodes, onNodesChange] = useNodesState(initNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
-
-  type Params = Connection | Edge
-
-  const onConnect = useCallback(
-    (params: Params) => setEdges((eds: Edge[]) => addEdge(params, eds)),
-    [setEdges]
-  )
-
-  const onNodeClick = (event: React.MouseEvent, node: Node) => {
-    if (selectedNodeInfo[0]?.id === node.id) {
+  const mouseEventCallbacks: MouseEventCallbacks = {
+    // onRelationshipRightClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
+    onNodeClick: (node: Node) => {
+      if (selectedNodeInfo[0]?.id === node.id) {
+        setSelectedNodeInfo([])
+      } else {
+        setSelectedNodeInfo([node])
+      }
+    },
+    // onNodeRightClick: (node: Node, hitTargets: HitTargets, evt: MouseEvent) => { },
+    // onNodeDoubleClick: (node: Node, hitTargets: HitTargets, evt: MouseEvent) => { },
+    // onRelationshipClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
+    // onRelationshipDoubleClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
+    onCanvasClick: () => {
       setSelectedNodeInfo([])
-      return
-    }
-    setSelectedNodeInfo([node])
+    },
+    // onCanvasDoubleClick: (evt: MouseEvent) => console.log('onCanvasDoubleClick', evt),
+    // onCanvasRightClick: (evt: MouseEvent) => { },
+    onDrag: () => {},
+    onPan: () => {},
+    onZoom: () => {},
   }
 
+  const nodeInfo = selectedNodeInfo[0]?.properties?.nodeInfo
+  const nodeId = selectedNodeInfo[0]?.properties?.id
+  const nodeName = selectedNodeInfo[0]?.properties?.nodeName
+
   useEffect(() => {
-    if (people && coreValues && goals && resources && members && communities) {
-      const simulationNodes: SimulationNodeDatum[] = selectedNodes.map(
-        (node) => ({
-          ...node,
-          x: node.position.x || 0,
-          y: node.position.y || 0,
-          vx: 0,
-          vy: 0,
-        })
-      )
+    const selectedNodeIds = selectedNodes.map((node) => node.id)
 
-      const newNodes = createForceLayout(simulationNodes)
-      setNodes(newNodes as Node[])
-      setEdges(
-        [
-          ...personToPersonConnection,
-          ...personToCommunityConnection,
-          ...personToGoalsConnection,
-          ...personToCoreValueConnection,
-          ...personToResourceConnection,
-          ...goalToCarePointConnection,
-          ...communityToCommunityConnection,
-        ].flatMap((edge) => (edge ? [edge] : []))
+    const filteredRelationships = [
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
       )
-    }
-  }, [
-    selectedNodes,
-    setNodes,
-    people,
-    coreValues,
-    goals,
-    resources,
-    members,
-    communities,
-    personToPersonConnection,
-    personToCommunityConnection,
-    personToGoalsConnection,
-    personToCoreValueConnection,
-    personToResourceConnection,
-    goalToCarePointConnection,
-    communityToCommunityConnection,
-    setEdges,
-  ])
+        ? personToPersonConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      )
+        ? personToCommunityConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => goalNodes.some((node) => node.id === id))
+        ? personToGoalsConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) =>
+        coreValuesNodes.some((node) => node.id === id)
+      )
+        ? personToCoreValueConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => resourceNodes.some((node) => node.id === id))
+        ? personToResourceConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        goalNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) =>
+        carePointsNodes.some((node) => node.id === id)
+      )
+        ? goalToCarePointConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      )
+        ? communityToCommunityConnection
+        : []),
+    ]
 
-  const nodeInfo = selectedNodeInfo[0]?.data.nodeInfo
-  const nodeId = selectedNodeInfo[0]?.data.id
-  const nodeName = selectedNodeInfo[0]?.data.nodeName
+    setRelationships(filteredRelationships)
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNodes])
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
-      <Stack direction={'row'} height={'100%'} position="relative">
+      <Stack
+        direction={'row'}
+        height={'100%'}
+        position="relative"
+        justifyContent="space-between"
+      >
         <GraphSideBar
           selectedNodeInfo={nodeInfo}
           nodes={graphNodes}
@@ -415,22 +410,31 @@ const GraphVisualization = () => {
           triggers={NodeTriggers}
         />
 
-        <div style={{ width: '100%', height: '90vh' }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-            onNodeClick={onNodeClick}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-          >
-            <Controls />
-            <MiniMap />
-            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-          </ReactFlow>
-        </div>
+        <Box flex={1} width="100%" className={styles.canvas_wrapper}>
+          <InteractiveNvlWrapper
+            nodes={selectedNodes}
+            rels={relationships}
+            mouseEventCallbacks={mouseEventCallbacks}
+            style={{
+              width: '100%',
+              height: '90dvh',
+            }}
+            interactionOptions={{
+              selectOnClick: true,
+            }}
+            nvlOptions={{
+              initialZoom: 1.5,
+              maxZoom: 5,
+              minZoom: 1,
+              panX: 0,
+              panY: 0,
+              renderer: 'canvas',
+              minimapContainer: graphControlsRef.current ?? undefined,
+            }}
+          />
+        </Box>
+
+        <GraphControls ref={graphControlsRef} />
       </Stack>
     </ApolloWrapper>
   )

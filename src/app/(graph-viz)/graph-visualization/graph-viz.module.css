@@ -1,0 +1,8 @@
+.canvas_wrapper > canvas{
+    width: 100% !important;
+}
+
+.canvas_wrapper > div {
+    width: 100% !important;
+}
+
