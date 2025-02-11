@@ -82,6 +82,12 @@ export const customTheme = createSystem(defaultConfig, {
               _dark: '{colors.green.300}',
             },
           },
+          node: {
+            value: {
+              base: ' #baf5d1',
+              _dark: ' #91edb4',
+            },
+          },
           subtle: {
             value: { base: '{colors.green.100}', _dark: '{colors.green.900}' },
           },
@@ -112,6 +118,12 @@ export const customTheme = createSystem(defaultConfig, {
             value: {
               base: '{colors.purple.700}',
               _dark: '{colors.purple.300}',
+            },
+          },
+          node: {
+            value: {
+              base: ' #dcbcf7',
+              _dark: ' #c392ee',
             },
           },
           subtle: {
@@ -155,6 +167,12 @@ export const customTheme = createSystem(defaultConfig, {
               _dark: '{colors.blue.300}',
             },
           },
+          node: {
+            value: {
+              base: ' #bacbfa',
+              _dark: ' #8ea9f0',
+            },
+          },
           subtle: {
             value: {
               base: '{colors.blue.100}',
@@ -196,6 +214,12 @@ export const customTheme = createSystem(defaultConfig, {
               _dark: '{colors.teal.300}',
             },
           },
+          node: {
+            value: {
+              base: ' #bacbfa',
+              _dark: ' #8ea9f0',
+            },
+          },
           subtle: {
             value: {
               base: '{colors.teal.100}',
@@ -235,6 +259,12 @@ export const customTheme = createSystem(defaultConfig, {
             value: {
               base: '{colors.cyan.700}',
               _dark: '{colors.cyan.300}',
+            },
+          },
+          node: {
+            value: {
+              base: ' #b6ebfa',
+              _dark: ' #8cddf3',
             },
           },
           subtle: {

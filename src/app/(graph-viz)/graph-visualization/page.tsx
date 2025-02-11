@@ -59,7 +59,7 @@ const GraphVisualization = () => {
     return (
       people?.people.map((person) => ({
         id: `Person-${person.id}`,
-        color: '#173da6',
+        color: '#8ea9f0',
         size: 20,
         caption: person.name,
         properties: {
@@ -81,7 +81,7 @@ const GraphVisualization = () => {
     return (
       coreValues?.coreValues.map((coreValue) => ({
         id: `CoreValue-${coreValue.id}`,
-        color: '#0a786f',
+        color: '#64ebdf',
         size: 20,
         caption: coreValue.name,
         properties: {
@@ -101,7 +101,7 @@ const GraphVisualization = () => {
     return (
       goals?.goals.map((goal) => ({
         id: `Goal-${goal.id}`,
-        color: '#713f12',
+        color: '#edcc91',
         size: 20,
         caption: goal.name,
         properties: {
@@ -122,7 +122,7 @@ const GraphVisualization = () => {
     return (
       carePoints?.carePoints.map((carePoint) => ({
         id: `CarePoint-${carePoint.id}`,
-        color: '#347081',
+        color: '#61cfed',
         size: 20,
         caption: carePoint.name,
         properties: {
@@ -142,7 +142,7 @@ const GraphVisualization = () => {
     return (
       resources?.resources.map((resource) => ({
         id: `Resource-${resource.id}`,
-        color: '#641ba3',
+        color: '#c392ee',
         size: 20,
         caption: resource.name,
         properties: {
@@ -163,7 +163,7 @@ const GraphVisualization = () => {
     return (
       communities?.communities.map((community) => ({
         id: `Community-${community.id}`,
-        color: '#116932',
+        color: '#91edb4',
         size: 20,
         caption: community.name,
         properties: {
