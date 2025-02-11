@@ -120,6 +120,10 @@ export const GET_ALL_PEOPLE = graphql(`
         name
         id
       }
+      createdBy {
+        id
+        name
+      }
     }
   }
 `)

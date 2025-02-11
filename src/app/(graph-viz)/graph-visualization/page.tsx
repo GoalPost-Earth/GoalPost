@@ -29,6 +29,9 @@ interface SelectedNodeInfo extends Node {
   }
 }
 
+interface SelectedRelationship extends Relationship {
+  size?: number
+}
 const initialSelectedNodeInfo: SelectedNodeInfo[] = []
 
 const NodeTriggers = [
@@ -60,7 +63,7 @@ const GraphVisualization = () => {
       people?.people.map((person) => ({
         id: `Person-${person.id}`,
         color: '#8ea9f0',
-        size: 20,
+        size: 15,
         caption: person.name,
         properties: {
           nodeInfo: {
@@ -82,7 +85,7 @@ const GraphVisualization = () => {
       coreValues?.coreValues.map((coreValue) => ({
         id: `CoreValue-${coreValue.id}`,
         color: '#64ebdf',
-        size: 20,
+        size: 15,
         caption: coreValue.name,
         properties: {
           nodeInfo: {
@@ -102,7 +105,7 @@ const GraphVisualization = () => {
       goals?.goals.map((goal) => ({
         id: `Goal-${goal.id}`,
         color: '#edcc91',
-        size: 20,
+        size: 15,
         caption: goal.name,
         properties: {
           nodeInfo: {
@@ -123,7 +126,7 @@ const GraphVisualization = () => {
       carePoints?.carePoints.map((carePoint) => ({
         id: `CarePoint-${carePoint.id}`,
         color: '#61cfed',
-        size: 20,
+        size: 15,
         caption: carePoint.name,
         properties: {
           nodeInfo: {
@@ -143,7 +146,7 @@ const GraphVisualization = () => {
       resources?.resources.map((resource) => ({
         id: `Resource-${resource.id}`,
         color: '#c392ee',
-        size: 20,
+        size: 15,
         caption: resource.name,
         properties: {
           nodeInfo: {
@@ -164,7 +167,7 @@ const GraphVisualization = () => {
       communities?.communities.map((community) => ({
         id: `Community-${community.id}`,
         color: '#91edb4',
-        size: 20,
+        size: 15,
         caption: community.name,
         properties: {
           nodeInfo: {
@@ -201,17 +204,44 @@ const GraphVisualization = () => {
   const [selectedNodes, setSelectedNodes] = useState<SelectedNodeInfo[]>([])
 
   const personToPersonConnection = useMemo(() => {
+    if (!people?.people) return []
+
+    const edges: SelectedRelationship[] = []
+    const seen = new Set()
+
+    people.people.forEach((person) => {
+      person.connections?.forEach((connection) => {
+        const [first, second] = [person.id, connection.id].sort()
+        const key = `${first}-${second}`
+
+        if (!seen.has(key)) {
+          seen.add(key)
+          edges.push({
+            id: `${person.id}-${connection.id}`,
+            from: `Person-${person.id}`,
+            to: `Person-${connection.id}`,
+            caption: 'Connected to',
+            captionSize: 0.75,
+            width: 0.5,
+          })
+        }
+      })
+    })
+    return edges
+  }, [people])
+
+  const personCreatedByConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
-        return person.connections
-          ? person.connections.map((personConnections) => {
-              return {
-                id: `${person.id}-${personConnections.id}`,
-                from: `Person-${person.id}`,
-                to: `Person-${personConnections.id}`,
-                caption: 'Connected to',
-              }
-            })
+        return person.createdBy
+          ? person.createdBy.map((createdBy) => ({
+              id: `${person.id}-${createdBy.id}`,
+              from: `Person-${person.id}`,
+              to: `Person-${createdBy.id}`,
+              caption: 'Created by',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
           : []
       }) ?? []
     )
@@ -226,6 +256,8 @@ const GraphVisualization = () => {
               from: `Person-${person.id}`,
               to: `Community-${community.id}`,
               caption: 'Belongs to',
+              captionSize: 0.75,
+              width: 0.5,
             }))
           : []
       }) ?? []
@@ -241,6 +273,8 @@ const GraphVisualization = () => {
               from: `Person-${person.id}`,
               to: `Goal-${goal.id}`,
               caption: 'Motivated by',
+              captionSize: 0.75,
+              width: 0.5,
             }))
           : []
       }) ?? []
@@ -256,8 +290,10 @@ const GraphVisualization = () => {
               from: `Person-${person.id}`,
               to: `CoreValue-${coreValue.id}`,
               caption: 'Guided by',
+              captionSize: 0.75,
+              width: 0.5,
             }))
-          : ([] as Relationship[])
+          : []
       }) ?? []
     )
   }, [people])
@@ -271,6 +307,8 @@ const GraphVisualization = () => {
               from: `Person-${person.id}`,
               to: `Resource-${resource.id}`,
               caption: 'Provides',
+              captionSize: 0.75,
+              width: 0.5,
             }))
           : []
       }) ?? []
@@ -286,6 +324,8 @@ const GraphVisualization = () => {
               from: `Goal-${goal.id}`,
               to: `CarePoint-${carePoint.id}`,
               caption: 'Enables Care',
+              captionSize: 0.75,
+              width: 0.5,
             }))
           : []
       }) ?? []
@@ -301,6 +341,8 @@ const GraphVisualization = () => {
               from: `Community-${community.id}`,
               to: `Community-${relatedCommunity.id}`,
               caption: 'Relates to',
+              captionSize: 0.75,
+              width: 0.5,
             }))
           : []
       }) ?? []
@@ -318,7 +360,7 @@ const GraphVisualization = () => {
     },
     // onNodeRightClick: (node: Node, hitTargets: HitTargets, evt: MouseEvent) => { },
     // onNodeDoubleClick: (node: Node, hitTargets: HitTargets, evt: MouseEvent) => { },
-    // onRelationshipClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
+    // onRelationshipClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { console.log('rel', rel.id) },
     // onRelationshipDoubleClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
     onCanvasClick: () => {
       setSelectedNodeInfo([])
@@ -341,8 +383,9 @@ const GraphVisualization = () => {
       ...(selectedNodeIds.some((id) =>
         peopleNodes.some((node) => node.id === id)
       )
-        ? personToPersonConnection
+        ? [...personToPersonConnection, ...personCreatedByConnection]
         : []),
+
       ...(selectedNodeIds.some((id) =>
         peopleNodes.some((node) => node.id === id)
       ) &&
