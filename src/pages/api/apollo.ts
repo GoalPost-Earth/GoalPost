@@ -11,7 +11,7 @@ export default async function initializeApolloServer() {
     process.env.NEO4J_URI || 'bolt://localhost:7687',
     auth.basic(
       process.env.NEO4J_USERNAME || 'neo4j',
-      process.env.NEO4J_PASSWORD || 'neo4j'
+      process.env.NEO4J_PASSWORD || 'letmein00'
     )
   )
 
@@ -20,14 +20,8 @@ export default async function initializeApolloServer() {
     resolvers,
     driver,
     features: {
-      authorization: {
-        key: process.env.JWT_SECRET ?? '',
-      },
-      populatedBy: {
-        callbacks: {
-          authIdCallback,
-        },
-      },
+      authorization: { key: process.env.JWT_SECRET ?? '' },
+      populatedBy: { callbacks: { authIdCallback } },
       excludeDeprecatedFields: {
         implicitEqualFilters: true,
         implicitSet: true,
@@ -54,10 +48,7 @@ export default async function initializeApolloServer() {
         }
       }
 
-      return {
-        token,
-        jwt,
-      }
+      return { token, jwt }
     },
     graphqlEndpoint: '/api/graphql',
   })
