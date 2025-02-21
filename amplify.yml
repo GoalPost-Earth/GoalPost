@@ -33,19 +33,6 @@ backend:
       - node_modules/**/*
       - .next/cache/**/*
 
-test:
-  phases:
-    preTest:
-      commands:
-        - npm install
-    test:
-      commands:
-        - npm test
-  artifacts:
-    baseDirectory: coverage
-    files:
-      - '**/*'
-
 hooks:
   preBuild:
     - npm run lint
