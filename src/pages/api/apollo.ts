@@ -14,7 +14,6 @@ export default async function initializeApolloServer() {
       process.env.NEO4J_PASSWORD ?? 'letmein00'
     )
   )
-  console.log('🚀 ~ apollo.ts:20 ~ driver:', driver)
 
   const neoSchema = new Neo4jGraphQL({
     typeDefs,

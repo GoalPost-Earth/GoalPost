@@ -6,7 +6,7 @@ import { Person } from '@/gql/graphql'
 
 const AvatarCarousel = ({ people = [] }: { people: Person[] }) => {
   return (
-    <HStack gap="4">
+    <HStack gap="4" wrap="wrap" alignItems="center" justifyContent="center">
       {people.map((person) => (
         <Link key={person.id} href={`/person/${person.id}`}>
           <Avatar
