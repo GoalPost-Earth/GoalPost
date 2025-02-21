@@ -126,7 +126,7 @@ RETURN goal;
 LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=595870152&single=true&output=csv" AS row
 MATCH (goal:Goal {id: row.goalId})
 MATCH (coreValue:CoreValue {id: row.coreValueId})
-MERGE (goal)-[:ALIGNED_TO]->(coreValue)
+MERGE (goal)-[:EMBRACES]->(coreValue)
 RETURN goal, coreValue LIMIT 1;
 
 // Load Resources
@@ -160,7 +160,7 @@ RETURN source, target;
 LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=574310506&single=true&output=csv" AS row
 MATCH (community:Community {id: row.id})
 MATCH (coreValue:CoreValue {id: row.coreValueId})
-MERGE (community)-[:ALIGNED_TO]->(coreValue)
+MERGE (community)-[:EMBRACES]->(coreValue)
 RETURN community, coreValue;
 
 
