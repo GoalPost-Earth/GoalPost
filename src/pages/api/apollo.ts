@@ -12,10 +12,7 @@ export default async function initializeApolloServer() {
     auth.basic(
       process.env.NEO4J_USERNAME ?? 'neo4j',
       process.env.NEO4J_PASSWORD ?? 'letmein00'
-    ),
-    {
-      encrypted: process.env.NEO4J_ENCRYPTED === 'true',
-    }
+    )
   )
   console.log('🚀 ~ apollo.ts:20 ~ driver:', driver)
 
