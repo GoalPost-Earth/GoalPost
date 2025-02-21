@@ -1,0 +1,19 @@
+Can you generate test data in csv format? I will give you the headings for each entity type and then you can send back the data.
+
+Use these rules:
+
+• Nodes: Represent entities like Person, Community, Goal, Resource, Core Value, Care Point.
+• Attributes: Each node contains relevant properties, such as availability for resources and success metrics for goals.
+* The data should be meaningful and realistic and should reflect a community of care for people who care deeply about their environment and also about enriching data.
+* Encapsulate each cell with double quotes
+* Replace all images with avatars from https://api.dicebear.com/9.x/lorelei/svg?seed=Jane
+* Use the following seed for the avatar: "firstName lastName"
+* Person ids should be picked form 101-108
+* Care Point is a node that represent an intersection of goals to goals and resources. It is a representation of care given and received and a means of quantifying and measuring such care
+
+You are to generate as many of such  carepoint nodes as make sense
+Use this as insipration for the test data. The first row is the headings and the second row everything else is sample data. 
+
+
+status	description	why	location	time	levelFulfilled	fulfillmentDate	successMeasures	issuesIdentified	issuesResolved
+Active	By providing a way for the team to dynamically ask questions via a generative AI chatbot that dynamically learns from project content, it might help find the right people with the right skills and project alignment to close both immediate and emerging gaps.								

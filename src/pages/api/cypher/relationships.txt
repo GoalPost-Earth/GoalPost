@@ -1,0 +1,63 @@
+Can you test data in  CSV format linking communities with corevalues?
+
+id	name
+1	Community Library
+2	Public WiFi Hub
+3	Food Pantry
+4	Mental Health Helpline
+5	Job Board
+6	Recycling Drop-Off
+7	Community Garden Tools
+8	Bicycle Sharing Station
+9	Volunteer Database
+10	First Aid Training
+11	Legal Aid Clinic
+12	Senior Care Assistance
+13	Coding Bootcamp
+14	Disaster Relief Storage
+15	Community Radio Station
+16	Public Art Supplies
+17	Children's Play Area
+18	Shared Workspaces
+19	Skill Exchange Program
+20	Homeless Shelter
+21	Tech Repair Workshops
+22	Music Instrument Lending
+23	Pet Adoption Center
+24	Safe Walking Routes
+25	Community Compost Bin
+26	LGBTQ+ Support Group
+27	Language Learning Sessions
+28	Public Health Kiosk
+29	Youth Sports Equipment
+30	Carpooling Network
+31	Community Bike Repair
+32	Elderly Social Club
+33	Urban Farming Kits
+34	Book Donation Drive
+35	Public Charging Stations
+36	Gardening Workshops
+37	Financial Planning Classes
+38	Hearing Aid Assistance
+39	Public Safety Patrol
+40	Clothing Donation Box
+41	Therapeutic Writing Sessions
+42	Eco-Friendly Packaging Program
+43	Online Counseling Services
+44	Women's Empowerment Group
+45	Community Newsletter
+
+communities
+
+id	name	description
+1	GreenHorizon	A community dedicated to sustainable agriculture, renewable energy, and ecological awareness.
+2	CompassionCircle	A network focused on mental health advocacy\, mutual aid\, and emotional resilience training.
+3	WildRoots	A community-driven project centered around reforestation\, land conservation\, and wildlife protection.
+4	HeartBridge	A support-based community for individuals seeking deep connections\, active listening\, and conflict resolution skills.
+5	GaiaHaven	A regenerative farming and permaculture community dedicated to sustainable food systems.
+
+
+ use these headings
+
+
+communityId	resourceId

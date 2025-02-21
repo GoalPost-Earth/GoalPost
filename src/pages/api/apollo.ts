@@ -8,12 +8,16 @@ import { authIdCallback } from './callbacks/populatedByCallbacks'
 
 export default async function initializeApolloServer() {
   const driver = neoDriver(
-    process.env.NEO4J_URI || 'bolt://localhost:7687',
+    process.env.NEO4J_URI ?? 'bolt://localhost:7687',
     auth.basic(
-      process.env.NEO4J_USERNAME || 'neo4j',
-      process.env.NEO4J_PASSWORD || 'letmein00'
-    )
+      process.env.NEO4J_USERNAME ?? 'neo4j',
+      process.env.NEO4J_PASSWORD ?? 'letmein00'
+    ),
+    {
+      encrypted: process.env.NEO4J_ENCRYPTED === 'true',
+    }
   )
+  console.log('🚀 ~ apollo.ts:20 ~ driver:', driver)
 
   const neoSchema = new Neo4jGraphQL({
     typeDefs,
