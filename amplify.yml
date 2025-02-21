@@ -41,6 +41,10 @@ test:
     test:
       commands:
         - npm test
+  artifacts:
+    baseDirectory: coverage
+    files:
+      - '**/*'
 
 hooks:
   preBuild:
