@@ -203,6 +203,7 @@ export default function SearchResults() {
             )}
             {!!returnedGoals && returnedGoals.length > 0 && (
               <VStack
+                key={returnedGoals[0].id}
                 width="100%"
                 onClick={handleSearchedEntityClick}
                 gap={2}

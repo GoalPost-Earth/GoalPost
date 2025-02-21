@@ -47,7 +47,7 @@ export default function AllGoals() {
                 alignItems="stretch"
               >
                 {person.goals.map((goal) => (
-                  <Flex key={goal.id}>
+                  <Flex key={goal.id} minWidth="300px" maxWidth="300px">
                     <GoalCard goal={goal} />
                   </Flex>
                 ))}

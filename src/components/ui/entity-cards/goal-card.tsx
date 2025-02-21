@@ -60,7 +60,7 @@ export const GoalCard = ({
           {!!photo ? (
             <Image
               objectFit="cover"
-              width={{ base: '50px', lg: '100%' }}
+              width={{ base: '50px', lg: '100px' }}
               height={{ base: '50px', lg: '100%' }}
               maxW="150px"
               borderRadius={{ base: 'sm', lg: 'lg' }}
