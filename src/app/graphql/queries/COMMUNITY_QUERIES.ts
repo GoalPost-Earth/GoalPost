@@ -83,6 +83,18 @@ export const GET_ALL_COMMUNITIES = graphql(`
         id
         name
       }
+      coreValues {
+        id
+        name
+      }
+      goals {
+        id
+        name
+      }
+      resources {
+        id
+        name
+      }
     }
   }
 `)

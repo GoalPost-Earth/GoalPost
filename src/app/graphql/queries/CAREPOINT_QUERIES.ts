@@ -69,6 +69,10 @@ export const GET_ALL_CAREPOINTS = graphql(`
         name
         id
       }
+      caresForGoals {
+        name
+        id
+      }
     }
   }
 `)

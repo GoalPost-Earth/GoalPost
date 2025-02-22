@@ -14963,6 +14963,7 @@ export type GetAllCarePointsQuery = {
       photo?: string | null
     }>
     enabledByGoals: Array<{ __typename?: 'Goal'; name: string; id: string }>
+    caresForGoals: Array<{ __typename?: 'Goal'; name: string; id: string }>
   }>
 }
 
@@ -15064,6 +15065,9 @@ export type GetAllCommunitesQuery = {
       id: string
       name: string
     }>
+    coreValues: Array<{ __typename?: 'CoreValue'; id: string; name: string }>
+    goals: Array<{ __typename?: 'Goal'; id: string; name: string }>
+    resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
   }>
 }
 
@@ -15296,6 +15300,7 @@ export type GetAllGoalsQuery = {
       name: string
       photo?: string | null
     }>
+    resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
   }>
 }
 
@@ -15439,7 +15444,7 @@ export type GetAllPeopleQuery = {
       name: string
       id: string
     }>
-    createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+    carePoints: Array<{ __typename?: 'CarePoint'; id: string; name: string }>
   }>
 }
 
@@ -19396,6 +19401,17 @@ export const GetAllCarePointsDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'caresForGoals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -19680,6 +19696,39 @@ export const GetAllCommunitesDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'relatedCommunities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'coreValues' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'goals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -20448,6 +20497,17 @@ export const GetAllGoalsDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -20942,7 +21002,7 @@ export const GetAllPeopleDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
+                  name: { kind: 'Name', value: 'carePoints' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
