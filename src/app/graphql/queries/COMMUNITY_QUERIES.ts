@@ -30,6 +30,15 @@ export const GET_COMMUNITY = graphql(`
         photo
       }
 
+      goals {
+        id
+        name
+        photo
+        status
+        createdAt
+        description
+      }
+
       resources {
         id
         name

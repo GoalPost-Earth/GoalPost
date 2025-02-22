@@ -185,7 +185,7 @@ MATCH (offer:Goal {id: row.offerId})
 MATCH (need:Goal {id: row.needId})
 MATCH (resource:Resource {id: row.resourceId})
 
-MERGE (carePoint)-[:APPLIED_IN]->(resource)
+MERGE (carePoint)-[:DEPENDS_ON]->(resource)
 MERGE (offer)-[:ENABLES]->(carePoint)
 MERGE (carePoint)-[:CARES_FOR]->(need)
 
@@ -219,3 +219,8 @@ MATCH (person:Person {id: "101"})
 MATCH (n)
 MERGE (person)<-[:CREATED_BY]-(n)
 RETURN person, n LIMIT 10;
+
+MATCH (carePoint:CarePoint)-[r:ENABLED_BY]-(goal:Goal)
+MERGE (goal)-[:ENABLES]->(carePoint)
+DELETE r
+RETURN carePoint, goal;

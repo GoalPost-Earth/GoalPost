@@ -103,7 +103,7 @@ type CarePoint @node {
   issuesResolved: String
 
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: OUT)
-  enabledByGoals: [Goal!]! @relationship(type: "ENABLED_BY", direction: IN)
+  enabledByGoals: [Goal!]! @relationship(type: "ENABLES", direction: IN)
   caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: OUT)
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
@@ -184,7 +184,7 @@ type Goal @node {
     @relationship(type: "MOTIVATED_BY", direction: IN)
   coreValues: [CoreValue!]! @relationship(type: "ALIGNED_TO", direction: OUT)
   enablesCarePoints: [CarePoint!]!
-    @relationship(type: "ENABLED_BY", direction: IN)
+    @relationship(type: "ENABLES", direction: OUT)
   caredForByCarePoints: [CarePoint!]!
     @relationship(type: "CARES_FOR", direction: IN)
 
