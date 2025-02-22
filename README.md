@@ -1,5 +1,7 @@
 [![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/rdamashek/GoalPost)
 
+[Excel With Issues](https://1drv.ms/x/s!AvGLHa7TI9Gigaw9CcqoaCIlYItjAA)
+
 # GoalPost Prototype 1
 
 GoalPost has the potential to profoundly influence both personal and community dynamics by reshaping how people share knowledge, resources, and support. Its approach is designed to counterbalance many of the shortcomings of conventional technology platforms, prioritizing mutual aid, privacy, sustainability, and deep interpersonal connections. Here are some ways GoalPost could change the world:
