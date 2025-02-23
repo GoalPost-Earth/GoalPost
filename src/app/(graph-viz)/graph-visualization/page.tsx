@@ -221,7 +221,7 @@ const GraphVisualization = () => {
             id: `${person.id}-${connection.id}`,
             from: `Person-${person.id}`,
             to: `Person-${connection.id}`,
-            caption: 'Connected to',
+            caption: 'CONNECTED TO',
             captionSize: 0.75,
             width: 0.5,
           })
@@ -239,7 +239,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${community.id}`,
               from: `Person-${person.id}`,
               to: `Community-${community.id}`,
-              caption: 'Belongs to',
+              caption: 'BELONGS TO',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -256,7 +256,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${goal.id}`,
               from: `Person-${person.id}`,
               to: `Goal-${goal.id}`,
-              caption: 'Motivated by',
+              caption: 'MOTIVATED BY',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -273,7 +273,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${coreValue.id}`,
               from: `Person-${person.id}`,
               to: `CoreValue-${coreValue.id}`,
-              caption: 'Embraces',
+              caption: 'EMBRACES',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -290,7 +290,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${carePoint.id}`,
               from: `Person-${person.id}`,
               to: `CarePoint-${carePoint.id}`,
-              caption: 'Enables Care',
+              caption: 'ENABLES CARE',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -307,7 +307,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${resource.id}`,
               from: `Person-${person.id}`,
               to: `Resource-${resource.id}`,
-              caption: 'Provides',
+              caption: 'PROVIDES',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -333,7 +333,7 @@ const GraphVisualization = () => {
             id: `${community.id}-${relatedCommunity.id}`,
             from: `Community-${community.id}`,
             to: `Community-${relatedCommunity.id}`,
-            caption: 'Connected to',
+            caption: 'CONNECTED TO',
             captionSize: 0.75,
             width: 0.5,
           })
@@ -351,7 +351,7 @@ const GraphVisualization = () => {
               id: `${community.id}-${goal.id}`,
               from: `Community-${community.id}`,
               to: `Goal-${goal.id}`,
-              caption: 'Motivated by',
+              caption: 'MOTIVATED BY',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -368,7 +368,7 @@ const GraphVisualization = () => {
               id: `${community.id}-${coreValue.id}`,
               from: `Community-${community.id}`,
               to: `CoreValue-${coreValue.id}`,
-              caption: 'Embraces',
+              caption: 'EMBRACES',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -385,7 +385,7 @@ const GraphVisualization = () => {
               id: `${community.id}-${resource.id}`,
               from: `Community-${community.id}`,
               to: `Resource-${resource.id}`,
-              caption: 'Provides',
+              caption: 'PROVIDES',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -402,7 +402,7 @@ const GraphVisualization = () => {
               id: `${goal.id}-${carePoint.id}`,
               from: `Goal-${goal.id}`,
               to: `CarePoint-${carePoint.id}`,
-              caption: 'Enables Care',
+              caption: 'ENABLES CARE',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -419,7 +419,7 @@ const GraphVisualization = () => {
               id: `${goal.id}-${resource.id}`,
               from: `Goal-${goal.id}`,
               to: `Resource-${resource.id}`,
-              caption: 'Provides',
+              caption: 'PROVIDES',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -436,7 +436,7 @@ const GraphVisualization = () => {
               id: `${carePoint.id}-${goal.id}`,
               from: `CarePoint-${carePoint.id}`,
               to: `Goal-${goal.id}`,
-              caption: 'Cares for',
+              caption: 'CARES FOR',
               captionSize: 0.75,
               width: 0.5,
             }))
