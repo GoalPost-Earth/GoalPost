@@ -72,6 +72,10 @@ export const GET_ALL_GOALS = graphql(`
         name
         photo
       }
+      resources {
+        id
+        name
+      }
     }
   }
 `)

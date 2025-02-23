@@ -131,6 +131,7 @@ const GraphVisualization = () => {
         properties: {
           nodeInfo: {
             Entity: 'Care Point',
+            Name: carePoint.name,
             Description: carePoint.description,
             Status: carePoint.status,
           },
@@ -230,23 +231,6 @@ const GraphVisualization = () => {
     return edges
   }, [people])
 
-  const personCreatedByConnection = useMemo(() => {
-    return (
-      people?.people.flatMap((person) => {
-        return person.createdBy
-          ? person.createdBy.map((createdBy) => ({
-              id: `${person.id}-${createdBy.id}`,
-              from: `Person-${person.id}`,
-              to: `Person-${createdBy.id}`,
-              caption: 'Created by',
-              captionSize: 0.75,
-              width: 0.5,
-            }))
-          : []
-      }) ?? []
-    )
-  }, [people])
-
   const personToCommunityConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
@@ -298,6 +282,23 @@ const GraphVisualization = () => {
     )
   }, [people])
 
+  const personToCarePointConnection = useMemo(() => {
+    return (
+      people?.people.flatMap((person) => {
+        return person.carePoints
+          ? person.carePoints.map((carePoint) => ({
+              id: `${person.id}-${carePoint.id}`,
+              from: `Person-${person.id}`,
+              to: `CarePoint-${carePoint.id}`,
+              caption: 'Enables Care',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
+          : []
+      }) ?? []
+    )
+  }, [people])
+
   const personToResourceConnection = useMemo(() => {
     return (
       people?.people.flatMap((person) => {
@@ -315,7 +316,85 @@ const GraphVisualization = () => {
     )
   }, [people])
 
-  const goalToCarePointConnection = useMemo(() => {
+  const communityToCommunityConnection = useMemo(() => {
+    if (!communities?.communities) return []
+
+    const edges: SelectedRelationship[] = []
+    const seen = new Set()
+
+    communities.communities.forEach((community) => {
+      community.relatedCommunities?.forEach((relatedCommunity) => {
+        const [first, second] = [community.id, relatedCommunity.id].sort()
+        const key = `${first}-${second}`
+
+        if (!seen.has(key)) {
+          seen.add(key)
+          edges.push({
+            id: `${community.id}-${relatedCommunity.id}`,
+            from: `Community-${community.id}`,
+            to: `Community-${relatedCommunity.id}`,
+            caption: 'Connected to',
+            captionSize: 0.75,
+            width: 0.5,
+          })
+        }
+      })
+    })
+    return edges
+  }, [communities])
+
+  const communityToGoalsConnection = useMemo(() => {
+    return (
+      communities?.communities.flatMap((community) => {
+        return community.goals
+          ? community.goals.map((goal) => ({
+              id: `${community.id}-${goal.id}`,
+              from: `Community-${community.id}`,
+              to: `Goal-${goal.id}`,
+              caption: 'Motivated by',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
+          : []
+      }) ?? []
+    )
+  }, [communities])
+
+  const communityToCoreValueConnection = useMemo(() => {
+    return (
+      communities?.communities.flatMap((community) => {
+        return community.coreValues
+          ? community.coreValues.map((coreValue) => ({
+              id: `${community.id}-${coreValue.id}`,
+              from: `Community-${community.id}`,
+              to: `CoreValue-${coreValue.id}`,
+              caption: 'Guided by',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
+          : []
+      }) ?? []
+    )
+  }, [communities])
+
+  const communityToResourcesConnection = useMemo(() => {
+    return (
+      communities?.communities.flatMap((community) => {
+        return community.resources
+          ? community.resources.map((resource) => ({
+              id: `${community.id}-${resource.id}`,
+              from: `Community-${community.id}`,
+              to: `Resource-${resource.id}`,
+              caption: 'Provides',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
+          : []
+      }) ?? []
+    )
+  }, [communities])
+
+  const goalToCarePointsConnection = useMemo(() => {
     return (
       carePoints?.carePoints.flatMap((carePoint) => {
         return carePoint.enabledByGoals
@@ -332,22 +411,39 @@ const GraphVisualization = () => {
     )
   }, [carePoints])
 
-  const communityToCommunityConnection = useMemo(() => {
+  const goalToResourcesConnection = useMemo(() => {
     return (
-      communities?.communities.flatMap((community) => {
-        return community.relatedCommunities
-          ? community.relatedCommunities.map((relatedCommunity) => ({
-              id: `${community.id}-${relatedCommunity.id}`,
-              from: `Community-${community.id}`,
-              to: `Community-${relatedCommunity.id}`,
-              caption: 'Relates to',
+      goals?.goals.flatMap((goal) => {
+        return goal.resources
+          ? goal.resources.map((resource) => ({
+              id: `${goal.id}-${resource.id}`,
+              from: `Goal-${goal.id}`,
+              to: `Resource-${resource.id}`,
+              caption: 'Provides',
               captionSize: 0.75,
               width: 0.5,
             }))
           : []
       }) ?? []
     )
-  }, [communities])
+  }, [goals])
+
+  const carePointToGoalsConnection = useMemo(() => {
+    return (
+      carePoints?.carePoints.flatMap((carePoint) => {
+        return carePoint.caresForGoals
+          ? carePoint.caresForGoals.map((goal) => ({
+              id: `${carePoint.id}-${goal.id}`,
+              from: `CarePoint-${carePoint.id}`,
+              to: `Goal-${goal.id}`,
+              caption: 'Cares for',
+              captionSize: 0.75,
+              width: 0.5,
+            }))
+          : []
+      }) ?? []
+    )
+  }, [carePoints])
 
   const mouseEventCallbacks: MouseEventCallbacks = {
     // onRelationshipRightClick: (rel: Relationship, hitTargets: HitTargets, evt: MouseEvent) => { },
@@ -383,7 +479,7 @@ const GraphVisualization = () => {
       ...(selectedNodeIds.some((id) =>
         peopleNodes.some((node) => node.id === id)
       )
-        ? [...personToPersonConnection, ...personCreatedByConnection]
+        ? [...personToPersonConnection]
         : []),
 
       ...(selectedNodeIds.some((id) =>
@@ -408,6 +504,16 @@ const GraphVisualization = () => {
       )
         ? personToCoreValueConnection
         : []),
+
+      ...(selectedNodeIds.some((id) =>
+        peopleNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) =>
+        carePointsNodes.some((node) => node.id === id)
+      )
+        ? personToCarePointConnection
+        : []),
+
       ...(selectedNodeIds.some((id) =>
         peopleNodes.some((node) => node.id === id)
       ) &&
@@ -415,17 +521,52 @@ const GraphVisualization = () => {
         ? personToResourceConnection
         : []),
       ...(selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      )
+        ? communityToCommunityConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) =>
+        coreValuesNodes.some((node) => node.id === id)
+      )
+        ? communityToCoreValueConnection
+        : []),
+
+      ...(selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => goalNodes.some((node) => node.id === id))
+        ? communityToGoalsConnection
+        : []),
+
+      ...(selectedNodeIds.some((id) =>
+        communityNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => resourceNodes.some((node) => node.id === id))
+        ? communityToResourcesConnection
+        : []),
+
+      ...(selectedNodeIds.some((id) =>
         goalNodes.some((node) => node.id === id)
       ) &&
       selectedNodeIds.some((id) =>
         carePointsNodes.some((node) => node.id === id)
       )
-        ? goalToCarePointConnection
+        ? goalToCarePointsConnection
         : []),
       ...(selectedNodeIds.some((id) =>
-        communityNodes.some((node) => node.id === id)
-      )
-        ? communityToCommunityConnection
+        goalNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => resourceNodes.some((node) => node.id === id))
+        ? goalToResourcesConnection
+        : []),
+      ...(selectedNodeIds.some((id) =>
+        carePointsNodes.some((node) => node.id === id)
+      ) &&
+      selectedNodeIds.some((id) => goalNodes.some((node) => node.id === id))
+        ? carePointToGoalsConnection
         : []),
     ]
 
