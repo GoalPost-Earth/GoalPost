@@ -15626,6 +15626,7 @@ export type GetMatchingEntitiesQuery = {
   carePointSubstringSearch: Array<{
     __typename?: 'CarePoint'
     id: string
+    name: string
     description?: string | null
   }>
   communitySubstringSearch: Array<{
@@ -21660,6 +21661,7 @@ export const GetMatchingEntitiesDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
               ],
             },

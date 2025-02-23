@@ -273,7 +273,7 @@ const GraphVisualization = () => {
               id: `${person.id}-${coreValue.id}`,
               from: `Person-${person.id}`,
               to: `CoreValue-${coreValue.id}`,
-              caption: 'Guided by',
+              caption: 'Embraces',
               captionSize: 0.75,
               width: 0.5,
             }))
@@ -368,7 +368,7 @@ const GraphVisualization = () => {
               id: `${community.id}-${coreValue.id}`,
               from: `Community-${community.id}`,
               to: `CoreValue-${coreValue.id}`,
-              caption: 'Guided by',
+              caption: 'Embraces',
               captionSize: 0.75,
               width: 0.5,
             }))

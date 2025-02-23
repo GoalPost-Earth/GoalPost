@@ -4,6 +4,7 @@ export const GET_MATCHING_ENTITIES = graphql(`
   query getMatchingEntities($key: String!) {
     carePointSubstringSearch(key: $key) {
       id
+      name
       description
     }
     communitySubstringSearch(key: $key) {
