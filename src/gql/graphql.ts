@@ -15448,6 +15448,7 @@ export type GetAllPeopleQuery = {
       name: string
       id: string
     }>
+    createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
   }>
 }
 
@@ -20969,6 +20970,17 @@ export const GetAllPeopleDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     ],
                   },
                 },

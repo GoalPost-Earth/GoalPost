@@ -10,9 +10,10 @@ import {
 import { EntityInfo } from './entity-info'
 import Link from 'next/link'
 import { LuArrowRight } from 'react-icons/lu'
+import { Node } from 'neo4j-driver'
 
 interface GraphNode extends Node {
-  data: {
+  properties: {
     nodeName: string
   }
 }
@@ -47,8 +48,8 @@ export default function GraphSideBar({
 }) {
   return (
     <Flex
-      flexDirection={'column'}
-      width={'fit-content'}
+      flexDirection="column"
+      width="fit-content"
       height="fit-content"
       padding={2}
       gap={10}
@@ -62,14 +63,14 @@ export default function GraphSideBar({
       scrollbarWidth="none"
       position="absolute"
       top={0}
-      left={0}
+      left={{ base: 0, lg: 'unset' }}
       zIndex={1}
     >
       <Heading fontWeight="bolder">Entities</Heading>
       <Flex gap={2} mt={2} flexWrap={'wrap'} width={'fit-content'}>
         {triggers.map((trigger) => {
           const nextNodes = nodes.filter(
-            (node: GraphNode) => node.data.nodeName === trigger
+            (node: GraphNode) => node.properties.nodeName === trigger
           )
           return (
             <Button
@@ -81,13 +82,13 @@ export default function GraphSideBar({
                 if (
                   selectedNodes.some(
                     (selectedNode: GraphNode) =>
-                      selectedNode.data.nodeName === trigger
+                      selectedNode.properties.nodeName === trigger
                   )
                 ) {
                   setNodes(
                     selectedNodes.filter(
                       (selectedNode: GraphNode) =>
-                        selectedNode.data.nodeName !== trigger
+                        selectedNode.properties.nodeName !== trigger
                     )
                   )
                   if (selectedNodeName === trigger && selectedNodeId) {
@@ -101,7 +102,7 @@ export default function GraphSideBar({
               variant={
                 selectedNodes.some(
                   (selectedNode: GraphNode) =>
-                    selectedNode.data.nodeName === trigger
+                    selectedNode.properties.nodeName === trigger
                 )
                   ? 'subtle'
                   : 'outline'

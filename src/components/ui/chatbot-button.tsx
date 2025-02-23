@@ -27,6 +27,7 @@ const ChatBotButton = () => {
       justifyContent={'center'}
       alignItems={'center'}
       transform={'translate(-50%, -50%)'}
+      zIndex={1000}
       onClick={() => {
         router.push('/chatbot')
       }}

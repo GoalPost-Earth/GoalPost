@@ -18,7 +18,7 @@
     "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version patch && git push origin && git push origin --tags"
   },
   "dependencies": {
-    "@apollo/client": "^3.12.4",
+    "@apollo/client": "^3.12.11",
     "@apollo/experimental-nextjs-app-support": "^0.11.5",
     "@as-integrations/next": "^3.2.0",
     "@auth0/nextjs-auth0": "^3.5.0",
@@ -29,6 +29,7 @@
     "@langchain/community": "^0.0.30",
     "@langchain/core": "^0.1.48",
     "@langchain/openai": "^0.0.11",
+    "@neo4j-nvl/react": "^0.3.6",
     "@neo4j/graphql": "^6.2.3",
     "@neo4j/graphql-ogm": "^5.9.1",
     "@xyflow/react": "^12.3.6",
