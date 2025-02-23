@@ -44,6 +44,7 @@ export function ActionCard({
     Community: '#D8F2FC',
     Resource: '#FEEBCB',
     CarePoint: '#FED7D7',
+    Log: '#F5F5F5',
   }
 
   return (
@@ -87,23 +88,25 @@ export function ActionCard({
       <Card.Body mt={{ base: 2, lg: 0 }} p={0} pl={{ base: 0, xl: 10 }}>
         {content}
       </Card.Body>
-      <Card.Footer
-        alignSelf="flex-end"
-        width="fit-content"
-        position="relative"
-        mt={2}
-        fontSize="sm"
-        textDecoration={'underline'}
-        color="GrayText"
-        _hover={{
-          color: 'brand.500',
-          textDecorationThickness: '2px',
-          cursor: 'pointer',
-        }}
-        p={0}
-      >
-        <Link href={`/${actionName?.toLowerCase()}/${id}`}>See more</Link>
-      </Card.Footer>
+      {actionName !== 'Log' && (
+        <Card.Footer
+          alignSelf="flex-end"
+          width="fit-content"
+          position="relative"
+          mt={2}
+          fontSize="sm"
+          textDecoration={'underline'}
+          color="GrayText"
+          _hover={{
+            color: 'brand.500',
+            textDecorationThickness: '2px',
+            cursor: 'pointer',
+          }}
+          p={0}
+        >
+          <Link href={`/${actionName?.toLowerCase()}/${id}`}>See more</Link>
+        </Card.Footer>
+      )}
     </Card.Root>
   )
 }
