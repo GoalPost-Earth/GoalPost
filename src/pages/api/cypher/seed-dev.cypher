@@ -101,7 +101,7 @@ coreValue.why = row.why
 
 WITH coreValue, row
 MATCH (person:Person {id: row.personId})
-MERGE (person)-[:GUIDED_BY]->(coreValue)
+MERGE (person)-[:EMBRACES]->(coreValue)
 
 RETURN coreValue, person;
 
@@ -126,7 +126,7 @@ RETURN goal;
 LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=595870152&single=true&output=csv" AS row
 MATCH (goal:Goal {id: row.goalId})
 MATCH (coreValue:CoreValue {id: row.coreValueId})
-MERGE (goal)-[:EMBRACES]->(coreValue)
+MERGE (goal)-[:ALIGNED_TO]->(coreValue)
 RETURN goal, coreValue LIMIT 1;
 
 // Load Resources
@@ -219,8 +219,3 @@ MATCH (person:Person {id: "101"})
 MATCH (n)
 MERGE (person)<-[:CREATED_BY]-(n)
 RETURN person, n LIMIT 10;
-
-MATCH (carePoint:CarePoint)-[r:ENABLED_BY]-(goal:Goal)
-MERGE (goal)-[:ENABLES]->(carePoint)
-DELETE r
-RETURN carePoint, goal;
