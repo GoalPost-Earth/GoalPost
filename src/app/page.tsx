@@ -231,11 +231,13 @@ const HomeClient = () => {
                 })
                 .map((action) => (
                   <ActionCard
+                    key={
+                      action.id + '' + action.actionName + '' + action.personId
+                    }
                     photo={action.personPhoto ?? undefined}
                     actionInfo={action.actionInfo}
                     personId={action?.personId}
                     id={action.id}
-                    key={action.id}
                     name={action?.personName}
                     actionName={action.actionName}
                     createdAt={action.createdAt}

@@ -43,7 +43,7 @@ export function LogoutSection({
       </HStack>
       <Link
         as="a"
-        href="/api/auth/logout?returnTo=/"
+        href="/api/auth/logout"
         onClick={() => setLoading(true)}
         style={{ display: 'block', width: '100%' }}
       >
