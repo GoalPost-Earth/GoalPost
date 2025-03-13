@@ -20,7 +20,7 @@ export default async function initializeApolloServer() {
     resolvers,
     driver,
     features: {
-      authorization: { key: process.env.JWT_SECRET ?? '' },
+      authorization: { key: process.env.JWT_SECRET ?? 'jwt' },
       populatedBy: { callbacks: { authIdCallback } },
       excludeDeprecatedFields: {
         implicitEqualFilters: true,
@@ -31,6 +31,10 @@ export default async function initializeApolloServer() {
       },
     },
   })
+  console.log(
+    '🚀 ~ apollo.ts:34 ~ process.env.JWT_SECRET :',
+    process.env.JWT_SECRET
+  )
   const schema = await neoSchema.getSchema()
 
   const yogaServer = createYoga({
