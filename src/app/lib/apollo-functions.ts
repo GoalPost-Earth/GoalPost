@@ -2,23 +2,13 @@ import { HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 import { RetryLink } from '@apollo/client/link/retry'
-import { getAccessToken } from '@auth0/nextjs-auth0'
+import { jwtDecode } from 'jwt-decode'
 
 export const ERROR_POLICY = 'all'
 
 export const httpLink = new HttpLink({
   uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/graphql',
 })
-
-export const isTokenExpired = (expiryDate: string | null) => {
-  if (!expiryDate) {
-    return true
-  }
-
-  const now = new Date()
-  const expiry = new Date(expiryDate)
-  return now >= expiry
-}
 
 export const retryLink = new RetryLink({
   delay: {
@@ -49,40 +39,53 @@ export const errorLink = onError(({ graphQLErrors, networkError }) => {
 })
 
 export const authLink = setContext(async (_, { headers }) => {
-  const token = ''
-  const expiryDate = ''
+  try {
+    const response = await fetch('/api/auth/access-token')
+    if (!response.ok) {
+      const resJson = await response.json()
+      const error = {
+        status: response.status,
+        statusText: response.statusText,
+        message: resJson?.message,
+        code: resJson?.code,
+      }
 
-  if (token && !isTokenExpired(expiryDate)) {
-    // return the headers to the context so httpLink can read them
-    return {
-      headers: {
-        ...headers,
-        Authorization: `Bearer ${token}`,
-      },
+      console.error('Error fetching access token:', error)
+
+      if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
+        console.warn('Access token expired, redirecting to login...')
+        window.location.href = '/api/auth/login?returnTo=/'
+      }
+
+      return { headers }
     }
-  }
 
-  const fetchedToken = await getAccessToken({
-    authorizationParams: {
-      audience: 'https://goalpost.app/graphql',
-      scope: 'read:current_user',
-      ignoreCache: true,
-    },
-  }).catch((error) => {
-    console.error('Error fetching token:', error)
-    return { accessToken: '' }
-  })
-  // const fetchedExpiryDate = new Date(new Date().getTime() + 3600 * 1000)
+    const resJson = await response.json()
 
-  // Store token and its expiry date in local storage
-  // localStorage.setItem('token', fetchedToken.accessToken ?? null)
-  // localStorage.setItem('expiryDate', fetchedExpiryDate.toString())
+    if (resJson?.accessToken) {
+      const decoded = jwtDecode(resJson.accessToken) as { exp: number }
+      const expireDate = new Date(decoded.exp * 1000)
 
-  // return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      Authorization: `Bearer ${fetchedToken.accessToken ?? null}`,
-    },
+      if (expireDate < new Date()) {
+        console.debug(
+          '[GraphQL debug] Access token expired, refreshing:',
+          expireDate
+        )
+        window.location.href = '/api/auth/login?returnTo=/'
+        return { headers }
+      }
+
+      return {
+        headers: {
+          ...headers,
+          Authorization: `Bearer ${resJson.accessToken}`,
+        },
+      }
+    }
+
+    return { headers }
+  } catch (error) {
+    console.error('Error in auth link:', error)
+    return { headers }
   }
 })
