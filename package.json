@@ -15,7 +15,8 @@
     "test:watch": "cross-env DOTENV_CONFIG_PATH=./.env.local jest --watchAll --detectOpenHandles",
     "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version major && git push origin && git push origin --tags",
     "release:minor": "changelog -m && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version minor && git push origin && git push origin --tags",
-    "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version patch && git push origin && git push origin --tags"
+    "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version patch && git push origin && git push origin --tags",
+    "init:db": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/init-db.js"
   },
   "dependencies": {
     "@apollo/client": "^3.12.11",
@@ -43,6 +44,7 @@
     "dotenv": "^16.4.7",
     "execa": "^9.5.2",
     "framer-motion": "^11.14.4",
+    "fs": "^0.0.1-security",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.16.0",
@@ -52,10 +54,11 @@
     "langchain": "^0.1.28",
     "lint-staged": "^15.2.11",
     "marked": "^15.0.5",
-    "neo4j-driver": "^5.27.0",
+    "neo4j-driver": "^5.28.1",
     "nest-auth": "^0.0.1",
     "next": "15.0.2",
     "next-themes": "^0.3.0",
+    "path": "^0.12.7",
     "prettier": "^3.4.2",
     "prettier-eslint-cli": "^8.0.1",
     "react": "^18.3.1",
@@ -63,6 +66,7 @@
     "react-hook-form": "^7.54.2",
     "react-icons": "^5.4.0",
     "tailwind-merge": "^2.5.5",
+    "url": "^0.11.4",
     "winston": "^3.17.0",
     "zod": "^3.23.8"
   },
