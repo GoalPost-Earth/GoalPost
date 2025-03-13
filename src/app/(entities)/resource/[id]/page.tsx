@@ -44,8 +44,8 @@ export default function ViewResourcePage({
 
   const resource = data?.resources[0]
   const owner =
-    (resource?.providedByPerson?.length ?? 0) > 0
-      ? resource?.providedByPerson[0]
+    (resource?.createdBy?.length ?? 0) > 0
+      ? resource?.createdBy[0]
       : resource?.providedByCommunity[0]
 
   if (error) {

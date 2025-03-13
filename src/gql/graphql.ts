@@ -15576,6 +15576,7 @@ export type GetResourceQuery = {
       description?: string | null
       createdAt: any
     }>
+    createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     providedByCommunity: Array<{
       __typename?: 'Community'
       name: string
@@ -21506,6 +21507,17 @@ export const GetResourceDocument = {
                   },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'providedByCommunity' },
