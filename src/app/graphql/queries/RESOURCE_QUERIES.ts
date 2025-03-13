@@ -34,6 +34,10 @@ export const GET_RESOURCE = graphql(`
         createdAt
       }
       createdAt
+      createdBy {
+        id
+        name
+      }
       providedByCommunity {
         name
         id
