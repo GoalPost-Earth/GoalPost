@@ -68,7 +68,7 @@ For the JWT_SECRET, paste your Auth0 certificate. You can get this from Auth0 Da
 
 ### Step 6: Initialize the Database
 
-Run the initialization script to populate your Neo4j database:
+Run the initialization script to populate your Neo4j database if you want to use the seed data:
 
 ```bash
 npm run db:init
