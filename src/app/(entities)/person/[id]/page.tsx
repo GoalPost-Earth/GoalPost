@@ -2,7 +2,7 @@
 
 import { GET_PERSON } from '@/app/graphql/queries'
 import { Box, Container, HStack, Text } from '@chakra-ui/react'
-import React, { use } from 'react'
+import React, { use, useEffect } from 'react'
 import {
   GenericTabs,
   UserInfo,
@@ -28,9 +28,14 @@ export default function ViewPersonPage({
 }) {
   const { id } = use(params)
 
-  const { data, loading, error } = useQuery(GET_PERSON, {
+  const { data, loading, error, refetch } = useQuery(GET_PERSON, {
     variables: { id },
+    fetchPolicy: 'network-only',
   })
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
 
   const person = data?.people[0]
 

@@ -68,6 +68,12 @@ export const GET_ALL_RESOURCES = graphql(`
         phone
         photo
       }
+      providedByCommunity {
+        id
+        name
+        description
+      }
+      createdAt
     }
   }
 `)

@@ -29,7 +29,8 @@ import {
   Spacer,
   VStack,
 } from '@chakra-ui/react'
-import React, { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 export default function CommunityResources({
@@ -41,10 +42,14 @@ export default function CommunityResources({
     community.resources ?? []
   )
   const [open, setOpen] = useState(false)
-  const { data, loading, error } = useQuery(GET_ALL_RESOURCES)
+  const { data, loading, error, refetch } = useQuery(GET_ALL_RESOURCES, {
+    fetchPolicy: 'network-only',
+  })
   const [UpdateCommunity] = useMutation(UPDATE_COMMUNITY_MUTATION)
   const contentRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
+
+  const router = useRouter()
 
   const valueOptions =
     data?.resources.map((resource) => ({
@@ -65,6 +70,10 @@ export default function CommunityResources({
       resources: resources.map((resource) => resource.id) ?? [],
     },
   })
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -123,14 +132,25 @@ export default function CommunityResources({
         >
           <DialogBackdrop />
           {/* <DialogTrigger asChild> */}
+
           {resources.length > 0 && (
             <HStack width="100%" justifyContent="space-between">
               <Spacer />
+              <Button
+                size="sm"
+                variant="surface"
+                onClick={() =>
+                  router.push('/resource/create?communityId=' + community.id)
+                }
+              >
+                Create a New Resource
+              </Button>
               <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
-                Update Resources
+                Connect Resources
               </Button>
             </HStack>
           )}
+
           {/* </DialogTrigger> */}
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogContent ref={contentRef}>
@@ -164,8 +184,17 @@ export default function CommunityResources({
 
         {resources.length === 0 && (
           <EmptyState title="No resources" description="Click here to add some">
-            <Button variant="surface" onClick={() => setOpen(true)}>
-              Add A Resource
+            <Button
+              size="sm"
+              variant="surface"
+              onClick={() =>
+                router.push('/resource/create?communityId=' + community.id)
+              }
+            >
+              Create a New Resource
+            </Button>
+            <Button size="sm" variant="surface" onClick={() => setOpen(true)}>
+              Connect Resources
             </Button>
           </EmptyState>
         )}
