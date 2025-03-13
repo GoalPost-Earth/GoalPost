@@ -20,8 +20,6 @@ function CreateResource() {
   const [CreateResources] = useMutation(CREATE_RESOURCE_MUTATION)
   const { user } = useApp()
 
-  console.log('personId', personId)
-
   const defaultValues = React.useMemo(
     () =>
       ({
@@ -31,8 +29,8 @@ function CreateResource() {
           : communityId
             ? 'communityLink'
             : 'personLink',
-        personLink: personId,
-        communityLink: communityId,
+        personLink: personId ?? undefined,
+        communityLink: communityId ?? undefined,
       }) as ResourceFormData,
     [personId, communityId]
   )
@@ -59,6 +57,7 @@ function CreateResource() {
 
   const onSubmit = async (data: ResourceFormData) => {
     const { personLink, linkTo, communityLink, ...rest } = data
+
     try {
       const res = await CreateResources({
         variables: {
@@ -83,7 +82,13 @@ function CreateResource() {
         },
       })
 
-      router.push('/resource/' + res.data?.createResources.resources[0].id)
+      if (personId) {
+        router.push('/person/' + personId + '?tab=My%20Resources')
+      } else if (communityId) {
+        router.push('/community/' + communityId + '?tab=Resources')
+      } else {
+        router.push('/resource/' + res.data?.createResources.resources[0].id)
+      }
     } catch (error) {
       console.error(error)
     }

@@ -15576,6 +15576,7 @@ export type GetResourceQuery = {
       description?: string | null
       createdAt: any
     }>
+    createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     providedByCommunity: Array<{
       __typename?: 'Community'
       name: string
@@ -15600,6 +15601,7 @@ export type GetAllResourcesQuery = {
     why?: string | null
     location?: string | null
     time?: string | null
+    createdAt: any
     resources: Array<{ __typename?: 'Resource'; id: string; name: string }>
     carePoints: Array<{
       __typename?: 'CarePoint'
@@ -15613,6 +15615,12 @@ export type GetAllResourcesQuery = {
       name: string
       phone?: string | null
       photo?: string | null
+    }>
+    providedByCommunity: Array<{
+      __typename?: 'Community'
+      id: string
+      name: string
+      description?: string | null
     }>
   }>
 }
@@ -21501,6 +21509,17 @@ export const GetResourceDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'providedByCommunity' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -21610,6 +21629,22 @@ export const GetAllResourcesDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'providedByCommunity' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],
             },
           },

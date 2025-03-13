@@ -107,7 +107,7 @@ export default function ViewGoalPage({
 
           <Box display={{ base: 'block', lg: 'none' }} width="100%" padding={0}>
             <Link href={`/person/${goal?.motivatesPeople[0]?.id}`}>
-              <EntityOwnerCard owner={goal?.motivatesPeople[0]} entity={goal} />
+              <EntityOwnerCard owner={goal?.createdBy[0]} entity={goal} />
             </Link>
           </Box>
 

@@ -34,6 +34,10 @@ export const GET_RESOURCE = graphql(`
         createdAt
       }
       createdAt
+      createdBy {
+        id
+        name
+      }
       providedByCommunity {
         name
         id
@@ -68,6 +72,12 @@ export const GET_ALL_RESOURCES = graphql(`
         phone
         photo
       }
+      providedByCommunity {
+        id
+        name
+        description
+      }
+      createdAt
     }
   }
 `)

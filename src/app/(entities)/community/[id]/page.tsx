@@ -11,7 +11,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react'
-import React, { use } from 'react'
+import React, { use, useEffect } from 'react'
 import {
   Avatar,
   EntityPageHeader,
@@ -40,9 +40,14 @@ export default function ViewCommunityPage({
 }) {
   const { id } = use(params)
 
-  const { data, loading, error } = useQuery(GET_COMMUNITY, {
+  const { data, loading, error, refetch } = useQuery(GET_COMMUNITY, {
     variables: { id },
+    fetchPolicy: 'network-only',
   })
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
 
   const community = data?.communities[0]
 
