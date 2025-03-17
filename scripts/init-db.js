@@ -45,7 +45,18 @@ async function initializeDatabase() {
         await session.run(statement)
       }
     }
-
+    // Create the vector index for person bio embeddings
+    console.log('Creating vector index for Person embeddings...')
+    await session.run(`
+      CALL db.index.vector.createNodeIndex(
+      'personBioVectorIndex',
+      'Person',
+      'embedding',
+      1536,  // Dimension size for OpenAI embeddings - adjust based on your model
+      'cosine'  // Similarity metric
+      )
+    `)
+    console.log('Vector index created successfully!')
     console.log('Database initialization completed successfully!')
   } catch (error) {
     console.error('Error initializing database:', error)
