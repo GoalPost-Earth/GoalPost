@@ -49,8 +49,9 @@ export default function ExtendedSideNav() {
         position="fixed"
         top={0}
         left={0}
-        width="100vw"
-        height="100vh"
+        width="100dvw"
+        height="100%"
+        maxHeight="100dvh"
         bg={'rgba(0, 0, 0, 0.5)'}
         zIndex={999}
         onClick={() => setExtended(false)}
@@ -65,7 +66,8 @@ export default function ExtendedSideNav() {
         ref={navRef}
         display={{ base: 'none', lg: 'flex' }}
         width={isExtended ? '300px' : '50px'}
-        height="100vh"
+        height="100%"
+        maxHeight="100dvh"
         position="fixed"
         top={0}
         left={0}

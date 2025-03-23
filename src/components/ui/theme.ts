@@ -5,6 +5,7 @@ export const customTheme = createSystem(defaultConfig, {
     body: {
       height: '100%',
       position: 'relative',
+      minHeight: '-webkit-fill-available',
     },
     html: {
       scrollBehavior: 'smooth',
