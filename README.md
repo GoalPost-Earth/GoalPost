@@ -4,9 +4,9 @@
 
 ## Installation Instructions
 
-This document provides step-by-step instructions for setting up the GoalPost prototype on your local machine. The prototype is built using Next.js, Neo4j, and Auth0, and it includes optional AI features powered by OpenAI.
-The goal of this prototype is to demonstrate the potential of GoalPost as a platform for mutual aid, community building, and personal growth. It is not intended for production use and should be treated as a proof of concept.
-The prototype is designed to be user-friendly and easy to set up, allowing you to explore its features and functionality quickly. The instructions below will guide you through the process of installing the necessary dependencies, configuring the environment, and running the application locally.
+This document provides step-by-step instructions for setting up the GoalPost prototype on your local machine. 
+
+The prototype is built using Next.js, Neo4j, and Auth0, and it includes optional AI features powered by OpenAI.
 
 ### Prerequisites
 
@@ -16,7 +16,7 @@ Before setting up GoalPost, make sure you have:
 2. Git
 3. Free accounts with:
    - [Auth0](https://auth0.com/signup)
-   - [OpenAI](https://platform.openai.com/signup) (if using AI features)
+   - [OpenAI](https://platform.openai.com/signup) (if using optional AI features)
    - [Neo4j Aura](https://neo4j.com/cloud/platform/aura-graph-database/)
 
 ### Step 1: Clone the Repository
@@ -56,7 +56,7 @@ npm install
    - Client Secret
    - API Audience (the identifier you set in the previous step)
 
-### Step 4: Set Up OpenAI API (If Using AI Features)
+### Step 4: Set Up OpenAI API (If Using Optional AI Features)
 
 1. Create or log in to your OpenAI account
 2. Navigate to https://platform.openai.com/api-keys
