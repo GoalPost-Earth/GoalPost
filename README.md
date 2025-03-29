@@ -94,3 +94,9 @@ If you want to deploy your application to Vercel, follow these steps:
 2. Connect your GitHub repository to Vercel
 3. Configure the environment variables in your Vercel project settings
 4. Deploy your application
+
+### Enabling AI
+To enable AI features, make sure to set the `OPENAI_API_KEY` in your `.env.local` file. There is a toggle in the sidebar that will enable or disable the AI features. The AI features are currently in development and may not be fully functional.
+
+*### NOTE: The prototype is a work in progress and may not include all features or be fully functional. It is intended for demonstration purposes only. Please report any issues or suggestions to the repository's issue tracker.*
+
