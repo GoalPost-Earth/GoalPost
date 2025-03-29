@@ -1,7 +1,15 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { HamburgerIcon } from '@/components/icons'
-import { Portal, VStack, Box, HStack } from '@chakra-ui/react'
+import {
+  Portal,
+  VStack,
+  Box,
+  HStack,
+  Text,
+  Flex,
+  Switch,
+} from '@chakra-ui/react'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { Button } from '../button'
 import { LogoutSection } from '../logout-section'
@@ -10,6 +18,7 @@ import { BrandedGoalPostText } from '../branded-goalpost-text'
 export default function ExtendedSideNav() {
   const [isExtended, setExtended] = useState(false)
   const [disableHover, setDisableHover] = useState(false)
+  const [showAIBot, setShowAIBot] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
 
   const handleNavItemClick = () => {
@@ -17,6 +26,15 @@ export default function ExtendedSideNav() {
     setExtended(false)
     setTimeout(() => setDisableHover(false), 300)
   }
+
+  // Load showAIBot setting from localStorage on component mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('showAIBot')
+
+    if (savedPreference === null) {
+      setShowAIBot(savedPreference === 'true')
+    }
+  }, [])
 
   useEffect(() => {
     if (isExtended) {
@@ -85,8 +103,8 @@ export default function ExtendedSideNav() {
       >
         <HStack gap={1} alignItems="center">
           <Button
+            as="div"
             cursor="pointer"
-            // onClick={() => setExtended(!isExtended)}
             background="none"
             padding={4}
             paddingLeft={3}
@@ -100,12 +118,39 @@ export default function ExtendedSideNav() {
           setOpen={handleNavItemClick}
           isExtended={isExtended}
           extendable
+          showAIBot={showAIBot}
         />
         <InputAccordion
           setOpen={handleNavItemClick}
           isExtended={isExtended}
           extendable
         />
+
+        {/* AI Bot Toggle */}
+        {isExtended && (
+          <Box px={6} mb={4} w="100%">
+            <Flex alignItems="center" justifyContent="space-between">
+              <Text fontSize="sm" color="gray.600">
+                Show AI Chat Bot
+              </Text>
+              <Switch.Root
+                checked={showAIBot}
+                onCheckedChange={(e) => {
+                  localStorage.setItem('showAIBot', String(e.checked))
+                  setShowAIBot(e.checked)
+                }}
+                colorScheme="orange"
+              >
+                <Switch.HiddenInput />
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Label />
+              </Switch.Root>
+            </Flex>
+          </Box>
+        )}
+
         <LogoutSection extendable isExtended={isExtended} />
       </VStack>
     </Portal>

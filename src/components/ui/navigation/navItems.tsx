@@ -82,49 +82,53 @@ export function NavItemLinks({
   setOpen,
   isExtended,
   extendable,
+  showAIBot = true,
 }: {
   setOpen: any
   extendable?: boolean
   isExtended?: boolean
+  showAIBot?: boolean
 }) {
   return (
     <Box borderBottom={'2px solid'} borderColor={'gray.subtle'} pb={10}>
-      {navItems.map((item) => {
-        const pathname = usePathname()
-        const isActive = pathname === item.to
+      {navItems
+        .filter((item) => item.name !== 'AI Chat Bot' || showAIBot)
+        .map((item) => {
+          const pathname = usePathname()
+          const isActive = pathname === item.to
 
-        return (
-          <Link href={item.to} key={item.name}>
-            <Button
-              borderRadius="none"
-              border="none"
-              key={item.name}
-              paddingY={6}
-              paddingX={2}
-              colorPalette="brand"
-              variant={isActive ? 'solid' : 'outline'}
-              width="100%"
-              onClick={() => {
-                setOpen(false)
-              }}
-            >
-              <Flex
-                gap="30px"
-                alignItems="center"
+          return (
+            <Link href={item.to} key={item.name}>
+              <Button
+                borderRadius="none"
+                border="none"
+                key={item.name}
+                paddingY={6}
+                paddingX={2}
+                colorPalette="brand"
+                variant={isActive ? 'solid' : 'outline'}
                 width="100%"
-                px={3}
-                pl={extendable && !isExtended ? 1.5 : 6}
-                transition={'all 0.4s ease-in-out'}
+                onClick={() => {
+                  setOpen(false)
+                }}
               >
-                <item.icon color={isActive ? 'white' : '#C05621'} />
-                {extendable && isExtended && (
-                  <Text fontSize="small">{item.name}</Text>
-                )}
-              </Flex>
-            </Button>
-          </Link>
-        )
-      })}
+                <Flex
+                  gap="30px"
+                  alignItems="center"
+                  width="100%"
+                  px={3}
+                  pl={extendable && !isExtended ? 1.5 : 6}
+                  transition={'all 0.4s ease-in-out'}
+                >
+                  <item.icon color={isActive ? 'white' : '#C05621'} />
+                  {extendable && isExtended && (
+                    <Text fontSize="small">{item.name}</Text>
+                  )}
+                </Flex>
+              </Button>
+            </Link>
+          )
+        })}
     </Box>
   )
 }
