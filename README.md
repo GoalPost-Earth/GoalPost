@@ -68,14 +68,14 @@ Create a `.env.local` file in the project root directory (use the `.env.example`
 
 To generate a random AUTH0_SECRET, you can use a secure generator.
 
-For the JWT_SECRET, paste your Auth0 certificate. You can get this from Auth0 Dashboard > Applications > Your App > Advanced Settings > Certificates.
+For the JWT_SECRET, paste your Auth0 certificate. You can get this from Auth0 Dashboard > Applications > Your App > Advanced Settings > Certificates. Make sure to replace the line breaks with the '\n' character so that you can paste it as a single line string while preserving the line breaks.
 
 ### Step 6: Initialize the Database
 
 Run the initialization script to populate your Neo4j database if you want to use the seed data:
 
 ```bash
-npm run db:init
+npm run init:db
 ```
 
 ### Step 7: Start the Development Server
