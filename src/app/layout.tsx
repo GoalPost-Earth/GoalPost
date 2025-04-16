@@ -5,9 +5,8 @@ import { Inter } from 'next/font/google'
 import Navbar from '@/components/ui/navigation/top-nav'
 import { Toaster } from '@/components/ui/toaster'
 import { AppProvider } from './contexts/AppContext'
-import { StartupScreen } from '@/components/screens'
+import { MaintenanceScreen, StartupScreen } from '@/components/screens'
 import ChatBotButton from '@/components/ui/chatbot-button'
-import { ReactFlowProvider } from '@xyflow/react'
 import { ApolloWrapper } from './lib/apollo-wrapper'
 import { Container } from '@chakra-ui/react'
 
@@ -22,6 +21,26 @@ export const metadata: Metadata = {
   description: 'A directive by the Seed COC',
 }
 
+// Content wrapper component to conditionally render maintenance screen
+const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
+  const isMaintenanceMode = true
+
+  if (isMaintenanceMode) {
+    return <MaintenanceScreen />
+  }
+
+  return (
+    <>
+      <Toaster />
+      <Navbar />
+      <Container pl={{ lg: '50px' }}>
+        {children}
+        <ChatBotButton />
+      </Container>
+    </>
+  )
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,20 +51,13 @@ export default function RootLayout({
       <body>
         <Provider>
           <UserProvider>
-            <ReactFlowProvider>
+            <ContentWrapper>
               <ApolloWrapper>
                 <StartupScreen>
-                  <AppProvider>
-                    <Toaster />
-                    <Navbar />
-                    <Container pl={{ lg: '50px' }}>
-                      {children}
-                      <ChatBotButton />
-                    </Container>
-                  </AppProvider>
+                  <AppProvider>{children}</AppProvider>
                 </StartupScreen>
               </ApolloWrapper>
-            </ReactFlowProvider>
+            </ContentWrapper>
           </UserProvider>
         </Provider>
       </body>

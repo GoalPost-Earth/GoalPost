@@ -40,6 +40,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   )
   const { user } = useUser()
 
+  // Maintenance mode state
+
   const [UpdatePerson] = useMutation(UPDATE_PERSON_MUTATION)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
