@@ -31,12 +31,18 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <Toaster />
-      <Navbar />
-      <Container pl={{ lg: '50px' }}>
-        {children}
-        <ChatBotButton />
-      </Container>
+      <ApolloWrapper>
+        <StartupScreen>
+          <AppProvider>
+            <Toaster />
+            <Navbar />
+            <Container pl={{ lg: '50px' }}>
+              {children}
+              <ChatBotButton />
+            </Container>
+          </AppProvider>
+        </StartupScreen>
+      </ApolloWrapper>
     </>
   )
 }
@@ -51,13 +57,7 @@ export default function RootLayout({
       <body>
         <Provider>
           <UserProvider>
-            <ContentWrapper>
-              <ApolloWrapper>
-                <StartupScreen>
-                  <AppProvider>{children}</AppProvider>
-                </StartupScreen>
-              </ApolloWrapper>
-            </ContentWrapper>
+            <ContentWrapper>{children}</ContentWrapper>
           </UserProvider>
         </Provider>
       </body>
