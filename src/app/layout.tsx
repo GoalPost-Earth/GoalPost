@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 // Content wrapper component to conditionally render maintenance screen
 const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
-  const isMaintenanceMode = true
+  const isMaintenanceMode = false
 
   if (isMaintenanceMode) {
     return <MaintenanceScreen />
