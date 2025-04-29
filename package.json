@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start:dev": "next start",
-    "start": "node scripts/start-dev.js",
+    "start": "next start",
+    "start:dev": "node scripts/start-dev.js",
     "lint": "next lint",
     "themegen": "npx @chakra-ui/cli typegen ./src/components/ui/theme.ts",
     "codegen": "graphql-codegen --config codegen.ts --watch",
