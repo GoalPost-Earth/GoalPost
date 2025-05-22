@@ -1,0 +1,51 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "name": "GoalPost Earth",
+    "type": "organisation",
+    "role": "owner",
+    "email": "community.of.care@proton.me",
+    "description": "GoalPost Earth is a mutual aid and community resilience project helping people organize and distribute resources effectively. We aim to strengthen communities through open-source tools for connection, collaboration, and resource sharing.",
+    "webpageUrl": {
+      "url": "https://goalpost.earth",
+      "wellKnown": ""
+    }
+  },
+  "projects": [
+    {
+      "guid": "goalpost",
+      "name": "GoalPost",
+      "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively.",
+      "webpageUrl": {
+        "url": "https://goalpost.earth"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/GoalPost-Earth/GoalPost"
+      },
+      "licenses": ["spdx:Apache-2.0"],
+      "tags": ["mutual-aid", "open-source", "community", "nonprofit"]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "opencollective",
+        "type": "payment-provider",
+        "address": "https://opencollective.com/goalpost",
+        "description": "Donate via Open Collective"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "general-support",
+        "status": "active",
+        "name": "General Support",
+        "description": "Support GoalPost Earth with any amount via Open Collective.",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": ["opencollective"]
+      }
+    ]
+  }
+}
