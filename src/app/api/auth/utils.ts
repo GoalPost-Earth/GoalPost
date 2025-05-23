@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { NextRequest } from 'next/server'
+import { Resend } from 'resend'
 
+const resend = new Resend(process.env.RESEND_API_KEY || '')
 const PEPPER = process.env.PEPPER || ''
 
 export const hashPassword = async (password: string) =>
@@ -38,4 +40,35 @@ export async function parseRequestBody(req: NextRequest) {
     }
   }
   return { ok: true, body }
+}
+
+/**
+ * Sends an email using Resend.
+ * @param to Recipient email address
+ * @param subject Email subject
+ * @param html HTML content of the email
+ * @param from Sender email address (optional, defaults to onboarding@resend.dev)
+ */
+export async function sendMail({
+  to,
+  subject,
+  html,
+  from = 'onboarding@resend.dev',
+}: {
+  to: string
+  subject: string
+  html: string
+  from?: string
+}) {
+  try {
+    const response = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+    })
+    return { ok: true, response }
+  } catch (error) {
+    return { ok: false, error }
+  }
 }
