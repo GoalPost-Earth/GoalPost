@@ -2,26 +2,32 @@
 import React, { useState } from 'react'
 import { Box, Button, Flex, Heading, Link, Text } from '@chakra-ui/react'
 import { useApp } from '@/app/contexts'
+import { useForm } from 'react-hook-form'
+import { Input } from '@/components/react-hook-form'
 
 function LoginPage() {
-  const { user, setUser } = useApp()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { /* user, */ setUser } = useApp()
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError: setFormError,
+  } = useForm({
+    defaultValues: { email: '', password: '' },
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (values: { email: string; password: string }) => {
     setLoading(true)
     setError('')
     try {
       const res = await fetch('/api/auth/login?returnTo=/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(values),
       })
       const data = await res.json()
-      // Store user, token, refreshToken, and returnTo in localStorage
       if (data.user) {
         setUser(data.user)
         localStorage.setItem('user', JSON.stringify(data.user))
@@ -32,13 +38,11 @@ function LoginPage() {
       if (data.refreshToken) {
         localStorage.setItem('refreshToken', data.refreshToken)
       }
-
-      console.log('🚀 ~ page.tsx:25 ~ user:', user)
-
       if (!res.ok) {
         setError(data.error || 'Login failed')
+        setFormError('email', { message: data.error || 'Login failed' })
       } else {
-        // window.location.href = data.returnTo || '/'
+        window.location.href = data.returnTo || '/'
       }
     } catch {
       setError('An unexpected error occurred')
@@ -53,47 +57,29 @@ function LoginPage() {
         <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={6}>
           Sign in to GoalPost
         </Heading>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Box mb={4}>
-            <Text fontWeight="medium" mb={1}>
-              Email address
-            </Text>
-            <input
+            <Input
+              label="Email address"
+              name="email"
               type="email"
               placeholder="you@email.com"
               autoComplete="email"
+              control={control}
+              errors={errors}
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                border: '1px solid #CBD5E1',
-                background: 'inherit',
-                color: 'inherit',
-              }}
             />
           </Box>
           <Box mb={6}>
-            <Text fontWeight="medium" mb={1}>
-              Password
-            </Text>
-            <input
+            <Input
+              label="Password"
+              name="password"
               type="password"
               placeholder="••••••••"
               autoComplete="current-password"
+              control={control}
+              errors={errors}
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                border: '1px solid #CBD5E1',
-                background: 'inherit',
-                color: 'inherit',
-              }}
             />
           </Box>
           {error && (
@@ -106,7 +92,7 @@ function LoginPage() {
             type="submit"
             w="full"
             mb={4}
-            loading={loading}
+            loading={loading || isSubmitting}
           >
             Sign In
           </Button>

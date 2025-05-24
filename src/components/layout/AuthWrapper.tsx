@@ -16,8 +16,8 @@ const AuthWrapper = ({ children }: { children: ReactNode }) => {
   return (
     <div>
       <ApolloWrapper>
-        <StartupScreen>
-          <AppProvider>
+        <AppProvider>
+          <StartupScreen>
             {isAuthRoute ? (
               <>{children}</>
             ) : (
@@ -30,8 +30,8 @@ const AuthWrapper = ({ children }: { children: ReactNode }) => {
                 </Container>
               </>
             )}
-          </AppProvider>
-        </StartupScreen>
+          </StartupScreen>
+        </AppProvider>
       </ApolloWrapper>
     </div>
   )

@@ -41,40 +41,45 @@ export const errorLink = onError(({ graphQLErrors, networkError }) => {
 export const authLink = setContext(async (_, { headers }) => {
   try {
     const response = await fetch('/api/auth/access-token')
+    let resJson = await response.json()
+
     if (!response.ok) {
-      const resJson = await response.json()
       const error = {
         status: response.status,
         statusText: response.statusText,
-        message: resJson?.message,
+        message: resJson?.message || resJson?.error,
         code: resJson?.code,
       }
-
       console.error('Error fetching access token:', error)
-
       if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
-        console.warn('Access token expired, redirecting to login...')
-        window.location.href = '/api/auth/login?returnTo=/'
+        // Try to refresh the token
+        const refreshResponse = await fetch('/api/auth/refresh-token')
+        const refreshJson = await refreshResponse.json()
+        if (refreshResponse.ok && refreshJson.accessToken) {
+          resJson = refreshJson
+        } else {
+          console.warn(
+            'Access token expired and refresh failed, redirecting to login...'
+          )
+          window.location.href = '/auth/login?returnTo=/'
+          return { headers }
+        }
+      } else {
+        return { headers }
       }
-
-      return { headers }
     }
-
-    const resJson = await response.json()
 
     if (resJson?.accessToken) {
       const decoded = jwtDecode(resJson.accessToken) as { exp: number }
       const expireDate = new Date(decoded.exp * 1000)
-
       if (expireDate < new Date()) {
         console.debug(
-          '[GraphQL debug] Access token expired, refreshing:',
+          '[GraphQL debug] Access token expired, redirecting:',
           expireDate
         )
-        window.location.href = '/api/auth/login?returnTo=/'
+        window.location.href = '/auth/login?returnTo=/'
         return { headers }
       }
-
       return {
         headers: {
           ...headers,
@@ -82,7 +87,6 @@ export const authLink = setContext(async (_, { headers }) => {
         },
       }
     }
-
     return { headers }
   } catch (error) {
     console.error('Error in auth link:', error)

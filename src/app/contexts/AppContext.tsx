@@ -41,7 +41,18 @@ export const useApp = () => {
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
-  const [user, setUser] = useState<ContextUser | undefined>(undefined)
+  const [user, setUser] = useState<ContextUser | undefined>(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser)
+      } catch {
+        return undefined
+      }
+    }
+
+    return undefined
+  })
 
   // Maintenance mode state
 
@@ -50,6 +61,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
     onCompleted: (data) => {
+      console.log('🚀 ~ AppContext.tsx:64 ~ data:', data)
       if (!data?.people[0]) {
         return
       }

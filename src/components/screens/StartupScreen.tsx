@@ -7,7 +7,6 @@ import { useApp } from '@/app/contexts'
 
 const StartupScreen = ({ children }: { children: React.ReactNode }) => {
   const { user } = useApp()
-  console.log('🚀 ~ StartupScreen.tsx:10 ~ user:', user)
   const [showSplash, setShowSplash] = useState(true)
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
