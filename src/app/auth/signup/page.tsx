@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Box, Button, Flex, Heading, Link, Text } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/react-hook-form'
+import { useRouter } from 'next/navigation'
 
 function SignupPage() {
   const {
@@ -13,6 +14,7 @@ function SignupPage() {
   } = useForm({
     defaultValues: { email: '', password: '', confirmPassword: '' },
   })
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -43,7 +45,7 @@ function SignupPage() {
         setError(data.error || 'Sign up failed')
         setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        window.location.href = '/auth/login'
+        router.push('/auth/login')
       }
     } catch {
       setError('An unexpected error occurred')

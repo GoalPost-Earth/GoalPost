@@ -1,53 +1,40 @@
 'use client'
 import React, { useState } from 'react'
 import { Box, Button, Flex, Heading, Link, Text } from '@chakra-ui/react'
-import { useApp } from '@/app/contexts'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/react-hook-form'
-import { useRouter } from 'next/navigation'
 
-function LoginPage() {
-  const { setUser } = useApp()
+function ForgotPasswordPage() {
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError: setFormError,
   } = useForm({
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '' },
   })
-
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const onSubmit = async (values: { email: string; password: string }) => {
+  const onSubmit = async (values: { email: string }) => {
     setLoading(true)
     setError('')
+    setSuccess('')
     try {
-      const res = await fetch('/api/auth/login?returnTo=/', {
+      const res = await fetch('/api/auth/request-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       })
       const data = await res.json()
-      if (data.user) {
-        setUser(data.user)
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        // Set a cookie (expires in 7 days)
-        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
-      }
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
-      }
       if (!res.ok) {
-        setError(data.error || 'Login failed')
-        setFormError('email', { message: data.error || 'Login failed' })
+        setError(data.error || 'Request failed')
+        setFormError('email', { message: data.error || 'Request failed' })
       } else {
-        router.push(data.returnTo || '/')
+        setSuccess(
+          'If an account with that email exists, you will receive password reset instructions.'
+        )
       }
     } catch {
       setError('An unexpected error occurred')
@@ -60,10 +47,10 @@ function LoginPage() {
     <Flex minH="100vh" align="center" justify="center" bg={'gray.50'}>
       <Box p={8} rounded="xl" boxShadow="lg" w="full" maxW="md">
         <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={6}>
-          Sign in to GoalPost
+          Forgot your password?
         </Heading>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Box mb={4}>
+          <Box mb={6}>
             <Input
               label="Email address"
               name="email"
@@ -75,21 +62,14 @@ function LoginPage() {
               required
             />
           </Box>
-          <Box mb={6}>
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              control={control}
-              errors={errors}
-              required
-            />
-          </Box>
           {error && (
             <Text color="red.500" mb={4} textAlign="center">
               {error}
+            </Text>
+          )}
+          {success && (
+            <Text color="green.500" mb={4} textAlign="center">
+              {success}
             </Text>
           )}
           <Button
@@ -99,23 +79,13 @@ function LoginPage() {
             mb={4}
             loading={loading || isSubmitting}
           >
-            Sign In
+            Send Reset Link
           </Button>
         </form>
         <Text textAlign="center" fontSize="sm" color="gray.500">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" color="brand.500" fontWeight="medium">
-            Sign up
-          </Link>
-        </Text>
-        <Text textAlign="center" fontSize="sm" color="gray.500">
-          Forgot your password?{' '}
-          <Link
-            href="/auth/forgot-password"
-            color="brand.500"
-            fontWeight="medium"
-          >
-            Reset it
+          Remembered your password?{' '}
+          <Link href="/auth/login" color="brand.500" fontWeight="medium">
+            Sign in
           </Link>
         </Text>
       </Box>
@@ -123,4 +93,4 @@ function LoginPage() {
   )
 }
 
-export default LoginPage
+export default ForgotPasswordPage
