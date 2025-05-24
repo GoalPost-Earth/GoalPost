@@ -1,50 +1,49 @@
 'use client'
 import React, { useState } from 'react'
 import { Box, Button, Flex, Heading, Link, Text } from '@chakra-ui/react'
-import { useApp } from '@/app/contexts'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/react-hook-form'
 
-function LoginPage() {
-  const { setUser } = useApp()
+function SignupPage() {
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError: setFormError,
   } = useForm({
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', confirmPassword: '' },
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const onSubmit = async (values: { email: string; password: string }) => {
+  const onSubmit = async (values: {
+    email: string
+    password: string
+    confirmPassword: string
+  }) => {
     setLoading(true)
     setError('')
+    if (values.password !== values.confirmPassword) {
+      setError('Passwords do not match')
+      setFormError('confirmPassword', { message: 'Passwords do not match' })
+      setLoading(false)
+      return
+    }
     try {
-      const res = await fetch('/api/auth/login?returnTo=/', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+        }),
       })
       const data = await res.json()
-      if (data.user) {
-        setUser(data.user)
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        // Set a cookie (expires in 7 days)
-        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
-      }
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
-      }
       if (!res.ok) {
-        setError(data.error || 'Login failed')
-        setFormError('email', { message: data.error || 'Login failed' })
+        setError(data.error || 'Sign up failed')
+        setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        window.location.href = data.returnTo || '/'
+        window.location.href = '/auth/login'
       }
     } catch {
       setError('An unexpected error occurred')
@@ -57,7 +56,7 @@ function LoginPage() {
     <Flex minH="100vh" align="center" justify="center" bg={'gray.50'}>
       <Box p={8} rounded="xl" boxShadow="lg" w="full" maxW="md">
         <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={6}>
-          Sign in to GoalPost
+          Create your GoalPost account
         </Heading>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Box mb={4}>
@@ -72,13 +71,25 @@ function LoginPage() {
               required
             />
           </Box>
-          <Box mb={6}>
+          <Box mb={4}>
             <Input
               label="Password"
               name="password"
               type="password"
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete="new-password"
+              control={control}
+              errors={errors}
+              required
+            />
+          </Box>
+          <Box mb={6}>
+            <Input
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="new-password"
               control={control}
               errors={errors}
               required
@@ -96,13 +107,13 @@ function LoginPage() {
             mb={4}
             loading={loading || isSubmitting}
           >
-            Sign In
+            Sign Up
           </Button>
         </form>
         <Text textAlign="center" fontSize="sm" color="gray.500">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" color="brand.500" fontWeight="medium">
-            Sign up
+          Already have an account?{' '}
+          <Link href="/auth/login" color="brand.500" fontWeight="medium">
+            Sign in
           </Link>
         </Text>
       </Box>
@@ -110,4 +121,4 @@ function LoginPage() {
   )
 }
 
-export default LoginPage
+export default SignupPage

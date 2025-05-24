@@ -38,6 +38,18 @@ export async function POST(req: NextRequest) {
     const session = getSession()
 
     try {
+      // Check if user already exists
+      const existingUser = await session.run(
+        `MATCH (u:User {email: $email}) RETURN u LIMIT 1`,
+        { email }
+      )
+      if (existingUser.records.length > 0) {
+        return NextResponse.json(
+          { error: 'A user with this email already exists' },
+          { status: 400 }
+        )
+      }
+
       const hashed = await hashPassword(password)
 
       const result = await session.run(
@@ -50,7 +62,7 @@ export async function POST(req: NextRequest) {
 
       if (result.records.length === 0) {
         return NextResponse.json(
-          { error: 'Invalid email or password' },
+          { error: 'Something went wrong' },
           { status: 400 }
         )
       }
