@@ -34,7 +34,7 @@ function CreateCommunity() {
             createdBy: {
               connect: [
                 {
-                  where: { node: { authId_EQ: user?.sub } },
+                  where: { node: { id_EQ: user?.id } },
                 },
               ],
             },

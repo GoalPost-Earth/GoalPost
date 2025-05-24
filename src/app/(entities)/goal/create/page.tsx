@@ -61,7 +61,7 @@ function CreateGoal() {
           input: {
             ...rest,
             createdBy: {
-              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+              connect: [{ where: { node: { id_EQ: user?.id } } }],
             },
             motivatesPeople:
               linkTo === 'personLink'
