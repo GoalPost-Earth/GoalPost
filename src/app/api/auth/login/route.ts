@@ -36,6 +36,10 @@ export async function POST(req: NextRequest) {
   initializeDB()
   const session = getSession()
 
+  // Get returnTo param from the request URL
+  const { searchParams } = new URL(req.url)
+  const returnTo = searchParams.get('returnTo') || undefined
+
   try {
     const result = await session.run(
       `MATCH (user:User {email: $email})
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     const token = signJWT({ id, ...rest })
 
-    return NextResponse.json({ token }, { status: 200 })
+    return NextResponse.json({ token, returnTo }, { status: 200 })
   } catch (err) {
     return NextResponse.json({ error: parseError(err) }, { status: 500 })
   } finally {
