@@ -66,9 +66,38 @@ npm install
 
 Create a `.env.local` file in the project root directory (use the `.env.example` file as a template).
 
-To generate a random AUTH0_SECRET, you can use a secure generator.
+#### How to get required secrets and variables:
 
-For the JWT_SECRET, paste your Auth0 certificate. You can get this from Auth0 Dashboard > Applications > Your App > Advanced Settings > Certificates. Make sure to replace the line breaks with the '\n' character so that you can paste it as a single line string while preserving the line breaks.
+
+- **JWT_SECRET**
+  - For local development, you can generate a strong random string or a self-signed certificate.
+  - To use a random string (suitable for HS256):
+    ```bash
+    openssl rand -base64 64
+    ```
+    Copy the output and use it as your `JWT_SECRET` in `.env.local`.
+  - To use a self-signed certificate (suitable for RS256):
+    ```bash
+    openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes
+    ```
+    Open `cert.pem`, copy the entire contents (including `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`), and paste it into your `.env.local` as the value for `JWT_SECRET`. Replace line breaks with `\n` if needed.
+  - If you later gain access to Auth0, you can replace this with the Auth0 certificate as described above.
+
+- **PEPPER**: Generate a random string (at least 32 characters). You can use `openssl rand -base64 32` or an online password generator. Example:
+  ```bash
+  openssl rand -base64 32
+  ```
+  Copy the output and use it as the value for `PEPPER` in your `.env.local`.
+
+- **NEXT_PUBLIC_EMAIL_FROM**: Set this to the email sender you want for transactional emails. Example:
+  ```env
+  NEXT_PUBLIC_EMAIL_FROM="Goalpost <info@goalpost.earth>"
+  ```
+
+- **NEXT_PUBLIC_BASE_URL**: Set this to your local or production base URL. For local development, use:
+  ```env
+  NEXT_PUBLIC_BASE_URL=http://localhost:3000
+  ```
 
 ### Step 6: Initialize the Database
 
