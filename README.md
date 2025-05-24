@@ -99,6 +99,15 @@ Create a `.env.local` file in the project root directory (use the `.env.example`
   NEXT_PUBLIC_BASE_URL=http://localhost:3000
   ```
 
+- **RESEND_API_KEY**: Required for sending transactional emails via the Resend email service. To obtain a key:
+  1. Go to https://resend.com/ and sign up or log in.
+  2. Navigate to the API Keys section in your Resend dashboard.
+  3. Create a new API key and copy it.
+  4. Add it to your `.env.local` as:
+     ```env
+     RESEND_API_KEY=your-resend-api-key
+     ```
+
 ### Step 6: Initialize the Database
 
 Run the initialization script to populate your Neo4j database if you want to use the seed data:
