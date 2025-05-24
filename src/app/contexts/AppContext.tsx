@@ -6,13 +6,13 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react'
 import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
 import { UserProfile } from '@auth0/nextjs-auth0/client'
 import { Person } from '@/gql/graphql'
 import { ApolloWrapper } from '@/components'
+import { usePathname } from 'next/navigation'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
@@ -39,7 +39,8 @@ export const useApp = () => {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const isAuthRoute = window.location.pathname.startsWith('/auth')
+  const pathname = usePathname()
+  const isAuthRoute = pathname?.startsWith('/auth')
   const [user, setUser] = useState<ContextUser | undefined>(undefined)
 
   // Maintenance mode state
@@ -77,13 +78,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
-  const value = useMemo(
-    () => ({
-      user,
-      setUser,
-    }),
-    [user]
-  )
+  const setUserAndPersist = (user: ContextUser) => {
+    setUser(user)
+    sessionStorage.setItem('user', JSON.stringify(user))
+  }
+
+  const value = {
+    user,
+    setUser: setUserAndPersist,
+  }
 
   return (
     <AppContext.Provider value={value}>

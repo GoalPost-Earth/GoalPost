@@ -21,8 +21,18 @@ function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
-      console.log('🚀 ~ page.tsx:24 ~ data:', data)
-      setUser(data.user)
+      // Store user, token, refreshToken, and returnTo in localStorage
+      if (data.user) {
+        setUser(data.user)
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+      }
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken)
+      }
+
       console.log('🚀 ~ page.tsx:25 ~ user:', user)
 
       if (!res.ok) {
