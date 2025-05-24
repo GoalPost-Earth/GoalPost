@@ -2,7 +2,12 @@ import { parseError } from '@/utils'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSession, initializeDB } from '../neo4j'
-import { comparePassword, parseRequestBody, signJWT } from '../utils'
+import {
+  comparePassword,
+  hashPassword,
+  parseRequestBody,
+  signJWT,
+} from '../utils'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -48,7 +53,8 @@ export async function POST(req: NextRequest) {
           hash: user.password,
           email: user.email,
           firstName: user.firstName,
-          lastName: user.lastName
+          lastName: user.lastName,
+          roles: user.roles
         }`,
       { email }
     )
@@ -70,21 +76,40 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const token = signJWT({ id, ...rest })
+    const token = signJWT({
+      user: { id, ...rest },
+      expiresAt: Math.floor(Date.now() / 1000) + 60 * 30,
+    })
+    // Help me create an opaque refresh token
+    const refreshToken = crypto.randomUUID()
+    const hashedToken = await hashPassword(refreshToken)
+
+    await session.run(
+      `MATCH (user:User {email: $email})
+          SET user.refreshToken = $refreshToken,
+              user.refreshTokenExp = $refreshTokenExp,
+              user.refreshTokenRevoked = $refreshTokenRevoked
+        RETURN user`,
+      {
+        email,
+        refreshToken: hashedToken,
+        refreshTokenExp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+        // 30 days
+        refreshTokenRevoked: false,
+      }
+    )
 
     return NextResponse.json(
       {
         user: { id, ...rest },
-        token: {
-          accessToken: token,
-          expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
-        },
-        refreshToken: 'refreshme',
+        token,
+        refreshToken,
         returnTo,
       },
       { status: 200 }
     )
   } catch (err) {
+    console.error('🚀 ~ route.ts:110 ~ err:', err)
     return NextResponse.json({ error: parseError(err) }, { status: 500 })
   } finally {
     await session.close()

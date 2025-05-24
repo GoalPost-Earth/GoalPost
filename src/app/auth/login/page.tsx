@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { Input } from '@/components/react-hook-form'
 
 function LoginPage() {
-  const { /* user, */ setUser } = useApp()
+  const { setUser } = useApp()
   const {
     control,
     handleSubmit,
@@ -34,6 +34,8 @@ function LoginPage() {
       }
       if (data.token) {
         localStorage.setItem('token', data.token)
+        // Set a cookie (expires in 7 days)
+        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
       }
       if (data.refreshToken) {
         localStorage.setItem('refreshToken', data.refreshToken)

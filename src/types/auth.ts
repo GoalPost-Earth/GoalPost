@@ -1,13 +1,15 @@
-interface DecodedToken {
-  exp: number
-  // Add other properties from the decoded token as needed
-}
+// interface DecodedToken {
+//   exp: number
+//   // Add other properties from the decoded token as needed
+// }
 
 export interface UserProfile {
   id: string
   firstName: string
   lastName: string
   email: string
+  picture?: string
+  roles?: string[]
 }
 
 export interface Token {

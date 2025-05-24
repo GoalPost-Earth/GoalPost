@@ -42,15 +42,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
   const [user, setUser] = useState<ContextUser | undefined>(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser)
-      } catch {
-        return undefined
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        try {
+          return JSON.parse(storedUser)
+        } catch {
+          return undefined
+        }
       }
     }
-
     return undefined
   })
 
@@ -98,14 +99,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user,
     setUser: setUserAndPersist,
   }
-  console.log('🚀 ~ AppContext.tsx:101 ~ value.user:', value.user)
 
   return (
     <AppContext.Provider value={value}>
       {isAuthRoute ? (
         <>{children}</>
       ) : (
-        <ApolloWrapper data={data} loading={loading} error={error}>
+        <ApolloWrapper
+          placeholder={!user}
+          data={data}
+          loading={loading}
+          error={error}
+        >
           {children}
         </ApolloWrapper>
       )}
