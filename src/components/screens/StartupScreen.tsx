@@ -7,6 +7,7 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 const StartupScreen = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser()
   const [showSplash, setShowSplash] = useState(true)
+  const isAuthRoute = window.location.pathname.startsWith('/auth')
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,6 +16,10 @@ const StartupScreen = ({ children }: { children: React.ReactNode }) => {
 
     return () => clearTimeout(timer)
   }, [])
+
+  if (isAuthRoute) {
+    return <>{children}</>
+  }
 
   if (showSplash && !user) {
     return <SplashScreen />

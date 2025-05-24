@@ -25,7 +25,8 @@ export function ApolloWrapper({
   children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: Readonly<{ children: React.ReactNode }>) {
-  const { isLoading, user } = useUser()
+  const { user } = useUser()
+  const isLoading = false
   const router = useRouter()
   const [token, setToken] = useState<Token>()
   const httpLink = new HttpLink({

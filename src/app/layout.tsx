@@ -2,13 +2,8 @@ import type { Metadata } from 'next'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import { Inter } from 'next/font/google'
-import Navbar from '@/components/ui/navigation/top-nav'
-import { Toaster } from '@/components/ui/toaster'
-import { AppProvider } from './contexts/AppContext'
-import { MaintenanceScreen, StartupScreen } from '@/components/screens'
-import ChatBotButton from '@/components/ui/chatbot-button'
-import { ApolloWrapper } from './lib/apollo-wrapper'
-import { Container } from '@chakra-ui/react'
+import { MaintenanceScreen } from '@/components/screens'
+import { AuthWrapper } from '@/components'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -29,22 +24,7 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
     return <MaintenanceScreen />
   }
 
-  return (
-    <>
-      <ApolloWrapper>
-        <StartupScreen>
-          <AppProvider>
-            <Toaster />
-            <Navbar />
-            <Container pl={{ lg: '50px' }}>
-              {children}
-              <ChatBotButton />
-            </Container>
-          </AppProvider>
-        </StartupScreen>
-      </ApolloWrapper>
-    </>
-  )
+  return <AuthWrapper>{children}</AuthWrapper>
 }
 
 export default function RootLayout({

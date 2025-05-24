@@ -35,6 +35,8 @@ export const useApp = () => {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const isAuthRoute = window.location.pathname.startsWith('/auth')
+
   const [loggedInUser, setLoggedInUser] = useState<ContextUser | undefined>(
     undefined
   )
@@ -81,6 +83,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }),
     [loggedInUser]
   )
+
+  if (isAuthRoute) {
+    return <>{children}</>
+  }
 
   return (
     <AppContext.Provider value={value}>
