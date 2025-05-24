@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
-import { UserProfile, useUser } from '@auth0/nextjs-auth0/client'
+import { UserProfile } from '@auth0/nextjs-auth0/client'
 import { Person } from '@/gql/graphql'
 import { ApolloWrapper } from '@/components'
 
@@ -20,10 +20,14 @@ type ContextUser = UserProfile & Person
 
 interface AppContextType {
   user?: ContextUser
+  setUser: (user: ContextUser) => void
 }
 
 const AppContext = createContext<AppContextType>({
   user: undefined,
+  setUser: () => {
+    throw new Error('setUser function is not defined')
+  },
 })
 
 export const useApp = () => {
@@ -36,11 +40,7 @@ export const useApp = () => {
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const isAuthRoute = window.location.pathname.startsWith('/auth')
-
-  const [loggedInUser, setLoggedInUser] = useState<ContextUser | undefined>(
-    undefined
-  )
-  const { user } = useUser()
+  const [user, setUser] = useState<ContextUser | undefined>(undefined)
 
   // Maintenance mode state
 
@@ -52,7 +52,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (!data?.people[0]) {
         return
       }
-      setLoggedInUser({ ...user, ...data.people[0] } as ContextUser)
+      setUser({ ...user, ...data.people[0] } as ContextUser)
       sessionStorage.setItem(
         'user',
         JSON.stringify({ ...user, ...data.people[0] })
@@ -73,26 +73,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
     if (sessionUser.id && sessionUser.level) {
-      setLoggedInUser(sessionUser)
+      setUser(sessionUser)
     }
-  }, [user])
+  }, [])
 
   const value = useMemo(
     () => ({
-      user: loggedInUser,
+      user,
+      setUser,
     }),
-    [loggedInUser]
+    [user]
   )
-
-  if (isAuthRoute) {
-    return <>{children}</>
-  }
 
   return (
     <AppContext.Provider value={value}>
-      <ApolloWrapper data={data} loading={loading} error={error}>
-        {children}
-      </ApolloWrapper>
+      {isAuthRoute ? (
+        <>{children}</>
+      ) : (
+        <ApolloWrapper data={data} loading={loading} error={error}>
+          {children}
+        </ApolloWrapper>
+      )}
     </AppContext.Provider>
   )
 }

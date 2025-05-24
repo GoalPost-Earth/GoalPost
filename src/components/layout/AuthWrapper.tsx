@@ -13,21 +13,23 @@ const AuthWrapper = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
 
-  if (isAuthRoute) {
-    return <>{children}</>
-  }
-
   return (
     <div>
       <ApolloWrapper>
         <StartupScreen>
           <AppProvider>
-            <Toaster />
-            <Navbar />
-            <Container pl={{ lg: '50px' }}>
-              {children}
-              <ChatBotButton />
-            </Container>
+            {isAuthRoute ? (
+              <>{children}</>
+            ) : (
+              <>
+                <Toaster />
+                <Navbar />
+                <Container pl={{ lg: '50px' }}>
+                  {children}
+                  <ChatBotButton />
+                </Container>
+              </>
+            )}
           </AppProvider>
         </StartupScreen>
       </ApolloWrapper>

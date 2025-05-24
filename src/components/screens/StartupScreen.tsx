@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { SplashScreen, GetStartedScreen } from '@/components/screens'
-import { useUser } from '@auth0/nextjs-auth0/client'
+import { usePathname } from 'next/navigation'
+import { useApp } from '@/app/contexts'
 
 const StartupScreen = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useUser()
+  const { user } = useApp()
+  console.log('🚀 ~ StartupScreen.tsx:10 ~ user:', user)
   const [showSplash, setShowSplash] = useState(true)
-  const isAuthRoute = window.location.pathname.startsWith('/auth')
+  const pathname = usePathname()
+  const isAuthRoute = pathname?.startsWith('/auth')
 
   useEffect(() => {
     const timer = setTimeout(() => {

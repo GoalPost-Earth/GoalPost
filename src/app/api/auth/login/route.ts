@@ -72,7 +72,10 @@ export async function POST(req: NextRequest) {
 
     const token = signJWT({ id, ...rest })
 
-    return NextResponse.json({ token, returnTo }, { status: 200 })
+    return NextResponse.json(
+      { user: { id, ...rest }, token, refreshToken: 'refreshme', returnTo },
+      { status: 200 }
+    )
   } catch (err) {
     return NextResponse.json({ error: parseError(err) }, { status: 500 })
   } finally {
