@@ -9,10 +9,10 @@ import {
   useState,
 } from 'react'
 import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
-import { UserProfile } from '@auth0/nextjs-auth0/client'
 import { Person } from '@/gql/graphql'
 import { ApolloWrapper } from '@/components'
 import { usePathname } from 'next/navigation'
+import { UserProfile } from '@/types'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 

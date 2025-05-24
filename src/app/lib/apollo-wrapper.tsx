@@ -9,7 +9,6 @@ import {
 } from '@apollo/experimental-nextjs-app-support'
 import { ERROR_POLICY } from './apollo-functions'
 
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
@@ -18,6 +17,7 @@ import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toaster } from '@/components'
+import { useApp } from '../contexts'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in
@@ -25,7 +25,7 @@ export function ApolloWrapper({
   children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: Readonly<{ children: React.ReactNode }>) {
-  const { user } = useUser()
+  const { user } = useApp()
   const isLoading = false
   const router = useRouter()
   const [token, setToken] = useState<Token>()
@@ -51,6 +51,7 @@ export function ApolloWrapper({
         }
 
         const response = await fetch('/api/auth/access-token')
+        console.log('🚀 ~ apollo-wrapper.tsx:50 ~ response:', response)
         if (!response.ok) {
           const resJson = await response.json()
           const error = {

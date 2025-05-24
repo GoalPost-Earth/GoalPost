@@ -6,11 +6,11 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { CommunityForm } from '@/components'
 import { CommunityFormData, communitySchema } from '@/app/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormMode } from '@/constants'
+import { useApp } from '@/app/contexts'
 
 function CreateCommunity() {
   const {
@@ -22,7 +22,7 @@ function CreateCommunity() {
     resolver: zodResolver(communitySchema),
   })
   const router = useRouter()
-  const { user } = useUser()
+  const { user } = useApp()
   const [CreateCommunities] = useMutation(CREATE_COMMUNITY_MUTATION)
 
   const onSubmit = async (data: CommunityFormData) => {

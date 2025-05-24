@@ -42,6 +42,7 @@ export const authLink = setContext(async (_, { headers }) => {
   try {
     const response = await fetch('/api/auth/access-token')
     let resJson = await response.json()
+    console.log('🚀 ~ apollo-functions.ts:45 ~ resJson:', resJson)
 
     if (!response.ok) {
       const error = {

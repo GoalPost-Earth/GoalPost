@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Provider } from '@/components/ui/provider'
 import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
@@ -36,9 +35,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body>
         <Provider>
-          <UserProvider>
-            <ContentWrapper>{children}</ContentWrapper>
-          </UserProvider>
+          <ContentWrapper>{children}</ContentWrapper>
         </Provider>
       </body>
     </html>

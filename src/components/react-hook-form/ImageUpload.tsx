@@ -11,8 +11,8 @@ import {
 } from '@chakra-ui/react'
 import { UseFormSetValue } from 'react-hook-form'
 import { ReactHookFormComponentProps } from '../../types/form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { Avatar } from '../ui'
+import { useApp } from '@/app/contexts'
 
 export interface ImageUploadProps extends ReactHookFormComponentProps {
   uploadPreset: string
@@ -41,7 +41,7 @@ const ImageUpload = (props: ImageUploadProps) => {
     fileInputRef.current?.click()
   }
 
-  const { user } = useUser()
+  const { user } = useApp()
 
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState(
