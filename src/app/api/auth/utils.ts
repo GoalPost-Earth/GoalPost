@@ -17,6 +17,7 @@ export const signJWT = (payload: Record<string, unknown>) =>
 export const verifyJWT = (token: string) =>
   jwt.verify(token, process.env.JWT_SECRET ?? '')
 
+
 /**
  * Parses the request body as JSON and checks for empty body.
  * Returns an object: { ok: true, body } or { ok: false, error, status }

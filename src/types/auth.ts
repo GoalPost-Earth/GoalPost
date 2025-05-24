@@ -12,7 +12,7 @@ export interface UserProfile {
 
 export interface Token {
   accessToken: string
-  accessTokenDecoded: DecodedToken
-  user: UserProfile
+  // accessTokenDecoded: DecodedToken
+  // user: UserProfile
   expiresAt: number
 }

@@ -61,7 +61,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
     onCompleted: (data) => {
-      console.log('🚀 ~ AppContext.tsx:64 ~ data:', data)
       if (!data?.people[0]) {
         return
       }
@@ -70,12 +69,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         'user',
         JSON.stringify({ ...user, ...data.people[0] })
       )
-      if (data?.people[0].authId !== user?.sub) {
+      if (data?.people[0].authId !== user?.id) {
         UpdatePerson({
           variables: {
             where: { email_EQ: user?.email },
             update: {
-              authId_SET: user?.sub,
+              authId_SET: user?.id,
             },
           },
         })
@@ -99,6 +98,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user,
     setUser: setUserAndPersist,
   }
+  console.log('🚀 ~ AppContext.tsx:101 ~ value.user:', value.user)
 
   return (
     <AppContext.Provider value={value}>

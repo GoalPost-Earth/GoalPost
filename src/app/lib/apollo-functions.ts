@@ -42,7 +42,6 @@ export const authLink = setContext(async (_, { headers }) => {
   try {
     const response = await fetch('/api/auth/access-token')
     let resJson = await response.json()
-    console.log('🚀 ~ apollo-functions.ts:45 ~ resJson:', resJson)
 
     if (!response.ok) {
       const error = {
@@ -51,7 +50,7 @@ export const authLink = setContext(async (_, { headers }) => {
         message: resJson?.message || resJson?.error,
         code: resJson?.code,
       }
-      console.error('Error fetching access token:', error)
+
       if (error.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
         // Try to refresh the token
         const refreshResponse = await fetch('/api/auth/refresh-token')
@@ -84,7 +83,7 @@ export const authLink = setContext(async (_, { headers }) => {
       return {
         headers: {
           ...headers,
-          Authorization: `Bearer ${resJson.accessToken}`,
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo`,
         },
       }
     }

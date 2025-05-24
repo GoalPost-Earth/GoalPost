@@ -73,7 +73,15 @@ export async function POST(req: NextRequest) {
     const token = signJWT({ id, ...rest })
 
     return NextResponse.json(
-      { user: { id, ...rest }, token, refreshToken: 'refreshme', returnTo },
+      {
+        user: { id, ...rest },
+        token: {
+          accessToken: token,
+          expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
+        },
+        refreshToken: 'refreshme',
+        returnTo,
+      },
       { status: 200 }
     )
   } catch (err) {
