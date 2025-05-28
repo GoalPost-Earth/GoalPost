@@ -8,14 +8,14 @@
     "description": "GoalPost Earth is a mutual aid and community resilience project helping people organize and distribute resources effectively. We aim to strengthen communities through open-source tools for connection, collaboration, and resource sharing.",
     "webpageUrl": {
       "url": "https://goalpost.earth",
-      "wellKnown": "https://goalpost.earth/.well-known/funding-manifest-urls"
+      "wellKnown": ""
     }
   },
   "projects": [
     {
       "guid": "goalpost",
       "name": "GoalPost",
-      "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively.",
+      "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively. Our open-source platform empowers communities to connect, collaborate, and share resources for greater resilience.",
       "webpageUrl": {
         "url": "https://goalpost.earth",
         "wellKnown": "https://goalpost.earth/.well-known/funding-manifest-urls"
@@ -34,7 +34,7 @@
         "guid": "opencollective",
         "type": "payment-provider",
         "address": "https://opencollective.com/goalpost",
-        "description": "Donate via Open Collective"
+        "description": "Donate to GoalPost Earth via Open Collective, a transparent funding platform for open and community projects."
       }
     ],
     "plans": [
@@ -42,7 +42,7 @@
         "guid": "general-support",
         "status": "active",
         "name": "General Support",
-        "description": "Support GoalPost Earth with any amount via Open Collective.",
+        "description": "Support GoalPost Earth with any amount via Open Collective. Your contribution helps us build tools and resources for community resilience and mutual aid.",
         "amount": 0,
         "currency": "USD",
         "frequency": "one-time",
