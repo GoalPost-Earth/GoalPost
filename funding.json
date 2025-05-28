@@ -1,14 +1,14 @@
 {
   "version": "v1.0.0",
   "entity": {
-    "name": "GoalPost Earth",
     "type": "organisation",
     "role": "owner",
+    "name": "GoalPost Earth",
     "email": "community.of.care@proton.me",
     "description": "GoalPost Earth is a mutual aid and community resilience project helping people organize and distribute resources effectively. We aim to strengthen communities through open-source tools for connection, collaboration, and resource sharing.",
     "webpageUrl": {
       "url": "https://goalpost.earth",
-      "wellKnown": ""
+      "wellKnown": "https://goalpost.earth/.well-known/funding-manifest-urls"
     }
   },
   "projects": [
@@ -17,10 +17,12 @@
       "name": "GoalPost",
       "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively.",
       "webpageUrl": {
-        "url": "https://goalpost.earth"
+        "url": "https://goalpost.earth",
+        "wellKnown": "https://goalpost.earth/.well-known/funding-manifest-urls"
       },
       "repositoryUrl": {
-        "url": "https://github.com/GoalPost-Earth/GoalPost"
+        "url": "https://github.com/GoalPost-Earth/GoalPost",
+        "wellKnown": "https://github.com/GoalPost-Earth/GoalPost/blob/main/public/.well-known/funding-manifest-urls"
       },
       "licenses": ["spdx:Apache-2.0"],
       "tags": ["mutual-aid", "open-source", "community", "nonprofit"]
@@ -46,6 +48,7 @@
         "frequency": "one-time",
         "channels": ["opencollective"]
       }
-    ]
+    ],
+    "history": []
   }
 }
