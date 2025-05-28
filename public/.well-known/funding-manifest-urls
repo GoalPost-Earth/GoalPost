@@ -1,1 +1,5 @@
-https://goalpost.earth/funding.json
+{
+  "urls": [
+    "https://goalpost.earth/funding.json"
+  ]
+}
