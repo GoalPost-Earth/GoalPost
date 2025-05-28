@@ -5,6 +5,7 @@
     "role": "owner",
     "name": "GoalPost Earth",
     "email": "community.of.care@proton.me",
+    "phone": "",
     "description": "GoalPost Earth is a mutual aid and community resilience project helping people organize and distribute resources effectively. We aim to strengthen communities through open-source tools for connection, collaboration, and resource sharing.",
     "webpageUrl": {
       "url": "https://goalpost.earth",
@@ -17,7 +18,8 @@
       "name": "GoalPost",
       "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively. Our open-source platform empowers communities to connect, collaborate, and share resources for greater resilience.",
       "webpageUrl": {
-        "url": "https://goalpost.earth"
+        "url": "https://goalpost.earth",
+        "wellKnown": ""
       },
       "repositoryUrl": {
         "url": "https://github.com/GoalPost-Earth/GoalPost",

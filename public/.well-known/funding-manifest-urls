@@ -1,8 +1,6 @@
 {
   "urls": [
     "https://goalpost.earth/funding.json",
-    "https://www.goalpost.earth/funding.json",
-    "https://goalpost.earth/.well-known/funding.json",
-    "https://www.goalpost.earth/.well-known/funding.json"
+    "https://www.goalpost.earth/funding.json"
   ]
 }
