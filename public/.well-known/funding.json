@@ -17,8 +17,7 @@
       "name": "GoalPost",
       "description": "A mutual aid and community resilience project helping people organize and distribute resources effectively. Our open-source platform empowers communities to connect, collaborate, and share resources for greater resilience.",
       "webpageUrl": {
-        "url": "https://goalpost.earth",
-        "wellKnown": "https://goalpost.earth/.well-known/funding-manifest-urls"
+        "url": "https://goalpost.earth"
       },
       "repositoryUrl": {
         "url": "https://github.com/GoalPost-Earth/GoalPost",
