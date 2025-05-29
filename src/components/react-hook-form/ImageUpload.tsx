@@ -11,8 +11,8 @@ import {
 } from '@chakra-ui/react'
 import { UseFormSetValue } from 'react-hook-form'
 import { ReactHookFormComponentProps } from '../../types/form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { Avatar } from '../ui'
+import { useApp } from '@/app/contexts'
 
 export interface ImageUploadProps extends ReactHookFormComponentProps {
   uploadPreset: string
@@ -41,7 +41,7 @@ const ImageUpload = (props: ImageUploadProps) => {
     fileInputRef.current?.click()
   }
 
-  const { user } = useUser()
+  const { user } = useApp()
 
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState(
@@ -52,7 +52,7 @@ const ImageUpload = (props: ImageUploadProps) => {
     const files = e.target.files ?? []
     const date = new Date().toISOString().slice(0, 10)
     const username = `${user?.name?.toLowerCase()}}`
-    let filename = `${username}-${user?.sub}/${date}_${files[0].name}`
+    let filename = `${username}-${user?.id}/${date}_${files[0].name}`
     filename = filename.replace(/\s/g, '-')
     filename = filename.replace(/~/g, '-')
     filename = filename.replace(/[^a-zA-Z0-9-_]/g, '')

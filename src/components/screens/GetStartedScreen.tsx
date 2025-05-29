@@ -44,12 +44,7 @@ const GetStartedScreen = () => {
               Connect with and care for your community.
             </Text>
           </VStack>
-          <Button
-            as="a"
-            href="/api/auth/login?returnTo=/"
-            size="lg"
-            paddingY={6}
-          >
+          <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
             Next
           </Button>
         </Box>
@@ -97,7 +92,7 @@ function DesktopGetStartedScreen() {
             Connect with and care for your community
           </Heading>
         </Container>
-        <Button as="a" href="/api/auth/login?returnTo=/" size="lg" paddingY={6}>
+        <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
           Next
         </Button>
       </VStack>

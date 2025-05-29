@@ -1,38 +1,15 @@
-import { getAccessToken } from '@auth0/nextjs-auth0'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
-  try {
-    const token = await getAccessToken()
-    return NextResponse.json(token, {
-      status: 200,
-    })
-  } catch (error) {
-    const errorWithType = error as {
-      code: string
-    }
-    if (errorWithType.code === 'ERR_EXPIRED_ACCESS_TOKEN') {
-      return NextResponse.json(
-        { error: 'Expired access token', code: errorWithType.code },
-        { status: 401 }
-      )
-    }
+export async function GET(req: NextRequest) {
+  // Read the 'accessToken' cookie
+  const accessToken = req.cookies.get('accessToken')?.value
 
+  if (!accessToken) {
     return NextResponse.json(
-      { error: 'Failed to get access token', code: errorWithType.code },
-      { status: 500 }
+      { error: 'No access token found' },
+      { status: 401 }
     )
   }
-}
 
-export async function POST() {
-  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
-}
-
-export async function PUT() {
-  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
-}
-
-export async function DELETE() {
-  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
+  return NextResponse.json({ accessToken })
 }
