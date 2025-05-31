@@ -45,6 +45,12 @@ const nextConfig: NextConfig = {
       loader: 'graphql-tag/loader',
     })
 
+    config.module.rules.push({
+      test: /\.well-known\/[^.]+$/,
+      type: 'asset/source',
+      exclude: /node_modules/,
+    })
+
     if (config.cache && !dev) {
       config.cache = Object.freeze({
         type: 'memory',
