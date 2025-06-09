@@ -115,7 +115,7 @@ export default function GoalRelatedResources({ goal }: { goal: Goal }) {
                   connect: [{ where: { node: { id_EQ: goal.id } } }],
                 },
                 createdBy: {
-                  connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+                  connect: [{ where: { node: { id_EQ: user?.id } } }],
                 },
               },
             ],

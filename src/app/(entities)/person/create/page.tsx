@@ -10,10 +10,10 @@ import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { PersonForm } from '@/components'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { FormMode } from '@/constants'
 import { PersonFormData, personSchema } from '@/app/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useApp } from '@/app/contexts'
 
 function CreatePerson() {
   const {
@@ -29,7 +29,7 @@ function CreatePerson() {
     },
   })
 
-  const { user } = useUser()
+  const { user } = useApp()
   const router = useRouter()
 
   const [CreatePeople] = useMutation(CREATE_PEOPLE_MUTATION)
@@ -55,7 +55,7 @@ function CreatePerson() {
                   ],
                 },
             createdBy: {
-              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+              connect: [{ where: { node: { id_EQ: user?.id } } }],
             },
           },
         },

@@ -9,7 +9,6 @@ import {
 } from '@apollo/experimental-nextjs-app-support'
 import { ERROR_POLICY } from './apollo-functions'
 
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
@@ -18,6 +17,7 @@ import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toaster } from '@/components'
+import { useApp } from '../contexts'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in
@@ -25,9 +25,15 @@ export function ApolloWrapper({
   children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: Readonly<{ children: React.ReactNode }>) {
-  const { isLoading, user } = useUser()
+  const { user } = useApp()
+  const isLoading = false
   const router = useRouter()
-  const [token, setToken] = useState<Token>()
+  const [token, setToken] = useState<Token | undefined>({
+    accessToken:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
+    expiresAt: 1748050000,
+  })
+
   const httpLink = new HttpLink({
     // this needs to be an absolute url, as relative urls cannot be used in SSR
     uri: process.env.NEXT_PUBLIC_GRAPHQL_URI ?? '/api/graphql',
@@ -64,14 +70,17 @@ export function ApolloWrapper({
 
         const resJson = await response?.json()
 
-        if (resJson?.accessToken) {
+        if (token) {
           const decoded = jwtDecode(resJson.accessToken) as { exp: number }
 
           setToken({
             accessToken: resJson.accessToken,
-            accessTokenDecoded: decoded,
-            user,
+            // accessTokenDecoded: decoded,
+            // user,
+            // Add all required Token properties here:
+            // Example: refreshToken: resJson.refreshToken,
             expiresAt: decoded.exp,
+            // Add any other required fields with appropriate values
           })
         }
       } catch (error) {
@@ -92,7 +101,7 @@ export function ApolloWrapper({
   }
 
   const authLink = new ApolloLink((operation, forward) => {
-    if (token?.accessToken) {
+    if (token) {
       try {
         const expireDate = new Date(token.expiresAt * 1000)
         if (expireDate < new Date()) {
@@ -107,7 +116,7 @@ export function ApolloWrapper({
           ({ headers }: { headers: Record<string, string> }) => {
             return {
               headers: {
-                authorization: `Bearer ${token?.accessToken}`,
+                Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo`,
                 ...headers,
               },
             }

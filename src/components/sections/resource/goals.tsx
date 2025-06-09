@@ -111,7 +111,7 @@ export default function ResourceRelatedGoals({
                   connect: [{ where: { node: { id_IN: toConnect } } }],
                 },
                 createdBy: {
-                  connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+                  connect: [{ where: { node: { id_EQ: user?.id } } }],
                 },
               },
             ],
