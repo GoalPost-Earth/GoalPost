@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       const hashed = await hashPassword(password)
 
       const result = await session.run(
-        `MERGE (person:Person {email: $email})
+        `MATCH (person:Person {email: $email})
                     SET person:User
                     SET person.password = $password 
                 RETURN person`,
