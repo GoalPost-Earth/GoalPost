@@ -6,7 +6,7 @@ const GetStartedScreen = () => {
   return (
     <>
       <Box
-        height="60vh"
+        height="100vh"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
         backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.webp)"
@@ -29,6 +29,7 @@ const GetStartedScreen = () => {
           padding="25px"
           gap="50px"
           alignItems="center"
+          bg="rgba(255, 255, 255, 0.9)"
         >
           <AppLogo
             width={100}

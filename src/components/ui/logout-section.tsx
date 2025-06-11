@@ -110,7 +110,7 @@ export function LogoutSection({
               {loading ? (
                 <HStack>
                   <Spinner />
-                  <Text>'Signing Out'</Text>
+                  <Text>Signing Out</Text>
                 </HStack>
               ) : (
                 'Sign Out'
