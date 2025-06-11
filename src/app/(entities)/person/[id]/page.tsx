@@ -1,7 +1,7 @@
 'use client'
 
-import { GET_PERSON } from '@/app/graphql/queries'
-import { Box, Container, HStack, Text } from '@chakra-ui/react'
+import { GET_USER_BY_ID, GET_PERSON } from '@/app/graphql/queries'
+import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
 import React, { use, useEffect } from 'react'
 import {
   GenericTabs,
@@ -33,11 +33,20 @@ export default function ViewPersonPage({
     fetchPolicy: 'network-only',
   })
 
+  const { data: usersData, loading: userLoading } = useQuery(GET_USER_BY_ID, {
+    variables: { id },
+    fetchPolicy: 'network-only',
+  })
+
   useEffect(() => {
     refetch()
   }, [refetch])
 
   const person = data?.people[0]
+  const user = usersData?.people[0]
+
+  console.log('User:', user)
+  console.log('User Data:', usersData)
 
   if (error) {
     throw error
@@ -98,6 +107,30 @@ export default function ViewPersonPage({
             tabTriggers={triggers}
             tabContent={[
               <>
+                {/* Invite button for non-user persons */}
+                {!user && !userLoading && (
+                  <Flex
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    width={'100%'}
+                    mb={5}
+                    mt={{ base: 3, lg: 0 }}
+                  >
+                    <Button
+                      colorScheme="blue"
+                      size="sm"
+                      borderRadius={'3xl'}
+                      onClick={() => {
+                        /* TODO: implement invite logic */
+                        window.alert(
+                          'Invite functionality not implemented yet.'
+                        )
+                      }}
+                    >
+                      Invite
+                    </Button>
+                  </Flex>
+                )}
                 <UserInfo data={bioData} key="bio" />
                 <Box mt={5} display={{ base: 'block', lg: 'none' }}>
                   <Text fontSize="sm" fontWeight="bold" my={5}>

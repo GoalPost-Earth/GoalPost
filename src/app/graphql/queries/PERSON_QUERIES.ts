@@ -189,3 +189,11 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
     }
   }
 `)
+
+export const GET_USER_BY_ID = graphql(`
+  query getUserById($id: ID!) {
+    people(where: { id_EQ: $id, NOT: { authId_EQ: null } }) {
+      id
+    }
+  }
+`)

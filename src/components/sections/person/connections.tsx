@@ -159,6 +159,13 @@ export default function PersonConnections({ person }: { person: Person }) {
 
   const onSubmitConnectionProps = async (data: ConnectionPropsData) => {
     try {
+      // Find connection to disconnect and reconnect with updated properties
+      const connectionToUpdate = selectedConnection?.id
+
+      if (!connectionToUpdate) {
+        throw new Error('No connection selected')
+      }
+
       const response = await UpdatePerson({
         variables: {
           where: {
@@ -166,18 +173,23 @@ export default function PersonConnections({ person }: { person: Person }) {
           },
           update: {
             connections: [
+              // First disconnect the existing relationship
               {
-                where: {
-                  node: {
-                    id_EQ: selectedConnection?.id,
+                disconnect: [
+                  { where: { node: { id_IN: [connectionToUpdate] } } },
+                ],
+              },
+              // Then reconnect with updated properties
+              {
+                connect: [
+                  {
+                    where: { node: { id_EQ: connectionToUpdate } },
+                    edge: {
+                      why: data.why,
+                      interests: data.interests,
+                    },
                   },
-                },
-                update: {
-                  edge: {
-                    why_SET: data.why,
-                    interests_SET: data.interests,
-                  },
-                },
+                ],
               },
             ],
           },
@@ -195,11 +207,15 @@ export default function PersonConnections({ person }: { person: Person }) {
       setOpenConnectionProps(false)
 
       toaster.success({
-        title: 'Updated Connection Properties',
-        description: 'The connection properties have been updated',
+        title: 'Updated Connection Details',
+        description: `The details for connection with ${selectedConnection?.name} have been updated`,
       })
     } catch (error) {
       console.error(error)
+      toaster.error({
+        title: 'Error',
+        description: 'An error occurred while updating the connection details',
+      })
     }
   }
 

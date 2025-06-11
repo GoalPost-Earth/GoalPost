@@ -26,6 +26,8 @@ const Select = (props: SelectPropsType) => {
     required,
     register,
     options,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onSelect, // Extract onSelect to avoid type conflict
     ...rest
   } = props
 

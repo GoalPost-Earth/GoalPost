@@ -144,7 +144,13 @@ export default function PersonCommunities({ person }: { person: Person }) {
 
   const onSubmitCommunityProps = async (data: CommunityPropsData) => {
     try {
-      // Find communities to delete and connect
+      // Find communities to disconnect and reconnect with updated properties
+      // First disconnect the community
+      const communityToUpdate = selectedCommunity?.id
+
+      if (!communityToUpdate) {
+        throw new Error('No community selected')
+      }
 
       const response = await UpdatePerson({
         variables: {
@@ -153,18 +159,23 @@ export default function PersonCommunities({ person }: { person: Person }) {
           },
           update: {
             communities: [
+              // First disconnect the existing relationship
               {
-                where: {
-                  node: {
-                    id_EQ: selectedCommunity?.id,
+                disconnect: [
+                  { where: { node: { id_IN: [communityToUpdate] } } },
+                ],
+              },
+              // Then reconnect with updated properties
+              {
+                connect: [
+                  {
+                    where: { node: { id_EQ: communityToUpdate } },
+                    edge: {
+                      totem: data.totem,
+                      signupDate: data.signupDate,
+                    },
                   },
-                },
-                update: {
-                  edge: {
-                    totem_SET: data.totem,
-                    signupDate_SET: data.signupDate,
-                  },
-                },
+                ],
               },
             ],
           },
@@ -179,10 +190,10 @@ export default function PersonCommunities({ person }: { person: Person }) {
         response.data.updatePeople.people[0].communitiesConnection
           .edges as PersonCommunitiesRelationship[]
       )
-      setOpen(false)
+      setOpenCommunityProps(false) // Close the dialog for community props
       toaster.success({
-        title: 'Updated Communities',
-        description: 'The communities for the person have been updated',
+        title: 'Updated Community Details',
+        description: `The details for ${selectedCommunity?.name} have been updated`,
       })
     } catch (error) {
       console.error(error)

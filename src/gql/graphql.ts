@@ -99,14 +99,17 @@ export type BelongsToWhere = {
 export type CarePoint = {
   __typename?: 'CarePoint'
   caresForGoals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "caresForGoalsConnection" instead */
   caresForGoalsAggregate?: Maybe<CarePointGoalCaresForGoalsAggregationSelection>
   caresForGoalsConnection: CarePointCaresForGoalsConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<CarePointPersonCreatedByAggregationSelection>
   createdByConnection: CarePointCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   enabledByGoals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "enabledByGoalsConnection" instead */
   enabledByGoalsAggregate?: Maybe<CarePointGoalEnabledByGoalsAggregationSelection>
   enabledByGoalsConnection: CarePointEnabledByGoalsConnection
   fulfillmentDate?: Maybe<Scalars['String']['output']>
@@ -117,6 +120,7 @@ export type CarePoint = {
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
   resources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate?: Maybe<CarePointResourceResourcesAggregationSelection>
   resourcesConnection: CarePointResourcesConnection
   status: Scalars['String']['output']
@@ -198,6 +202,31 @@ export type CarePointResourcesConnectionArgs = {
   where?: InputMaybe<CarePointResourcesConnectionWhere>
 }
 
+export type CarePointAggregate = {
+  __typename?: 'CarePointAggregate'
+  count: Count
+  node: CarePointAggregateNode
+}
+
+export type CarePointAggregateNode = {
+  __typename?: 'CarePointAggregateNode'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  fulfillmentDate: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  issuesIdentified: StringAggregateSelection
+  issuesResolved: StringAggregateSelection
+  levelFulfilled: StringAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  status: StringAggregateSelection
+  successMeasures: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
 export type CarePointAggregateSelection = {
   __typename?: 'CarePointAggregateSelection'
   count: Scalars['Int']['output']
@@ -237,6 +266,7 @@ export type CarePointCaresForGoalsConnectFieldInput = {
 
 export type CarePointCaresForGoalsConnection = {
   __typename?: 'CarePointCaresForGoalsConnection'
+  aggregate: CarePointGoalCaresForGoalsAggregateSelection
   edges: Array<CarePointCaresForGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -441,6 +471,7 @@ export type CarePointCaresForGoalsRelationship = {
 
 export type CarePointCaresForGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<CarePointCaresForGoalsConnectionWhere>
 }
 
 export type CarePointCaresForGoalsUpdateFieldInput = {
@@ -449,7 +480,6 @@ export type CarePointCaresForGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<CarePointCaresForGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CarePointCaresForGoalsDisconnectFieldInput>>
   update?: InputMaybe<CarePointCaresForGoalsUpdateConnectionInput>
-  where?: InputMaybe<CarePointCaresForGoalsConnectionWhere>
 }
 
 export type CarePointConnectInput = {
@@ -500,6 +530,7 @@ export type CarePointCreatedByConnectFieldInput = {
 
 export type CarePointCreatedByConnection = {
   __typename?: 'CarePointCreatedByConnection'
+  aggregate: CarePointPersonCreatedByAggregateSelection
   edges: Array<CarePointCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -809,6 +840,7 @@ export type CarePointCreatedByRelationship = {
 
 export type CarePointCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<CarePointCreatedByConnectionWhere>
 }
 
 export type CarePointCreatedByUpdateFieldInput = {
@@ -817,7 +849,6 @@ export type CarePointCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<CarePointCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CarePointCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CarePointCreatedByUpdateConnectionInput>
-  where?: InputMaybe<CarePointCreatedByConnectionWhere>
 }
 
 export type CarePointDeleteInput = {
@@ -861,6 +892,7 @@ export type CarePointEnabledByGoalsConnectFieldInput = {
 
 export type CarePointEnabledByGoalsConnection = {
   __typename?: 'CarePointEnabledByGoalsConnection'
+  aggregate: CarePointGoalEnabledByGoalsAggregateSelection
   edges: Array<CarePointEnabledByGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1065,6 +1097,7 @@ export type CarePointEnabledByGoalsRelationship = {
 
 export type CarePointEnabledByGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<CarePointEnabledByGoalsConnectionWhere>
 }
 
 export type CarePointEnabledByGoalsUpdateFieldInput = {
@@ -1073,7 +1106,12 @@ export type CarePointEnabledByGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<CarePointEnabledByGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CarePointEnabledByGoalsDisconnectFieldInput>>
   update?: InputMaybe<CarePointEnabledByGoalsUpdateConnectionInput>
-  where?: InputMaybe<CarePointEnabledByGoalsConnectionWhere>
+}
+
+export type CarePointGoalCaresForGoalsAggregateSelection = {
+  __typename?: 'CarePointGoalCaresForGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CarePointGoalCaresForGoalsNodeAggregateSelection>
 }
 
 export type CarePointGoalCaresForGoalsAggregationSelection = {
@@ -1099,6 +1137,12 @@ export type CarePointGoalCaresForGoalsNodeAggregateSelection = {
   why: StringAggregateSelection
 }
 
+export type CarePointGoalEnabledByGoalsAggregateSelection = {
+  __typename?: 'CarePointGoalEnabledByGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CarePointGoalEnabledByGoalsNodeAggregateSelection>
+}
+
 export type CarePointGoalEnabledByGoalsAggregationSelection = {
   __typename?: 'CarePointGoalEnabledByGoalsAggregationSelection'
   count: Scalars['Int']['output']
@@ -1120,6 +1164,12 @@ export type CarePointGoalEnabledByGoalsNodeAggregateSelection = {
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
+}
+
+export type CarePointPersonCreatedByAggregateSelection = {
+  __typename?: 'CarePointPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CarePointPersonCreatedByNodeAggregateSelection>
 }
 
 export type CarePointPersonCreatedByAggregationSelection = {
@@ -1150,6 +1200,12 @@ export type CarePointPersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type CarePointResourceResourcesAggregateSelection = {
+  __typename?: 'CarePointResourceResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CarePointResourceResourcesNodeAggregateSelection>
 }
 
 export type CarePointResourceResourcesAggregationSelection = {
@@ -1191,6 +1247,7 @@ export type CarePointResourcesConnectFieldInput = {
 
 export type CarePointResourcesConnection = {
   __typename?: 'CarePointResourcesConnection'
+  aggregate: CarePointResourceResourcesAggregateSelection
   edges: Array<CarePointResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1350,6 +1407,7 @@ export type CarePointResourcesRelationship = {
 
 export type CarePointResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<CarePointResourcesConnectionWhere>
 }
 
 export type CarePointResourcesUpdateFieldInput = {
@@ -1358,7 +1416,6 @@ export type CarePointResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<CarePointResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CarePointResourcesDisconnectFieldInput>>
   update?: InputMaybe<CarePointResourcesUpdateConnectionInput>
-  where?: InputMaybe<CarePointResourcesConnectionWhere>
 }
 
 /** Fields to sort CarePoints by. The order in which sorts are applied is not guaranteed when specifying many fields in one CarePointSort object. */
@@ -1547,6 +1604,7 @@ export type CarePointWhere = {
 
 export type CarePointsConnection = {
   __typename?: 'CarePointsConnection'
+  aggregate: CarePointAggregate
   edges: Array<CarePointEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1556,6 +1614,18 @@ export type ChatbotResponse = {
   __typename?: 'ChatbotResponse'
   message: Scalars['String']['output']
   sessionId: Scalars['String']['output']
+}
+
+export type ChatbotResponseAggregate = {
+  __typename?: 'ChatbotResponseAggregate'
+  count: Count
+  node: ChatbotResponseAggregateNode
+}
+
+export type ChatbotResponseAggregateNode = {
+  __typename?: 'ChatbotResponseAggregateNode'
+  message: StringAggregateSelection
+  sessionId: StringAggregateSelection
 }
 
 export type ChatbotResponseAggregateSelection = {
@@ -1605,6 +1675,7 @@ export type ChatbotResponseWhere = {
 
 export type ChatbotResponsesConnection = {
   __typename?: 'ChatbotResponsesConnection'
+  aggregate: ChatbotResponseAggregate
   edges: Array<ChatbotResponseEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1612,6 +1683,7 @@ export type ChatbotResponsesConnection = {
 
 export type CommunitiesConnection = {
   __typename?: 'CommunitiesConnection'
+  aggregate: CommunityAggregate
   edges: Array<CommunityEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1621,26 +1693,32 @@ export type Community = {
   __typename?: 'Community'
   activities?: Maybe<Scalars['String']['output']>
   coreValues: Array<CoreValue>
+  /** @deprecated Please use field "aggregate" inside "coreValuesConnection" instead */
   coreValuesAggregate?: Maybe<CommunityCoreValueCoreValuesAggregationSelection>
   coreValuesConnection: CommunityCoreValuesConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<CommunityPersonCreatedByAggregationSelection>
   createdByConnection: CommunityCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   goals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "goalsConnection" instead */
   goalsAggregate?: Maybe<CommunityGoalGoalsAggregationSelection>
   goalsConnection: CommunityGoalsConnection
   id: Scalars['ID']['output']
   location?: Maybe<Scalars['String']['output']>
   members: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "membersConnection" instead */
   membersAggregate?: Maybe<CommunityPersonMembersAggregationSelection>
   membersConnection: CommunityMembersConnection
   name: Scalars['String']['output']
   relatedCommunities: Array<Community>
+  /** @deprecated Please use field "aggregate" inside "relatedCommunitiesConnection" instead */
   relatedCommunitiesAggregate?: Maybe<CommunityCommunityRelatedCommunitiesAggregationSelection>
   relatedCommunitiesConnection: CommunityRelatedCommunitiesConnection
   resources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate?: Maybe<CommunityResourceResourcesAggregationSelection>
   resourcesConnection: CommunityResourcesConnection
   resultsAchieved?: Maybe<Scalars['String']['output']>
@@ -1758,6 +1836,28 @@ export type CommunityResourcesConnectionArgs = {
   where?: InputMaybe<CommunityResourcesConnectionWhere>
 }
 
+export type CommunityAggregate = {
+  __typename?: 'CommunityAggregate'
+  count: Count
+  node: CommunityAggregateNode
+}
+
+export type CommunityAggregateNode = {
+  __typename?: 'CommunityAggregateNode'
+  activities: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  resultsAchieved: StringAggregateSelection
+  status: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
 export type CommunityAggregateSelection = {
   __typename?: 'CommunityAggregateSelection'
   activities: StringAggregateSelection
@@ -1773,6 +1873,12 @@ export type CommunityAggregateSelection = {
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
+}
+
+export type CommunityCommunityRelatedCommunitiesAggregateSelection = {
+  __typename?: 'CommunityCommunityRelatedCommunitiesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityCommunityRelatedCommunitiesNodeAggregateSelection>
 }
 
 export type CommunityCommunityRelatedCommunitiesAggregationSelection = {
@@ -1810,6 +1916,12 @@ export type CommunityConnectInput = {
 
 export type CommunityConnectWhere = {
   node: CommunityWhere
+}
+
+export type CommunityCoreValueCoreValuesAggregateSelection = {
+  __typename?: 'CommunityCoreValueCoreValuesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityCoreValueCoreValuesNodeAggregateSelection>
 }
 
 export type CommunityCoreValueCoreValuesAggregationSelection = {
@@ -1850,6 +1962,7 @@ export type CommunityCoreValuesConnectFieldInput = {
 
 export type CommunityCoreValuesConnection = {
   __typename?: 'CommunityCoreValuesConnection'
+  aggregate: CommunityCoreValueCoreValuesAggregateSelection
   edges: Array<CommunityCoreValuesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -1998,6 +2111,7 @@ export type CommunityCoreValuesRelationship = {
 
 export type CommunityCoreValuesUpdateConnectionInput = {
   node?: InputMaybe<CoreValueUpdateInput>
+  where?: InputMaybe<CommunityCoreValuesConnectionWhere>
 }
 
 export type CommunityCoreValuesUpdateFieldInput = {
@@ -2006,7 +2120,6 @@ export type CommunityCoreValuesUpdateFieldInput = {
   delete?: InputMaybe<Array<CommunityCoreValuesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CommunityCoreValuesDisconnectFieldInput>>
   update?: InputMaybe<CommunityCoreValuesUpdateConnectionInput>
-  where?: InputMaybe<CommunityCoreValuesConnectionWhere>
 }
 
 export type CommunityCreateInput = {
@@ -2045,6 +2158,7 @@ export type CommunityCreatedByConnectFieldInput = {
 
 export type CommunityCreatedByConnection = {
   __typename?: 'CommunityCreatedByConnection'
+  aggregate: CommunityPersonCreatedByAggregateSelection
   edges: Array<CommunityCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -2354,6 +2468,7 @@ export type CommunityCreatedByRelationship = {
 
 export type CommunityCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<CommunityCreatedByConnectionWhere>
 }
 
 export type CommunityCreatedByUpdateFieldInput = {
@@ -2362,7 +2477,6 @@ export type CommunityCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<CommunityCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CommunityCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CommunityCreatedByUpdateConnectionInput>
-  where?: InputMaybe<CommunityCreatedByConnectionWhere>
 }
 
 export type CommunityDeleteInput = {
@@ -2391,6 +2505,12 @@ export type CommunityEdge = {
   __typename?: 'CommunityEdge'
   cursor: Scalars['String']['output']
   node: Community
+}
+
+export type CommunityGoalGoalsAggregateSelection = {
+  __typename?: 'CommunityGoalGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityGoalGoalsNodeAggregateSelection>
 }
 
 export type CommunityGoalGoalsAggregationSelection = {
@@ -2435,6 +2555,7 @@ export type CommunityGoalsConnectFieldInput = {
 
 export type CommunityGoalsConnection = {
   __typename?: 'CommunityGoalsConnection'
+  aggregate: CommunityGoalGoalsAggregateSelection
   edges: Array<CommunityGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -2639,6 +2760,7 @@ export type CommunityGoalsRelationship = {
 
 export type CommunityGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<CommunityGoalsConnectionWhere>
 }
 
 export type CommunityGoalsUpdateFieldInput = {
@@ -2647,7 +2769,6 @@ export type CommunityGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<CommunityGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CommunityGoalsDisconnectFieldInput>>
   update?: InputMaybe<CommunityGoalsUpdateConnectionInput>
-  where?: InputMaybe<CommunityGoalsConnectionWhere>
 }
 
 export type CommunityMembersAggregateInput = {
@@ -2669,6 +2790,7 @@ export type CommunityMembersConnectFieldInput = {
 
 export type CommunityMembersConnection = {
   __typename?: 'CommunityMembersConnection'
+  aggregate: CommunityPersonMembersAggregateSelection
   edges: Array<CommunityMembersRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -2978,6 +3100,7 @@ export type CommunityMembersRelationship = {
 
 export type CommunityMembersUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<CommunityMembersConnectionWhere>
 }
 
 export type CommunityMembersUpdateFieldInput = {
@@ -2986,7 +3109,12 @@ export type CommunityMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<CommunityMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CommunityMembersDisconnectFieldInput>>
   update?: InputMaybe<CommunityMembersUpdateConnectionInput>
-  where?: InputMaybe<CommunityMembersConnectionWhere>
+}
+
+export type CommunityPersonCreatedByAggregateSelection = {
+  __typename?: 'CommunityPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityPersonCreatedByNodeAggregateSelection>
 }
 
 export type CommunityPersonCreatedByAggregationSelection = {
@@ -3017,6 +3145,12 @@ export type CommunityPersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type CommunityPersonMembersAggregateSelection = {
+  __typename?: 'CommunityPersonMembersAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityPersonMembersNodeAggregateSelection>
 }
 
 export type CommunityPersonMembersAggregationSelection = {
@@ -3068,6 +3202,7 @@ export type CommunityRelatedCommunitiesConnectFieldInput = {
 
 export type CommunityRelatedCommunitiesConnection = {
   __typename?: 'CommunityRelatedCommunitiesConnection'
+  aggregate: CommunityCommunityRelatedCommunitiesAggregateSelection
   edges: Array<CommunityRelatedCommunitiesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -3257,6 +3392,7 @@ export type CommunityRelatedCommunitiesRelationship = {
 
 export type CommunityRelatedCommunitiesUpdateConnectionInput = {
   node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<CommunityRelatedCommunitiesConnectionWhere>
 }
 
 export type CommunityRelatedCommunitiesUpdateFieldInput = {
@@ -3267,7 +3403,12 @@ export type CommunityRelatedCommunitiesUpdateFieldInput = {
     Array<CommunityRelatedCommunitiesDisconnectFieldInput>
   >
   update?: InputMaybe<CommunityRelatedCommunitiesUpdateConnectionInput>
-  where?: InputMaybe<CommunityRelatedCommunitiesConnectionWhere>
+}
+
+export type CommunityResourceResourcesAggregateSelection = {
+  __typename?: 'CommunityResourceResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CommunityResourceResourcesNodeAggregateSelection>
 }
 
 export type CommunityResourceResourcesAggregationSelection = {
@@ -3309,6 +3450,7 @@ export type CommunityResourcesConnectFieldInput = {
 
 export type CommunityResourcesConnection = {
   __typename?: 'CommunityResourcesConnection'
+  aggregate: CommunityResourceResourcesAggregateSelection
   edges: Array<CommunityResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -3468,6 +3610,7 @@ export type CommunityResourcesRelationship = {
 
 export type CommunityResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<CommunityResourcesConnectionWhere>
 }
 
 export type CommunityResourcesUpdateFieldInput = {
@@ -3476,7 +3619,6 @@ export type CommunityResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<CommunityResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CommunityResourcesDisconnectFieldInput>>
   update?: InputMaybe<CommunityResourcesUpdateConnectionInput>
-  where?: InputMaybe<CommunityResourcesConnectionWhere>
 }
 
 /** Fields to sort Communities by. The order in which sorts are applied is not guaranteed when specifying many fields in one CommunitySort object. */
@@ -3760,19 +3902,23 @@ export type CoreValue = {
   alignmentChallenges?: Maybe<Scalars['String']['output']>
   alignmentExamples?: Maybe<Scalars['String']['output']>
   communities: Array<Community>
+  /** @deprecated Please use field "aggregate" inside "communitiesConnection" instead */
   communitiesAggregate?: Maybe<CoreValueCommunityCommunitiesAggregationSelection>
   communitiesConnection: CoreValueCommunitiesConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<CoreValuePersonCreatedByAggregationSelection>
   createdByConnection: CoreValueCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   goals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "goalsConnection" instead */
   goalsAggregate?: Maybe<CoreValueGoalGoalsAggregationSelection>
   goalsConnection: CoreValueGoalsConnection
   id: Scalars['ID']['output']
   name: Scalars['String']['output']
   people: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "peopleConnection" instead */
   peopleAggregate?: Maybe<CoreValuePersonPeopleAggregationSelection>
   peopleConnection: CoreValuePeopleConnection
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -3851,6 +3997,25 @@ export type CoreValuePeopleConnectionArgs = {
   where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
+export type CoreValueAggregate = {
+  __typename?: 'CoreValueAggregate'
+  count: Count
+  node: CoreValueAggregateNode
+}
+
+export type CoreValueAggregateNode = {
+  __typename?: 'CoreValueAggregateNode'
+  alignmentChallenges: StringAggregateSelection
+  alignmentExamples: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
 export type CoreValueAggregateSelection = {
   __typename?: 'CoreValueAggregateSelection'
   alignmentChallenges: StringAggregateSelection
@@ -3884,6 +4049,7 @@ export type CoreValueCommunitiesConnectFieldInput = {
 
 export type CoreValueCommunitiesConnection = {
   __typename?: 'CoreValueCommunitiesConnection'
+  aggregate: CoreValueCommunityCommunitiesAggregateSelection
   edges: Array<CoreValueCommunitiesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -4073,6 +4239,7 @@ export type CoreValueCommunitiesRelationship = {
 
 export type CoreValueCommunitiesUpdateConnectionInput = {
   node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<CoreValueCommunitiesConnectionWhere>
 }
 
 export type CoreValueCommunitiesUpdateFieldInput = {
@@ -4081,7 +4248,12 @@ export type CoreValueCommunitiesUpdateFieldInput = {
   delete?: InputMaybe<Array<CoreValueCommunitiesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CoreValueCommunitiesDisconnectFieldInput>>
   update?: InputMaybe<CoreValueCommunitiesUpdateConnectionInput>
-  where?: InputMaybe<CoreValueCommunitiesConnectionWhere>
+}
+
+export type CoreValueCommunityCommunitiesAggregateSelection = {
+  __typename?: 'CoreValueCommunityCommunitiesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CoreValueCommunityCommunitiesNodeAggregateSelection>
 }
 
 export type CoreValueCommunityCommunitiesAggregationSelection = {
@@ -4148,6 +4320,7 @@ export type CoreValueCreatedByConnectFieldInput = {
 
 export type CoreValueCreatedByConnection = {
   __typename?: 'CoreValueCreatedByConnection'
+  aggregate: CoreValuePersonCreatedByAggregateSelection
   edges: Array<CoreValueCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -4457,6 +4630,7 @@ export type CoreValueCreatedByRelationship = {
 
 export type CoreValueCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<CoreValueCreatedByConnectionWhere>
 }
 
 export type CoreValueCreatedByUpdateFieldInput = {
@@ -4465,7 +4639,6 @@ export type CoreValueCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<CoreValueCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CoreValueCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CoreValueCreatedByUpdateConnectionInput>
-  where?: InputMaybe<CoreValueCreatedByConnectionWhere>
 }
 
 export type CoreValueDeleteInput = {
@@ -4486,6 +4659,12 @@ export type CoreValueEdge = {
   __typename?: 'CoreValueEdge'
   cursor: Scalars['String']['output']
   node: CoreValue
+}
+
+export type CoreValueGoalGoalsAggregateSelection = {
+  __typename?: 'CoreValueGoalGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CoreValueGoalGoalsNodeAggregateSelection>
 }
 
 export type CoreValueGoalGoalsAggregationSelection = {
@@ -4530,6 +4709,7 @@ export type CoreValueGoalsConnectFieldInput = {
 
 export type CoreValueGoalsConnection = {
   __typename?: 'CoreValueGoalsConnection'
+  aggregate: CoreValueGoalGoalsAggregateSelection
   edges: Array<CoreValueGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -4734,6 +4914,7 @@ export type CoreValueGoalsRelationship = {
 
 export type CoreValueGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<CoreValueGoalsConnectionWhere>
 }
 
 export type CoreValueGoalsUpdateFieldInput = {
@@ -4742,7 +4923,6 @@ export type CoreValueGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<CoreValueGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CoreValueGoalsDisconnectFieldInput>>
   update?: InputMaybe<CoreValueGoalsUpdateConnectionInput>
-  where?: InputMaybe<CoreValueGoalsConnectionWhere>
 }
 
 export type CoreValuePeopleAggregateInput = {
@@ -4764,6 +4944,7 @@ export type CoreValuePeopleConnectFieldInput = {
 
 export type CoreValuePeopleConnection = {
   __typename?: 'CoreValuePeopleConnection'
+  aggregate: CoreValuePersonPeopleAggregateSelection
   edges: Array<CoreValuePeopleRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -5073,6 +5254,7 @@ export type CoreValuePeopleRelationship = {
 
 export type CoreValuePeopleUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<CoreValuePeopleConnectionWhere>
 }
 
 export type CoreValuePeopleUpdateFieldInput = {
@@ -5081,7 +5263,12 @@ export type CoreValuePeopleUpdateFieldInput = {
   delete?: InputMaybe<Array<CoreValuePeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<CoreValuePeopleDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePeopleUpdateConnectionInput>
-  where?: InputMaybe<CoreValuePeopleConnectionWhere>
+}
+
+export type CoreValuePersonCreatedByAggregateSelection = {
+  __typename?: 'CoreValuePersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CoreValuePersonCreatedByNodeAggregateSelection>
 }
 
 export type CoreValuePersonCreatedByAggregationSelection = {
@@ -5112,6 +5299,12 @@ export type CoreValuePersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type CoreValuePersonPeopleAggregateSelection = {
+  __typename?: 'CoreValuePersonPeopleAggregateSelection'
+  count: CountConnection
+  node?: Maybe<CoreValuePersonPeopleNodeAggregateSelection>
 }
 
 export type CoreValuePersonPeopleAggregationSelection = {
@@ -5290,9 +5483,21 @@ export type CoreValueWhere = {
 
 export type CoreValuesConnection = {
   __typename?: 'CoreValuesConnection'
+  aggregate: CoreValueAggregate
   edges: Array<CoreValueEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type Count = {
+  __typename?: 'Count'
+  nodes: Scalars['Int']['output']
+}
+
+export type CountConnection = {
+  __typename?: 'CountConnection'
+  edges: Scalars['Int']['output']
+  nodes: Scalars['Int']['output']
 }
 
 export type CreateCarePointsMutationResponse = {
@@ -5367,30 +5572,37 @@ export type Goal = {
   __typename?: 'Goal'
   activities?: Maybe<Scalars['String']['output']>
   caredForByCarePoints: Array<CarePoint>
+  /** @deprecated Please use field "aggregate" inside "caredForByCarePointsConnection" instead */
   caredForByCarePointsAggregate?: Maybe<GoalCarePointCaredForByCarePointsAggregationSelection>
   caredForByCarePointsConnection: GoalCaredForByCarePointsConnection
   coreValues: Array<CoreValue>
+  /** @deprecated Please use field "aggregate" inside "coreValuesConnection" instead */
   coreValuesAggregate?: Maybe<GoalCoreValueCoreValuesAggregationSelection>
   coreValuesConnection: GoalCoreValuesConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<GoalPersonCreatedByAggregationSelection>
   createdByConnection: GoalCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   enablesCarePoints: Array<CarePoint>
+  /** @deprecated Please use field "aggregate" inside "enablesCarePointsConnection" instead */
   enablesCarePointsAggregate?: Maybe<GoalCarePointEnablesCarePointsAggregationSelection>
   enablesCarePointsConnection: GoalEnablesCarePointsConnection
   id: Scalars['ID']['output']
   location?: Maybe<Scalars['String']['output']>
   motivatesCommunities: Array<Community>
+  /** @deprecated Please use field "aggregate" inside "motivatesCommunitiesConnection" instead */
   motivatesCommunitiesAggregate?: Maybe<GoalCommunityMotivatesCommunitiesAggregationSelection>
   motivatesCommunitiesConnection: GoalMotivatesCommunitiesConnection
   motivatesPeople: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "motivatesPeopleConnection" instead */
   motivatesPeopleAggregate?: Maybe<GoalPersonMotivatesPeopleAggregationSelection>
   motivatesPeopleConnection: GoalMotivatesPeopleConnection
   name: Scalars['String']['output']
   photo?: Maybe<Scalars['String']['output']>
   resources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate?: Maybe<GoalResourceResourcesAggregationSelection>
   resourcesConnection: GoalResourcesConnection
   status: Scalars['String']['output']
@@ -5526,6 +5738,29 @@ export type GoalResourcesConnectionArgs = {
   where?: InputMaybe<GoalResourcesConnectionWhere>
 }
 
+export type GoalAggregate = {
+  __typename?: 'GoalAggregate'
+  count: Count
+  node: GoalAggregateNode
+}
+
+export type GoalAggregateNode = {
+  __typename?: 'GoalAggregateNode'
+  activities: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  photo: StringAggregateSelection
+  status: StringAggregateSelection
+  successMeasures: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
 export type GoalAggregateSelection = {
   __typename?: 'GoalAggregateSelection'
   activities: StringAggregateSelection
@@ -5542,6 +5777,12 @@ export type GoalAggregateSelection = {
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
+}
+
+export type GoalCarePointCaredForByCarePointsAggregateSelection = {
+  __typename?: 'GoalCarePointCaredForByCarePointsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalCarePointCaredForByCarePointsNodeAggregateSelection>
 }
 
 export type GoalCarePointCaredForByCarePointsAggregationSelection = {
@@ -5567,6 +5808,12 @@ export type GoalCarePointCaredForByCarePointsNodeAggregateSelection = {
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
+}
+
+export type GoalCarePointEnablesCarePointsAggregateSelection = {
+  __typename?: 'GoalCarePointEnablesCarePointsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalCarePointEnablesCarePointsNodeAggregateSelection>
 }
 
 export type GoalCarePointEnablesCarePointsAggregationSelection = {
@@ -5613,6 +5860,7 @@ export type GoalCaredForByCarePointsConnectFieldInput = {
 
 export type GoalCaredForByCarePointsConnection = {
   __typename?: 'GoalCaredForByCarePointsConnection'
+  aggregate: GoalCarePointCaredForByCarePointsAggregateSelection
   edges: Array<GoalCaredForByCarePointsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -5847,6 +6095,7 @@ export type GoalCaredForByCarePointsRelationship = {
 
 export type GoalCaredForByCarePointsUpdateConnectionInput = {
   node?: InputMaybe<CarePointUpdateInput>
+  where?: InputMaybe<GoalCaredForByCarePointsConnectionWhere>
 }
 
 export type GoalCaredForByCarePointsUpdateFieldInput = {
@@ -5855,7 +6104,12 @@ export type GoalCaredForByCarePointsUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalCaredForByCarePointsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalCaredForByCarePointsDisconnectFieldInput>>
   update?: InputMaybe<GoalCaredForByCarePointsUpdateConnectionInput>
-  where?: InputMaybe<GoalCaredForByCarePointsConnectionWhere>
+}
+
+export type GoalCommunityMotivatesCommunitiesAggregateSelection = {
+  __typename?: 'GoalCommunityMotivatesCommunitiesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalCommunityMotivatesCommunitiesNodeAggregateSelection>
 }
 
 export type GoalCommunityMotivatesCommunitiesAggregationSelection = {
@@ -5898,6 +6152,12 @@ export type GoalConnectWhere = {
   node: GoalWhere
 }
 
+export type GoalCoreValueCoreValuesAggregateSelection = {
+  __typename?: 'GoalCoreValueCoreValuesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalCoreValueCoreValuesNodeAggregateSelection>
+}
+
 export type GoalCoreValueCoreValuesAggregationSelection = {
   __typename?: 'GoalCoreValueCoreValuesAggregationSelection'
   count: Scalars['Int']['output']
@@ -5936,6 +6196,7 @@ export type GoalCoreValuesConnectFieldInput = {
 
 export type GoalCoreValuesConnection = {
   __typename?: 'GoalCoreValuesConnection'
+  aggregate: GoalCoreValueCoreValuesAggregateSelection
   edges: Array<GoalCoreValuesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -6084,6 +6345,7 @@ export type GoalCoreValuesRelationship = {
 
 export type GoalCoreValuesUpdateConnectionInput = {
   node?: InputMaybe<CoreValueUpdateInput>
+  where?: InputMaybe<GoalCoreValuesConnectionWhere>
 }
 
 export type GoalCoreValuesUpdateFieldInput = {
@@ -6092,7 +6354,6 @@ export type GoalCoreValuesUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalCoreValuesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalCoreValuesDisconnectFieldInput>>
   update?: InputMaybe<GoalCoreValuesUpdateConnectionInput>
-  where?: InputMaybe<GoalCoreValuesConnectionWhere>
 }
 
 export type GoalCreateInput = {
@@ -6133,6 +6394,7 @@ export type GoalCreatedByConnectFieldInput = {
 
 export type GoalCreatedByConnection = {
   __typename?: 'GoalCreatedByConnection'
+  aggregate: GoalPersonCreatedByAggregateSelection
   edges: Array<GoalCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -6442,6 +6704,7 @@ export type GoalCreatedByRelationship = {
 
 export type GoalCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<GoalCreatedByConnectionWhere>
 }
 
 export type GoalCreatedByUpdateFieldInput = {
@@ -6450,7 +6713,6 @@ export type GoalCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalCreatedByDisconnectFieldInput>>
   update?: InputMaybe<GoalCreatedByUpdateConnectionInput>
-  where?: InputMaybe<GoalCreatedByConnectionWhere>
 }
 
 export type GoalDeleteInput = {
@@ -6508,6 +6770,7 @@ export type GoalEnablesCarePointsConnectFieldInput = {
 
 export type GoalEnablesCarePointsConnection = {
   __typename?: 'GoalEnablesCarePointsConnection'
+  aggregate: GoalCarePointEnablesCarePointsAggregateSelection
   edges: Array<GoalEnablesCarePointsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -6742,6 +7005,7 @@ export type GoalEnablesCarePointsRelationship = {
 
 export type GoalEnablesCarePointsUpdateConnectionInput = {
   node?: InputMaybe<CarePointUpdateInput>
+  where?: InputMaybe<GoalEnablesCarePointsConnectionWhere>
 }
 
 export type GoalEnablesCarePointsUpdateFieldInput = {
@@ -6750,7 +7014,6 @@ export type GoalEnablesCarePointsUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalEnablesCarePointsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalEnablesCarePointsDisconnectFieldInput>>
   update?: InputMaybe<GoalEnablesCarePointsUpdateConnectionInput>
-  where?: InputMaybe<GoalEnablesCarePointsConnectionWhere>
 }
 
 export type GoalMotivatesCommunitiesAggregateInput = {
@@ -6772,6 +7035,7 @@ export type GoalMotivatesCommunitiesConnectFieldInput = {
 
 export type GoalMotivatesCommunitiesConnection = {
   __typename?: 'GoalMotivatesCommunitiesConnection'
+  aggregate: GoalCommunityMotivatesCommunitiesAggregateSelection
   edges: Array<GoalMotivatesCommunitiesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -6961,6 +7225,7 @@ export type GoalMotivatesCommunitiesRelationship = {
 
 export type GoalMotivatesCommunitiesUpdateConnectionInput = {
   node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<GoalMotivatesCommunitiesConnectionWhere>
 }
 
 export type GoalMotivatesCommunitiesUpdateFieldInput = {
@@ -6969,7 +7234,6 @@ export type GoalMotivatesCommunitiesUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalMotivatesCommunitiesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalMotivatesCommunitiesDisconnectFieldInput>>
   update?: InputMaybe<GoalMotivatesCommunitiesUpdateConnectionInput>
-  where?: InputMaybe<GoalMotivatesCommunitiesConnectionWhere>
 }
 
 export type GoalMotivatesPeopleAggregateInput = {
@@ -6991,6 +7255,7 @@ export type GoalMotivatesPeopleConnectFieldInput = {
 
 export type GoalMotivatesPeopleConnection = {
   __typename?: 'GoalMotivatesPeopleConnection'
+  aggregate: GoalPersonMotivatesPeopleAggregateSelection
   edges: Array<GoalMotivatesPeopleRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -7300,6 +7565,7 @@ export type GoalMotivatesPeopleRelationship = {
 
 export type GoalMotivatesPeopleUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<GoalMotivatesPeopleConnectionWhere>
 }
 
 export type GoalMotivatesPeopleUpdateFieldInput = {
@@ -7308,7 +7574,12 @@ export type GoalMotivatesPeopleUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalMotivatesPeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalMotivatesPeopleDisconnectFieldInput>>
   update?: InputMaybe<GoalMotivatesPeopleUpdateConnectionInput>
-  where?: InputMaybe<GoalMotivatesPeopleConnectionWhere>
+}
+
+export type GoalPersonCreatedByAggregateSelection = {
+  __typename?: 'GoalPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalPersonCreatedByNodeAggregateSelection>
 }
 
 export type GoalPersonCreatedByAggregationSelection = {
@@ -7341,6 +7612,12 @@ export type GoalPersonCreatedByNodeAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
+export type GoalPersonMotivatesPeopleAggregateSelection = {
+  __typename?: 'GoalPersonMotivatesPeopleAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalPersonMotivatesPeopleNodeAggregateSelection>
+}
+
 export type GoalPersonMotivatesPeopleAggregationSelection = {
   __typename?: 'GoalPersonMotivatesPeopleAggregationSelection'
   count: Scalars['Int']['output']
@@ -7369,6 +7646,12 @@ export type GoalPersonMotivatesPeopleNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type GoalResourceResourcesAggregateSelection = {
+  __typename?: 'GoalResourceResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<GoalResourceResourcesNodeAggregateSelection>
 }
 
 export type GoalResourceResourcesAggregationSelection = {
@@ -7410,6 +7693,7 @@ export type GoalResourcesConnectFieldInput = {
 
 export type GoalResourcesConnection = {
   __typename?: 'GoalResourcesConnection'
+  aggregate: GoalResourceResourcesAggregateSelection
   edges: Array<GoalResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -7569,6 +7853,7 @@ export type GoalResourcesRelationship = {
 
 export type GoalResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<GoalResourcesConnectionWhere>
 }
 
 export type GoalResourcesUpdateFieldInput = {
@@ -7577,7 +7862,6 @@ export type GoalResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<GoalResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<GoalResourcesDisconnectFieldInput>>
   update?: InputMaybe<GoalResourcesUpdateConnectionInput>
-  where?: InputMaybe<GoalResourcesConnectionWhere>
 }
 
 /** Fields to sort Goals by. The order in which sorts are applied is not guaranteed when specifying many fields in one GoalSort object. */
@@ -7808,6 +8092,7 @@ export type GoalWhere = {
 
 export type GoalsConnection = {
   __typename?: 'GoalsConnection'
+  aggregate: GoalAggregate
   edges: Array<GoalEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -7822,18 +8107,22 @@ export type IdAggregateSelection = {
 export type Log = {
   __typename?: 'Log'
   carePoints: Array<CarePoint>
+  /** @deprecated Please use field "aggregate" inside "carePointsConnection" instead */
   carePointsAggregate?: Maybe<LogCarePointCarePointsAggregationSelection>
   carePointsConnection: LogCarePointsConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<LogPersonCreatedByAggregationSelection>
   createdByConnection: LogCreatedByConnection
   description: Scalars['String']['output']
   goals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "goalsConnection" instead */
   goalsAggregate?: Maybe<LogGoalGoalsAggregationSelection>
   goalsConnection: LogGoalsConnection
   id: Scalars['ID']['output']
   resources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate?: Maybe<LogResourceResourcesAggregationSelection>
   resourcesConnection: LogResourcesConnection
 }
@@ -7910,6 +8199,20 @@ export type LogResourcesConnectionArgs = {
   where?: InputMaybe<LogResourcesConnectionWhere>
 }
 
+export type LogAggregate = {
+  __typename?: 'LogAggregate'
+  count: Count
+  node: LogAggregateNode
+}
+
+export type LogAggregateNode = {
+  __typename?: 'LogAggregateNode'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+}
+
 export type LogAggregateSelection = {
   __typename?: 'LogAggregateSelection'
   count: Scalars['Int']['output']
@@ -7917,6 +8220,12 @@ export type LogAggregateSelection = {
   description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+}
+
+export type LogCarePointCarePointsAggregateSelection = {
+  __typename?: 'LogCarePointCarePointsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<LogCarePointCarePointsNodeAggregateSelection>
 }
 
 export type LogCarePointCarePointsAggregationSelection = {
@@ -7963,6 +8272,7 @@ export type LogCarePointsConnectFieldInput = {
 
 export type LogCarePointsConnection = {
   __typename?: 'LogCarePointsConnection'
+  aggregate: LogCarePointCarePointsAggregateSelection
   edges: Array<LogCarePointsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -8197,6 +8507,7 @@ export type LogCarePointsRelationship = {
 
 export type LogCarePointsUpdateConnectionInput = {
   node?: InputMaybe<CarePointUpdateInput>
+  where?: InputMaybe<LogCarePointsConnectionWhere>
 }
 
 export type LogCarePointsUpdateFieldInput = {
@@ -8205,7 +8516,6 @@ export type LogCarePointsUpdateFieldInput = {
   delete?: InputMaybe<Array<LogCarePointsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogCarePointsDisconnectFieldInput>>
   update?: InputMaybe<LogCarePointsUpdateConnectionInput>
-  where?: InputMaybe<LogCarePointsConnectionWhere>
 }
 
 export type LogCreateInput = {
@@ -8235,6 +8545,7 @@ export type LogCreatedByConnectFieldInput = {
 
 export type LogCreatedByConnection = {
   __typename?: 'LogCreatedByConnection'
+  aggregate: LogPersonCreatedByAggregateSelection
   edges: Array<LogCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -8544,6 +8855,7 @@ export type LogCreatedByRelationship = {
 
 export type LogCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<LogCreatedByConnectionWhere>
 }
 
 export type LogCreatedByUpdateFieldInput = {
@@ -8552,7 +8864,6 @@ export type LogCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<LogCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogCreatedByDisconnectFieldInput>>
   update?: InputMaybe<LogCreatedByUpdateConnectionInput>
-  where?: InputMaybe<LogCreatedByConnectionWhere>
 }
 
 export type LogDeleteInput = {
@@ -8566,6 +8877,12 @@ export type LogEdge = {
   __typename?: 'LogEdge'
   cursor: Scalars['String']['output']
   node: Log
+}
+
+export type LogGoalGoalsAggregateSelection = {
+  __typename?: 'LogGoalGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<LogGoalGoalsNodeAggregateSelection>
 }
 
 export type LogGoalGoalsAggregationSelection = {
@@ -8610,6 +8927,7 @@ export type LogGoalsConnectFieldInput = {
 
 export type LogGoalsConnection = {
   __typename?: 'LogGoalsConnection'
+  aggregate: LogGoalGoalsAggregateSelection
   edges: Array<LogGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -8814,6 +9132,7 @@ export type LogGoalsRelationship = {
 
 export type LogGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<LogGoalsConnectionWhere>
 }
 
 export type LogGoalsUpdateFieldInput = {
@@ -8822,7 +9141,12 @@ export type LogGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<LogGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogGoalsDisconnectFieldInput>>
   update?: InputMaybe<LogGoalsUpdateConnectionInput>
-  where?: InputMaybe<LogGoalsConnectionWhere>
+}
+
+export type LogPersonCreatedByAggregateSelection = {
+  __typename?: 'LogPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<LogPersonCreatedByNodeAggregateSelection>
 }
 
 export type LogPersonCreatedByAggregationSelection = {
@@ -8853,6 +9177,12 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type LogResourceResourcesAggregateSelection = {
+  __typename?: 'LogResourceResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<LogResourceResourcesNodeAggregateSelection>
 }
 
 export type LogResourceResourcesAggregationSelection = {
@@ -8894,6 +9224,7 @@ export type LogResourcesConnectFieldInput = {
 
 export type LogResourcesConnection = {
   __typename?: 'LogResourcesConnection'
+  aggregate: LogResourceResourcesAggregateSelection
   edges: Array<LogResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -9053,6 +9384,7 @@ export type LogResourcesRelationship = {
 
 export type LogResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<LogResourcesConnectionWhere>
 }
 
 export type LogResourcesUpdateFieldInput = {
@@ -9061,7 +9393,6 @@ export type LogResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogResourcesDisconnectFieldInput>>
   update?: InputMaybe<LogResourcesUpdateConnectionInput>
-  where?: InputMaybe<LogResourcesConnectionWhere>
 }
 
 /** Fields to sort Logs by. The order in which sorts are applied is not guaranteed when specifying many fields in one LogSort object. */
@@ -9171,6 +9502,7 @@ export type LogWhere = {
 
 export type LogsConnection = {
   __typename?: 'LogsConnection'
+  aggregate: LogAggregate
   edges: Array<LogEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -9337,6 +9669,7 @@ export type PageInfo = {
 
 export type PeopleConnection = {
   __typename?: 'PeopleConnection'
+  aggregate: PersonAggregate
   edges: Array<PersonEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -9349,16 +9682,20 @@ export type Person = PersonInterface & {
   careManual?: Maybe<Scalars['String']['output']>
   carePoints: Array<CarePoint>
   communities: Array<Community>
+  /** @deprecated Please use field "aggregate" inside "communitiesConnection" instead */
   communitiesAggregate?: Maybe<PersonCommunityCommunitiesAggregationSelection>
   communitiesConnection: PersonCommunitiesConnection
   connections: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "connectionsConnection" instead */
   connectionsAggregate?: Maybe<PersonPersonConnectionsAggregationSelection>
   connectionsConnection: PersonConnectionsConnection
   coreValues: Array<CoreValue>
+  /** @deprecated Please use field "aggregate" inside "coreValuesConnection" instead */
   coreValuesAggregate?: Maybe<PersonCoreValueCoreValuesAggregationSelection>
   coreValuesConnection: PersonCoreValuesConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<PersonPersonCreatedByAggregationSelection>
   createdByConnection: PersonCreatedByConnection
   email?: Maybe<Scalars['String']['output']>
@@ -9366,6 +9703,7 @@ export type Person = PersonInterface & {
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
   goals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "goalsConnection" instead */
   goalsAggregate?: Maybe<PersonGoalGoalsAggregationSelection>
   goalsConnection: PersonGoalsConnection
   id: Scalars['ID']['output']
@@ -9378,6 +9716,7 @@ export type Person = PersonInterface & {
   photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
   providesResources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "providesResourcesConnection" instead */
   providesResourcesAggregate?: Maybe<PersonResourceProvidesResourcesAggregationSelection>
   providesResourcesConnection: PersonProvidesResourcesConnection
   status: Scalars['String']['output']
@@ -9493,6 +9832,36 @@ export type PersonProvidesResourcesConnectionArgs = {
   where?: InputMaybe<PersonProvidesResourcesConnectionWhere>
 }
 
+export type PersonAggregate = {
+  __typename?: 'PersonAggregate'
+  count: Count
+  node: PersonAggregateNode
+}
+
+export type PersonAggregateNode = {
+  __typename?: 'PersonAggregateNode'
+  authId: StringAggregateSelection
+  avatar: StringAggregateSelection
+  careManual: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  favorites: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  passions: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  status: StringAggregateSelection
+  traits: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
 export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
   authId: StringAggregateSelection
@@ -9539,6 +9908,7 @@ export type PersonCommunitiesConnectFieldInput = {
 
 export type PersonCommunitiesConnection = {
   __typename?: 'PersonCommunitiesConnection'
+  aggregate: PersonCommunityCommunitiesAggregateSelection
   edges: Array<PersonCommunitiesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -9733,6 +10103,7 @@ export type PersonCommunitiesRelationship = {
 export type PersonCommunitiesUpdateConnectionInput = {
   edge?: InputMaybe<BelongsToUpdateInput>
   node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<PersonCommunitiesConnectionWhere>
 }
 
 export type PersonCommunitiesUpdateFieldInput = {
@@ -9741,7 +10112,13 @@ export type PersonCommunitiesUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonCommunitiesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonCommunitiesDisconnectFieldInput>>
   update?: InputMaybe<PersonCommunitiesUpdateConnectionInput>
-  where?: InputMaybe<PersonCommunitiesConnectionWhere>
+}
+
+export type PersonCommunityCommunitiesAggregateSelection = {
+  __typename?: 'PersonCommunityCommunitiesAggregateSelection'
+  count: CountConnection
+  edge?: Maybe<PersonCommunityCommunitiesEdgeAggregateSelection>
+  node?: Maybe<PersonCommunityCommunitiesNodeAggregateSelection>
 }
 
 export type PersonCommunityCommunitiesAggregationSelection = {
@@ -9808,6 +10185,7 @@ export type PersonConnectionsConnectFieldInput = {
 
 export type PersonConnectionsConnection = {
   __typename?: 'PersonConnectionsConnection'
+  aggregate: PersonPersonConnectionsAggregateSelection
   edges: Array<PersonConnectionsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -10122,6 +10500,7 @@ export type PersonConnectionsRelationship = {
 export type PersonConnectionsUpdateConnectionInput = {
   edge?: InputMaybe<ConnectedToUpdateInput>
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<PersonConnectionsConnectionWhere>
 }
 
 export type PersonConnectionsUpdateFieldInput = {
@@ -10130,7 +10509,12 @@ export type PersonConnectionsUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonConnectionsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonConnectionsDisconnectFieldInput>>
   update?: InputMaybe<PersonConnectionsUpdateConnectionInput>
-  where?: InputMaybe<PersonConnectionsConnectionWhere>
+}
+
+export type PersonCoreValueCoreValuesAggregateSelection = {
+  __typename?: 'PersonCoreValueCoreValuesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonCoreValueCoreValuesNodeAggregateSelection>
 }
 
 export type PersonCoreValueCoreValuesAggregationSelection = {
@@ -10171,6 +10555,7 @@ export type PersonCoreValuesConnectFieldInput = {
 
 export type PersonCoreValuesConnection = {
   __typename?: 'PersonCoreValuesConnection'
+  aggregate: PersonCoreValueCoreValuesAggregateSelection
   edges: Array<PersonCoreValuesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -10319,6 +10704,7 @@ export type PersonCoreValuesRelationship = {
 
 export type PersonCoreValuesUpdateConnectionInput = {
   node?: InputMaybe<CoreValueUpdateInput>
+  where?: InputMaybe<PersonCoreValuesConnectionWhere>
 }
 
 export type PersonCoreValuesUpdateFieldInput = {
@@ -10327,7 +10713,6 @@ export type PersonCoreValuesUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonCoreValuesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonCoreValuesDisconnectFieldInput>>
   update?: InputMaybe<PersonCoreValuesUpdateConnectionInput>
-  where?: InputMaybe<PersonCoreValuesConnectionWhere>
 }
 
 export type PersonCreateInput = {
@@ -10374,6 +10759,7 @@ export type PersonCreatedByConnectFieldInput = {
 
 export type PersonCreatedByConnection = {
   __typename?: 'PersonCreatedByConnection'
+  aggregate: PersonPersonCreatedByAggregateSelection
   edges: Array<PersonCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -10683,6 +11069,7 @@ export type PersonCreatedByRelationship = {
 
 export type PersonCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<PersonCreatedByConnectionWhere>
 }
 
 export type PersonCreatedByUpdateFieldInput = {
@@ -10691,7 +11078,6 @@ export type PersonCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   update?: InputMaybe<PersonCreatedByUpdateConnectionInput>
-  where?: InputMaybe<PersonCreatedByConnectionWhere>
 }
 
 export type PersonDeleteInput = {
@@ -10718,6 +11104,12 @@ export type PersonEdge = {
   __typename?: 'PersonEdge'
   cursor: Scalars['String']['output']
   node: Person
+}
+
+export type PersonGoalGoalsAggregateSelection = {
+  __typename?: 'PersonGoalGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonGoalGoalsNodeAggregateSelection>
 }
 
 export type PersonGoalGoalsAggregationSelection = {
@@ -10762,6 +11154,7 @@ export type PersonGoalsConnectFieldInput = {
 
 export type PersonGoalsConnection = {
   __typename?: 'PersonGoalsConnection'
+  aggregate: PersonGoalGoalsAggregateSelection
   edges: Array<PersonGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -10966,6 +11359,7 @@ export type PersonGoalsRelationship = {
 
 export type PersonGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<PersonGoalsConnectionWhere>
 }
 
 export type PersonGoalsUpdateFieldInput = {
@@ -10974,7 +11368,6 @@ export type PersonGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonGoalsDisconnectFieldInput>>
   update?: InputMaybe<PersonGoalsUpdateConnectionInput>
-  where?: InputMaybe<PersonGoalsConnectionWhere>
 }
 
 export type PersonInterface = {
@@ -10989,6 +11382,28 @@ export type PersonInterface = {
   photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+export type PersonInterfaceAggregate = {
+  __typename?: 'PersonInterfaceAggregate'
+  count: Count
+  node: PersonInterfaceAggregateNode
+}
+
+export type PersonInterfaceAggregateNode = {
+  __typename?: 'PersonInterfaceAggregateNode'
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
 }
 
 export type PersonInterfaceAggregateSelection = {
@@ -11099,9 +11514,17 @@ export type PersonInterfaceWhere = {
 
 export type PersonInterfacesConnection = {
   __typename?: 'PersonInterfacesConnection'
+  aggregate: PersonInterfaceAggregate
   edges: Array<PersonInterfaceEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type PersonPersonConnectionsAggregateSelection = {
+  __typename?: 'PersonPersonConnectionsAggregateSelection'
+  count: CountConnection
+  edge?: Maybe<PersonPersonConnectionsEdgeAggregateSelection>
+  node?: Maybe<PersonPersonConnectionsNodeAggregateSelection>
 }
 
 export type PersonPersonConnectionsAggregationSelection = {
@@ -11139,6 +11562,12 @@ export type PersonPersonConnectionsNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type PersonPersonCreatedByAggregateSelection = {
+  __typename?: 'PersonPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonPersonCreatedByNodeAggregateSelection>
 }
 
 export type PersonPersonCreatedByAggregationSelection = {
@@ -11190,6 +11619,7 @@ export type PersonProvidesResourcesConnectFieldInput = {
 
 export type PersonProvidesResourcesConnection = {
   __typename?: 'PersonProvidesResourcesConnection'
+  aggregate: PersonResourceProvidesResourcesAggregateSelection
   edges: Array<PersonProvidesResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -11349,6 +11779,7 @@ export type PersonProvidesResourcesRelationship = {
 
 export type PersonProvidesResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<PersonProvidesResourcesConnectionWhere>
 }
 
 export type PersonProvidesResourcesUpdateFieldInput = {
@@ -11357,7 +11788,12 @@ export type PersonProvidesResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonProvidesResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonProvidesResourcesDisconnectFieldInput>>
   update?: InputMaybe<PersonProvidesResourcesUpdateConnectionInput>
-  where?: InputMaybe<PersonProvidesResourcesConnectionWhere>
+}
+
+export type PersonResourceProvidesResourcesAggregateSelection = {
+  __typename?: 'PersonResourceProvidesResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonResourceProvidesResourcesNodeAggregateSelection>
 }
 
 export type PersonResourceProvidesResourcesAggregationSelection = {
@@ -11642,35 +12078,44 @@ export type Query = {
   __typename?: 'Query'
   carePointSubstringSearch: Array<CarePoint>
   carePoints: Array<CarePoint>
+  /** @deprecated Please use the explicit field "aggregate" inside "carePointsConnection" instead */
   carePointsAggregate: CarePointAggregateSelection
   carePointsConnection: CarePointsConnection
   chatbotResponses: Array<ChatbotResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "chatbotResponsesConnection" instead */
   chatbotResponsesAggregate: ChatbotResponseAggregateSelection
   chatbotResponsesConnection: ChatbotResponsesConnection
   communities: Array<Community>
+  /** @deprecated Please use the explicit field "aggregate" inside "communitiesConnection" instead */
   communitiesAggregate: CommunityAggregateSelection
   communitiesConnection: CommunitiesConnection
   communitySubstringSearch: Array<Community>
   coreValueSubstringSearch: Array<CoreValue>
   coreValues: Array<CoreValue>
+  /** @deprecated Please use the explicit field "aggregate" inside "coreValuesConnection" instead */
   coreValuesAggregate: CoreValueAggregateSelection
   coreValuesConnection: CoreValuesConnection
   goalSubstringSearch: Array<Goal>
   goals: Array<Goal>
+  /** @deprecated Please use the explicit field "aggregate" inside "goalsConnection" instead */
   goalsAggregate: GoalAggregateSelection
   goalsConnection: GoalsConnection
   logs: Array<Log>
+  /** @deprecated Please use the explicit field "aggregate" inside "logsConnection" instead */
   logsAggregate: LogAggregateSelection
   logsConnection: LogsConnection
   people: Array<Person>
+  /** @deprecated Please use the explicit field "aggregate" inside "peopleConnection" instead */
   peopleAggregate: PersonAggregateSelection
   peopleConnection: PeopleConnection
   peopleSubstringSearch: Array<Person>
   personInterfaces: Array<PersonInterface>
+  /** @deprecated Please use the explicit field "aggregate" inside "personInterfacesConnection" instead */
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
   resourceSubstringSearch: Array<Resource>
   resources: Array<Resource>
+  /** @deprecated Please use the explicit field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate: ResourceAggregateSelection
   resourcesConnection: ResourcesConnection
 }
@@ -11864,26 +12309,32 @@ export type QueryResourcesConnectionArgs = {
 export type Resource = {
   __typename?: 'Resource'
   carePoints: Array<CarePoint>
+  /** @deprecated Please use field "aggregate" inside "carePointsConnection" instead */
   carePointsAggregate?: Maybe<ResourceCarePointCarePointsAggregationSelection>
   carePointsConnection: ResourceCarePointsConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<ResourcePersonCreatedByAggregationSelection>
   createdByConnection: ResourceCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   goals: Array<Goal>
+  /** @deprecated Please use field "aggregate" inside "goalsConnection" instead */
   goalsAggregate?: Maybe<ResourceGoalGoalsAggregationSelection>
   goalsConnection: ResourceGoalsConnection
   id: Scalars['ID']['output']
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
   providedByCommunity: Array<Community>
+  /** @deprecated Please use field "aggregate" inside "providedByCommunityConnection" instead */
   providedByCommunityAggregate?: Maybe<ResourceCommunityProvidedByCommunityAggregationSelection>
   providedByCommunityConnection: ResourceProvidedByCommunityConnection
   providedByPerson: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "providedByPersonConnection" instead */
   providedByPersonAggregate?: Maybe<ResourcePersonProvidedByPersonAggregationSelection>
   providedByPersonConnection: ResourceProvidedByPersonConnection
   resources: Array<Resource>
+  /** @deprecated Please use field "aggregate" inside "resourcesConnection" instead */
   resourcesAggregate?: Maybe<ResourceResourceResourcesAggregationSelection>
   resourcesConnection: ResourceResourcesConnection
   status: Scalars['String']['output']
@@ -12000,6 +12451,26 @@ export type ResourceResourcesConnectionArgs = {
   where?: InputMaybe<ResourceResourcesConnectionWhere>
 }
 
+export type ResourceAggregate = {
+  __typename?: 'ResourceAggregate'
+  count: Count
+  node: ResourceAggregateNode
+}
+
+export type ResourceAggregateNode = {
+  __typename?: 'ResourceAggregateNode'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  location: StringAggregateSelection
+  name: StringAggregateSelection
+  status: StringAggregateSelection
+  time: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+  why: StringAggregateSelection
+}
+
 export type ResourceAggregateSelection = {
   __typename?: 'ResourceAggregateSelection'
   count: Scalars['Int']['output']
@@ -12013,6 +12484,12 @@ export type ResourceAggregateSelection = {
   time: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
   why: StringAggregateSelection
+}
+
+export type ResourceCarePointCarePointsAggregateSelection = {
+  __typename?: 'ResourceCarePointCarePointsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourceCarePointCarePointsNodeAggregateSelection>
 }
 
 export type ResourceCarePointCarePointsAggregationSelection = {
@@ -12059,6 +12536,7 @@ export type ResourceCarePointsConnectFieldInput = {
 
 export type ResourceCarePointsConnection = {
   __typename?: 'ResourceCarePointsConnection'
+  aggregate: ResourceCarePointCarePointsAggregateSelection
   edges: Array<ResourceCarePointsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -12293,6 +12771,7 @@ export type ResourceCarePointsRelationship = {
 
 export type ResourceCarePointsUpdateConnectionInput = {
   node?: InputMaybe<CarePointUpdateInput>
+  where?: InputMaybe<ResourceCarePointsConnectionWhere>
 }
 
 export type ResourceCarePointsUpdateFieldInput = {
@@ -12301,7 +12780,12 @@ export type ResourceCarePointsUpdateFieldInput = {
   delete?: InputMaybe<Array<ResourceCarePointsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResourceCarePointsDisconnectFieldInput>>
   update?: InputMaybe<ResourceCarePointsUpdateConnectionInput>
-  where?: InputMaybe<ResourceCarePointsConnectionWhere>
+}
+
+export type ResourceCommunityProvidedByCommunityAggregateSelection = {
+  __typename?: 'ResourceCommunityProvidedByCommunityAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourceCommunityProvidedByCommunityNodeAggregateSelection>
 }
 
 export type ResourceCommunityProvidedByCommunityAggregationSelection = {
@@ -12377,6 +12861,7 @@ export type ResourceCreatedByConnectFieldInput = {
 
 export type ResourceCreatedByConnection = {
   __typename?: 'ResourceCreatedByConnection'
+  aggregate: ResourcePersonCreatedByAggregateSelection
   edges: Array<ResourceCreatedByRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -12686,6 +13171,7 @@ export type ResourceCreatedByRelationship = {
 
 export type ResourceCreatedByUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<ResourceCreatedByConnectionWhere>
 }
 
 export type ResourceCreatedByUpdateFieldInput = {
@@ -12694,7 +13180,6 @@ export type ResourceCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<ResourceCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResourceCreatedByDisconnectFieldInput>>
   update?: InputMaybe<ResourceCreatedByUpdateConnectionInput>
-  where?: InputMaybe<ResourceCreatedByConnectionWhere>
 }
 
 export type ResourceDeleteInput = {
@@ -12725,6 +13210,12 @@ export type ResourceEdge = {
   __typename?: 'ResourceEdge'
   cursor: Scalars['String']['output']
   node: Resource
+}
+
+export type ResourceGoalGoalsAggregateSelection = {
+  __typename?: 'ResourceGoalGoalsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourceGoalGoalsNodeAggregateSelection>
 }
 
 export type ResourceGoalGoalsAggregationSelection = {
@@ -12769,6 +13260,7 @@ export type ResourceGoalsConnectFieldInput = {
 
 export type ResourceGoalsConnection = {
   __typename?: 'ResourceGoalsConnection'
+  aggregate: ResourceGoalGoalsAggregateSelection
   edges: Array<ResourceGoalsRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -12973,6 +13465,7 @@ export type ResourceGoalsRelationship = {
 
 export type ResourceGoalsUpdateConnectionInput = {
   node?: InputMaybe<GoalUpdateInput>
+  where?: InputMaybe<ResourceGoalsConnectionWhere>
 }
 
 export type ResourceGoalsUpdateFieldInput = {
@@ -12981,7 +13474,12 @@ export type ResourceGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<ResourceGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResourceGoalsDisconnectFieldInput>>
   update?: InputMaybe<ResourceGoalsUpdateConnectionInput>
-  where?: InputMaybe<ResourceGoalsConnectionWhere>
+}
+
+export type ResourcePersonCreatedByAggregateSelection = {
+  __typename?: 'ResourcePersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourcePersonCreatedByNodeAggregateSelection>
 }
 
 export type ResourcePersonCreatedByAggregationSelection = {
@@ -13012,6 +13510,12 @@ export type ResourcePersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+export type ResourcePersonProvidedByPersonAggregateSelection = {
+  __typename?: 'ResourcePersonProvidedByPersonAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourcePersonProvidedByPersonNodeAggregateSelection>
 }
 
 export type ResourcePersonProvidedByPersonAggregationSelection = {
@@ -13063,6 +13567,7 @@ export type ResourceProvidedByCommunityConnectFieldInput = {
 
 export type ResourceProvidedByCommunityConnection = {
   __typename?: 'ResourceProvidedByCommunityConnection'
+  aggregate: ResourceCommunityProvidedByCommunityAggregateSelection
   edges: Array<ResourceProvidedByCommunityRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -13252,6 +13757,7 @@ export type ResourceProvidedByCommunityRelationship = {
 
 export type ResourceProvidedByCommunityUpdateConnectionInput = {
   node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
 export type ResourceProvidedByCommunityUpdateFieldInput = {
@@ -13262,7 +13768,6 @@ export type ResourceProvidedByCommunityUpdateFieldInput = {
     Array<ResourceProvidedByCommunityDisconnectFieldInput>
   >
   update?: InputMaybe<ResourceProvidedByCommunityUpdateConnectionInput>
-  where?: InputMaybe<ResourceProvidedByCommunityConnectionWhere>
 }
 
 export type ResourceProvidedByPersonAggregateInput = {
@@ -13284,6 +13789,7 @@ export type ResourceProvidedByPersonConnectFieldInput = {
 
 export type ResourceProvidedByPersonConnection = {
   __typename?: 'ResourceProvidedByPersonConnection'
+  aggregate: ResourcePersonProvidedByPersonAggregateSelection
   edges: Array<ResourceProvidedByPersonRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -13593,6 +14099,7 @@ export type ResourceProvidedByPersonRelationship = {
 
 export type ResourceProvidedByPersonUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
 }
 
 export type ResourceProvidedByPersonUpdateFieldInput = {
@@ -13601,7 +14108,12 @@ export type ResourceProvidedByPersonUpdateFieldInput = {
   delete?: InputMaybe<Array<ResourceProvidedByPersonDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResourceProvidedByPersonDisconnectFieldInput>>
   update?: InputMaybe<ResourceProvidedByPersonUpdateConnectionInput>
-  where?: InputMaybe<ResourceProvidedByPersonConnectionWhere>
+}
+
+export type ResourceResourceResourcesAggregateSelection = {
+  __typename?: 'ResourceResourceResourcesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResourceResourceResourcesNodeAggregateSelection>
 }
 
 export type ResourceResourceResourcesAggregationSelection = {
@@ -13643,6 +14155,7 @@ export type ResourceResourcesConnectFieldInput = {
 
 export type ResourceResourcesConnection = {
   __typename?: 'ResourceResourcesConnection'
+  aggregate: ResourceResourceResourcesAggregateSelection
   edges: Array<ResourceResourcesRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -13802,6 +14315,7 @@ export type ResourceResourcesRelationship = {
 
 export type ResourceResourcesUpdateConnectionInput = {
   node?: InputMaybe<ResourceUpdateInput>
+  where?: InputMaybe<ResourceResourcesConnectionWhere>
 }
 
 export type ResourceResourcesUpdateFieldInput = {
@@ -13810,7 +14324,6 @@ export type ResourceResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<ResourceResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResourceResourcesDisconnectFieldInput>>
   update?: InputMaybe<ResourceResourcesUpdateConnectionInput>
-  where?: InputMaybe<ResourceResourcesConnectionWhere>
 }
 
 /** Fields to sort Resources by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResourceSort object. */
@@ -14000,6 +14513,7 @@ export type ResourceWhere = {
 
 export type ResourcesConnection = {
   __typename?: 'ResourcesConnection'
+  aggregate: ResourceAggregate
   edges: Array<ResourceEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
@@ -15535,6 +16049,15 @@ export type GetPeopleAndTheirCoreValuesQuery = {
       }>
     }>
   }>
+}
+
+export type GetUserByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetUserByIdQuery = {
+  __typename?: 'Query'
+  people: Array<{ __typename?: 'Person'; id: string }>
 }
 
 export type GetResourceQueryVariables = Exact<{
@@ -21391,6 +21914,74 @@ export const GetPeopleAndTheirCoreValuesDocument = {
   GetPeopleAndTheirCoreValuesQuery,
   GetPeopleAndTheirCoreValuesQueryVariables
 >
+export const GetUserByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUserById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'NOT' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'authId_EQ' },
+                            value: { kind: 'NullValue' },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetUserByIdQuery, GetUserByIdQueryVariables>
 export const GetResourceDocument = {
   kind: 'Document',
   definitions: [
