@@ -242,6 +242,7 @@ type ChatbotResponse {
 type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
   sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse!
+  invitePerson(personId: ID!): Person!
 }
 
 type Query {
