@@ -1,6 +1,7 @@
 'use client'
 
 import { GET_USER_BY_ID, GET_PERSON } from '@/app/graphql/queries'
+import { INVITE_PERSON_MUTATION } from '@/app/graphql/mutations'
 import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
 import React, { use, useEffect } from 'react'
 import {
@@ -19,7 +20,8 @@ import {
 } from '@/components'
 import { Person } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
-import { useQuery } from '@apollo/client'
+import { useQuery, useMutation } from '@apollo/client'
+import { toaster } from '@/components/ui/toaster'
 
 export default function ViewPersonPage({
   params,
@@ -38,15 +40,16 @@ export default function ViewPersonPage({
     fetchPolicy: 'network-only',
   })
 
+  const [invitePerson, { loading: inviteLoading }] = useMutation(
+    INVITE_PERSON_MUTATION
+  )
+
   useEffect(() => {
     refetch()
   }, [refetch])
 
   const person = data?.people[0]
   const user = usersData?.people[0]
-
-  console.log('User:', user)
-  console.log('User Data:', usersData)
 
   if (error) {
     throw error
@@ -120,14 +123,30 @@ export default function ViewPersonPage({
                       colorScheme="blue"
                       size="sm"
                       borderRadius={'3xl'}
-                      onClick={() => {
-                        /* TODO: implement invite logic */
-                        window.alert(
-                          'Invite functionality not implemented yet.'
-                        )
+                      disabled={inviteLoading}
+                      onClick={async () => {
+                        try {
+                          await invitePerson({
+                            variables: { personId: person.id },
+                          })
+                          toaster.success({
+                            title: 'Invite Sent',
+                            description:
+                              'Successfully invited the person to join GoalPost!',
+                            meta: { closable: true },
+                          })
+                        } catch (e) {
+                          console.error(e)
+                          toaster.error({
+                            title: 'Invitation Failed',
+                            description:
+                              'Unable to send invite. Please try again later.',
+                            meta: { closable: true },
+                          })
+                        }
                       }}
                     >
-                      Invite
+                      {inviteLoading ? 'Sending...' : 'Invite'}
                     </Button>
                   </Flex>
                 )}

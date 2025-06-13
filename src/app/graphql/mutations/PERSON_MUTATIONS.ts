@@ -118,3 +118,14 @@ export const DELETE_PERSON_MUTATION = graphql(`
     }
   }
 `)
+
+export const INVITE_PERSON_MUTATION = graphql(`
+  mutation InvitePerson($personId: ID!) {
+    invitePerson(personId: $personId) {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+`)

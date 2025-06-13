@@ -9527,6 +9527,7 @@ export type Mutation = {
   deletePeople: DeleteInfo
   deleteResources: DeleteInfo
   generatePersonEmbeddings: Scalars['Boolean']['output']
+  invitePerson: Person
   sendMessageToChatbot: ChatbotResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
@@ -9610,6 +9611,10 @@ export type MutationDeleteResourcesArgs = {
 }
 
 export type MutationGeneratePersonEmbeddingsArgs = {
+  personId: Scalars['ID']['input']
+}
+
+export type MutationInvitePersonArgs = {
   personId: Scalars['ID']['input']
 }
 
@@ -15201,6 +15206,21 @@ export type DeletePersonMutation = {
   deletePeople: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
+export type InvitePersonMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type InvitePersonMutation = {
+  __typename?: 'Mutation'
+  invitePerson: {
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    email?: string | null
+  }
+}
+
 export type CreateResourcesMutationVariables = Exact<{
   input: Array<ResourceCreateInput> | ResourceCreateInput
 }>
@@ -18890,6 +18910,60 @@ export const DeletePersonDocument = {
 } as unknown as DocumentNode<
   DeletePersonMutation,
   DeletePersonMutationVariables
+>
+export const InvitePersonDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'InvitePerson' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'invitePerson' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  InvitePersonMutation,
+  InvitePersonMutationVariables
 >
 export const CreateResourcesDocument = {
   kind: 'Document',
