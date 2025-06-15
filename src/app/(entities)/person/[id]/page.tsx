@@ -1,7 +1,10 @@
 'use client'
 
 import { GET_USER_BY_ID, GET_PERSON } from '@/app/graphql/queries'
-import { INVITE_PERSON_MUTATION } from '@/app/graphql/mutations'
+import {
+  INVITE_PERSON_MUTATION,
+  CREATE_LOG_MUTATION,
+} from '@/app/graphql/mutations'
 import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
 import React, { use, useEffect } from 'react'
 import {
@@ -22,6 +25,7 @@ import { Person } from '@/gql/graphql'
 import { EntityEnum, TRIGGERS } from '@/constants'
 import { useQuery, useMutation } from '@apollo/client'
 import { toaster } from '@/components/ui/toaster'
+import { useApp } from '@/app/contexts'
 
 export default function ViewPersonPage({
   params,
@@ -43,6 +47,7 @@ export default function ViewPersonPage({
   const [invitePerson, { loading: inviteLoading }] = useMutation(
     INVITE_PERSON_MUTATION
   )
+  const [createLog] = useMutation(CREATE_LOG_MUTATION)
 
   useEffect(() => {
     refetch()
@@ -50,6 +55,8 @@ export default function ViewPersonPage({
 
   const person = data?.people[0]
   const user = usersData?.people[0]
+
+  const { user: currentUser } = useApp()
 
   if (error) {
     throw error
@@ -93,6 +100,8 @@ export default function ViewPersonPage({
     ? [...personTriggers, ...memberTriggers]
     : personTriggers
 
+  console.log('Person ', person)
+
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
       <Container
@@ -128,6 +137,26 @@ export default function ViewPersonPage({
                         try {
                           await invitePerson({
                             variables: { personId: person.id },
+                          })
+                          // Log the invite action
+                          await createLog({
+                            variables: {
+                              input: [
+                                {
+                                  description: `${person.firstName} ${person.lastName} was invited to join GoalPost!`,
+                                  // Optionally add more fields as needed
+                                  createdBy: {
+                                    connect: [
+                                      {
+                                        where: {
+                                          node: { id_EQ: currentUser?.id },
+                                        },
+                                      },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
                           })
                           toaster.success({
                             title: 'Invite Sent',

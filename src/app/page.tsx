@@ -37,8 +37,12 @@ const HomeClient = () => {
   const { user } = useApp()
   const connections = user?.connections
 
-  const { data, loading, error } = useQuery(GET_RECENT_ACTIONS)
-  const { data: communityData } = useQuery(GET_ALL_COMMUNITIES)
+  const { data, loading, error } = useQuery(GET_RECENT_ACTIONS, {
+    pollInterval: 60000,
+  })
+  const { data: communityData } = useQuery(GET_ALL_COMMUNITIES, {
+    pollInterval: 60000,
+  })
 
   const communities = communityData?.communities
 
@@ -46,28 +50,30 @@ const HomeClient = () => {
     return <LoadingScreen />
   }
 
-  const recentLogs = data?.logs.map((log) => {
-    return {
-      actionName: log.__typename,
-      id: log.id,
-      actionInfo: 'logged an action',
-      icon: <SettingsIcon width="18px" height="18px" />,
-      createdAt: log.createdAt,
-      personId: log.createdBy[0].id,
-      personName: log.createdBy[0].name,
-      personPhoto: log.createdBy[0].photo,
-      children: (
-        <Text>
-          {log.description.split('\n').map((line, index) => (
-            <React.Fragment key={index}>
-              {line}
-              <br />
-            </React.Fragment>
-          ))}
-        </Text>
-      ),
-    }
-  })
+  const recentLogs = (data?.logs ?? [])
+    .filter((log) => log && log.id)
+    .map((log) => {
+      return {
+        actionName: log.__typename,
+        id: log.id,
+        actionInfo: 'logged an action',
+        icon: <SettingsIcon width="18px" height="18px" />,
+        createdAt: log.createdAt,
+        personId: log.createdBy[0]?.id,
+        personName: log.createdBy[0]?.name,
+        personPhoto: log.createdBy[0]?.photo,
+        children: (
+          <Text>
+            {log.description.split('\n').map((line, index) => (
+              <React.Fragment key={index}>
+                {line}
+                <br />
+              </React.Fragment>
+            ))}
+          </Text>
+        ),
+      }
+    })
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recentCarePoints = data?.carePoints.map((carePoint) => {
