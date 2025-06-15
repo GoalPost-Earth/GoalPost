@@ -45,7 +45,7 @@ function SignupPage() {
         setError(data.error || 'Sign up failed')
         setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        router.push('/auth/registration')
+        router.push('/')
       }
     } catch {
       setError('An unexpected error occurred')

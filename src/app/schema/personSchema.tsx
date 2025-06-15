@@ -21,6 +21,7 @@ export const personSchema = object({
   traits: string().optional(),
   fieldsOfCare: string().optional(),
   interests: string().optional(),
+  community: string().optional(), // <-- Add this line
 })
 
 export type PersonFormData = z.infer<typeof personSchema>
