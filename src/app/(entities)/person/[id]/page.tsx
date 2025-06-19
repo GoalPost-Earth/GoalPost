@@ -6,7 +6,7 @@ import {
   CREATE_LOG_MUTATION,
 } from '@/app/graphql/mutations'
 import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
-import React, { use, useEffect } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import {
   GenericTabs,
   UserInfo,
@@ -48,6 +48,7 @@ export default function ViewPersonPage({
     INVITE_PERSON_MUTATION
   )
   const [createLog] = useMutation(CREATE_LOG_MUTATION)
+  const [inviteSent, setInviteSent] = useState(false)
 
   useEffect(() => {
     refetch()
@@ -128,55 +129,71 @@ export default function ViewPersonPage({
                     mb={5}
                     mt={{ base: 3, lg: 0 }}
                   >
-                    <Button
-                      colorScheme="blue"
-                      size="sm"
-                      borderRadius={'3xl'}
-                      disabled={inviteLoading}
-                      onClick={async () => {
-                        try {
-                          await invitePerson({
-                            variables: { personId: person.id },
-                          })
-                          // Log the invite action
-                          await createLog({
-                            variables: {
-                              input: [
-                                {
-                                  description: `${person.firstName} ${person.lastName} was invited to join GoalPost!`,
-                                  // Optionally add more fields as needed
-                                  createdBy: {
-                                    connect: [
-                                      {
-                                        where: {
-                                          node: { id_EQ: currentUser?.id },
+                    {inviteSent ? (
+                      <Button
+                        colorScheme="red"
+                        colorPalette="red"
+                        size="sm"
+                        borderRadius={'3xl'}
+                        // TODO: Implement cancel invite logic
+                        onClick={() => {
+                          // TODO: Cancel invite mutation or logic here
+                        }}
+                      >
+                        Cancel invite
+                      </Button>
+                    ) : (
+                      <Button
+                        colorPalette="green"
+                        size="sm"
+                        borderRadius={'3xl'}
+                        disabled={inviteLoading}
+                        onClick={async () => {
+                          try {
+                            await invitePerson({
+                              variables: { personId: person.id },
+                            })
+                            // Log the invite action
+                            await createLog({
+                              variables: {
+                                input: [
+                                  {
+                                    description: `${person.firstName} ${person.lastName} was invited to join GoalPost!`,
+                                    // Optionally add more fields as needed
+                                    createdBy: {
+                                      connect: [
+                                        {
+                                          where: {
+                                            node: { id_EQ: currentUser?.id },
+                                          },
                                         },
-                                      },
-                                    ],
+                                      ],
+                                    },
                                   },
-                                },
-                              ],
-                            },
-                          })
-                          toaster.success({
-                            title: 'Invite Sent',
-                            description:
-                              'Successfully invited the person to join GoalPost!',
-                            meta: { closable: true },
-                          })
-                        } catch (e) {
-                          console.error(e)
-                          toaster.error({
-                            title: 'Invitation Failed',
-                            description:
-                              'Unable to send invite. Please try again later.',
-                            meta: { closable: true },
-                          })
-                        }
-                      }}
-                    >
-                      {inviteLoading ? 'Sending...' : 'Invite'}
-                    </Button>
+                                ],
+                              },
+                            })
+                            setInviteSent(true)
+                            toaster.success({
+                              title: 'Invite Sent',
+                              description:
+                                'Successfully invited the person to join GoalPost!',
+                              meta: { closable: true },
+                            })
+                          } catch (e) {
+                            console.error(e)
+                            toaster.error({
+                              title: 'Invitation Failed',
+                              description:
+                                'Unable to send invite. Please try again later.',
+                              meta: { closable: true },
+                            })
+                          }
+                        }}
+                      >
+                        {inviteLoading ? 'Sending...' : 'Invite'}
+                      </Button>
+                    )}
                   </Flex>
                 )}
                 <UserInfo data={bioData} key="bio" />
