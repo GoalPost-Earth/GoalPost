@@ -120,12 +120,23 @@ export const DELETE_PERSON_MUTATION = graphql(`
 `)
 
 export const INVITE_PERSON_MUTATION = graphql(`
-  mutation InvitePerson($personId: ID!) {
+  mutation InvitePerson($personId: ID!, $input: [LogCreateInput!]!) {
     invitePerson(personId: $personId) {
       id
       firstName
       lastName
       email
+    }
+    createLogs(input: $input) {
+      logs {
+        id
+        description
+        createdAt
+        createdBy {
+          id
+          name
+        }
+      }
     }
   }
 `)

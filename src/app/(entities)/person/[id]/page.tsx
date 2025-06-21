@@ -1,10 +1,7 @@
 'use client'
 
 import { GET_USER_BY_ID, GET_PERSON } from '@/app/graphql/queries'
-import {
-  INVITE_PERSON_MUTATION,
-  CREATE_LOG_MUTATION,
-} from '@/app/graphql/mutations'
+import { INVITE_PERSON_MUTATION } from '@/app/graphql/mutations'
 import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
 import React, { use, useEffect } from 'react'
 import {
@@ -47,7 +44,6 @@ export default function ViewPersonPage({
   const [invitePerson, { loading: inviteLoading }] = useMutation(
     INVITE_PERSON_MUTATION
   )
-  const [createLog] = useMutation(CREATE_LOG_MUTATION)
 
   useEffect(() => {
     refetch()
@@ -136,11 +132,8 @@ export default function ViewPersonPage({
                       onClick={async () => {
                         try {
                           await invitePerson({
-                            variables: { personId: person.id },
-                          })
-                          // Log the invite action
-                          await createLog({
                             variables: {
+                              personId: person.id,
                               input: [
                                 {
                                   description: `${person.firstName} ${person.lastName} was invited to join GoalPost!`,
@@ -158,6 +151,7 @@ export default function ViewPersonPage({
                               ],
                             },
                           })
+
                           toaster.success({
                             title: 'Invite Sent',
                             description:
