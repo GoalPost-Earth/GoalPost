@@ -37,7 +37,7 @@ type Person implements PersonInterface @node {
   email: String
   pronouns: String
   location: String
-  inviteSent: Boolean @customResolver
+  inviteSent: Boolean 
 
   # Relationships
   connections: [Person!]!
