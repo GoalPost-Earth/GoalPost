@@ -3,10 +3,10 @@
 import { GET_USER_BY_ID, GET_PERSON } from '@/app/graphql/queries'
 import {
   INVITE_PERSON_MUTATION,
-  CREATE_LOG_MUTATION,
+  CANCEL_INVITE_MUTATION,
 } from '@/app/graphql/mutations'
 import { Box, Container, HStack, Text, Button, Flex } from '@chakra-ui/react'
-import React, { use, useEffect, useState } from 'react'
+import React, { use, useEffect } from 'react'
 import {
   GenericTabs,
   UserInfo,
@@ -47,8 +47,9 @@ export default function ViewPersonPage({
   const [invitePerson, { loading: inviteLoading }] = useMutation(
     INVITE_PERSON_MUTATION
   )
-  const [createLog] = useMutation(CREATE_LOG_MUTATION)
-  const [inviteSent, setInviteSent] = useState(false)
+  const [cancelInvite, { loading: cancelInviteLoading }] = useMutation(
+    CANCEL_INVITE_MUTATION
+  )
 
   useEffect(() => {
     refetch()
@@ -129,15 +130,25 @@ export default function ViewPersonPage({
                     mb={5}
                     mt={{ base: 3, lg: 0 }}
                   >
-                    {inviteSent ? (
+                    {person.inviteSent ? (
                       <Button
                         colorScheme="red"
                         colorPalette="red"
                         size="sm"
                         borderRadius={'3xl'}
-                        // TODO: Implement cancel invite logic
-                        onClick={() => {
-                          // TODO: Cancel invite mutation or logic here
+                        loading={cancelInviteLoading}
+                        onClick={async () => {
+                          await cancelInvite({
+                            variables: {
+                              personId: person.id,
+                            },
+                          })
+                          toaster.success({
+                            title: 'Invite Cancelled',
+                            description:
+                              'Successfully cancelled the invite for this person.',
+                            meta: { closable: true },
+                          })
                         }}
                       >
                         Cancel invite
@@ -147,18 +158,12 @@ export default function ViewPersonPage({
                         colorPalette="green"
                         size="sm"
                         borderRadius={'3xl'}
-                        disabled={inviteLoading}
+                        loading={inviteLoading}
                         onClick={async () => {
                           try {
-                            await invitePerson({
+                            const res = await invitePerson({
                               variables: {
                                 personId: person.id,
-                                input: [], // Empty input array since we're handling logging separately
-                              },
-                            })
-                            // Log the invite action
-                            await createLog({
-                              variables: {
                                 input: [
                                   {
                                     description: `${person.firstName} ${person.lastName} was invited to join GoalPost!`,
@@ -176,7 +181,9 @@ export default function ViewPersonPage({
                                 ],
                               },
                             })
-                            setInviteSent(true)
+                            console.log('🚀 ~ page.tsx:188 ~ res:', res)
+                            // Log the invite action
+
                             toaster.success({
                               title: 'Invite Sent',
                               description:

@@ -30,6 +30,7 @@ type Person implements PersonInterface @node {
   email: String
   pronouns: String
   location: String
+  inviteSent: Boolean @customResolver
 
   # Relationships
   connections: [Person!]!
@@ -243,6 +244,7 @@ type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
   sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse!
   invitePerson(personId: ID!): Person!
+  cancelInvite(personId: ID!): Person!
 }
 
 type Query {

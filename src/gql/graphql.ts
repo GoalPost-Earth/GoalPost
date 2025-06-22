@@ -9178,6 +9178,7 @@ export type LogsConnection = {
 
 export type Mutation = {
   __typename?: 'Mutation'
+  cancelInvite: Person
   createCarePoints: CreateCarePointsMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
@@ -9205,6 +9206,10 @@ export type Mutation = {
   updateLogs: UpdateLogsMutationResponse
   updatePeople: UpdatePeopleMutationResponse
   updateResources: UpdateResourcesMutationResponse
+}
+
+export type MutationCancelInviteArgs = {
+  personId: Scalars['ID']['input']
 }
 
 export type MutationCreateCarePointsArgs = {
@@ -9375,6 +9380,7 @@ export type Person = PersonInterface & {
   goalsConnection: PersonGoalsConnection
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
+  inviteSent?: Maybe<Scalars['Boolean']['output']>
   lastName: Scalars['String']['output']
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
@@ -14704,6 +14710,7 @@ export type InvitePersonMutation = {
     id: string
     firstName: string
     lastName: string
+    inviteSent?: boolean | null
     email?: string | null
   }
   createLogs: {
@@ -14715,6 +14722,22 @@ export type InvitePersonMutation = {
       createdAt: any
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
     }>
+  }
+}
+
+export type CancelInviteMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type CancelInviteMutation = {
+  __typename?: 'Mutation'
+  cancelInvite: {
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    email?: string | null
+    inviteSent?: boolean | null
   }
 }
 
@@ -15375,6 +15398,7 @@ export type GetPersonQuery = {
     photo?: string | null
     phone?: string | null
     pronouns?: string | null
+    inviteSent?: boolean | null
     status: string
     avatar?: string | null
     careManual?: string | null
@@ -18470,6 +18494,7 @@ export const InvitePersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
               ],
             },
@@ -18535,6 +18560,61 @@ export const InvitePersonDocument = {
 } as unknown as DocumentNode<
   InvitePersonMutation,
   InvitePersonMutationVariables
+>
+export const CancelInviteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CancelInvite' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelInvite' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelInviteMutation,
+  CancelInviteMutationVariables
 >
 export const CreateResourcesDocument = {
   kind: 'Document',
@@ -20846,6 +20926,7 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'avatar' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },

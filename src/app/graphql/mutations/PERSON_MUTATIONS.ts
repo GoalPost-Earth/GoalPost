@@ -125,6 +125,7 @@ export const INVITE_PERSON_MUTATION = graphql(`
       id
       firstName
       lastName
+      inviteSent
       email
     }
     createLogs(input: $input) {
@@ -137,6 +138,18 @@ export const INVITE_PERSON_MUTATION = graphql(`
           name
         }
       }
+    }
+  }
+`)
+
+export const CANCEL_INVITE_MUTATION = graphql(`
+  mutation CancelInvite($personId: ID!) {
+    cancelInvite(personId: $personId) {
+      id
+      firstName
+      lastName
+      email
+      inviteSent
     }
   }
 `)

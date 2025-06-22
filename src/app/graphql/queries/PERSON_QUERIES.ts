@@ -11,6 +11,7 @@ export const GET_PERSON = graphql(`
       photo
       phone
       pronouns
+      inviteSent
 
       status
       avatar
