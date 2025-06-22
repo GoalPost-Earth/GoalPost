@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     )
 
     // Send email with reset link
-    const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}`
+    const encodedEmail = encodeURIComponent(email)
+    const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodedEmail}`
 
     await sendMail({
       from: process.env.NEXT_PUBLIC_EMAIL_FROM,

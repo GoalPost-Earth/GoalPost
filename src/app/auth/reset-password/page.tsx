@@ -9,6 +9,7 @@ function ResetPasswordPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams?.get('token') || ''
+  const email = searchParams?.get('email') || ''
 
   const {
     control,
@@ -43,7 +44,7 @@ function ResetPasswordPage() {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword: values.newPassword }),
+        body: JSON.stringify({ token, email, newPassword: values.newPassword }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -66,9 +67,14 @@ function ResetPasswordPage() {
   return (
     <Flex minH="100vh" align="center" justify="center" bg={'gray.50'}>
       <Box p={8} rounded="xl" boxShadow="lg" w="full" maxW="md">
-        <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={6}>
+        <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={2}>
           Reset your password
         </Heading>
+        {email && (
+          <Text textAlign="center" color="gray.600" mb={4}>
+            for {email}
+          </Text>
+        )}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Box mb={6}>
             <Input

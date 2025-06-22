@@ -6,6 +6,7 @@ import { getSession, initializeDB } from '../neo4j'
 
 const resetPasswordSchema = z.object({
   token: z.string(),
+  email: z.string().email().optional(),
   newPassword: z.string().min(8, 'Password must be at least 8 characters long'),
 })
 
