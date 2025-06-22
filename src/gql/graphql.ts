@@ -9252,7 +9252,7 @@ export type Person = PersonInterface & {
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
   inviteSent?: Maybe<Scalars['Boolean']['output']>
-  isUser: Scalars['Boolean']['output']
+  isUser?: Maybe<Scalars['Boolean']['output']>
   lastName: Scalars['String']['output']
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
@@ -15052,7 +15052,7 @@ export type GetLoggedInUserQuery = {
   people: Array<{
     __typename?: 'Person'
     id: string
-    isUser: boolean
+    isUser?: boolean | null
     firstName: string
     lastName: string
     name: string

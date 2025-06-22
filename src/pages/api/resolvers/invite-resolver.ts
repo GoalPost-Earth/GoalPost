@@ -1,5 +1,6 @@
 import { Context } from '@/config/types'
 import { sendMail } from '@/app/api/auth/utils'
+import crypto from 'crypto'
 
 export const inviteMutations = {
   invitePerson: async (
@@ -16,7 +17,6 @@ export const inviteMutations = {
       const result = await session.run(
         `
                 MATCH (person:Person {id: $id})
-                
                 RETURN person
                 `,
         { id: personId }
@@ -32,6 +32,16 @@ export const inviteMutations = {
         throw new Error('Person does not have an email address')
       }
 
+      // Generate a reset token for the new user
+      const token = crypto.randomUUID()
+      const expiration = new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ).toISOString() // 7 days
+
+      // Create the reset password link
+      const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`
+
+      console.log('🚀 ~ invite-resolver.ts:44 ~ resetLink:', resetLink)
       // Send invite email
       const [mailResult, inviteResult] = await Promise.all([
         sendMail({
@@ -50,8 +60,8 @@ export const inviteMutations = {
           We’re stoked to have your good vibes and energy with us. <br>
           Let’s grow, create, and celebrate together!
             </p>
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL}" style="display: inline-block; background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); color: #4b3f2b; text-decoration: none; font-weight: bold; padding: 14px 36px; border-radius: 30px; font-size: 1.1em; box-shadow: 0 2px 8px rgba(255, 179, 71, 0.15); margin-bottom: 18px;">
-          Join the Community
+            <a href="${resetLink}" style="display: inline-block; background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); color: #4b3f2b; text-decoration: none; font-weight: bold; padding: 14px 36px; border-radius: 30px; font-size: 1.1em; box-shadow: 0 2px 8px rgba(255, 179, 71, 0.15); margin-bottom: 18px;">
+          Set Your Password & Join Us
             </a>
             <p style="font-size: 0.98em; margin: 24px 0 0; color: #a1885c;">
           Looking forward to sharing with you,<br>
@@ -66,9 +76,12 @@ export const inviteMutations = {
           `
           MATCH (person:Person {id: $id})
             SET person.inviteSent = true
+            SET person.resetToken = $token
+            SET person.resetTokenExpires = datetime($expiration)
+            SET person:User
           RETURN person
           `,
-          { id: personId }
+          { id: personId, token, expiration }
         ),
       ])
       console.log('🚀 ~ invite-resolver.ts:63 ~ mailResult:', mailResult)
@@ -102,9 +115,10 @@ export const inviteMutations = {
     try {
       const result = await session.run(
         `
-                MATCH (person:Person {id: $id})
-                  REMOVE person.inviteSent
-                RETURN person
+                MATCH (user:User {id: $id})
+                  REMOVE user.inviteSent
+                  REMOVE user:User
+                RETURN user
                 `,
         { id: personId }
       )
