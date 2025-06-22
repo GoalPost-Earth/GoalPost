@@ -6,6 +6,7 @@ export const GET_PERSON = graphql(`
       id
       firstName
       lastName
+      # isUser
       name
       email
       photo
@@ -193,7 +194,7 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
 
 export const GET_USER_BY_ID = graphql(`
   query getUserById($id: ID!) {
-    people(where: { id_EQ: $id, NOT: { authId_EQ: null } }) {
+    people(where: { id_EQ: $id, NOT: { isUser_EQ: false } }) {
       id
     }
   }

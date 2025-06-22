@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import {
   ReactNode,
   createContext,
@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
+import { GET_LOGGED_IN_USER } from '../graphql'
 import { Person } from '@/gql/graphql'
 import { ApolloWrapper } from '@/components'
 import { usePathname } from 'next/navigation'
@@ -57,7 +57,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Maintenance mode state
 
-  const [UpdatePerson] = useMutation(UPDATE_PERSON_MUTATION)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
@@ -70,16 +69,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         'user',
         JSON.stringify({ ...user, ...data.people[0] })
       )
-      if (data?.people[0].authId !== user?.id) {
-        UpdatePerson({
-          variables: {
-            where: { email_EQ: user?.email },
-            update: {
-              authId_SET: user?.id,
-            },
-          },
-        })
-      }
     },
   })
 
