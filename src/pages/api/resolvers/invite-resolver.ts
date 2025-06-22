@@ -41,7 +41,6 @@ export const inviteMutations = {
       // Create the reset password link
       const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`
 
-      console.log('🚀 ~ invite-resolver.ts:44 ~ resetLink:', resetLink)
       // Send invite email
       const [mailResult, inviteResult] = await Promise.all([
         sendMail({

@@ -10210,6 +10210,7 @@ export type PersonCreateInput = {
   firstName: Scalars['String']['input']
   goals?: InputMaybe<PersonGoalsFieldInput>
   interests?: InputMaybe<Scalars['String']['input']>
+  inviteSent?: InputMaybe<Scalars['Boolean']['input']>
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
   passions?: InputMaybe<Scalars['String']['input']>
@@ -11240,6 +11241,7 @@ export type PersonSort = {
   firstName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
+  inviteSent?: InputMaybe<SortDirection>
   isUser?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
   location?: InputMaybe<SortDirection>
@@ -11265,6 +11267,7 @@ export type PersonUpdateInput = {
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   goals?: InputMaybe<Array<PersonGoalsUpdateFieldInput>>
   interests_SET?: InputMaybe<Scalars['String']['input']>
+  inviteSent_SET?: InputMaybe<Scalars['Boolean']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
   passions_SET?: InputMaybe<Scalars['String']['input']>
@@ -11416,6 +11419,7 @@ export type PersonWhere = {
   interests_EQ?: InputMaybe<Scalars['String']['input']>
   interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  inviteSent_EQ?: InputMaybe<Scalars['Boolean']['input']>
   isUser_EQ?: InputMaybe<Scalars['Boolean']['input']>
   lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
