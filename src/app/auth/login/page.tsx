@@ -103,12 +103,6 @@ function LoginPage() {
           </Button>
         </form>
         <Text textAlign="center" fontSize="sm" color="gray.500">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" color="brand.500" fontWeight="medium">
-            Sign up
-          </Link>
-        </Text>
-        <Text textAlign="center" fontSize="sm" color="gray.500">
           Forgot your password?{' '}
           <Link
             href="/auth/forgot-password"
