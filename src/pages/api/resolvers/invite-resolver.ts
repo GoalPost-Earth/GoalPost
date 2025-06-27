@@ -53,22 +53,22 @@ export const inviteMutations = {
           <div style="background: linear-gradient(135deg, #fdf6e3 0%, #ffe0ec 100%); padding: 40px 0;">
         <div style="max-width: 480px; margin: 0 auto; background: #fffbe7; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 36px 32px; font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif; color: #4b3f2b;">
           <div style="text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 12px;">✌️🌻</div>
-            <h1 style="font-size: 2.2em; margin: 0 0 12px; font-weight: 700; letter-spacing: 1px;">Welcome, Beautiful Soul!</h1>
-            <p style="font-size: 1.15em; margin: 0 0 18px; color: #7d5c2e;">
+        <div style="font-size: 48px; margin-bottom: 12px;">✌️🌻</div>
+        <h1 style="font-size: 2.2em; margin: 0 0 12px; font-weight: 700; letter-spacing: 1px;">Welcome, Beautiful Soul!</h1>
+        <p style="font-size: 1.15em; margin: 0 0 18px; color: #7d5c2e;">
           You’ve been invited to join <span style="font-weight: bold; color: #e67e22;">GoalPost</span> — a place where dreams blossom and journeys are shared.
-            </p>
-            <p style="font-size: 1.05em; margin: 0 0 24px; color: #8d6e3f;">
+        </p>
+        <p style="font-size: 1.05em; margin: 0 0 24px; color: #8d6e3f;">
           We’re stoked to have your good vibes and energy with us. <br>
           Let’s grow, create, and celebrate together!
-            </p>
-            <a href="${resetLink}" style="display: inline-block; background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); color: #4b3f2b; text-decoration: none; font-weight: bold; padding: 14px 36px; border-radius: 30px; font-size: 1.1em; box-shadow: 0 2px 8px rgba(255, 179, 71, 0.15); margin-bottom: 18px;">
+        </p>
+        <a href="${resetLink}" style="display: inline-block; background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); color: #4b3f2b; text-decoration: none; font-weight: bold; padding: 14px 36px; border-radius: 30px; font-size: 1.1em; box-shadow: 0 2px 8px rgba(255, 179, 71, 0.15); margin-bottom: 18px;">
           Set Your Password & Join Us
-            </a>
-            <p style="font-size: 0.98em; margin: 24px 0 0; color: #a1885c;">
+        </a>
+        <p style="font-size: 0.98em; margin: 24px 0 0; color: #a1885c;">
           Looking forward to sharing with you,<br>
           GoalPost ✨
-            </p>
+        </p>
           </div>
         </div>
           </div>
