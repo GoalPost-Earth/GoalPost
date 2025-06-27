@@ -6,7 +6,7 @@ const GetStartedScreen = () => {
   return (
     <>
       <Box
-        height="60vh"
+        height="100vh"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
         backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.webp)"
@@ -29,6 +29,7 @@ const GetStartedScreen = () => {
           padding="25px"
           gap="50px"
           alignItems="center"
+          bg="rgba(255, 255, 255, 0.9)"
         >
           <AppLogo
             width={100}
@@ -44,12 +45,7 @@ const GetStartedScreen = () => {
               Connect with and care for your community.
             </Text>
           </VStack>
-          <Button
-            as="a"
-            href="/api/auth/login?returnTo=/"
-            size="lg"
-            paddingY={6}
-          >
+          <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
             Next
           </Button>
         </Box>
@@ -97,7 +93,7 @@ function DesktopGetStartedScreen() {
             Connect with and care for your community
           </Heading>
         </Container>
-        <Button as="a" href="/api/auth/login?returnTo=/" size="lg" paddingY={6}>
+        <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
           Next
         </Button>
       </VStack>

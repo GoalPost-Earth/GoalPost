@@ -6,6 +6,7 @@ import { Button } from '../button'
 import { EntityType } from '@/types'
 import { useMutation } from '@apollo/client'
 import {
+  CREATE_LOG_MUTATION,
   DELETE_CAREPOINT_MUTATION,
   DELETE_COMMUNITY_MUTATION,
   DELETE_COREVALUE_MUTATION,
@@ -33,6 +34,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '../dialog'
+import { useApp } from '@/app/contexts/AppContext'
 
 export function DeleteButton({
   entityId,
@@ -68,6 +70,8 @@ export function DeleteButton({
   const [DeleteCarePoint] = useMutation(DELETE_CAREPOINT_MUTATION, {
     refetchQueries: [GET_ALL_CAREPOINTS],
   })
+  const [createLog] = useMutation(CREATE_LOG_MUTATION)
+  const { user: currentUser } = useApp()
 
   const handleConfirmDelete = async () => {
     setSubmitting(true)
@@ -92,6 +96,21 @@ export function DeleteButton({
           id: entityId,
         },
       })
+
+      // Log the delete action
+      await createLog({
+        variables: {
+          input: [
+            {
+              description: `Deleted ${entityType} named ${entityName}`,
+              createdBy: {
+                connect: [{ where: { node: { id_EQ: currentUser?.id } } }],
+              },
+            },
+          ],
+        },
+      })
+
       router.push('/' + entityType.toLowerCase())
 
       toaster.create({

@@ -21,7 +21,14 @@ extend schema @authentication
 
 type Person implements PersonInterface @node {
   id: ID! @id
-  authId: String
+  isUser: Boolean
+    @cypher(
+      statement: """
+      MATCH (this) WHERE this:User
+      RETURN true AS isUser
+      """
+      columnName: "isUser"
+    )
   firstName: String!
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
@@ -30,6 +37,7 @@ type Person implements PersonInterface @node {
   email: String
   pronouns: String
   location: String
+  inviteSent: Boolean 
 
   # Relationships
   connections: [Person!]!
@@ -242,6 +250,8 @@ type ChatbotResponse {
 type Mutation {
   generatePersonEmbeddings(personId: ID!): Boolean!
   sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse!
+  invitePerson(personId: ID!): Person!
+  cancelInvite(personId: ID!): Person!
 }
 
 type Query {

@@ -1,6 +1,7 @@
 import { Person } from '@/gql/graphql'
 import { embeddingMutations } from './embedding-mutations'
 import { chatbotResolvers } from './chatbot-resolvers'
+import { inviteMutations } from './invite-resolver'
 
 const resolvers = {
   // Resolver Parameters
@@ -16,6 +17,7 @@ const resolvers = {
   Mutation: {
     ...embeddingMutations,
     ...chatbotResolvers,
+    ...inviteMutations,
   },
   Query: {},
 }

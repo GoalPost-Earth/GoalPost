@@ -6,11 +6,11 @@ import { useMutation } from '@apollo/client'
 import { Container } from '@chakra-ui/react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { CarePointForm } from '@/components'
 import { FormMode } from '@/constants'
 import { CarePointFormData, carePointSchema } from '@/app/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useApp } from '@/app/contexts'
 
 function CreateCarePoint() {
   const {
@@ -28,7 +28,7 @@ function CreateCarePoint() {
     },
   })
   const router = useRouter()
-  const { user } = useUser()
+  const { user } = useApp()
 
   const [CreateCarePoint] = useMutation(CREATE_CAREPOINT_MUTATION)
 
@@ -41,7 +41,7 @@ function CreateCarePoint() {
           input: {
             ...rest,
             createdBy: {
-              connect: [{ where: { node: { authId_EQ: user?.sub } } }],
+              connect: [{ where: { node: { id_EQ: user?.id } } }],
             },
 
             enabledByGoals: {

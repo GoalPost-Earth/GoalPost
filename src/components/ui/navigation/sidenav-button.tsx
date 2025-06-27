@@ -12,15 +12,15 @@ import {
   DrawerRoot,
   DrawerTrigger,
 } from '../drawer'
-import { useUser } from '@auth0/nextjs-auth0/client'
 import { AppLogo } from '../app-logo'
 import { HamburgerIcon } from '@/icons'
 import { InputAccordion, NavItemLinks } from './navItems'
 import { LogoutSection } from '../logout-section'
 import { BrandedGoalPostText } from '../branded-goalpost-text'
+import { useApp } from '@/app/contexts'
 
 const NavHamburgerButton = () => {
-  const { user } = useUser()
+  const { user } = useApp()
   const [open, setOpen] = useState(false)
 
   return (

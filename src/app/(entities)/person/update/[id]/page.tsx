@@ -34,7 +34,7 @@ export default function UpdatePerson({
       phone: person?.phone || undefined,
       pronouns: person?.pronouns || undefined,
       location: person?.location || undefined,
-      community: person?.communitiesConnection.edges[0]?.node.id || [],
+      community: person?.communitiesConnection.edges[0]?.node.id || undefined,
 
       status: person?.status || 'Active',
       avatar: person?.avatar || undefined,

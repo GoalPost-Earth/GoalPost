@@ -41,3 +41,14 @@ export function getInitials(name: string) {
     ? `${firstName.charAt(0)}${lastName.charAt(0)}`
     : firstName.charAt(0)
 }
+
+export const parseError = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message
+  } else if (typeof error === 'string') {
+    return error
+  } else if (typeof error === 'object' && error !== null) {
+    return JSON.stringify(error)
+  }
+  return 'Unknown error'
+}

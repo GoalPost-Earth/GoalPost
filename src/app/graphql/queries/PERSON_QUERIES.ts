@@ -6,11 +6,13 @@ export const GET_PERSON = graphql(`
       id
       firstName
       lastName
+      # isUser
       name
       email
       photo
       phone
       pronouns
+      inviteSent
 
       status
       avatar
@@ -186,6 +188,14 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
       id
       name
       photo
+    }
+  }
+`)
+
+export const GET_USER_BY_ID = graphql(`
+  query getUserById($id: ID!) {
+    people(where: { id_EQ: $id, NOT: { isUser_EQ: false } }) {
+      id
     }
   }
 `)

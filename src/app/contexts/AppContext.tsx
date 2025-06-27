@@ -1,18 +1,18 @@
 'use client'
 
-import { useMutation, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import {
   ReactNode,
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react'
-import { GET_LOGGED_IN_USER, UPDATE_PERSON_MUTATION } from '../graphql'
-import { UserProfile, useUser } from '@auth0/nextjs-auth0/client'
+import { GET_LOGGED_IN_USER } from '../graphql'
 import { Person } from '@/gql/graphql'
 import { ApolloWrapper } from '@/components'
+import { usePathname } from 'next/navigation'
+import { UserProfile } from '@/types'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
@@ -20,10 +20,14 @@ type ContextUser = UserProfile & Person
 
 interface AppContextType {
   user?: ContextUser
+  setUser: (user: ContextUser) => void
 }
 
 const AppContext = createContext<AppContextType>({
   user: undefined,
+  setUser: () => {
+    throw new Error('setUser function is not defined')
+  },
 })
 
 export const useApp = () => {
@@ -35,14 +39,24 @@ export const useApp = () => {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [loggedInUser, setLoggedInUser] = useState<ContextUser | undefined>(
-    undefined
-  )
-  const { user } = useUser()
+  const pathname = usePathname()
+  const isAuthRoute = pathname?.startsWith('/auth')
+  const [user, setUser] = useState<ContextUser | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        try {
+          return JSON.parse(storedUser)
+        } catch {
+          return undefined
+        }
+      }
+    }
+    return undefined
+  })
 
   // Maintenance mode state
 
-  const [UpdatePerson] = useMutation(UPDATE_PERSON_MUTATION)
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
@@ -50,43 +64,45 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (!data?.people[0]) {
         return
       }
-      setLoggedInUser({ ...user, ...data.people[0] } as ContextUser)
+      setUser({ ...user, ...data.people[0] } as ContextUser)
       sessionStorage.setItem(
         'user',
         JSON.stringify({ ...user, ...data.people[0] })
       )
-      if (data?.people[0].authId !== user?.sub) {
-        UpdatePerson({
-          variables: {
-            where: { email_EQ: user?.email },
-            update: {
-              authId_SET: user?.sub,
-            },
-          },
-        })
-      }
     },
   })
 
   useEffect(() => {
     const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
     if (sessionUser.id && sessionUser.level) {
-      setLoggedInUser(sessionUser)
+      setUser(sessionUser)
     }
-  }, [user])
+  }, [])
 
-  const value = useMemo(
-    () => ({
-      user: loggedInUser,
-    }),
-    [loggedInUser]
-  )
+  const setUserAndPersist = (user: ContextUser) => {
+    setUser(user)
+    sessionStorage.setItem('user', JSON.stringify(user))
+  }
+
+  const value = {
+    user,
+    setUser: setUserAndPersist,
+  }
 
   return (
     <AppContext.Provider value={value}>
-      <ApolloWrapper data={data} loading={loading} error={error}>
-        {children}
-      </ApolloWrapper>
+      {isAuthRoute ? (
+        <>{children}</>
+      ) : (
+        <ApolloWrapper
+          placeholder={!user}
+          data={data}
+          loading={loading}
+          error={error}
+        >
+          {children}
+        </ApolloWrapper>
+      )}
     </AppContext.Provider>
   )
 }

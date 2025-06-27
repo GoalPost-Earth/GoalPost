@@ -118,3 +118,38 @@ export const DELETE_PERSON_MUTATION = graphql(`
     }
   }
 `)
+
+export const INVITE_PERSON_MUTATION = graphql(`
+  mutation InvitePerson($personId: ID!, $input: [LogCreateInput!]!) {
+    invitePerson(personId: $personId) {
+      id
+      firstName
+      lastName
+      inviteSent
+      email
+    }
+    createLogs(input: $input) {
+      logs {
+        id
+        description
+        createdAt
+        createdBy {
+          id
+          name
+        }
+      }
+    }
+  }
+`)
+
+export const CANCEL_INVITE_MUTATION = graphql(`
+  mutation CancelInvite($personId: ID!) {
+    cancelInvite(personId: $personId) {
+      id
+      firstName
+      lastName
+      email
+      inviteSent
+    }
+  }
+`)

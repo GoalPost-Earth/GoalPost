@@ -539,21 +539,6 @@ export type CarePointCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CarePointCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<CarePointCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CarePointCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1130,7 +1115,6 @@ export type CarePointPersonCreatedByAggregationSelection = {
 
 export type CarePointPersonCreatedByNodeAggregateSelection = {
   __typename?: 'CarePointPersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -2084,21 +2068,6 @@ export type CommunityCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CommunityCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<CommunityCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CommunityCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2708,21 +2677,6 @@ export type CommunityMembersNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CommunityMembersNodeAggregationWhereInput>>
   NOT?: InputMaybe<CommunityMembersNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CommunityMembersNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2997,7 +2951,6 @@ export type CommunityPersonCreatedByAggregationSelection = {
 
 export type CommunityPersonCreatedByNodeAggregateSelection = {
   __typename?: 'CommunityPersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -3027,7 +2980,6 @@ export type CommunityPersonMembersAggregationSelection = {
 
 export type CommunityPersonMembersNodeAggregateSelection = {
   __typename?: 'CommunityPersonMembersNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -4187,21 +4139,6 @@ export type CoreValueCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CoreValueCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<CoreValueCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CoreValueCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4803,21 +4740,6 @@ export type CoreValuePeopleNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CoreValuePeopleNodeAggregationWhereInput>>
   NOT?: InputMaybe<CoreValuePeopleNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CoreValuePeopleNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5092,7 +5014,6 @@ export type CoreValuePersonCreatedByAggregationSelection = {
 
 export type CoreValuePersonCreatedByNodeAggregateSelection = {
   __typename?: 'CoreValuePersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -5122,7 +5043,6 @@ export type CoreValuePersonPeopleAggregationSelection = {
 
 export type CoreValuePersonPeopleNodeAggregateSelection = {
   __typename?: 'CoreValuePersonPeopleNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -6172,21 +6092,6 @@ export type GoalCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<GoalCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<GoalCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<GoalCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7030,21 +6935,6 @@ export type GoalMotivatesPeopleNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<GoalMotivatesPeopleNodeAggregationWhereInput>>
   NOT?: InputMaybe<GoalMotivatesPeopleNodeAggregationWhereInput>
   OR?: InputMaybe<Array<GoalMotivatesPeopleNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7319,7 +7209,6 @@ export type GoalPersonCreatedByAggregationSelection = {
 
 export type GoalPersonCreatedByNodeAggregateSelection = {
   __typename?: 'GoalPersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -7349,7 +7238,6 @@ export type GoalPersonMotivatesPeopleAggregationSelection = {
 
 export type GoalPersonMotivatesPeopleNodeAggregateSelection = {
   __typename?: 'GoalPersonMotivatesPeopleNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -8274,21 +8162,6 @@ export type LogCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<LogCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<LogCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<LogCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8833,7 +8706,6 @@ export type LogPersonCreatedByAggregationSelection = {
 
 export type LogPersonCreatedByNodeAggregateSelection = {
   __typename?: 'LogPersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -9178,6 +9050,7 @@ export type LogsConnection = {
 
 export type Mutation = {
   __typename?: 'Mutation'
+  cancelInvite: Person
   createCarePoints: CreateCarePointsMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
@@ -9195,6 +9068,7 @@ export type Mutation = {
   deletePeople: DeleteInfo
   deleteResources: DeleteInfo
   generatePersonEmbeddings: Scalars['Boolean']['output']
+  invitePerson: Person
   sendMessageToChatbot: ChatbotResponse
   updateCarePoints: UpdateCarePointsMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
@@ -9204,6 +9078,10 @@ export type Mutation = {
   updateLogs: UpdateLogsMutationResponse
   updatePeople: UpdatePeopleMutationResponse
   updateResources: UpdateResourcesMutationResponse
+}
+
+export type MutationCancelInviteArgs = {
+  personId: Scalars['ID']['input']
 }
 
 export type MutationCreateCarePointsArgs = {
@@ -9281,6 +9159,10 @@ export type MutationGeneratePersonEmbeddingsArgs = {
   personId: Scalars['ID']['input']
 }
 
+export type MutationInvitePersonArgs = {
+  personId: Scalars['ID']['input']
+}
+
 export type MutationSendMessageToChatbotArgs = {
   message: Scalars['String']['input']
   sessionId?: InputMaybe<Scalars['String']['input']>
@@ -9344,7 +9226,6 @@ export type PeopleConnection = {
 
 export type Person = PersonInterface & {
   __typename?: 'Person'
-  authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
   careManual?: Maybe<Scalars['String']['output']>
   carePoints: Array<CarePoint>
@@ -9370,6 +9251,8 @@ export type Person = PersonInterface & {
   goalsConnection: PersonGoalsConnection
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
+  inviteSent?: Maybe<Scalars['Boolean']['output']>
+  isUser?: Maybe<Scalars['Boolean']['output']>
   lastName: Scalars['String']['output']
   location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
@@ -9495,7 +9378,6 @@ export type PersonProvidesResourcesConnectionArgs = {
 
 export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   count: Scalars['Int']['output']
@@ -9850,21 +9732,6 @@ export type PersonConnectionsNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<PersonConnectionsNodeAggregationWhereInput>>
   NOT?: InputMaybe<PersonConnectionsNodeAggregationWhereInput>
   OR?: InputMaybe<Array<PersonConnectionsNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10331,7 +10198,6 @@ export type PersonCoreValuesUpdateFieldInput = {
 }
 
 export type PersonCreateInput = {
-  authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
   communities?: InputMaybe<PersonCommunitiesFieldInput>
@@ -10344,6 +10210,7 @@ export type PersonCreateInput = {
   firstName: Scalars['String']['input']
   goals?: InputMaybe<PersonGoalsFieldInput>
   interests?: InputMaybe<Scalars['String']['input']>
+  inviteSent?: InputMaybe<Scalars['Boolean']['input']>
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
   passions?: InputMaybe<Scalars['String']['input']>
@@ -10413,21 +10280,6 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<PersonCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<PersonCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<PersonCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11119,7 +10971,6 @@ export type PersonPersonConnectionsEdgeAggregateSelection = {
 
 export type PersonPersonConnectionsNodeAggregateSelection = {
   __typename?: 'PersonPersonConnectionsNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -11149,7 +11000,6 @@ export type PersonPersonCreatedByAggregationSelection = {
 
 export type PersonPersonCreatedByNodeAggregateSelection = {
   __typename?: 'PersonPersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -11382,7 +11232,6 @@ export type PersonResourceProvidesResourcesNodeAggregateSelection = {
 
 /** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
 export type PersonSort = {
-  authId?: InputMaybe<SortDirection>
   avatar?: InputMaybe<SortDirection>
   careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
@@ -11392,6 +11241,8 @@ export type PersonSort = {
   firstName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
+  inviteSent?: InputMaybe<SortDirection>
+  isUser?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
   location?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
@@ -11404,7 +11255,6 @@ export type PersonSort = {
 }
 
 export type PersonUpdateInput = {
-  authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   careManual_SET?: InputMaybe<Scalars['String']['input']>
   communities?: InputMaybe<Array<PersonCommunitiesUpdateFieldInput>>
@@ -11417,6 +11267,7 @@ export type PersonUpdateInput = {
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   goals?: InputMaybe<Array<PersonGoalsUpdateFieldInput>>
   interests_SET?: InputMaybe<Scalars['String']['input']>
+  inviteSent_SET?: InputMaybe<Scalars['Boolean']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
   passions_SET?: InputMaybe<Scalars['String']['input']>
@@ -11432,11 +11283,6 @@ export type PersonWhere = {
   AND?: InputMaybe<Array<PersonWhere>>
   NOT?: InputMaybe<PersonWhere>
   OR?: InputMaybe<Array<PersonWhere>>
-  authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  authId_EQ?: InputMaybe<Scalars['String']['input']>
-  authId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_CONTAINS?: InputMaybe<Scalars['String']['input']>
   avatar_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
@@ -11573,6 +11419,8 @@ export type PersonWhere = {
   interests_EQ?: InputMaybe<Scalars['String']['input']>
   interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  inviteSent_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  isUser_EQ?: InputMaybe<Scalars['Boolean']['input']>
   lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
@@ -12416,21 +12264,6 @@ export type ResourceCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<ResourceCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<ResourceCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<ResourceCreatedByNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12992,7 +12825,6 @@ export type ResourcePersonCreatedByAggregationSelection = {
 
 export type ResourcePersonCreatedByNodeAggregateSelection = {
   __typename?: 'ResourcePersonCreatedByNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -13022,7 +12854,6 @@ export type ResourcePersonProvidedByPersonAggregationSelection = {
 
 export type ResourcePersonProvidedByPersonNodeAggregateSelection = {
   __typename?: 'ResourcePersonProvidedByPersonNodeAggregateSelection'
-  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -13323,21 +13154,6 @@ export type ResourceProvidedByPersonNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<ResourceProvidedByPersonNodeAggregationWhereInput>>
   NOT?: InputMaybe<ResourceProvidedByPersonNodeAggregationWhereInput>
   OR?: InputMaybe<Array<ResourceProvidedByPersonNodeAggregationWhereInput>>
-  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14687,6 +14503,49 @@ export type DeletePersonMutation = {
   deletePeople: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
+export type InvitePersonMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+  input: Array<LogCreateInput> | LogCreateInput
+}>
+
+export type InvitePersonMutation = {
+  __typename?: 'Mutation'
+  invitePerson: {
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    inviteSent?: boolean | null
+    email?: string | null
+  }
+  createLogs: {
+    __typename?: 'CreateLogsMutationResponse'
+    logs: Array<{
+      __typename?: 'Log'
+      id: string
+      description: string
+      createdAt: any
+      createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+    }>
+  }
+}
+
+export type CancelInviteMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type CancelInviteMutation = {
+  __typename?: 'Mutation'
+  cancelInvite: {
+    __typename?: 'Person'
+    id: string
+    firstName: string
+    lastName: string
+    email?: string | null
+    inviteSent?: boolean | null
+  }
+}
+
 export type CreateResourcesMutationVariables = Exact<{
   input: Array<ResourceCreateInput> | ResourceCreateInput
 }>
@@ -15197,7 +15056,7 @@ export type GetLoggedInUserQuery = {
   people: Array<{
     __typename?: 'Person'
     id: string
-    authId?: string | null
+    isUser?: boolean | null
     firstName: string
     lastName: string
     name: string
@@ -15344,6 +15203,7 @@ export type GetPersonQuery = {
     photo?: string | null
     phone?: string | null
     pronouns?: string | null
+    inviteSent?: boolean | null
     status: string
     avatar?: string | null
     careManual?: string | null
@@ -15535,6 +15395,15 @@ export type GetPeopleAndTheirCoreValuesQuery = {
       }>
     }>
   }>
+}
+
+export type GetUserByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetUserByIdQuery = {
+  __typename?: 'Query'
+  people: Array<{ __typename?: 'Person'; id: string }>
 }
 
 export type GetResourceQueryVariables = Exact<{
@@ -18368,6 +18237,190 @@ export const DeletePersonDocument = {
   DeletePersonMutation,
   DeletePersonMutationVariables
 >
+export const InvitePersonDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'InvitePerson' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'LogCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'invitePerson' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createLogs' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'logs' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  InvitePersonMutation,
+  InvitePersonMutationVariables
+>
+export const CancelInviteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CancelInvite' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelInvite' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelInviteMutation,
+  CancelInviteMutationVariables
+>
 export const CreateResourcesDocument = {
   kind: 'Document',
   definitions: [
@@ -20234,7 +20287,7 @@ export const GetLoggedInUserDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'authId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isUser' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -20678,6 +20731,7 @@ export const GetPersonDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inviteSent' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'avatar' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
@@ -21391,6 +21445,74 @@ export const GetPeopleAndTheirCoreValuesDocument = {
   GetPeopleAndTheirCoreValuesQuery,
   GetPeopleAndTheirCoreValuesQueryVariables
 >
+export const GetUserByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUserById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'NOT' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'isUser_EQ' },
+                            value: { kind: 'BooleanValue', value: false },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetUserByIdQuery, GetUserByIdQueryVariables>
 export const GetResourceDocument = {
   kind: 'Document',
   definitions: [
