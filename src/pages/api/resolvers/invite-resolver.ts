@@ -44,6 +44,9 @@ export const inviteMutations = {
       // Send invite email
       const [mailResult, inviteResult] = await Promise.all([
         sendMail({
+          from:
+            process.env.NEXT_PUBLIC_EMAIL_FROM ||
+            'Goalpost <info@goalpost.earth>',
           to: email,
           subject: '🌼 You’re Invited to GoalPost! 🌈',
           html: `
