@@ -114,10 +114,10 @@ export const inviteMutations = {
     try {
       const result = await session.run(
         `
-                MATCH (user:User {id: $id})
+                MATCH (user:Person {id: $id})
                   REMOVE user.inviteSent
                   REMOVE user:User
-                RETURN user
+                RETURN user AS person
                 `,
         { id: personId }
       )
