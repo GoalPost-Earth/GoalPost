@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       from:
         process.env.NEXT_PUBLIC_EMAIL_FROM || 'Goalpost <info@goalpost.earth>',
       to: email,
-      subject: 'Password Reset Request',
+      subject: '🌻 Password Reset Request',
       html: `
       <div style="background: linear-gradient(135deg, #fdf6e3 0%, #ffe0ec 100%); padding: 40px 0;">
         <div style="max-width: 480px; margin: 0 auto; background: #fffbe7; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 36px 32px; font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif; color: #4b3f2b;">
