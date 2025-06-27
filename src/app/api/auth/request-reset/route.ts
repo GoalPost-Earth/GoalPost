@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodedEmail}`
 
     await sendMail({
-      from: process.env.NEXT_PUBLIC_EMAIL_FROM,
+      from:
+        process.env.NEXT_PUBLIC_EMAIL_FROM || 'Goalpost <info@goalpost.earth>',
       to: email,
       subject: 'Password Reset Request',
       html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
