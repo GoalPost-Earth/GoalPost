@@ -41,6 +41,7 @@ export const inviteMutations = {
       // Create the reset password link
       const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`
 
+      console.log('Reset link:', resetLink)
       // Send invite email
       const [mailResult, inviteResult] = await Promise.all([
         sendMail({
@@ -129,7 +130,7 @@ export const inviteMutations = {
         throw new Error('Person not found')
       }
 
-      return result.records[0].get('person').properties
+      return result.records[0].get('user').properties
     } catch (error) {
       console.error(error)
       return {

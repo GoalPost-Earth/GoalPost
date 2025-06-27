@@ -44,6 +44,7 @@ export default function ViewPersonPage({
     fetchPolicy: 'network-only',
   })
 
+  console.log('🚀 ~ page.tsx:20 ~ ViewPersonPage ~ usersData:', usersData)
   const [invitePerson, { loading: inviteLoading }] = useMutation(
     INVITE_PERSON_MUTATION
   )
@@ -103,6 +104,7 @@ export default function ViewPersonPage({
     : personTriggers
 
   console.log('Person ', person)
+  console.log('user ', user)
 
   return (
     <ApolloWrapper data={data} loading={loading} error={error}>
