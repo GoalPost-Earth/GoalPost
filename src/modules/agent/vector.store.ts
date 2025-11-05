@@ -17,11 +17,11 @@ export default async function initVectorStore(
     username: process.env.NEO4J_USERNAME as string,
     password: process.env.NEO4J_PASSWORD as string,
     indexName: 'personBioVectorIndex',
-    textNodeProperty: 'plot',
+    textNodeProperty: 'passions',
     embeddingNodeProperty: 'embedding',
     retrievalQuery: `
       RETURN
-        node.plot AS text,
+        node.passions AS text,
         score,
         {
           _id: elementid(node),
