@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await session.run(
-      'MATCH (u:User {email: $email}) ' +
+      'MATCH (u:Person {email: $email}) ' +
         'SET u.resetToken = $token, u.resetTokenExpires = datetime($expiration)',
       { email, token, expiration }
     )
