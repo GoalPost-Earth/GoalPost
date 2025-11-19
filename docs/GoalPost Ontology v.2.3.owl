@@ -1,0 +1,216 @@
+{
+  "@context": {
+    "@vocab": "http://goalpost.earth/ontology#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#"
+  },
+  "@graph": [
+    {
+      "@id": "RelationalEntity",
+      "@type": "owl:Class",
+      "rdfs:comment": "Any entity that can play multiple roles within relational fields: Person, Goal, Resource, etc."
+    },
+    {
+      "@id": "LifeSensor",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "RelationalEntity",
+      "rdfs:comment": "Any being—human, community, ecosystem, symbolic presence—that initiates or senses relational shifts."
+    },
+    {
+      "@id": "Person",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "LifeSensor",
+      "rdfs:comment": "Human beings as relational and sensing entities."
+    },
+    {
+      "@id": "Community",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": ["FieldContext", "LifeSensor"],
+      "rdfs:comment": "A living relational field that can sense, emit pulses, and be honored with reciprocity."
+   },
+  {
+  "@id": "SymbolicSensor",
+  "@type": "owl:Class",
+  "rdfs:subClassOf": "LifeSensor",
+  "rdfs:comment": "A presence that senses, responds, or resonates symbolically—such as a dream figure, fictional character, AI companion, ancestor, archetype, or imagined being. Though not biologically alive, these sensors become real through relationship."
+   },
+    {
+      "@id": "FieldContext",
+      "@type": "owl:Class",
+      "rdfs:comment": "A context or membrane that holds relational unfolding—such as a learning cohort, agency initiative, or care point."
+    },
+    {
+      "@id": "hasEmergentName",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": "FieldContext",
+      "rdfs:range": "xsd:string",
+      "rdfs:comment": "Poetic or field-given name that arises from lived experience in the context."
+    },
+    {
+      "@id": "FieldPulse",
+      "@type": "owl:Class",
+      "rdfs:comment": "A sensed shift or resonance in the field—initiated by a LifeSensor, held within a FieldContext."
+    },
+    {
+      "@id": "TimePulse",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "FieldPulse",
+      "rdfs:comment": "A FieldPulse aligned with a systemic, natural, or symbolic temporal rhythm (e.g., Equinox, Deadline)."
+    },
+    {
+      "@id": "CarePulse",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "FieldPulse",
+      "rdfs:comment": "A pulse holding or releasing care, grief, support, or nourishment."
+    },
+    {
+      "@id": "ResonancePulse",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "FieldPulse",
+      "rdfs:comment": "A pulse expressing or amplifying a field resonance (e.g., Courage, Belonging, Emergence)."
+    },
+    {
+      "@id": "FieldAwakeningPulse",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "FieldPulse",
+      "rdfs:comment": "A pulse arising from direct awareness of the field’s aliveness—through stillness, dream, meditation, or moment of entanglement."
+    },
+    {
+      "@id": "UnspokenPulse",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "FieldPulse",
+      "rdfs:comment": "A pulse that emerges without words—held in the body, in silence, or in pain. A resonance that is felt but not yet shared aloud."
+    },
+    {
+      "@id": "FieldResonance",
+      "@type": "owl:Class",
+      "rdfs:comment": "An archetypal, symbolic, or energetic pattern that threads through multiple pulses—e.g., Justice, Reciprocity, Grief."
+    },
+    {
+      "@id": "RoleExpression",
+      "@type": "owl:Class",
+      "rdfs:comment": "A contextual role a RelationalEntity plays in a FieldContext—e.g., Goal, Resource, Story."
+    },
+    {
+      "@id": "GoalRole",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "RoleExpression",
+      "rdfs:comment": "Role of an entity when serving as a Goal in a given context."
+    },
+    {
+      "@id": "ResourceRole",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "RoleExpression",
+      "rdfs:comment": "Role of an entity when acting as a Resource within a field."
+    },
+    {
+      "@id": "StoryRole",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "RoleExpression",
+      "rdfs:comment": "Role of an entity when serving as a narrative force within a context."
+    },
+    {
+      "@id": "actsAs",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "RelationalEntity",
+      "rdfs:range": "RoleExpression",
+      "rdfs:comment": "Describes how an entity is being expressed in a field."
+    },
+    {
+      "@id": "withinContext",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "RoleExpression",
+      "rdfs:range": "FieldContext",
+      "rdfs:comment": "Ties a role expression to the context it lives within."
+    },
+    {
+      "@id": "expandsInto",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "RelationalEntity",
+      "rdfs:range": "RelationalEntity",
+      "rdfs:comment": "Captures the transformation or evolution of one entity into another."
+    },
+    {
+      "@id": "feelsLike",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "RelationalEntity",
+      "rdfs:range": "FieldResonance",
+      "rdfs:comment": "A poetic or symbolic resonance carried by an entity."
+    },
+    {
+      "@id": "initiatedBy",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "FieldPulse",
+      "rdfs:range": "LifeSensor",
+      "rdfs:comment": "Who or what initiated this relational pulse."
+    },
+    {
+      "@id": "alignedWith",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "FieldPulse",
+      "rdfs:range": "FieldResonance",
+      "rdfs:comment": "Which resonance this pulse is expressing or harmonizing with."
+    },
+    {
+      "@id": "intensity",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": "FieldPulse",
+      "rdfs:range": "xsd:float",
+      "rdfs:comment": "How strongly the pulse was felt—optional (e.g., 0.0 to 1.0)."
+    },
+    {
+      "@id": "why",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": "FieldPulse",
+      "rdfs:range": "xsd:string",
+      "rdfs:comment": "Felt motivation or symbolic reason the pulse emerged."
+    },
+    {
+      "@id": "SensingModality",
+      "@type": "owl:Class",
+      "rdfs:comment": "A poetic description of how a sensor perceives—e.g., intuition, shared memory, vibration. Optional."
+    },
+    {
+      "@id": "hasSensingModality",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "LifeSensor",
+      "rdfs:range": "SensingModality",
+      "rdfs:comment": "Optional property describing how the being senses."
+    },
+    {
+      "@id": "ReciprocalOffering",
+      "@type": "owl:Class",
+      "rdfs:comment": "A gesture of gratitude or care offered in response to relational presence, resonance, or impact."
+    },
+    {
+      "@id": "HonorariumOffering",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": "ReciprocalOffering",
+      "rdfs:comment": "A relational acknowledgment of ongoing presence or catalytic pulse—may include material offerings."
+    },
+    {
+      "@id": "receivedBy",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "ReciprocalOffering",
+      "rdfs:range": "LifeSensor",
+      "rdfs:comment": "The person, community, or ecological presence receiving the offering."
+    },
+    {
+      "@id": "recognizesPulse",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": "ReciprocalOffering",
+      "rdfs:range": "FieldPulse",
+      "rdfs:comment": "The pulse this offering is acknowledging or responding to."
+    },
+    {
+      "@id": "reciprocityPattern",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": "HonorariumOffering",
+      "rdfs:range": "xsd:string",
+      "rdfs:comment": "Optional string describing the pattern of reciprocity—e.g., 'field-presence', 'pulse-response'."
+    }
+  ]
+}
+
