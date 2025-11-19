@@ -20,9 +20,11 @@ interface RelationalEntity {
   name: String
   description: String
   # Ontology property: expandsInto - captures transformation/evolution.
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
   # Ontology property: feelsLike - poetic/symbolic resonance.
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
   createdAt: DateTime!
   updatedAt: DateTime
 }
@@ -33,12 +35,15 @@ interface LifeSensor {
   id: ID!
   name: String
   description: String
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
   createdAt: DateTime!
   updatedAt: DateTime
   # Own property
-  sensingModality: SensingModality @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
+  sensingModality: SensingModality
+    @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
 }
 
 # FieldContext: Contexts holding relational unfolding (e.g., former CarePoints).
@@ -50,7 +55,8 @@ interface RoleExpression {
   name: String!
   description: String
   # Ontology property: withinContext - ties to FieldContext.
-  context: FieldContextNode @relationship(type: "WITHIN_CONTEXT", direction: OUT)
+  context: FieldContextNode
+    @relationship(type: "WITHIN_CONTEXT", direction: OUT)
   createdAt: DateTime!
 }
 
@@ -59,7 +65,8 @@ type GoalRole implements RoleExpression @node {
   id: ID! @id
   name: String!
   description: String
-  context: FieldContextNode @relationship(type: "WITHIN_CONTEXT", direction: OUT)
+  context: FieldContextNode
+    @relationship(type: "WITHIN_CONTEXT", direction: OUT)
   createdAt: DateTime!
 }
 
@@ -67,7 +74,8 @@ type ResourceRole implements RoleExpression @node {
   id: ID! @id
   name: String!
   description: String
-  context: FieldContextNode @relationship(type: "WITHIN_CONTEXT", direction: OUT)
+  context: FieldContextNode
+    @relationship(type: "WITHIN_CONTEXT", direction: OUT)
   createdAt: DateTime!
 }
 
@@ -75,7 +83,8 @@ type StoryRole implements RoleExpression @node {
   id: ID! @id
   name: String!
   description: String
-  context: FieldContextNode @relationship(type: "WITHIN_CONTEXT", direction: OUT)
+  context: FieldContextNode
+    @relationship(type: "WITHIN_CONTEXT", direction: OUT)
   createdAt: DateTime!
 }
 
@@ -87,7 +96,8 @@ interface FieldPulse {
   # Ontology property: initiatedBy - who/what initiated.
   initiatedBy: LifeSensor @relationship(type: "INITIATED_BY", direction: IN)
   # Ontology property: alignedWith - resonance expressed.
-  alignedWith: FieldResonance @relationship(type: "ALIGNED_WITH", direction: OUT)
+  alignedWith: FieldResonance
+    @relationship(type: "ALIGNED_WITH", direction: OUT)
   # Ontology property: intensity - how strongly felt.
   intensity: Float
   # Ontology property: why - motivation/reason.
@@ -102,7 +112,8 @@ type TimePulse implements FieldPulse @node {
   name: String
   description: String
   initiatedBy: LifeSensor @relationship(type: "INITIATED_BY", direction: IN)
-  alignedWith: FieldResonance @relationship(type: "ALIGNED_WITH", direction: OUT)
+  alignedWith: FieldResonance
+    @relationship(type: "ALIGNED_WITH", direction: OUT)
   intensity: Float
   why: String
   context: FieldContextNode @relationship(type: "HELD_WITHIN", direction: OUT)
@@ -114,7 +125,8 @@ type CarePulse implements FieldPulse @node {
   name: String
   description: String
   initiatedBy: LifeSensor @relationship(type: "INITIATED_BY", direction: IN)
-  alignedWith: FieldResonance @relationship(type: "ALIGNED_WITH", direction: OUT)
+  alignedWith: FieldResonance
+    @relationship(type: "ALIGNED_WITH", direction: OUT)
   intensity: Float
   why: String
   context: FieldContextNode @relationship(type: "HELD_WITHIN", direction: OUT)
@@ -145,7 +157,8 @@ interface ReciprocalOffering {
   # Ontology property: receivedBy - who receives.
   receivedBy: LifeSensor @relationship(type: "RECEIVED_BY", direction: IN)
   # Ontology property: recognizesPulse - pulse acknowledged.
-  recognizesPulse: FieldPulse @relationship(type: "RECOGNIZES_PULSE", direction: OUT)
+  recognizesPulse: FieldPulse
+    @relationship(type: "RECOGNIZES_PULSE", direction: OUT)
   createdAt: DateTime!
 }
 
@@ -154,7 +167,8 @@ type HonorariumOffering implements ReciprocalOffering @node {
   id: ID! @id
   description: String
   receivedBy: LifeSensor @relationship(type: "RECEIVED_BY", direction: IN)
-  recognizesPulse: FieldPulse @relationship(type: "RECOGNIZES_PULSE", direction: OUT)
+  recognizesPulse: FieldPulse
+    @relationship(type: "RECOGNIZES_PULSE", direction: OUT)
   # Ontology property: reciprocityPattern.
   reciprocityPattern: String
   createdAt: DateTime!
@@ -165,12 +179,15 @@ interface PersonInterface {
   id: ID!
   name: String
   description: String
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
   createdAt: DateTime!
   updatedAt: DateTime
   # Copied from LifeSensor
-  sensingModality: SensingModality @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
+  sensingModality: SensingModality
+    @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
   # Own
   firstName: String!
   lastName: String!
@@ -200,16 +217,19 @@ type Person implements PersonInterface @node {
   email: String
   pronouns: String
   location: String
-  inviteSent: Boolean 
+  inviteSent: Boolean
 
   # Ontology: actsAs - how entity expresses roles in fields.
   actsAs: [RoleExpression!]! @relationship(type: "ACTS_AS", direction: OUT)
   # Ontology: expandsInto - transformation/evolution.
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
   # Ontology: feelsLike - resonance.
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
   # Ontology: hasSensingModality.
-  sensingModality: SensingModality @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
+  sensingModality: SensingModality
+    @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
 
   # Legacy relationships, reinterpreted via ontology.
   # Connections now as FieldContribution in shared FieldContext.
@@ -322,10 +342,13 @@ type Community implements LifeSensor @node {
   resultsAchieved: String
   status: String!
   # Ontology: RelationalEntity properties.
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
   # Ontology: LifeSensor property.
-  sensingModality: SensingModality @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
+  sensingModality: SensingModality
+    @relationship(type: "HAS_SENSING_MODALITY", direction: OUT)
   # Ontology: pulses.
   pulses: [FieldPulse!]! @relationship(type: "HELD_WITHIN", direction: IN)
 
@@ -386,9 +409,11 @@ type Goal implements RelationalEntity @node {
   # Ontology: actsAs - entity expresses as GoalRole.
   actsAs: [RoleExpression!]! @relationship(type: "ACTS_AS", direction: IN) # Inverted for context.
   # Ontology: expandsInto.
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
   # Ontology: feelsLike.
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
 
   # Legacy relationships.
   resources: [Resource!]! @relationship(type: "APPLIED_TO", direction: IN)
@@ -421,12 +446,15 @@ type Resource implements RelationalEntity @node {
   # Ontology: actsAs ResourceRole.
   actsAs: [RoleExpression!]! @relationship(type: "ACTS_AS", direction: IN)
   # Ontology: expandsInto.
-  expandsInto: [RelationalEntity!]! @relationship(type: "EXPANDS_INTO", direction: OUT)
+  expandsInto: [RelationalEntity!]!
+    @relationship(type: "EXPANDS_INTO", direction: OUT)
   # Ontology: feelsLike.
-  feelsLike: [FieldResonance!]! @relationship(type: "FEELS_LIKE", direction: OUT)
+  feelsLike: [FieldResonance!]!
+    @relationship(type: "FEELS_LIKE", direction: OUT)
 
   # Legacy relationships.
-  contexts: [FieldContextNode!]! @relationship(type: "DEPENDS_ON", direction: IN)
+  contexts: [FieldContextNode!]!
+    @relationship(type: "DEPENDS_ON", direction: IN)
   goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
   resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
   providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
@@ -447,11 +475,13 @@ type FieldContribution @node {
   id: ID! @id
   description: String!
   # Ontology: withinContext.
-  context: FieldContextNode @relationship(type: "WITHIN_CONTEXT", direction: OUT)
+  context: FieldContextNode
+    @relationship(type: "WITHIN_CONTEXT", direction: OUT)
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   # Legacy: loggedFor goals/contexts/resources.
   goals: [Goal!]! @relationship(type: "LOGGED_FOR", direction: OUT)
-  contexts: [FieldContextNode!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+  contexts: [FieldContextNode!]!
+    @relationship(type: "LOGGED_FOR", direction: OUT)
   resources: [Resource!]! @relationship(type: "LOGGED_FOR", direction: OUT)
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
