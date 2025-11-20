@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
 import { AuthWrapper } from '@/components/layout'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from 'next-themes'
+import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,7 +36,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body>
-        <ContentWrapper>{children}</ContentWrapper>
+        <ContentWrapper>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </ContentWrapper>
         <Toaster />
       </body>
     </html>

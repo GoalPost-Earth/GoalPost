@@ -12,6 +12,8 @@ export default function Home() {
   return (
     <div className="h-screen w-screen bg-background">
       <div className="fixed bottom-4 right-4">
+        <h1 className="text-3xl font-bold underline">Hello world!</h1>
+
         <Dialog>
           <DialogTrigger asChild>
             <Button>AI</Button>
