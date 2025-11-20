@@ -34,20 +34,39 @@ export async function POST(req: NextRequest) {
   initializeDB()
   const session = getSession()
   try {
-    const result = await session.run(
-      'MATCH (u:User {resetToken: $token}) ' +
-        'WHERE u.resetTokenExpires > datetime() ' +
+    // First check if token exists at all
+    const tokenCheck = await session.run(
+      'MATCH (u:Person {resetToken: $token}) RETURN u.resetTokenExpires as expires',
+      { token }
+    )
+
+    if (tokenCheck.records.length === 0) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
+    }
+
+    // Check if token is expired using Neo4j datetime comparison
+    const expiryCheck = await session.run(
+      'MATCH (u:Person {resetToken: $token}) ' +
+        'RETURN u.resetTokenExpires > datetime() as isValid',
+      { token }
+    )
+
+    if (!expiryCheck.records[0].get('isValid')) {
+      // Clean up expired token
+      await session.run(
+        'MATCH (u:Person {resetToken: $token}) SET u.resetToken = NULL, u.resetTokenExpires = NULL',
+        { token }
+      )
+      return NextResponse.json({ error: 'Token has expired' }, { status: 400 })
+    }
+
+    // Token is valid, proceed with password reset
+    await session.run(
+      'MATCH (u:Person {resetToken: $token}) ' +
         'SET u.password = $password, u.resetToken = NULL, u.resetTokenExpires = NULL ' +
         'RETURN u',
       { token, password: await hashPassword(newPassword) }
     )
-
-    if (result.records.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 400 }
-      )
-    }
 
     return NextResponse.json(
       { message: 'Password reset successfully' },
