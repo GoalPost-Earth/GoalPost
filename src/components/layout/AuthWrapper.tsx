@@ -2,7 +2,6 @@
 import React, { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { StartupScreen } from '@/components/screens'
-import { Container } from '@chakra-ui/react'
 import { AppProvider } from '@/app/contexts'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 
@@ -19,7 +18,7 @@ const AuthWrapper = ({ children }: { children: ReactNode }) => {
               <>{children}</>
             ) : (
               <>
-                <Container pl={{ lg: '50px' }}>{children}</Container>
+                <div>{children}</div>
               </>
             )}
           </StartupScreen>

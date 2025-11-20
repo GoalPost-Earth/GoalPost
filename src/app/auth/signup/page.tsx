@@ -1,9 +1,11 @@
 'use client'
 import React, { useState } from 'react'
-import { Box, Button, Flex, Heading, Link, Text } from '@chakra-ui/react'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
-import { Input } from '@/components/react-hook-form'
+import Input from '@/components/react-hook-form/Input'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 function SignupPage() {
   const {
@@ -55,71 +57,69 @@ function SignupPage() {
   }
 
   return (
-    <Flex minH="100vh" align="center" justify="center" bg={'gray.50'}>
-      <Box p={8} rounded="xl" boxShadow="lg" w="full" maxW="md">
-        <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={6}>
-          Create your GoalPost account
-        </Heading>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Box mb={4}>
-            <Input
-              label="Email address"
-              name="email"
-              type="email"
-              placeholder="you@email.com"
-              autoComplete="email"
-              control={control}
-              errors={errors}
-              required
-            />
-          </Box>
-          <Box mb={4}>
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              control={control}
-              errors={errors}
-              required
-            />
-          </Box>
-          <Box mb={6}>
-            <Input
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              control={control}
-              errors={errors}
-              required
-            />
-          </Box>
-          {error && (
-            <Text color="red.500" mb={4} textAlign="center">
-              {error}
-            </Text>
-          )}
-          <Button
-            colorScheme="brand"
-            type="submit"
-            w="full"
-            mb={4}
-            loading={loading || isSubmitting}
-          >
-            Sign Up
-          </Button>
-        </form>
-        <Text textAlign="center" fontSize="sm" color="gray.500">
-          Already have an account?{' '}
-          <Link href="/auth/login" color="brand.500" fontWeight="medium">
-            Sign in
-          </Link>
-        </Text>
-      </Box>
-    </Flex>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-blue-600">
+            Create your GoalPost account
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-4">
+              <Input
+                label="Email address"
+                name="email"
+                type="email"
+                placeholder="you@email.com"
+                autoComplete="email"
+                control={control}
+                errors={errors}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                control={control}
+                errors={errors}
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <Input
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                control={control}
+                errors={errors}
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+            <Button
+              type="submit"
+              className="w-full mb-4"
+              disabled={loading || isSubmitting}
+            >
+              Sign Up
+            </Button>
+          </form>
+          <p className="text-center text-sm text-gray-500">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-blue-500 font-medium">
+              Sign in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

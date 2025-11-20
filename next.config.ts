@@ -79,7 +79,6 @@ const nextConfig: NextConfig = {
       '@neo4j/graphql',
       'react',
       'apollo-server-micro',
-      '@chakra-ui/react',
     ],
     externalDir: true,
     serverSourceMaps: false,
