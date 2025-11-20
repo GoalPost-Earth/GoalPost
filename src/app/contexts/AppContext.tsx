@@ -21,12 +21,16 @@ type ContextUser = UserProfile & Person
 interface AppContextType {
   user?: ContextUser
   setUser: (user: ContextUser) => void
+  logout: () => void
 }
 
 const AppContext = createContext<AppContextType>({
   user: undefined,
   setUser: () => {
     throw new Error('setUser function is not defined')
+  },
+  logout: () => {
+    throw new Error('logout function is not defined')
   },
 })
 
@@ -84,9 +88,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.setItem('user', JSON.stringify(user))
   }
 
+  const logout = () => {
+    setUser(undefined)
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    sessionStorage.removeItem('user')
+    document.cookie = 'accessToken=; path=/; max-age=0'
+  }
+
   const value = {
     user,
     setUser: setUserAndPersist,
+    logout,
   }
 
   return (
