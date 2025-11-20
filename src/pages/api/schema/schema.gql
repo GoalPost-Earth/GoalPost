@@ -46,7 +46,7 @@ interface LifeSensor {
 
 # RoleExpression: Contextual roles entities play (e.g., GoalRole, ResourceRole).
 interface RoleExpression {
-  id: ID! @id
+  id: ID!
   name: String!
   description: String
   # Ontology property: withinContext - ties to FieldContext.
@@ -84,7 +84,7 @@ type StoryRole implements RoleExpression @node {
 
 # FieldPulse: Sensed shifts in the field.
 interface FieldPulse {
-  id: ID! @id
+  id: ID!
   name: String
   description: String
   # Ontology property: initiatedBy - who/what initiated.
@@ -128,7 +128,7 @@ type CarePulse implements FieldPulse @node {
 
 # FieldResonance: Archetypal patterns threading pulses.
 interface FieldResonance {
-  id: ID! @id
+  id: ID!
   name: String!
   description: String
   why: String
@@ -145,7 +145,7 @@ type SensingModality @node {
 
 # ReciprocalOffering: Gestures of gratitude/care.
 interface ReciprocalOffering {
-  id: ID! @id
+  id: ID!
   description: String
   # Ontology property: receivedBy - who receives.
   receivedBy: LifeSensor @declareRelationship
@@ -201,6 +201,7 @@ type Person implements PersonInterface @node {
   firstName: String!
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
+  description: String
   photo: String
   phone: String
   email: String

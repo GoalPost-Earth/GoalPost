@@ -1,6 +1,0 @@
-export { default as CommunityDetails } from './details'
-export { default as RelatedCommunities } from './related-communities'
-export { default as CommunityGoals } from './goals'
-export { default as CommunityResources } from './resources'
-export { default as CommunityMembers } from './members'
-export { default as CommunityCoreValues } from './corevalues'

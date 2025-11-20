@@ -10,9 +10,9 @@ import {
 } from 'react'
 import { GET_LOGGED_IN_USER } from '../graphql'
 import { Person } from '@/gql/graphql'
-import { ApolloWrapper } from '@/components'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
+import { ApolloWrapper } from '@/components/layout'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 

@@ -16,7 +16,7 @@ import { onError } from '@apollo/client/link/error'
 import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
-import { toaster } from '@/components'
+import { toast } from 'sonner'
 import { useApp } from '../contexts'
 
 // have a function to create a client for you
@@ -94,7 +94,7 @@ export function ApolloWrapper({
     }
 
     fetchTokenData()
-  }, [router, user])
+  }, [router, user, token])
 
   if (isLoading || (!token && user)) {
     return <LoadingScreen />
@@ -138,8 +138,7 @@ export function ApolloWrapper({
             `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
           )
         )
-        toaster.error({
-          title: 'GraphQL Error',
+        toast.error('GraphQL Error', {
           description: graphQLErrors[0].message,
         })
       }

@@ -1,55 +1,37 @@
-import { Box, Container, Heading, HStack, Text, VStack } from '@chakra-ui/react'
-import { AppLogo, BrandedGoalPostText, Button } from '@/components'
+import Link from 'next/link'
 import Image from 'next/image'
+import { Button } from '@/components/ui/button'
 
 const GetStartedScreen = () => {
   return (
     <>
-      <Box
-        height="100vh"
-        backgroundRepeat="no-repeat"
-        backgroundSize="cover"
-        backgroundImage="url(/assets/images/bottom-view-group-diverse-friends-posing.webp)"
-        display={{ base: 'block', lg: 'none' }}
+      <div
+        className="h-screen bg-cover bg-no-repeat bg-center lg:hidden"
+        style={{
+          backgroundImage:
+            'url(/assets/images/bottom-view-group-diverse-friends-posing.webp)',
+        }}
       >
-        <Box
-          height="60vh"
-          bgGradient="to-t"
-          gradientFrom="rgba(0, 0, 0, 0.7)"
-          gradientTo="rgba(0, 0, 0, 0)"
-        />
-        <Box
-          position="absolute"
-          bottom={0}
-          width="100%"
-          height="40%"
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          padding="25px"
-          gap="50px"
-          alignItems="center"
-          bg="rgba(255, 255, 255, 0.9)"
-        >
-          <AppLogo
-            width={100}
-            height={100}
-            position="absolute"
-            top={'-100px'}
-          />
-          <VStack width="100%" textAlign="center" gap={5}>
-            <Heading color="brandIcons" fontWeight="bold" size="xl">
+        <div className="h-[60vh] bg-linear-to-t from-black/70 to-transparent" />
+        <div className="absolute bottom-0 w-full h-[40%] flex flex-col justify-center px-6 gap-10 items-center bg-white/90">
+          <div className="absolute top-[-100px] w-24 h-24 bg-gray-500 flex items-center justify-center text-white">
+            Logo
+          </div>
+          <div className="w-full text-center space-y-5">
+            <h1 className="text-brandIcons font-bold text-xl">
               Hello and Welcome!
-            </Heading>
-            <Text fontSize="md" opacity={0.6}>
+            </h1>
+            <p className="text-md opacity-60">
               Connect with and care for your community.
-            </Text>
-          </VStack>
-          <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
-            Next
-          </Button>
-        </Box>
-      </Box>
+            </p>
+          </div>
+          <Link href="/auth/login?returnTo=/" passHref>
+            <Button size="lg" className="py-6">
+              Next
+            </Button>
+          </Link>
+        </div>
+      </div>
       <DesktopGetStartedScreen />
     </>
   )
@@ -57,47 +39,35 @@ const GetStartedScreen = () => {
 
 function DesktopGetStartedScreen() {
   return (
-    <HStack display={{ base: 'none', lg: 'flex' }} height={'100vh'}>
-      <Box
-        position="relative"
-        flex={1}
-        width="40%"
-        height={'100%'}
-        overflow="hidden"
-      >
+    <div className="hidden lg:flex h-screen">
+      <div className="relative flex-1 w-2/5 h-full overflow-hidden">
         <Image
           src="/assets/images/bottom-view-group-diverse-friends-posing.webp"
           fill
-          objectFit="cover"
+          className="object-cover"
           alt="get started"
         />
-      </Box>
-      <VStack
-        flex={1}
-        width="60%"
-        gap={4}
-        padding={'60px'}
-        height={'100%'}
-        justifyContent="center"
-        alignSelf="start"
-      >
-        <HStack alignSelf="start">
-          <AppLogo />
-          <BrandedGoalPostText fontSize="4xl" />
-        </HStack>
-        <Container>
-          <Heading fontWeight="bold" alignSelf="start">
-            Welcome!
-          </Heading>
-          <Heading alignSelf="start" fontSize="4xl">
+      </div>
+      <div className="flex-1 w-3/5 flex flex-col gap-4 p-16 h-full justify-center self-start">
+        <div className="self-start flex items-center gap-2">
+          <div className="w-12 h-12 bg-gray-500 flex items-center justify-center text-white">
+            Logo
+          </div>
+          <h1 className="text-4xl">GoalPost</h1>
+        </div>
+        <div className="container">
+          <h1 className="font-bold self-start">Welcome!</h1>
+          <h1 className="self-start text-4xl">
             Connect with and care for your community
-          </Heading>
-        </Container>
-        <Button as="a" href="/auth/login?returnTo=/" size="lg" paddingY={6}>
-          Next
-        </Button>
-      </VStack>
-    </HStack>
+          </h1>
+        </div>
+        <Link href="/auth/login?returnTo=/" passHref>
+          <Button size="lg" className="py-6">
+            Next
+          </Button>
+        </Link>
+      </div>
+    </div>
   )
 }
 

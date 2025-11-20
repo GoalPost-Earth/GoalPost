@@ -1,6 +1,0 @@
-export { default as CommunityForm } from './CommunityForm'
-export { default as PersonForm } from './PersonForm'
-export { default as ResourceForm } from './ResourceForm'
-export { default as CoreValueForm } from './CoreValueForm'
-export { default as GoalForm } from './GoalForm'
-export { default as CarePointForm } from './CarePointForm'

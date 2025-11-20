@@ -1,5 +1,0 @@
-export * from './forms'
-export * from './carepoint'
-export * from './goal'
-export * from './person'
-export * from './community'
