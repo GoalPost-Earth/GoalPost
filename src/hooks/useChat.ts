@@ -1,3 +1,13 @@
+/**
+ * @deprecated This hook is deprecated and should not be used in new code.
+ * Use the assistant-ui runtime with @assistant-ui/react-ai-sdk instead.
+ *
+ * This legacy implementation uses Apollo/GraphQL mutations for chat.
+ * The new implementation in src/app/page.tsx uses useChatRuntime with AI SDK.
+ *
+ * This file is kept for reference but will be removed in a future update.
+ */
+
 import { SEND_MESSAGE_MUTATION } from '@/app/graphql'
 import { useMutation } from '@apollo/client'
 import { useEffect, useRef, useState } from 'react'
@@ -7,6 +17,9 @@ export type Message = {
   content: string
 }
 
+/**
+ * @deprecated Use useChatRuntime from @assistant-ui/react-ai-sdk instead
+ */
 export default function useChat() {
   const [thinking, setThinking] = useState<boolean>(false)
   const [sessionId, setSessionId] = useState<string | undefined>()
