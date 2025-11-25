@@ -15,7 +15,8 @@
     "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version major && git push origin && git push origin --tags",
     "release:minor": "changelog -m && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version minor && git push origin && git push origin --tags",
     "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version patch && git push origin && git push origin --tags",
-    "init:db": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/init-db.js"
+    "init:db": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/init-db.js",
+    "load:sample-data": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/load-sample-data.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.69",
