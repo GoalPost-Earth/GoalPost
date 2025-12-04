@@ -139,7 +139,7 @@ CALL {
   LIMIT 1
   MERGE (member)-[:FEELS_LIKE]->(resonance)
 }
-RETURN member, community;
+RETURN member;
 
 // LOAD People (additional Persons)
 LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=824956865&single=true&output=csv" AS row
@@ -320,31 +320,3 @@ MERGE (offer)-[:ENABLES]->(fieldContext)
 MERGE (fieldContext)-[:CARES_FOR]->(need)
 
 RETURN fieldContext, offer, need, resource;
-
-// Load Person - Goal Relationships (MOTIVATED_BY)
-LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=1729232360&single=true&output=csv" AS row
-MATCH (person:Person {id: row.personId})
-MATCH (goal:Goal {id: row.goalId})
-MERGE (person)-[:MOTIVATED_BY]->(goal)
-RETURN person, goal;
-
-// Load Community - Goal Relationships (MOTIVATED_BY)
-LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=281806365&single=true&output=csv" AS row
-MATCH (community:Community {id: row.communityId})
-MATCH (goal:Goal {id: row.goalId})
-MERGE (community)-[:MOTIVATED_BY]->(goal)
-RETURN community, goal;
-
-// Load Community - Resource Relationships (HAS_ACCESS_TO)
-LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDykek0DB89FZZciwPVautpd3VVlS3paHF3H6Bcp6bd1BMbCNWzA8NLx5gZ-7-d9GiGDjdQEOxafG/pub?gid=2114184472&single=true&output=csv" AS row
-MATCH (community:Community {id: row.communityId})
-MATCH (resource:Resource {id: row.resourceId})
-MERGE (community)-[:HAS_ACCESS_TO]->(resource)
-RETURN community, resource;
-
-// Set createdBy for all nodes to the person with id "101"
-MATCH (creator:Person {id: "101"})
-MATCH (n)
-WHERE NOT n:Person AND NOT n:SensingModality AND NOT n:FieldResonance
-MERGE (n)-[:CREATED_BY]->(creator)
-RETURN count(n) AS nodesCreatedBySet;
