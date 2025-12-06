@@ -1,10 +1,18 @@
-import { openai } from '@ai-sdk/openai'
+import { createOllama } from 'ollama-ai-provider-v2'
 import { streamText, UIMessage, convertToModelMessages, tool } from 'ai'
 import { z } from 'zod'
 import { frontendTools } from '@assistant-ui/react-ai-sdk'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
+
+// Configure Ollama provider with remote instance
+const ollama = createOllama({
+  baseURL: 'http://120.238.149.138:57253/api',
+  headers: {
+    Authorization: `Bearer 54eb0876757612c3716bfae45cd743a2e2a22729934f918393258aab5c57753f`,
+  },
+})
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +28,7 @@ export async function POST(req: Request) {
     } = await req.json()
 
     const result = streamText({
-      model: openai('gpt-4o'),
+      model: ollama('mistral'),
       system:
         system ||
         'You are a helpful AI assistant for GoalPost, a platform that helps communities achieve their goals through shared values and collaborative action.',
