@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true, // Enable React strict mode
   compress: true, // Enable gzip compression
   productionBrowserSourceMaps: false,
+  outputFileTracingIncludes: {
+    '/': ['./node_modules/lightningcss/**/*'],
+  },
   async headers() {
     return [
       {

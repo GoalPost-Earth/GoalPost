@@ -21,5 +21,6 @@ export const AgentToolInputSchema = z.object({
     .describe(
       'A rephrased version of the original question based on the conversation history'
     ),
-})
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
+}) as any
 // end::schema[]
