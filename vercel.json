@@ -1,4 +1,5 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install --include=optional --ignore-scripts && npm rebuild"
+  "installCommand": "npm ci --include=optional",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
 }

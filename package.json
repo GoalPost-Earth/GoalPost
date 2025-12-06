@@ -9,7 +9,7 @@
     "start:dev": "node scripts/start-dev.js",
     "lint": "next lint",
     "codegen": "graphql-codegen --config codegen.ts --watch",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "test": "cross-env DOTENV_CONFIG_PATH=./.env.local jest",
     "test:watch": "cross-env DOTENV_CONFIG_PATH=./.env.local jest --watchAll --detectOpenHandles",
     "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'docs: updated CHANGELOG.md' && npm version major && git push origin && git push origin --tags",
