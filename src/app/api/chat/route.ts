@@ -1,4 +1,4 @@
-import { createOllama } from 'ollama-ai-provider-v2'
+import { createOllama } from 'ollama-ai-provider'
 import { streamText, UIMessage, convertToModelMessages, tool } from 'ai'
 import { z } from 'zod'
 import { frontendTools } from '@assistant-ui/react-ai-sdk'
