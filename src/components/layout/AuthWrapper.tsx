@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { StartupScreen } from '@/components/screens'
 import { AppProvider } from '@/app/contexts'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
-import TopNav from './TopNav'
 
 const AuthWrapper = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
@@ -19,7 +18,7 @@ const AuthWrapper = ({ children }: { children: ReactNode }) => {
               <>{children}</>
             ) : (
               <>
-                <TopNav />
+                {/* <TopNav /> */}
                 <div>{children}</div>
               </>
             )}
