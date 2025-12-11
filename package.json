@@ -90,6 +90,9 @@
     "winston": "^3.17.0",
     "zod": "^4.0.16"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.28.4"
+  },
   "devDependencies": {
     "@parcel/watcher": "^2.5.0",
     "@types/cors": "^2.8.17",
