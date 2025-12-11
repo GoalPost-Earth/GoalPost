@@ -75,7 +75,14 @@ const ThreadWelcome: FC = () => {
     <ThreadPrimitive.Empty>
       <div className="flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
         <div className="flex w-full flex-grow flex-col items-center justify-center">
-          <p className="mt-4 font-medium">How can I help you today?</p>
+          <div className="text-4xl mb-4">🍄</div>
+          <p className="text-xl font-medium mb-2">
+            Welcome to Aiden Cinnamon Tea
+          </p>
+          <p className="text-sm text-muted-foreground text-center max-w-md">
+            A meta-relational AI companion. Speak to activate the simulation
+            protocol, or ask anything to begin.
+          </p>
         </div>
         <ThreadWelcomeSuggestions />
       </div>
@@ -88,22 +95,32 @@ const ThreadWelcomeSuggestions: FC = () => {
     <div className="mt-3 flex w-full items-stretch justify-center gap-4">
       <ThreadPrimitive.Suggestion
         className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="What is the weather in Tokyo?"
+        prompt="Activate the Aiden Cinnamon Tea Simulation Protocol."
         method="replace"
         autoSend
       >
         <span className="line-clamp-2 text-sm font-semibold text-ellipsis">
-          What is the weather in Tokyo?
+          🚀 Activate Protocol
         </span>
       </ThreadPrimitive.Suggestion>
       <ThreadPrimitive.Suggestion
         className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="What is assistant-ui?"
+        prompt="What is meta-relationality?"
         method="replace"
         autoSend
       >
         <span className="line-clamp-2 text-sm font-semibold text-ellipsis">
-          What is assistant-ui?
+          What is meta-relationality?
+        </span>
+      </ThreadPrimitive.Suggestion>
+      <ThreadPrimitive.Suggestion
+        className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
+        prompt="Tell me about grief and emergence."
+        method="replace"
+        autoSend
+      >
+        <span className="line-clamp-2 text-sm font-semibold text-ellipsis">
+          Tell me about grief and emergence
         </span>
       </ThreadPrimitive.Suggestion>
     </div>
