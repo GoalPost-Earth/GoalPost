@@ -91,7 +91,8 @@
     "zod": "^4.0.16"
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "^1.28.4"
+    "lightningcss-linux-x64-gnu": "^1.28.4",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.1.17"
   },
   "devDependencies": {
     "@parcel/watcher": "^2.5.0",
