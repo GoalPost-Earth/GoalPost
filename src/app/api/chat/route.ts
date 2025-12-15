@@ -1,4 +1,4 @@
-import { createOllama } from 'ollama-ai-provider-v2'
+import { openai } from '@ai-sdk/openai'
 import { streamText, UIMessage, convertToModelMessages, tool } from 'ai'
 import { z } from 'zod'
 import { frontendTools } from '@assistant-ui/react-ai-sdk'
@@ -14,26 +14,6 @@ import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
-
-/**
- * Detects if the user query is asking about a specific person
- */
-function isPersonQuery(message: string): boolean {
-  const personPatterns = [
-    /\b(who is|tell me about|find|search for|show me|know about|information about)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b(does|do you know)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(profile|bio|background|details)/i,
-  ]
-  return personPatterns.some((pattern) => pattern.test(message))
-}
-
-// Configure Ollama provider
-const ollama = createOllama({
-  baseURL: process.env.OLLAMA_BASE_URL,
-  headers: {
-    Authorization: `Bearer ${process.env.OLLAMA_BEARER_TOKEN}`,
-  },
-})
 
 export async function POST(req: Request) {
   try {
@@ -125,22 +105,12 @@ If someone asks about a person and you don't use the search_person tool, you are
       '🔍 [DEBUG] Final system prompt length:',
       systemPrompt?.length || 0
     )
-    // Detect if query is about a person to force tool usage
-    const isAboutPerson = lastMessage
-      ? isPersonQuery(lastMessage.content)
-      : false
-    console.log(
-      '🔍 [DEBUG] Is person query:',
-      isAboutPerson,
-      'Query:',
-      lastMessage?.content
-    )
+
     const result = streamText({
-      model: ollama('mistral'),
+      model: openai('gpt-5'),
       system: systemPrompt,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       messages: messagesWithSimulation as any,
-      toolChoice: isAboutPerson ? 'required' : 'auto',
       tools: {
         // Frontend tools forwarded from AssistantChatTransport
         ...frontendTools(tools),
@@ -175,14 +145,8 @@ If someone asks about a person and you don't use the search_person tool, you are
                 needsDisambiguation: parsedResult.needsDisambiguation,
               })
 
-              // If person found, format for UI rendering
-              if (parsedResult.found && parsedResult.count === 1) {
-                const person = parsedResult.people[0]
-                return `I found ${person.name} in the GoalPost community. PERSON_PROFILE_FOUND: ${JSON.stringify(person)}`
-              }
-
-              // Return the message from the tool (handles not found and disambiguation)
-              return parsedResult.message
+              // Return structured JSON for tool UI and coherent LLM responses
+              return parsedResult
             } catch (error) {
               console.error('Person search error:', error)
               return 'I encountered an error while searching the GoalPost database. Please try again.'

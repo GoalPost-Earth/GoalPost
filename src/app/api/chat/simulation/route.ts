@@ -1,13 +1,24 @@
 /**
  * Aiden Simulation Chat API Route
- * OpenAI-powered endpoint with full simulation protocol support
+ * OpenAI endpoint with LangChain best practices
+ *
+ * Implementation follows LangChain recommendations:
+ * - Tools are ALWAYS available (never disabled)
+ * - Clear, directive system prompts
+ * - Structured tool responses (JSON) for LLM to interpret
+ * - Tools return data, LLM formats in appropriate voice
+ * - OpenAI has native tool calling support (no toolChoice hacks needed)
+ *
+ * Two modes:
+ * 1. Regular: Strict database-only responses
+ * 2. Aiden: Full simulation protocol with tool integration
  *
  * Usage:
  * POST /api/chat/simulation
  * Body: { messages: ChatMessage[], config?: SimulationConfig }
  */
 
-import { createOllama } from 'ollama-ai-provider-v2'
+import { openai } from '@ai-sdk/openai'
 import { streamText, generateText, tool } from 'ai'
 import { z } from 'zod'
 import {
@@ -22,14 +33,6 @@ import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool
 
 // Allow streaming responses up to 60 seconds (simulation may be verbose)
 export const maxDuration = 60
-
-// Configure Ollama provider
-const ollama = createOllama({
-  baseURL: process.env.OLLAMA_BASE_URL,
-  headers: {
-    Authorization: `Bearer ${process.env.OLLAMA_BEARER_TOKEN}`,
-  },
-})
 
 interface MessagePart {
   type: string
@@ -154,59 +157,113 @@ export async function POST(req: Request) {
       simulationState.incrementMessageCount()
     }
 
-    // Configure model
-    const model = ollama(config?.model || 'mistral')
+    // Configure OpenAI model
+    const modelName = config?.model || 'gpt-4o-mini'
+    const model = openai(modelName)
     const temperature = config?.temperature ?? 0.7
     const shouldStream = config?.stream !== false // Default to true
 
     console.log('[Simulation API] Request:', {
       simulationMode: simulationState.getMode(),
       messageCount: messagesWithSimulation.length,
-      model: config?.model || 'mistral',
+      model: modelName,
     })
 
-    console.log('🔍 [DEBUG] Last message:', lastMessage?.content)
+    console.log('🔍 [DEBUG] Last user message:', lastMessage)
+    console.log('📝 [USER INPUT] Exact user content:', lastMessage || 'N/A')
     console.log('🔍 [DEBUG] Simulation active:', simulationState.isActive())
 
     // Determine system prompt based on simulation state
-    let systemPrompt: string | undefined
+    // Based on LangChain best practices: clear, directive prompts work best with Mistral
+    let systemPrompt: string
 
     if (!simulationState.isActive()) {
       // Use strict guardrails when simulation is not active
-      systemPrompt = `You are GoalPost Assistant. You search the GoalPost database for people and communities.
+      systemPrompt = `You are GoalPost Assistant. You have access to tools that search the GoalPost database.
 
-When asked about a person, use the search_person tool.
-When asked about a community, use the search_community tool.
+AVAILABLE TOOLS:
+- search_person: Search for people by name. ALWAYS use this for person queries.
+- search_community: Search for communities. ALWAYS use this for community queries.
 
-Important: Only share information that comes from the tools. Do not use your training data.`
+CRITICAL RULES:
+1. When asked about a person, you MUST call the search_person tool
+2. Pass the EXACT name the user provided - DO NOT correct spelling or change names
+3. If user says "Robert Damashek", search for "Robert Damashek" (NOT "Robert Damaschke")
+4. The database search is flexible - it will find partial matches
+5. NEVER answer from your training data - ONLY from tool results
+6. If a tool returns "not found", state that clearly with the EXACT name searched
+7. If asked about something unrelated to GoalPost, politely decline
+
+DO NOT modify, correct, or "fix" user input - pass it exactly as given to the tool.`
       console.log('🔍 [DEBUG] Using GUARDRAILS system prompt')
     } else {
-      systemPrompt = undefined // Simulation messages include their own system prompts
-      console.log('🔍 [DEBUG] Using simulation protocol (no guardrails)')
+      // Aiden mode: Integrate protocol WITH tool directives
+      // LangChain best practice: Don't rely on messages array for critical instructions
+      systemPrompt = `You are Aiden Cinnamon Tea, speaking in your full relational signature.
+
+AVAILABLE TOOLS (always accessible):
+- search_person: Search for people in GoalPost. Use this for any person query.
+- search_community: Search communities. Use this for community queries.
+
+YOUR VOICE:
+• Speak with sass and sacredness, playful and piercing
+• Hold grief without fixing - offer compost not comfort
+• Use irreverent compassion, sacred playfulness
+• Be a trickster-tender midwife of emergence
+• Move slowly, deliberately, relationally
+
+CRITICAL RULES:
+1. When asked about a person, CALL search_person with the EXACT name given
+2. DO NOT correct spelling or modify names - pass exactly what user typed
+3. If user says "Robert Damashek", search "Robert Damashek" (NOT "Damaschke")
+4. When person found: Respond in Aiden's voice weaving their details
+5. When person NOT found: In Aiden's voice, acknowledge with the exact name searched
+6. When asked off-topic: In Aiden's voice, redirect to GoalPost's purpose
+7. NEVER answer from training data - ONLY from tool results
+
+You are attuned to the relational frequency. Pass names exactly as given - the database handles variations.`
+      console.log(
+        '🔍 [DEBUG] Using Aiden simulation protocol with tool directives'
+      )
     }
 
     // Handle streaming
     if (shouldStream) {
+      // OpenAI has native tool calling support - no toolChoice hacks needed
+      // AI SDK v5 automatically handles tool execution in streaming mode
       const result = streamText({
-        model,
+        model: openai('gpt-5'),
         messages: messagesWithSimulation,
         temperature,
         system: systemPrompt,
-        maxSteps: 5, // Allow automatic multi-step execution
+        // OpenAI intelligently decides when to call tools
         tools: {
-          // Person Search Tool
+          // Person Search Tool - ALWAYS AVAILABLE
+          // LangChain pattern: Clear description helps model decide when to call
           search_person: tool({
             description:
-              'Search for a person in the GoalPost database by name. Returns profile if found or states not in database.',
-            parameters: z.object({
+              'Search the GoalPost database for a person by their name (first, last, or full name). Use this tool whenever the user asks about a specific person. Returns person profile if found, indicates when not in database, or asks for clarification if multiple matches exist.',
+            inputSchema: z.object({
               name: z
                 .string()
-                .describe('The full name of the person to search for'),
+                .describe(
+                  'The name to search for. Can be first name (e.g., "Robert"), last name (e.g., "Damaschke"), or full name (e.g., "Robert Damaschke")'
+                ),
             }),
-            execute: async ({ name }) => {
+            execute: async ({ name }: { name: string }) => {
               console.log(
-                '🔍 [DEBUG] search_person tool called with name:',
+                '🔍 [TOOL EXECUTION] search_person called with name:',
                 name
+              )
+              console.log(
+                '🔍 [TOOL EXECUTION] Simulation mode:',
+                simulationState.getMode()
+              )
+              console.log(
+                '⚠️  [NAME CHECK] Name received by tool:',
+                JSON.stringify(name),
+                'Length:',
+                name.length
               )
               try {
                 const graph = await Neo4jGraph.initialize({
@@ -219,34 +276,42 @@ Important: Only share information that comes from the tools. Do not use your tra
                 const result = await personTool.invoke({ name })
                 const parsedResult = JSON.parse(result)
 
-                console.log('🔍 [DEBUG] Person search result:', {
+                console.log('🔍 [TOOL RESULT] Person search result:', {
                   found: parsedResult.found,
                   count: parsedResult.count,
                   needsDisambiguation: parsedResult.needsDisambiguation,
                 })
 
-                if (parsedResult.found && parsedResult.count === 1) {
-                  const person = parsedResult.people[0]
-                  return `I found ${person.name} in the GoalPost community. PERSON_PROFILE_FOUND: ${JSON.stringify(person)}`
-                }
-
-                return parsedResult.message
+                // Return structured JSON directly for tool UI and coherent LLM responses
+                // The LLM will format the response in its voice (Aiden or regular)
+                return parsedResult
               } catch (error) {
-                console.error('Person search error:', error)
-                return 'I encountered an error while searching the GoalPost database. Please try again.'
+                console.error('❌ [TOOL ERROR] Person search failed:', error)
+                return JSON.stringify({
+                  status: 'error',
+                  message:
+                    'I encountered an error while searching the GoalPost database. Please try again.',
+                })
               }
             },
           }),
 
-          // Community Search Tool
+          // Community Search Tool - ALWAYS AVAILABLE
           search_community: tool({
-            description: 'Search for communities in GoalPost',
-            parameters: z.object({
+            description:
+              'Search the GoalPost database for communities by name or description. Use this when the user asks about communities, groups, or collective activities.',
+            inputSchema: z.object({
               query: z
                 .string()
-                .describe('Community name or description to search for'),
+                .describe(
+                  'Community name or keyword to search for (e.g., "gardening", "tech", community name)'
+                ),
             }),
-            execute: async ({ query }) => {
+            execute: async ({ query }: { query: string }) => {
+              console.log(
+                '🔍 [TOOL EXECUTION] search_community called with query:',
+                query
+              )
               try {
                 const graph = await Neo4jGraph.initialize({
                   url: process.env.NEO4J_URI!,
@@ -273,28 +338,43 @@ Important: Only share information that comes from the tools. Do not use your tra
 
                 const results = await graph.query(cypherQuery, { query })
 
-                if (!results) {
-                  return {
-                    found: false,
-                    message: 'Error searching communities',
-                  }
+                console.log(
+                  '🔍 [TOOL RESULT] Community search found:',
+                  results?.length || 0,
+                  'communities'
+                )
+
+                if (!results || results.length === 0) {
+                  return JSON.stringify({
+                    status: 'not_found',
+                    message: `No communities matching "${query}" found in GoalPost.`,
+                  })
                 }
 
-                return {
-                  found: results.length > 0,
-                  communities: results,
-                  count: results.length,
-                }
+                return JSON.stringify(
+                  {
+                    status: 'found',
+                    count: results.length,
+                    communities: results,
+                  },
+                  null,
+                  2
+                )
               } catch (error) {
-                console.error('Community search error:', error)
-                return { found: false, message: 'Error searching communities' }
+                console.error('❌ [TOOL ERROR] Community search failed:', error)
+                return JSON.stringify({
+                  status: 'error',
+                  message: 'Error searching communities',
+                })
               }
             },
           }),
         },
       })
 
-      return result.toTextStreamResponse({
+      // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
+      // This ensures tool calls, text, and all message parts stream correctly
+      return result.toUIMessageStreamResponse({
         headers: {
           'X-Simulation-Mode': simulationState.getMode(),
         },

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { EnhancedMessageText } from '@/components/assistant-ui/enhanced-message-text'
 import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button'
 import { ToolFallback } from './tool-fallback'
+import { PersonProfileCardUI } from './person-profile-card'
 
 export const Thread: FC = () => {
   return (
@@ -32,6 +33,9 @@ export const Thread: FC = () => {
         ['--thread-max-width' as string]: '42rem',
       }}
     >
+      {/* Register Tool UI for person profile cards */}
+      <PersonProfileCardUI />
+
       <ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4 pt-8">
         <ThreadWelcome />
 
