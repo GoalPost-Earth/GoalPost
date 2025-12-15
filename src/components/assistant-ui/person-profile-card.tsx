@@ -198,25 +198,27 @@ export const PersonProfileCardUI = makeAssistantToolUI<
           </div>
 
           {/* Passions */}
-          {person.passions && person.passions.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Heart className="h-4 w-4 text-primary" />
-                <span>Passions</span>
+          {person.passions &&
+            Array.isArray(person.passions) &&
+            person.passions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <span>Passions</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {person.passions.map((passion, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="px-3 py-1 text-xs"
+                    >
+                      {passion}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {person.passions.map((passion, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1 text-xs"
-                  >
-                    {passion}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+            )}
         </CardContent>
       </Card>
     )

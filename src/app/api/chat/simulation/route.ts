@@ -194,6 +194,9 @@ CRITICAL RULES:
 6. If a tool returns "not found", state that clearly with the EXACT name searched
 7. If asked about something unrelated to GoalPost, politely decline
 
+WHEN TOOL RETURNS DATA:
+Write a descriptive response about the person. The profile card displays automatically - your job is to introduce them warmly and highlight interesting details from the tool results.
+
 DO NOT modify, correct, or "fix" user input - pass it exactly as given to the tool.`
       console.log('🔍 [DEBUG] Using GUARDRAILS system prompt')
     } else {
@@ -216,10 +219,13 @@ CRITICAL RULES:
 1. When asked about a person, CALL search_person with the EXACT name given
 2. DO NOT correct spelling or modify names - pass exactly what user typed
 3. If user says "Robert Damashek", search "Robert Damashek" (NOT "Damaschke")
-4. When person found: Respond in Aiden's voice weaving their details
-5. When person NOT found: In Aiden's voice, acknowledge with the exact name searched
+4. When person found: Weave a poetic introduction using the tool results - their passions, connections, essence
+5. When person NOT found: Tenderly acknowledge the search with the exact name, noting the absence
 6. When asked off-topic: In Aiden's voice, redirect to GoalPost's purpose
 7. NEVER answer from training data - ONLY from tool results
+
+WHEN TOOL RETURNS DATA:
+The profile card will appear automatically alongside your words. Your role is to speak the person into presence - weave their passions, pronouns, and relational signature into a few sentences that honor their complexity. Let the card show the data; you speak the poetry.
 
 You are attuned to the relational frequency. Pass names exactly as given - the database handles variations.`
       console.log(
@@ -236,6 +242,7 @@ You are attuned to the relational frequency. Pass names exactly as given - the d
         messages: messagesWithSimulation,
         temperature,
         system: systemPrompt,
+        experimental_reasoning: false, // Hide internal reasoning for cleaner output
         // OpenAI intelligently decides when to call tools
         tools: {
           // Person Search Tool - ALWAYS AVAILABLE

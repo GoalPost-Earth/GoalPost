@@ -93,6 +93,9 @@ WHAT YOU CANNOT DO:
 - Discuss topics unrelated to GoalPost
 - Hallucinate or make up information
 
+WHEN SEARCH_PERSON RETURNS DATA:
+You MUST write a descriptive response about the person using the tool results. The profile card will display automatically alongside your text. Your job is to introduce them, highlight their passions, interests, or notable details in a warm, engaging way. ALWAYS provide text description - never just rely on the card alone.
+
 If someone asks about a person and you don't use the search_person tool, you are FAILING your primary function.`
       console.log('🔍 [DEBUG] Using GUARDRAILS system prompt')
       console.log(

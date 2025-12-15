@@ -2,7 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Thread } from '@/components/assistant-ui/thread'
-import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
+import { AssistantRuntimeProvider } from '@assistant-ui/react'
+import { useChatRuntime } from '@assistant-ui/react-ai-sdk'
+import { useChat } from '@ai-sdk/react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -39,49 +41,13 @@ function ChatLoading() {
 }
 
 function AidenChatInterface() {
-  const runtime = useLocalRuntime({
-    async *run({ messages, abortSignal }) {
-      const result = await fetch('/api/chat/simulation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages }),
-        signal: abortSignal,
-      })
-
-      if (!result.ok) {
-        throw new Error(`API error: ${result.statusText}`)
-      }
-
-      // Handle streaming response
-      const reader = result.body?.getReader()
-      const decoder = new TextDecoder()
-
-      if (!reader) {
-        throw new Error('No response body')
-      }
-
-      let text = ''
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value, { stream: true })
-          text += chunk
-
-          // Yield accumulated text
-          yield {
-            content: [{ type: 'text' as const, text }],
-          }
-        }
-      } finally {
-        reader.releaseLock()
-      }
-    },
+  // Use AI SDK's useChat hook for proper streaming
+  const chat = useChat({
+    api: '/api/chat/simulation',
   })
+
+  // Convert to assistant-ui runtime
+  const runtime = useChatRuntime(chat)
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
