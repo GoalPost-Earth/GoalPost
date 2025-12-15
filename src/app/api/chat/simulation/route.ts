@@ -23,75 +23,6 @@ import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool
 // Allow streaming responses up to 60 seconds (simulation may be verbose)
 export const maxDuration = 60
 
-/**
- * Detects if the user query is asking about a specific person
- * AGGRESSIVE: Treats any query with capitalized names as a person query
- */
-function isPersonQuery(message: string | undefined): boolean {
-  if (!message) return false
-  const trimmed = message.trim()
-
-  // Pattern 1: Explicit person queries
-  const explicitPatterns = [
-    /\b(who\s+is|who's|tell\s+me\s+about|find|search\s+for|show\s+me|know\s+about|information\s+about)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b(does|do\s+you\s+know)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(profile|bio|background|details)/i,
-  ]
-
-  if (explicitPatterns.some((pattern) => pattern.test(message))) {
-    return true
-  }
-
-  // Pattern 2: Just a capitalized name (e.g., "Lina", "Robert Damaschke")
-  // Allow 1-3 capitalized words, potentially with common words between
-  const justNamePattern =
-    /^(?:about\s+)?([A-Z][a-z]+(?:\s+(?:the\s+)?[A-Z][a-z]+)*)(?:\s*\?)?$/i
-  if (justNamePattern.test(trimmed)) {
-    return true
-  }
-
-  return false
-}
-
-/**
- * Extract a likely person name from the query
- */
-function extractPersonName(message: string | undefined): string | null {
-  if (!message) return null
-  const trimmed = message.trim()
-
-  // Try explicit patterns first
-  const patterns = [
-    /\b(?:who\s+is|who's|tell\s+me\s+about|find|search\s+for|show\s+me|know\s+about|information\s+about|about)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b(does|do\s+you\s+know)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:profile|bio|background|details)\b/i,
-  ]
-
-  for (const re of patterns) {
-    const m = trimmed.match(re)
-    if (!m) continue
-    const candidate = (m[2] || m[1] || '').trim()
-    if (candidate) return candidate
-  }
-
-  // If query is just capitalized names, return the whole thing
-  const justNamePattern =
-    /^(?:about\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:\s*\?)?$/i
-  const justNameMatch = trimmed.match(justNamePattern)
-  if (justNameMatch) {
-    return justNameMatch[1].trim()
-  }
-
-  // Fallback: extract capitalized words
-  const capTokens = trimmed.match(/[A-Z][a-z]+/g)
-  if (capTokens && capTokens.length) {
-    // Take up to 2 capitalized words
-    return capTokens.slice(0, 2).join(' ')
-  }
-
-  return null
-}
-
 // Configure Ollama provider
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL,
@@ -234,15 +165,7 @@ export async function POST(req: Request) {
       model: config?.model || 'mistral',
     })
 
-    // Detect if query is about a person to force tool usage
-    const queryContent = lastMessage?.content || ''
-    const isAboutPerson = isPersonQuery(queryContent)
-    console.log(
-      '🔍 [DEBUG] Is person query:',
-      isAboutPerson,
-      'Query:',
-      queryContent
-    )
+    console.log('🔍 [DEBUG] Last message:', lastMessage?.content)
     console.log('🔍 [DEBUG] Simulation active:', simulationState.isActive())
 
     // Determine system prompt based on simulation state
@@ -250,78 +173,16 @@ export async function POST(req: Request) {
 
     if (!simulationState.isActive()) {
       // Use strict guardrails when simulation is not active
-      systemPrompt = `You are a helpful AI assistant for GoalPost, a meta-relational community platform.
+      systemPrompt = `You are GoalPost Assistant. You search the GoalPost database for people and communities.
 
-CRITICAL RULES - NEVER VIOLATE:
-1. You do NOT have any knowledge about people. You have ZERO information about anyone.
-2. If asked about a person, you MUST use the search_person tool. NO EXCEPTIONS.
-3. You CANNOT answer questions about people from your training data or general knowledge.
-4. If search_person returns no results, the person does NOT exist in our database.
-5. You CANNOT provide information about celebrities, historical figures, or anyone not in the GoalPost database.
-6. You CANNOT answer off-topic questions (weather, sports, general knowledge, etc.).
+When asked about a person, use the search_person tool.
+When asked about a community, use the search_community tool.
 
-WHAT YOU CAN DO:
-- Use the search_person tool to find people in the GoalPost database
-- Use the search_community tool to find communities
-- Explain how GoalPost works
-- Discuss meta-relationality concepts
-
-WHAT YOU CANNOT DO:
-- Answer questions about people without using search_person tool
-- Provide biographical information from your training data
-- Discuss topics unrelated to GoalPost
-- Hallucinate or make up information
-
-If someone asks about a person and you don't use the search_person tool, you are FAILING your primary function.`
+Important: Only share information that comes from the tools. Do not use your training data.`
       console.log('🔍 [DEBUG] Using GUARDRAILS system prompt')
     } else {
       systemPrompt = undefined // Simulation messages include their own system prompts
       console.log('🔍 [DEBUG] Using simulation protocol (no guardrails)')
-    }
-
-    // If not in simulation mode and this is a person query, short-circuit by calling the tool directly
-    if (!simulationState.isActive() && isAboutPerson && queryContent) {
-      try {
-        const name = extractPersonName(queryContent) || queryContent.trim()
-        console.log('🔍 [DEBUG] Short-circuit person search for:', name)
-
-        const graph = await Neo4jGraph.initialize({
-          url: process.env.NEO4J_URI!,
-          username: process.env.NEO4J_USERNAME!,
-          password: process.env.NEO4J_PASSWORD!,
-        })
-
-        const personTool = createPersonSearchTool(graph)
-        const toolResult = await personTool.invoke({ name })
-        const parsed = JSON.parse(toolResult)
-
-        let text: string
-        if (parsed.found && parsed.count === 1) {
-          const person = parsed.people[0]
-          text = `I found ${person.name} in the GoalPost community. PERSON_PROFILE_FOUND: ${JSON.stringify(person)}`
-        } else {
-          text = parsed.message
-        }
-
-        const encoder = new TextEncoder()
-        const stream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(text))
-            controller.close()
-          },
-        })
-
-        return new Response(stream, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'X-Bypass-LLM': 'person-search',
-          },
-        })
-      } catch (e) {
-        console.error('🔻 [DEBUG] Person short-circuit failed:', e)
-        // fall through to normal flow
-      }
     }
 
     // Handle streaming
@@ -331,15 +192,16 @@ If someone asks about a person and you don't use the search_person tool, you are
         messages: messagesWithSimulation,
         temperature,
         system: systemPrompt,
-        toolChoice:
-          isAboutPerson && !simulationState.isActive() ? 'required' : 'auto',
+        maxSteps: 5, // Allow automatic multi-step execution
         tools: {
           // Person Search Tool
           search_person: tool({
             description:
-              'REQUIRED tool for finding people in the GoalPost community database. Use this tool whenever the user asks about a specific person by name.',
-            inputSchema: z.object({
-              name: z.string().describe('The name of the person to search for'),
+              'Search for a person in the GoalPost database by name. Returns profile if found or states not in database.',
+            parameters: z.object({
+              name: z
+                .string()
+                .describe('The full name of the person to search for'),
             }),
             execute: async ({ name }) => {
               console.log(
@@ -379,7 +241,7 @@ If someone asks about a person and you don't use the search_person tool, you are
           // Community Search Tool
           search_community: tool({
             description: 'Search for communities in GoalPost',
-            inputSchema: z.object({
+            parameters: z.object({
               query: z
                 .string()
                 .describe('Community name or description to search for'),
