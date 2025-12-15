@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
-import { MarkdownText } from '@/components/assistant-ui/markdown-text'
+import { EnhancedMessageText } from '@/components/assistant-ui/enhanced-message-text'
 import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button'
 import { ToolFallback } from './tool-fallback'
 
@@ -222,7 +222,10 @@ const AssistantMessage: FC = () => {
     <MessagePrimitive.Root className="relative grid w-full max-w-[var(--thread-max-width)] grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr] py-4">
       <div className="text-foreground col-span-2 col-start-2 row-start-1 my-1.5 max-w-[calc(var(--thread-max-width)*0.8)] leading-7 break-words">
         <MessagePrimitive.Parts
-          components={{ Text: MarkdownText, tools: { Fallback: ToolFallback } }}
+          components={{
+            Text: EnhancedMessageText,
+            tools: { Fallback: ToolFallback },
+          }}
         />
         <MessageError />
       </div>
