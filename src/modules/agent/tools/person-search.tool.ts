@@ -56,12 +56,25 @@ export function createPersonSearchTool(
     ): Promise<string> => {
       const { name } = input
 
-      // Build a flexible Cypher query that searches first name, last name, or full name
+      // Build a very flexible Cypher query that handles:
+      // - Single first name: "Robert" matches "Robert Damaschke"
+      // - Single last name: "Damaschke" matches "Robert Damaschke"
+      // - Full name: "Robert Damaschke" matches exactly
+      // - Partial matches: "Rob" matches "Robert"
+      // - Case insensitive matching
       const query = `
         MATCH (p:Person)
-        WHERE toLower(p.firstName) CONTAINS toLower($name)
-          OR toLower(p.lastName) CONTAINS toLower($name)
-          OR toLower(p.firstName + ' ' + p.lastName) CONTAINS toLower($name)
+        WHERE 
+          // Match if search term is contained in first name
+          toLower(coalesce(p.firstName, '')) CONTAINS toLower($name)
+          // Match if search term is contained in last name
+          OR toLower(coalesce(p.lastName, '')) CONTAINS toLower($name)
+          // Match if search term matches full name
+          OR toLower(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, '')) CONTAINS toLower($name)
+          // Match if first name starts with search term (for "Rob" -> "Robert")
+          OR toLower(coalesce(p.firstName, '')) STARTS WITH toLower($name)
+          // Match if last name starts with search term
+          OR toLower(coalesce(p.lastName, '')) STARTS WITH toLower($name)
         OPTIONAL MATCH (p)-[:BELONGS_TO]->(c:Community)
         OPTIONAL MATCH (p)-[:CONNECTED_TO]-(conn:Person)
         WITH p, 
@@ -71,7 +84,7 @@ export function createPersonSearchTool(
           elementId(p) as id,
           p.firstName as firstName,
           p.lastName as lastName,
-          p.firstName + ' ' + p.lastName as name,
+          coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, '') as name,
           p.email as email,
           p.pronouns as pronouns,
           p.location as location,
@@ -84,11 +97,25 @@ export function createPersonSearchTool(
           p.favorites as favorites,
           communities,
           connectionCount
+        ORDER BY 
+          // Prioritize exact first name matches
+          CASE WHEN toLower(p.firstName) = toLower($name) THEN 0
+               WHEN toLower(p.lastName) = toLower($name) THEN 1
+               WHEN toLower(p.firstName) STARTS WITH toLower($name) THEN 2
+               ELSE 3 END,
+          p.firstName
         LIMIT 10
       `
 
+      console.log('🔍 [DEBUG] Executing person search for:', name)
+
       try {
         const results = await graph.query(query, { name })
+        console.log(
+          '🔍 [DEBUG] Query returned',
+          results?.length || 0,
+          'results'
+        )
 
         if (!results) {
           return JSON.stringify({
@@ -109,12 +136,14 @@ export function createPersonSearchTool(
 
         // Case 1: No person found
         if (results.length === 0) {
+          console.log('❌ [DEBUG] No person found for:', name)
           result.message = `I searched the GoalPost database but could not find any person matching "${name}". There is no information about such a person in our community database. Would you like me to help you search for someone else, or explore other aspects of the community?`
           return JSON.stringify(result)
         }
 
         // Case 2: Multiple people found - need disambiguation
         if (results.length > 1) {
+          console.log('🔀 [DEBUG] Multiple matches found:', results.length)
           const peopleList = results
             .map((p, idx) => {
               const details = []
@@ -134,6 +163,7 @@ export function createPersonSearchTool(
 
         // Case 3: Exact match - return profile data
         const person = results[0]
+        console.log('✅ [DEBUG] Found person:', person.name)
         result.message = `PERSON_PROFILE_FOUND: ${JSON.stringify(person)}`
 
         return JSON.stringify(result)
