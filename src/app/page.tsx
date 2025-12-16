@@ -3,8 +3,10 @@
 import { Button } from '@/components/ui/button'
 import { Thread } from '@/components/assistant-ui/thread'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
-import { useChatRuntime } from '@assistant-ui/react-ai-sdk'
-import { useChat } from '@ai-sdk/react'
+import {
+  useChatRuntime,
+  AssistantChatTransport,
+} from '@assistant-ui/react-ai-sdk'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -42,13 +44,12 @@ function ChatLoading() {
 }
 
 function AidenChatInterface() {
-  // Use AI SDK's useChat hook for proper streaming
-  const chat = useChat({
-    api: '/api/chat/simulation',
+  // Use AI SDK v5's useChatRuntime with AssistantChatTransport
+  const runtime = useChatRuntime({
+    transport: new AssistantChatTransport({
+      api: '/api/chat/simulation',
+    }),
   })
-
-  // Convert to assistant-ui runtime
-  const runtime = useChatRuntime(chat)
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

@@ -4,5 +4,5 @@
     "no-console": "off"
   },
   "extends": ["next/core-web-vitals", "next/typescript"],
-  "ignorePatterns": ["/src/components/ui/**"]
+  "ignorePatterns": ["/src/components/ui/**", "next-env.d.ts"]
 }

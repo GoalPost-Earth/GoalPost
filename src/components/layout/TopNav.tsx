@@ -34,7 +34,7 @@ const TopNav = () => {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={user.avatar || undefined}
+                      src={user.picture || undefined}
                       alt={user.firstName || ''}
                     />
                     <AvatarFallback>

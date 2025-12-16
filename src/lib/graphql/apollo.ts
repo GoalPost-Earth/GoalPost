@@ -1,5 +1,5 @@
 import typeDefs from './schema/schema.gql'
-import resolvers from '@/lib/graphql/resolvers'
+import resolvers from './resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
@@ -78,10 +78,12 @@ export default async function initializeApolloServer() {
             'Apollo-Require-Preflight',
           ],
         }
-      : {
-          origin: process.env.CORS_ORIGIN || false,
-          credentials: true,
-        },
+      : process.env.CORS_ORIGIN
+        ? {
+            origin: process.env.CORS_ORIGIN,
+            credentials: true,
+          }
+        : undefined,
     logging: {
       debug: (...args) => logger.debug(args.join(' ')),
       info: (...args) => logger.info(args.join(' ')),

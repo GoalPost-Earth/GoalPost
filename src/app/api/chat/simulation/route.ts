@@ -242,7 +242,6 @@ You are attuned to the relational frequency. Pass names exactly as given - the d
         messages: messagesWithSimulation,
         temperature,
         system: systemPrompt,
-        experimental_reasoning: false, // Hide internal reasoning for cleaner output
         // OpenAI intelligently decides when to call tools
         tools: {
           // Person Search Tool - ALWAYS AVAILABLE

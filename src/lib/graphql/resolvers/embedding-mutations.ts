@@ -1,6 +1,5 @@
 import { Context } from '@/config/types'
-import { Person } from '@/gql/graphql'
-import { generatePersonBio } from '@/utils'
+// import { Person } from '@/gql/graphql'
 
 export const embeddingMutations = {
   generatePersonEmbeddings: async (
@@ -15,16 +14,16 @@ export const embeddingMutations = {
     const { personId } = _args
 
     try {
-      const personRes = await session.run(
-        `
-            MATCH (person:Person {id: $id})
-            RETURN person
-            `,
-        { id: personId }
-      )
+      // const personRes = await session.run(
+      //   `
+      //       MATCH (person:Person {id: $id})
+      //       RETURN person
+      //       `,
+      //   { id: personId }
+      // )
 
-      const person = personRes.records[0].get('person').properties as Person
-      const bio = generatePersonBio(person)
+      // const person = personRes.records[0].get('person').properties as Person
+      const bio = ''
 
       await session.run(
         `

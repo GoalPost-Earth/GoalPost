@@ -7,7 +7,6 @@ import initCypherEvaluationChain from './cypher-evaluation.chain'
 import { saveHistory } from '../../history'
 import initGenerateAuthoritativeAnswerChain from '../../chains/authoritative-answer-generation.chain'
 import { AgentToolInput } from '../../agent.types'
-import { extractIds } from '@/utils'
 
 // tag::input[]
 type CypherRetrievalThroughput = AgentToolInput & {
@@ -169,5 +168,12 @@ export default async function initCypherRetrievalChain(
       })
       .pick('output')
   )
+}
+
+function extractIds(
+  results: Record<string, any> | Record<string, any>[]
+): unknown {
+  console.log('Function not implemented.', results)
+  throw new Error('Function not implemented.')
 }
 // end::function[]
