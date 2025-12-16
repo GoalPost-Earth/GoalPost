@@ -6,7 +6,7 @@
 
 import { ChatOpenAI } from '@langchain/openai'
 import { OpenAIEmbeddings } from '@langchain/openai'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
+import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
 
 const PersonInsightsSchema = z.object({
@@ -96,7 +96,7 @@ Be specific and evidence-based. Use the actual pulse content to support your ins
 export async function enrichPersonFromPulses(
   personId: string
 ): Promise<PersonEnrichmentResult> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Fetch person's current data and recent pulses (last 30 days)
   const result = await graph.query<{

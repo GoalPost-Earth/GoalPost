@@ -4,7 +4,7 @@
  */
 
 import { ChatOpenAI } from '@langchain/openai'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
+import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
 
 const ResonancePatternSchema = z.object({
@@ -49,7 +49,7 @@ async function findSimilarPulses(
   threshold: number = 0.7,
   limit: number = 10
 ): Promise<Array<{ id: string; content: string; similarity: number }>> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Get the pulse embedding
   const pulseResult = await graph.query<{
@@ -228,7 +228,7 @@ async function createResonanceInDatabase(
 export async function discoverResonancesForPulse(
   pulseId: string
 ): Promise<DiscoveredResonance[]> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Get the pulse
   const pulseResult = await graph.query<{
@@ -280,7 +280,7 @@ export async function discoverResonancesForPulse(
 export async function discoverGlobalResonances(
   lastRunTimestamp?: string
 ): Promise<DiscoveredResonance[]> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Get all pulses created/modified since last run
   const query = lastRunTimestamp

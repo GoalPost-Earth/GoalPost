@@ -4,7 +4,7 @@
  */
 
 import { OpenAIEmbeddings } from '@langchain/openai'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
+import { initGraph } from '../../../modules/graph'
 
 export interface ConversationChunkNode {
   id: string
@@ -46,7 +46,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 export async function generatePulseEmbeddings(
   pulseId: string
 ): Promise<PulseEmbeddingResult> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Fetch pulse content and all related conversation chunks
   const result = await graph.query<{
@@ -167,7 +167,7 @@ export async function batchGeneratePulseEmbeddings(
 export async function generateChunkEmbeddings(
   chunks: Array<{ id: string; content: string }>
 ): Promise<Array<{ chunkId: string; embedding: number[] }>> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
   const results: Array<{ chunkId: string; embedding: number[] }> = []
 
   for (const chunk of chunks) {
