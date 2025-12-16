@@ -27,7 +27,7 @@ async function initializeDatabase() {
     // Read the seed-dev.cypher file
     const cypherFilePath = path.join(
       __dirname,
-      '../src/pages/api/cypher/seed-dev.cypher'
+      '../docs/cypher/seed-dev.cypher'
     )
     let cypherQuery = fs.readFileSync(cypherFilePath, 'utf8')
 
@@ -45,19 +45,123 @@ async function initializeDatabase() {
         await session.run(statement)
       }
     }
-    // Create the vector index for person bio embeddings
-    console.log('Creating vector index for Person embeddings...')
-    await session.run(`
-      CALL db.index.vector.createNodeIndex(
-      'personBioVectorIndex',
-      'Person',
-      'embedding',
-      1536,  // Dimension size for OpenAI embeddings - adjust based on your model
-      'cosine'  // Similarity metric
-      )
-    `)
-    console.log('Vector index created successfully!')
-    console.log('Database initialization completed successfully!')
+    // Create constraints for unique IDs
+    console.log('Creating database constraints...')
+    const constraints = [
+      `CREATE CONSTRAINT conversation_chunk_id IF NOT EXISTS
+       FOR (n:ConversationChunk) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT person_id IF NOT EXISTS
+       FOR (n:Person) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT community_id IF NOT EXISTS
+       FOR (n:Community) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT space_id IF NOT EXISTS
+       FOR (n:Space) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT context_id IF NOT EXISTS
+       FOR (n:FieldContext) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT pulse_id IF NOT EXISTS
+       FOR (n:FieldPulse) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT resonance_id IF NOT EXISTS
+       FOR (n:FieldResonance) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT resonance_link_id IF NOT EXISTS
+       FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
+    ]
+
+    for (const constraint of constraints) {
+      try {
+        await session.run(constraint)
+        console.log(`✓ Constraint created`)
+      } catch (error) {
+        if (
+          error.code ===
+          'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists'
+        ) {
+          console.log(`✓ Constraint already exists`)
+        } else {
+          throw error
+        }
+      }
+    }
+
+    // Create vector indexes
+    console.log('\nCreating vector indexes...')
+    const vectorIndexes = [
+      {
+        name: 'personBioVectorIndex',
+        label: 'Person',
+        property: 'embedding',
+        description: 'Person bio embeddings for semantic search',
+      },
+      {
+        name: 'pulseContentVectorIndex',
+        label: 'FieldPulse',
+        property: 'embedding',
+        description: 'Pulse content embeddings (aggregated from chunks)',
+      },
+      {
+        name: 'conversationChunkVectorIndex',
+        label: 'ConversationChunk',
+        property: 'embedding',
+        description: 'Individual conversation chunk embeddings',
+      },
+    ]
+
+    for (const index of vectorIndexes) {
+      try {
+        await session.run(
+          `
+          CALL db.index.vector.createNodeIndex(
+            $name,
+            $label,
+            $property,
+            1536,
+            'cosine'
+          )
+        `,
+          { name: index.name, label: index.label, property: index.property }
+        )
+        console.log(`✓ Created ${index.description}: ${index.name}`)
+      } catch (error) {
+        if (
+          error.code ===
+          'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists'
+        ) {
+          console.log(`✓ Vector index already exists: ${index.name}`)
+        } else {
+          throw error
+        }
+      }
+    }
+
+    // Create indexes for performance
+    console.log('\nCreating property indexes...')
+    const propertyIndexes = [
+      `CREATE INDEX resonance_label IF NOT EXISTS
+       FOR (r:FieldResonance) ON (r.label)`,
+      `CREATE INDEX pulse_createdAt IF NOT EXISTS
+       FOR (p:FieldPulse) ON (p.createdAt)`,
+      `CREATE INDEX pulse_modifiedAt IF NOT EXISTS
+       FOR (p:FieldPulse) ON (p.modifiedAt)`,
+      `CREATE INDEX chunk_order IF NOT EXISTS
+       FOR (c:ConversationChunk) ON (c.order)`,
+    ]
+
+    for (const index of propertyIndexes) {
+      try {
+        await session.run(index)
+        console.log(`✓ Property index created`)
+      } catch (error) {
+        if (
+          error.code ===
+          'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists'
+        ) {
+          console.log(`✓ Property index already exists`)
+        } else {
+          throw error
+        }
+      }
+    }
+
+    console.log('\n✅ Database initialization completed successfully!')
   } catch (error) {
     console.error('Error initializing database:', error)
     process.exit(1)
