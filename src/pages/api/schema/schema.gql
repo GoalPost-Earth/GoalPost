@@ -1,13 +1,11 @@
-"""
-GoalPost GraphQL Schema - Neo4j GraphQL
-Designed for pulse-first, context-aware relational data modeling.
-
-Architecture:
-- Pulses are the write path (first-class citizens)
-- Resonance is the read/insight path (AI-generated meaning)
-- Spaces define privacy boundaries (MeSpace/WeSpace)
-- AI adds meaning after the fact (explainability layer)
-"""
+# GoalPost GraphQL Schema - Neo4j GraphQL
+# Designed for pulse-first, context-aware relational data modeling.
+#
+# Architecture:
+# - Pulses are the write path (first-class citizens)
+# - Resonance is the read/insight path (AI-generated meaning)
+# - Spaces define privacy boundaries (MeSpace/WeSpace)
+# - AI adds meaning after the fact (explainability layer)
 
 extend schema @authentication
 
@@ -19,13 +17,11 @@ extend schema @authentication
 A human user of the system.
 Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
 """
-type Person
-  @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
+type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
   id: ID! @id @unique
   name: String!
   email: String
-  ownsSpaces: [Space!]!
-    @relationship(type: "OWNS", direction: OUT)
+  ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 """
@@ -33,22 +29,18 @@ A collective identity (team, family, cohort, etc).
 Can own spaces and initiate pulses.
 Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
 """
-type Community
-  @node(labels: ["Community", "LifeSensor", "RelationalEntity"]) {
+type Community @node(labels: ["Community", "LifeSensor", "RelationalEntity"]) {
   id: ID! @id @unique
   name: String!
   type: String
-  ownsSpaces: [Space!]!
-    @relationship(type: "OWNS", direction: OUT)
+  ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 """
 Anything that can initiate pulses or own spaces.
-Never instantiated directly - use Person or Community.
+Query-time abstraction - either a Person or Community.
 """
-interface LifeSensor {
-  id: ID!
-}
+union LifeSensor = Person | Community
 
 # ============================================================================
 # SPACES (Privacy + Ownership Boundary)
@@ -63,8 +55,6 @@ interface Space {
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  contexts: [FieldContext!]!
-  owner: LifeSensor!
 }
 
 enum SpaceVisibility {
@@ -76,34 +66,27 @@ enum SpaceVisibility {
 A private space owned by exactly one person or community.
 Multi-label: ["Space", "MeSpace"]
 """
-type MeSpace implements Space
-  @node(labels: ["Space", "MeSpace"]) {
+type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
   id: ID! @id @unique
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: LifeSensor!
-    @relationship(type: "OWNS", direction: IN)
-  contexts: [FieldContext!]!
-    @relationship(type: "HAS_CONTEXT", direction: OUT)
+  owner: LifeSensor! @relationship(type: "OWNS", direction: IN)
+  contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
 """
 A shared space with an owner and members.
 Multi-label: ["Space", "WeSpace"]
 """
-type WeSpace implements Space
-  @node(labels: ["Space", "WeSpace"]) {
+type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
   id: ID! @id @unique
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: LifeSensor!
-    @relationship(type: "OWNS", direction: IN)
-  members: [LifeSensor!]!
-    @relationship(type: "HAS_MEMBER", direction: OUT)
-  contexts: [FieldContext!]!
-    @relationship(type: "HAS_CONTEXT", direction: OUT)
+  owner: LifeSensor! @relationship(type: "OWNS", direction: IN)
+  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
+  contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
 # ============================================================================
@@ -115,16 +98,13 @@ A thematic or temporal container inside a Space.
 Groups related pulses together.
 Label: ["FieldContext"]
 """
-type FieldContext
-  @node(labels: ["FieldContext"]) {
+type FieldContext @node(labels: ["FieldContext"]) {
   id: ID! @id @unique
   title: String!
   emergentName: String
   createdAt: DateTime!
-  pulses: [FieldPulse!]!
-    @relationship(type: "HAS_PULSE", direction: OUT)
-  space: Space!
-    @relationship(type: "HAS_CONTEXT", direction: IN)
+  pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
+  space: Space! @relationship(type: "HAS_CONTEXT", direction: IN)
 }
 
 # ============================================================================
@@ -141,8 +121,6 @@ interface FieldPulse {
   content: String!
   createdAt: DateTime!
   intensity: Float
-  initiatedBy: LifeSensor!
-  context: FieldContext!
 }
 
 """
@@ -157,10 +135,8 @@ type GoalPulse implements FieldPulse
   intensity: Float
   status: GoalStatus!
   horizon: GoalHorizon
-  initiatedBy: LifeSensor!
-    @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext!
-    @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
+  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 enum GoalStatus {
@@ -187,10 +163,8 @@ type ResourcePulse implements FieldPulse
   intensity: Float
   resourceType: String!
   availability: Float
-  initiatedBy: LifeSensor!
-    @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext!
-    @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
+  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 """
@@ -203,10 +177,8 @@ type StoryPulse implements FieldPulse
   content: String!
   createdAt: DateTime!
   intensity: Float
-  initiatedBy: LifeSensor!
-    @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext!
-    @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
+  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 # ============================================================================
@@ -218,8 +190,7 @@ A semantic or symbolic pattern discovered across pulses.
 Usually AI-generated.
 Label: ["FieldResonance"]
 """
-type FieldResonance
-  @node(labels: ["FieldResonance"]) {
+type FieldResonance @node(labels: ["FieldResonance"]) {
   id: ID! @id @unique
   label: String!
   description: String
@@ -230,18 +201,45 @@ A justified resonance connection between two pulses.
 This is the explainability layer for AI-generated insights.
 Label: ["ResonanceLink"]
 """
-type ResonanceLink
-  @node(labels: ["ResonanceLink"]) {
+type ResonanceLink @node(labels: ["ResonanceLink"]) {
   id: ID! @id @unique
   confidence: Float!
   evidence: String
   createdAt: DateTime!
-  source: FieldPulse!
-    @relationship(type: "SOURCE", direction: OUT)
-  target: FieldPulse!
-    @relationship(type: "TARGET", direction: OUT)
-  resonance: FieldResonance!
-    @relationship(type: "RESONATES_AS", direction: OUT)
-  detectedBy: LifeSensor
-    @relationship(type: "DETECTED_BY", direction: OUT)
+  source: FieldPulse! @relationship(type: "SOURCE", direction: OUT)
+  target: FieldPulse! @relationship(type: "TARGET", direction: OUT)
+  resonance: FieldResonance! @relationship(type: "RESONATES_AS", direction: OUT)
+  detectedBy: LifeSensor @relationship(type: "DETECTED_BY", direction: OUT)
+}
+
+# ============================================================================
+# MUTATIONS (Custom Operations)
+# ============================================================================
+
+"""
+Response from the chatbot containing the message and session ID.
+"""
+type ChatbotResponse {
+  message: String!
+  sessionId: String!
+}
+
+type Mutation {
+  """
+  Send a message to the chatbot and receive a response.
+  Placeholder for future chatbot functionality.
+  """
+  sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse
+
+  """
+  Invite a person to join the platform.
+  Sends an invite email with a password reset link.
+  """
+  invitePerson(personId: String!): Person
+
+  """
+  Cancel an invitation for a person.
+  Removes the User label and invite-related properties.
+  """
+  cancelInvite(personId: String!): Person
 }

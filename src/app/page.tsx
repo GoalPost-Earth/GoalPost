@@ -8,6 +8,7 @@ import { useChat } from '@ai-sdk/react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import Link from 'next/link'
 
 function ChatErrorFallback({
   error,
@@ -87,6 +88,11 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Link href="/graph">
+                <Button variant="outline" size="sm">
+                  📊 View Graph
+                </Button>
+              </Link>
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
                   isSimulationActive
