@@ -5,62 +5,24 @@ export const GET_COMMUNITY = graphql(`
     communities(where: { id_EQ: $id }) {
       id
       name
-      description
-      why
-      location
-      time
-      activities
-      resultsAchieved
-      status
-
-      relatedCommunities {
-        id
-        name
-        description
-        members(limit: 5) {
-          id
-          name
-          photo
-        }
-      }
-
+      type
       members {
-        id
-        name
-        photo
-      }
-
-      goals {
-        id
-        name
-        photo
-        status
-        createdAt
-        description
-      }
-
-      resources {
-        id
-        name
-        description
-        status
-        providedByPerson(limit: 1) {
+        ... on Person {
           id
           name
-          photo
+          email
+        }
+        ... on Community {
+          id
+          name
+          type
         }
       }
-
-      createdAt
-      createdBy {
+      ownsSpaces {
         id
         name
-        photo
-      }
-      coreValues {
-        id
-        name
-        description
+        visibility
+        createdAt
       }
     }
   }
@@ -71,64 +33,45 @@ export const GET_ALL_COMMUNITIES = graphql(`
     communities(where: $where) {
       id
       name
-      description
-      why
-      location
-      time
-      activities
-      resultsAchieved
-      status
-      createdBy {
-        id
-        name
-        photo
-      }
+      type
       members {
-        id
-        name
-        photo
+        ... on Person {
+          id
+          name
+          email
+        }
+        ... on Community {
+          id
+          name
+          type
+        }
       }
-      relatedCommunities {
+      ownsSpaces {
         id
         name
-      }
-      coreValues {
-        id
-        name
-      }
-      goals {
-        id
-        name
-      }
-      resources {
-        id
-        name
+        visibility
       }
     }
   }
 `)
 
+// Stubbed until WeSpace member queries are implemented
 export const GET_COMMUNITIES_AND_THEIR_MEMBERS = graphql(`
   query getCommunitiesAndTheirMembers {
-    communities(where: { members_SOME: { NOT: { id_EQ: "" } } }) {
+    communities {
       id
       name
-      members {
-        email
-        name
-        id
-        photo
-      }
+      type
     }
   }
 `)
 
+// Stubbed - communities relationship doesn't exist on Person in current schema
 export const GET_PEOPLE_NOT_IN_COMMUNITIES = graphql(`
   query getPeopleNotInCommunities {
-    people(where: { communitiesAggregate: { count_EQ: 0 } }) {
+    people {
       id
       name
-      photo
       email
     }
   }

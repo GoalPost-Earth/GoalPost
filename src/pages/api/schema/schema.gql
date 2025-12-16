@@ -18,7 +18,7 @@ A human user of the system.
 Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
 """
 type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
-  id: ID! @id @unique
+  id: ID! @id
   name: String!
   email: String
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
@@ -26,13 +26,14 @@ type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
 
 """
 A collective identity (team, family, cohort, etc).
-Can own spaces and initiate pulses.
+Has members and can own spaces and initiate pulses.
 Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
 """
 type Community @node(labels: ["Community", "LifeSensor", "RelationalEntity"]) {
-  id: ID! @id @unique
+  id: ID! @id
   name: String!
   type: String
+  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
 
@@ -63,28 +64,31 @@ enum SpaceVisibility {
 }
 
 """
-A private space owned by exactly one person or community.
+A personal space owned by one person or community.
+Can be private (only owner) or shared with specific members.
 Multi-label: ["Space", "MeSpace"]
 """
 type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
-  id: ID! @id @unique
+  id: ID! @id
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: LifeSensor! @relationship(type: "OWNS", direction: IN)
+  owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
+  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
 """
-A shared space with an owner and members.
+A collaborative space shared with other people.
+Has an owner and members who can all participate.
 Multi-label: ["Space", "WeSpace"]
 """
 type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
-  id: ID! @id @unique
+  id: ID! @id
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: LifeSensor! @relationship(type: "OWNS", direction: IN)
+  owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
   members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
@@ -99,12 +103,12 @@ Groups related pulses together.
 Label: ["FieldContext"]
 """
 type FieldContext @node(labels: ["FieldContext"]) {
-  id: ID! @id @unique
+  id: ID! @id
   title: String!
   emergentName: String
   createdAt: DateTime!
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
-  space: Space! @relationship(type: "HAS_CONTEXT", direction: IN)
+  space: [Space!]! @relationship(type: "HAS_CONTEXT", direction: IN)
 }
 
 # ============================================================================
@@ -129,14 +133,15 @@ Multi-label: ["FieldPulse", "GoalPulse"]
 """
 type GoalPulse implements FieldPulse
   @node(labels: ["FieldPulse", "GoalPulse"]) {
-  id: ID! @id @unique
+  id: ID! @id
   content: String!
   createdAt: DateTime!
   intensity: Float
   status: GoalStatus!
   horizon: GoalHorizon
-  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: [LifeSensor!]!
+    @relationship(type: "INITIATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 enum GoalStatus {
@@ -157,14 +162,15 @@ Multi-label: ["FieldPulse", "ResourcePulse"]
 """
 type ResourcePulse implements FieldPulse
   @node(labels: ["FieldPulse", "ResourcePulse"]) {
-  id: ID! @id @unique
+  id: ID! @id
   content: String!
   createdAt: DateTime!
   intensity: Float
   resourceType: String!
   availability: Float
-  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: [LifeSensor!]!
+    @relationship(type: "INITIATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 """
@@ -173,12 +179,13 @@ Multi-label: ["FieldPulse", "StoryPulse"]
 """
 type StoryPulse implements FieldPulse
   @node(labels: ["FieldPulse", "StoryPulse"]) {
-  id: ID! @id @unique
+  id: ID! @id
   content: String!
   createdAt: DateTime!
   intensity: Float
-  initiatedBy: LifeSensor! @relationship(type: "INITIATED_BY", direction: OUT)
-  context: FieldContext! @relationship(type: "HAS_PULSE", direction: IN)
+  initiatedBy: [LifeSensor!]!
+    @relationship(type: "INITIATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
 # ============================================================================
@@ -191,7 +198,7 @@ Usually AI-generated.
 Label: ["FieldResonance"]
 """
 type FieldResonance @node(labels: ["FieldResonance"]) {
-  id: ID! @id @unique
+  id: ID! @id
   label: String!
   description: String
 }
@@ -202,14 +209,15 @@ This is the explainability layer for AI-generated insights.
 Label: ["ResonanceLink"]
 """
 type ResonanceLink @node(labels: ["ResonanceLink"]) {
-  id: ID! @id @unique
+  id: ID! @id
   confidence: Float!
   evidence: String
   createdAt: DateTime!
-  source: FieldPulse! @relationship(type: "SOURCE", direction: OUT)
-  target: FieldPulse! @relationship(type: "TARGET", direction: OUT)
-  resonance: FieldResonance! @relationship(type: "RESONATES_AS", direction: OUT)
-  detectedBy: LifeSensor @relationship(type: "DETECTED_BY", direction: OUT)
+  source: [FieldPulse!]! @relationship(type: "SOURCE", direction: OUT)
+  target: [FieldPulse!]! @relationship(type: "TARGET", direction: OUT)
+  resonance: [FieldResonance!]!
+    @relationship(type: "RESONATES_AS", direction: OUT)
+  detectedBy: [LifeSensor!]! @relationship(type: "DETECTED_BY", direction: OUT)
 }
 
 # ============================================================================

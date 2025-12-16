@@ -20,9 +20,10 @@ Instead they are **pulse types** (interpretations of contributions inside a cont
 ### 1.1 LifeSensors
 A **LifeSensor** is anything that can initiate pulses and participate in spaces.
 - `Person` is a human user.
-- `Community` is a collective identity (team, family, cohort, group).
+- `Community` is a collective identity (team, family, cohort, group) with members.
 
 Both can:
+- have members (Community has members explicitly, Person can be a member of Communities/Spaces)
 - own spaces
 - initiate pulses
 
@@ -32,18 +33,23 @@ A **Space** is a privacy and access boundary, and a parent container for context
 There are two space types:
 
 #### MeSpace
-- Private by nature
-- Owned by exactly **one** `LifeSensor` (either a `Person` or a `Community`)
+- Personal space owned by exactly **one** `LifeSensor` (either a `Person` or a `Community`)
+- Can be **private** (only the owner) or **shared** with specific members
+- Visibility is controlled by the owner
+- Members can be added to share the space while maintaining owner control
 - Typically used for "my inner field," but ownership may also be a community (e.g., "community private workspace").
 
 #### WeSpace
-- Shared space
+- Collaborative space shared with other people
 - Has an **owner** (exactly one `LifeSensor`)
 - Has **members** (one or more `LifeSensor`s)
-- Used for collaborative contexts, shared pulses, shared resonance.
+- Always shared/collaborative in nature
+- Used for team contexts, shared pulses, shared resonance
 
-**Important:** In this system, both `MeSpace` and `WeSpace` can be owned by either `Person` or `Community`.  
-(Ownership is separate from membership.)
+**Important:** Both `MeSpace` and `WeSpace` can:
+- Be owned by either `Person` or `Community`
+- Have members (People or Communities who can participate)
+- Ownership is separate from membership
 
 ### 1.3 FieldContexts
 A **FieldContext** is a "membrane" within a space that holds unfolding.
@@ -147,8 +153,10 @@ This supports:
 **Ownership**
 - `(LifeSensor)-[:OWNS]->(Space)`
 
-**Membership (WeSpace only)**
-- `(WeSpace)-[:HAS_MEMBER]->(LifeSensor)`
+**Membership**
+- `(Community)-[:HAS_MEMBER]->(LifeSensor)` (Community members)
+- `(MeSpace)-[:HAS_MEMBER]->(LifeSensor)` (Optional - when MeSpace is shared)
+- `(WeSpace)-[:HAS_MEMBER]->(LifeSensor)` (Always - WeSpace is collaborative)
 
 **Containment**
 - `(Space)-[:HAS_CONTEXT]->(FieldContext)`
@@ -183,6 +191,9 @@ Recommended properties:
 - `name: string`
 - `type: string?` (e.g., "team", "family", "cohort")
 
+Recommended relationships:
+- `HAS_MEMBER` → `LifeSensor` (People or other Communities that are members)
+
 ### 3.3 Space (MeSpace/WeSpace)
 Represents access/privacy boundary.
 
@@ -191,6 +202,13 @@ Recommended properties:
 - `name: string`
 - `visibility: "PRIVATE" | "SHARED"`
 - `createdAt: datetime`
+
+Recommended relationships:
+- `OWNS` (incoming from exactly one LifeSensor - the owner)
+- `HAS_MEMBER` (outgoing to LifeSensors - people/communities who can participate)
+- Both MeSpace and WeSpace support members
+- MeSpace can be PRIVATE (no members) or SHARED (with members)
+- WeSpace is always SHARED with members
 
 ### 3.4 FieldContext
 Represents a thematic/temporal container inside a space.
