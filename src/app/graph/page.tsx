@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useQuery } from '@apollo/client'
 import Link from 'next/link'
 import {
   Card,
@@ -12,6 +12,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import {
+  GET_GRAPH_STATS,
+  GET_GRAPH_PEOPLE,
+  GET_GRAPH_SPACES,
+  GET_GRAPH_RESONANCES,
+} from '@/app/graphql/queries'
 
 interface GraphStats {
   personCount: number
@@ -49,119 +55,89 @@ interface Resonance {
 }
 
 export default function GraphVisualization() {
-  const [stats, setStats] = useState<GraphStats | null>(null)
-  const [people, setPeople] = useState<Person[]>([])
-  const [spaces, setSpaces] = useState<Space[]>([])
-  const [resonances, setResonances] = useState<Resonance[]>([])
-  const [loading, setLoading] = useState(true)
+  // Fetch graph statistics
+  const { data: statsData, loading: statsLoading } = useQuery(GET_GRAPH_STATS)
 
-  useEffect(() => {
-    // In a real implementation, you'd fetch from your API
-    // For now, we'll use mock data based on what we created
-    const mockStats: GraphStats = {
-      personCount: 4,
-      communityCount: 1,
-      meSpaceCount: 1,
-      weSpaceCount: 2,
-      contextCount: 4,
-      goalCount: 4,
-      resourceCount: 4,
-      storyCount: 3,
-      resonanceCount: 5,
-      linkCount: 6,
-    }
+  // Fetch people data
+  const { data: peopleData, loading: peopleLoading } =
+    useQuery(GET_GRAPH_PEOPLE)
 
-    const mockPeople: Person[] = [
-      {
-        person: 'John Dagy',
-        email: 'jaedagy@gmail.com',
-        spacesOwned: 2,
-        contextsInSpaces: 3,
-        pulsesInContexts: 6,
-      },
-      {
-        person: 'Naa Adjeley',
-        email: 'naa@codefoundry.dev',
-        spacesOwned: 0,
-        contextsInSpaces: 0,
-        pulsesInContexts: 4,
-      },
-      {
-        person: 'Sarah Chen',
-        email: 'sarah@example.com',
-        spacesOwned: 0,
-        contextsInSpaces: 0,
-        pulsesInContexts: 1,
-      },
-      {
-        person: 'Mike Rodriguez',
-        email: 'mike@example.com',
-        spacesOwned: 0,
-        contextsInSpaces: 0,
-        pulsesInContexts: 1,
-      },
-    ]
+  // Fetch spaces data
+  const { data: spacesData, loading: spacesLoading } =
+    useQuery(GET_GRAPH_SPACES)
 
-    const mockSpaces: Space[] = [
-      {
-        spaceName: "John's Personal Space",
-        spaceType: 'MeSpace',
-        visibility: 'PRIVATE',
-        owner: 'John Dagy',
-        members: [],
-      },
-      {
-        spaceName: 'CodeFoundry Collaboration Space',
-        spaceType: 'WeSpace',
-        visibility: 'SHARED',
-        owner: 'CodeFoundry Team',
-        members: ['John Dagy', 'Naa Adjeley', 'Sarah Chen', 'CodeFoundry Team'],
-      },
-      {
-        spaceName: 'GoalPost Project Space',
-        spaceType: 'WeSpace',
-        visibility: 'SHARED',
-        owner: 'John Dagy',
-        members: ['John Dagy', 'Naa Adjeley', 'Mike Rodriguez'],
-      },
-    ]
+  // Fetch resonances data
+  const { data: resonancesData, loading: resonancesLoading } =
+    useQuery(GET_GRAPH_RESONANCES)
 
-    const mockResonances: Resonance[] = [
-      {
-        resonancePattern: 'Focus',
-        description: 'Narrowing attention toward essential priorities',
-        connections: 2,
-      },
-      {
-        resonancePattern: 'Momentum',
-        description: 'Building forward energy and confidence',
-        connections: 1,
-      },
-      {
-        resonancePattern: 'Alignment',
-        description: 'Goals and resources moving in harmony',
-        connections: 1,
-      },
-      {
-        resonancePattern: 'Growth',
-        description: 'Learning and capability expansion',
-        connections: 1,
-      },
-      {
-        resonancePattern: 'Intensity',
-        description: 'High-energy focused effort period',
-        connections: 1,
-      },
-    ]
+  const loading =
+    statsLoading || peopleLoading || spacesLoading || resonancesLoading
 
-    setTimeout(() => {
-      setStats(mockStats)
-      setPeople(mockPeople)
-      setSpaces(mockSpaces)
-      setResonances(mockResonances)
-      setLoading(false)
-    }, 500)
-  }, [])
+  // Transform stats data
+  const stats: GraphStats | null = statsData
+    ? {
+        personCount: statsData.peopleAggregate?.count || 0,
+        communityCount: statsData.communitiesAggregate?.count || 0,
+        meSpaceCount: statsData.meSpacesAggregate?.count || 0,
+        weSpaceCount: statsData.weSpacesAggregate?.count || 0,
+        contextCount: statsData.fieldContextsAggregate?.count || 0,
+        goalCount: statsData.goalPulsesAggregate?.count || 0,
+        resourceCount: statsData.resourcePulsesAggregate?.count || 0,
+        storyCount: statsData.storyPulsesAggregate?.count || 0,
+        resonanceCount: statsData.fieldResonancesAggregate?.count || 0,
+        linkCount: statsData.resonanceLinksAggregate?.count || 0,
+      }
+    : null
+
+  // Transform people data
+  const people: Person[] =
+    peopleData?.people?.map((person) => {
+      const spacesOwned = person.ownsSpaces?.length || 0
+      let contextsInSpaces = 0
+      let pulsesInContexts = 0
+
+      person.ownsSpaces?.forEach((space) => {
+        const contexts = space.contexts || []
+        contextsInSpaces += contexts.length
+        contexts.forEach((context) => {
+          pulsesInContexts += context.pulses?.length || 0
+        })
+      })
+
+      return {
+        person: person.name || '',
+        email: person.email || '',
+        spacesOwned,
+        contextsInSpaces,
+        pulsesInContexts,
+      }
+    }) || []
+
+  // Transform spaces data
+  const spaces: Space[] = [
+    ...(spacesData?.meSpaces?.map((space) => ({
+      spaceName: space.name || '',
+      spaceType: 'MeSpace',
+      visibility: space.visibility || 'PRIVATE',
+      owner: space.owner?.[0]?.name || '',
+      members: space.members?.map((m) => m.name || '') || [],
+    })) || []),
+    ...(spacesData?.weSpaces?.map((space) => ({
+      spaceName: space.name || '',
+      spaceType: 'WeSpace',
+      visibility: space.visibility || 'SHARED',
+      owner: space.owner?.[0]?.name || '',
+      members: space.members?.map((m) => m.name || '') || [],
+    })) || []),
+  ]
+
+  // Transform resonances data
+  const resonances: Resonance[] =
+    resonancesData?.fieldResonances?.map((resonance) => ({
+      resonancePattern: resonance.label || '',
+      description: resonance.description || '',
+      connections: 0, // This would need a separate query to count connections
+    })) || []
 
   if (loading) {
     return (
