@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@apollo/client'
 import Link from 'next/link'
 import {
@@ -13,10 +14,20 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   GET_GRAPH_STATS,
   GET_GRAPH_PEOPLE,
   GET_GRAPH_SPACES,
   GET_GRAPH_RESONANCES,
+  GET_PERSON_DETAILS,
+  GET_SPACE_DETAILS,
+  GET_RESONANCE_DETAILS,
 } from '@/app/graphql/queries'
 
 interface GraphStats {
@@ -33,6 +44,7 @@ interface GraphStats {
 }
 
 interface Person {
+  id: string
   person: string
   email: string
   spacesOwned: number
@@ -41,6 +53,7 @@ interface Person {
 }
 
 interface Space {
+  id: string
   spaceName: string
   spaceType: string
   visibility: string
@@ -49,12 +62,19 @@ interface Space {
 }
 
 interface Resonance {
+  id: string
   resonancePattern: string
   description: string
   connections: number
 }
 
 export default function GraphVisualization() {
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null)
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(null)
+  const [selectedResonance, setSelectedResonance] = useState<string | null>(
+    null
+  )
+
   // Fetch graph statistics
   const { data: statsData, loading: statsLoading } = useQuery(GET_GRAPH_STATS)
 
@@ -69,6 +89,22 @@ export default function GraphVisualization() {
   // Fetch resonances data
   const { data: resonancesData, loading: resonancesLoading } =
     useQuery(GET_GRAPH_RESONANCES)
+
+  // Fetch detail data based on selection
+  const { data: personDetailsData } = useQuery(GET_PERSON_DETAILS, {
+    variables: { email: selectedPerson || '' },
+    skip: !selectedPerson,
+  })
+
+  const { data: spaceDetailsData } = useQuery(GET_SPACE_DETAILS, {
+    variables: { spaceId: selectedSpace || '' },
+    skip: !selectedSpace,
+  })
+
+  const { data: resonanceDetailsData } = useQuery(GET_RESONANCE_DETAILS, {
+    variables: { resonanceId: selectedResonance || '' },
+    skip: !selectedResonance,
+  })
 
   const loading =
     statsLoading || peopleLoading || spacesLoading || resonancesLoading
@@ -105,6 +141,7 @@ export default function GraphVisualization() {
       })
 
       return {
+        id: person.id,
         person: person.name || '',
         email: person.email || '',
         spacesOwned,
@@ -116,6 +153,7 @@ export default function GraphVisualization() {
   // Transform spaces data
   const spaces: Space[] = [
     ...(spacesData?.meSpaces?.map((space) => ({
+      id: space.id,
       spaceName: space.name || '',
       spaceType: 'MeSpace',
       visibility: space.visibility || 'PRIVATE',
@@ -123,6 +161,7 @@ export default function GraphVisualization() {
       members: space.members?.map((m) => m.name || '') || [],
     })) || []),
     ...(spacesData?.weSpaces?.map((space) => ({
+      id: space.id,
       spaceName: space.name || '',
       spaceType: 'WeSpace',
       visibility: space.visibility || 'SHARED',
@@ -134,6 +173,7 @@ export default function GraphVisualization() {
   // Transform resonances data
   const resonances: Resonance[] =
     resonancesData?.fieldResonances?.map((resonance) => ({
+      id: resonance.id,
       resonancePattern: resonance.label || '',
       description: resonance.description || '',
       connections: 0, // This would need a separate query to count connections
@@ -247,7 +287,11 @@ export default function GraphVisualization() {
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {people.map((person) => (
-            <Card key={person.email}>
+            <Card
+              key={person.email}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSelectedPerson(person.email)}
+            >
               <CardHeader>
                 <CardTitle className="text-lg">{person.person}</CardTitle>
                 <CardDescription className="text-xs">
@@ -280,11 +324,12 @@ export default function GraphVisualization() {
           {spaces.map((space) => (
             <Card
               key={space.spaceName}
-              className={
+              className={`cursor-pointer hover:shadow-lg transition-shadow ${
                 space.spaceType === 'MeSpace'
                   ? 'border-blue-500'
                   : 'border-green-500'
-              }
+              }`}
+              onClick={() => setSelectedSpace(space.id)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -342,7 +387,8 @@ export default function GraphVisualization() {
           {resonances.map((resonance) => (
             <Card
               key={resonance.resonancePattern}
-              className="border-purple-500/50"
+              className="border-purple-500/50 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSelectedResonance(resonance.id)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -432,6 +478,193 @@ export default function GraphVisualization() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Person Details Dialog */}
+      <Dialog
+        open={!!selectedPerson}
+        onOpenChange={() => setSelectedPerson(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {personDetailsData?.people?.[0]?.name || 'Person'} - Pulses
+            </DialogTitle>
+            <DialogDescription>
+              {personDetailsData?.people?.[0]?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            {personDetailsData?.people?.[0]?.ownsSpaces?.map((space) => (
+              <div key={space.id} className="space-y-4">
+                <h3 className="text-lg font-semibold border-b pb-2">
+                  {space.name}
+                </h3>
+                {space.contexts?.map((context) => (
+                  <div key={context.id} className="pl-4 space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground">
+                      Context: {context.title}
+                    </h4>
+                    <div className="space-y-2 pl-4">
+                      {context.pulses?.map((pulse) => (
+                        <Card key={pulse.id} className="p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm flex-1">{pulse.content}</p>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" className="text-xs">
+                                {'status' in pulse && pulse.status
+                                  ? pulse.status
+                                  : 'resourceType' in pulse &&
+                                      pulse.resourceType
+                                    ? pulse.resourceType
+                                    : 'Story'}
+                              </Badge>
+                              {pulse.intensity && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {pulse.intensity.toFixed(1)}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(pulse.createdAt).toLocaleDateString()}
+                          </p>
+                        </Card>
+                      ))}
+                      {(!context.pulses || context.pulses.length === 0) && (
+                        <p className="text-sm text-muted-foreground italic">
+                          No pulses in this context yet
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Space Details Dialog */}
+      <Dialog
+        open={!!selectedSpace}
+        onOpenChange={() => setSelectedSpace(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {spaceDetailsData?.meSpaces?.[0]?.name ||
+                spaceDetailsData?.weSpaces?.[0]?.name ||
+                'Space'}{' '}
+              - Contents
+            </DialogTitle>
+            <DialogDescription>
+              {spaceDetailsData?.meSpaces?.[0]?.visibility ||
+                spaceDetailsData?.weSpaces?.[0]?.visibility}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            {(
+              spaceDetailsData?.meSpaces?.[0]?.contexts ||
+              spaceDetailsData?.weSpaces?.[0]?.contexts ||
+              []
+            ).map((context) => (
+              <div key={context.id} className="space-y-3">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="text-lg font-semibold">{context.title}</h3>
+                  <Badge variant="outline">
+                    {context.pulses?.length || 0} pulses
+                  </Badge>
+                </div>
+                {context.emergentName && (
+                  <p className="text-sm text-muted-foreground italic">
+                    Emergent: {context.emergentName}
+                  </p>
+                )}
+                <div className="space-y-2 pl-4">
+                  {context.pulses?.map((pulse) => (
+                    <Card key={pulse.id} className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm flex-1">{pulse.content}</p>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className="text-xs">
+                            {'status' in pulse && pulse.status
+                              ? pulse.status
+                              : 'resourceType' in pulse && pulse.resourceType
+                                ? pulse.resourceType
+                                : 'Story'}
+                          </Badge>
+                          {pulse.intensity && (
+                            <Badge variant="secondary" className="text-xs">
+                              {pulse.intensity.toFixed(1)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {new Date(pulse.createdAt).toLocaleDateString()}
+                      </p>
+                    </Card>
+                  ))}
+                  {(!context.pulses || context.pulses.length === 0) && (
+                    <p className="text-sm text-muted-foreground italic">
+                      No pulses in this context yet
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resonance Details Dialog */}
+      <Dialog
+        open={!!selectedResonance}
+        onOpenChange={() => setSelectedResonance(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {resonanceDetailsData?.fieldResonances?.[0]?.label ||
+                'Resonance Pattern'}
+            </DialogTitle>
+            <DialogDescription>
+              {resonanceDetailsData?.fieldResonances?.[0]?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                This resonance pattern was discovered by AI analysis across
+                multiple pulses. The system identified semantic and contextual
+                connections that share this common theme.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Pattern Details</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Pattern ID:</span>
+                  <p className="font-mono text-xs">
+                    {resonanceDetailsData?.fieldResonances?.[0]?.id}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Type:</span>
+                  <p>AI-Discovered Meaning</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                💡 Future enhancement: This view will show all connected pulses
+                that share this resonance pattern, along with confidence scores
+                and evidence for each connection.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
