@@ -49,7 +49,7 @@ Dedicated simulation endpoint with OpenAI support.
     }
   ],
   "config": {
-    "model": "gpt-4-turbo-preview",
+    "model": "gpt-5.1",
     "temperature": 0.7,
     "stream": true
   }
@@ -139,7 +139,7 @@ async function sendChatMessage(messages: ChatMessage[]) {
     body: JSON.stringify({
       messages,
       config: {
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5.1',
         temperature: 0.7,
         stream: true,
       },
@@ -282,7 +282,7 @@ Add to `.env.local`:
 OPENAI_API_KEY=sk-...
 
 # Optional: Configure default model
-SIMULATION_DEFAULT_MODEL=gpt-4-turbo-preview
+SIMULATION_DEFAULT_MODEL=gpt-5.1
 ```
 
 ## Testing

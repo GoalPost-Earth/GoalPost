@@ -46,9 +46,8 @@ async function extractPersonInsights(
   pulses: Array<{ content: string; createdAt: string; type: string }>
 ): Promise<z.infer<typeof PersonInsightsSchema>> {
   const llm = new ChatOpenAI({
-    modelName: 'gpt-4-turbo-preview',
+    modelName: 'gpt-5.1',
     temperature: 0.3,
-    openAIApiKey: process.env.OPENAI_API_KEY,
   })
 
   const pulsesSummary = pulses
@@ -137,11 +136,11 @@ export async function enrichPersonFromPulses(
     { personId }
   )
 
-  if (!result.records.length) {
+  if (!Array.isArray(result) || result.length === 0) {
     throw new Error(`Person not found: ${personId}`)
   }
 
-  const { person, pulses } = result.records[0].toObject()
+  const { person, pulses } = result[0]
 
   // Filter out null pulses from OPTIONAL MATCH
   const validPulses = pulses.filter((p) => p.content)

@@ -79,9 +79,10 @@ export async function createReActAgent(config: ReActAgentConfig) {
   })
 
   // Create the OpenAI Functions agent
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const agent = await createOpenAIFunctionsAgent({
     llm,
-    tools,
+    tools: tools as any,
     prompt,
   })
 
@@ -150,7 +151,7 @@ export async function createDefaultReActAgent(
   sessionId?: string
 ): Promise<AgentExecutor> {
   const llm = new ChatOpenAI({
-    modelName: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+    modelName: process.env.OPENAI_MODEL || 'gpt-5.1',
     temperature: 0.7,
     streaming: false,
   })

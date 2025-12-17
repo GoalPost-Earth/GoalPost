@@ -68,11 +68,11 @@ export async function generatePulseEmbeddings(
     { pulseId }
   )
 
-  if (!result.records.length) {
+  if (!Array.isArray(result) || result.length === 0) {
     throw new Error(`Pulse not found: ${pulseId}`)
   }
 
-  const { pulse, chunks } = result.records[0].toObject()
+  const { pulse, chunks } = result[0]
 
   // Generate embeddings for each chunk
   const chunkEmbeddings: Array<{ chunkId: string; embedding: number[] }> = []
@@ -119,6 +119,7 @@ export async function generatePulseEmbeddings(
     `
     MATCH (p:FieldPulse {id: $pulseId})
     SET p.modifiedAt = datetime()
+    WITH p
     CALL db.create.setNodeVectorProperty(p, 'embedding', $embedding)
   `,
     { pulseId, embedding: pulseEmbedding }

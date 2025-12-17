@@ -116,7 +116,7 @@ Send a message with simulation support.
 {
   messages: ChatMessage[]
   config?: {
-    model?: string           // Default: 'gpt-4-turbo-preview'
+    model?: string           // Default: 'gpt-5.1'
     temperature?: number     // Default: 0.7
     maxTokens?: number       // Default: 2000
     stream?: boolean         // Default: true
@@ -295,7 +295,7 @@ curl -X POST http://localhost:3000/api/chat/simulation \
 Edit `src/app/api/chat/simulation/route.ts`:
 
 ```typescript
-const model = openai(config?.model || 'gpt-4')  // Instead of gpt-4-turbo-preview
+const model = openai(config?.model || 'gpt-4')  // Instead of gpt-5.1
 ```
 
 ### Adjust Temperature
@@ -320,7 +320,7 @@ The system logs to console:
 
 ```
 [Simulation] Aiden Cinnamon Tea Protocol activated at 2025-12-09T...
-[Simulation API] Request: { simulationMode: 'aiden', messageCount: 3, model: 'gpt-4-turbo-preview' }
+[Simulation API] Request: { simulationMode: 'aiden', messageCount: 3, model: 'gpt-5.1' }
 [Simulation] Deactivating. Messages processed: 5
 ```
 

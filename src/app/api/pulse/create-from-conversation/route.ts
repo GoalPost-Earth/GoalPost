@@ -7,9 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
-import { queuePulseProcessing } from '@/lib/jobs/queue-config'
+import { initGraph } from '@/modules/graph'
 import { chunkConversationMessages } from '@/lib/resonance/utils/sentence-chunker'
+import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
+import { enrichPersonFromPulses } from '@/lib/resonance/embeddings/person-enricher'
 
 interface CreatePulseRequest {
   contextId: string // FieldContext where pulse belongs
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const graph = getGraphInstance()
+    const graph = await initGraph()
 
     // Create pulse node with appropriate labels
     const pulseLabels = ['FieldPulse', pulseType]
@@ -128,7 +129,14 @@ export async function POST(request: NextRequest) {
       params
     )
 
-    const pulseId = pulseResult.records[0].get('pulseId')
+    const pulseId =
+      Array.isArray(pulseResult) && pulseResult.length > 0
+        ? pulseResult[0].pulseId
+        : null
+
+    if (!pulseId) {
+      throw new Error('Failed to create pulse')
+    }
 
     // Process conversation chunks if provided
     const chunkIds: string[] = []
@@ -160,29 +168,35 @@ export async function POST(request: NextRequest) {
           }
         )
 
-        chunkIds.push(result.records[0].get('chunkId'))
+        const chunkId =
+          Array.isArray(result) && result.length > 0 ? result[0].chunkId : null
+
+        if (chunkId) {
+          chunkIds.push(chunkId)
+        }
       }
     }
 
-    // Queue pulse processing job (embeddings generation)
-    await queuePulseProcessing({
-      pulseId,
-      personId,
-      triggerPersonEnrichment: true, // Always trigger person enrichment on pulse creation
-    })
+    // Process embeddings and person enrichment directly (no queue/workers needed)
+    try {
+      // Generate embeddings for pulse and chunks
+      await generatePulseEmbeddings(pulseId)
+      await enrichPersonFromPulses(personId)
+      console.log(`✓ Enriched person profile for ${personId}`)
+    } catch (error) {
+      console.error('Error in background processing:', error)
+      // Don't fail the request if background processing fails
+    }
 
     console.log(
       `✓ Created pulse ${pulseId} with ${chunkIds.length} conversation chunks`
-    )
-    console.log(
-      `✓ Queued pulse processing and person enrichment for ${personId}`
     )
 
     return NextResponse.json<CreatePulseResponse>({
       success: true,
       pulseId,
       chunkIds,
-      message: `Pulse created successfully with ${chunkIds.length} conversation chunks. Processing embeddings and person enrichment.`,
+      message: `Pulse created successfully with ${chunkIds.length} conversation chunks. Embeddings generated and person enriched.`,
     })
   } catch (error) {
     console.error('Error creating pulse from conversation:', error)

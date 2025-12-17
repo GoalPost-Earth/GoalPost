@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
+import { initGraph } from '@/modules/graph'
 
 interface ReviewResonanceLinkRequest {
   linkId: string
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     const minConfidence = parseFloat(searchParams.get('minConfidence') || '0')
     const maxConfidence = parseFloat(searchParams.get('maxConfidence') || '1')
 
-    const graph = getGraphInstance()
+    const graph = await initGraph()
 
     const query = `
       MATCH (link:ResonanceLink)-[:SOURCE]->(source:FieldPulse)
@@ -86,7 +86,9 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const pendingResonances = result.records.map((r) => r.get('linkDetail'))
+    const pendingResonances = Array.isArray(result)
+      ? result.map((r) => r.linkDetail)
+      : []
 
     return NextResponse.json({
       success: true,
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
     const body: ReviewResonanceLinkRequest | UpdateResonanceLabelRequest =
       await request.json()
 
-    const graph = getGraphInstance()
+    const graph = await initGraph()
 
     // Check if this is a link review or label update
     if ('linkId' in body) {

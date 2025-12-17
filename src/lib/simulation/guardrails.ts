@@ -1,7 +1,6 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts'
-import { RunnableSequence } from '@langchain/core/runnables'
-import { BaseChatModel } from 'langchain/chat_models/base'
 import { StringOutputParser } from '@langchain/core/output_parsers'
+import type { BaseChatModel } from '@langchain/core/language_models/chat_models'
 
 /**
  * Guardrails Chain for GoalPost AI
@@ -69,7 +68,7 @@ Your response:`
 export async function createGuardrailsChain(llm: BaseChatModel) {
   const prompt = ChatPromptTemplate.fromTemplate(GUARDRAIL_PROMPT)
 
-  const chain = RunnableSequence.from([prompt, llm, new StringOutputParser()])
+  const chain = prompt.pipe(llm).pipe(new StringOutputParser())
 
   return chain
 }

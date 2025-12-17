@@ -62,11 +62,15 @@ async function findSimilarPulses(
     { pulseId }
   )
 
-  if (!pulseResult.records.length || !pulseResult.records[0].get('embedding')) {
+  if (
+    !Array.isArray(pulseResult) ||
+    pulseResult.length === 0 ||
+    !pulseResult[0].embedding
+  ) {
     return []
   }
 
-  const embedding = pulseResult.records[0].get('embedding')
+  const embedding = pulseResult[0].embedding
 
   // Use vector similarity search
   const similarResult = await graph.query<{
@@ -83,10 +87,14 @@ async function findSimilarPulses(
     { pulseId, embedding, limit, threshold }
   )
 
-  return similarResult.records.map((r) => ({
-    id: r.get('pulse').id,
-    content: r.get('pulse').content,
-    similarity: r.get('similarity'),
+  if (!Array.isArray(similarResult) || similarResult.length === 0) {
+    return []
+  }
+
+  return similarResult.map((r) => ({
+    id: r.pulse.id,
+    content: r.pulse.content,
+    similarity: r.similarity,
   }))
 }
 
@@ -101,9 +109,8 @@ async function analyzeResonancePattern(
   }
 
   const llm = new ChatOpenAI({
-    modelName: 'gpt-4-turbo-preview',
+    modelName: 'gpt-5.1',
     temperature: 0.2,
-    openAIApiKey: process.env.OPENAI_API_KEY,
   })
 
   const pulseList = pulses
@@ -152,7 +159,7 @@ Be specific and evidence-based. Only create connections where the resonance is c
 async function createResonanceInDatabase(
   pattern: z.infer<typeof ResonancePatternSchema>
 ): Promise<DiscoveredResonance> {
-  const graph = getGraphInstance()
+  const graph = await initGraph()
 
   // Create FieldResonance node using Neo4j's randomUUID()
   const resonanceResult = await graph.query<{ resonanceId: string }>(
@@ -172,7 +179,14 @@ async function createResonanceInDatabase(
     }
   )
 
-  const resonanceId = resonanceResult.records[0].get('resonanceId')
+  const resonanceId =
+    Array.isArray(resonanceResult) && resonanceResult.length > 0
+      ? resonanceResult[0].resonanceId
+      : null
+
+  if (!resonanceId) {
+    throw new Error('Failed to create resonance node')
+  }
 
   // Create ResonanceLink nodes
   const links: DiscoveredResonance['links'] = []
@@ -203,15 +217,21 @@ async function createResonanceInDatabase(
       }
     )
 
-    const linkId = linkResult.records[0].get('linkId')
+    const linkId =
+      Array.isArray(linkResult) && linkResult.length > 0
+        ? linkResult[0].linkId
+        : null
 
-    links.push({
-      linkId,
-      sourcePulseId: connection.sourcePulseId,
-      targetPulseId: connection.targetPulseId,
-      confidence: connection.confidence,
-      evidence: connection.evidence,
-    })
+    // Only add link if it was successfully created
+    if (linkId) {
+      links.push({
+        linkId,
+        sourcePulseId: connection.sourcePulseId,
+        targetPulseId: connection.targetPulseId,
+        confidence: connection.confidence,
+        evidence: connection.evidence,
+      })
+    }
   }
 
   return {
@@ -245,12 +265,12 @@ export async function discoverResonancesForPulse(
     { pulseId }
   )
 
-  if (!pulseResult.records.length) {
+  if (!Array.isArray(pulseResult) || pulseResult.length === 0) {
     console.warn(`Pulse not found: ${pulseId}`)
     return []
   }
 
-  const pulse = pulseResult.records[0].get('pulse')
+  const pulse = pulseResult[0].pulse
 
   // Find similar pulses
   const similarPulses = await findSimilarPulses(pulseId, 0.7, 10)
@@ -291,7 +311,6 @@ export async function discoverGlobalResonances(
        ORDER BY p.createdAt DESC
        LIMIT 100`
     : `MATCH (p:FieldPulse)
-       WHERE p.embedding IS NOT NULL
        RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
        ORDER BY p.createdAt DESC
        LIMIT 50`
@@ -300,7 +319,13 @@ export async function discoverGlobalResonances(
     pulse: { id: string; content: string; createdAt: string }
   }>(query, lastRunTimestamp ? { lastRunTimestamp } : {})
 
-  const pulses = pulsesResult.records.map((r) => r.get('pulse'))
+  // Neo4jGraph returns plain array, not {records: []}
+  if (!Array.isArray(pulsesResult) || pulsesResult.length === 0) {
+    console.log('No pulses found for resonance discovery')
+    return []
+  }
+
+  const pulses = pulsesResult.map((r) => r.pulse)
 
   console.log(`Analyzing ${pulses.length} pulses for resonances...`)
 

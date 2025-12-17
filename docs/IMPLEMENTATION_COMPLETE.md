@@ -156,7 +156,7 @@ NEO4J_URI=your_neo4j_uri
 NEO4J_USERNAME=your_username
 NEO4J_PASSWORD=your_password
 OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-4-turbo-preview  # optional
+OPENAI_MODEL=gpt-5.1  # optional
 ```
 
 ### Database Schema Used

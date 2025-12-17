@@ -79,7 +79,7 @@ export function AidenSimulationChat() {
         body: JSON.stringify({
           messages: chatMessages,
           config: {
-            model: 'gpt-4-turbo-preview',
+            model: 'gpt-5.1',
             temperature: 0.7,
             stream: false,
           },

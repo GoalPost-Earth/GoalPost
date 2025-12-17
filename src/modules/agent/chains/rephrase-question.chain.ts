@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
@@ -40,28 +41,25 @@ export default function initRephraseChain(llm: BaseChatModel) {
     {input}`
   )
 
-  return RunnableSequence.from<RephraseQuestionInput, string>([
-    // <1> Convert message history to a string
-    RunnablePassthrough.assign({
-      history: ({ history }): string => {
-        if (history.length == 0) {
-          return 'No history'
-        }
-        return history
-          .map(
-            (response: ChatbotResponse) =>
-              `Human: ${response.input}\nAI: ${response.output}`
-          )
-          .join('\n')
-      },
-    }),
-    // <2> Use the input and formatted history to format the prompt
-    rephraseQuestionChainPrompt,
-    // <3> Pass the formatted prompt to the LLM
-    llm,
-    // <4> Coerce the output into a string
-    new StringOutputParser(),
-  ])
+  return RunnablePassthrough.assign({
+    history: ({ history }: RephraseQuestionInput): string => {
+      if (history.length == 0) {
+        return 'No history'
+      }
+      return history
+        .map(
+          (response: ChatbotResponse) =>
+            `Human: ${response.input}\nAI: ${response.output}`
+        )
+        .join('\n')
+    },
+  })
+    .pipe(rephraseQuestionChainPrompt)
+    .pipe(llm as any)
+    .pipe(new StringOutputParser()) as RunnableSequence<
+    RephraseQuestionInput,
+    string
+  >
 }
 // end::function[]
 

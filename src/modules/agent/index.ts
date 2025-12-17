@@ -23,7 +23,8 @@ export async function call(input: string, sessionId: string): Promise<string> {
   // Get Graph Singleton
   const graph = await initGraph()
 
-  const agent = await initAgent(llm, embeddings, graph)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agent = await initAgent(llm as any, embeddings, graph)
   const res = await agent.invoke({ input }, { configurable: { sessionId } })
 
   return res

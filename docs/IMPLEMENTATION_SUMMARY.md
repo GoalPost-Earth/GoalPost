@@ -179,7 +179,7 @@ OPENAI_API_KEY=sk-your-key-here
 
 Optional:
 ```bash
-SIMULATION_DEFAULT_MODEL=gpt-4-turbo-preview
+SIMULATION_DEFAULT_MODEL=gpt-5.1
 ```
 
 ## 🎯 Activation Commands

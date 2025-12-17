@@ -1,7 +1,7 @@
 /* eslint-disable indent */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
-import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { pull } from 'langchain/hub'
 import initRephraseChain, {
   RephraseQuestionInput,
@@ -21,29 +21,28 @@ export default async function initAgent(
   //  Initiate tools
   const tools = await initTools(llm, embeddings, graph)
   //  Pull the prompt from the hub
-  const prompt = await pull<ChatPromptTemplate>(
-    'hwchase17/openai-functions-agent'
-  )
+  const prompt: any = await pull('hwchase17/openai-functions-agent')
   //  Create an agent
   const agent = await createOpenAIFunctionsAgent({
     llm,
-    tools,
+    tools: tools as any,
     prompt,
   })
   //  Create an agent executor
   const executor = new AgentExecutor({
     agent,
-    tools,
+    tools: tools as any,
     verbose: true, // Verbose output logs the agents _thinking_
   })
   //  Create a rephrase question chain
   const rephraseQuestionChain = await initRephraseChain(llm)
   //  Return a runnable passthrough
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return RunnablePassthrough.assign<{ input: string; sessionId: string }, any>({
     // Get Message History
     history: async (_input, options) => {
-      const history = await getHistory(options?.config.configurable.sessionId)
+      const history = await getHistory(
+        (options as any)?.config?.configurable?.sessionId
+      )
 
       return history
     },
@@ -53,7 +52,7 @@ export default async function initAgent(
       rephrasedQuestion: (input: RephraseQuestionInput, config: never) =>
         rephraseQuestionChain.invoke(input, config),
     })
-    .pipe(executor)
+    .pipe(executor as any)
     .pick('output')
 }
 // end::function[]

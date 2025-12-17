@@ -78,7 +78,7 @@ NEO4J_PASSWORD=your_password
 
 # OpenAI
 OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-4-turbo-preview
+OPENAI_MODEL=gpt-5.1
 
 # Redis
 REDIS_HOST=localhost
@@ -493,7 +493,7 @@ redis-cli FLUSHDB
 
 - **Chunk size**: 3 sentences per chunk (configurable)
 - **Embedding model**: `text-embedding-3-small` (1536 dimensions, cheaper than `text-embedding-3-large`)
-- **LLM model**: `gpt-4-turbo-preview` for pattern analysis (accuracy over speed)
+- **LLM model**: `gpt-5.1` for pattern analysis (accuracy over speed)
 - **Worker concurrency**: 
   - Pulse processing: 2 concurrent
   - Person enrichment: 3 concurrent

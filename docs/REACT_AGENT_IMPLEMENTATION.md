@@ -277,7 +277,7 @@ NEO4J_PASSWORD=your_password
 
 # OpenAI (for guardrails and agent)
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4-turbo-preview
+OPENAI_MODEL=gpt-5.1
 
 # Ollama (for main chat)
 OLLAMA_BASE_URL=http://localhost:11434

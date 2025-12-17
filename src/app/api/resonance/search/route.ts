@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { OpenAIEmbeddings } from '@langchain/openai'
-import { getGraphInstance } from '@/modules/agent/tools/langchain-react-agent.tool'
+import { initGraph } from '@/modules/graph'
 
 interface SearchRequest {
   query: string
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     })
     const queryEmbedding = await embeddings.embedQuery(query)
 
-    const graph = getGraphInstance()
+    const graph = await initGraph()
     const results: SearchResponse['results'] = {}
 
     // Search pulses
@@ -137,9 +137,9 @@ export async function POST(request: NextRequest) {
         spaceId,
       })
 
-      results.pulses = pulseResults.records.map(
-        (r) => r.toObject() as PulseResult
-      )
+      results.pulses = Array.isArray(pulseResults)
+        ? (pulseResults as PulseResult[])
+        : []
     }
 
     // Search conversation chunks
@@ -167,9 +167,9 @@ export async function POST(request: NextRequest) {
         minSimilarity,
       })
 
-      results.chunks = chunkResults.records.map(
-        (r) => r.toObject() as ChunkResult
-      )
+      results.chunks = Array.isArray(chunkResults)
+        ? (chunkResults as ChunkResult[])
+        : []
     }
 
     // Search resonances (label/description based)
@@ -203,9 +203,9 @@ export async function POST(request: NextRequest) {
         }
       )
 
-      results.resonances = resonanceResults.records.map(
-        (r) => r.toObject() as ResonanceResult
-      )
+      results.resonances = Array.isArray(resonanceResults)
+        ? (resonanceResults as ResonanceResult[])
+        : []
     }
 
     return NextResponse.json<SearchResponse>({

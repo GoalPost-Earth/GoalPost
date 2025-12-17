@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
@@ -44,15 +45,16 @@ export default function initGenerateAuthoritativeAnswerChain(
     {context}
   `)
 
-  return RunnableSequence.from<GenerateAuthoritativeAnswerInput, string>([
-    RunnablePassthrough.assign({
-      context: ({ context }) =>
-        context == undefined || context === '' ? "I don't know" : context,
-    }),
-    answerQuestionPrompt,
-    llm,
-    new StringOutputParser(),
-  ])
+  return RunnablePassthrough.assign({
+    context: ({ context }) =>
+      context == undefined || context === '' ? "I don't know" : context,
+  })
+    .pipe(answerQuestionPrompt)
+    .pipe(llm as any)
+    .pipe(new StringOutputParser()) as RunnableSequence<
+    GenerateAuthoritativeAnswerInput,
+    string
+  >
 }
 // end::function[]
 
