@@ -279,5 +279,55 @@ export const GET_RESONANCE_DETAILS = graphql(`
       label
       description
     }
+    resonanceLinks(where: { resonance_SOME: { id_EQ: $resonanceId } }) {
+      id
+      confidence
+      evidence
+      createdAt
+      source {
+        ... on GoalPulse {
+          id
+          content
+          createdAt
+          status
+          intensity
+        }
+        ... on ResourcePulse {
+          id
+          content
+          createdAt
+          resourceType
+          intensity
+        }
+        ... on StoryPulse {
+          id
+          content
+          createdAt
+          intensity
+        }
+      }
+      target {
+        ... on GoalPulse {
+          id
+          content
+          createdAt
+          status
+          intensity
+        }
+        ... on ResourcePulse {
+          id
+          content
+          createdAt
+          resourceType
+          intensity
+        }
+        ... on StoryPulse {
+          id
+          content
+          createdAt
+          intensity
+        }
+      }
+    }
   }
 `)

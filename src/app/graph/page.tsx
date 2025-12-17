@@ -91,20 +91,27 @@ export default function GraphVisualization() {
     useQuery(GET_GRAPH_RESONANCES)
 
   // Fetch detail data based on selection
-  const { data: personDetailsData } = useQuery(GET_PERSON_DETAILS, {
-    variables: { email: selectedPerson || '' },
-    skip: !selectedPerson,
-  })
+  const { data: personDetailsData, loading: personDetailsLoading } = useQuery(
+    GET_PERSON_DETAILS,
+    {
+      variables: { email: selectedPerson || '' },
+      skip: !selectedPerson,
+    }
+  )
 
-  const { data: spaceDetailsData } = useQuery(GET_SPACE_DETAILS, {
-    variables: { spaceId: selectedSpace || '' },
-    skip: !selectedSpace,
-  })
+  const { data: spaceDetailsData, loading: spaceDetailsLoading } = useQuery(
+    GET_SPACE_DETAILS,
+    {
+      variables: { spaceId: selectedSpace || '' },
+      skip: !selectedSpace,
+    }
+  )
 
-  const { data: resonanceDetailsData } = useQuery(GET_RESONANCE_DETAILS, {
-    variables: { resonanceId: selectedResonance || '' },
-    skip: !selectedResonance,
-  })
+  const { data: resonanceDetailsData, loading: resonanceDetailsLoading } =
+    useQuery(GET_RESONANCE_DETAILS, {
+      variables: { resonanceId: selectedResonance || '' },
+      skip: !selectedResonance,
+    })
 
   const loading =
     statsLoading || peopleLoading || spacesLoading || resonancesLoading
@@ -493,54 +500,68 @@ export default function GraphVisualization() {
               {personDetailsData?.people?.[0]?.email}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
-            {personDetailsData?.people?.[0]?.ownsSpaces?.map((space) => (
-              <div key={space.id} className="space-y-4">
-                <h3 className="text-lg font-semibold border-b pb-2">
-                  {space.name}
-                </h3>
-                {space.contexts?.map((context) => (
-                  <div key={context.id} className="pl-4 space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">
-                      Context: {context.title}
-                    </h4>
-                    <div className="space-y-2 pl-4">
-                      {context.pulses?.map((pulse) => (
-                        <Card key={pulse.id} className="p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm flex-1">{pulse.content}</p>
-                            <div className="flex flex-col gap-1">
-                              <Badge variant="outline" className="text-xs">
-                                {'status' in pulse && pulse.status
-                                  ? pulse.status
-                                  : 'resourceType' in pulse &&
-                                      pulse.resourceType
-                                    ? pulse.resourceType
-                                    : 'Story'}
-                              </Badge>
-                              {pulse.intensity && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {pulse.intensity.toFixed(1)}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(pulse.createdAt).toLocaleDateString()}
-                          </p>
-                        </Card>
-                      ))}
-                      {(!context.pulses || context.pulses.length === 0) && (
-                        <p className="text-sm text-muted-foreground italic">
-                          No pulses in this context yet
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          {personDetailsLoading ? (
+            <div className="space-y-4 py-8">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ))}
-          </div>
+              <p className="text-center text-sm text-muted-foreground">
+                Loading pulses...
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {personDetailsData?.people?.[0]?.ownsSpaces?.map((space) => (
+                <div key={space.id} className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">
+                    {space.name}
+                  </h3>
+                  {space.contexts?.map((context) => (
+                    <div key={context.id} className="pl-4 space-y-2">
+                      <h4 className="font-medium text-sm text-muted-foreground">
+                        Context: {context.title}
+                      </h4>
+                      <div className="space-y-2 pl-4">
+                        {context.pulses?.map((pulse) => (
+                          <Card key={pulse.id} className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm flex-1">{pulse.content}</p>
+                              <div className="flex flex-col gap-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {'status' in pulse && pulse.status
+                                    ? pulse.status
+                                    : 'resourceType' in pulse &&
+                                        pulse.resourceType
+                                      ? pulse.resourceType
+                                      : 'Story'}
+                                </Badge>
+                                {pulse.intensity && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {pulse.intensity.toFixed(1)}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {new Date(pulse.createdAt).toLocaleDateString()}
+                            </p>
+                          </Card>
+                        ))}
+                        {(!context.pulses || context.pulses.length === 0) && (
+                          <p className="text-sm text-muted-foreground italic">
+                            No pulses in this context yet
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -562,58 +583,69 @@ export default function GraphVisualization() {
                 spaceDetailsData?.weSpaces?.[0]?.visibility}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
-            {(
-              spaceDetailsData?.meSpaces?.[0]?.contexts ||
-              spaceDetailsData?.weSpaces?.[0]?.contexts ||
-              []
-            ).map((context) => (
-              <div key={context.id} className="space-y-3">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="text-lg font-semibold">{context.title}</h3>
-                  <Badge variant="outline">
-                    {context.pulses?.length || 0} pulses
-                  </Badge>
-                </div>
-                {context.emergentName && (
-                  <p className="text-sm text-muted-foreground italic">
-                    Emergent: {context.emergentName}
-                  </p>
-                )}
-                <div className="space-y-2 pl-4">
-                  {context.pulses?.map((pulse) => (
-                    <Card key={pulse.id} className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm flex-1">{pulse.content}</p>
-                        <div className="flex flex-col gap-1">
-                          <Badge variant="outline" className="text-xs">
-                            {'status' in pulse && pulse.status
-                              ? pulse.status
-                              : 'resourceType' in pulse && pulse.resourceType
-                                ? pulse.resourceType
-                                : 'Story'}
-                          </Badge>
-                          {pulse.intensity && (
-                            <Badge variant="secondary" className="text-xs">
-                              {pulse.intensity.toFixed(1)}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(pulse.createdAt).toLocaleDateString()}
-                      </p>
-                    </Card>
-                  ))}
-                  {(!context.pulses || context.pulses.length === 0) && (
+          {spaceDetailsLoading ? (
+            <div className="space-y-4 py-8">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                Loading space contents...
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {(
+                spaceDetailsData?.meSpaces?.[0]?.contexts ||
+                spaceDetailsData?.weSpaces?.[0]?.contexts ||
+                []
+              ).map((context) => (
+                <div key={context.id} className="space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h3 className="text-lg font-semibold">{context.title}</h3>
+                    <Badge variant="outline">
+                      {context.pulses?.length || 0} pulses
+                    </Badge>
+                  </div>
+                  {context.emergentName && (
                     <p className="text-sm text-muted-foreground italic">
-                      No pulses in this context yet
+                      Emergent: {context.emergentName}
                     </p>
                   )}
+                  <div className="space-y-2 pl-4">
+                    {context.pulses?.map((pulse) => (
+                      <Card key={pulse.id} className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm flex-1">{pulse.content}</p>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              {'status' in pulse && pulse.status
+                                ? pulse.status
+                                : 'resourceType' in pulse && pulse.resourceType
+                                  ? pulse.resourceType
+                                  : 'Story'}
+                            </Badge>
+                            {pulse.intensity && (
+                              <Badge variant="secondary" className="text-xs">
+                                {pulse.intensity.toFixed(1)}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(pulse.createdAt).toLocaleDateString()}
+                        </p>
+                      </Card>
+                    ))}
+                    {(!context.pulses || context.pulses.length === 0) && (
+                      <p className="text-sm text-muted-foreground italic">
+                        No pulses in this context yet
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -622,7 +654,7 @@ export default function GraphVisualization() {
         open={!!selectedResonance}
         onOpenChange={() => setSelectedResonance(null)}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {resonanceDetailsData?.fieldResonances?.[0]?.label ||
@@ -632,37 +664,186 @@ export default function GraphVisualization() {
               {resonanceDetailsData?.fieldResonances?.[0]?.description}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                This resonance pattern was discovered by AI analysis across
-                multiple pulses. The system identified semantic and contextual
-                connections that share this common theme.
+          {resonanceDetailsLoading ? (
+            <div className="space-y-4 py-8">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                Loading resonance connections...
               </p>
             </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Pattern Details</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Pattern ID:</span>
-                  <p className="font-mono text-xs">
-                    {resonanceDetailsData?.fieldResonances?.[0]?.id}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Type:</span>
-                  <p>AI-Discovered Meaning</p>
+          ) : (
+            <div className="space-y-6">
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  This resonance pattern was discovered by AI analysis across
+                  multiple pulses. The system identified semantic and contextual
+                  connections that share this common theme.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Pattern Details</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Pattern ID:</span>
+                    <p className="font-mono text-xs">
+                      {resonanceDetailsData?.fieldResonances?.[0]?.id}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Type:</span>
+                    <p>AI-Discovered Meaning</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Connections:</span>
+                    <p className="font-semibold">
+                      {resonanceDetailsData?.resonanceLinks?.length || 0}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Connected Pulses */}
+              {resonanceDetailsData?.resonanceLinks &&
+              resonanceDetailsData.resonanceLinks.length > 0 ? (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-base border-b pb-2">
+                    Connected Pulses
+                  </h4>
+                  {resonanceDetailsData.resonanceLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="space-y-3 p-4 border rounded-lg bg-card"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {(link.confidence * 100).toFixed(0)}% confidence
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(link.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {link.evidence && (
+                        <div className="p-3 bg-muted/50 rounded text-xs italic">
+                          <span className="font-medium">Evidence: </span>
+                          {link.evidence}
+                        </div>
+                      )}
+
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {/* Source Pulse */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              SOURCE
+                            </span>
+                            <div className="h-px flex-1 bg-border"></div>
+                          </div>
+                          {link.source.map((pulse) => (
+                            <Card
+                              key={pulse.id}
+                              className="p-3 bg-blue-50 dark:bg-blue-950/20"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-sm flex-1">
+                                    {pulse.content}
+                                  </p>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs shrink-0"
+                                  >
+                                    {'status' in pulse && pulse.status
+                                      ? pulse.status
+                                      : 'resourceType' in pulse &&
+                                          pulse.resourceType
+                                        ? pulse.resourceType
+                                        : 'Story'}
+                                  </Badge>
+                                </div>
+                                {pulse.intensity && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    Intensity: {pulse.intensity.toFixed(1)}
+                                  </Badge>
+                                )}
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(
+                                    pulse.createdAt
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+
+                        {/* Target Pulse */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              TARGET
+                            </span>
+                            <div className="h-px flex-1 bg-border"></div>
+                          </div>
+                          {link.target.map((pulse) => (
+                            <Card
+                              key={pulse.id}
+                              className="p-3 bg-green-50 dark:bg-green-950/20"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-sm flex-1">
+                                    {pulse.content}
+                                  </p>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs shrink-0"
+                                  >
+                                    {'status' in pulse && pulse.status
+                                      ? pulse.status
+                                      : 'resourceType' in pulse &&
+                                          pulse.resourceType
+                                        ? pulse.resourceType
+                                        : 'Story'}
+                                  </Badge>
+                                </div>
+                                {pulse.intensity && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    Intensity: {pulse.intensity.toFixed(1)}
+                                  </Badge>
+                                )}
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(
+                                    pulse.createdAt
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center border rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">
+                    No pulse connections found for this resonance pattern yet.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                💡 Future enhancement: This view will show all connected pulses
-                that share this resonance pattern, along with confidence scores
-                and evidence for each connection.
-              </p>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
