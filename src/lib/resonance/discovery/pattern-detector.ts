@@ -42,6 +42,22 @@ export interface DiscoveredResonance {
 }
 
 /**
+ * Sanitize resonance labels for consistent deduplication
+ * - Convert to lowercase
+ * - Replace spaces with hyphens
+ * - Remove special characters
+ * - Collapse multiple hyphens
+ */
+function sanitizeResonanceLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[^a-z0-9-]/g, '') // Remove special characters
+    .replace(/-+/g, '-') // Collapse multiple hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
+/**
  * Find semantically similar pulses using vector search
  */
 async function findSimilarPulses(
@@ -155,25 +171,33 @@ Be specific and evidence-based. Only create connections where the resonance is c
 
 /**
  * Create FieldResonance and ResonanceLink nodes in the database
+ * Uses MERGE to deduplicate resonance patterns by sanitized label
  */
 async function createResonanceInDatabase(
   pattern: z.infer<typeof ResonancePatternSchema>
 ): Promise<DiscoveredResonance> {
   const graph = await initGraph()
 
-  // Create FieldResonance node using Neo4j's randomUUID()
+  // Sanitize label for deduplication matching
+  const sanitizedLabel = sanitizeResonanceLabel(pattern.label)
+
+  // MERGE FieldResonance node - ensures no duplicates by sanitized label
   const resonanceResult = await graph.query<{ resonanceId: string }>(
     `
-    CREATE (r:FieldResonance {
-      id: 'res_' + randomUUID(),
-      label: $label,
-      description: $description,
-      createdAt: datetime(),
-      detectedBy: 'AI'
-    })
+    MERGE (r:FieldResonance {sanitizedLabel: $sanitizedLabel})
+    ON CREATE SET
+      r.id = 'res_' + randomUUID(),
+      r.label = $label,
+      r.description = $description,
+      r.createdAt = datetime(),
+      r.detectedBy = 'AI'
+    ON MATCH SET
+      r.description = COALESCE($description, r.description),
+      r.modifiedAt = datetime()
     RETURN r.id as resonanceId
   `,
     {
+      sanitizedLabel,
       label: pattern.label,
       description: pattern.description,
     }
@@ -185,10 +209,11 @@ async function createResonanceInDatabase(
       : null
 
   if (!resonanceId) {
-    throw new Error('Failed to create resonance node')
+    throw new Error('Failed to merge or create resonance node')
   }
 
-  // Create ResonanceLink nodes
+  // Create ResonanceLink nodes for each pulse connection
+  // Use MERGE to avoid duplicate links for the same resonance + pulse pair
   const links: DiscoveredResonance['links'] = []
 
   for (const connection of pattern.pulseConnections) {
@@ -197,15 +222,23 @@ async function createResonanceInDatabase(
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
       MATCH (resonance:FieldResonance {id: $resonanceId})
-      CREATE (link:ResonanceLink {
-        id: 'rl_' + randomUUID(),
-        confidence: $confidence,
-        evidence: $evidence,
-        createdAt: datetime()
+      MERGE (link:ResonanceLink {
+        sourceId: $sourcePulseId,
+        targetId: $targetPulseId,
+        resonanceId: $resonanceId
       })
-      CREATE (link)-[:SOURCE]->(source)
-      CREATE (link)-[:TARGET]->(target)
-      CREATE (link)-[:RESONATES_AS]->(resonance)
+      ON CREATE SET
+        link.id = 'rl_' + randomUUID(),
+        link.confidence = $confidence,
+        link.evidence = $evidence,
+        link.createdAt = datetime()
+      ON MATCH SET
+        link.confidence = $confidence,
+        link.evidence = $evidence,
+        link.modifiedAt = datetime()
+      MERGE (link)-[:SOURCE]->(source)
+      MERGE (link)-[:TARGET]->(target)
+      MERGE (link)-[:RESONATES_AS]->(resonance)
       RETURN link.id as linkId
     `,
       {

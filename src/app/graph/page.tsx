@@ -525,7 +525,13 @@ export default function GraphVisualization() {
                         {context.pulses?.map((pulse) => (
                           <Card key={pulse.id} className="p-3">
                             <div className="flex items-start justify-between gap-2">
-                              <p className="text-sm flex-1">{pulse.content}</p>
+                              <div className="flex-1">
+                                <p className="text-sm">{pulse.content}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  By:{' '}
+                                  {pulse.initiatedBy?.[0]?.name || 'Unknown'}
+                                </p>
+                              </div>
                               <div className="flex flex-col gap-1">
                                 <Badge variant="outline" className="text-xs">
                                   {'status' in pulse && pulse.status
@@ -615,7 +621,12 @@ export default function GraphVisualization() {
                     {context.pulses?.map((pulse) => (
                       <Card key={pulse.id} className="p-3">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm flex-1">{pulse.content}</p>
+                          <div className="flex-1">
+                            <p className="text-sm">{pulse.content}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              By: {pulse.initiatedBy?.[0]?.name || 'Unknown'}
+                            </p>
+                          </div>
                           <div className="flex flex-col gap-1">
                             <Badge variant="outline" className="text-xs">
                               {'status' in pulse && pulse.status
@@ -766,6 +777,10 @@ export default function GraphVisualization() {
                                         : 'Story'}
                                   </Badge>
                                 </div>
+                                <p className="text-xs text-muted-foreground">
+                                  By:{' '}
+                                  {pulse.initiatedBy?.[0]?.name || 'Unknown'}
+                                </p>
                                 {pulse.intensity && (
                                   <Badge
                                     variant="secondary"
@@ -814,6 +829,10 @@ export default function GraphVisualization() {
                                         : 'Story'}
                                   </Badge>
                                 </div>
+                                <p className="text-xs text-muted-foreground">
+                                  By:{' '}
+                                  {pulse.initiatedBy?.[0]?.name || 'Unknown'}
+                                </p>
                                 {pulse.intensity && (
                                   <Badge
                                     variant="secondary"

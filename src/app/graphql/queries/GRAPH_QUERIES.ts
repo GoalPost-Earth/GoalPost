@@ -151,6 +151,17 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 status
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
               ... on ResourcePulse {
                 id
@@ -158,12 +169,34 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 resourceType
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
               ... on StoryPulse {
                 id
                 content
                 createdAt
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
             }
           }
@@ -179,6 +212,17 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 status
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
               ... on ResourcePulse {
                 id
@@ -186,12 +230,34 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 resourceType
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
               ... on StoryPulse {
                 id
                 content
                 createdAt
                 intensity
+                initiatedBy {
+                  ... on Person {
+                    id
+                    name
+                    email
+                  }
+                  ... on Community {
+                    id
+                    name
+                  }
+                }
               }
             }
           }
@@ -219,6 +285,17 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             status
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
           ... on ResourcePulse {
             id
@@ -226,12 +303,34 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             resourceType
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
           ... on StoryPulse {
             id
             content
             createdAt
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
         }
       }
@@ -252,6 +351,17 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             status
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
           ... on ResourcePulse {
             id
@@ -259,12 +369,34 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             resourceType
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
           ... on StoryPulse {
             id
             content
             createdAt
             intensity
+            initiatedBy {
+              ... on Person {
+                id
+                name
+                email
+              }
+              ... on Community {
+                id
+                name
+              }
+            }
           }
         }
       }
@@ -291,6 +423,17 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           status
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
         ... on ResourcePulse {
           id
@@ -298,12 +441,34 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           resourceType
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
         ... on StoryPulse {
           id
           content
           createdAt
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
       }
       target {
@@ -313,6 +478,17 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           status
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
         ... on ResourcePulse {
           id
@@ -320,12 +496,34 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           resourceType
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
         ... on StoryPulse {
           id
           content
           createdAt
           intensity
+          initiatedBy {
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
         }
       }
     }
