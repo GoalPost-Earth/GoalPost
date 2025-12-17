@@ -1,13 +1,8 @@
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
-import { AgentExecutor, createOpenAIFunctionsAgent } from 'langchain/agents'
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from '@langchain/core/prompts'
-import { BufferMemory } from 'langchain/memory'
+import { createAgent } from 'langchain'
 import initTools from './tools'
 import { createPersonSearchTool } from './tools/person-search.tool'
 import { validateQuery } from '@/lib/simulation/guardrails'
@@ -62,47 +57,21 @@ export async function createReActAgent(config: ReActAgentConfig) {
   const personSearchTool = createPersonSearchTool(graph)
   const tools = [...baseTools, personSearchTool]
 
-  // Create the prompt template for ReAct agent
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', REACT_AGENT_SYSTEM_PROMPT],
-    new MessagesPlaceholder('chat_history'),
-    ['human', '{input}'],
-    new MessagesPlaceholder('agent_scratchpad'),
-  ])
-
-  // Create memory for conversation history
-  const memory = new BufferMemory({
-    memoryKey: 'chat_history',
-    returnMessages: true,
-    inputKey: 'input',
-    outputKey: 'output',
-  })
-
-  // Create the OpenAI Functions agent
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const agent = await createOpenAIFunctionsAgent({
-    llm,
-    tools: tools as any,
-    prompt,
-  })
-
-  // Create the agent executor
-  const executor = new AgentExecutor({
-    agent,
+  // Create the agent using v1 API
+  const agent = createAgent({
+    model: llm,
     tools,
-    memory,
-    verbose: true,
-    returnIntermediateSteps: true,
+    systemPrompt: REACT_AGENT_SYSTEM_PROMPT,
   })
 
-  return executor
+  return agent
 }
 
 /**
  * Process a query through the ReAct agent with guardrails
  */
 export async function processQueryWithAgent(
-  executor: AgentExecutor,
+  agent: ReturnType<typeof createAgent>,
   query: string,
   llm: BaseChatModel
 ): Promise<{
@@ -124,14 +93,32 @@ export async function processQueryWithAgent(
 
   // Step 2: Process with ReAct agent
   try {
-    const result = await executor.invoke({
-      input: query,
+    const result = await agent.invoke({
+      messages: [{ role: 'user', content: query }],
     })
+
+    // Extract the output from the messages
+    const messages = result.messages || []
+    const lastMessage = messages[messages.length - 1]
+    const rawContent = lastMessage?.content || ''
+
+    // Convert content to string if it's an array
+    const output =
+      typeof rawContent === 'string'
+        ? rawContent
+        : Array.isArray(rawContent)
+          ? rawContent
+              .map((block) =>
+                typeof block === 'string' ? block : block.text || ''
+              )
+              .join('')
+          : ''
 
     return {
       success: true,
-      output: result.output,
-      intermediateSteps: result.intermediateSteps,
+      output,
+      // v1 agents don't expose intermediateSteps in the same way
+      // They're accessible through the graph state if needed
     }
   } catch (error) {
     console.error('ReAct agent error:', error)
@@ -149,7 +136,7 @@ export async function processQueryWithAgent(
 export async function createDefaultReActAgent(
   graph: Neo4jGraph,
   sessionId?: string
-): Promise<AgentExecutor> {
+) {
   const llm = new ChatOpenAI({
     modelName: process.env.OPENAI_MODEL || 'gpt-5.1',
     temperature: 0.7,

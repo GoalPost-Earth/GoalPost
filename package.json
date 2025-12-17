@@ -70,7 +70,7 @@
     "ioredis": "^5.4.2",
     "joi": "^17.13.3",
     "jwt-decode": "^4.0.0",
-    "langchain": "^0.1.28",
+    "langchain": "^1.2.1",
     "lightningcss": "^1.28.4",
     "lucide-react": "^0.554.0",
     "marked": "^15.0.5",

@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
   RunnablePassthrough,
   RunnableSequence,
 } from '@langchain/core/runnables'
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 
 // tag::interface[]
 export type GenerateAuthoritativeAnswerInput = {
@@ -16,7 +15,7 @@ export type GenerateAuthoritativeAnswerInput = {
 
 // tag::function[]
 export default function initGenerateAuthoritativeAnswerChain(
-  llm: BaseLanguageModel
+  llm: BaseChatModel
 ): RunnableSequence<GenerateAuthoritativeAnswerInput, string> {
   const answerQuestionPrompt = PromptTemplate.fromTemplate(`
     Use the following context to answer the following question.
@@ -50,7 +49,7 @@ export default function initGenerateAuthoritativeAnswerChain(
       context == undefined || context === '' ? "I don't know" : context,
   })
     .pipe(answerQuestionPrompt)
-    .pipe(llm as any)
+    .pipe(llm)
     .pipe(new StringOutputParser()) as RunnableSequence<
     GenerateAuthoritativeAnswerInput,
     string

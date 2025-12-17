@@ -79,7 +79,7 @@ export default async function initializeApolloServer() {
           ],
         }
       : {
-          origin: process.env.CORS_ORIGIN || false,
+          origin: process.env.CORS_ORIGIN || undefined,
           credentials: true,
         },
     logging: {

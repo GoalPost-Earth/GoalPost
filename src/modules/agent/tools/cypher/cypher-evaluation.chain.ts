@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
   RunnablePassthrough,
@@ -23,9 +23,7 @@ export type CypherEvaluationChainOutput = {
 // end::output[]
 
 // tag::function[]
-export default async function initCypherEvaluationChain(
-  llm: BaseLanguageModel
-) {
+export default async function initCypherEvaluationChain(llm: BaseChatModel) {
   const prompt = PromptTemplate.fromTemplate(`
   You are an expert Neo4j Developer evaluating a Cypher statement written by an AI.
 

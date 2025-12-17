@@ -23,10 +23,14 @@ export async function call(input: string, sessionId: string): Promise<string> {
   // Get Graph Singleton
   const graph = await initGraph()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const agent = await initAgent(llm as any, embeddings, graph)
+  const agent = await initAgent(llm, embeddings, graph)
   const res = await agent.invoke({ input }, { configurable: { sessionId } })
 
-  return res
+  // Extract the output string from the response
+  if (typeof res === 'object' && 'output' in res) {
+    return res.output as string
+  }
+
+  return res as string
 }
 // end::call[]

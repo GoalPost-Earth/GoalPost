@@ -1,4 +1,4 @@
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import initCypherRetrievalChain from './cypher/cypher-retrieval.chain'

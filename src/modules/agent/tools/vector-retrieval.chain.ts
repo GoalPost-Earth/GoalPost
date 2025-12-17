@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Runnable,
   RunnablePassthrough,
@@ -5,7 +6,7 @@ import {
 } from '@langchain/core/runnables'
 import { Embeddings } from '@langchain/core/embeddings'
 import initGenerateAnswerChain from '../chains/answer-generation.chain'
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import initVectorStore from '../vector.store'
 import { saveHistory } from '../history'
 import { DocumentInterface } from '@langchain/core/documents'
@@ -33,7 +34,7 @@ const docsToJson = (documents: DocumentInterface[]) => JSON.stringify(documents)
 
 // tag::function[]
 export default async function initVectorRetrievalChain(
-  llm: BaseLanguageModel,
+  llm: BaseChatModel,
   embeddings: Embeddings
 ): Promise<Runnable<AgentToolInput, string>> {
   // Create vector store instance
@@ -64,7 +65,7 @@ export default async function initVectorRetrievalChain(
     .assign({
       responseId: async (input: RetrievalChainThroughput, options) =>
         saveHistory(
-          options?.config.configurable.sessionId,
+          (options as any)?.config.configurable.sessionId,
           'vector',
           input.input,
           input.rephrasedQuestion,

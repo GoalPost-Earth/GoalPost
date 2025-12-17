@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
@@ -6,7 +5,7 @@ import {
   RunnableSequence,
 } from '@langchain/core/runnables'
 
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { ChatbotResponse } from '../history'
 
 // tag::interface[]
@@ -55,7 +54,7 @@ export default function initRephraseChain(llm: BaseChatModel) {
     },
   })
     .pipe(rephraseQuestionChainPrompt)
-    .pipe(llm as any)
+    .pipe(llm)
     .pipe(new StringOutputParser()) as RunnableSequence<
     RephraseQuestionInput,
     string

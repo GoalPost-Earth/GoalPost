@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { PromptTemplate } from '@langchain/core/prompts'
 import {
   RunnablePassthrough,
@@ -10,7 +10,7 @@ import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 // tag::function[]
 export default async function initCypherGenerationChain(
   graph: Neo4jGraph,
-  llm: BaseLanguageModel
+  llm: BaseChatModel
 ) {
   // Create Prompt Template
   const cypherPrompt = PromptTemplate.fromTemplate(`
