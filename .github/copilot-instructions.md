@@ -2,6 +2,151 @@
 
 GoalPost is a meta-relational community platform using Neo4j graph database, LangChain AI agents, and Next.js. The system discovers semantic patterns ("resonances") across user contributions ("pulses") using vector embeddings and LLM analysis.
 
+---
+
+## Universal Developer Guidelines (Language-Agnostic)
+
+These principles apply to all code, all languages, all frameworks.
+
+### Core Philosophy
+
+**Code is a communication tool before it is an execution tool.**
+
+If another developer (or AI agent) cannot understand what this code does and why within minutes, it is wrong — even if it works.
+
+We optimize for: **Correctness → Clarity → Replaceability → Testability**, with performance as an afterthought.
+
+### 1. Single Source of Truth
+
+There must be one authoritative place where any piece of logic or data is decided.
+
+- Business rules → one module / service
+- Calculations → one function, never duplicated
+- State → owned by a single layer
+
+**Anti-patterns**: Copy-pasting logic "for convenience", re-implementing rules in frontend + backend, "temporary" duplicated code. If logic exists in two places, at least one is wrong.
+
+### 2. Deterministic Code Only
+
+Code must behave the same way given the same inputs.
+
+- No hidden globals
+- No implicit state
+- No side effects inside "pure" functions
+- Explicit inputs, explicit outputs, clear naming
+
+**BAD**: `processData()` | **GOOD**: `processUserPayment(input: PaymentInput) -> PaymentResult`
+
+### 3. File & Module Size Discipline
+
+👉 **Max 400 lines per file** (hard rule) | 👉 **Target: < 300 lines**
+
+If a file grows too large:
+
+- Split by responsibility
+- Extract helpers
+- Extract services
+- **One Responsibility Per File**: one component, one service, one concept
+
+Large files hide bugs. Small files reveal intent.
+
+### 4. Layered Architecture
+
+Every project must clearly separate concerns:
+
+**Interfaces** (HTTP handlers, CLI entrypoints, UI components) → **Application Logic** (use cases, workflows, orchestration) → **Domain Logic** (rules, models, decisions) → **Infrastructure** (databases, APIs, file systems, external services)
+
+- Interfaces never contain business logic
+- Domain logic never depends on infrastructure
+- Infrastructure is replaceable
+
+### 5. Explicit Data Flow
+
+Data must flow forward in a traceable way. You should answer:
+
+- Where did this value come from?
+- Who transformed it?
+- Where is it stored?
+
+**Disallowed**: Magic mutations, hidden transformations, "this just happens automatically"
+
+### 6. Error Handling Is Part of Design
+
+Errors are first-class outputs, not afterthoughts.
+
+Every function must either:
+
+- Return a valid result, OR
+- Return a clearly defined error
+
+No silent failures. No swallowed exceptions. If an error cannot be explained, it cannot be debugged.
+
+### 7. Naming Is a Contract
+
+Names must explain intent, not implementation.
+
+Good names answer: What is this? Why does it exist? When should it be used?
+
+**BAD**: `handler.ts` | **GOOD**: `createUserFromInvitation.ts`
+
+If naming is hard, the abstraction is wrong.
+
+### 8. Testability Is Mandatory
+
+Every important unit must be testable in isolation.
+
+This requires:
+
+- Pure functions where possible
+- Dependency injection
+- No hard-coded globals
+
+Tests should verify: inputs → outputs, edge cases, failure modes. If code cannot be tested, it cannot be trusted.
+
+### 9. Replaceability Over Optimization
+
+Assume every dependency will be replaced one day.
+
+Design so that: databases can change, APIs can change, models can change, providers can change. Abstractions exist to enable replacement, not complexity.
+
+### 10. No Hidden Framework Magic
+
+Frameworks are tools, not architects.
+
+**Disallowed**: Relying on undocumented behavior, deep magic decorators without explanation, "this works because the framework does it"
+
+Every non-obvious behavior must be: explicit, commented, testable.
+
+### 11. Comments Explain Why, Not What
+
+Code explains what. Comments explain why.
+
+**BAD**: `// increment i` | **GOOD**: `// Retry count is capped to prevent infinite loops`
+
+### 12. Red Flags (Stop & Refactor Immediately)
+
+- "We'll clean this later"
+- "Just this once"
+- "It's faster this way"
+- Files > 400 lines
+- Logic copied across layers
+- Functions with unclear inputs/outputs
+
+These always become production problems.
+
+### 13. Definition of Done (Universal)
+
+A task is done only if:
+
+- Code is readable without explanation
+- Logic exists in one place
+- Files are appropriately sized
+- Errors are handled
+- Tests exist (or are trivial to add)
+- Dependencies are replaceable
+
+---
+
 ## Architecture Overview
 
 **Core Stack**: Next.js 15, Neo4j (graph + vector indexes), LangChain, OpenAI (GPT-4 + embeddings), TypeScript
