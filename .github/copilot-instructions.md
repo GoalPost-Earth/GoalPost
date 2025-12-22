@@ -74,6 +74,7 @@ CALL db.create.setNodeVectorProperty(p, 'embedding', $embedding)
 3. **Testability**: Modular code is inherently more testable. Each exported function/component should be independently testable.
 
 **Guidelines**:
+
 - Utility functions → separate `utils/` or `helpers/` files
 - Complex logic → extract to `lib/` modules with clear naming
 - React components → one component per file (or co-located related components if tightly coupled)
