@@ -65,6 +65,23 @@ CALL db.create.setNodeVectorProperty(p, 'embedding', $embedding)
 - **Standalone scripts** (tsx): Use relative paths (`import { initGraph } from '../../../modules/graph.js'`)
 - **Never** mix them - standalone scripts can't resolve `@/` aliases
 
+## Code Modularity & File Size Guidelines
+
+**Maximum 400 lines per file** unless absolutely necessary. Prioritize:
+
+1. **Absolute Modularity**: Break files into single-responsibility units. Extract utility functions, hooks, components, and business logic into separate files.
+2. **Human Readability**: Shorter files are easier to understand, test, and maintain. Aim for files under 300 lines where practical.
+3. **Testability**: Modular code is inherently more testable. Each exported function/component should be independently testable.
+
+**Guidelines**:
+- Utility functions → separate `utils/` or `helpers/` files
+- Complex logic → extract to `lib/` modules with clear naming
+- React components → one component per file (or co-located related components if tightly coupled)
+- API routes → keep business logic in separate service/handler modules, not in route files
+- Types/interfaces → move to dedicated `.types.ts` files if shared across modules
+
+**Exception**: Only exceed 400 lines if the file is genuinely monolithic (e.g., a large enum, extensive data seed file, or generated schema). Document with a comment explaining why.
+
 ## Workflows
 
 ### Development
