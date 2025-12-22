@@ -48,6 +48,12 @@ async function seedInitialUser() {
     // Default user credentials
     const defaultEmail = process.env.SEED_USER_EMAIL || 'demo@goalpost.app'
     const defaultName = process.env.SEED_USER_NAME || 'Demo User'
+    const defaultFirstName =
+      process.env.SEED_USER_FIRST_NAME || defaultName.split(' ')[0]
+    const defaultLastName =
+      process.env.SEED_USER_LAST_NAME ||
+      defaultName.split(' ').slice(1).join(' ') ||
+      'User'
     const defaultPassword = process.env.SEED_USER_PASSWORD || 'password123'
 
     // Hash password
@@ -63,7 +69,8 @@ async function seedInitialUser() {
       `
       CREATE (person:Person:LifeSensor:RelationalEntity {
         id: $personId,
-        name: $name,
+        firstName: $firstName,
+        lastName: $lastName,
         email: $email,
         password: $password,
         createdAt: datetime(),
@@ -74,7 +81,7 @@ async function seedInitialUser() {
       
       CREATE (meSpace:Space:MeSpace {
         id: $meSpaceId,
-        name: $name + "'s Personal Space",
+        name: $firstName + ' ' + $lastName + "'s Personal Space",
         visibility: "PRIVATE",
         createdAt: datetime()
       })
@@ -100,7 +107,8 @@ async function seedInitialUser() {
     `,
       {
         personId,
-        name: defaultName,
+        firstName: defaultFirstName,
+        lastName: defaultLastName,
         email: defaultEmail,
         password: hashedPassword,
         meSpaceId,
@@ -113,11 +121,13 @@ async function seedInitialUser() {
     console.log('\nUser Details:')
     console.log('─────────────────────────────────────')
     console.log(`Email:     ${defaultEmail}`)
-    console.log(`Name:      ${defaultName}`)
+    console.log(`Name:      ${defaultFirstName} ${defaultLastName}`)
     console.log(`Password:  ${defaultPassword}`)
     console.log(`Person ID: ${personId}`)
     console.log('\nSpaces Created:')
-    console.log(`  • MeSpace: "${defaultName}'s Personal Space" (${meSpaceId})`)
+    console.log(
+      `  • MeSpace: "${defaultFirstName} ${defaultLastName}'s Personal Space" (${meSpaceId})`
+    )
     console.log('\nContexts Created:')
     console.log(`  • "Health & Wellness" (${healthContextId})`)
     console.log(`  • "Personal Growth" (${wellnessContextId})`)

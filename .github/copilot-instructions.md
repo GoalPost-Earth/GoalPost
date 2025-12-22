@@ -39,7 +39,7 @@ Code must behave the same way given the same inputs.
 
 ### 3. File & Module Size Discipline
 
-👉 **Max 400 lines per file** (hard rule) | 👉 **Target: < 300 lines**
+👉 **Max 500 lines per file** (hard rule) | 👉 **Target: < 400 lines**
 
 If a file grows too large:
 

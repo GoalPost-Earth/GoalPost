@@ -19,7 +19,9 @@ Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
 """
 type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
   id: ID! @id
-  name: String!
+  firstName: String!
+  lastName: String!
+  name: String @customResolver(field: "firstName lastName")
   email: String
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }

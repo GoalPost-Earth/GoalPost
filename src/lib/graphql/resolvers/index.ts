@@ -1,4 +1,4 @@
-// import { Person } from '@/gql/graphql'
+import { Person } from '@/gql/graphql'
 import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
 
@@ -9,9 +9,9 @@ const resolvers = {
   // Context: Context object, database connection, API, etc
   // GraphQLResolveInfo
 
-  // Person: {
-  //   // name: (source: Person) => `${source.firstName} ${source.lastName}`,
-  // },
+  Person: {
+    name: (source: Person) => `${source.firstName} ${source.lastName}`,
+  },
 
   Mutation: {
     ...chatbotResolvers,
