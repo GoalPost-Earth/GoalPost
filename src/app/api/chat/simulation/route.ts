@@ -300,7 +300,7 @@ export async function POST(req: Request) {
       // This ensures tool calls, text, and all message parts stream correctly
       return result.toUIMessageStreamResponse({
         headers: {
-          'X-Simulation-Mode': simulationState.getMode(),
+          'X-Simulation-Mode': assistantModeManager.getMode(),
         },
       })
     }
@@ -316,7 +316,7 @@ export async function POST(req: Request) {
       JSON.stringify({
         role: 'assistant',
         content: result.text,
-        simulationMode: simulationState.getMode(),
+        simulationMode: assistantModeManager.getMode(),
       }),
       {
         status: 200,

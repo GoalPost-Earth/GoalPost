@@ -11,13 +11,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { MODE_METADATA } from '@/lib/simulation'
 import type { AssistantMode } from '@/lib/simulation'
 
@@ -73,31 +66,25 @@ export function AssistantModeSelector({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">
+        <label
+          className="text-sm font-medium text-gray-700"
+          htmlFor="assistant-mode-select"
+        >
           Assistant Mode
         </label>
-        <Select
+        <select
+          id="assistant-mode-select"
+          className="w-48 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           value={selectedMode}
-          onValueChange={(value) => handleModeChange(value as AssistantMode)}
+          onChange={(e) => handleModeChange(e.target.value as AssistantMode)}
           disabled={disabled || isLoading}
         >
-          <SelectTrigger className="w-48">
-            <SelectValue
-              placeholder="Select mode"
-              defaultValue={selectedMode}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(MODE_METADATA).map(([key, metadata]) => (
-              <SelectItem key={key} value={key}>
-                <span className="flex items-center gap-2">
-                  <span>{metadata.icon}</span>
-                  <span>{metadata.label}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {Object.entries(MODE_METADATA).map(([key, metadata]) => (
+            <option key={key} value={key}>
+              {`${metadata.icon} ${metadata.label}`}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Show description of current mode */}

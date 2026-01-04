@@ -16,13 +16,16 @@ export {
   withSimulation,
   addSimulationHeaders,
 } from './middleware'
-export { SYSTEM_PROMPTS, MODE_METADATA } from './system-prompts'
+export {
+  SYSTEM_PROMPTS,
+  MODE_METADATA,
+  type SystemPromptKey,
+} from './system-prompts'
 export type {
   SimulationMode,
   AssistantMode,
   SimulationState,
   ChatMessage,
   SimulationConfig,
-  SystemPromptKey,
-  AssistantModeInfo,
 } from './types'
+export type { AssistantModeInfo } from './system-prompts'
