@@ -5,7 +5,6 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloNextAppProvider,
-  SSRMultipartLink,
 } from '@apollo/experimental-nextjs-app-support'
 import { ERROR_POLICY } from './apollo-functions'
 
@@ -146,15 +145,7 @@ export function ApolloWrapper({
     }),
     authLink,
     new RetryLink(),
-    typeof window === 'undefined'
-      ? ApolloLink.from([
-          new SSRMultipartLink({
-            stripDefer: false,
-            cutoffDelay: 200,
-          }),
-          httpLink,
-        ])
-      : httpLink,
+    httpLink,
   ])
 
   const makeClient = () =>

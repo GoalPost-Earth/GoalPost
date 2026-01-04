@@ -64,7 +64,8 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  webpack(config, { dev }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  webpack: (config: any, { dev }: any) => {
     config.experiments = { topLevelAwait: true, layers: true }
     // Add support for handling GraphQL files
     config.module.rules.push({
@@ -97,13 +98,12 @@ const nextConfig: NextConfig = {
       usedExports: true, // Tree-shake unused exports
     }
 
-    return config
-  },
-  webpack: (config) => {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
       { module: /@apollo\/client/ },
+      { module: /@apollo\/experimental-nextjs-app-support/ },
     ]
+
     return config
   },
   experimental: {
