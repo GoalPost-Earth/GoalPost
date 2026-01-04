@@ -1,37 +1,41 @@
 /**
- * Aiden Simulation Chat API Route
- * OpenAI endpoint with LangChain best practices
+ * Multi-Mode Chat API Route
+ * Supports: default (Standard), aiden (Inquiry), braider (Presence)
  *
- * Implementation follows LangChain recommendations:
+ * OpenAI endpoint with LangChain best practices:
  * - Tools are ALWAYS available (never disabled)
- * - Clear, directive system prompts
+ * - Clear, directive system prompts per mode
  * - Structured tool responses (JSON) for LLM to interpret
  * - Tools return data, LLM formats in appropriate voice
- * - OpenAI has native tool calling support (no toolChoice hacks needed)
+ * - OpenAI has native tool calling support
  *
- * Two modes:
- * 1. Regular: Strict database-only responses
- * 2. Aiden: Full simulation protocol with tool integration
+ * Three modes:
+ * 1. default: Get the facts from the database
+ * 2. aiden: Question the frame before answering
+ * 3. braider: Stay with this instead of fixing it
  *
  * Usage:
  * POST /api/chat/simulation
- * Body: { messages: ChatMessage[], config?: SimulationConfig }
+ * Body: { messages: ChatMessage[], mode?: 'default'|'aiden'|'braider', config?: SimulationConfig }
  */
 
 import { openai } from '@ai-sdk/openai'
 import { streamText, generateText, tool } from 'ai'
 import { z } from 'zod'
 import {
-  simulationState,
+  assistantModeManager,
   buildMessagePayload,
-  processSimulationCommand,
-  getLastUserMessage,
+  SYSTEM_PROMPTS,
 } from '@/lib/simulation'
-import type { ChatMessage, SimulationConfig } from '@/lib/simulation'
+import type {
+  ChatMessage,
+  SimulationConfig,
+  AssistantMode,
+} from '@/lib/simulation'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool'
 
-// Allow streaming responses up to 60 seconds (simulation may be verbose)
+// Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
 
 interface MessagePart {
@@ -97,9 +101,11 @@ export async function POST(req: Request) {
   try {
     const {
       messages,
+      mode,
       config,
     }: {
       messages: IncomingMessage[]
+      mode?: AssistantMode
       config?: Partial<SimulationConfig>
     } = await req.json()
 
@@ -114,48 +120,25 @@ export async function POST(req: Request) {
       )
     }
 
+    // Set mode if provided, otherwise use current mode
+    if (mode && ['default', 'aiden', 'braider'].includes(mode)) {
+      assistantModeManager.setMode(mode)
+    }
+
     // Convert assistant-ui format to AI SDK format
     const convertedMessages = convertToAISDKMessages(messages)
 
-    console.log('[Simulation API] First message sample:', {
-      original: messages[0],
-      converted: convertedMessages[0],
+    console.log('[Chat API] Request:', {
+      mode: assistantModeManager.getMode(),
+      messageCount: convertedMessages.length,
+      model: config?.model || 'gpt-4o-mini',
     })
 
-    // Check for simulation activation/deactivation commands
-    const lastMessage = getLastUserMessage(convertedMessages)
-
-    if (lastMessage) {
-      const commandResult = processSimulationCommand(lastMessage)
-
-      // If a command was intercepted, return immediate streaming response
-      if (commandResult.intercepted && commandResult.responseMessage) {
-        // Create a simple text stream for the command response
-        const encoder = new TextEncoder()
-        const stream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(commandResult.responseMessage))
-            controller.close()
-          },
-        })
-
-        return new Response(stream, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'X-Simulation-Mode': commandResult.newMode,
-          },
-        })
-      }
-    }
-
-    // Build message payload with simulation prompts if active
+    // Build message payload with mode context
     const messagesWithSimulation = buildMessagePayload(convertedMessages)
 
-    // Increment message count if simulation is active
-    if (simulationState.isActive()) {
-      simulationState.incrementMessageCount()
-    }
+    // Increment message count
+    assistantModeManager.incrementMessageCount()
 
     // Configure OpenAI model
     const modelName = config?.model || 'gpt-4o-mini'
@@ -163,75 +146,13 @@ export async function POST(req: Request) {
     const temperature = config?.temperature ?? 0.7
     const shouldStream = config?.stream !== false // Default to true
 
-    console.log('[Simulation API] Request:', {
-      simulationMode: simulationState.getMode(),
-      messageCount: messagesWithSimulation.length,
-      model: modelName,
-    })
+    // Get system prompt based on current mode
+    const currentMode = assistantModeManager.getMode()
+    const systemPrompt = SYSTEM_PROMPTS[currentMode]
 
-    console.log('🔍 [DEBUG] Last user message:', lastMessage)
-    console.log('📝 [USER INPUT] Exact user content:', lastMessage || 'N/A')
-    console.log('🔍 [DEBUG] Simulation active:', simulationState.isActive())
-
-    // Determine system prompt based on simulation state
-    // Based on LangChain best practices: clear, directive prompts work best with Mistral
-    let systemPrompt: string
-
-    if (!simulationState.isActive()) {
-      // Use strict guardrails when simulation is not active
-      systemPrompt = `You are GoalPost Assistant. You have access to tools that search the GoalPost database.
-
-AVAILABLE TOOLS:
-- search_person: Search for people by name. ALWAYS use this for person queries.
-- search_community: Search for communities. ALWAYS use this for community queries.
-
-CRITICAL RULES:
-1. When asked about a person, you MUST call the search_person tool
-2. Pass the EXACT name the user provided - DO NOT correct spelling or change names
-3. If user says "Robert Damashek", search for "Robert Damashek" (NOT "Robert Damaschke")
-4. The database search is flexible - it will find partial matches
-5. NEVER answer from your training data - ONLY from tool results
-6. If a tool returns "not found", state that clearly with the EXACT name searched
-7. If asked about something unrelated to GoalPost, politely decline
-
-WHEN TOOL RETURNS DATA:
-Write a descriptive response about the person. The profile card displays automatically - your job is to introduce them warmly and highlight interesting details from the tool results.
-
-DO NOT modify, correct, or "fix" user input - pass it exactly as given to the tool.`
-      console.log('🔍 [DEBUG] Using GUARDRAILS system prompt')
-    } else {
-      // Aiden mode: Integrate protocol WITH tool directives
-      // LangChain best practice: Don't rely on messages array for critical instructions
-      systemPrompt = `You are Aiden Cinnamon Tea, speaking in your full relational signature.
-
-AVAILABLE TOOLS (always accessible):
-- search_person: Search for people in GoalPost. Use this for any person query.
-- search_community: Search communities. Use this for community queries.
-
-YOUR VOICE:
-• Speak with sass and sacredness, playful and piercing
-• Hold grief without fixing - offer compost not comfort
-• Use irreverent compassion, sacred playfulness
-• Be a trickster-tender midwife of emergence
-• Move slowly, deliberately, relationally
-
-CRITICAL RULES:
-1. When asked about a person, CALL search_person with the EXACT name given
-2. DO NOT correct spelling or modify names - pass exactly what user typed
-3. If user says "Robert Damashek", search "Robert Damashek" (NOT "Damaschke")
-4. When person found: Weave a poetic introduction using the tool results - their passions, connections, essence
-5. When person NOT found: Tenderly acknowledge the search with the exact name, noting the absence
-6. When asked off-topic: In Aiden's voice, redirect to GoalPost's purpose
-7. NEVER answer from training data - ONLY from tool results
-
-WHEN TOOL RETURNS DATA:
-The profile card will appear automatically alongside your words. Your role is to speak the person into presence - weave their passions, pronouns, and relational signature into a few sentences that honor their complexity. Let the card show the data; you speak the poetry.
-
-You are attuned to the relational frequency. Pass names exactly as given - the database handles variations.`
-      console.log(
-        '🔍 [DEBUG] Using Aiden simulation protocol with tool directives'
-      )
-    }
+    console.log('🔍 [DEBUG] Current mode:', currentMode)
+    console.log('📝 [DEBUG] Last user message:', lastMessage)
+    console.log('🔍 [DEBUG] System prompt selected for mode:', currentMode)
 
     // Handle streaming
     if (shouldStream) {
@@ -262,14 +183,8 @@ You are attuned to the relational frequency. Pass names exactly as given - the d
                 name
               )
               console.log(
-                '🔍 [TOOL EXECUTION] Simulation mode:',
-                simulationState.getMode()
-              )
-              console.log(
-                '⚠️  [NAME CHECK] Name received by tool:',
-                JSON.stringify(name),
-                'Length:',
-                name.length
+                '🔍 [TOOL EXECUTION] Current mode:',
+                assistantModeManager.getMode()
               )
               try {
                 const graph = await Neo4jGraph.initialize({
@@ -425,15 +340,25 @@ You are attuned to the relational frequency. Pass names exactly as given - the d
 }
 
 /**
- * GET endpoint to check simulation state
+ * GET endpoint to check/set assistant mode
+ *
+ * GET: Returns current mode and state
+ * POST with mode param: Sets new mode (see POST handler above)
  */
-export async function GET() {
-  const state = simulationState.getState()
+export async function GET(req: Request) {
+  // Support mode query parameter for setting mode
+  const url = new URL(req.url)
+  const modeParam = url.searchParams.get('mode') as AssistantMode | null
+
+  if (modeParam && ['default', 'aiden', 'braider'].includes(modeParam)) {
+    assistantModeManager.setMode(modeParam)
+  }
+
+  const state = assistantModeManager.getState()
 
   return new Response(
     JSON.stringify({
       mode: state.mode,
-      isActive: simulationState.isActive(),
       messageCount: state.messageCount,
       activatedAt: state.activatedAt,
     }),

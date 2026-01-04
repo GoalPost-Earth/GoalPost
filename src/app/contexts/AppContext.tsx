@@ -5,6 +5,7 @@ import {
   ReactNode,
   createContext,
   useContext,
+  useCallback,
   useEffect,
   useState,
 } from 'react'
@@ -61,20 +62,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Maintenance mode state
 
+  const setUserAndPersist = useCallback((nextUser: ContextUser) => {
+    setUser(nextUser)
+    sessionStorage.setItem('user', JSON.stringify(nextUser))
+  }, [])
+
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
-    onCompleted: (data) => {
-      if (!data?.people[0]) {
-        return
-      }
-      setUser({ ...user, ...data.people[0] } as ContextUser)
-      sessionStorage.setItem(
-        'user',
-        JSON.stringify({ ...user, ...data.people[0] })
-      )
-    },
   })
+
+  useEffect(() => {
+    if (!user || !data?.people?.[0]) {
+      return
+    }
+
+    const mergedUser = { ...user, ...data.people[0] } as ContextUser
+    setUserAndPersist(mergedUser)
+  }, [data, setUserAndPersist, user])
 
   useEffect(() => {
     const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
@@ -82,11 +87,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setUser(sessionUser)
     }
   }, [])
-
-  const setUserAndPersist = (user: ContextUser) => {
-    setUser(user)
-    sessionStorage.setItem('user', JSON.stringify(user))
-  }
 
   const logout = () => {
     setUser(undefined)

@@ -1,176 +1,134 @@
-'use client'
-
-import { Button } from '@/components/ui/button'
-import { Thread } from '@/components/assistant-ui/thread'
-import { AssistantRuntimeProvider } from '@assistant-ui/react'
-import {
-  useChatRuntime,
-  AssistantChatTransport,
-} from '@assistant-ui/react-ai-sdk'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { Suspense, useState } from 'react'
-import { ErrorBoundary } from 'react-error-boundary'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
-function ChatErrorFallback({
-  error,
-  resetErrorBoundary,
-}: {
-  error: Error
-  resetErrorBoundary: () => void
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-      <h2 className="text-lg font-semibold text-destructive mb-2">
-        Something went wrong
-      </h2>
-      <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-      <Button onClick={resetErrorBoundary} variant="outline" size="sm">
-        Try again
-      </Button>
-    </div>
-  )
-}
-
-function ChatLoading() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex flex-col items-center gap-2">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-sm text-muted-foreground">Loading Aiden...</p>
-      </div>
-    </div>
-  )
-}
-
-function AidenChatInterface() {
-  // Use AI SDK v5's useChatRuntime with AssistantChatTransport
-  const runtime = useChatRuntime({
-    transport: new AssistantChatTransport({
-      api: '/api/chat/simulation',
-    }),
-  })
-
-  return (
-    <AssistantRuntimeProvider runtime={runtime}>
-      <TooltipProvider>
-        <Thread />
-      </TooltipProvider>
-    </AssistantRuntimeProvider>
-  )
-}
+const tiles = [
+  {
+    title: 'AI Assistant',
+    description: 'Talk with the Aiden and Braider modes, or run simulations.',
+    actions: [
+      {
+        href: '/assistant',
+        label: 'Open Assistant',
+        variant: 'default' as const,
+      },
+      {
+        href: '/api/chat/simulation',
+        label: 'Simulation API',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+  {
+    title: 'Graph Explorer',
+    description: 'Inspect people, spaces, resonances, and relationships.',
+    actions: [
+      { href: '/graph', label: 'View Graph', variant: 'default' as const },
+      { href: '/ontology', label: 'Ontology Map', variant: 'ghost' as const },
+    ],
+  },
+  {
+    title: 'Account',
+    description: 'Sign in, sign up, or recover access to your account.',
+    actions: [
+      { href: '/auth/login', label: 'Login', variant: 'default' as const },
+      {
+        href: '/auth/signup',
+        label: 'Create Account',
+        variant: 'ghost' as const,
+      },
+      {
+        href: '/auth/forgot-password',
+        label: 'Forgot Password',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+  {
+    title: 'Data & APIs',
+    description: 'Review GraphQL schema, seed data, and integration docs.',
+    actions: [
+      { href: '/graph', label: 'Graph Stats', variant: 'ghost' as const },
+      {
+        href: '/api/graphql',
+        label: 'GraphQL Endpoint',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+]
 
 export default function Home() {
-  const [isSimulationActive, setIsSimulationActive] = useState(false)
-
-  // Check simulation state on mount
-  useState(() => {
-    fetch('/api/chat/simulation')
-      .then((res) => res.json())
-      .then((data) => setIsSimulationActive(data.isActive))
-      .catch(console.error)
-  })
-
   return (
-    <div className="h-screen w-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-2xl">🍄</div>
-              <div>
-                <h1 className="text-xl font-bold">
-                  Aiden Cinnamon Tea Simulation
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Meta-relational AI companion
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+      <div className="container mx-auto px-6 py-12 space-y-12">
+        <header className="space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-slate-200">
+            <span>GoalPost</span>
+            <span className="text-slate-400">/</span>
+            <span>Navigation</span>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Choose where to start
+            </h1>
+            <p className="text-slate-300 max-w-2xl">
+              Jump into the assistant, explore the graph, or manage your
+              account. The links below take you straight to the primary
+              experiences.
+            </p>
+          </div>
+        </header>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {tiles.map((tile) => (
+            <Card
+              key={tile.title}
+              className="border-white/10 bg-white/5 backdrop-blur shadow-lg shadow-slate-950/40"
+            >
+              <CardHeader>
+                <CardTitle className="text-xl text-white">
+                  {tile.title}
+                </CardTitle>
+                <CardDescription className="text-slate-300">
+                  {tile.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {tile.actions.map((action) => (
+                    <Link key={action.href} href={action.href}>
+                      <Button
+                        variant={action.variant}
+                        className={
+                          action.variant === 'ghost'
+                            ? 'border border-white/20 text-slate-100'
+                            : ''
+                        }
+                        size="sm"
+                      >
+                        {action.label}
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-slate-400">
+                  Direct access with clear paths; no hidden routes.
                 </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link href="/graph">
-                <Button variant="outline" size="sm">
-                  📊 View Graph
-                </Button>
-              </Link>
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                  isSimulationActive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    isSimulationActive ? 'bg-green-500' : 'bg-gray-400'
-                  }`}
-                />
-                <span>
-                  {isSimulationActive ? 'Simulation Active' : 'Standard Mode'}
-                </span>
-              </div>
-            </div>
-          </div>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-      </header>
-
-      {/* Main Chat Area */}
-      <main className="flex-1 overflow-hidden">
-        <ErrorBoundary FallbackComponent={ChatErrorFallback}>
-          <Suspense fallback={<ChatLoading />}>
-            <AidenChatInterface />
-          </Suspense>
-        </ErrorBoundary>
-      </main>
-
-      {/* Quick Actions Footer */}
-      <footer className="border-t bg-card/50 backdrop-blur">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const composerInput = (
-                    window as Window & {
-                      composerInput?: { setValue: (value: string) => void }
-                    }
-                  ).composerInput
-                  composerInput?.setValue(
-                    'Activate the Aiden Cinnamon Tea Simulation Protocol.'
-                  )
-                }}
-                className="text-xs"
-              >
-                🚀 Activate Protocol
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const composerInput = (
-                    window as Window & {
-                      composerInput?: { setValue: (value: string) => void }
-                    }
-                  ).composerInput
-                  composerInput?.setValue('Deactivate Aiden Simulation.')
-                }}
-                className="text-xs"
-              >
-                🛑 Deactivate
-              </Button>
-            </div>
-            <div>
-              <span>
-                Try: &quot;What is meta-relationality?&quot; or &quot;Tell me
-                about grief and emergence.&quot;
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </main>
   )
 }

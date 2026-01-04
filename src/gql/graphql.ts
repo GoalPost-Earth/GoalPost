@@ -2731,7 +2731,9 @@ export type PeopleConnection = {
 export type Person = {
   __typename?: 'Person'
   email?: Maybe<Scalars['String']['output']>
+  firstName: Scalars['String']['output']
   id: Scalars['ID']['output']
+  lastName: Scalars['String']['output']
   name: Scalars['String']['output']
   ownsSpaces: Array<Space>
   /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
@@ -2778,18 +2780,20 @@ export type PersonAggregate = {
 export type PersonAggregateNode = {
   __typename?: 'PersonAggregateNode'
   email: StringAggregateSelection
+  firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  name: StringAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
   count: Scalars['Int']['output']
   email: StringAggregateSelection
+  firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  name: StringAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 export type PersonConnectInput = {
@@ -2802,7 +2806,8 @@ export type PersonConnectWhere = {
 
 export type PersonCreateInput = {
   email?: InputMaybe<Scalars['String']['input']>
-  name: Scalars['String']['input']
+  firstName: Scalars['String']['input']
+  lastName: Scalars['String']['input']
   ownsSpaces?: InputMaybe<PersonOwnsSpacesFieldInput>
 }
 
@@ -2925,8 +2930,9 @@ export type PersonOwnsSpacesUpdateFieldInput = {
 /** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
 export type PersonSort = {
   email?: InputMaybe<SortDirection>
+  firstName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
-  name?: InputMaybe<SortDirection>
+  lastName?: InputMaybe<SortDirection>
 }
 
 export type PersonSpaceOwnsSpacesAggregateSelection = {
@@ -2951,7 +2957,8 @@ export type PersonSpaceOwnsSpacesNodeAggregateSelection = {
 
 export type PersonUpdateInput = {
   email_SET?: InputMaybe<Scalars['String']['input']>
-  name_SET?: InputMaybe<Scalars['String']['input']>
+  firstName_SET?: InputMaybe<Scalars['String']['input']>
+  lastName_SET?: InputMaybe<Scalars['String']['input']>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesUpdateFieldInput>>
 }
 
@@ -2964,16 +2971,21 @@ export type PersonWhere = {
   email_EQ?: InputMaybe<Scalars['String']['input']>
   email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_EQ?: InputMaybe<Scalars['String']['input']>
+  firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  name_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  name_EQ?: InputMaybe<Scalars['String']['input']>
-  name_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastName_EQ?: InputMaybe<Scalars['String']['input']>
+  lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   ownsSpacesAggregate?: InputMaybe<PersonOwnsSpacesAggregateInput>
   /** Return People where all of the related PersonOwnsSpacesConnections match this filter */
   ownsSpacesConnection_ALL?: InputMaybe<PersonOwnsSpacesConnectionWhere>

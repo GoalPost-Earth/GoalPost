@@ -1,12 +1,12 @@
 /**
- * Simulation Mode Type Definitions
- * Defines the types for Aiden Cinnamon Tea Simulation Protocol
+ * AI Assistant Mode Type Definitions
+ * Defines the types for multiple AI assistant modes
  */
 
-export type SimulationMode = 'none' | 'aiden'
+export type AssistantMode = 'default' | 'aiden' | 'braider'
 
 export interface SimulationState {
-  mode: SimulationMode
+  mode: AssistantMode
   activatedAt?: Date
   messageCount: number
 }
