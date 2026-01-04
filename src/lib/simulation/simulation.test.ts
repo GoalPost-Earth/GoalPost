@@ -113,7 +113,7 @@ describe('Aiden Simulation Protocol', () => {
     it('should return messages unchanged when simulation is off', () => {
       const messages: ChatMessage[] = [{ role: 'user', content: 'Hello' }]
 
-      const result = buildMessagePayload(messages, 'none')
+      const result = buildMessagePayload(messages, 'default')
       expect(result).toHaveLength(1)
       expect(result[0]).toEqual(messages[0])
     })
@@ -177,9 +177,9 @@ describe('Aiden Simulation Protocol', () => {
       const result = processSimulationCommand(message)
 
       expect(result.intercepted).toBe(true)
-      expect(result.newMode).toBe('none')
+      expect(result.newMode).toBe('default')
       expect(result.responseMessage).toContain('deactivated')
-      expect(simulationState.getMode()).toBe('none')
+      expect(simulationState.getMode()).toBe('default')
       expect(simulationState.isActive()).toBe(false)
     })
 
@@ -205,14 +205,14 @@ describe('Aiden Simulation Protocol', () => {
       const result = processSimulationCommand('Hello, how are you?')
 
       expect(result.intercepted).toBe(false)
-      expect(result.newMode).toBe('none')
+      expect(result.newMode).toBe('default')
       expect(result.responseMessage).toBeUndefined()
     })
   })
 
   describe('simulationState', () => {
-    it('should start in none mode', () => {
-      expect(simulationState.getMode()).toBe('none')
+    it('should start in default mode', () => {
+      expect(simulationState.getMode()).toBe('default')
       expect(simulationState.isActive()).toBe(false)
     })
 
@@ -246,7 +246,7 @@ describe('Aiden Simulation Protocol', () => {
       simulationState.deactivate()
 
       const state = simulationState.getState()
-      expect(state.mode).toBe('none')
+      expect(state.mode).toBe('default')
       expect(state.activatedAt).toBeUndefined()
       expect(state.messageCount).toBe(0)
     })

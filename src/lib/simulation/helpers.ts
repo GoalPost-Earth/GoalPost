@@ -111,7 +111,7 @@ export function processSimulationCommand(message: string): {
 
     return {
       intercepted: true,
-      newMode: 'none',
+      newMode: 'default',
       responseMessage: wasActive
         ? 'The Aiden simulation has been deactivated. Returning to standard mode.'
         : 'The Aiden simulation was not active.',

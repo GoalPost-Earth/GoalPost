@@ -4,6 +4,7 @@
  */
 
 export type AssistantMode = 'default' | 'aiden' | 'braider'
+export type SimulationMode = AssistantMode
 
 export interface SimulationState {
   mode: AssistantMode

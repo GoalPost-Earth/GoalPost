@@ -70,6 +70,29 @@ class AssistantModeManager {
   }
 
   /**
+   * Check if the Aiden simulation mode is active
+   */
+  isActive(): boolean {
+    return this.state.mode === 'aiden'
+  }
+
+  /**
+   * Activate the Aiden simulation mode
+   */
+  activate(): void {
+    this.state.mode = 'aiden'
+    this.state.activatedAt = new Date()
+    this.state.messageCount = 0
+  }
+
+  /**
+   * Deactivate simulation and return to default mode
+   */
+  deactivate(): void {
+    this.reset()
+  }
+
+  /**
    * Check if specific mode is active
    */
   isModeActive(mode: AssistantMode): boolean {

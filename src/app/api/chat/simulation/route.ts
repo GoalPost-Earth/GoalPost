@@ -26,6 +26,7 @@ import {
   assistantModeManager,
   buildMessagePayload,
   SYSTEM_PROMPTS,
+  getLastUserMessage,
 } from '@/lib/simulation'
 import type {
   ChatMessage,
@@ -150,8 +151,10 @@ export async function POST(req: Request) {
     const currentMode = assistantModeManager.getMode()
     const systemPrompt = SYSTEM_PROMPTS[currentMode]
 
+    const lastUserMessage = getLastUserMessage(convertedMessages)
+
     console.log('🔍 [DEBUG] Current mode:', currentMode)
-    console.log('📝 [DEBUG] Last user message:', lastMessage)
+    console.log('📝 [DEBUG] Last user message:', lastUserMessage)
     console.log('🔍 [DEBUG] System prompt selected for mode:', currentMode)
 
     // Handle streaming
