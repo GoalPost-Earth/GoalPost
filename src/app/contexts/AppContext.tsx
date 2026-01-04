@@ -5,14 +5,15 @@ import {
   ReactNode,
   createContext,
   useContext,
+  useCallback,
   useEffect,
   useState,
 } from 'react'
 import { GET_LOGGED_IN_USER } from '../graphql'
 import { Person } from '@/gql/graphql'
-import { ApolloWrapper } from '@/components'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
+import { ApolloWrapper } from '@/components/layout'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
@@ -21,12 +22,16 @@ type ContextUser = UserProfile & Person
 interface AppContextType {
   user?: ContextUser
   setUser: (user: ContextUser) => void
+  logout: () => void
 }
 
 const AppContext = createContext<AppContextType>({
   user: undefined,
   setUser: () => {
     throw new Error('setUser function is not defined')
+  },
+  logout: () => {
+    throw new Error('logout function is not defined')
   },
 })
 
@@ -57,20 +62,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Maintenance mode state
 
+  const setUserAndPersist = useCallback((nextUser: ContextUser) => {
+    setUser(nextUser)
+    sessionStorage.setItem('user', JSON.stringify(nextUser))
+  }, [])
+
   const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
-    onCompleted: (data) => {
-      if (!data?.people[0]) {
-        return
-      }
-      setUser({ ...user, ...data.people[0] } as ContextUser)
-      sessionStorage.setItem(
-        'user',
-        JSON.stringify({ ...user, ...data.people[0] })
-      )
-    },
   })
+
+  useEffect(() => {
+    if (!user || !data?.people?.[0]) {
+      return
+    }
+
+    const mergedUser = { ...user, ...data.people[0] } as ContextUser
+    setUserAndPersist(mergedUser)
+  }, [data, setUserAndPersist, user])
 
   useEffect(() => {
     const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
@@ -79,14 +88,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
-  const setUserAndPersist = (user: ContextUser) => {
-    setUser(user)
-    sessionStorage.setItem('user', JSON.stringify(user))
+  const logout = () => {
+    setUser(undefined)
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    sessionStorage.removeItem('user')
+    document.cookie = 'accessToken=; path=/; max-age=0'
   }
 
   const value = {
     user,
     setUser: setUserAndPersist,
+    logout,
   }
 
   return (

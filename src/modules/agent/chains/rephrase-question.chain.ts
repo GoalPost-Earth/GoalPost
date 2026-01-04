@@ -5,7 +5,7 @@ import {
   RunnableSequence,
 } from '@langchain/core/runnables'
 
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { ChatbotResponse } from '../history'
 
 // tag::interface[]
@@ -40,28 +40,25 @@ export default function initRephraseChain(llm: BaseChatModel) {
     {input}`
   )
 
-  return RunnableSequence.from<RephraseQuestionInput, string>([
-    // <1> Convert message history to a string
-    RunnablePassthrough.assign({
-      history: ({ history }): string => {
-        if (history.length == 0) {
-          return 'No history'
-        }
-        return history
-          .map(
-            (response: ChatbotResponse) =>
-              `Human: ${response.input}\nAI: ${response.output}`
-          )
-          .join('\n')
-      },
-    }),
-    // <2> Use the input and formatted history to format the prompt
-    rephraseQuestionChainPrompt,
-    // <3> Pass the formatted prompt to the LLM
-    llm,
-    // <4> Coerce the output into a string
-    new StringOutputParser(),
-  ])
+  return RunnablePassthrough.assign({
+    history: ({ history }: RephraseQuestionInput): string => {
+      if (history.length == 0) {
+        return 'No history'
+      }
+      return history
+        .map(
+          (response: ChatbotResponse) =>
+            `Human: ${response.input}\nAI: ${response.output}`
+        )
+        .join('\n')
+    },
+  })
+    .pipe(rephraseQuestionChainPrompt)
+    .pipe(llm)
+    .pipe(new StringOutputParser()) as RunnableSequence<
+    RephraseQuestionInput,
+    string
+  >
 }
 // end::function[]
 

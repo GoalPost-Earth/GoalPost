@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = await session.run(
-      `MATCH (user:User {email: $email})
+      `MATCH (user:Person {email: $email})
         RETURN user {
           id: user.id,
           hash: user.password,
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     const hashedToken = await hashPassword(refreshToken)
 
     await session.run(
-      `MATCH (user:User {email: $email})
+      `MATCH (user:Person {email: $email})
           SET user.refreshToken = $refreshToken,
               user.refreshTokenExp = $refreshTokenExp,
               user.refreshTokenRevoked = $refreshTokenRevoked
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     )
   } catch (err) {
-    console.error('🚀 ~ route.ts:110 ~ err:', err)
+    console.error('🚀 ~ route.ts:112 ~ err:', err)
     return NextResponse.json({ error: parseError(err) }, { status: 500 })
   } finally {
     await session.close()

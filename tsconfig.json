@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
@@ -23,7 +24,7 @@
       "@/types": ["./src/types"],
       "@/utils": ["./src/utils"],
       "@/icons": ["./src/components/icons"],
-      "@/lib/*": ["./src/app/lib/*"],
+      "@/lib/*": ["./src/lib/*"],
       "@/mutations": ["./src/app/graphql/mutations"],
       "@/queries/*": ["./src/app/graphql/queries/*"]
     }

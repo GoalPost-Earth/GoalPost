@@ -1,109 +1,42 @@
 import { graphql } from '@/gql'
 
+// Goal → GoalPulse in pulse-first architecture
 export const CREATE_GOAL_MUTATION = graphql(`
-  mutation createGoals($input: [GoalCreateInput!]!) {
-    createGoals(input: $input) {
-      goals {
+  mutation createGoalPulses($input: [GoalPulseCreateInput!]!) {
+    createGoalPulses(input: $input) {
+      goalPulses {
         id
-        name
-        description
-        successMeasures
-        photo
-        status
-        location
-        time
+        content
         createdAt
-        coreValues {
-          id
-          name
-          description
-        }
-        motivatesPeople {
-          id
-          name
-          photo
-        }
-        motivatesCommunities {
-          id
-          name
-          description
-        }
-        enablesCarePoints {
-          id
-          description
-          status
-        }
-        caredForByCarePoints {
-          id
-          description
-          status
-        }
-        createdBy {
-          id
-          name
-        }
+        intensity
+        status
+        horizon
       }
     }
   }
 `)
 
 export const UPDATE_GOAL_MUTATION = graphql(`
-  mutation updateGoal($id: ID!, $update: GoalUpdateInput!) {
-    updateGoals(where: { id_EQ: $id }, update: $update) {
-      goals {
+  mutation updateGoalPulses(
+    $where: GoalPulseWhere!
+    $update: GoalPulseUpdateInput!
+  ) {
+    updateGoalPulses(where: $where, update: $update) {
+      goalPulses {
         id
-        name
-        description
-        successMeasures
-        photo
-        status
-        location
-        why
-        time
+        content
         createdAt
-        coreValues {
-          id
-          name
-          description
-        }
-        motivatesPeople {
-          id
-          name
-          photo
-        }
-        motivatesCommunities {
-          id
-          name
-          description
-        }
-        enablesCarePoints {
-          id
-          description
-          status
-        }
-        caredForByCarePoints {
-          id
-          description
-          status
-        }
-        resources {
-          id
-          name
-          description
-          status
-        }
-        createdBy {
-          id
-          name
-        }
+        intensity
+        status
+        horizon
       }
     }
   }
 `)
 
 export const DELETE_GOAL_MUTATION = graphql(`
-  mutation deleteGoal($id: ID!) {
-    deleteGoals(where: { id_EQ: $id }) {
+  mutation deleteGoalPulses($where: GoalPulseWhere!) {
+    deleteGoalPulses(where: $where) {
       nodesDeleted
     }
   }

@@ -1,276 +1,134 @@
-'use client'
-
-import React from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import {
-  Container,
-  Flex,
-  Grid,
-  GridItem,
-  Heading,
-  Text,
-  VStack,
-} from '@chakra-ui/react'
-import { Community, Goal, Person, Resource } from '@/gql/graphql'
-import { useApp } from './contexts/AppContext'
-import { GET_ALL_COMMUNITIES, GET_RECENT_ACTIONS } from './graphql'
-import { useQuery } from '@apollo/client'
-import {
-  ApolloWrapper,
-  AvatarCarousel,
-  ActionCard,
-  Avatar,
-  CommunityCard,
-  LoadingScreen,
-  GoalCard,
-  CarePointsIcon,
-  GoalsIcon,
-  PeopleIcon,
-  SettingsIcon,
-  ResourceCard,
-  PersonCard,
-  CoreValuesIcon,
-  CarePointCard,
-  CoreValueCard,
-} from '@/components'
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
-const HomeClient = () => {
-  const { user } = useApp()
-  const connections = user?.connections
+const tiles = [
+  {
+    title: 'AI Assistant',
+    description: 'Talk with the Aiden and Braider modes, or run simulations.',
+    actions: [
+      {
+        href: '/assistant',
+        label: 'Open Assistant',
+        variant: 'default' as const,
+      },
+      {
+        href: '/api/chat/simulation',
+        label: 'Simulation API',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+  {
+    title: 'Graph Explorer',
+    description: 'Inspect people, spaces, resonances, and relationships.',
+    actions: [
+      { href: '/graph', label: 'View Graph', variant: 'default' as const },
+      { href: '/ontology', label: 'Ontology Map', variant: 'ghost' as const },
+    ],
+  },
+  {
+    title: 'Account',
+    description: 'Sign in, sign up, or recover access to your account.',
+    actions: [
+      { href: '/auth/login', label: 'Login', variant: 'default' as const },
+      {
+        href: '/auth/signup',
+        label: 'Create Account',
+        variant: 'ghost' as const,
+      },
+      {
+        href: '/auth/forgot-password',
+        label: 'Forgot Password',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+  {
+    title: 'Data & APIs',
+    description: 'Review GraphQL schema, seed data, and integration docs.',
+    actions: [
+      { href: '/graph', label: 'Graph Stats', variant: 'ghost' as const },
+      {
+        href: '/api/graphql',
+        label: 'GraphQL Endpoint',
+        variant: 'ghost' as const,
+      },
+    ],
+  },
+]
 
-  const { data, loading, error } = useQuery(GET_RECENT_ACTIONS, {
-    pollInterval: 60000,
-  })
-  const { data: communityData } = useQuery(GET_ALL_COMMUNITIES, {
-    pollInterval: 60000,
-  })
-
-  const communities = communityData?.communities
-
-  if (!(data && communities)) {
-    return <LoadingScreen />
-  }
-
-  const recentLogs = (data?.logs ?? [])
-    .filter((log) => log && log.id)
-    .map((log) => {
-      return {
-        actionName: log.__typename,
-        id: log.id,
-        actionInfo: 'logged an action',
-        icon: <SettingsIcon width="18px" height="18px" />,
-        createdAt: log.createdAt,
-        personId: log.createdBy[0]?.id,
-        personName: log.createdBy[0]?.name,
-        personPhoto: log.createdBy[0]?.photo,
-        children: (
-          <Text>
-            {log.description.split('\n').map((line, index) => (
-              <React.Fragment key={index}>
-                {line}
-                <br />
-              </React.Fragment>
-            ))}
-          </Text>
-        ),
-      }
-    })
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const recentCarePoints = data?.carePoints.map((carePoint) => {
-    return {
-      actionName: carePoint.__typename,
-      id: carePoint.id,
-      actionInfo: 'added a new care point',
-      icon: <CarePointsIcon width="18px" height="18px" />,
-      createdAt: carePoint.createdAt,
-      personId: carePoint.createdBy[0].id,
-      personName: carePoint.createdBy[0].name,
-      personPhoto: carePoint.createdBy[0].photo,
-      children: <CarePointCard carePoint={carePoint} />,
-    }
-  })
-
-  const recentGoals = data?.goals.map((goal) => {
-    return {
-      actionName: goal.__typename,
-      actionInfo: 'posted a new goal',
-      icon: <GoalsIcon width="18px" height="18px" />,
-      id: goal.id,
-      createdAt: goal.createdAt,
-      personId: goal.createdBy[0].id,
-      personName: goal.createdBy[0].name,
-      personPhoto: goal.createdBy[0].photo,
-      description: goal.description,
-      name: goal.name,
-      photo: goal.photo,
-      status: goal.status,
-      children: <GoalCard goal={goal as Goal} />,
-    }
-  })
-  const recentCoreValues = data?.coreValues.map((coreValue) => {
-    return {
-      actionName: coreValue.__typename,
-      actionInfo: 'embraced a new core value',
-      icon: <CoreValuesIcon width="18px" height="18px" />,
-      id: coreValue.id,
-      createdAt: coreValue.createdAt,
-      createdBy: coreValue.people,
-      description: coreValue.description,
-      personId: coreValue.people[0]?.id,
-      personName: coreValue.people[0]?.name,
-      personPhoto: coreValue.people[0]?.photo,
-      children: <CoreValueCard coreValue={coreValue} />,
-    }
-  })
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const recentResources = data?.resources.map((resource) => {
-    const owner = resource.providedByPerson.length
-      ? resource.providedByPerson[0]
-      : resource.providedByCommunity[0]
-
-    return {
-      actionName: resource.__typename,
-      actionInfo: 'added a new resource',
-      icon: <SettingsIcon width="18px" height="18px" />,
-      personName: owner.name,
-      personPhoto: 'photo' in owner ? (owner.photo ?? '') : '',
-      personId: owner.id,
-      id: resource.id,
-      createdAt: resource.createdAt,
-      createdBy: resource.createdBy,
-      description: resource.description,
-      name: resource.name,
-      children: <ResourceCard resource={resource as Resource} />,
-    }
-  })
-
-  const recentCommunityMembers = data?.communities.flatMap((community) => {
-    return community.members.flatMap((member) => {
-      return {
-        actionName: community.__typename,
-        id: community.id,
-        personId: member.id,
-        icon: <PeopleIcon width="18px" height="18px" />,
-        createdAt: member.createdAt,
-        personName: member.name,
-        personPhoto: member.photo,
-        name: community.name,
-        actionInfo: `joined a community`,
-        children: (
-          <PersonCard
-            id={member.id}
-            name={member.name}
-            photo={member.photo}
-            info={community.name}
-            fontWeight="normal"
-          />
-        ),
-      }
-    })
-  })
-
-  const recentActions = [
-    ...recentGoals,
-    ...recentCoreValues,
-    ...recentCommunityMembers,
-    ...recentResources,
-    ...recentCarePoints,
-    ...recentLogs,
-  ]
-
+export default function Home() {
   return (
-    <ApolloWrapper data={data} loading={loading} error={error}>
-      <Container p={{ base: 0 }}>
-        <Grid
-          templateColumns={{ base: 'repeat(1, 1fr)', lg: '0.6fr 1.5fr 1fr' }}
-          gap={20}
-          mt={5}
-          position="relative"
-          justifyItems={{ md: 'center' }}
-          width="100%"
-        >
-          <GridItem
-            display="flex"
-            flexDirection="column"
-            gap={5}
-            alignItems={{ base: 'flex-start', lg: 'center' }}
-            mt={{ base: 2, lg: 5 }}
-          >
-            <Flex gap={{ base: 2, lg: 5 }} flexDirection={{ lg: 'column' }}>
-              <Avatar
-                src={user?.photo ?? undefined}
-                width={{ base: '50px', lg: '200px' }}
-                height={{ base: '50px', lg: '200px' }}
-              />
-              <Flex
-                direction="column"
-                textAlign={{ base: 'left', lg: 'center' }}
-              >
-                <Text>Hi</Text>
-                <Heading>{user?.name}</Heading>
-              </Flex>
-            </Flex>
-            {!!connections?.length && (
-              <VStack gap={2} alignItems={{ base: 'flex-start', lg: 'center' }}>
-                <Heading
-                  fontSize={{ lg: 'md' }}
-                  fontWeight={{ base: 'bolder', lg: 'light' }}
-                >
-                  Your Connections
-                </Heading>
-                <AvatarCarousel people={connections as Person[]} />
-              </VStack>
-            )}
-          </GridItem>
-          <GridItem>
-            <Heading mb={2} fontWeight="bolder">
-              {"What's new for me?"}
-            </Heading>
-            <VStack>
-              {recentActions
-                .sort((a, b) => {
-                  return (
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-                  )
-                })
-                .map((action) => (
-                  <ActionCard
-                    key={
-                      action.id + '' + action.actionName + '' + action.personId
-                    }
-                    photo={action.personPhoto ?? undefined}
-                    actionInfo={action.actionInfo}
-                    personId={action?.personId}
-                    id={action.id}
-                    name={action?.personName}
-                    actionName={action.actionName}
-                    createdAt={action.createdAt}
-                    icon={action.icon}
-                    content={action.children}
-                  />
-                ))}
-            </VStack>
-          </GridItem>
-          <GridItem>
-            <Heading mb={2} fontWeight="bolder">
-              Our Communities
-            </Heading>
-            <VStack gap={2} maxWidth="520px">
-              {communities.map((community) => (
-                <CommunityCard
-                  key={community.id}
-                  community={community as Community}
-                  fontWeight={400}
-                />
-              ))}
-            </VStack>
-          </GridItem>
-        </Grid>
-      </Container>
-    </ApolloWrapper>
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+      <div className="container mx-auto px-6 py-12 space-y-12">
+        <header className="space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-slate-200">
+            <span>GoalPost</span>
+            <span className="text-slate-400">/</span>
+            <span>Navigation</span>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Choose where to start
+            </h1>
+            <p className="text-slate-300 max-w-2xl">
+              Jump into the assistant, explore the graph, or manage your
+              account. The links below take you straight to the primary
+              experiences.
+            </p>
+          </div>
+        </header>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {tiles.map((tile) => (
+            <Card
+              key={tile.title}
+              className="border-white/10 bg-white/5 backdrop-blur shadow-lg shadow-slate-950/40"
+            >
+              <CardHeader>
+                <CardTitle className="text-xl text-white">
+                  {tile.title}
+                </CardTitle>
+                <CardDescription className="text-slate-300">
+                  {tile.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {tile.actions.map((action) => (
+                    <Link key={action.href} href={action.href}>
+                      <Button
+                        variant={action.variant}
+                        className={
+                          action.variant === 'ghost'
+                            ? 'border border-white/20 text-slate-100'
+                            : ''
+                        }
+                        size="sm"
+                      >
+                        {action.label}
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-slate-400">
+                  Direct access with clear paths; no hidden routes.
+                </p>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </main>
   )
 }
-
-export default HomeClient

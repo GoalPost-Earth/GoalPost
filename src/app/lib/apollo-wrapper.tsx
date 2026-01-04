@@ -2,9 +2,9 @@
 
 import { ApolloLink, HttpLink } from '@apollo/client'
 import {
-  ApolloNextAppProvider,
-  InMemoryCache,
   ApolloClient,
+  InMemoryCache,
+  ApolloNextAppProvider,
   SSRMultipartLink,
 } from '@apollo/experimental-nextjs-app-support'
 import { ERROR_POLICY } from './apollo-functions'
@@ -16,7 +16,7 @@ import { onError } from '@apollo/client/link/error'
 import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
-import { toaster } from '@/components'
+import { toast } from 'sonner'
 import { useApp } from '../contexts'
 
 // have a function to create a client for you
@@ -42,8 +42,6 @@ export function ApolloWrapper({
     // (this does not work if you are rendering your page with `export const dynamic = "force-static"`)
 
     // fetchOptions: { cache: 'no-store' },
-    // you can override the default `fetchOptions` on a per query basis
-    // via the `context` property on the options passed as a second argument
     // to an Apollo Client data fetching hook, e.g.:
     // const { data } = useSuspenseQuery(MY_QUERY, { context: { fetchOptions: { cache: "force-cache" }}});
   })
@@ -94,7 +92,7 @@ export function ApolloWrapper({
     }
 
     fetchTokenData()
-  }, [router, user])
+  }, [router, user, token])
 
   if (isLoading || (!token && user)) {
     return <LoadingScreen />
@@ -138,8 +136,7 @@ export function ApolloWrapper({
             `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
           )
         )
-        toaster.error({
-          title: 'GraphQL Error',
+        toast.error('GraphQL Error', {
           description: graphQLErrors[0].message,
         })
       }
@@ -162,11 +159,15 @@ export function ApolloWrapper({
 
   const makeClient = () =>
     new ApolloClient({
-      name: 'web-ssr',
-      version: '1.2',
+      clientAwareness: {
+        name: 'web-ssr',
+        version: '1.2',
+      },
       link: authHttpLink,
       cache: new InMemoryCache(),
-      connectToDevTools: true,
+      devtools: {
+        enabled: true,
+      },
       defaultOptions: {
         watchQuery: {
           errorPolicy: ERROR_POLICY,

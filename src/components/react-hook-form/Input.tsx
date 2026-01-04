@@ -1,56 +1,66 @@
-'use client'
-
 import React from 'react'
-import {
-  Input as ChakraInput,
-  InputProps as ChakraInputProps,
-} from '@chakra-ui/react'
-import { Controller } from 'react-hook-form'
-import { ReactHookFormComponentProps } from '../../types/form'
-import { Field } from '../ui/field'
+import { Controller, Control, FieldErrors } from 'react-hook-form'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
-export interface InputProps extends ReactHookFormComponentProps {
-  type?:
-    | 'date'
-    | 'time'
-    | 'datetime-local'
-    | 'password'
-    | 'color'
-    | 'email'
-    | 'number'
-    | 'search'
-    | 'tel'
-    | 'text'
-    | 'url'
+interface InputProps {
+  label: string
+  name: string
+  type?: string
+  placeholder?: string
+  autoComplete?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
+  errors: FieldErrors
+  required?: boolean
+  minLength?: number
+  className?: string
 }
-type InputPropsType = InputProps & Omit<ChakraInputProps, 'type'>
 
-const Input = (props: InputPropsType) => {
-  const { label, name, control, errors, required, ...rest } = props
-
+const InputField: React.FC<InputProps> = ({
+  label,
+  name,
+  type = 'text',
+  placeholder,
+  autoComplete,
+  control,
+  errors,
+  required,
+  minLength,
+  className,
+}) => {
   return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <Field
-          label={label}
-          invalid={!!errors[name]}
-          errorText={errors[name]?.message as string}
-          required={required}
-        >
-          <ChakraInput
+    <div className={cn('space-y-2', className)}>
+      <Label htmlFor={name}>{label}</Label>
+      <Controller
+        name={name}
+        control={control}
+        rules={{
+          required: required ? `${label} is required` : false,
+          minLength: minLength
+            ? {
+                value: minLength,
+                message: `${label} must be at least ${minLength} characters`,
+              }
+            : undefined,
+        }}
+        render={({ field }) => (
+          <Input
             id={name}
-            border="1px solid #CBD5E1"
-            borderRadius="10px"
-            variant="subtle"
+            type={type}
+            placeholder={placeholder}
+            autoComplete={autoComplete}
             {...field}
-            {...rest}
+            className={cn(errors[name] && 'border-red-500')}
           />
-        </Field>
+        )}
+      />
+      {errors[name] && (
+        <p className="text-sm text-red-500">{String(errors[name]?.message)}</p>
       )}
-    />
+    </div>
   )
 }
 
-export default Input
+export default InputField

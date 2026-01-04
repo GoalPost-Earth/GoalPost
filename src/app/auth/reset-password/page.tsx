@@ -1,9 +1,10 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Box, Button, Flex, Heading, Text } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
-import { Input } from '@/components/react-hook-form'
+import Input from '@/components/react-hook-form/Input'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 function ResetPasswordPage() {
   const router = useRouter()
@@ -65,60 +66,56 @@ function ResetPasswordPage() {
   }
 
   return (
-    <Flex minH="100vh" align="center" justify="center" bg={'gray.50'}>
-      <Box p={8} rounded="xl" boxShadow="lg" w="full" maxW="md">
-        <Heading as="h1" size="lg" textAlign="center" color="brand.600" mb={2}>
-          Reset your password
-        </Heading>
-        {email && (
-          <Text textAlign="center" color="gray.600" mb={4}>
-            for {email}
-          </Text>
-        )}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Box mb={6}>
-            <Input
-              label="New Password"
-              name="newPassword"
-              type="password"
-              placeholder="Enter new password"
-              control={control}
-              errors={errors}
-              required
-              minLength={8}
-            />
-            <Input
-              label="Confirm New Password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Re-enter new password"
-              control={control}
-              errors={errors}
-              required
-            />
-          </Box>
-          {errorMsg && (
-            <Text color="red.500" mb={4} textAlign="center">
-              {errorMsg}
-            </Text>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-blue-600 mb-2">
+            Reset your password
+          </CardTitle>
+          {email && (
+            <p className="text-center text-gray-600 mb-4">for {email}</p>
           )}
-          {success && (
-            <Text color="green.500" mb={4} textAlign="center">
-              {success}
-            </Text>
-          )}
-          <Button
-            colorScheme="brand"
-            type="submit"
-            w="full"
-            mb={4}
-            loading={loading || isSubmitting}
-          >
-            Reset Password
-          </Button>
-        </form>
-      </Box>
-    </Flex>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-6">
+              <Input
+                label="New Password"
+                name="newPassword"
+                type="password"
+                placeholder="Enter new password"
+                control={control}
+                errors={errors}
+                required
+                minLength={8}
+              />
+              <Input
+                label="Confirm New Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="Re-enter new password"
+                control={control}
+                errors={errors}
+                required
+              />
+            </div>
+            {errorMsg && (
+              <p className="text-red-500 mb-4 text-center">{errorMsg}</p>
+            )}
+            {success && (
+              <p className="text-green-500 mb-4 text-center">{success}</p>
+            )}
+            <Button
+              type="submit"
+              className="w-full mb-4"
+              disabled={loading || isSubmitting}
+            >
+              Reset Password
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

@@ -30,7 +30,7 @@ export const parsePhoneNumber = (phoneNumber?: string | number | null) => {
   return cleaned
 }
 
-// TODO: Move this out and use Chakra default Avatar component
+// TODO: Move this out and use  default Avatar component
 export function getInitials(name: string) {
   if (!name) return ''
 

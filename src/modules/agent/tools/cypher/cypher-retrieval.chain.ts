@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { RunnablePassthrough } from '@langchain/core/runnables'
 import initCypherGenerationChain from './cypher-generation.chain'
@@ -7,7 +7,6 @@ import initCypherEvaluationChain from './cypher-evaluation.chain'
 import { saveHistory } from '../../history'
 import initGenerateAuthoritativeAnswerChain from '../../chains/authoritative-answer-generation.chain'
 import { AgentToolInput } from '../../agent.types'
-import { extractIds } from '@/utils'
 
 // tag::input[]
 type CypherRetrievalThroughput = AgentToolInput & {
@@ -25,13 +24,13 @@ type CypherRetrievalThroughput = AgentToolInput & {
  * a Cypher statement based on the user question
  *
  * @param {Neo4jGraph}        graph     The graph
- * @param {BaseLanguageModel} llm       An LLM to generate the Cypher
+ * @param {BaseChatModel} llm       An LLM to generate the Cypher
  * @param {string}            question  The rephrased question
  * @returns {string}
  */
 export async function recursivelyEvaluate(
   graph: Neo4jGraph,
-  llm: BaseLanguageModel,
+  llm: BaseChatModel,
   question: string
 ): Promise<string> {
   // Create Cypher Generation Chain
@@ -80,13 +79,13 @@ export async function recursivelyEvaluate(
  * attempt to correct the errors.
  *
  * @param {Neo4jGraph}        graph  The graph instance to get the results from
- * @param {BaseLanguageModel} llm    The LLM to evaluate the Cypher statement if anything goes wrong
+ * @param {BaseChatModel} llm    The LLM to evaluate the Cypher statement if anything goes wrong
  * @param {string}            input  The input built up by the Cypher Retrieval Chain
  * @returns {Promise<Record<string, any>[]>}
  */
 export async function getResults(
   graph: Neo4jGraph,
-  llm: BaseLanguageModel,
+  llm: BaseChatModel,
   input: { question: string; cypher: string }
 ): Promise<any | undefined> {
   // catch Cypher errors and pass to the Cypher evaluation chain
@@ -119,7 +118,7 @@ export async function getResults(
 
 // tag::function[]
 export default async function initCypherRetrievalChain(
-  llm: BaseLanguageModel,
+  llm: BaseChatModel,
   graph: Neo4jGraph
 ) {
   // initiate answer chain
@@ -157,7 +156,7 @@ export default async function initCypherRetrievalChain(
       .assign({
         responseId: async (input: CypherRetrievalThroughput, options) => {
           saveHistory(
-            options?.config.configurable.sessionId,
+            (options as any)?.config.configurable.sessionId,
             'cypher',
             input.input,
             input.rephrasedQuestion,
@@ -169,5 +168,12 @@ export default async function initCypherRetrievalChain(
       })
       .pick('output')
   )
+}
+
+function extractIds(
+  results: Record<string, any> | Record<string, any>[]
+): unknown {
+  console.log('Function not implemented.', results)
+  throw new Error('Function not implemented.')
 }
 // end::function[]

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
-import { Text, Box } from '@chakra-ui/react'
-import { motion, stagger, useAnimate } from 'framer-motion'
+import { motion, stagger, useAnimate } from 'motion/react'
+import { cn } from '@/lib/utils'
 
 export const TextGenerateEffect = ({
   words,
@@ -37,9 +37,8 @@ export const TextGenerateEffect = ({
           return (
             <motion.span
               key={word + idx}
+              className="dark:text-white text-black opacity-0"
               style={{
-                color: 'black',
-                opacity: 0,
                 filter: filter ? 'blur(10px)' : 'none',
               }}
             >
@@ -52,14 +51,12 @@ export const TextGenerateEffect = ({
   }
 
   return (
-    <Box
-      fontWeight="bold"
-      marginTop={4}
-      fontSize="2xl"
-      lineHeight="snug"
-      letterSpacing="wide"
-    >
-      {renderWords()}
-    </Box>
+    <div className={cn('font-bold', className)}>
+      <div className="mt-4">
+        <div className=" dark:text-white text-black text-2xl leading-snug tracking-wide">
+          {renderWords()}
+        </div>
+      </div>
+    </div>
   )
 }

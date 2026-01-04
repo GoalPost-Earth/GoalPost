@@ -1,12 +1,14 @@
-import typeDefs from './schema/schema.gql'
-import resolvers from './resolvers'
+import typeDefs from '@/lib/graphql/schema/schema.gql'
+import resolvers from '@/lib/graphql/resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
 import { jwtDecode } from 'jwt-decode'
-import { authIdCallback } from './callbacks/populatedByCallbacks'
+import logger from '@/lib/logger'
 
 export default async function initializeApolloServer() {
+  logger.info('🚀 Initializing Apollo Server...')
+
   const driver = neoDriver(
     process.env.NEO4J_URI ?? 'bolt://localhost:7687',
     auth.basic(
@@ -21,7 +23,6 @@ export default async function initializeApolloServer() {
     driver,
     features: {
       authorization: { key: process.env.JWT_SECRET ?? 'jwt' },
-      populatedBy: { callbacks: { authIdCallback } },
       excludeDeprecatedFields: {
         implicitEqualFilters: true,
         implicitSet: true,
@@ -32,7 +33,19 @@ export default async function initializeApolloServer() {
     },
   })
 
-  const schema = await neoSchema.getSchema()
+  let schema
+  try {
+    schema = await neoSchema.getSchema()
+    logger.info('✅ GraphQL schema built successfully')
+  } catch (error) {
+    logger.error('❌ Failed to build GraphQL schema', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    throw error
+  }
+
+  const isDevelopment = process.env.NODE_ENV === 'development'
 
   const yogaServer = createYoga({
     schema,
@@ -45,14 +58,39 @@ export default async function initializeApolloServer() {
         try {
           jwt = jwtDecode(token)
         } catch (error) {
-          console.error('Invalid token:', error)
+          logger.warn('Invalid JWT token', {
+            error: error instanceof Error ? error.message : String(error),
+          })
         }
       }
 
       return { token, jwt }
     },
     graphqlEndpoint: '/api/graphql',
+    cors: isDevelopment
+      ? {
+          origin: '*',
+          credentials: true,
+          methods: ['GET', 'POST', 'OPTIONS'],
+          allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'Apollo-Require-Preflight',
+          ],
+        }
+      : {
+          origin: process.env.CORS_ORIGIN || undefined,
+          credentials: true,
+        },
+    logging: {
+      debug: (...args) => logger.debug(args.join(' ')),
+      info: (...args) => logger.info(args.join(' ')),
+      warn: (...args) => logger.warn(args.join(' ')),
+      error: (...args) => logger.error(args.join(' ')),
+    },
   })
+
+  logger.info('✅ Apollo Server initialized successfully')
 
   return yogaServer
 }

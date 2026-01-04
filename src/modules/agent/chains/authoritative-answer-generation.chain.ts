@@ -4,7 +4,7 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from '@langchain/core/runnables'
-import { BaseLanguageModel } from 'langchain/base_language'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 
 // tag::interface[]
 export type GenerateAuthoritativeAnswerInput = {
@@ -15,7 +15,7 @@ export type GenerateAuthoritativeAnswerInput = {
 
 // tag::function[]
 export default function initGenerateAuthoritativeAnswerChain(
-  llm: BaseLanguageModel
+  llm: BaseChatModel
 ): RunnableSequence<GenerateAuthoritativeAnswerInput, string> {
   const answerQuestionPrompt = PromptTemplate.fromTemplate(`
     Use the following context to answer the following question.
@@ -44,15 +44,16 @@ export default function initGenerateAuthoritativeAnswerChain(
     {context}
   `)
 
-  return RunnableSequence.from<GenerateAuthoritativeAnswerInput, string>([
-    RunnablePassthrough.assign({
-      context: ({ context }) =>
-        context == undefined || context === '' ? "I don't know" : context,
-    }),
-    answerQuestionPrompt,
-    llm,
-    new StringOutputParser(),
-  ])
+  return RunnablePassthrough.assign({
+    context: ({ context }) =>
+      context == undefined || context === '' ? "I don't know" : context,
+  })
+    .pipe(answerQuestionPrompt)
+    .pipe(llm)
+    .pipe(new StringOutputParser()) as RunnableSequence<
+    GenerateAuthoritativeAnswerInput,
+    string
+  >
 }
 // end::function[]
 

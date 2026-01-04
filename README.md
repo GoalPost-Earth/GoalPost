@@ -2,6 +2,8 @@
 
 # GoalPost Prototype 1
 
+Looking for docs? Start with the consolidated index at [docs/README.md](docs/README.md) for architecture, setup, and assistant mode references.
+
 ## Installation Instructions
 
 This document provides step-by-step instructions for setting up the GoalPost prototype on your local machine. 
