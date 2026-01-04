@@ -99,6 +99,13 @@ const nextConfig: NextConfig = {
 
     return config
   },
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /@apollo\/client/ },
+    ]
+    return config
+  },
   experimental: {
     optimizePackageImports: [
       'lodash',

@@ -25,7 +25,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.69",
     "@ai-sdk/react": "^2.0.97",
-    "@apollo/client": "^3.12.11",
+    "@apollo/client": "^4.0.11",
+    "@apollo/client-integration-nextjs": "^0.14.3",
     "@apollo/experimental-nextjs-app-support": "^0.11.5",
     "@as-integrations/next": "^3.2.0",
     "@assistant-ui/react": "^0.11.41",
