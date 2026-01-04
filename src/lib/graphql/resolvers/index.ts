@@ -10,7 +10,11 @@ const resolvers = {
   // GraphQLResolveInfo
 
   Person: {
-    name: (source: Person) => `${source.firstName} ${source.lastName}`,
+    name: (source: Person) => {
+      console.log('🚀 ~ index.ts:14 ~ source:', source)
+
+      return `${source.firstName} ${source.lastName}`
+    },
   },
 
   Mutation: {
