@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react'
-import { ApolloError } from '@apollo/client'
 import { ErrorScreen, LoadingScreen } from '../screens'
 
 type ApolloWrapperPropsType = {
@@ -14,7 +13,9 @@ const ApolloWrapper = (props: ApolloWrapperPropsType) => {
   const { data, loading, error, placeholder } = props
 
   if (error) {
-    return <ErrorScreen error={error as ApolloError} />
+    const normalizedError =
+      error instanceof Error ? error : new Error('GraphQL request failed')
+    return <ErrorScreen error={normalizedError} />
   } else if (data || placeholder) {
     return <>{props.children}</>
   } else if (loading) {

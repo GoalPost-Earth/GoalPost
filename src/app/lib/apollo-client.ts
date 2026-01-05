@@ -1,6 +1,4 @@
-import { from } from '@apollo/client'
-import { ApolloClient, InMemoryCache } from '@apollo/client'
-import { registerApolloClient } from '@apollo/experimental-nextjs-app-support'
+import { ApolloClient, InMemoryCache, from } from '@apollo/client'
 import {
   authLink,
   ERROR_POLICY,
@@ -9,9 +7,8 @@ import {
   retryLink,
 } from './apollo-functions'
 
-export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
-  return new ApolloClient({
-    uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/api/graphql',
+const createApolloClient = () =>
+  new ApolloClient({
     link: from([retryLink, errorLink, authLink.concat(httpLink)]),
     cache: new InMemoryCache(),
     defaultOptions: {
@@ -26,4 +23,20 @@ export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
       },
     },
   })
-})
+
+let client: ApolloClient | null = null
+
+export const getClient = () => {
+  if (!client) {
+    client = createApolloClient()
+  }
+  return client
+}
+
+export const query = (options: Parameters<ApolloClient['query']>[0]) =>
+  getClient().query(options)
+
+// Placeholder export to retain previous API surface; not used in the app.
+export const PreloadQuery = undefined
+
+export { createApolloClient }

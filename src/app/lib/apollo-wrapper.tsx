@@ -1,18 +1,19 @@
 'use client'
 
-import { ApolloLink, HttpLink } from '@apollo/client'
 import {
+  ApolloLink,
+  HttpLink,
   ApolloClient,
   InMemoryCache,
-  ApolloNextAppProvider,
-} from '@apollo/experimental-nextjs-app-support'
+} from '@apollo/client'
+import { ApolloProvider } from '@apollo/client/react'
 import { ERROR_POLICY } from './apollo-functions'
 
 import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
 import { onError } from '@apollo/client/link/error'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toast } from 'sonner'
@@ -33,17 +34,13 @@ export function ApolloWrapper({
     expiresAt: 1748050000,
   })
 
-  const httpLink = new HttpLink({
-    // this needs to be an absolute url, as relative urls cannot be used in SSR
-    uri: process.env.NEXT_PUBLIC_GRAPHQL_URI ?? '/api/graphql',
-
-    // you can disable result caching here if you want to
-    // (this does not work if you are rendering your page with `export const dynamic = "force-static"`)
-
-    // fetchOptions: { cache: 'no-store' },
-    // to an Apollo Client data fetching hook, e.g.:
-    // const { data } = useSuspenseQuery(MY_QUERY, { context: { fetchOptions: { cache: "force-cache" }}});
-  })
+  const httpLink = useMemo(
+    () =>
+      new HttpLink({
+        uri: process.env.NEXT_PUBLIC_GRAPHQL_URI ?? '/api/graphql',
+      }),
+    []
+  )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -93,88 +90,102 @@ export function ApolloWrapper({
     fetchTokenData()
   }, [router, user, token])
 
+  const authLink = useMemo(
+    () =>
+      new ApolloLink((operation, forward) => {
+        if (token) {
+          try {
+            const expireDate = new Date(token.expiresAt * 1000)
+            if (expireDate < new Date()) {
+              console.debug(
+                '[GraphQL debug] Access token expired, refreshing:',
+                expireDate
+              )
+              router.refresh()
+            }
+
+            operation.setContext(
+              ({ headers }: { headers: Record<string, string> }) => {
+                return {
+                  headers: {
+                    Authorization:
+                      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
+                    ...headers,
+                  },
+                }
+              }
+            )
+          } catch (error) {
+            console.error(error)
+          }
+        }
+
+        return forward(operation)
+      }),
+    [router, token]
+  )
+
+  const errorLink = useMemo(
+    () =>
+      onError((error) => {
+        const { graphQLErrors, networkError } = error as {
+          graphQLErrors?: ReadonlyArray<{
+            message: string
+            locations?: unknown
+            path?: unknown
+          }>
+          networkError?: unknown
+        }
+
+        if (graphQLErrors) {
+          graphQLErrors.forEach(({ message, locations, path }) =>
+            console.error(
+              `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+            )
+          )
+          toast.error('GraphQL Error', {
+            description: graphQLErrors[0].message,
+          })
+        }
+        if (networkError) {
+          console.error('[Network error]:', networkError)
+        }
+      }),
+    []
+  )
+
+  const authHttpLink = useMemo(
+    () => ApolloLink.from([errorLink, authLink, new RetryLink(), httpLink]),
+    [authLink, errorLink, httpLink]
+  )
+
+  const client = useMemo(
+    () =>
+      new ApolloClient({
+        clientAwareness: {
+          name: 'web-ssr',
+          version: '1.2',
+        },
+        link: authHttpLink,
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          watchQuery: {
+            errorPolicy: ERROR_POLICY,
+          },
+          query: {
+            errorPolicy: ERROR_POLICY,
+          },
+          mutate: {
+            errorPolicy: ERROR_POLICY,
+          },
+        },
+      }),
+    [authHttpLink]
+  )
+
   if (isLoading || (!token && user)) {
     return <LoadingScreen />
   }
 
-  const authLink = new ApolloLink((operation, forward) => {
-    if (token) {
-      try {
-        const expireDate = new Date(token.expiresAt * 1000)
-        if (expireDate < new Date()) {
-          console.debug(
-            '[GraphQL debug] Access token expired, refreshing:',
-            expireDate
-          )
-          router.refresh()
-        }
-
-        operation.setContext(
-          ({ headers }: { headers: Record<string, string> }) => {
-            return {
-              headers: {
-                Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo`,
-                ...headers,
-              },
-            }
-          }
-        )
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    return forward(operation)
-  })
-
-  const authHttpLink = ApolloLink.from([
-    onError(({ graphQLErrors, networkError }) => {
-      if (graphQLErrors) {
-        graphQLErrors.forEach(({ message, locations, path }) =>
-          console.error(
-            `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-          )
-        )
-        toast.error('GraphQL Error', {
-          description: graphQLErrors[0].message,
-        })
-      }
-      if (networkError) {
-        console.error('[Network error]:', networkError)
-      }
-    }),
-    authLink,
-    new RetryLink(),
-    httpLink,
-  ])
-
-  const makeClient = () =>
-    new ApolloClient({
-      clientAwareness: {
-        name: 'web-ssr',
-        version: '1.2',
-      },
-      link: authHttpLink,
-      cache: new InMemoryCache(),
-      devtools: {
-        enabled: true,
-      },
-      defaultOptions: {
-        watchQuery: {
-          errorPolicy: ERROR_POLICY,
-        },
-        query: {
-          errorPolicy: ERROR_POLICY,
-        },
-        mutate: {
-          errorPolicy: ERROR_POLICY,
-        },
-      },
-    })
-
-  return (
-    <ApolloNextAppProvider makeClient={makeClient}>
-      {children}
-    </ApolloNextAppProvider>
-  )
+  return <ApolloProvider client={client}>{children}</ApolloProvider>
 }

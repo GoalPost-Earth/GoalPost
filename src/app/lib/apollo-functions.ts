@@ -21,9 +21,19 @@ export const retryLink = new RetryLink({
   },
 })
 
-export const errorLink = onError(({ graphQLErrors, networkError }) => {
+export const errorLink = onError((error) => {
+  const { graphQLErrors, networkError } = error as {
+    // Apollo Client v4 consolidates error shapes; we only care about these two if present
+    graphQLErrors?: ReadonlyArray<{
+      message: string
+      locations?: unknown
+      path?: unknown
+    }>
+    networkError?: unknown
+  }
+
   if (graphQLErrors) {
-    graphQLErrors.map(({ message, locations, path }) => {
+    graphQLErrors.forEach(({ message, locations, path }) => {
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
