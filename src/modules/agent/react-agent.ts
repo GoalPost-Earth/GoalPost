@@ -1,4 +1,7 @@
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
+import {
+  getLangChainChatModel,
+  getLangChainEmbeddings,
+} from '@/lib/llm/adapters/langchain-adapter'
 import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
@@ -137,13 +140,12 @@ export async function createDefaultReActAgent(
   graph: Neo4jGraph,
   sessionId?: string
 ) {
-  const llm = new ChatOpenAI({
+  const llm = getLangChainChatModel({
     modelName: process.env.OPENAI_MODEL || 'gpt-5.1',
     temperature: 0.7,
-    streaming: false,
   })
 
-  const embeddings = new OpenAIEmbeddings({
+  const embeddings = getLangChainEmbeddings({
     modelName: 'text-embedding-3-small',
   })
 

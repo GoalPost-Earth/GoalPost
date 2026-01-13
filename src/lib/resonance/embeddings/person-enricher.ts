@@ -4,10 +4,9 @@
  * Triggered on every pulse creation to keep Person embeddings current
  */
 
-import { ChatOpenAI } from '@langchain/openai'
-import { OpenAIEmbeddings } from '@langchain/openai'
 import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
+import { getAnalysisProvider, getEmbeddingsProvider } from '../../llm/factory'
 
 const PersonInsightsSchema = z.object({
   themes: z
@@ -45,10 +44,7 @@ async function extractPersonInsights(
   personId: string,
   pulses: Array<{ content: string; createdAt: string; type: string }>
 ): Promise<z.infer<typeof PersonInsightsSchema>> {
-  const llm = new ChatOpenAI({
-    modelName: 'gpt-5.1',
-    temperature: 0.3,
-  })
+  const provider = getAnalysisProvider()
 
   const pulsesSummary = pulses
     .map(
@@ -72,17 +68,19 @@ Provide insights about this person based on their contributions. Focus on:
 Be specific and evidence-based. Use the actual pulse content to support your insights.`
 
   // Use structured output parsing
-  const structuredLlm = llm.withStructuredOutput(PersonInsightsSchema)
-  const insights = await structuredLlm.invoke([
-    {
-      role: 'system',
-      content:
-        'You are an empathetic analyst who helps people understand themselves through their contributions and reflections.',
-    },
-    { role: 'user', content: prompt },
-  ])
+  const insights = await provider.structuredOutput(
+    [
+      {
+        role: 'system',
+        content:
+          'You are an empathetic analyst who helps people understand themselves through their contributions and reflections.',
+      },
+      { role: 'user', content: prompt },
+    ],
+    { schema: PersonInsightsSchema, temperature: 0.3 }
+  )
 
-  return insights as z.infer<typeof PersonInsightsSchema>
+  return insights
 }
 
 /**
@@ -151,11 +149,9 @@ export async function enrichPersonFromPulses(
     )
     // Still regenerate embedding from existing bio
     const bioText = `${person.name}${person.email ? ` (${person.email})` : ''}`
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: 'text-embedding-3-small',
-    })
-    const embedding = await embeddings.embedQuery(bioText)
+    const embeddingProvider = getEmbeddingsProvider()
+    const embeddings = await embeddingProvider.embed([bioText])
+    const embedding = embeddings[0]
 
     return {
       personId,
@@ -216,11 +212,9 @@ Fields of Care: ${updatedProperties.fieldsOfCare.join(', ')}
 Traits: ${updatedProperties.traits.join(', ')}
 Summary: ${insights.summary}`
 
-  const embeddings = new OpenAIEmbeddings({
-    openAIApiKey: process.env.OPENAI_API_KEY,
-    modelName: 'text-embedding-3-small',
-  })
-  const embedding = await embeddings.embedQuery(bioText)
+  const embeddingProvider = getEmbeddingsProvider()
+  const embeddings = await embeddingProvider.embed([bioText])
+  const embedding = embeddings[0]
 
   // Store updated embedding
   await graph.query(

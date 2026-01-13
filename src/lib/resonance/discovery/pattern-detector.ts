@@ -3,7 +3,7 @@
  * Uses LLM and vector similarity to discover semantic patterns across pulses
  */
 
-import { ChatOpenAI } from '@langchain/openai'
+import { getAnalysisProvider } from '@/lib/llm'
 import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
 
@@ -124,10 +124,7 @@ async function analyzeResonancePattern(
     return null
   }
 
-  const llm = new ChatOpenAI({
-    modelName: 'gpt-5.1',
-    temperature: 0.2,
-  })
+  const provider = getAnalysisProvider()
 
   const pulseList = pulses
     .map((p, i) => `[${i}] ID: ${p.id}\n   Content: "${p.content}"`)
@@ -150,17 +147,20 @@ Focus on:
 
 Be specific and evidence-based. Only create connections where the resonance is clear and meaningful.`
 
-  const structuredLlm = llm.withStructuredOutput(ResonancePatternSchema)
-
   try {
-    const pattern = await structuredLlm.invoke([
-      {
-        role: 'system',
-        content:
-          'You are an expert at discovering meaningful patterns and connections in human experiences and reflections.',
-      },
-      { role: 'user', content: prompt },
-    ])
+    const pattern = await provider.structuredOutput<
+      z.infer<typeof ResonancePatternSchema>
+    >(
+      [
+        {
+          role: 'system',
+          content:
+            'You are an expert at discovering meaningful patterns and connections in human experiences and reflections.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      { schema: ResonancePatternSchema, temperature: 0.2 }
+    )
 
     return pattern as z.infer<typeof ResonancePatternSchema>
   } catch (error) {
