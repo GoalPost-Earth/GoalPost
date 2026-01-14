@@ -35,7 +35,7 @@ export default function Home() {
             subtitle="Inner Sanctuary"
             description="Self-reflection, personal growth, and individual purpose."
             variant="mespace"
-            onClick={() => router.push('/protected/assistant')}
+            onClick={() => router.push('/protected/fields/mespace')}
           />
 
           {/* WeSpace - Community Space */}
@@ -45,7 +45,7 @@ export default function Home() {
             subtitle="Collective Field"
             description="Community sensing, shared intent, and collaborative evolution."
             variant="wespace"
-            onClick={() => router.push('/protected/graph-explorer')}
+            onClick={() => router.push('/protected/fields/wespace')}
           />
         </div>
       </div>

@@ -32,7 +32,7 @@ export function SpaceWrapper({
       onClick={onClick}
     >
       {/* Main container */}
-      <div className="gp-glass w-[320px] h-[320px] lg:w-[440px] lg:h-[440px] rounded-full flex flex-col items-center justify-center transition-all duration-700 hover:scale-105 active:scale-95 group-hover:rotate-2">
+      <div className="gp-glass w-[320px] h-80 lg:w-110 lg:h-110 rounded-full flex flex-col items-center justify-center transition-all duration-700 hover:scale-105 active:scale-95 group-hover:rotate-2">
         {/* Content */}
         <div className="flex flex-col items-center gap-6 p-8 text-center relative z-10">
           {/* Icon */}
@@ -53,7 +53,7 @@ export function SpaceWrapper({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gp-ink-soft dark:text-gp-ink-soft max-w-[200px] leading-relaxed hidden lg:block font-light transition-colors">
+          <p className="text-sm text-gp-ink-soft dark:text-gp-ink-soft max-w-50 leading-relaxed hidden lg:block font-light transition-colors">
             {description}
           </p>
         </div>
