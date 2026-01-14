@@ -25,7 +25,7 @@ export default function NavBar() {
   }
 
   return (
-    <header className="fixed top-6 left-0 right-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-gp-glass-border px-10 py-4 gp-glass mx-10 rounded-full shadow-lg">
+    <header className="fixed top-6 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-gp-glass-border px-10 py-4 gp-glass mx-10 rounded-full shadow-lg">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-4 text-gp-primary">
           <div className="size-6">

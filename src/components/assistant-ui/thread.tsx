@@ -36,8 +36,21 @@ export const Thread: FC = () => {
       {/* Register Tool UI for person profile cards */}
       <PersonProfileCardUI />
 
-      <ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4 pt-8">
+      {/* Scrollable Messages Area */}
+      <ThreadPrimitive.Viewport className="relative flex-1 overflow-y-auto scroll-smooth bg-inherit px-4 pt-4 scrollbar-hide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* Gradient overlay at top */}
+        <div className="absolute top-0 inset-x-0 h-8 bg-linear-to-b from-background/80 dark:from-slate-900/80 to-transparent pointer-events-none z-10" />
+
         <ThreadWelcome />
+
+        {/* Date separator */}
+        <ThreadPrimitive.If empty={false}>
+          <div className="flex justify-center py-4 first:pt-0">
+            <span className="text-[9px] uppercase tracking-widest text-slate-400 dark:text-white/40 font-medium py-1 px-3 rounded-full bg-slate-100 dark:bg-white/5">
+              Today
+            </span>
+          </div>
+        </ThreadPrimitive.If>
 
         <ThreadPrimitive.Messages
           components={{
@@ -47,15 +60,15 @@ export const Thread: FC = () => {
           }}
         />
 
-        <ThreadPrimitive.If empty={false}>
-          <div className="min-h-8 flex-grow" />
-        </ThreadPrimitive.If>
-
-        <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-inherit pb-4">
-          <ThreadScrollToBottom />
-          <Composer />
-        </div>
+        {/* Padding at bottom to prevent messages from hiding behind composer */}
+        <div className="h-8" />
       </ThreadPrimitive.Viewport>
+
+      {/* Fixed Composer at Bottom */}
+      <div className="border-t border-slate-200 dark:border-white/5 px-4 py-4 bg-gradient-to-t from-background/95 dark:from-slate-900/95 to-background/50 dark:to-slate-900/50">
+        <ThreadScrollToBottom />
+        <Composer />
+      </div>
     </ThreadPrimitive.Root>
   )
 }
@@ -78,14 +91,14 @@ const ThreadWelcome: FC = () => {
   return (
     <ThreadPrimitive.Empty>
       <div className="flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
-        <div className="flex w-full flex-grow flex-col items-center justify-center">
+        <div className="flex w-full flex-grow flex-col items-center justify-center py-8">
           <div className="text-4xl mb-4">🍄</div>
-          <p className="text-xl font-medium mb-2">
-            Welcome to Aiden Cinnamon Tea
+          <p className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">
+            Welcome to GoalPost
           </p>
-          <p className="text-sm text-muted-foreground text-center max-w-md">
-            A meta-relational AI companion. Speak to activate the simulation
-            protocol, or ask anything to begin.
+          <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-md">
+            I&apos;ve been monitoring your field. Ask me about patterns,
+            connections, or any insights you&apos;d like to explore.
           </p>
         </div>
         <ThreadWelcomeSuggestions />
@@ -133,15 +146,34 @@ const ThreadWelcomeSuggestions: FC = () => {
 
 const Composer: FC = () => {
   return (
-    <ComposerPrimitive.Root className="focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border bg-inherit px-2.5 shadow-sm transition-colors ease-in">
-      <ComposerPrimitive.Input
-        rows={1}
-        autoFocus
-        placeholder="Write a message..."
-        className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
-      />
-      <ComposerAction />
-    </ComposerPrimitive.Root>
+    <div className="w-full space-y-3">
+      {/* Input wrapper with gradient blur */}
+      <div className="relative group">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/20 dark:to-gp-accent-glow/20 rounded-2xl blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-700" />
+
+        <ComposerPrimitive.Root className="relative flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 group-focus-within:border-gp-primary/30 dark:group-focus-within:border-gp-primary/30 rounded-2xl p-2 pr-2 shadow-lg dark:shadow-none transition-colors">
+          <ComposerPrimitive.Input
+            rows={1}
+            autoFocus
+            placeholder="Ask about patterns, entities, or flows..."
+            className="flex-1 bg-transparent border-none text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 p-1 outline-none disabled:cursor-not-allowed resize-none"
+          />
+          <ComposerAction />
+        </ComposerPrimitive.Root>
+      </div>
+
+      {/* Bottom action buttons */}
+      <div className="flex justify-center gap-6">
+        <button className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
+          <span className="material-symbols-outlined text-[12px]">delete</span>
+          Clear
+        </button>
+        <button className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
+          <span className="material-symbols-outlined text-[12px]">tune</span>
+          Settings
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -150,24 +182,16 @@ const ComposerAction: FC = () => {
     <>
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
-          <TooltipIconButton
-            tooltip="Send"
-            variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in"
-          >
-            <SendHorizontalIcon />
-          </TooltipIconButton>
+          <button className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-gp-primary dark:hover:bg-gp-primary hover:text-white text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
+            <SendHorizontalIcon className="size-5" />
+          </button>
         </ComposerPrimitive.Send>
       </ThreadPrimitive.If>
       <ThreadPrimitive.If running>
         <ComposerPrimitive.Cancel asChild>
-          <TooltipIconButton
-            tooltip="Cancel"
-            variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in"
-          >
+          <button className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-red-500 text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
             <CircleStopIcon />
-          </TooltipIconButton>
+          </button>
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
     </>
@@ -176,14 +200,19 @@ const ComposerAction: FC = () => {
 
 const UserMessage: FC = () => {
   return (
-    <MessagePrimitive.Root className="grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 py-4 [&:where(>*)]:col-start-2">
-      <UserActionBar />
-
-      <div className="bg-muted text-foreground col-start-2 row-start-2 max-w-[calc(var(--thread-max-width)*0.8)] rounded-3xl px-5 py-2.5 break-words">
+    <MessagePrimitive.Root className="flex flex-col items-end gap-1 my-2">
+      {/* Message bubble */}
+      <div className="p-4 bg-gradient-to-br from-gp-primary/90 to-blue-600/90 text-white text-sm rounded-2xl rounded-tr-none shadow-md shadow-gp-primary/20 border border-white/10 max-w-[85%] leading-relaxed break-words backdrop-blur-md">
         <MessagePrimitive.Parts />
       </div>
 
-      <BranchPicker className="col-span-full col-start-1 row-start-3 -mr-1 justify-end" />
+      {/* Timestamp */}
+      <span className="text-[9px] text-slate-400 dark:text-white/30 pr-1 font-medium">
+        Just now
+      </span>
+
+      <UserActionBar />
+      <BranchPicker className="hidden" />
     </MessagePrimitive.Root>
   )
 }
@@ -223,20 +252,29 @@ const EditComposer: FC = () => {
 
 const AssistantMessage: FC = () => {
   return (
-    <MessagePrimitive.Root className="relative grid w-full max-w-[var(--thread-max-width)] grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr] py-4">
-      <div className="text-foreground col-span-2 col-start-2 row-start-1 my-1.5 max-w-[calc(var(--thread-max-width)*0.8)] leading-7 break-words">
-        <MessagePrimitive.Parts
-          components={{
-            Text: EnhancedMessageText,
-            tools: { Fallback: ToolFallback },
-          }}
-        />
-        <MessageError />
+    <MessagePrimitive.Root className="flex gap-3 group my-2">
+      {/* Avatar */}
+      <div className="shrink-0 size-8 rounded-full bg-gp-primary/10 dark:bg-gp-primary/20 border border-gp-primary/20 dark:border-gp-primary/30 flex items-center justify-center mt-1 group-hover:bg-gp-primary/20 dark:group-hover:bg-gp-primary/30 transition-colors">
+        <span className="material-symbols-outlined text-sm text-gp-primary dark:text-gp-primary">
+          smart_toy
+        </span>
       </div>
 
-      <AssistantActionBar />
+      {/* Message */}
+      <div className="space-y-2 max-w-[85%]">
+        <div className="p-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl rounded-tl-none text-sm text-slate-600 dark:text-white/80 leading-relaxed shadow-sm dark:shadow-none">
+          <MessagePrimitive.Parts
+            components={{
+              Text: EnhancedMessageText,
+              tools: { Fallback: ToolFallback },
+            }}
+          />
+          <MessageError />
+        </div>
+        <AssistantActionBar />
+      </div>
 
-      <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />
+      <BranchPicker className="hidden" />
     </MessagePrimitive.Root>
   )
 }
@@ -257,10 +295,13 @@ const AssistantActionBar: FC = () => {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="text-muted-foreground data-[floating]:bg-background col-start-3 row-start-2 -ml-1 flex gap-1 data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm"
+      className="flex gap-1 text-slate-400 dark:text-slate-500 data-[floating]:bg-white dark:data-[floating]:bg-slate-800 data-[floating]:border data-[floating]:border-slate-200 dark:data-[floating]:border-white/10 data-[floating]:rounded-lg data-[floating]:p-1.5 data-[floating]:shadow-md"
     >
       <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy">
+        <TooltipIconButton
+          tooltip="Copy"
+          className="hover:text-gp-primary dark:hover:text-gp-primary"
+        >
           <MessagePrimitive.If copied>
             <CheckIcon />
           </MessagePrimitive.If>
@@ -270,7 +311,10 @@ const AssistantActionBar: FC = () => {
         </TooltipIconButton>
       </ActionBarPrimitive.Copy>
       <ActionBarPrimitive.Reload asChild>
-        <TooltipIconButton tooltip="Refresh">
+        <TooltipIconButton
+          tooltip="Refresh"
+          className="hover:text-gp-primary dark:hover:text-gp-primary"
+        >
           <RefreshCwIcon />
         </TooltipIconButton>
       </ActionBarPrimitive.Reload>
