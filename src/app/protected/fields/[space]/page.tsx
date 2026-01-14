@@ -1,11 +1,16 @@
 'use client'
 
+import { useRouter, useParams } from 'next/navigation'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
 
 export default function FieldsPage() {
+  const router = useRouter()
+  const params = useParams()
+
   const handleFieldClick = (fieldTitle: string) => {
-    console.log(`Clicked field: ${fieldTitle}`)
-    // Navigate to field details or open field modal
+    const fieldId = fieldTitle.toLowerCase().replace(/\s+/g, '-')
+    const space = params?.space as string
+    router.push(`/protected/fields/${space}/${fieldId}`)
   }
 
   return (
