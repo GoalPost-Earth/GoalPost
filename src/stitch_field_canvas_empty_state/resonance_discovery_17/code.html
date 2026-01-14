@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Offering Input - Seed Clicked (Light Mode)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "primary-dark": "#0b8bc9",
+                        "accent-glow": "#4fffcb",
+                        "background-light": "#f3f5f7",
+                        "glass-border": "rgba(0, 0, 0, 0.06)",
+                        "glass-bg": "rgba(255, 255, 255, 0.75)",
+                        "glass-panel-bg": "rgba(255, 255, 255, 0.65)",
+                        "goal-tint": "#0ea5e9","resource-tint": "#22c55e","story-tint": "#a855f7",},
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                        'float-random': 'float 12s ease-in-out 2s infinite',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
+                        'ripple': 'ripple 2s linear infinite',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'breathing': 'breathing 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px -5px rgba(19, 164, 236, 0.3)' },
+                            '100%': { boxShadow: '0 0 40px 10px rgba(19, 164, 236, 0.5)' },
+                        },
+                        ripple: {
+                            '0%': { transform: 'scale(1)', opacity: '0.8' },
+                            '100%': { transform: 'scale(2.5)', opacity: '0' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        },
+                        breathing: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.05)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 
+                        0 0 0 1px rgba(0,0,0,0.02);
+            transition: all 0.4s ease;
+        }
+        .pulse-node {
+            transition: z-index 0s;
+        }
+        .pulse-node:hover {
+            z-index: 50;
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 25px 50px -12px rgba(100, 116, 139, 0.25), 
+                        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+        }
+        .glass-input-glow {
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(to right, rgba(19, 164, 236, 0.15), rgba(79, 255, 203, 0.15), rgba(19, 164, 236, 0.15));
+            border-radius: 1.7rem;
+            filter: blur(16px);
+            z-index: -1;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-background-light text-slate-700 font-display overflow-hidden selection:bg-primary/20 selection:text-primary-dark">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<header class="z-40 flex items-center justify-between whitespace-nowrap border-b border-glass-border bg-glass-bg backdrop-blur-md px-10 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-800">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined text-[32px]">hub</span>
+</div>
+<h2 class="text-slate-800 text-lg font-bold leading-tight tracking-[-0.015em]">GoalPost</h2>
+</div>
+<div class="flex items-center gap-9 hidden md:flex">
+<a class="text-primary font-semibold hover:text-primary-dark transition-colors text-sm leading-normal" href="#">Explore Field</a>
+<a class="text-slate-500 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Patterns</a>
+<a class="text-slate-500 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Knowledge Graph</a>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<button class="flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 size-10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border border-white shadow-sm" data-alt="User profile avatar showing a smiling person" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJA6FsGkQJQDXAeeBjGcz1t8TDIvwLmaJTasvIMWu5G4tZkfY60wSyTWbPSMH5U2MGJJUDpOfM0gwgBNiA7FYJZVzGYOxDqXmuDmNfprNXmd73JYJ984Q723HoF0pNvBgAIB7gx5KoXLaQ6lP_OJq299kswaK8Dcay6d7xSydYxFFT40BpMn73G_3Vjv0RJuAKJeSrPB2hHQhfJJtztOtJJjNisIMY3EjGzzHRfIBPITOUO1woKtlf-TPAgkPQvUz3ukC1iu9cBtUg");'></div>
+</div>
+</header>
+<main class="relative flex-1 w-full h-full overflow-hidden bg-background-light">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(19,164,236,0.03),transparent_60%)]"></div>
+<div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#000000 1px, transparent 1px); background-size: 60px 60px;"></div>
+<div class="absolute top-[20%] left-[10%] size-1.5 bg-slate-400/30 rounded-full animate-pulse"></div>
+<div class="absolute top-[80%] left-[20%] size-2 bg-slate-400/20 rounded-full animate-pulse-slow"></div>
+<div class="absolute top-[40%] right-[15%] size-1.5 bg-slate-400/30 rounded-full animate-float"></div>
+<div class="absolute top-[28%] left-[68%] pulse-node animate-float flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(14,165,233,0.15)]">
+<span class="material-symbols-outlined text-goal-tint text-4xl drop-shadow-[0_2px_4px_rgba(14,165,233,0.2)]">flag</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">Expand API Coverage</span>
+<span class="text-[9px] uppercase tracking-widest text-goal-tint font-bold mt-1">Goal</span>
+</div>
+</div>
+<div class="absolute top-[62%] left-[22%] pulse-node animate-float-delayed flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(34,197,94,0.15)]">
+<span class="material-symbols-outlined text-resource-tint text-4xl drop-shadow-[0_2px_4px_rgba(34,197,94,0.2)]">diamond</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">Design Tokens</span>
+<span class="text-[9px] uppercase tracking-widest text-resource-tint font-bold mt-1">Resource</span>
+</div>
+</div>
+<div class="absolute top-[35%] left-[32%] pulse-node animate-float-random flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(168,85,247,0.15)]">
+<span class="material-symbols-outlined text-story-tint text-4xl drop-shadow-[0_2px_4px_rgba(168,85,247,0.2)]">auto_stories</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">Origin Narrative</span>
+<span class="text-[9px] uppercase tracking-widest text-story-tint font-bold mt-1">Story</span>
+</div>
+</div>
+<div class="absolute top-[75%] left-[72%] pulse-node animate-pulse-slow flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(14,165,233,0.15)]">
+<span class="material-symbols-outlined text-goal-tint text-4xl drop-shadow-[0_2px_4px_rgba(14,165,233,0.2)]">flag</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">Q3 Revenue</span>
+<span class="text-[9px] uppercase tracking-widest text-goal-tint font-bold mt-1">Goal</span>
+</div>
+</div>
+<div class="absolute top-[20%] left-[25%] pulse-node animate-float flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(34,197,94,0.15)]">
+<span class="material-symbols-outlined text-resource-tint text-4xl drop-shadow-[0_2px_4px_rgba(34,197,94,0.2)]">diamond</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">Raw Dataset B</span>
+<span class="text-[9px] uppercase tracking-widest text-resource-tint font-bold mt-1">Resource</span>
+</div>
+</div>
+<div class="absolute top-[45%] left-[82%] pulse-node animate-float-delayed flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-glass-panel-bg shadow-[0_10px_30px_-5px_rgba(168,85,247,0.15)]">
+<span class="material-symbols-outlined text-story-tint text-4xl drop-shadow-[0_2px_4px_rgba(168,85,247,0.2)]">auto_stories</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-semibold text-slate-700 leading-tight">User Journey Map</span>
+<span class="text-[9px] uppercase tracking-widest text-story-tint font-bold mt-1">Story</span>
+</div>
+</div>
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 rounded-full bg-white/60 border border-white/40 backdrop-blur-xl shadow-lg z-30 opacity-40 pointer-events-none">
+<button class="size-10 flex items-center justify-center rounded-full text-slate-600">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-600">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-600">
+<span class="material-symbols-outlined">center_focus_strong</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-600">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+<div class="absolute inset-0 z-40 bg-white/60 backdrop-blur-md transition-all duration-700"></div>
+<div class="absolute inset-x-0 bottom-[15%] z-50 flex justify-center items-end px-4">
+<div class="w-full max-w-[640px] animate-fade-in-up">
+<div class="relative group">
+<div class="glass-input-glow group-hover:opacity-100 transition-opacity duration-1000"></div>
+<div class="glass-input relative flex items-center gap-0 p-2 pl-3 rounded-3xl overflow-hidden">
+<div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-black/5 text-primary shadow-sm shrink-0 animate-breathing">
+<span class="material-symbols-outlined text-[26px]">spa</span>
+</div>
+<input autofocus="" class="flex-1 w-full bg-transparent border-0 focus:ring-0 text-xl text-slate-800 placeholder-slate-400 font-light px-4 h-14 caret-primary" placeholder="Speak your intention..." type="text"/>
+<div class="flex items-center gap-1 pr-1">
+<button class="group/mic p-3 rounded-2xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+<span class="material-symbols-outlined text-[24px] group-hover/mic:scale-110 transition-transform">mic</span>
+</button>
+<div class="w-px h-6 bg-slate-200 mx-1"></div>
+<button class="flex items-center justify-center size-12 rounded-2xl bg-primary hover:bg-primary-dark text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] hover:shadow-[0_6px_20px_-3px_rgba(19,164,236,0.6)]">
+<span class="material-symbols-outlined text-[24px]">arrow_upward</span>
+</button>
+</div>
+</div>
+<div class="absolute top-full left-0 right-0 mt-4 text-center animate-pulse-slow">
+<p class="text-slate-500/80 text-sm font-medium tracking-wide">Offering something? Just type or speak.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Field Canvas - With AI Bot Icon (Light Mode)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "accent-glow": "#4fffcb",
+                        "background-light": "#f0f4f8", // Light gray-blueish background
+                        "background-dark": "#101c22", 
+                        "glass-border": "rgba(0, 0, 0, 0.06)", // Darker border for light mode
+                        "glass-bg": "rgba(255, 255, 255, 0.75)", // White glass
+                        "goal-tint": "#0ea5e9", // Slightly darker blue for contrast
+                        "resource-tint": "#22c55e", // Green
+                        "story-tint": "#a855f7", // Purple
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                        'float-random': 'float 12s ease-in-out 2s infinite',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
+                        'ripple': 'ripple 2s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px -5px rgba(19, 164, 236, 0.3)' },
+                            '100%': { boxShadow: '0 0 40px 10px rgba(19, 164, 236, 0.5)' },
+                        },
+                        ripple: {
+                            '0%': { transform: 'scale(1)', opacity: '0.8' },
+                            '100%': { transform: 'scale(2.5)', opacity: '0' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s ease;
+        }
+        .pulse-node {
+            transition: z-index 0s;
+        }
+        .pulse-node:hover {
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-background-light text-slate-800 font-display overflow-hidden selection:bg-primary/30">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<header class="z-40 flex items-center justify-between whitespace-nowrap border-b border-glass-border bg-glass-bg backdrop-blur-md px-10 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-800">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined text-[32px]">hub</span>
+</div>
+<h2 class="text-slate-800 text-lg font-bold leading-tight tracking-[-0.015em]">GoalPost</h2>
+</div>
+<div class="flex items-center gap-9 hidden md:flex">
+<a class="text-primary hover:text-primary-dark transition-colors text-sm font-medium leading-normal" href="#">Explore Field</a>
+<a class="text-slate-500 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Patterns</a>
+<a class="text-slate-500 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Knowledge Graph</a>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<button class="flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 text-primary size-10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border border-glass-border shadow-sm" data-alt="User profile avatar showing a smiling person" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJA6FsGkQJQDXAeeBjGcz1t8TDIvwLmaJTasvIMWu5G4tZkfY60wSyTWbPSMH5U2MGJJUDpOfM0gwgBNiA7FYJZVzGYOxDqXmuDmNfprNXmd73JYJ984Q723HoF0pNvBgAIB7gx5KoXLaQ6lP_OJq299kswaK8Dcay6d7xSydYxFFT40BpMn73G_3Vjv0RJuAKJeSrPB2hHQhfJJtztOtJJjNisIMY3EjGzzHRfIBPITOUO1woKtlf-TPAgkPQvUz3ukC1iu9cBtUg");'></div>
+</div>
+</header>
+<main class="relative flex-1 w-full h-full overflow-hidden bg-background-light">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(19,164,236,0.08),transparent_70%)]"></div>
+<div class="absolute inset-0 opacity-40" style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 60px 60px;"></div>
+<div class="absolute top-[20%] left-[10%] size-1 bg-primary/40 rounded-full animate-pulse"></div>
+<div class="absolute top-[80%] left-[20%] size-1.5 bg-primary/30 rounded-full animate-pulse-slow"></div>
+<div class="absolute top-[40%] right-[15%] size-1 bg-primary/40 rounded-full animate-float"></div>
+<div class="absolute top-[28%] left-[68%] pulse-node animate-float group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(14,165,233,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(14,165,233,0.3)] group-hover:border-goal-tint/30">
+<span class="material-symbols-outlined text-goal-tint text-4xl drop-shadow-sm">flag</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">Expand API Coverage</span>
+<span class="text-[9px] uppercase tracking-widest text-goal-tint font-bold mt-1">Goal</span>
+</div>
+</div>
+<div class="absolute top-[62%] left-[22%] pulse-node animate-float-delayed group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(34,197,94,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.3)] group-hover:border-resource-tint/30">
+<span class="material-symbols-outlined text-resource-tint text-4xl drop-shadow-sm">diamond</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">Design Tokens</span>
+<span class="text-[9px] uppercase tracking-widest text-resource-tint font-bold mt-1">Resource</span>
+</div>
+</div>
+<div class="absolute top-[35%] left-[32%] pulse-node animate-float-random group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(168,85,247,0.3)] group-hover:border-story-tint/30">
+<span class="material-symbols-outlined text-story-tint text-4xl drop-shadow-sm">auto_stories</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">Origin Narrative</span>
+<span class="text-[9px] uppercase tracking-widest text-story-tint font-bold mt-1">Story</span>
+</div>
+</div>
+<div class="absolute top-[75%] left-[72%] pulse-node animate-pulse-slow group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(14,165,233,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(14,165,233,0.3)] group-hover:border-goal-tint/30">
+<span class="material-symbols-outlined text-goal-tint text-4xl drop-shadow-sm">flag</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">Q3 Revenue</span>
+<span class="text-[9px] uppercase tracking-widest text-goal-tint font-bold mt-1">Goal</span>
+</div>
+</div>
+<div class="absolute top-[20%] left-[25%] pulse-node animate-float group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(34,197,94,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.3)] group-hover:border-resource-tint/30">
+<span class="material-symbols-outlined text-resource-tint text-4xl drop-shadow-sm">diamond</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">Raw Dataset B</span>
+<span class="text-[9px] uppercase tracking-widest text-resource-tint font-bold mt-1">Resource</span>
+</div>
+</div>
+<div class="absolute top-[45%] left-[82%] pulse-node animate-float-delayed group cursor-pointer flex flex-col items-center gap-3 w-32">
+<div class="relative flex items-center justify-center size-20 rounded-2xl glass-panel bg-white/70 shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2 group-hover:shadow-[0_0_40px_rgba(168,85,247,0.3)] group-hover:border-story-tint/30">
+<span class="material-symbols-outlined text-story-tint text-4xl drop-shadow-sm">auto_stories</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="text-xs font-bold text-slate-700 leading-tight">User Journey Map</span>
+<span class="text-[9px] uppercase tracking-widest text-story-tint font-bold mt-1">Story</span>
+</div>
+</div>
+<div class="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 group flex flex-col items-center gap-3">
+<button class="relative flex items-center justify-center size-16 rounded-full glass-panel bg-white/50 hover:bg-white/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] transition-all duration-500 ease-out border border-slate-200 hover:border-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-3xl text-slate-400 group-hover:text-accent-glow transition-colors duration-500">spa</span>
+<div class="absolute inset-0 rounded-full border border-slate-400/20 opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+</button>
+<span class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 select-none">Plant Seed</span>
+</div>
+<div class="absolute bottom-6 right-6 z-40 group flex flex-col items-end gap-2">
+<div class="relative">
+<button class="relative flex items-center justify-center size-12 rounded-full glass-panel bg-white/60 hover:bg-white shadow-lg hover:shadow-[0_0_25px_rgba(0,0,0,0.1)] transition-all duration-300 border border-slate-200 backdrop-blur-md">
+<span class="material-symbols-outlined text-2xl text-slate-500 group-hover:text-primary transition-colors duration-300">psychology</span>
+<span class="absolute top-0 right-0 -mt-1 -mr-1 size-2.5 bg-primary rounded-full border-2 border-white animate-pulse"></span>
+</button>
+<div class="absolute bottom-full right-0 mb-3 w-max opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+<div class="bg-white/90 backdrop-blur-md border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 shadow-xl">
+                            AI Assistant
+                        </div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 rounded-full bg-glass-bg border border-glass-border backdrop-blur-xl shadow-lg z-30 opacity-90 hover:opacity-100 transition-opacity">
+<button class="size-10 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-colors" title="Zoom In">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-colors" title="Center View">
+<span class="material-symbols-outlined">center_focus_strong</span>
+</button>
+<div class="w-px h-4 bg-slate-300"></div>
+<button class="size-10 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-colors" title="Layers">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+</main>
+</div>
+
+</body></html>

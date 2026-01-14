@@ -5,6 +5,7 @@ import { AuthWrapper } from '@/components/layout'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import './globals.css'
+import NavBar from '@/components/layout/nav-bar'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,7 +36,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
+          rel="stylesheet"
+        />
+      </head>
       <body>
+        <NavBar />
         <ContentWrapper>
           <ThemeProvider
             attribute="class"
