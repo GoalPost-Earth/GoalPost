@@ -1,6 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import React, { useState } from 'react'
 import type { Node, Relationship } from '@neo4j-nvl/base'

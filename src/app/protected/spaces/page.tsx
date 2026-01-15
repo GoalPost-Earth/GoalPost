@@ -1,6 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
