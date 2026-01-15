@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import React, { useState } from 'react'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react'

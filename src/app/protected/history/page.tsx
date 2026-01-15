@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import React from 'react'
 import { Sidebar } from '@/components/history/sidebar'
 import { ActivePulses } from '@/components/history/active-pulses'

@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { Button } from '@/components/ui/button'
 import { Thread } from '@/components/assistant-ui/thread'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'

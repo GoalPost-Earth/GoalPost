@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import { ResonanceNode } from '@/components/ui/resonance-node'
 import { PulseNode } from '@/components/ui/pulse-node'
