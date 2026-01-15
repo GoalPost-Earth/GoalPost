@@ -17,6 +17,7 @@ export interface PulseNodeProps {
     | 'top-center'
     | 'right-center'
     | 'left-center'
+    | { top: string; left: string }
   animation?: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
   onClick?: () => void
   className?: string
@@ -78,8 +79,9 @@ export function PulseNode({
   className,
 }: PulseNodeProps) {
   const config = typeConfig[type]
-  const posClass = positionClasses[position]
+  const posClass = typeof position === 'string' ? positionClasses[position] : ''
   const animClass = animationClasses[animation]
+  const customPosition = typeof position === 'object' ? position : undefined
 
   return (
     <div
@@ -90,6 +92,15 @@ export function PulseNode({
         className
       )}
       onClick={onClick}
+      style={
+        customPosition
+          ? {
+              position: 'absolute',
+              top: customPosition.top,
+              left: customPosition.left,
+            }
+          : undefined
+      }
     >
       {/* Node Container */}
       <div
