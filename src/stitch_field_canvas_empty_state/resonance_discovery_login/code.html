@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalPost - Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ea5e9",
+                        "field-blue": "#3b82f6",
+                        "background-airy": "#f8fafc",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        :root {
+            --liquid-glass-bg: rgba(255, 255, 255, 0.45);
+            --liquid-glass-border: rgba(255, 255, 255, 0.8);
+            --input-glass: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(199,100%,93%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(187,100%,92%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                radial-gradient(at 0% 100%, hsla(190,100%,94%,1) 0, transparent 50%);
+        }
+        .organic-cloud {
+            background: var(--liquid-glass-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--liquid-glass-border);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.04),
+                inset 0 0 40px rgba(255, 255, 255, 0.4);
+            border-radius: 60% 40% 70% 30% / 40% 50% 60% 50%;
+        }
+        .glass-input {
+            background: var(--input-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+        .btn-field {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-field:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="font-display h-screen flex flex-col items-center justify-center overflow-hidden">
+<div class="relative w-full max-w-4xl flex flex-col items-center justify-center">
+<div class="absolute -top-20 -left-20 w-64 h-64 bg-blue-100/30 rounded-full blur-[100px]"></div>
+<div class="absolute -bottom-20 -right-20 w-80 h-80 bg-cyan-100/30 rounded-full blur-[100px]"></div>
+<div class="organic-cloud w-[500px] h-[500px] flex flex-col items-center justify-center p-12 relative z-10">
+<div class="flex flex-col items-center w-full max-w-xs space-y-8">
+<div class="text-center space-y-2">
+<div class="size-12 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/80 shadow-sm">
+<span class="material-symbols-outlined text-primary text-2xl">hub</span>
+</div>
+<h1 class="text-3xl font-light text-slate-800 tracking-tight">Return to Resonance</h1>
+<p class="text-slate-400 text-xs uppercase tracking-[0.2em] font-medium">GoalPost Identity</p>
+</div>
+<div class="w-full space-y-4">
+<div class="relative">
+<input class="w-full glass-input rounded-2xl px-5 py-3.5 text-slate-700 placeholder-slate-400 focus:outline-none text-sm font-light" placeholder="Email" type="email"/>
+</div>
+<div class="relative">
+<input class="w-full glass-input rounded-2xl px-5 py-3.5 text-slate-700 placeholder-slate-400 focus:outline-none text-sm font-light" placeholder="Password" type="password"/>
+</div>
+</div>
+<button class="w-full btn-field text-white rounded-2xl py-3.5 text-sm font-medium tracking-wide">
+                    Enter the Field
+                </button>
+<div class="text-center">
+<button class="text-[10px] text-slate-400 hover:text-primary transition-colors uppercase tracking-widest font-semibold">
+                        Forgot Access?
+                    </button>
+</div>
+</div>
+</div>
+<div class="mt-12 text-center z-20">
+<a class="group flex flex-col items-center" href="#">
+<span class="text-slate-500 text-sm font-light">New to the community?</span>
+<span class="text-primary font-medium text-sm mt-1 border-b border-primary/20 group-hover:border-primary transition-all">Create an account</span>
+</a>
+</div>
+</div>
+<div class="absolute top-10 left-10 flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-xl">blur_on</span>
+<span class="text-slate-400 text-sm font-light tracking-widest uppercase">GoalPost</span>
+</div>
+
+</body></html>

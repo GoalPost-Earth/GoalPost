@@ -1,26 +1,17 @@
 'use client'
 
-import { useApp } from '@/app/contexts'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import NavBar from '@/components/layout/nav-bar'
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { user } = useApp()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login')
-    }
-  }, [user, router])
-
-  if (!user) {
-    return null
-  }
-
-  return <>{children}</>
+  return (
+    <ProtectedRoute>
+      <NavBar />
+      {children}
+    </ProtectedRoute>
+  )
 }

@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { SplashScreen, GetStartedScreen } from '@/components/screens'
 import { usePathname } from 'next/navigation'
-import { useApp } from '@/app/contexts'
+import { useAuth } from '@/app/contexts'
 
 const StartupScreen = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useApp()
+  const { isAuthenticated } = useAuth()
   const [showSplash, setShowSplash] = useState(true)
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
@@ -23,11 +23,11 @@ const StartupScreen = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>
   }
 
-  if (showSplash && !user) {
+  if (showSplash && !isAuthenticated) {
     return <SplashScreen />
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <GetStartedScreen />
   }
 

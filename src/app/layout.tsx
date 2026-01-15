@@ -5,7 +5,6 @@ import { AuthWrapper } from '@/components/layout'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import './globals.css'
-import NavBar from '@/components/layout/nav-bar'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,18 +43,15 @@ export default function RootLayout({
         />
       </head>
       <body className="isolate">
-        <NavBar />
-        <ContentWrapper>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </ContentWrapper>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ContentWrapper>{children}</ContentWrapper>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

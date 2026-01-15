@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalPost - Login (Dark Mode)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6",
+                        "field-blue": "#3b82f6",
+                        "background-dark": "#05070a",
+                        "charcoal-glass": "rgba(20, 24, 33, 0.65)"
+                    },
+                    fontFamily: {
+                        display: "Inter"
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                        lg: "2rem",
+                        xl: "3rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        };
+    </script>
+<style type="text/tailwindcss">
+        :root {
+            --liquid-glass-bg: rgba(15, 18, 25, 0.7);
+            --liquid-glass-border: rgba(255, 255, 255, 0.1);
+            --input-glass: rgba(255, 255, 255, 0.05);
+        }
+        body {
+            background-color: #05070a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(220, 40%, 15%, 1) 0, transparent 60%), 
+                radial-gradient(at 100% 0%, hsla(240, 30%, 10%, 1) 0, transparent 60%), 
+                radial-gradient(at 100% 100%, hsla(210, 50%, 12%, 1) 0, transparent 60%), 
+                radial-gradient(at 0% 100%, hsla(230, 40%, 14%, 1) 0, transparent 60%);
+        }
+        .organic-cloud {
+            background: var(--liquid-glass-bg);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border: 1px solid var(--liquid-glass-border);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.5),
+                inset 0 0 40px rgba(255, 255, 255, 0.02),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            border-radius: 60% 40% 70% 30% / 40% 50% 60% 50%;
+        }
+        .glass-input {
+            background: var(--input-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+        .btn-field {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-field:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="font-display h-screen flex flex-col items-center justify-center overflow-hidden">
+<div class="relative w-full max-w-4xl flex flex-col items-center justify-center">
+<div class="absolute -top-40 -left-20 w-96 h-96 bg-blue-900/10 rounded-full blur-[120px]"></div>
+<div class="absolute -bottom-40 -right-20 w-96 h-96 bg-indigo-900/10 rounded-full blur-[120px]"></div>
+<div class="organic-cloud w-[500px] h-[500px] flex flex-col items-center justify-center p-12 relative z-10">
+<div class="flex flex-col items-center w-full max-w-xs space-y-8">
+<div class="text-center space-y-2">
+<div class="size-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10 shadow-lg">
+<span class="material-symbols-outlined text-primary text-2xl">hub</span>
+</div>
+<h1 class="text-3xl font-light text-slate-100 tracking-tight">Return to Resonance</h1>
+<p class="text-slate-500 text-xs uppercase tracking-[0.2em] font-medium">GoalPost Identity</p>
+</div>
+<div class="w-full space-y-4">
+<div class="relative">
+<input class="w-full glass-input rounded-2xl px-5 py-3.5 text-slate-200 placeholder-slate-500 focus:outline-none text-sm font-light" placeholder="Email" type="email"/>
+</div>
+<div class="relative">
+<input class="w-full glass-input rounded-2xl px-5 py-3.5 text-slate-200 placeholder-slate-500 focus:outline-none text-sm font-light" placeholder="Password" type="password"/>
+</div>
+</div>
+<button class="w-full btn-field text-white rounded-2xl py-3.5 text-sm font-medium tracking-wide">
+                Enter the Field
+            </button>
+<div class="text-center">
+<button class="text-[10px] text-slate-500 hover:text-primary transition-colors uppercase tracking-widest font-semibold">
+                    Forgot Access?
+                </button>
+</div>
+</div>
+</div>
+<div class="mt-12 text-center z-20">
+<a class="group flex flex-col items-center" href="#">
+<span class="text-slate-500 text-sm font-light">New to the community?</span>
+<span class="text-primary font-medium text-sm mt-1 border-b border-primary/20 group-hover:border-primary transition-all">Create an account</span>
+</a>
+</div>
+</div>
+<div class="absolute top-10 left-10 flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-600 text-xl">blur_on</span>
+<span class="text-slate-600 text-sm font-light tracking-widest uppercase">GoalPost</span>
+</div>
+
+</body></html>

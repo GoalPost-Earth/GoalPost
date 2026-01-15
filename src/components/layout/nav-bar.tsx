@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -10,11 +10,25 @@ import {
   NotificationIcon,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/app/contexts'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const pathname = usePathname()
+  const { user, logout } = useAuth()
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Check initial theme from localStorage or system preference
@@ -28,6 +42,22 @@ export default function NavBar() {
     document.documentElement.classList.toggle('dark', shouldBeDark)
     setIsMounted(true)
   }, [])
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   const toggleTheme = () => {
     const newTheme = !isDark
@@ -103,14 +133,115 @@ export default function NavBar() {
         <button className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
           {isMounted && <NotificationIcon />}
         </button>
-        <div
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-gp-surface-strong shadow-sm"
-          style={{
-            backgroundImage:
-              'url("https://api.dicebear.com/7.x/avataaars/svg?seed=User")',
-          }}
-        />
+
+        {/* User Menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all"
+            style={{
+              backgroundImage:
+                'url("https://api.dicebear.com/7.x/avataaars/svg?seed=User")',
+            }}
+            aria-label="User menu"
+          />
+
+          {/* Dropdown Menu */}
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl gp-glass border border-gp-glass-border shadow-xl py-2 z-50">
+              {/* User Info */}
+              <div className="px-4 py-3 border-b border-gp-glass-border">
+                <p className="text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+                  {user?.firstName || user?.lastName
+                    ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                    : 'User'}
+                </p>
+                <p className="text-xs text-gp-ink-muted dark:text-gp-ink-muted mt-1">
+                  {user?.email || 'No email'}
+                </p>
+              </div>
+
+              {/* Menu Items */}
+              <div className="py-1">
+                <Link
+                  href="/protected/profile"
+                  className="flex items-center gap-3 px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    person
+                  </span>
+                  <span>Profile</span>
+                </Link>
+
+                <Link
+                  href="/protected/settings"
+                  className="flex items-center gap-3 px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    settings
+                  </span>
+                  <span>Settings</span>
+                </Link>
+              </div>
+
+              {/* Logout Button */}
+              <div className="border-t border-gp-glass-border pt-1">
+                <button
+                  onClick={() => {
+                    setShowUserMenu(false)
+                    setShowLogoutConfirm(true)
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    logout
+                  </span>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-gp-ink-strong dark:text-gp-ink-strong">
+              <span className="material-symbols-outlined text-red-600 dark:text-red-400">
+                logout
+              </span>
+              Confirm Logout
+            </DialogTitle>
+            <DialogDescription className="text-gp-ink-muted dark:text-gp-ink-muted">
+              Are you sure you want to log out? You`&apos;ll need to sign in
+              again to access your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowLogoutConfirm(false)
+                logout()
+              }}
+              className="flex-1"
+            >
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }

@@ -150,7 +150,8 @@ const fieldNodesData: Record<
     },
   ],
 }
-export default function FieldDetailPage() {
+
+function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -277,3 +278,5 @@ export default function FieldDetailPage() {
     </main>
   )
 }
+
+export default FieldDetailPage
