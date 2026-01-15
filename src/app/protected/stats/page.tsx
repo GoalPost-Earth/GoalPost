@@ -4,8 +4,6 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 import { useState } from 'react'
-
-import { useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import {
