@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { PulseNode } from '@/components/ui/pulse-node'
 import { OfferingModal } from '@/components/ui/offering-modal'
@@ -153,9 +153,14 @@ const fieldNodesData: Record<
 export default function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAIChatOpen, setIsAIChatOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const paramId = useParams()
   const fieldId = (paramId?.id as string) || 'deep-work'
   const nodes = fieldNodesData[fieldId] || fieldNodesData['deep-work']
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const positionMap: Record<string, string> = {
     'top-left': 'top-[28%] left-[68%]',
@@ -198,44 +203,47 @@ export default function FieldDetailPage() {
       <div className="relative w-full h-full pt-24">
         {/* Nodes Canvas */}
         <div className="relative w-full h-full">
-          {nodes.map((node, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                'absolute',
-                positionMap[node.position] ||
-                  'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-              )}
-            >
-              <PulseNode
-                icon={node.icon}
-                label={node.label}
-                type={node.type}
-                animation={
-                  node.animation as
-                    | 'float'
-                    | 'float-delayed'
-                    | 'float-random'
-                    | 'pulse-slow'
-                    | 'none'
-                }
-                onClick={() => console.log(`Clicked node: ${node.label}`)}
-              />
-            </div>
-          ))}
+          {isMounted &&
+            nodes.map((node, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'absolute',
+                  positionMap[node.position] ||
+                    'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                )}
+              >
+                <PulseNode
+                  icon={node.icon}
+                  label={node.label}
+                  type={node.type}
+                  animation={
+                    node.animation as
+                      | 'float'
+                      | 'float-delayed'
+                      | 'float-random'
+                      | 'pulse-slow'
+                      | 'none'
+                  }
+                  onClick={() => console.log(`Clicked node: ${node.label}`)}
+                />
+              </div>
+            ))}
         </div>
 
         {/* Bottom Action Button */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 group flex flex-col items-center gap-3">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass bg-white/50 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.2)] transition-all duration-500 ease-out border border-slate-200 dark:border-white/10 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/30 backdrop-blur-md group-hover:-translate-y-1"
-          >
-            <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-white group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
-              spa
-            </span>
-            <div className="absolute inset-0 rounded-full border border-slate-400/20 dark:border-white/15 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-          </button>
+          {isMounted && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass bg-white/50 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.2)] transition-all duration-500 ease-out border border-slate-200 dark:border-white/10 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/30 backdrop-blur-md group-hover:-translate-y-1"
+            >
+              <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-white group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
+                spa
+              </span>
+              <div className="absolute inset-0 rounded-full border border-slate-400/20 dark:border-white/15 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -254,14 +262,18 @@ export default function FieldDetailPage() {
       </OfferingModal>
 
       {/* AI Chat Components */}
-      <AIChatButton
-        onClick={() => setIsAIChatOpen(!isAIChatOpen)}
-        isOpen={isAIChatOpen}
-      />
-      <AIAssistantPanel
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-      />
+      {isMounted && (
+        <>
+          <AIChatButton
+            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
+            isOpen={isAIChatOpen}
+          />
+          <AIAssistantPanel
+            isOpen={isAIChatOpen}
+            onClose={() => setIsAIChatOpen(false)}
+          />
+        </>
+      )}
     </main>
   )
 }

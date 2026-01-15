@@ -30,7 +30,6 @@ export default function Home() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-24 w-full max-w-7xl">
           {/* MeSpace - Personal Space */}
           <SpaceWrapper
-            icon="spa"
             title="MeSpace"
             subtitle="Inner Sanctuary"
             description="Self-reflection, personal growth, and individual purpose."
@@ -40,7 +39,6 @@ export default function Home() {
 
           {/* WeSpace - Community Space */}
           <SpaceWrapper
-            icon="diversity_2"
             title="WeSpace"
             subtitle="Collective Field"
             description="Community sensing, shared intent, and collaborative evolution."

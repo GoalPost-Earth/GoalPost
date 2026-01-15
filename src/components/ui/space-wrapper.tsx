@@ -1,9 +1,9 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { SpaIcon, DiversityIcon } from '@/components/icons'
 
 interface SpaceWrapperProps {
-  icon: string
   title: string
   subtitle: string
   description: string
@@ -13,7 +13,6 @@ interface SpaceWrapperProps {
 }
 
 export function SpaceWrapper({
-  icon,
   title,
   subtitle,
   description,
@@ -25,6 +24,8 @@ export function SpaceWrapper({
     variant === 'mespace'
       ? 'bg-blue-200/5 dark:bg-blue-200/10'
       : 'bg-emerald-200/5 dark:bg-emerald-200/10'
+  
+  const Icon = variant === 'mespace' ? SpaIcon : DiversityIcon
 
   return (
     <div
@@ -37,9 +38,7 @@ export function SpaceWrapper({
         <div className="flex flex-col items-center gap-6 p-8 text-center relative z-10">
           {/* Icon */}
           <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-3xl bg-white/40 dark:bg-white/10 flex items-center justify-center shadow-lg border border-white/60 dark:border-white/20 mb-2">
-            <span className="material-symbols-outlined text-3xl lg:text-4xl text-gp-ink-strong dark:text-gp-ink-strong font-light transition-colors">
-              {icon}
-            </span>
+            <Icon className="text-3xl lg:text-4xl text-gp-ink-strong dark:text-gp-ink-strong font-light transition-colors" />
           </div>
 
           {/* Title and subtitle */}
