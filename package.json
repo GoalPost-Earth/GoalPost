@@ -79,7 +79,7 @@
     "motion": "^12.23.24",
     "neo4j-driver": "^5.28.1",
     "nest-auth": "^0.0.1",
-    "next": "15.2.6",
+    "next": "^15.5.9",
     "next-themes": "^0.3.0",
     "ollama-ai-provider-v2": "latest",
     "path": "^0.12.7",
