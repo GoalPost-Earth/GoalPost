@@ -31,26 +31,26 @@ function transformFieldsToProps(
   }))
 }
 
-export default function WeSpaceFieldsPage() {
+export default function MeSpaceFieldsPage() {
   const router = useRouter()
   const params = useParams()
-  const weSpaceId = params?.id as string
+  const meSpaceId = params?.id as string
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { createField, loading: isCreating } = useCreateField()
 
   const fetchFields = useCallback(async () => {
-    if (!weSpaceId) return
+    if (!meSpaceId) return
     try {
       setLoading(true)
       setError(null)
       const res = await fetch('/api/field/get-fields-by-space', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spaceId: weSpaceId }),
+        body: JSON.stringify({ spaceId: meSpaceId }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -63,25 +63,25 @@ export default function WeSpaceFieldsPage() {
     } finally {
       setLoading(false)
     }
-  }, [weSpaceId])
+  }, [meSpaceId])
 
   useEffect(() => {
     fetchFields()
   }, [fetchFields])
 
   const handleFieldClick = (fieldId: string) => {
-    router.push(`/protected/spaces/we-space/${weSpaceId}/fields/${fieldId}`)
+    router.push(`/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`)
   }
 
   const handleCreateField = async (description: string, name?: string) => {
-    if (!weSpaceId) {
-      console.error('WeSpace ID not available')
+    if (!meSpaceId) {
+      console.error('MeSpace ID not available')
       return
     }
     try {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
-      await createField(title, weSpaceId)
+      await createField(title, meSpaceId)
       await fetchFields()
     } catch (err) {
       console.error('Error creating field:', err)
@@ -101,7 +101,7 @@ export default function WeSpaceFieldsPage() {
       )}
       <FieldsCanvas
         fields={transformedFields}
-        spaceId={weSpaceId}
+        spaceId={meSpaceId}
         onFieldClick={handleFieldClick}
         onCreateField={handleCreateField}
         isCreating={isCreating}

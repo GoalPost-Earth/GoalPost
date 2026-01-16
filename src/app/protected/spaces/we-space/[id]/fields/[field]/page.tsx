@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { useAuth } from '@/app/contexts/AuthContext'
 import { PulseNode } from '@/components/ui/pulse-node'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { AIChatButton } from '@/components/ui/ai-chat-button'
 import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
 import { cn } from '@/lib/utils'
+import { useApp } from '@/app/contexts'
 
 // Icon mappings for pulse types
 const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
@@ -62,9 +62,14 @@ function FieldDetailPage() {
   >([])
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
 
-  const paramId = useParams()
-  const fieldId = (paramId?.field as string) || 'deep-work'
-  const { user } = useAuth()
+  const params = useParams()
+  const fieldId = params?.field as string
+  const { user } = useApp()
+
+  // Redirect if no field ID
+  if (!fieldId) {
+    console.error('❌ No field ID in URL')
+  }
 
   const fetchPulses = useCallback(async () => {
     try {
@@ -242,14 +247,12 @@ function FieldDetailPage() {
         {/* Nodes Canvas */}
         <div className="relative w-full h-full">
           {isMounted && isLoadingPulses && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="mb-4">
-                  <span className="material-symbols-outlined text-4xl text-gp-primary animate-spin">
-                    hourglass_bottom
-                  </span>
-                </div>
-                <p className="text-sm text-slate-600 dark:text-white/60">
+            <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4">
+                <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
+                  hourglass_bottom
+                </span>
+                <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
                   Loading pulses...
                 </p>
               </div>

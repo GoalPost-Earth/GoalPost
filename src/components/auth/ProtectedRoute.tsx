@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/app/contexts'
+import { useApp } from '@/app/contexts'
 import { useRouter } from 'next/navigation'
 import { useEffect, ReactNode } from 'react'
 
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useApp()
   const router = useRouter()
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/app/contexts'
+import { useApp } from '@/app/contexts'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -15,7 +15,7 @@ const loginSchema = z.object({
 
 function LoginPage() {
   const router = useRouter()
-  const { login, isLoading, isAuthenticated } = useAuth()
+  const { login, isLoading, isAuthenticated } = useApp()
   const {
     register,
     handleSubmit,

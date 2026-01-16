@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 interface CreateFieldModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreateField?: (description: string) => void | Promise<void>
+  onCreateField?: (description: string, name?: string) => void | Promise<void>
   isLoading?: boolean
 }
 
@@ -17,12 +17,14 @@ export function CreateFieldModal({
   onCreateField,
   isLoading = false,
 }: CreateFieldModalProps) {
+  const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (description.trim() && !isLoading) {
-      await onCreateField?.(description)
+    if (name.trim() && !isLoading) {
+      await onCreateField?.(description.trim(), name.trim())
+      setName('')
       setDescription('')
       onClose()
     }
@@ -72,48 +74,88 @@ export function CreateFieldModal({
             </h2>
 
             {/* Input Form */}
-            <form onSubmit={handleSubmit} className="w-full mb-8">
+            <form onSubmit={handleSubmit} className="w-full mb-8 space-y-4">
+              {/* Field Name Input */}
               <div className="w-full relative group">
                 <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40 transition duration-500" />
-                <div className="relative flex items-center">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Describe your intention..."
-                    className={cn(
-                      'w-full rounded-2xl px-6 py-4 text-lg transition-all font-light',
-                      'bg-white/90 dark:bg-black/40',
-                      'border border-gp-glass-border dark:border-white/10',
-                      'text-gp-ink-strong dark:text-white',
-                      'placeholder-gp-ink-soft dark:placeholder-white/20',
-                      'focus:outline-none focus:border-gp-primary/50 focus:bg-white dark:focus:bg-black/60',
-                      'focus:shadow-[0_0_0_4px_rgba(14,165,233,0.1)]'
-                    )}
-                  />
-                  <button
-                    disabled={isLoading || !description.trim()}
-                    onClick={handleSubmit}
-                    className={cn(
-                      'absolute right-2 p-2 rounded-xl transition-all',
-                      isLoading || !description.trim()
-                        ? 'bg-gp-primary/5 dark:bg-gp-primary/10 text-gp-primary/40 cursor-not-allowed'
-                        : 'bg-gp-primary/10 dark:bg-gp-primary/20 text-gp-primary hover:bg-gp-primary hover:text-white'
-                    )}
-                  >
-                    {isLoading ? (
-                      <span className="material-symbols-outlined animate-spin">
+                <input
+                  autoFocus
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Field name (e.g., 'Deep Work', 'Growth')..."
+                  className={cn(
+                    'w-full rounded-2xl px-6 py-4 text-lg transition-all font-light relative',
+                    'bg-white/90 dark:bg-black/40',
+                    'border border-gp-glass-border dark:border-white/10',
+                    'text-gp-ink-strong dark:text-white',
+                    'placeholder-gp-ink-soft dark:placeholder-white/20',
+                    'focus:outline-none focus:border-gp-primary/50 focus:bg-white dark:focus:bg-black/60',
+                    'focus:shadow-[0_0_0_4px_rgba(14,165,233,0.1)]'
+                  )}
+                />
+              </div>
+
+              {/* Field Description Textarea */}
+              <div className="w-full relative group">
+                <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40 transition duration-500" />
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Add a description (optional)..."
+                  rows={3}
+                  className={cn(
+                    'w-full rounded-2xl px-6 py-4 text-base transition-all font-light relative resize-none',
+                    'bg-white/90 dark:bg-black/40',
+                    'border border-gp-glass-border dark:border-white/10',
+                    'text-gp-ink-strong dark:text-white',
+                    'placeholder-gp-ink-soft dark:placeholder-white/20',
+                    'focus:outline-none focus:border-gp-primary/50 focus:bg-white dark:focus:bg-black/60',
+                    'focus:shadow-[0_0_0_4px_rgba(14,165,233,0.1)]'
+                  )}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="cursor-pointer flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-white/20 bg-white/50 dark:bg-black/40 text-gp-ink-muted dark:text-gp-ink-soft text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-white/30 hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-black/60"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    close
+                  </span>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading || !name.trim()}
+                  className={cn(
+                    'cursor-pointer flex-1 h-12 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 transform active:scale-95',
+                    isLoading || !name.trim()
+                      ? 'bg-gp-primary/30 dark:bg-gp-primary/20 text-gp-primary/50 dark:text-gp-primary/40 cursor-not-allowed shadow-none'
+                      : 'bg-gp-primary hover:bg-gp-primary/90 text-white shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)]'
+                  )}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="material-symbols-outlined text-lg animate-spin">
                         progress_activity
                       </span>
-                    ) : (
-                      <span className="material-symbols-outlined">
-                        arrow_upward
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-lg">
+                        check
                       </span>
-                    )}
-                  </button>
-                </div>
+                      Create Field
+                    </>
+                  )}
+                </button>
               </div>
             </form>
           </div>
@@ -121,7 +163,7 @@ export function CreateFieldModal({
 
         {/* Footer Hint */}
         <p className="text-center mt-6 text-gp-ink-soft dark:text-white/30 text-xs font-mono">
-          Press &apos;Enter&apos; to create, or &apos;Esc&apos; to cancel
+          Field name is required. Description is optional.
         </p>
       </div>
     </OfferingModal>

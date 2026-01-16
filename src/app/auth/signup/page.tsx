@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuth } from '@/app/contexts'
+import { useApp } from '@/app/contexts'
 
 const signupSchema = z
   .object({
@@ -29,7 +29,7 @@ const signupSchema = z
 
 function SignupPage() {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useApp()
   const {
     register,
     handleSubmit,

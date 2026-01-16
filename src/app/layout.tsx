@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
-import { AuthWrapper } from '@/components/layout'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
+import { AppProvider } from '@/app/contexts'
+import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import './globals.css'
 
 const inter = Inter({
@@ -27,7 +28,11 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
     return <MaintenanceScreen />
   }
 
-  return <AuthWrapper>{children}</AuthWrapper>
+  return (
+    <AppProvider>
+      <ApolloWrapper>{children}</ApolloWrapper>
+    </AppProvider>
+  )
 }
 
 export default function RootLayout({

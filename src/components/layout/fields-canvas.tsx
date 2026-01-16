@@ -14,115 +14,27 @@ export interface FieldsCanvasProps {
     'position' | 'size' | 'shape' | 'animationType'
   > & { id?: string })[]
   onFieldClick?: (fieldId: string) => void
-  onCreateField?: (description: string) => void | Promise<void>
+  onCreateField?: (description: string, name?: string) => void | Promise<void>
   className?: string
   spaceId?: string // Optional space ID to link new fields to
   isCreating?: boolean // Loading state for field creation
   isLoading?: boolean // Loading state for fetching fields
 }
 
-// Default fields data structure
-const defaultFields = [
-  {
-    id: 'deep-work',
-    icon: 'psychology',
-    title: 'Deep Work',
-    description: '5 active threads',
-    badge: { text: '5 Active', variant: 'primary' as const },
-    decorators: [
-      {
-        icon: 'menu_book',
-        position: 'top-left' as const,
-        opacity: 'opacity-40' as const,
-        animate: 'float' as const,
-      },
-      {
-        icon: 'code',
-        position: 'bottom-right' as const,
-        opacity: 'opacity-40' as const,
-        animate: 'float' as const,
-      },
-    ],
-  },
-  {
-    id: 'growth',
-    icon: 'self_improvement',
-    title: 'Growth',
-    description: 'Shared intentions with WeSpace neighbors',
-    members: [
-      {
-        initials: 'S',
-        color:
-          'bg-white/10 dark:bg-white/10 text-gp-ink-strong dark:text-gp-ink-soft',
-      },
-      {
-        initials: 'M',
-        color:
-          'bg-white/10 dark:bg-white/10 text-gp-ink-strong dark:text-gp-ink-soft',
-      },
-    ],
-    decorators: [
-      {
-        icon: 'spa',
-        position: 'bottom-left' as const,
-        opacity: 'opacity-30' as const,
-      },
-    ],
-  },
-  {
-    id: 'community',
-    icon: 'hub',
-    title: 'Community',
-    description: 'Shared intentions with WeSpace neighbors',
-    decorators: [
-      {
-        icon: 'forum',
-        position: 'top-left' as const,
-        opacity: 'opacity-20' as const,
-        animate: 'bounce' as const,
-      },
-      {
-        icon: 'handshake',
-        position: 'bottom-right' as const,
-        opacity: 'opacity-20' as const,
-        animate: 'bounce' as const,
-      },
-      {
-        icon: 'groups',
-        position: 'top-right' as const,
-        opacity: 'opacity-10' as const,
-        animate: 'pulse' as const,
-      },
-    ],
-  },
-  {
-    id: 'inbox',
-    icon: 'inbox',
-    title: 'Inbox',
-    description: '',
-    badge: { text: '12 New', variant: 'primary' as const },
-  },
-  {
-    id: 'vitality',
-    icon: 'monitor_heart',
-    title: 'Vitality',
-    description: '',
-  },
-]
-
 export function FieldsCanvas({
-  fields = defaultFields,
+  fields = [],
   onFieldClick,
   onCreateField,
   className,
   isCreating = false,
+  isLoading = false,
 }: FieldsCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const handleCreateField = async (description: string) => {
+  const handleCreateField = async (description: string, name?: string) => {
     try {
-      await onCreateField?.(description)
+      await onCreateField?.(description, name)
       setIsCreateModalOpen(false)
     } catch (err) {
       console.error('Failed to create field:', err)
@@ -181,6 +93,20 @@ export function FieldsCanvas({
         className
       )}
     >
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
+              hourglass_bottom
+            </span>
+            <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+              Loading fields...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Radial gradient overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.15),transparent_70%)]" />
 
@@ -194,17 +120,30 @@ export function FieldsCanvas({
 
       {/* Bubbles Container */}
       <div className="absolute inset-0 overflow-hidden">
-        {fields.map((field, idx) => (
-          <FieldBubble
-            key={idx}
-            {...field}
-            position={positions[idx % positions.length]}
-            size={sizes[idx % sizes.length]}
-            shape={shapes[idx % shapes.length]}
-            animationType={animations[idx % animations.length]}
-            onClick={() => onFieldClick?.(field.id || field.title || '')}
-          />
-        ))}
+        {!isLoading && fields.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                No fields yet
+              </p>
+              <p className="text-sm text-gp-ink-soft dark:text-white/40 mb-6">
+                Create a field to organize your thoughts and intentions
+              </p>
+            </div>
+          </div>
+        ) : (
+          fields.map((field, idx) => (
+            <FieldBubble
+              key={idx}
+              {...field}
+              position={positions[idx % positions.length]}
+              size={sizes[idx % sizes.length]}
+              shape={shapes[idx % shapes.length]}
+              animationType={animations[idx % animations.length]}
+              onClick={() => onFieldClick?.(field.id || field.title || '')}
+            />
+          ))
+        )}
       </div>
 
       {/* Bottom Controls */}

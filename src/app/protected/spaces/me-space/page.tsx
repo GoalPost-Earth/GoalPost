@@ -7,19 +7,6 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/app/contexts/AppContext'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 
-// Size variations for visual interest
-const sizeVariations = ['xl', 'lg', 'md', 'md', 'sm', 'lg', 'md', 'sm'] as const
-const shapeVariations = [
-  'circle',
-  'organic-1',
-  'organic-2',
-  'organic-3',
-  'circle',
-  'organic-1',
-  'organic-2',
-  'circle',
-] as const
-
 const positions = [
   'top-[10%] left-[50%] -translate-x-1/2',
   'top-[25%] left-[15%]',
@@ -31,99 +18,93 @@ const positions = [
   'bottom-[35%] left-[50%] -translate-x-1/2',
 ]
 
-export default function WeSpacePage() {
+export default function MeSpacePage() {
   const router = useRouter()
   const { user } = useApp()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
-  const [weSpaces, setWeSpaces] = useState<
+  const [userMeSpaces, setUserMeSpaces] = useState<
     Array<{
       id: string
-      size: (typeof sizeVariations)[number]
-      shape: (typeof shapeVariations)[number]
+      name: string
+      description?: string
+      size: 'xl' | 'lg' | 'md' | 'sm'
+      shape: 'circle' | 'organic-1' | 'organic-2' | 'organic-3'
       icon: string
-      title: string
-      subtitle: string
-      badge?: { text: string; variant: 'primary' | 'accent' | 'default' }
+      subtitle?: string
     }>
   >([])
 
-  const fetchWeSpaces = useCallback(async () => {
+  const sizes: Array<'xl' | 'lg' | 'md' | 'sm'> = ['xl', 'lg', 'md', 'md', 'sm']
+  const shapes: Array<'circle' | 'organic-1' | 'organic-2' | 'organic-3'> = [
+    'circle',
+    'organic-1',
+    'organic-2',
+    'organic-3',
+    'circle',
+  ]
+
+  const fetchUserMeSpaces = useCallback(async () => {
     if (!user?.id) {
-      console.log('⏳ No user ID yet, skipping fetch')
+      setIsFetching(false)
       return
     }
 
     try {
       setIsFetching(true)
-      console.log('🔍 Fetching WeSpaces for user:', user.id)
+      const res = await fetch('/api/me-space/get-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
 
-      const response = await fetch(
-        `/api/we-space/get-by-member?userId=${user.id}`
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error('Failed to fetch meSpaces:', data.error)
+        setUserMeSpaces([])
+        return
+      }
+
+      // Transform API response to component format
+      const spaces = data.meSpaces.map(
+        (
+          space: { id: string; name: string; description?: string },
+          idx: number
+        ) => ({
+          id: space.id,
+          name: space.name,
+          description: space.description || '',
+          size: sizes[idx % sizes.length] as 'xl' | 'lg' | 'md' | 'sm',
+          shape: shapes[idx % shapes.length] as
+            | 'circle'
+            | 'organic-1'
+            | 'organic-2'
+            | 'organic-3',
+          icon: 'hub',
+          subtitle: space.description || 'Personal space',
+        })
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch WeSpaces: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data.success && data.spaces && data.spaces.length > 0) {
-        const transformedSpaces = data.spaces.map(
-          (
-            space: {
-              id: string
-              name: string
-              memberCount?: number
-              contextCount?: number
-            },
-            idx: number
-          ) => {
-            const memberCount = space.memberCount ?? 0
-            const contextCount = space.contextCount ?? 0
-
-            return {
-              id: space.id,
-              size: sizeVariations[idx % sizeVariations.length],
-              shape: shapeVariations[idx % shapeVariations.length],
-              icon: 'groups',
-              title: space.name,
-              subtitle:
-                memberCount > 0
-                  ? `${memberCount} member${memberCount !== 1 ? 's' : ''}`
-                  : 'Collaborative space',
-              badge:
-                contextCount > 0
-                  ? {
-                      text: `${contextCount} Field${contextCount !== 1 ? 's' : ''}`,
-                      variant: 'primary' as const,
-                    }
-                  : undefined,
-            }
-          }
-        )
-        setWeSpaces(transformedSpaces)
-        console.log(`✓ Loaded ${transformedSpaces.length} WeSpaces`)
-      } else {
-        setWeSpaces([])
-        console.log('ℹ️ No WeSpaces found for user')
-      }
-    } catch (error) {
-      console.error('Error fetching WeSpaces:', error)
-      setWeSpaces([])
+      setUserMeSpaces(spaces)
+    } catch (err) {
+      console.error('Error fetching meSpaces:', err)
+      setUserMeSpaces([])
     } finally {
       setIsFetching(false)
     }
+
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
   useEffect(() => {
-    fetchWeSpaces()
-  }, [fetchWeSpaces])
+    fetchUserMeSpaces()
+  }, [fetchUserMeSpaces])
 
   const handleSpaceClick = (spaceId: string) => {
-    router.push(`/protected/spaces/we-space/${spaceId}`)
+    router.push(`/protected/spaces/me-space/${spaceId}`)
   }
 
   const handleCreateSpace = async ({
@@ -147,7 +128,7 @@ export default function WeSpacePage() {
     setError('')
 
     try {
-      const res = await fetch('/api/we-space/create', {
+      const res = await fetch('/api/me-space/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,12 +146,10 @@ export default function WeSpacePage() {
       }
 
       setShowCreateModal(false)
-      // Refresh the spaces list after creating a new one
-      await fetchWeSpaces()
+      await fetchUserMeSpaces()
     } catch (err) {
       setError(
-        'An error occurred while creating the space' +
-          (err instanceof Error ? `: ${err.message}` : '')
+        'An error occurred while creating the space: ' + (err as Error).message
       )
     } finally {
       setIsLoading(false)
@@ -179,16 +158,15 @@ export default function WeSpacePage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full p-4">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400 mb-2">Error: {error}</p>
-          <button
-            onClick={() => setError('')}
-            className="px-4 py-2 bg-gp-primary text-white rounded-full hover:bg-gp-primary-dark transition"
-          >
-            Dismiss
-          </button>
-        </div>
+      <div className="p-6">
+        <h2 className="text-2xl font-semibold mb-4">Error</h2>
+        <p className="text-red-600">{error}</p>
+        <button
+          onClick={() => setError('')}
+          className="mt-4 px-4 py-2 bg-gp-primary text-white rounded-lg"
+        >
+          Dismiss
+        </button>
       </div>
     )
   }
@@ -197,16 +175,13 @@ export default function WeSpacePage() {
     <main className="relative flex-1 w-full h-full min-h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
       {/* Radial gradient overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.15),transparent_70%)]" />
-
       {/* Animated background blobs */}
       <div className="absolute top-[20%] left-[20%] w-96 h-96 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[100px] animate-blob" />
       <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[80px] animate-blob [animation-delay:2s]" />
       <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px] animate-blob [animation-delay:4s]" />
-
       {/* Dot grid pattern */}
       <div className="absolute inset-0 gp-dot-grid opacity-30 dark:opacity-20" />
-
-      {/* We-Space Bubbles Container */}
+      {/* Me-Space Bubbles Container */}
       <div className="absolute inset-0 overflow-hidden pt-24 pb-24">
         {isFetching ? (
           <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
@@ -219,14 +194,18 @@ export default function WeSpacePage() {
               </p>
             </div>
           </div>
-        ) : weSpaces.length > 0 ? (
-          weSpaces.map((space, idx) => (
+        ) : userMeSpaces.length > 0 ? (
+          userMeSpaces.map((space, idx) => (
             <div
               key={space.id}
               className={cn('absolute', positions[idx % positions.length])}
             >
               <EntityBubble
-                {...space}
+                size={space.size}
+                shape={space.shape}
+                icon={space.icon}
+                title={space.name}
+                subtitle={space.subtitle}
                 animationDelay={idx * 0.15}
                 onClick={() => handleSpaceClick(space.id)}
               />
@@ -235,17 +214,19 @@ export default function WeSpacePage() {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                No spaces yet
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-6">
+                No spaces yet. Create your first one!
               </p>
-              <p className="text-sm text-gp-ink-soft dark:text-white/40 mb-6">
-                Create your first WeSpace to collaborate with your community
-              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 rounded-lg bg-gp-primary hover:bg-gp-primary/90 text-white font-medium transition-colors"
+              >
+                Create Your First Space
+              </button>
             </div>
           </div>
         )}
       </div>
-
       {/* Bottom Controls */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
         {/* View Controls */}
@@ -282,11 +263,10 @@ export default function WeSpacePage() {
             add_circle
           </span>
           <span className="hidden md:inline text-sm md:text-base font-semibold text-gp-ink-strong dark:text-gp-ink-strong group-hover:text-gp-primary dark:group-hover:text-gp-primary transition-colors relative z-10">
-            Create WeSpace
+            Create Space
           </span>
         </button>
       </div>
-
       {/* Create Space Modal (styled to match CreateFieldModal) */}
       {showCreateModal && (
         <CreateSpaceModal
@@ -297,8 +277,8 @@ export default function WeSpacePage() {
           }}
           onCreate={handleCreateSpace}
           isLoading={isLoading}
-          title="Create New WeSpace"
-          subtitle="Start a collaborative space with your community"
+          title="Create New MeSpace"
+          subtitle="Name your personal space and add a short description"
         />
       )}
     </main>

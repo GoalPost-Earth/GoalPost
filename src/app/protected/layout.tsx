@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { UserDataProvider } from '@/app/contexts'
 import NavBar from '@/components/layout/nav-bar'
 
 export default function ProtectedLayout({
@@ -12,8 +13,10 @@ export default function ProtectedLayout({
 }) {
   return (
     <ProtectedRoute>
-      <NavBar />
-      {children}
+      <div className="flex flex-col h-screen">
+        <NavBar />
+        <UserDataProvider>{children}</UserDataProvider>
+      </div>
     </ProtectedRoute>
   )
 }

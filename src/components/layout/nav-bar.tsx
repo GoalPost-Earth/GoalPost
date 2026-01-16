@@ -10,7 +10,6 @@ import {
   NotificationIcon,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/app/contexts'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useApp } from '@/app/contexts'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
@@ -27,7 +27,7 @@ export default function NavBar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,11 +79,11 @@ export default function NavBar() {
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
-              pathname === '/protected/spaces/me-space/fields'
+              pathname === '/protected/spaces/me-space'
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
             )}
-            href="/protected/spaces/me-space/fields"
+            href="/protected/spaces/me-space"
           >
             Me Space
           </Link>

@@ -2,14 +2,9 @@
 
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/app/contexts/AuthContext'
-import { toast } from 'sonner'
-import { useMeSpaceFields } from '@/hooks/useMeSpaceFields'
 
 export default function SpacesPage() {
   const router = useRouter()
-  const { user } = useAuth()
-  const { meSpaceId } = useMeSpaceFields(user?.id)
 
   return (
     <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-hidden pt-24">
@@ -39,16 +34,7 @@ export default function SpacesPage() {
             subtitle="Inner Sanctuary"
             description="Self-reflection, personal growth, and individual purpose."
             variant="mespace"
-            onClick={() => {
-              if (meSpaceId) {
-                router.push(`/protected/spaces/me-space/fields`)
-              } else {
-                toast.info('Your MeSpace is not set up yet', {
-                  description:
-                    'We could not find your personal space. Please create or seed your MeSpace.',
-                })
-              }
-            }}
+            onClick={() => router.push('/protected/spaces/me-space')}
           />
 
           {/* WeSpace - Community Space */}

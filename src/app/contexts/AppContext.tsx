@@ -1,6 +1,5 @@
 'use client'
 
-import { useQuery } from '@apollo/client/react'
 import {
   ReactNode,
   createContext,
@@ -9,11 +8,9 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { GET_LOGGED_IN_USER } from '../graphql'
 import { Person } from '@/gql/graphql'
-import { usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { UserProfile } from '@/types'
-import { ApolloWrapper } from '@/components/layout'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
@@ -23,6 +20,9 @@ interface AppContextType {
   user?: ContextUser
   setUser: (user: ContextUser) => void
   logout: () => void
+  login: (email: string, password: string) => Promise<void>
+  isLoading: boolean
+  isAuthenticated: boolean
 }
 
 const AppContext = createContext<AppContextType>({
@@ -33,6 +33,11 @@ const AppContext = createContext<AppContextType>({
   logout: () => {
     throw new Error('logout function is not defined')
   },
+  login: async () => {
+    throw new Error('login function is not defined')
+  },
+  isLoading: false,
+  isAuthenticated: false,
 })
 
 export const useApp = () => {
@@ -44,8 +49,8 @@ export const useApp = () => {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const pathname = usePathname()
-  const isAuthRoute = pathname?.startsWith('/auth')
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<ContextUser | undefined>(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user')
@@ -60,66 +65,90 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return undefined
   })
 
-  // Maintenance mode state
-
   const setUserAndPersist = useCallback((nextUser: ContextUser) => {
     setUser(nextUser)
+    localStorage.setItem('user', JSON.stringify(nextUser))
     sessionStorage.setItem('user', JSON.stringify(nextUser))
   }, [])
 
-  const { data, loading, error } = useQuery(GET_LOGGED_IN_USER, {
-    variables: { email: user?.email ?? '' },
-    skip: !user?.email,
-  })
-
   useEffect(() => {
-    if (!user || !data?.people?.[0]) {
-      return
+    const initializeAuth = () => {
+      try {
+        const storedToken = localStorage.getItem('accessToken')
+        const sessionUser = sessionStorage.getItem('user')
+
+        if (storedToken && sessionUser) {
+          const parsedUser = JSON.parse(sessionUser)
+          if (parsedUser.id && parsedUser.level) {
+            setUser(parsedUser)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const mergedUser = { ...user, ...data.people[0] } as ContextUser
-    // Only update if the user data actually changed to prevent infinite loops
-    if (JSON.stringify(user) !== JSON.stringify(mergedUser)) {
-      setUserAndPersist(mergedUser)
-    }
-  }, [data?.people, user, setUserAndPersist])
-
-  useEffect(() => {
-    const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
-    if (sessionUser.id && sessionUser.level) {
-      setUser(sessionUser)
-    }
+    initializeAuth()
   }, [])
 
-  const logout = () => {
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Login failed')
+        }
+
+        const data = await response.json()
+        const { user, token, refreshToken } = data
+
+        // Store auth data
+        localStorage.setItem('accessToken', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken)
+        }
+
+        setUserAndPersist(user)
+
+        // Redirect to spaces
+        router.push('/protected/spaces')
+      } catch (error) {
+        throw error
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [router, setUserAndPersist]
+  )
+
+  const logout = useCallback(() => {
     setUser(undefined)
     localStorage.removeItem('user')
-    localStorage.removeItem('token')
+    localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     sessionStorage.removeItem('user')
     document.cookie = 'accessToken=; path=/; max-age=0'
-  }
+    router.push('/auth/login')
+  }, [router])
 
   const value = {
     user,
     setUser: setUserAndPersist,
     logout,
+    login,
+    isLoading,
+    isAuthenticated: !!user && !!localStorage.getItem('accessToken'),
   }
 
-  return (
-    <AppContext.Provider value={value}>
-      {isAuthRoute ? (
-        <>{children}</>
-      ) : (
-        <ApolloWrapper
-          placeholder={!user}
-          data={data}
-          loading={loading}
-          error={error}
-        >
-          {children}
-        </ApolloWrapper>
-      )}
-    </AppContext.Provider>
-  )
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
