@@ -90,7 +90,7 @@ export function ResonancePanel({
             Field Resonance
           </span>
           <div className="flex gap-2">
-            <button className="text-slate-400 dark:text-white/50 hover:text-slate-600 dark:hover:text-white transition-colors">
+            <button className="cursor-pointer text-slate-400 dark:text-white/50 hover:text-slate-600 dark:hover:text-white transition-colors">
               <span className="material-symbols-outlined text-lg">
                 open_in_full
               </span>

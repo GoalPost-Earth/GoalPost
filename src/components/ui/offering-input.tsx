@@ -132,7 +132,7 @@ export function OfferingInput({
             <div className="flex items-center gap-1 pr-1">
               <button
                 disabled={isLoading}
-                className="group/mic p-3 rounded-2xl hover:bg-white/10 dark:hover:bg-white/10 text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer group/mic p-3 rounded-2xl hover:bg-white/10 dark:hover:bg-white/10 text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-[24px] group-hover/mic:scale-110 transition-transform">
                   mic
@@ -145,7 +145,7 @@ export function OfferingInput({
                 onClick={handleSubmit}
                 disabled={isLoading}
                 className={cn(
-                  'flex items-center justify-center size-12 rounded-2xl text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] dark:shadow-[0_0_15px_rgba(19,164,236,0.3)]',
+                  'cursor-pointer flex items-center justify-center size-12 rounded-2xl text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] dark:shadow-[0_0_15px_rgba(19,164,236,0.3)]',
                   isLoading
                     ? 'bg-gp-primary/50 dark:bg-gp-primary/50 cursor-not-allowed'
                     : 'bg-gp-primary hover:bg-gp-primary/90 dark:bg-gp-primary dark:hover:bg-gp-primary/80 hover:shadow-[0_6px_20px_-3px_rgba(19,164,236,0.6)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.5)]'

@@ -347,7 +347,7 @@ export function ChatWithHelp() {
             placeholder="Ask something..."
             className="flex-1 px-4 py-2 border rounded-lg"
           />
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+          <button className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-lg">
             Send
           </button>
         </div>

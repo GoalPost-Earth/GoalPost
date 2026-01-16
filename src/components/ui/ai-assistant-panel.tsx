@@ -105,12 +105,12 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            <button className="cursor-pointer size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
               <span className="material-symbols-outlined text-lg">history</span>
             </button>
             <button
               onClick={onClose}
-              className="size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              className="cursor-pointer size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
             >
               <span className="material-symbols-outlined text-lg">close</span>
             </button>

@@ -75,7 +75,7 @@ export function FieldsHeader({
         </div>
 
         {/* Notifications Button */}
-        <button className="flex items-center justify-center rounded-full bg-gp-primary/20 hover:bg-gp-primary/30 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 text-gp-primary dark:text-gp-primary size-9 md:size-10 transition-all hover:scale-110">
+        <button className="cursor-pointer flex items-center justify-center rounded-full bg-gp-primary/20 hover:bg-gp-primary/30 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 text-gp-primary dark:text-gp-primary size-9 md:size-10 transition-all hover:scale-110">
           <span className="material-symbols-outlined text-[20px] md:text-[24px]">
             notifications
           </span>

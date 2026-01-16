@@ -60,7 +60,7 @@ export function AIChatButton({ onClick, isOpen }: AIChatButtonProps) {
         <button
           ref={buttonRef}
           onClick={handleClick}
-          className="relative flex items-center justify-center size-12 rounded-full glass-panel bg-white/50 dark:bg-slate-900/50 hover:bg-white/70 dark:hover:bg-slate-900/70 shadow-lg hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.3)] transition-all duration-300 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 backdrop-blur-md"
+          className="cursor-pointer relative flex items-center justify-center size-12 rounded-full glass-panel bg-white/50 dark:bg-slate-900/50 hover:bg-white/70 dark:hover:bg-slate-900/70 shadow-lg hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.3)] transition-all duration-300 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 backdrop-blur-md"
           aria-label="AI Assistant"
         >
           <span className="material-symbols-outlined text-2xl text-slate-600 dark:text-white/60 group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-300">

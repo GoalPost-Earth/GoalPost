@@ -289,7 +289,7 @@ export function PulseTypeSuggestion({
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <button
                 onClick={() => setEditedName('')}
-                className="p-1.5 rounded-full hover:bg-white/80 text-[#9aa6b2] hover:text-[#1f2a36] transition-colors"
+                className="cursor-pointer p-1.5 rounded-full hover:bg-white/80 text-[#9aa6b2] hover:text-[#1f2a36] transition-colors"
                 title="Clear"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
@@ -317,7 +317,7 @@ export function PulseTypeSuggestion({
         <div className="flex w-full gap-3">
           <button
             onClick={handleRegenerateType}
-            className="flex-1 h-12 rounded-xl border border-[#2c3a46] bg-[#101820] text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-[#1f8bff] hover:text-white hover:bg-[#162230]"
+            className="cursor-pointer flex-1 h-12 rounded-xl border border-[#2c3a46] bg-[#101820] text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-[#1f8bff] hover:text-white hover:bg-[#162230]"
           >
             <span className="material-symbols-outlined text-lg group-hover:-rotate-12 transition-transform">
               tune
@@ -326,7 +326,7 @@ export function PulseTypeSuggestion({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 h-12 rounded-xl bg-[#1a9bff] hover:bg-[#1386dc] text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(26,155,255,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
+            className="cursor-pointer flex-1 h-12 rounded-xl bg-[#1a9bff] hover:bg-[#1386dc] text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(26,155,255,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
           >
             <span className="material-symbols-outlined text-lg">check</span>
             Create Pulse

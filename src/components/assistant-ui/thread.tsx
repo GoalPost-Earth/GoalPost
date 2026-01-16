@@ -164,11 +164,11 @@ const Composer: FC = () => {
 
       {/* Bottom action buttons */}
       <div className="flex justify-center gap-6">
-        <button className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
+        <button className="cursor-pointer flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
           <span className="material-symbols-outlined text-[12px]">delete</span>
           Clear
         </button>
-        <button className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
+        <button className="cursor-pointer flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-gp-primary dark:hover:text-gp-primary transition-colors font-medium">
           <span className="material-symbols-outlined text-[12px]">tune</span>
           Settings
         </button>
@@ -182,14 +182,14 @@ const ComposerAction: FC = () => {
     <>
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
-          <button className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-gp-primary dark:hover:bg-gp-primary hover:text-white text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
+          <button className="cursor-pointer p-2 bg-slate-100 dark:bg-slate-700 hover:bg-gp-primary dark:hover:bg-gp-primary hover:text-white text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
             <SendHorizontalIcon className="size-5" />
           </button>
         </ComposerPrimitive.Send>
       </ThreadPrimitive.If>
       <ThreadPrimitive.If running>
         <ComposerPrimitive.Cancel asChild>
-          <button className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-red-500 text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
+          <button className="cursor-pointer p-2 bg-slate-100 dark:bg-slate-700 hover:bg-red-500 text-slate-400 dark:text-slate-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
             <CircleStopIcon />
           </button>
         </ComposerPrimitive.Cancel>

@@ -149,7 +149,7 @@ export function AIChatPanel({ isOpen, onClose }: AIChatPanelProps) {
           </div>
           <button
             onClick={onClose}
-            className="size-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="cursor-pointer size-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
@@ -218,7 +218,7 @@ export function AIChatPanel({ isOpen, onClose }: AIChatPanelProps) {
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="absolute right-2 bottom-2 size-8 rounded-full bg-gp-primary hover:bg-gp-primary/90 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:shadow-none"
+                className="cursor-pointer absolute right-2 bottom-2 size-8 rounded-full bg-gp-primary hover:bg-gp-primary/90 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:shadow-none"
               >
                 <span className="material-symbols-outlined text-[20px]">
                   arrow_upward

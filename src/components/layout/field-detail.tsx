@@ -127,7 +127,7 @@ export function FieldDetail({
 
       {/* Bottom Action Button */}
       <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 group flex flex-col items-center gap-3">
-        <button className="relative flex items-center justify-center size-16 rounded-full glass-panel bg-white/50 dark:bg-glass-bg/30 hover:bg-white/80 dark:hover:bg-glass-bg shadow-lg dark:shadow-none hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.15)] transition-all duration-500 ease-out border border-gp-surface-strong dark:border-white/5 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/20 backdrop-blur-md group-hover:-translate-y-1">
+        <button className="cursor-pointer relative flex items-center justify-center size-16 rounded-full glass-panel bg-white/50 dark:bg-glass-bg/30 hover:bg-white/80 dark:hover:bg-glass-bg shadow-lg dark:shadow-none hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.15)] transition-all duration-500 ease-out border border-gp-surface-strong dark:border-white/5 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/20 backdrop-blur-md group-hover:-translate-y-1">
           <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
             spa
           </span>

@@ -54,7 +54,7 @@ export function ActivePulses() {
         <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
           Active Pulses
         </h3>
-        <button className="text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
+        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
           View All
         </button>
       </div>

@@ -130,7 +130,7 @@ export default function NavBar() {
         >
           {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
         </button>
-        <button className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
+        <button className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
           {isMounted && <NotificationIcon />}
         </button>
 

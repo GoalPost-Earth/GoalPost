@@ -61,7 +61,7 @@ export function FieldsList() {
         <h3 className="section-title text-primary-content text-sm font-bold uppercase tracking-widest dark:text-primary">
           Fields
         </h3>
-        <button className="text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
+        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
           Manage Fields
         </button>
       </div>
