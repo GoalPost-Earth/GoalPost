@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Routes that don't require authentication
-const publicRoutes = ['/auth/login', '/auth/signup', '/']
-
 // Routes that require authentication
 const protectedRoutes = ['/protected']
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const token = request.cookies.get('accessToken')?.value
-
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some((route) =>
-    route === '/' ? pathname === '/' : pathname.startsWith(route)
-  )
 
   // Check if route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -34,5 +26,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|.*\\..*).*)'],
+  matcher: ['/((?!_next|.*\\..*|api).*)'],
 }
