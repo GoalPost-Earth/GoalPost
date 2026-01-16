@@ -66,7 +66,7 @@ export function AIChatButton({ onClick, isOpen }: AIChatButtonProps) {
           <span className="material-symbols-outlined text-2xl text-slate-600 dark:text-white/60 group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-300">
             psychology
           </span>
-          
+
           {/* Pulsing indicator dot */}
           {!isOpen && (
             <span className="absolute top-0 right-0 -mt-1 -mr-1 size-2.5 bg-gp-primary rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
