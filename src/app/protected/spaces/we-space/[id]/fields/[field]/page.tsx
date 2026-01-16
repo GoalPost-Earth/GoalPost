@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { PulseNode } from '@/components/ui/pulse-node'
@@ -10,154 +10,39 @@ import { AIChatButton } from '@/components/ui/ai-chat-button'
 import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
 import { cn } from '@/lib/utils'
 
-// Mock data for field nodes
-const fieldNodesData: Record<
-  string,
-  Array<{
-    icon: string
-    label: string
-    type: 'goal' | 'resource' | 'story'
-    position: string
-    animation: string
-  }>
-> = {
-  'deep-work': [
-    {
-      icon: 'flag',
-      label: 'Expand API Coverage',
-      type: 'goal',
-      position: 'top-left',
-      animation: 'float',
-    },
-    {
-      icon: 'diamond',
-      label: 'Design Tokens',
-      type: 'resource',
-      position: 'bottom-left',
-      animation: 'float-delayed',
-    },
-    {
-      icon: 'auto_stories',
-      label: 'Origin Narrative',
-      type: 'story',
-      position: 'top-right',
-      animation: 'float-random',
-    },
-    {
-      icon: 'flag',
-      label: 'Q3 Revenue',
-      type: 'goal',
-      position: 'bottom-right',
-      animation: 'pulse-slow',
-    },
-    {
-      icon: 'diamond',
-      label: 'Raw Dataset B',
-      type: 'resource',
-      position: 'top-center',
-      animation: 'float',
-    },
-    {
-      icon: 'auto_stories',
-      label: 'User Journey Map',
-      type: 'story',
-      position: 'right-center',
-      animation: 'float-delayed',
-    },
-  ],
-  growth: [
-    {
-      icon: 'self_improvement',
-      label: 'Personal Development',
-      type: 'goal',
-      position: 'top-left',
-      animation: 'float',
-    },
-    {
-      icon: 'diamond',
-      label: 'Learning Materials',
-      type: 'resource',
-      position: 'bottom-left',
-      animation: 'float-delayed',
-    },
-    {
-      icon: 'auto_stories',
-      label: 'Growth Journey',
-      type: 'story',
-      position: 'top-right',
-      animation: 'float-random',
-    },
-  ],
-  community: [
-    {
-      icon: 'groups',
-      label: 'Team Building',
-      type: 'goal',
-      position: 'top-left',
-      animation: 'float',
-    },
-    {
-      icon: 'handshake',
-      label: 'Collaboration Tools',
-      type: 'resource',
-      position: 'bottom-left',
-      animation: 'float-delayed',
-    },
-    {
-      icon: 'forum',
-      label: 'Community Stories',
-      type: 'story',
-      position: 'top-right',
-      animation: 'float-random',
-    },
-    {
-      icon: 'hub',
-      label: 'Network Hub',
-      type: 'goal',
-      position: 'bottom-right',
-      animation: 'pulse-slow',
-    },
-  ],
-  inbox: [
-    {
-      icon: 'mail',
-      label: 'Unread Messages',
-      type: 'goal',
-      position: 'top-left',
-      animation: 'float',
-    },
-    {
-      icon: 'notification_important',
-      label: 'Urgent Items',
-      type: 'resource',
-      position: 'top-right',
-      animation: 'float-delayed',
-    },
-  ],
-  vitality: [
-    {
-      icon: 'favorite',
-      label: 'Health Goals',
-      type: 'goal',
-      position: 'top-left',
-      animation: 'float',
-    },
-    {
-      icon: 'fitness_center',
-      label: 'Wellness Resources',
-      type: 'resource',
-      position: 'top-right',
-      animation: 'float-delayed',
-    },
-  ],
-}
-
 // Icon mappings for pulse types
 const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
   goal: 'flag',
   resource: 'diamond',
   story: 'auto_stories',
 }
+
+const POSITION_ORDER: Array<
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'right-center'
+> = [
+  'top-left',
+  'bottom-left',
+  'top-right',
+  'bottom-right',
+  'top-center',
+  'right-center',
+]
+
+const ANIMATION_ORDER: Array<
+  'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
+> = [
+  'float',
+  'float-delayed',
+  'float-random',
+  'pulse-slow',
+  'float',
+  'float-delayed',
+]
 
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -181,78 +66,54 @@ function FieldDetailPage() {
   const fieldId = (paramId?.field as string) || 'deep-work'
   const { user } = useAuth()
 
-  // Position variations for the pulses
-  const positions: Array<
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'top-center'
-    | 'right-center'
-  > = [
-    'top-left',
-    'bottom-left',
-    'top-right',
-    'bottom-right',
-    'top-center',
-    'right-center',
-  ]
+  const fetchPulses = useCallback(async () => {
+    try {
+      setIsLoadingPulses(true)
+      const response = await fetch(
+        `/api/pulse/get-by-context?contextId=${fieldId}`
+      )
 
-  const animations: Array<
-    'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
-  > = [
-    'float',
-    'float-delayed',
-    'float-random',
-    'pulse-slow',
-    'float',
-    'float-delayed',
-  ]
+      if (!response.ok) {
+        throw new Error(`Failed to fetch pulses: ${response.status}`)
+      }
 
-  // Fetch pulses on mount
-  useEffect(() => {
-    const fetchPulses = async () => {
-      try {
-        setIsLoadingPulses(true)
-        const response = await fetch(
-          `/api/pulse/get-by-context?contextId=${fieldId}`
-        )
+      const data = await response.json()
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch pulses: ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (data.success && data.pulses && data.pulses.length > 0) {
-          // Transform pulses to node format
-          const pulseNodes = data.pulses.map((pulse: any, idx: number) => ({
-            icon: pulseTypeIcons[pulse.type as 'goal' | 'resource' | 'story'],
+      if (data.success && data.pulses && data.pulses.length > 0) {
+        const pulseNodes = data.pulses.map(
+          (
+            pulse: {
+              content: string
+              type: 'goal' | 'resource' | 'story'
+            },
+            idx: number
+          ) => ({
+            icon: pulseTypeIcons[pulse.type],
             label:
               pulse.content.substring(0, 50) +
               (pulse.content.length > 50 ? '...' : ''),
-            type: pulse.type as 'goal' | 'resource' | 'story',
-            position: positions[idx % positions.length],
-            animation: animations[idx % animations.length],
-          }))
-          setPulses(pulseNodes)
-          console.log(
-            `✓ Loaded ${pulseNodes.length} pulses for field ${fieldId}`
-          )
-        } else {
-          setPulses([])
-          console.log(`ℹ️ No pulses found for field ${fieldId}`)
-        }
-      } catch (error) {
-        console.error('Error fetching pulses:', error)
+            type: pulse.type,
+            position: POSITION_ORDER[idx % POSITION_ORDER.length],
+            animation: ANIMATION_ORDER[idx % ANIMATION_ORDER.length],
+          })
+        )
+        setPulses(pulseNodes)
+        console.log(`✓ Loaded ${pulseNodes.length} pulses for field ${fieldId}`)
+      } else {
         setPulses([])
-      } finally {
-        setIsLoadingPulses(false)
+        console.log(`ℹ️ No pulses found for field ${fieldId}`)
       }
+    } catch (error) {
+      console.error('Error fetching pulses:', error)
+      setPulses([])
+    } finally {
+      setIsLoadingPulses(false)
     }
-
-    fetchPulses()
   }, [fieldId])
+
+  useEffect(() => {
+    fetchPulses()
+  }, [fetchPulses])
 
   useEffect(() => {
     setIsMounted(true)
@@ -334,6 +195,9 @@ function FieldDetailPage() {
       const data = await response.json()
       console.log('✅ Pulse created successfully:', data)
       setSubmitSuccess(true)
+
+      // Refresh pulses after successful creation
+      await fetchPulses()
 
       // Close modal and reset after success
       setTimeout(() => {
