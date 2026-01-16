@@ -1,6 +1,6 @@
 [![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/rdamashek/GoalPost)
 
-# GoalPost Prototype 1
+# GoalPost Prototype 1-5
 
 Looking for docs? Start with the consolidated index at [docs/README.md](docs/README.md) for architecture, setup, and assistant mode references.
 
