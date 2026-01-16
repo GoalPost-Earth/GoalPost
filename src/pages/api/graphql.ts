@@ -2,8 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import initializeApolloServer from '@/lib/graphql/apollo'
 import { applyCorsMiddleware } from '@/lib/middleware/cors'
 
-// Initialize Apollo Server
-const apolloHandler = await initializeApolloServer()
+let apolloHandler: Awaited<ReturnType<typeof initializeApolloServer>> | null =
+  null
+
+async function getApolloHandler() {
+  if (!apolloHandler) {
+    apolloHandler = await initializeApolloServer()
+  }
+  return apolloHandler
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,11 +19,14 @@ export default async function handler(
   // Enable CORS
   await applyCorsMiddleware(req, res)
 
+  // Get or initialize Apollo handler
+  const yoga = await getApolloHandler()
+
   // Handle GraphQL requests
   if (req.method === 'OPTIONS') {
     res.end()
   } else {
-    await apolloHandler(req, res)
+    await yoga(req, res)
   }
 }
 // export default function handler(req, res) {
