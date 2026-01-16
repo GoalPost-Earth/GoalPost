@@ -9,11 +9,11 @@ import { useRef, useState } from 'react'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 
 export interface FieldsCanvasProps {
-  fields?: Omit<
+  fields?: (Omit<
     FieldBubbleProps,
     'position' | 'size' | 'shape' | 'animationType'
-  >[]
-  onFieldClick?: (fieldTitle: string) => void
+  > & { id?: string })[]
+  onFieldClick?: (fieldId: string) => void
   onCreateField?: (description: string) => void | Promise<void>
   className?: string
   spaceId?: string // Optional space ID to link new fields to
@@ -24,6 +24,7 @@ export interface FieldsCanvasProps {
 // Default fields data structure
 const defaultFields = [
   {
+    id: 'deep-work',
     icon: 'psychology',
     title: 'Deep Work',
     description: '5 active threads',
@@ -44,6 +45,7 @@ const defaultFields = [
     ],
   },
   {
+    id: 'growth',
     icon: 'self_improvement',
     title: 'Growth',
     description: 'Shared intentions with WeSpace neighbors',
@@ -68,6 +70,7 @@ const defaultFields = [
     ],
   },
   {
+    id: 'community',
     icon: 'hub',
     title: 'Community',
     description: 'Shared intentions with WeSpace neighbors',
@@ -93,12 +96,14 @@ const defaultFields = [
     ],
   },
   {
+    id: 'inbox',
     icon: 'inbox',
     title: 'Inbox',
     description: '',
     badge: { text: '12 New', variant: 'primary' as const },
   },
   {
+    id: 'vitality',
     icon: 'monitor_heart',
     title: 'Vitality',
     description: '',
@@ -197,7 +202,7 @@ export function FieldsCanvas({
             size={sizes[idx % sizes.length]}
             shape={shapes[idx % shapes.length]}
             animationType={animations[idx % animations.length]}
-            onClick={() => onFieldClick?.(field.title)}
+            onClick={() => onFieldClick?.(field.id || field.title || '')}
           />
         ))}
       </div>
