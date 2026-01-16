@@ -5,12 +5,17 @@ import { gsap } from 'gsap'
 import { PulseTypeSuggestion } from './pulse-type-suggestion'
 import { OfferingModal } from './offering-modal'
 import { NodeType } from './pulse-node'
+import { cn } from '@/lib/utils'
 
 interface OfferingInputProps {
   onSubmit?: (value: string, type: NodeType, name: string) => void
+  isLoading?: boolean
 }
 
-export function OfferingInput({ onSubmit }: OfferingInputProps) {
+export function OfferingInput({
+  onSubmit,
+  isLoading = false,
+}: OfferingInputProps) {
   const [input, setInput] = useState('')
   const [showSuggestion, setShowSuggestion] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -41,23 +46,34 @@ export function OfferingInput({ onSubmit }: OfferingInputProps) {
   }, [])
 
   const handleSubmit = () => {
-    if (input.trim()) {
+    if (input.trim() && !isLoading) {
       setShowSuggestion(true)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault()
       handleSubmit()
     }
   }
 
   const handleSelectPulseType = (type: NodeType, name: string) => {
-    if (onSubmit) {
+    console.log('🎯 handleSelectPulseType called:', {
+      type,
+      name,
+      hasOnSubmit: !!onSubmit,
+      isLoading,
+    })
+    if (onSubmit && !isLoading) {
+      console.log('📤 Calling onSubmit with:', { input, type, name })
       onSubmit(input, type, name)
       setInput('')
       setShowSuggestion(false)
+    } else if (!onSubmit) {
+      console.error('❌ onSubmit callback not provided')
+    } else if (isLoading) {
+      console.warn('⏳ Still loading, ignoring submit')
     }
   }
 
@@ -103,17 +119,21 @@ export function OfferingInput({ onSubmit }: OfferingInputProps) {
             {/* Input Field */}
             <input
               autoFocus
+              disabled={isLoading}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Speak your intention..."
-              className="flex-1 w-full bg-transparent border-0 focus:ring-0 focus:outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 font-light px-4 h-14 caret-gp-primary"
+              className="flex-1 w-full bg-transparent border-0 focus:ring-0 focus:outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 font-light px-4 h-14 caret-gp-primary disabled:opacity-50 disabled:cursor-not-allowed"
             />
 
             {/* Action Buttons */}
             <div className="flex items-center gap-1 pr-1">
-              <button className="group/mic p-3 rounded-2xl hover:bg-white/10 dark:hover:bg-white/10 text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition-all">
+              <button
+                disabled={isLoading}
+                className="group/mic p-3 rounded-2xl hover:bg-white/10 dark:hover:bg-white/10 text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <span className="material-symbols-outlined text-[24px] group-hover/mic:scale-110 transition-transform">
                   mic
                 </span>
@@ -123,10 +143,21 @@ export function OfferingInput({ onSubmit }: OfferingInputProps) {
 
               <button
                 onClick={handleSubmit}
-                className="flex items-center justify-center size-12 rounded-2xl bg-gp-primary hover:bg-gp-primary/90 dark:bg-gp-primary dark:hover:bg-gp-primary/80 text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] dark:shadow-[0_0_15px_rgba(19,164,236,0.3)] hover:shadow-[0_6px_20px_-3px_rgba(19,164,236,0.6)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.5)]"
+                disabled={isLoading}
+                className={cn(
+                  'flex items-center justify-center size-12 rounded-2xl text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] dark:shadow-[0_0_15px_rgba(19,164,236,0.3)]',
+                  isLoading
+                    ? 'bg-gp-primary/50 dark:bg-gp-primary/50 cursor-not-allowed'
+                    : 'bg-gp-primary hover:bg-gp-primary/90 dark:bg-gp-primary dark:hover:bg-gp-primary/80 hover:shadow-[0_6px_20px_-3px_rgba(19,164,236,0.6)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.5)]'
+                )}
               >
-                <span className="material-symbols-outlined text-[24px]">
-                  arrow_upward
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-[24px]',
+                    isLoading && 'animate-spin'
+                  )}
+                >
+                  {isLoading ? 'hourglass_bottom' : 'arrow_upward'}
                 </span>
               </button>
             </div>

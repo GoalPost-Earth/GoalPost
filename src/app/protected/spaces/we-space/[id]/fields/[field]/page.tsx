@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useAuth } from '@/app/contexts/AuthContext'
 import { PulseNode } from '@/components/ui/pulse-node'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
@@ -151,13 +152,107 @@ const fieldNodesData: Record<
   ],
 }
 
+// Icon mappings for pulse types
+const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
+  goal: 'flag',
+  resource: 'diamond',
+  story: 'auto_stories',
+}
+
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [pulses, setPulses] = useState<
+    Array<{
+      icon: string
+      label: string
+      type: 'goal' | 'resource' | 'story'
+      position: string
+      animation: string
+    }>
+  >([])
+  const [isLoadingPulses, setIsLoadingPulses] = useState(true)
+
   const paramId = useParams()
-  const fieldId = (paramId?.id as string) || 'deep-work'
-  const nodes = fieldNodesData[fieldId] || fieldNodesData['deep-work']
+  const fieldId = (paramId?.field as string) || 'deep-work'
+  const { user } = useAuth()
+
+  // Position variations for the pulses
+  const positions: Array<
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'top-center'
+    | 'right-center'
+  > = [
+    'top-left',
+    'bottom-left',
+    'top-right',
+    'bottom-right',
+    'top-center',
+    'right-center',
+  ]
+
+  const animations: Array<
+    'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
+  > = [
+    'float',
+    'float-delayed',
+    'float-random',
+    'pulse-slow',
+    'float',
+    'float-delayed',
+  ]
+
+  // Fetch pulses on mount
+  useEffect(() => {
+    const fetchPulses = async () => {
+      try {
+        setIsLoadingPulses(true)
+        const response = await fetch(
+          `/api/pulse/get-by-context?contextId=${fieldId}`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch pulses: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data.success && data.pulses && data.pulses.length > 0) {
+          // Transform pulses to node format
+          const pulseNodes = data.pulses.map((pulse: any, idx: number) => ({
+            icon: pulseTypeIcons[pulse.type as 'goal' | 'resource' | 'story'],
+            label:
+              pulse.content.substring(0, 50) +
+              (pulse.content.length > 50 ? '...' : ''),
+            type: pulse.type as 'goal' | 'resource' | 'story',
+            position: positions[idx % positions.length],
+            animation: animations[idx % animations.length],
+          }))
+          setPulses(pulseNodes)
+          console.log(
+            `✓ Loaded ${pulseNodes.length} pulses for field ${fieldId}`
+          )
+        } else {
+          setPulses([])
+          console.log(`ℹ️ No pulses found for field ${fieldId}`)
+        }
+      } catch (error) {
+        console.error('Error fetching pulses:', error)
+        setPulses([])
+      } finally {
+        setIsLoadingPulses(false)
+      }
+    }
+
+    fetchPulses()
+  }, [fieldId])
 
   useEffect(() => {
     setIsMounted(true)
@@ -172,9 +267,87 @@ function FieldDetailPage() {
     'right-center': 'top-[45%] left-[82%]',
   }
 
-  const handleOfferingSubmit = (value: string, type: string, name: string) => {
-    console.log('Pulse submitted:', { value, type, name })
-    // Handle the submission logic here
+  const handleOfferingSubmit = async (
+    value: string,
+    type: string,
+    name: string
+  ) => {
+    console.log('🎯 handleOfferingSubmit called with:', { value, type, name })
+
+    if (!user) {
+      console.error('❌ No user authenticated')
+      setSubmitError('User not authenticated')
+      return
+    }
+
+    console.log('👤 User found:', user.id)
+    setIsSubmitting(true)
+    setSubmitError(null)
+    setSubmitSuccess(false)
+
+    try {
+      // Map pulse type from node type to API pulse type
+      const pulseTypeMap: Record<string, string> = {
+        goal: 'GoalPulse',
+        resource: 'ResourcePulse',
+        story: 'StoryPulse',
+      }
+
+      const pulseType = pulseTypeMap[type] || 'GoalPulse'
+
+      const requestBody = {
+        contextId: fieldId, // Use field ID as context ID
+        personId: user.id,
+        pulseType,
+        content: value,
+        conversation: [
+          {
+            role: 'user',
+            content: value,
+          },
+        ],
+      }
+
+      console.log(
+        '📤 Sending request to /api/pulse/create-from-conversation:',
+        requestBody
+      )
+
+      const response = await fetch('/api/pulse/create-from-conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      console.log('📨 Response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('❌ API error response:', errorData)
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        )
+      }
+
+      const data = await response.json()
+      console.log('✅ Pulse created successfully:', data)
+      setSubmitSuccess(true)
+
+      // Close modal and reset after success
+      setTimeout(() => {
+        setIsModalOpen(false)
+        setSubmitSuccess(false)
+      }, 1500)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      console.error('❌ Error submitting pulse:', error)
+      setSubmitError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -204,8 +377,37 @@ function FieldDetailPage() {
       <div className="relative w-full h-full pt-24">
         {/* Nodes Canvas */}
         <div className="relative w-full h-full">
+          {isMounted && isLoadingPulses && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="mb-4">
+                  <span className="material-symbols-outlined text-4xl text-gp-primary animate-spin">
+                    hourglass_bottom
+                  </span>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-white/60">
+                  Loading pulses...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isMounted && !isLoadingPulses && pulses.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-slate-600 dark:text-white/60 mb-2">
+                  No pulses yet
+                </p>
+                <p className="text-xs text-slate-500 dark:text-white/40">
+                  Create one with the button below
+                </p>
+              </div>
+            </div>
+          )}
+
           {isMounted &&
-            nodes.map((node, idx) => (
+            !isLoadingPulses &&
+            pulses.map((node, idx) => (
               <div
                 key={idx}
                 className={cn(
@@ -226,7 +428,7 @@ function FieldDetailPage() {
                       | 'pulse-slow'
                       | 'none'
                   }
-                  onClick={() => console.log(`Clicked node: ${node.label}`)}
+                  onClick={() => console.log(`Clicked pulse: ${node.label}`)}
                 />
               </div>
             ))}
@@ -251,15 +453,31 @@ function FieldDetailPage() {
       {/* Offering Modal */}
       <OfferingModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSubmitError(null)
+          setSubmitSuccess(false)
+        }}
         position="bottom"
       >
-        <OfferingInput
-          onSubmit={(value, type, name) => {
-            handleOfferingSubmit(value, type, name)
-            setIsModalOpen(false)
-          }}
-        />
+        <div className="w-full max-w-160">
+          {submitError && (
+            <div className="mb-4 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
+              {submitError}
+            </div>
+          )}
+          {submitSuccess && (
+            <div className="mb-4 p-4 rounded-xl bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
+              Pulse created successfully!
+            </div>
+          )}
+          <OfferingInput
+            onSubmit={(value, type, name) => {
+              handleOfferingSubmit(value, type, name)
+            }}
+            isLoading={isSubmitting}
+          />
+        </div>
       </OfferingModal>
 
       {/* AI Chat Components */}

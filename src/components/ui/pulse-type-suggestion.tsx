@@ -210,6 +210,8 @@ export function PulseTypeSuggestion({
   }
 
   const handleConfirm = () => {
+    console.log('🎯 handleConfirm called:', { selectedType, editedName })
+    console.log('📤 Calling onSelect with:', { selectedType, editedName })
     onSelect(selectedType, editedName)
     onClose()
   }
