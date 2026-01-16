@@ -14,6 +14,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n': typeof types.CreateFieldContextDocument
+  '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n': typeof types.UpdateFieldContextDocument
+  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteFieldContextDocument
+  '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: { space: { connect: [{ where: { node: { id_EQ: $spaceId } } }] } }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n': typeof types.ConnectFieldToSpaceDocument
   '\n  mutation createGoalPulses($input: [GoalPulseCreateInput!]!) {\n    createGoalPulses(input: $input) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n': typeof types.CreateGoalPulsesDocument
   '\n  mutation updateGoalPulses(\n    $where: GoalPulseWhere!\n    $update: GoalPulseUpdateInput!\n  ) {\n    updateGoalPulses(where: $where, update: $update) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n': typeof types.UpdateGoalPulsesDocument
   '\n  mutation deleteGoalPulses($where: GoalPulseWhere!) {\n    deleteGoalPulses(where: $where) {\n      nodesDeleted\n    }\n  }\n': typeof types.DeleteGoalPulsesDocument
@@ -27,6 +31,11 @@ type Documents = {
   '\n  query getCommunitiesAndTheirMembers {\n    communities {\n      id\n      name\n      type\n    }\n  }\n': typeof types.GetCommunitiesAndTheirMembersDocument
   '\n  query getPeopleNotInCommunities {\n    people {\n      id\n      name\n      email\n    }\n  }\n': typeof types.GetPeopleNotInCommunitiesDocument
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n': typeof types.GetLoggedInUserDocument
+  '\n  query GetFieldContexts($where: FieldContextWhere) {\n    fieldContexts(where: $where) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetFieldContextsDocument
+  '\n  query GetMeSpaceFields {\n    meSpaces {\n      id\n      name\n      owner {\n        ... on Person {\n          id\n        }\n        ... on Community {\n          id\n        }\n      }\n      contexts {\n        id\n        title\n        emergentName\n        createdAt\n      }\n    }\n  }\n': typeof types.GetMeSpaceFieldsDocument
+  '\n  query GetFieldsForSpace($spaceId: ID!) {\n    fieldContexts(where: { space_SOME: { id_EQ: $spaceId } }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetFieldsForSpaceDocument
+  '\n  query GetFieldContextById($id: ID!) {\n    fieldContexts(where: { id_EQ: $id }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetFieldContextByIdDocument
+  '\n  query GetFieldsForSpacePaginated($spaceId: ID!, $offset: Int, $limit: Int) {\n    fieldContexts(\n      where: { space_SOME: { id_EQ: $spaceId } }\n      offset: $offset\n      limit: $limit\n    ) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetFieldsForSpacePaginatedDocument
   '\n  query getGraphStats {\n    peopleAggregate {\n      count\n    }\n    communitiesAggregate {\n      count\n    }\n    meSpacesAggregate {\n      count\n    }\n    weSpacesAggregate {\n      count\n    }\n    fieldContextsAggregate {\n      count\n    }\n    goalPulsesAggregate {\n      count\n    }\n    resourcePulsesAggregate {\n      count\n    }\n    storyPulsesAggregate {\n      count\n    }\n    fieldResonancesAggregate {\n      count\n    }\n    resonanceLinksAggregate {\n      count\n    }\n  }\n': typeof types.GetGraphStatsDocument
   '\n  query getGraphPeople {\n    people {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        ... on MeSpace {\n          contexts {\n            id\n            pulses {\n              id\n            }\n          }\n        }\n        ... on WeSpace {\n          contexts {\n            id\n            pulses {\n              id\n            }\n          }\n        }\n      }\n    }\n  }\n': typeof types.GetGraphPeopleDocument
   '\n  query getGraphSpaces {\n    meSpaces {\n      id\n      name\n      visibility\n      createdAt\n      owner {\n        ... on Person {\n          id\n          name\n        }\n        ... on Community {\n          id\n          name\n        }\n      }\n      members {\n        ... on Person {\n          id\n          name\n        }\n        ... on Community {\n          id\n          name\n        }\n      }\n    }\n    weSpaces {\n      id\n      name\n      visibility\n      createdAt\n      owner {\n        ... on Person {\n          id\n          name\n        }\n        ... on Community {\n          id\n          name\n        }\n      }\n      members {\n        ... on Person {\n          id\n          name\n        }\n        ... on Community {\n          id\n          name\n        }\n      }\n    }\n  }\n': typeof types.GetGraphSpacesDocument
@@ -42,6 +51,14 @@ type Documents = {
   '\n  query getUserById($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      name\n      email\n    }\n  }\n': typeof types.GetUserByIdDocument
 }
 const documents: Documents = {
+  '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n':
+    types.CreateFieldContextDocument,
+  '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
+    types.UpdateFieldContextDocument,
+  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n':
+    types.DeleteFieldContextDocument,
+  '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: { space: { connect: [{ where: { node: { id_EQ: $spaceId } } }] } }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n':
+    types.ConnectFieldToSpaceDocument,
   '\n  mutation createGoalPulses($input: [GoalPulseCreateInput!]!) {\n    createGoalPulses(input: $input) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n':
     types.CreateGoalPulsesDocument,
   '\n  mutation updateGoalPulses(\n    $where: GoalPulseWhere!\n    $update: GoalPulseUpdateInput!\n  ) {\n    updateGoalPulses(where: $where, update: $update) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n':
@@ -68,6 +85,16 @@ const documents: Documents = {
     types.GetPeopleNotInCommunitiesDocument,
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n':
     types.GetLoggedInUserDocument,
+  '\n  query GetFieldContexts($where: FieldContextWhere) {\n    fieldContexts(where: $where) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
+    types.GetFieldContextsDocument,
+  '\n  query GetMeSpaceFields {\n    meSpaces {\n      id\n      name\n      owner {\n        ... on Person {\n          id\n        }\n        ... on Community {\n          id\n        }\n      }\n      contexts {\n        id\n        title\n        emergentName\n        createdAt\n      }\n    }\n  }\n':
+    types.GetMeSpaceFieldsDocument,
+  '\n  query GetFieldsForSpace($spaceId: ID!) {\n    fieldContexts(where: { space_SOME: { id_EQ: $spaceId } }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
+    types.GetFieldsForSpaceDocument,
+  '\n  query GetFieldContextById($id: ID!) {\n    fieldContexts(where: { id_EQ: $id }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
+    types.GetFieldContextByIdDocument,
+  '\n  query GetFieldsForSpacePaginated($spaceId: ID!, $offset: Int, $limit: Int) {\n    fieldContexts(\n      where: { space_SOME: { id_EQ: $spaceId } }\n      offset: $offset\n      limit: $limit\n    ) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
+    types.GetFieldsForSpacePaginatedDocument,
   '\n  query getGraphStats {\n    peopleAggregate {\n      count\n    }\n    communitiesAggregate {\n      count\n    }\n    meSpacesAggregate {\n      count\n    }\n    weSpacesAggregate {\n      count\n    }\n    fieldContextsAggregate {\n      count\n    }\n    goalPulsesAggregate {\n      count\n    }\n    resourcePulsesAggregate {\n      count\n    }\n    storyPulsesAggregate {\n      count\n    }\n    fieldResonancesAggregate {\n      count\n    }\n    resonanceLinksAggregate {\n      count\n    }\n  }\n':
     types.GetGraphStatsDocument,
   '\n  query getGraphPeople {\n    people {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        ... on MeSpace {\n          contexts {\n            id\n            pulses {\n              id\n            }\n          }\n        }\n        ... on WeSpace {\n          contexts {\n            id\n            pulses {\n              id\n            }\n          }\n        }\n      }\n    }\n  }\n':
@@ -110,6 +137,30 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        space {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: { space: { connect: [{ where: { node: { id_EQ: $spaceId } } }] } }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n'
+): (typeof documents)['\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: { space: { connect: [{ where: { node: { id_EQ: $spaceId } } }] } }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -188,6 +239,36 @@ export function graphql(
 export function graphql(
   source: '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      email\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetFieldContexts($where: FieldContextWhere) {\n    fieldContexts(where: $where) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetFieldContexts($where: FieldContextWhere) {\n    fieldContexts(where: $where) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetMeSpaceFields {\n    meSpaces {\n      id\n      name\n      owner {\n        ... on Person {\n          id\n        }\n        ... on Community {\n          id\n        }\n      }\n      contexts {\n        id\n        title\n        emergentName\n        createdAt\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetMeSpaceFields {\n    meSpaces {\n      id\n      name\n      owner {\n        ... on Person {\n          id\n        }\n        ... on Community {\n          id\n        }\n      }\n      contexts {\n        id\n        title\n        emergentName\n        createdAt\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetFieldsForSpace($spaceId: ID!) {\n    fieldContexts(where: { space_SOME: { id_EQ: $spaceId } }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetFieldsForSpace($spaceId: ID!) {\n    fieldContexts(where: { space_SOME: { id_EQ: $spaceId } }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetFieldContextById($id: ID!) {\n    fieldContexts(where: { id_EQ: $id }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetFieldContextById($id: ID!) {\n    fieldContexts(where: { id_EQ: $id }) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetFieldsForSpacePaginated($spaceId: ID!, $offset: Int, $limit: Int) {\n    fieldContexts(\n      where: { space_SOME: { id_EQ: $spaceId } }\n      offset: $offset\n      limit: $limit\n    ) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetFieldsForSpacePaginated($spaceId: ID!, $offset: Int, $limit: Int) {\n    fieldContexts(\n      where: { space_SOME: { id_EQ: $spaceId } }\n      offset: $offset\n      limit: $limit\n    ) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

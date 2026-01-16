@@ -78,8 +78,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const mergedUser = { ...user, ...data.people[0] } as ContextUser
-    setUserAndPersist(mergedUser)
-  }, [data, setUserAndPersist, user])
+    // Only update if the user data actually changed to prevent infinite loops
+    if (JSON.stringify(user) !== JSON.stringify(mergedUser)) {
+      setUserAndPersist(mergedUser)
+    }
+  }, [data?.people, user, setUserAndPersist])
 
   useEffect(() => {
     const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')

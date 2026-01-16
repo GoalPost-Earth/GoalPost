@@ -262,6 +262,20 @@
     animation: pulse-slow 3s ease-in-out infinite;
   }
 
+  @keyframes glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 10px rgba(79, 255, 203, 0.5));
+    }
+    50% {
+      filter: drop-shadow(0 0 20px rgba(79, 255, 203, 0.8));
+    }
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
   .glass-panel {
     background-clip: padding-box;
     border: 1px solid rgba(255, 255, 255, 0.1);

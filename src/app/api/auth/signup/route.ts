@@ -65,8 +65,26 @@ export async function POST(req: NextRequest) {
                     person.updatedAt = datetime()
                 
                     WITH person
+                    
+                    // Create personal MeSpace for the user
+                    CREATE (meSpace:Space:MeSpace {
+                      id: randomUUID(),
+                      name: CASE 
+                        WHEN $firstName <> '' AND $lastName <> '' THEN $firstName + ' ' + $lastName + "'s Personal Space"
+                        WHEN $firstName <> '' THEN $firstName + "'s Personal Space"
+                        ELSE 'My Personal Space'
+                      END,
+                      visibility: 'PRIVATE',
+                      createdAt: datetime()
+                    })
+                    
+                    // Link person to their MeSpace
+                    CREATE (person)-[:OWNS]->(meSpace)
+                    
+                    // Create self-reference
                     MERGE (person)-[:CREATED_BY]->(person)
-                RETURN person`,
+                    
+                RETURN person, meSpace`,
         {
           email,
           password: hashed,

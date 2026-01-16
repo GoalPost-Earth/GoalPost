@@ -14,7 +14,7 @@ const GetStartedScreen = () => {
       >
         <div className="h-[60vh] bg-linear-to-t from-black/70 to-transparent" />
         <div className="absolute bottom-0 w-full h-[40%] flex flex-col justify-center px-6 gap-10 items-center bg-white/90">
-          <div className="absolute top-[-100px] w-24 h-24 bg-gray-500 flex items-center justify-center text-white">
+          <div className="absolute -top-25 w-24 h-24 bg-gray-500 flex items-center justify-center text-white">
             Logo
           </div>
           <div className="w-full text-center space-y-5">

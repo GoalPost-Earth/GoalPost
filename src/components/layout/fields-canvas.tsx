@@ -5,7 +5,8 @@ import {
   type FieldBubbleProps,
 } from '@/components/ui/field-bubble'
 import { cn } from '@/lib/utils'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 
 export interface FieldsCanvasProps {
   fields?: Omit<
@@ -13,7 +14,11 @@ export interface FieldsCanvasProps {
     'position' | 'size' | 'shape' | 'animationType'
   >[]
   onFieldClick?: (fieldTitle: string) => void
+  onCreateField?: (description: string) => void | Promise<void>
   className?: string
+  spaceId?: string // Optional space ID to link new fields to
+  isCreating?: boolean // Loading state for field creation
+  isLoading?: boolean // Loading state for fetching fields
 }
 
 // Default fields data structure
@@ -103,9 +108,22 @@ const defaultFields = [
 export function FieldsCanvas({
   fields = defaultFields,
   onFieldClick,
+  onCreateField,
   className,
+  isCreating = false,
 }: FieldsCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  const handleCreateField = async (description: string) => {
+    try {
+      await onCreateField?.(description)
+      setIsCreateModalOpen(false)
+    } catch (err) {
+      console.error('Failed to create field:', err)
+      // TODO: Show error toast/notification to user
+    }
+  }
 
   // Position variations for the bubbles
   const positions: Array<FieldBubbleProps['position']> = [
@@ -211,7 +229,10 @@ export function FieldsCanvas({
         </div>
 
         {/* Add New Field Button */}
-        <button className="flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 hover:shadow-[0_0_50px_rgba(19,127,236,0.2)] transition-all duration-300 group">
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 hover:shadow-[0_0_50px_rgba(19,127,236,0.2)] transition-all duration-300 group"
+        >
           <div className="absolute inset-0 rounded-full bg-linear-to-tr from-gp-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-primary dark:group-hover:text-gp-primary text-[20px] md:text-[24px] transition-colors relative z-10">
             add_circle
@@ -221,6 +242,14 @@ export function FieldsCanvas({
           </span>
         </button>
       </div>
+
+      {/* Create Field Modal */}
+      <CreateFieldModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateField={handleCreateField}
+        isLoading={isCreating}
+      />
     </main>
   )
 }

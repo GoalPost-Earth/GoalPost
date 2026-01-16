@@ -2,9 +2,13 @@
 
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { useMeSpaceFields } from '@/hooks/useMeSpaceFields'
 
 export default function SpacesPage() {
   const router = useRouter()
+  const { user } = useAuth()
+  const { meSpaceId } = useMeSpaceFields(user?.id)
 
   return (
     <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-hidden pt-24">
@@ -34,7 +38,11 @@ export default function SpacesPage() {
             subtitle="Inner Sanctuary"
             description="Self-reflection, personal growth, and individual purpose."
             variant="mespace"
-            onClick={() => router.push('/protected/fields/mespace')}
+            onClick={() => {
+              if (meSpaceId) {
+                router.push(`/protected/spaces/me-space/fields`)
+              }
+            }}
           />
 
           {/* WeSpace - Community Space */}
@@ -43,7 +51,7 @@ export default function SpacesPage() {
             subtitle="Collective Field"
             description="Community sensing, shared intent, and collaborative evolution."
             variant="wespace"
-            onClick={() => router.push('/protected/fields/wespace')}
+            onClick={() => router.push('/protected/spaces/we-space')}
           />
         </div>
       </div>

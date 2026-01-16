@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (storedToken && storedUser) {
           setTokenState(storedToken)
           setUserState(JSON.parse(storedUser))
-          console.log(storedUser)
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error)

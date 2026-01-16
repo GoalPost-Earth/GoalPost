@@ -15,9 +15,9 @@ extend schema @authentication
 
 """
 A human user of the system.
-Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
+Multi-label: ["Person", "User"]
 """
-type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
+type Person @node(labels: ["Person", "User"]) {
   id: ID! @id
   firstName: String!
   lastName: String!
@@ -29,9 +29,9 @@ type Person @node(labels: ["Person", "LifeSensor", "RelationalEntity"]) {
 """
 A collective identity (team, family, cohort, etc).
 Has members and can own spaces and initiate pulses.
-Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+Multi-label: ["Community"]
 """
-type Community @node(labels: ["Community", "LifeSensor", "RelationalEntity"]) {
+type Community @node(labels: ["Community"]) {
   id: ID! @id
   name: String!
   type: String

@@ -114,7 +114,7 @@ export type CommunitiesConnection = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type Community = {
   __typename?: 'Community'
@@ -132,7 +132,7 @@ export type Community = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type CommunityMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -143,7 +143,7 @@ export type CommunityMembersArgs = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type CommunityMembersConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -154,7 +154,7 @@ export type CommunityMembersConnectionArgs = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type CommunityOwnsSpacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -166,7 +166,7 @@ export type CommunityOwnsSpacesArgs = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type CommunityOwnsSpacesAggregateArgs = {
   where?: InputMaybe<SpaceWhere>
@@ -175,7 +175,7 @@ export type CommunityOwnsSpacesAggregateArgs = {
 /**
  * A collective identity (team, family, cohort, etc).
  * Has members and can own spaces and initiate pulses.
- * Multi-label: ["Community", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Community"]
  */
 export type CommunityOwnsSpacesConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -2726,7 +2726,7 @@ export type PeopleConnection = {
 
 /**
  * A human user of the system.
- * Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Person", "User"]
  */
 export type Person = {
   __typename?: 'Person'
@@ -2743,7 +2743,7 @@ export type Person = {
 
 /**
  * A human user of the system.
- * Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Person", "User"]
  */
 export type PersonOwnsSpacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -2754,7 +2754,7 @@ export type PersonOwnsSpacesArgs = {
 
 /**
  * A human user of the system.
- * Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Person", "User"]
  */
 export type PersonOwnsSpacesAggregateArgs = {
   where?: InputMaybe<SpaceWhere>
@@ -2762,7 +2762,7 @@ export type PersonOwnsSpacesAggregateArgs = {
 
 /**
  * A human user of the system.
- * Multi-label: ["Person", "LifeSensor", "RelationalEntity"]
+ * Multi-label: ["Person", "User"]
  */
 export type PersonOwnsSpacesConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -5949,6 +5949,119 @@ export type WeSpacesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+export type CreateFieldContextMutationVariables = Exact<{
+  input: Array<FieldContextCreateInput> | FieldContextCreateInput
+}>
+
+export type CreateFieldContextMutation = {
+  __typename?: 'Mutation'
+  createFieldContexts: {
+    __typename?: 'CreateFieldContextsMutationResponse'
+    fieldContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      space: Array<
+        | {
+            __typename?: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+        | {
+            __typename?: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+      >
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
+export type UpdateFieldContextMutationVariables = Exact<{
+  where: FieldContextWhere
+  update: FieldContextUpdateInput
+}>
+
+export type UpdateFieldContextMutation = {
+  __typename?: 'Mutation'
+  updateFieldContexts: {
+    __typename?: 'UpdateFieldContextsMutationResponse'
+    fieldContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      space: Array<
+        | {
+            __typename?: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }
+        | {
+            __typename?: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }
+      >
+    }>
+    info: {
+      __typename?: 'UpdateInfo'
+      nodesCreated: number
+      nodesDeleted: number
+      relationshipsCreated: number
+      relationshipsDeleted: number
+    }
+  }
+}
+
+export type DeleteFieldContextMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteFieldContextMutation = {
+  __typename?: 'Mutation'
+  deleteFieldContexts: {
+    __typename?: 'DeleteInfo'
+    nodesDeleted: number
+    relationshipsDeleted: number
+  }
+}
+
+export type ConnectFieldToSpaceMutationVariables = Exact<{
+  fieldId: Scalars['ID']['input']
+  spaceId: Scalars['ID']['input']
+}>
+
+export type ConnectFieldToSpaceMutation = {
+  __typename?: 'Mutation'
+  updateFieldContexts: {
+    __typename?: 'UpdateFieldContextsMutationResponse'
+    fieldContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      space: Array<
+        | { __typename?: 'MeSpace'; id: string; name: string }
+        | { __typename?: 'WeSpace'; id: string; name: string }
+      >
+    }>
+  }
+}
+
 export type CreateGoalPulsesMutationVariables = Exact<{
   input: Array<GoalPulseCreateInput> | GoalPulseCreateInput
 }>
@@ -6240,6 +6353,146 @@ export type GetLoggedInUserQuery = {
           name: string
           visibility: SpaceVisibility
           createdAt: any
+        }
+    >
+  }>
+}
+
+export type GetFieldContextsQueryVariables = Exact<{
+  where?: InputMaybe<FieldContextWhere>
+}>
+
+export type GetFieldContextsQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+  }>
+}
+
+export type GetMeSpaceFieldsQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetMeSpaceFieldsQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    owner: Array<
+      | { __typename?: 'Community'; id: string }
+      | { __typename?: 'Person'; id: string }
+    >
+    contexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+    }>
+  }>
+}
+
+export type GetFieldsForSpaceQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetFieldsForSpaceQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+  }>
+}
+
+export type GetFieldContextByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type GetFieldContextByIdQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+  }>
+}
+
+export type GetFieldsForSpacePaginatedQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+  offset?: InputMaybe<Scalars['Int']['input']>
+  limit?: InputMaybe<Scalars['Int']['input']>
+}>
+
+export type GetFieldsForSpacePaginatedQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
         }
     >
   }>
@@ -6899,6 +7152,495 @@ export type GetUserByIdQuery = {
   }>
 }
 
+export const CreateFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'FieldContextCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateFieldContextMutation,
+  CreateFieldContextMutationVariables
+>
+export const UpdateFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'FieldContextWhere' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'FieldContextUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesDeleted' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsDeleted' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateFieldContextMutation,
+  UpdateFieldContextMutationVariables
+>
+export const DeleteFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'relationshipsDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteFieldContextMutation,
+  DeleteFieldContextMutationVariables
+>
+export const ConnectFieldToSpaceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ConnectFieldToSpace' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fieldId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'fieldId' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'space' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'connect' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'where' },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'node',
+                                            },
+                                            value: {
+                                              kind: 'ObjectValue',
+                                              fields: [
+                                                {
+                                                  kind: 'ObjectField',
+                                                  name: {
+                                                    kind: 'Name',
+                                                    value: 'id_EQ',
+                                                  },
+                                                  value: {
+                                                    kind: 'Variable',
+                                                    name: {
+                                                      kind: 'Name',
+                                                      value: 'spaceId',
+                                                    },
+                                                  },
+                                                },
+                                              ],
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ConnectFieldToSpaceMutation,
+  ConnectFieldToSpaceMutationVariables
+>
 export const CreateGoalPulsesDocument = {
   kind: 'Document',
   definitions: [
@@ -7926,6 +8668,457 @@ export const GetLoggedInUserDocument = {
 } as unknown as DocumentNode<
   GetLoggedInUserQuery,
   GetLoggedInUserQueryVariables
+>
+export const GetFieldContextsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldContexts' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'FieldContextWhere' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldContextsQuery,
+  GetFieldContextsQueryVariables
+>
+export const GetMeSpaceFieldsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetMeSpaceFields' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMeSpaceFieldsQuery,
+  GetMeSpaceFieldsQueryVariables
+>
+export const GetFieldsForSpaceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldsForSpace' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'space_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'spaceId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldsForSpaceQuery,
+  GetFieldsForSpaceQueryVariables
+>
+export const GetFieldContextByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldContextById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldContextByIdQuery,
+  GetFieldContextByIdQueryVariables
+>
+export const GetFieldsForSpacePaginatedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldsForSpacePaginated' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'offset' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'space_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'spaceId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'offset' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'offset' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldsForSpacePaginatedQuery,
+  GetFieldsForSpacePaginatedQueryVariables
 >
 export const GetGraphStatsDocument = {
   kind: 'Document',

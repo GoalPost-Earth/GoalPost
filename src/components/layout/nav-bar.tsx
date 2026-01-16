@@ -79,22 +79,22 @@ export default function NavBar() {
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
-              pathname === '/protected/fields/mespace'
+              pathname === '/protected/spaces/me-space/fields'
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
             )}
-            href="/protected/fields/mespace"
+            href="/protected/spaces/me-space/fields"
           >
             Me Space
           </Link>
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
-              pathname === '/protected/fields/wespace'
+              pathname === '/protected/spaces/we-space'
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
             )}
-            href="/protected/fields/wespace"
+            href="/protected/spaces/we-space"
           >
             We Space
           </Link>
