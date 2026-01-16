@@ -67,12 +67,14 @@ const logger = winston.createLogger({
     errors({ stack: true })
   ),
   transports: [
-    // Console transport for development
+    // Console transport (always enabled, works in serverless)
     new winston.transports.Console({
       format: combine(colorize({ all: true }), consoleFormat),
     }),
-    // File transports for production
-    ...(process.env.NODE_ENV === 'production'
+    // File transports only for local production testing (disabled on Vercel)
+    ...(process.env.NODE_ENV === 'production' &&
+    !process.env.VERCEL &&
+    !process.env.AWS_LAMBDA_FUNCTION_NAME
       ? [
           new winston.transports.File({
             filename: 'logs/error.log',
