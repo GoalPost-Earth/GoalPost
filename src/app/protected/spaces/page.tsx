@@ -3,6 +3,7 @@
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/contexts/AuthContext'
+import { toast } from 'sonner'
 import { useMeSpaceFields } from '@/hooks/useMeSpaceFields'
 
 export default function SpacesPage() {
@@ -41,6 +42,11 @@ export default function SpacesPage() {
             onClick={() => {
               if (meSpaceId) {
                 router.push(`/protected/spaces/me-space/fields`)
+              } else {
+                toast.info('Your MeSpace is not set up yet', {
+                  description:
+                    'We could not find your personal space. Please create or seed your MeSpace.',
+                })
               }
             }}
           />

@@ -28,11 +28,7 @@ export function ApolloWrapper({
   const { user } = useApp()
   const isLoading = false
   const router = useRouter()
-  const [token, setToken] = useState<Token | undefined>({
-    accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
-    expiresAt: 1748050000,
-  })
+  const [token, setToken] = useState<Token | undefined>(undefined)
 
   const httpLink = useMemo(
     () =>
@@ -62,21 +58,13 @@ export function ApolloWrapper({
           throw error
         }
 
-        const resJson = await response?.json()
+        const resJson = await response.json()
 
-        if (token) {
-          const decoded = jwtDecode(resJson.accessToken) as { exp: number }
-
-          setToken({
-            accessToken: resJson.accessToken,
-            // accessTokenDecoded: decoded,
-            // user,
-            // Add all required Token properties here:
-            // Example: refreshToken: resJson.refreshToken,
-            expiresAt: decoded.exp,
-            // Add any other required fields with appropriate values
-          })
-        }
+        const decoded = jwtDecode(resJson.accessToken) as { exp: number }
+        setToken({
+          accessToken: resJson.accessToken,
+          expiresAt: decoded.exp,
+        })
       } catch (error) {
         if ((error as { code?: string }).code === 'ERR_EXPIRED_ACCESS_TOKEN') {
           console.warn('Access token expired, refreshing...')
@@ -108,8 +96,7 @@ export function ApolloWrapper({
               ({ headers }: { headers: Record<string, string> }) => {
                 return {
                   headers: {
-                    Authorization:
-                      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
+                    Authorization: `Bearer ${token.accessToken}`,
                     ...headers,
                   },
                 }
