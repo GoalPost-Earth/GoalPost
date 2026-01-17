@@ -13,7 +13,7 @@ import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
 import { onError } from '@apollo/client/link/error'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toast } from 'sonner'
@@ -29,6 +29,7 @@ export function ApolloWrapper({
   const router = useRouter()
   const [token, setToken] = useState<Token | undefined>(undefined)
   const [isTokenLoading, setIsTokenLoading] = useState(false)
+  const tokenFetchInProgress = useRef(false)
 
   const httpLink = useMemo(
     () =>
@@ -43,18 +44,24 @@ export function ApolloWrapper({
     if (!user) {
       console.log('🚫 [APOLLO] No user, clearing token')
       setToken(undefined)
+      tokenFetchInProgress.current = false
       return
     }
 
-    // Skip if we already have a token or currently loading
-    if (token || isTokenLoading) {
-      console.log(
-        '⏭️ [APOLLO] Skip token fetch - already have token or loading'
-      )
+    // Skip if we already have a token
+    if (token) {
+      console.log('⏭️ [APOLLO] Already have token, skipping fetch')
+      return
+    }
+
+    // Skip if a fetch is already in progress
+    if (tokenFetchInProgress.current) {
+      console.log('⏭️ [APOLLO] Token fetch already in progress, skipping')
       return
     }
 
     console.log('🔄 [APOLLO] Fetching token from /api/auth/access-token')
+    tokenFetchInProgress.current = true
     setIsTokenLoading(true)
 
     async function fetchToken() {
@@ -72,6 +79,7 @@ export function ApolloWrapper({
             response.status,
             errorText
           )
+          tokenFetchInProgress.current = false
           setIsTokenLoading(false)
           return
         }
@@ -80,6 +88,7 @@ export function ApolloWrapper({
 
         if (!resJson.accessToken) {
           console.error('❌ [APOLLO] No accessToken in response')
+          tokenFetchInProgress.current = false
           setIsTokenLoading(false)
           return
         }
@@ -92,15 +101,17 @@ export function ApolloWrapper({
         console.log(
           '✅ [APOLLO] Token successfully loaded from access-token endpoint'
         )
+        tokenFetchInProgress.current = false
         setIsTokenLoading(false)
       } catch (error) {
         console.error('❌ [APOLLO] Error fetching token:', error)
+        tokenFetchInProgress.current = false
         setIsTokenLoading(false)
       }
     }
 
     fetchToken()
-  }, [user, token, isTokenLoading])
+  }, [user, token])
 
   const authLink = useMemo(
     () =>
@@ -202,8 +213,8 @@ export function ApolloWrapper({
     [authHttpLink]
   )
 
-  // Show loading screen while fetching token
-  if (isTokenLoading) {
+  // Show loading screen only during Apollo setup if token is being fetched
+  if (isTokenLoading && !user) {
     return <LoadingScreen />
   }
 

@@ -51,36 +51,27 @@ export const useApp = () => {
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<ContextUser | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        try {
-          return JSON.parse(storedUser)
-        } catch {
-          return undefined
-        }
-      }
-    }
-    return undefined
-  })
-
-  const setUserAndPersist = useCallback((nextUser: ContextUser) => {
-    setUser(nextUser)
-    localStorage.setItem('user', JSON.stringify(nextUser))
-    sessionStorage.setItem('user', JSON.stringify(nextUser))
-  }, [])
+  const [user, setUser] = useState<ContextUser | undefined>(undefined)
 
   useEffect(() => {
     const initializeAuth = () => {
       try {
-        const storedToken = localStorage.getItem('accessToken')
-        const sessionUser = sessionStorage.getItem('user')
+        if (typeof window === 'undefined') {
+          return
+        }
 
-        if (storedToken && sessionUser) {
-          const parsedUser = JSON.parse(sessionUser)
-          if (parsedUser.id && parsedUser.level) {
-            setUser(parsedUser)
+        const storedToken = localStorage.getItem('accessToken')
+        const storedUser = localStorage.getItem('user')
+
+        if (storedToken && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser)
+            if (parsedUser.id) {
+              setUser(parsedUser)
+            }
+          } catch {
+            // Invalid JSON in localStorage
+            localStorage.removeItem('user')
           }
         }
       } catch (error) {
@@ -92,6 +83,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth()
   }, [])
+
+  const setUserAndPersist = useCallback((nextUser: ContextUser) => {
+    setUser(nextUser)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(nextUser))
+    }
+  }, [])
+
+  const logout = useCallback(() => {
+    setUser(undefined)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      document.cookie = 'accessToken=; path=/; max-age=0'
+    }
+    router.push('/auth/login')
+  }, [router])
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -130,16 +139,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     },
     [router, setUserAndPersist]
   )
-
-  const logout = useCallback(() => {
-    setUser(undefined)
-    localStorage.removeItem('user')
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    sessionStorage.removeItem('user')
-    document.cookie = 'accessToken=; path=/; max-age=0'
-    router.push('/auth/login')
-  }, [router])
 
   const value = {
     user,
