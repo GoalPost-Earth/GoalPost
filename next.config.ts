@@ -26,7 +26,7 @@ const securityHeaders = [
     value:
       process.env.NODE_ENV === 'development'
         ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' localhost:* http://localhost:* ws://localhost:* https://vercel.live; frame-ancestors 'none';"
-        : "default-src 'self'; script-src 'self' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://vercel.live; frame-ancestors 'none';",
+        : "default-src 'self'; script-src 'self' 'nonce-{{NONCE}}' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://vercel.live; frame-ancestors 'none';",
   },
 ]
 
