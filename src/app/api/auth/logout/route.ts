@@ -5,7 +5,7 @@ import { getSession, initializeDB } from '../neo4j'
 import { parseRequestBody } from '../utils'
 
 const logoutSchema = z.object({
-  email: z.string().min(1, 'Refresh token required'),
+  email: z.string().min(1, 'Email required'),
 })
 
 export async function POST(req: NextRequest) {
@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
   const session = getSession()
 
   try {
-    // Find user by refresh token and revoke it
-    const result = await session.run(
-      `MATCH (user:User {email: $email, refreshTokenRevoked: false})
+    // Find user and revoke refresh token
+    await session.run(
+      `MATCH (user:Person {email: $email})
        SET user.refreshTokenRevoked = true,
            user.refreshToken = NULL,
            user.refreshTokenExp = 0
@@ -45,15 +45,27 @@ export async function POST(req: NextRequest) {
       { email }
     )
 
-    if (result.records.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid or already revoked refresh token' },
-        { status: 400 }
-      )
-    }
+    const response = NextResponse.json(
+      { success: true, message: 'Logged out successfully' },
+      { status: 200 }
+    )
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    // Clear auth cookies
+    response.cookies.set('accessToken', '', {
+      httpOnly: true,
+      maxAge: 0,
+      path: '/',
+    })
+
+    response.cookies.set('refreshToken', '', {
+      httpOnly: true,
+      maxAge: 0,
+      path: '/',
+    })
+
+    return response
   } catch (err) {
+    console.error('🚀 ~ route.ts ~ err:', err)
     return NextResponse.json({ error: parseError(err) }, { status: 500 })
   } finally {
     await session.close()

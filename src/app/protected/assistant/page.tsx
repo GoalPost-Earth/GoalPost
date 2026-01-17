@@ -11,6 +11,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
 function ChatErrorFallback({
   error,
@@ -70,37 +71,44 @@ export default function AssistantPage() {
   })
 
   return (
-    <div className="h-screen w-screen bg-background flex flex-col">
-      <header className="border-b bg-card">
+    <div className="h-screen w-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+      <header className="border-b border-white/10 bg-slate-900/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-2xl">🍄</div>
+            <Link
+              href="/"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <ArrowLeft className="w-5 h-5 text-slate-300" />
               <div>
-                <h1 className="text-xl font-bold">
-                  Aiden Cinnamon Tea Simulation
+                <h1 className="text-xl font-bold text-white">
+                  Aiden Assistant
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-300">
                   Meta-relational AI companion
                 </p>
               </div>
-            </div>
+            </Link>
             <div className="flex items-center gap-2">
-              <Link href="/graph">
-                <Button variant="outline" size="sm">
+              <Link href="/protected/graph">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/20 text-slate-100 hover:bg-white/10"
+                >
                   📊 View Graph
                 </Button>
               </Link>
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
                   isSimulationActive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                    : 'bg-slate-700/50 text-slate-300 border border-slate-600'
                 }`}
               >
                 <div
                   className={`w-2 h-2 rounded-full ${
-                    isSimulationActive ? 'bg-green-500' : 'bg-gray-400'
+                    isSimulationActive ? 'bg-green-400' : 'bg-slate-400'
                   }`}
                 />
                 <span>
@@ -120,9 +128,9 @@ export default function AssistantPage() {
         </ErrorBoundary>
       </main>
 
-      <footer className="border-t bg-card/50 backdrop-blur">
+      <footer className="border-t border-white/10 bg-slate-900/30 backdrop-blur">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-slate-300">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -137,7 +145,7 @@ export default function AssistantPage() {
                     'Activate the Aiden Cinnamon Tea Simulation Protocol.'
                   )
                 }}
-                className="text-xs"
+                className="text-xs hover:bg-white/10"
               >
                 🚀 Activate Protocol
               </Button>
@@ -152,7 +160,7 @@ export default function AssistantPage() {
                   ).composerInput
                   composerInput?.setValue('Deactivate Aiden Simulation.')
                 }}
-                className="text-xs"
+                className="text-xs hover:bg-white/10"
               >
                 🛑 Deactivate
               </Button>

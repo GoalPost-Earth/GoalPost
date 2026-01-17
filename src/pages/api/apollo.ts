@@ -50,21 +50,45 @@ export default async function initializeApolloServer() {
   const yogaServer = createYoga({
     schema,
     context: async (req) => {
-      // decode JWT token
-      const token = req.request.headers.get('authorization')
-      let jwt = null
+      // Extract and decode JWT token from Authorization header
+      const authHeader = req.request.headers.get('authorization')
 
-      if (token) {
+      console.log(
+        '🔍 [YOGA CONTEXT] Authorization header:',
+        authHeader ? '✓ Present' : '✗ Missing'
+      )
+
+      let jwt = null
+      let jwtString = null
+
+      if (authHeader) {
         try {
-          jwt = jwtDecode(token)
-        } catch (error) {
-          logger.warn('Invalid JWT token', {
-            error: error instanceof Error ? error.message : String(error),
+          // Strip "Bearer " prefix if present
+          jwtString = authHeader.startsWith('Bearer ')
+            ? authHeader.substring(7)
+            : authHeader
+
+          // Decode to validate and extract claims
+          jwt = jwtDecode(jwtString)
+
+          console.log('✅ [YOGA CONTEXT] JWT decoded successfully:', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            sub: (jwt as any).sub,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            email: (jwt as any).email,
           })
+        } catch (error) {
+          console.error(
+            '❌ [YOGA CONTEXT] Invalid JWT token:',
+            error instanceof Error ? error.message : String(error)
+          )
         }
+      } else {
+        console.warn('⚠️ [YOGA CONTEXT] No Authorization header provided')
       }
 
-      return { token, jwt }
+      // Neo4jGraphQL expects the jwt in the context for @authentication directive
+      return { jwt }
     },
     graphqlEndpoint: '/api/graphql',
     cors: isDevelopment

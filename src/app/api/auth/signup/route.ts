@@ -7,6 +7,8 @@ import { z } from 'zod'
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    const { email, password } = parseResult.data
+    const { email, password, firstName, lastName } = parseResult.data
 
     initializeDB()
     const session = getSession()
@@ -57,15 +59,18 @@ export async function POST(req: NextRequest) {
                     SET person:User
                     SET person.password = $password 
                     SET person.id = randomUUID(),
-                    person.firstName = '',
-                    person.lastName = '',
+                    person.firstName = $firstName,
+                    person.lastName = $lastName,
                     person.createdAt = datetime(),
                     person.updatedAt = datetime()
                 
-                    WITH person
-                    MERGE (person)-[:CREATED_BY]->(person)
                 RETURN person`,
-        { email, password: hashed }
+        {
+          email,
+          password: hashed,
+          firstName: firstName || '',
+          lastName: lastName || '',
+        }
       )
 
       if (result.records.length === 0) {

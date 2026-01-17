@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,15 +24,37 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/types": ["./src/types"],
-      "@/utils": ["./src/utils"],
-      "@/icons": ["./src/components/icons"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/mutations": ["./src/app/graphql/mutations"],
-      "@/queries/*": ["./src/app/graphql/queries/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/types": [
+        "./src/types"
+      ],
+      "@/utils": [
+        "./src/utils"
+      ],
+      "@/icons": [
+        "./src/components/icons"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/mutations": [
+        "./src/app/graphql/mutations"
+      ],
+      "@/queries/*": [
+        "./src/app/graphql/queries/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { OpenAIEmbeddings } from '@langchain/openai'
+import { getEmbeddingsProvider } from '@/lib/llm'
 import { initGraph } from '@/modules/graph'
 
 interface SearchRequest {
@@ -85,11 +85,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate query embedding
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: 'text-embedding-3-small',
-    })
-    const queryEmbedding = await embeddings.embedQuery(query)
+    const embeddingsProvider = getEmbeddingsProvider()
+    const embeddings = await embeddingsProvider.embed([query])
+    const queryEmbedding = embeddings[0]
 
     const graph = await initGraph()
     const results: SearchResponse['results'] = {}

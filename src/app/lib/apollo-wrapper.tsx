@@ -13,7 +13,7 @@ import { LoadingScreen } from '@/components/screens'
 import { useRouter } from 'next/navigation'
 import { RetryLink } from '@apollo/client/link/retry'
 import { onError } from '@apollo/client/link/error'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toast } from 'sonner'
@@ -26,13 +26,10 @@ export function ApolloWrapper({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: Readonly<{ children: React.ReactNode }>) {
   const { user } = useApp()
-  const isLoading = false
   const router = useRouter()
-  const [token, setToken] = useState<Token | undefined>({
-    accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
-    expiresAt: 1748050000,
-  })
+  const [token, setToken] = useState<Token | undefined>(undefined)
+  const [isTokenLoading, setIsTokenLoading] = useState(false)
+  const tokenFetchInProgress = useRef(false)
 
   const httpLink = useMemo(
     () =>
@@ -41,54 +38,80 @@ export function ApolloWrapper({
       }),
     []
   )
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+  // Fetch token once when user becomes available
   useEffect(() => {
-    const fetchTokenData = async () => {
+    if (!user) {
+      console.log('🚫 [APOLLO] No user, clearing token')
+      setToken(undefined)
+      tokenFetchInProgress.current = false
+      return
+    }
+
+    // Skip if we already have a token
+    if (token) {
+      console.log('⏭️ [APOLLO] Already have token, skipping fetch')
+      return
+    }
+
+    // Skip if a fetch is already in progress
+    if (tokenFetchInProgress.current) {
+      console.log('⏭️ [APOLLO] Token fetch already in progress, skipping')
+      return
+    }
+
+    console.log('🔄 [APOLLO] Fetching token from /api/auth/access-token')
+    tokenFetchInProgress.current = true
+    setIsTokenLoading(true)
+
+    async function fetchToken() {
       try {
-        if (!user) {
+        const response = await fetch('/api/auth/access-token', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Include cookies in the request
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error(
+            '❌ [APOLLO] Failed to fetch token:',
+            response.status,
+            errorText
+          )
+          tokenFetchInProgress.current = false
+          setIsTokenLoading(false)
           return
         }
 
-        const response = await fetch('/api/auth/access-token')
-        if (!response.ok) {
-          const resJson = await response.json()
-          const error = {
-            status: response.status,
-            statusText: response.statusText,
-            message: resJson?.message,
-            code: resJson?.code,
-          }
+        const resJson = await response.json()
 
-          throw error
+        if (!resJson.accessToken) {
+          console.error('❌ [APOLLO] No accessToken in response')
+          tokenFetchInProgress.current = false
+          setIsTokenLoading(false)
+          return
         }
 
-        const resJson = await response?.json()
-
-        if (token) {
-          const decoded = jwtDecode(resJson.accessToken) as { exp: number }
-
-          setToken({
-            accessToken: resJson.accessToken,
-            // accessTokenDecoded: decoded,
-            // user,
-            // Add all required Token properties here:
-            // Example: refreshToken: resJson.refreshToken,
-            expiresAt: decoded.exp,
-            // Add any other required fields with appropriate values
-          })
-        }
+        const decoded = jwtDecode(resJson.accessToken) as { exp: number }
+        setToken({
+          accessToken: resJson.accessToken,
+          expiresAt: decoded.exp,
+        })
+        console.log(
+          '✅ [APOLLO] Token successfully loaded from access-token endpoint'
+        )
+        tokenFetchInProgress.current = false
+        setIsTokenLoading(false)
       } catch (error) {
-        if ((error as { code?: string }).code === 'ERR_EXPIRED_ACCESS_TOKEN') {
-          console.warn('Access token expired, refreshing...')
-          router.push('/api/auth/login?returnTo=/')
-        }
-
-        console.error(error)
+        console.error('❌ [APOLLO] Error fetching token:', error)
+        tokenFetchInProgress.current = false
+        setIsTokenLoading(false)
       }
     }
 
-    fetchTokenData()
-  }, [router, user, token])
+    fetchToken()
+  }, [user, token])
 
   const authLink = useMemo(
     () =>
@@ -104,20 +127,27 @@ export function ApolloWrapper({
               router.refresh()
             }
 
+            console.log(
+              '📤 [APOLLO] Attaching token to request:',
+              token.accessToken.substring(0, 20) + '...'
+            )
             operation.setContext(
               ({ headers }: { headers: Record<string, string> }) => {
                 return {
                   headers: {
-                    Authorization:
-                      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImpvaG4tZGFnIiwibGFzdE5hbWUiOiJBZGR5IiwiZW1haWwiOiJqYWVkYWd5QGdtYWlsLmNvbSIsImZpcnN0TmFtZSI6IkpEIiwiaWF0IjoxNzQ4MDU3NDk3LCJleHAiOjE3NDgwNTkyOTd9.Dgb1ySMk4y1ItIuOXWFXZAaPgw3YVvEJhns2FrmJaqo',
+                    Authorization: `Bearer ${token.accessToken}`,
                     ...headers,
                   },
                 }
               }
             )
           } catch (error) {
-            console.error(error)
+            console.error('[APOLLO ERROR]', error)
           }
+        } else {
+          console.warn(
+            '⚠️ [APOLLO] No token available, request will be unauthenticated'
+          )
         }
 
         return forward(operation)
@@ -183,7 +213,8 @@ export function ApolloWrapper({
     [authHttpLink]
   )
 
-  if (isLoading || (!token && user)) {
+  // Show loading screen only during Apollo setup if token is being fetched
+  if (isTokenLoading && !user) {
     return <LoadingScreen />
   }
 

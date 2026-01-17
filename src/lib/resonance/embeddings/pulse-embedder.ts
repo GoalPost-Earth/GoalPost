@@ -3,8 +3,8 @@
  * Generates embeddings for pulses by combining pulse content with conversation chunks
  */
 
-import { OpenAIEmbeddings } from '@langchain/openai'
 import { initGraph } from '../../../modules/graph'
+import { getEmbeddingsProvider } from '../../llm/factory'
 
 export interface ConversationChunkNode {
   id: string
@@ -24,16 +24,12 @@ export interface PulseEmbeddingResult {
 }
 
 /**
- * Generate embedding for a single text using OpenAI
+ * Generate embedding for a single text using provider abstraction
  */
 async function generateEmbedding(text: string): Promise<number[]> {
-  const embeddings = new OpenAIEmbeddings({
-    openAIApiKey: process.env.OPENAI_API_KEY,
-    modelName: 'text-embedding-3-small',
-  })
-
-  const embedding = await embeddings.embedQuery(text)
-  return embedding
+  const provider = getEmbeddingsProvider()
+  const embeddings = await provider.embed([text])
+  return embeddings[0]
 }
 
 /**
