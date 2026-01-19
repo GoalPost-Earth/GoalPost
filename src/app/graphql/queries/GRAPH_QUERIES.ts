@@ -529,3 +529,147 @@ export const GET_RESONANCE_DETAILS = graphql(`
     }
   }
 `)
+
+export const GET_RESONANCE_WITH_LINKS = graphql(`
+  query getResonanceWithLinks($resonanceId: ID!) {
+    fieldResonances(where: { id_EQ: $resonanceId }) {
+      id
+      label
+      description
+    }
+    resonanceLinks(where: { resonance_SOME: { id_EQ: $resonanceId } }) {
+      id
+      confidence
+      evidence
+      createdAt
+      source {
+        __typename
+        ... on GoalPulse {
+          id
+          content
+          createdAt
+          status
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+        ... on ResourcePulse {
+          id
+          content
+          createdAt
+          resourceType
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+        ... on StoryPulse {
+          id
+          content
+          createdAt
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+      }
+      target {
+        __typename
+        ... on GoalPulse {
+          id
+          content
+          createdAt
+          status
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+        ... on ResourcePulse {
+          id
+          content
+          createdAt
+          resourceType
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+        ... on StoryPulse {
+          id
+          content
+          createdAt
+          intensity
+          initiatedBy {
+            __typename
+            ... on Person {
+              id
+              name
+              email
+            }
+            ... on Community {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
+export const GET_ALL_RESONANCES = graphql(`
+  query getAllResonances {
+    fieldResonances {
+      id
+      label
+      description
+    }
+  }
+`)
