@@ -1,146 +1,215 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useLazyQuery, useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
-import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
+import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
+import { ConnectedPulseNode } from '@/components/ui/connected-pulse-node'
 import {
   ResonanceConnections,
   type ConnectionLine,
 } from '@/components/ui/resonance-connections'
-import {
-  ResonancePanel,
-  type ResonanceLink,
-} from '@/components/ui/resonance-panel'
-import {
-  GET_RESONANCE_WITH_LINKS,
-  GET_ALL_RESONANCES,
-} from '@/app/graphql/queries'
+import { ResonancePanel } from '@/components/ui/resonance-panel'
+import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
 
-interface PulseWithPosition {
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+interface ResonanceLinkData {
+  id: string
+  confidence: number
+  evidence: string | null
+  createdAt: string
+  resonance: Array<{
+    id: string
+    label: string
+    description: string | null
+  }>
+  source: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+  target: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+}
+
+interface FieldResonanceNode {
   id: string
   label: string
+  description: string
+  linkCount: number
+  confidence: number // Average confidence of links
+  position: { top: string; left: string }
+  x: number
+  y: number
+}
+
+interface ResonanceLinkNode {
+  id: string
+  confidence: number
+  evidence: string
+  resonanceId: string
+  position: { top: string; left: string }
+  x: number
+  y: number
+}
+
+interface PulseNode {
+  id: string
+  content: string
   type: 'goal' | 'resource' | 'story'
-  icon: string
-  description: string
-  connections: number
-  author: string
-  relevance: number
-  position: { top: string; left: string }
-}
-
-interface ResonanceDefinition {
-  id: string
-  label: string
-  description: string
-  icon: string
-  pulseCount: number
-  strength: number
-  position: { top: string; left: string }
-  connectedPulses: PulseWithPosition[]
-  connections: ConnectionLine[]
-}
-
-interface PositionedPulse extends PulseWithPosition {
   x: number
   y: number
 }
 
-interface PositionedResonance extends ResonanceDefinition {
-  x: number
-  y: number
-  connectedPulses: PositionedPulse[]
+// ============================================================================
+// Expansion State Types
+// ============================================================================
+
+type ExpandedType = 'field-resonance' | 'resonance-link' | null
+interface ExpandedState {
+  type: ExpandedType
+  id: string | null
 }
+
+// ============================================================================
+// Main Component
+// ============================================================================
 
 export default function ResonancePage() {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [isPanelOpen, setIsPanelOpen] = useState(false)
-  const [resonances, setResonances] = useState<PositionedResonance[]>([])
-  const [currentScale, setCurrentScale] = useState(1)
-  const [canvasSize, setCanvasSize] = useState({
-    width: 1200 * 3,
-    height: 1200 * 3,
+  const [expandedState, setExpandedState] = useState<ExpandedState>({
+    type: null,
+    id: null,
   })
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [fieldResonances, setFieldResonances] = useState<FieldResonanceNode[]>(
+    []
+  )
+  const [resonanceLinks, setResonanceLinks] = useState<ResonanceLinkNode[]>([])
+  const [linkPulses, setLinkPulses] = useState<{
+    source: PulseNode | null
+    target: PulseNode | null
+  }>({ source: null, target: null })
+  const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [selectedPulse, setSelectedPulse] = useState<PulseDetails | null>(null)
+  const [currentScale, setCurrentScale] = useState(1)
 
-  // Fetch all resonances
-  const { data: allResonancesData, loading: allResonancesLoading } =
-    useQuery(GET_ALL_RESONANCES)
+  // Fetch all resonance links
+  const { data: linksData, loading: linksLoading } = useQuery(
+    GET_ALL_RESONANCE_LINKS_WITH_RESONANCES
+  )
 
-  // Lazy query for resonance details
-  const [
-    fetchResonanceDetails,
-    { data: resonanceData, loading: resonanceLoading },
-  ] = useLazyQuery(GET_RESONANCE_WITH_LINKS)
+  // Transform resonance links into field resonances and link nodes
+  const transformedData = useMemo(() => {
+    if (!linksData?.resonanceLinks) return { resonances: [], links: [] }
 
-  // Normalize resonance data from GraphQL
-  const selectedResonanceDetails = useMemo(() => {
-    if (!resonanceData?.fieldResonances?.[0] || !resonanceData?.resonanceLinks)
-      return null
+    const resonanceMap = new Map<
+      string,
+      {
+        id: string
+        label: string
+        description: string
+        links: ResonanceLinkData[]
+        confidences: number[]
+      }
+    >()
 
-    const resonance = resonanceData.fieldResonances[0]
+    // Group links by resonance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const links = resonanceData.resonanceLinks.map((link: any) => ({
-      id: link.id,
-      confidence: link.confidence,
-      evidence: link.evidence,
-      createdAt: link.createdAt,
-      source: {
-        id: link.source.id,
-        content: link.source.content,
-        __typename: link.source.__typename,
-      },
-      target: {
-        id: link.target.id,
-        content: link.target.content,
-        __typename: link.target.__typename,
-      },
-    })) as ResonanceLink[]
+    linksData.resonanceLinks.forEach((link: any) => {
+      const resonanceArray = link.resonance || []
+      const resonance = resonanceArray[0]
+      if (!resonance) return
 
-    return {
-      resonance,
-      links,
-    }
-  }, [resonanceData])
-
-  // Transform fetched resonances to display format
-  const fetchedResonances = useMemo(() => {
-    if (!allResonancesData?.fieldResonances) return []
-
-    const icons: Record<string, string> = {
-      'ecological-reciprocity': 'eco',
-      'knowledge-commons': 'school',
-      'care-networks': 'favorite',
-      'emergent-futures': 'lightbulb',
-    }
-
-    // Distribute resonances around the canvas in a grid
-    const resonancesPerSide = 2
-    const positions: Array<{ left: string; top: string }> = []
-
-    for (let i = 0; i < resonancesPerSide; i++) {
-      for (let j = 0; j < resonancesPerSide; j++) {
-        positions.push({
-          left: `${25 + i * 50}%`,
-          top: `${25 + j * 50}%`,
+      const resId = resonance.id
+      if (!resonanceMap.has(resId)) {
+        resonanceMap.set(resId, {
+          id: resId,
+          label: resonance.label,
+          description: resonance.description,
+          links: [],
+          confidences: [],
         })
       }
-    }
+
+      const res = resonanceMap.get(resId)!
+      res.links.push(link)
+      res.confidences.push(link.confidence)
+    })
+
+    // Convert to array with positions
+    const resonances = Array.from(resonanceMap.values())
+      .sort((a, b) => b.links.length - a.links.length) // Largest first
+      .map((res, idx) => {
+        const col = idx % 3
+        const row = Math.floor(idx / 3)
+        return {
+          id: res.id,
+          label: res.label,
+          description: res.description,
+          linkCount: res.links.length,
+          confidence:
+            res.confidences.reduce((a, b) => a + b, 0) / res.confidences.length,
+          position: {
+            left: `${25 + col * 37.5}%`,
+            top: `${25 + row * 37.5}%`,
+          },
+          x: 0,
+          y: 0,
+        }
+      })
+
+    // Create link nodes - distribute around their resonance
+    const linkNodes: ResonanceLinkNode[] = []
+    const linksPerResonance = new Map<string, ResonanceLinkData[]>()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return allResonancesData.fieldResonances.map((res: any, idx: number) => ({
-      id: res.id,
-      label: res.label,
-      description: res.description || '',
-      icon: icons[res.id] || 'psychology',
-      pulseCount: 0,
-      strength: 75 + Math.random() * 20, // Mock strength
-      position: positions[idx % positions.length],
-      connectedPulses: [] as PulseWithPosition[],
-      connections: [] as ConnectionLine[],
-    }))
-  }, [allResonancesData])
+    linksData.resonanceLinks.forEach((link: any) => {
+      const resEntry = link.resonance?.[0]
+      if (!resEntry) return
+      const resId = resEntry.id
+      if (!linksPerResonance.has(resId)) {
+        linksPerResonance.set(resId, [])
+      }
+      linksPerResonance.get(resId)!.push(link)
+    })
 
+    resonances.forEach((res) => {
+      const links = linksPerResonance.get(res.id) || []
+      const radius = 15
+      links.forEach((link, idx) => {
+        const angle = (idx / Math.max(links.length, 1)) * 2 * Math.PI
+        const offsetX = Math.cos(angle) * radius
+        const offsetY = Math.sin(angle) * radius
+        const centerX = parseFloat(res.position.left)
+        const centerY = parseFloat(res.position.top)
+
+        linkNodes.push({
+          id: link.id,
+          confidence: link.confidence,
+          evidence: link.evidence || 'No evidence provided',
+          resonanceId: res.id,
+          position: {
+            left: `${centerX + offsetX}%`,
+            top: `${centerY + offsetY}%`,
+          },
+          x: 0,
+          y: 0,
+        })
+      })
+    })
+
+    return { resonances, links: linkNodes }
+  }, [linksData])
+
+  // Helper to convert percentage to pixels
   const toBandPx = useCallback((value: string, total: number, band = 0.7) => {
     const numeric = parseFloat(value)
     if (Number.isNaN(numeric)) return total / 2
@@ -150,189 +219,180 @@ export default function ResonancePage() {
     return (clamped / 100) * usable + margin
   }, [])
 
-  const buildPositions = useCallback(
-    (width: number, height: number, resData: typeof fetchedResonances) =>
-      resData.map<PositionedResonance>((resonance) => ({
-        ...resonance,
-        x: toBandPx(resonance.position.left, width, 0.6),
-        y: toBandPx(resonance.position.top, height, 0.6),
-        connectedPulses: resonance.connectedPulses.map((pulse) => ({
-          ...pulse,
-          x: toBandPx(pulse.position.left, width, 0.5),
-          y: toBandPx(pulse.position.top, height, 0.5),
-        })),
-      })),
-    [toBandPx]
-  )
-
+  // Update canvas size and positions
   useEffect(() => {
     const width = (window.innerWidth || 1200) * 3
     const height = (window.innerHeight || 1200) * 3
-    setCanvasSize({ width, height })
-    setResonances(buildPositions(width, height, fetchedResonances))
-  }, [buildPositions, fetchedResonances])
 
-  const expandedResonance = useMemo(
-    () => resonances.find((r) => r.id === expandedId) || null,
-    [expandedId, resonances]
-  )
+    // Convert field resonances
+    const positioned = transformedData.resonances.map((res) => ({
+      ...res,
+      x: toBandPx(res.position.left, width, 0.6),
+      y: toBandPx(res.position.top, height, 0.6),
+    }))
 
-  const buildConnectionLines = useCallback(
-    (resonance: PositionedResonance) =>
-      resonance.connections.map((line, idx) => {
-        const targetPulse = resonance.connectedPulses[idx]
-        const fallbackX2 = toBandPx(line.x2, canvasSize.width, 0.6)
-        const fallbackY2 = toBandPx(line.y2, canvasSize.height, 0.6)
+    // Convert resonance links
+    const positionedLinks = transformedData.links.map((link) => ({
+      ...link,
+      x: toBandPx(link.position.left, width, 0.6),
+      y: toBandPx(link.position.top, height, 0.6),
+    }))
 
-        return {
-          ...line,
-          x1: resonance.x.toString(),
-          y1: resonance.y.toString(),
-          x2: (targetPulse?.x ?? fallbackX2).toString(),
-          y2: (targetPulse?.y ?? fallbackY2).toString(),
-        }
-      }),
-    [canvasSize.height, canvasSize.width, toBandPx]
-  )
+    setFieldResonances(positioned)
+    setResonanceLinks(positionedLinks)
+  }, [transformedData, toBandPx])
 
-  // Fetch resonance details when expandedId changes
-  useEffect(() => {
-    if (expandedId) {
-      setIsPanelOpen(true)
-      fetchResonanceDetails({ variables: { resonanceId: expandedId } })
-    } else {
-      setIsPanelOpen(false)
+  // Get resonance links for currently expanded resonance
+  const activeResonanceId = useMemo(() => {
+    if (expandedState.type === 'field-resonance') return expandedState.id
+
+    if (expandedState.type === 'resonance-link' && expandedState.id) {
+      const parentLink = resonanceLinks.find((l) => l.id === expandedState.id)
+      return parentLink?.resonanceId || null
     }
-  }, [expandedId, fetchResonanceDetails])
 
-  // Update resonance with connected pulses when links are fetched
-  useEffect(() => {
-    if (!selectedResonanceDetails || !expandedId) return
+    return null
+  }, [expandedState, resonanceLinks])
 
-    const { links } = selectedResonanceDetails
-
-    // Extract unique pulses from links (both source and target)
-    const pulseMap = new Map<string, PulseWithPosition>()
-
-    links.forEach((link) => {
-      // Helper to extract pulse type from __typename
-      const getPulseType = (
-        typename: string
-      ): 'goal' | 'resource' | 'story' => {
-        if (typename === 'GoalPulse') return 'goal'
-        if (typename === 'ResourcePulse') return 'resource'
-        return 'story'
-      }
-
-      // Helper to get icon for pulse type
-      const getPulseIcon = (typename: string): string => {
-        if (typename === 'GoalPulse') return 'flag'
-        if (typename === 'ResourcePulse') return 'diamond'
-        return 'auto_stories'
-      }
-
-      // Add source pulse if not already in map
-      if (!pulseMap.has(link.source.id)) {
-        const sourceContent = link.source.content || 'Untitled pulse'
-        pulseMap.set(link.source.id, {
-          id: link.source.id,
-          label:
-            sourceContent.length > 40
-              ? sourceContent.substring(0, 40) + '...'
-              : sourceContent,
-          type: getPulseType(link.source.__typename),
-          icon: getPulseIcon(link.source.__typename),
-          description: sourceContent,
-          connections: 0,
-          author: 'Unknown',
-          relevance: Math.round(link.confidence * 100),
-          position: { top: '0%', left: '0%' }, // Will be positioned in a circle
-        })
-      }
-
-      // Add target pulse if not already in map
-      if (!pulseMap.has(link.target.id)) {
-        const targetContent = link.target.content || 'Untitled pulse'
-        pulseMap.set(link.target.id, {
-          id: link.target.id,
-          label:
-            targetContent.length > 40
-              ? targetContent.substring(0, 40) + '...'
-              : targetContent,
-          type: getPulseType(link.target.__typename),
-          icon: getPulseIcon(link.target.__typename),
-          description: targetContent,
-          connections: 0,
-          author: 'Unknown',
-          relevance: Math.round(link.confidence * 100),
-          position: { top: '0%', left: '0%' },
-        })
-      }
-    })
-
-    const pulses = Array.from(pulseMap.values())
-
-    // Position pulses in a circle around the resonance node
-    const radius = 20 // Percentage offset from resonance center
-
-    // Find resonance position from fetchedResonances to avoid dependency on resonances state
-    const resonanceData = fetchedResonances.find((r) => r.id === expandedId)
-    if (!resonanceData) return
-
-    pulses.forEach((pulse, idx) => {
-      const angle = (idx / pulses.length) * 2 * Math.PI
-      const offsetX = Math.cos(angle) * radius
-      const offsetY = Math.sin(angle) * radius
-
-      const centerX = parseFloat(resonanceData.position.left)
-      const centerY = parseFloat(resonanceData.position.top)
-      pulse.position = {
-        left: `${centerX + offsetX}%`,
-        top: `${centerY + offsetY}%`,
-      }
-    })
-
-    // Update resonances state with connected pulses
-    setResonances((prev) =>
-      prev.map((r) => {
-        if (r.id !== expandedId) return r
-
-        // Convert pulses to PositionedPulse with x, y coordinates
-        const positionedPulses = pulses.map((pulse) => ({
-          ...pulse,
-          x: toBandPx(pulse.position.left, canvasSize.width, 0.5),
-          y: toBandPx(pulse.position.top, canvasSize.height, 0.5),
-        }))
-
-        // Create connection lines
-        const connections = positionedPulses.map((pulse, idx) => ({
-          id: `line-${pulse.id}`,
-          x1: r.position.left,
-          y1: r.position.top,
-          x2: pulse.position.left,
-          y2: pulse.position.top,
-          dashArray: '10, 10',
-          duration: 3 + idx * 0.2,
-        }))
-
-        return {
-          ...r,
-          connectedPulses: positionedPulses,
-          connections,
-        }
-      })
+  const activeResonanceLinks = useMemo(() => {
+    if (!activeResonanceId) return []
+    return resonanceLinks.filter(
+      (link) => link.resonanceId === activeResonanceId
     )
-  }, [
-    selectedResonanceDetails,
-    expandedId,
-    fetchedResonances,
-    toBandPx,
-    canvasSize,
-  ])
+  }, [activeResonanceId, resonanceLinks])
+
+  // Get pulses for currently expanded resonance link, anchored near the link node
+  useEffect(() => {
+    if (expandedState.type !== 'resonance-link' || !expandedState.id) {
+      setLinkPulses({ source: null, target: null })
+      return
+    }
+
+    const linkNode = resonanceLinks.find((l) => l.id === expandedState.id)
+    const linkData = linksData?.resonanceLinks.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (l: any) => l.id === expandedState.id
+    )
+
+    if (!linkNode || !linkData) {
+      setLinkPulses({ source: null, target: null })
+      return
+    }
+
+    const sourceData = linkData.source?.[0]
+    const targetData = linkData.target?.[0]
+
+    if (!sourceData || !targetData) {
+      setLinkPulses({ source: null, target: null })
+      return
+    }
+
+    const distance = 120 // bring pulses closer to the resonance link
+    const verticalOffset = 50
+
+    const sourcePulse: PulseNode = {
+      id: sourceData.id,
+      content: sourceData.content,
+      type: getPulseType(sourceData.__typename),
+      x: linkNode.x - distance,
+      y: linkNode.y - verticalOffset,
+    }
+
+    const targetPulse: PulseNode = {
+      id: targetData.id,
+      content: targetData.content,
+      type: getPulseType(targetData.__typename),
+      x: linkNode.x + distance,
+      y: linkNode.y + verticalOffset,
+    }
+
+    setLinkPulses({ source: sourcePulse, target: targetPulse })
+  }, [expandedState, linksData, resonanceLinks])
 
   const handleToggleResonance = (resonanceId: string) => {
-    setExpandedId((prev) => (prev === resonanceId ? null : resonanceId))
+    if (
+      expandedState.type === 'field-resonance' &&
+      expandedState.id === resonanceId
+    ) {
+      setExpandedState({ type: null, id: null })
+      setIsPanelOpen(false)
+    } else {
+      setExpandedState({ type: 'field-resonance', id: resonanceId })
+      setIsPanelOpen(true)
+    }
   }
+
+  const handleToggleLink = (linkId: string) => {
+    if (
+      expandedState.type === 'resonance-link' &&
+      expandedState.id === linkId
+    ) {
+      setExpandedState({ type: null, id: null })
+      setIsPanelOpen(false)
+    } else {
+      setExpandedState({ type: 'resonance-link', id: linkId })
+      setIsPanelOpen(true)
+    }
+  }
+
+  const buildResonanceLinkLines = useCallback(
+    (res: FieldResonanceNode, links: ResonanceLinkNode[]): ConnectionLine[] =>
+      links.map((link, idx) => ({
+        id: `res-link-${res.id}-${link.id}`,
+        x1: res.x.toString(),
+        y1: res.y.toString(),
+        x2: link.x.toString(),
+        y2: link.y.toString(),
+        dashArray: '10, 10',
+        duration: 3 + idx * 0.1,
+      })),
+    []
+  )
+
+  const buildLinkPulseLines = useCallback(
+    (
+      link: ResonanceLinkNode,
+      source: PulseNode,
+      target: PulseNode
+    ): ConnectionLine[] => [
+      {
+        id: `link-src-${link.id}`,
+        x1: link.x.toString(),
+        y1: link.y.toString(),
+        x2: source.x.toString(),
+        y2: source.y.toString(),
+        dashArray: '8, 8',
+        duration: 2.8,
+      },
+      {
+        id: `link-tgt-${link.id}`,
+        x1: link.x.toString(),
+        y1: link.y.toString(),
+        x2: target.x.toString(),
+        y2: target.y.toString(),
+        dashArray: '8, 8',
+        duration: 3.2,
+      },
+    ],
+    []
+  )
+
+  const handleOpenPulsePanel = useCallback((pulse: PulseNode) => {
+    const details: PulseDetails = {
+      id: pulse.id,
+      type: pulse.type,
+      content: pulse.content,
+      createdAt: null,
+      intensity: null,
+      status: null,
+      horizon: null,
+      resourceType: null,
+      initiators: [],
+      contexts: [],
+    }
+    setSelectedPulse(details)
+    setIsPulsePanelOpen(true)
+  }, [])
 
   return (
     <>
@@ -342,82 +402,152 @@ export default function ResonancePage() {
         enableZoomControls
         showBackgroundDecor
       >
-        {!allResonancesLoading && resonances.length > 0 && (
+        {!linksLoading && fieldResonances.length > 0 && (
           <div className="relative w-full h-full">
-            {expandedResonance && (
-              <ResonanceConnections
-                isActive
-                lines={buildConnectionLines(expandedResonance)}
-              />
-            )}
+            {/* Lines from resonance to its link nodes when expanded */}
+            {activeResonanceId &&
+              (() => {
+                const activeResonance = fieldResonances.find(
+                  (r) => r.id === activeResonanceId
+                )
+                if (!activeResonance) return null
 
-            {resonances.map((resonance) => (
-              <div key={resonance.id}>
-                <DraggableResonanceNode
-                  id={resonance.id}
-                  icon={resonance.icon}
-                  label={resonance.label}
-                  description={resonance.description}
-                  isActive={expandedId === resonance.id}
-                  canvasPosition={{ x: resonance.x, y: resonance.y }}
-                  scale={currentScale}
-                  onPositionChange={(x, y) =>
-                    setResonances((prev) =>
-                      prev.map((r) => {
-                        if (r.id !== resonance.id) return r
+                return (
+                  <ResonanceConnections
+                    isActive
+                    lines={buildResonanceLinkLines(
+                      activeResonance,
+                      activeResonanceLinks
+                    )}
+                  />
+                )
+              })()}
 
-                        const deltaX = x - r.x
-                        const deltaY = y - r.y
-
-                        return {
-                          ...r,
-                          x,
-                          y,
-                          connectedPulses: r.connectedPulses.map((p) => ({
-                            ...p,
-                            x: p.x + deltaX,
-                            y: p.y + deltaY,
-                          })),
-                        }
-                      })
+            {/* Field Resonance Nodes */}
+            {fieldResonances.map((res) => (
+              <DraggableResonanceNode
+                key={res.id}
+                id={res.id}
+                icon="psychology"
+                label={res.label}
+                description={res.description}
+                isActive={
+                  expandedState.type === 'field-resonance' &&
+                  expandedState.id === res.id
+                }
+                canvasPosition={{ x: res.x, y: res.y }}
+                scale={currentScale}
+                onPositionChange={(x, y) => {
+                  setFieldResonances((prev) =>
+                    prev.map((r) => (r.id === res.id ? { ...r, x, y } : r))
+                  )
+                  // Update linked resonance link nodes
+                  setResonanceLinks((prev) =>
+                    prev.map((link) =>
+                      link.resonanceId === res.id
+                        ? {
+                            ...link,
+                            x: link.x + (x - res.x),
+                            y: link.y + (y - res.y),
+                          }
+                        : link
                     )
-                  }
-                  onClick={() => handleToggleResonance(resonance.id)}
-                />
-
-                {expandedId === resonance.id &&
-                  resonance.connectedPulses.map((pulse) => (
-                    <DraggablePulseNode
-                      key={pulse.id}
-                      icon={pulse.icon}
-                      label={pulse.label}
-                      type={pulse.type}
-                      animation="float"
-                      canvasPosition={{ x: pulse.x, y: pulse.y }}
-                      scale={currentScale}
-                      onPositionChange={(x, y) =>
-                        setResonances((prev) =>
-                          prev.map((r) =>
-                            r.id === resonance.id
-                              ? {
-                                  ...r,
-                                  connectedPulses: r.connectedPulses.map((p) =>
-                                    p.id === pulse.id ? { ...p, x, y } : p
-                                  ),
-                                }
-                              : r
-                          )
-                        )
-                      }
-                      onClick={() => console.log('Pulse clicked:', pulse.label)}
-                    />
-                  ))}
-              </div>
+                  )
+                }}
+                onClick={() => handleToggleResonance(res.id)}
+              />
             ))}
+
+            {/* Resonance Link Nodes (visible when parent resonance expanded) */}
+            {activeResonanceLinks.map((link, idx) => (
+              <DraggableResonanceLinkNode
+                key={link.id}
+                id={link.id}
+                confidence={link.confidence}
+                evidence={link.evidence}
+                canvasPosition={{ x: link.x, y: link.y }}
+                scale={currentScale}
+                isVisible={activeResonanceId === link.resonanceId}
+                delay={idx * 0.1}
+                onPositionChange={(x, y) => {
+                  setResonanceLinks((prev) =>
+                    prev.map((l) => (l.id === link.id ? { ...l, x, y } : l))
+                  )
+                }}
+                onClick={() => handleToggleLink(link.id)}
+              />
+            ))}
+
+            {/* Pulse Nodes (visible when resonance link expanded) */}
+            {expandedState.type === 'resonance-link' &&
+              linkPulses.source &&
+              linkPulses.target && (
+                <>
+                  {/* Lines from link to its pulses */}
+                  {(() => {
+                    const linkNode = resonanceLinks.find(
+                      (l) => l.id === expandedState.id
+                    )
+                    return linkNode ? (
+                      <ResonanceConnections
+                        isActive
+                        lines={buildLinkPulseLines(
+                          linkNode,
+                          linkPulses.source,
+                          linkPulses.target
+                        )}
+                      />
+                    ) : null
+                  })()}
+
+                  <ConnectedPulseNode
+                    id={linkPulses.source.id}
+                    icon={getPulseIcon(linkPulses.source.type)}
+                    label={linkPulses.source.content.substring(0, 40)}
+                    type={linkPulses.source.type}
+                    animation="float"
+                    canvasPosition={{
+                      x: linkPulses.source.x,
+                      y: linkPulses.source.y,
+                    }}
+                    scale={currentScale}
+                    isVisible
+                    onClick={() => handleOpenPulsePanel(linkPulses.source!)}
+                    onPositionChange={(x, y) =>
+                      setLinkPulses((prev) =>
+                        prev.source
+                          ? { ...prev, source: { ...prev.source, x, y } }
+                          : prev
+                      )
+                    }
+                  />
+                  <ConnectedPulseNode
+                    id={linkPulses.target.id}
+                    icon={getPulseIcon(linkPulses.target.type)}
+                    label={linkPulses.target.content.substring(0, 40)}
+                    type={linkPulses.target.type}
+                    animation="float"
+                    canvasPosition={{
+                      x: linkPulses.target.x,
+                      y: linkPulses.target.y,
+                    }}
+                    scale={currentScale}
+                    isVisible
+                    onClick={() => handleOpenPulsePanel(linkPulses.target!)}
+                    onPositionChange={(x, y) =>
+                      setLinkPulses((prev) =>
+                        prev.target
+                          ? { ...prev, target: { ...prev.target, x, y } }
+                          : prev
+                      )
+                    }
+                  />
+                </>
+              )}
           </div>
         )}
 
-        {allResonancesLoading && (
+        {linksLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
               <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
@@ -430,7 +560,7 @@ export default function ResonancePage() {
           </div>
         )}
 
-        {!allResonancesLoading && resonances.length === 0 && (
+        {!linksLoading && fieldResonances.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
@@ -444,22 +574,120 @@ export default function ResonancePage() {
         )}
       </GenericCanvas>
 
-      {expandedResonance && selectedResonanceDetails && (
+      {/* Panel for Field Resonance */}
+      {expandedState.type === 'field-resonance' && expandedState.id && (
         <ResonancePanel
           isOpen={isPanelOpen}
-          isLoading={resonanceLoading}
-          onClose={() => setIsPanelOpen(false)}
-          resonance={{
-            id: selectedResonanceDetails.resonance.id,
-            label:
-              selectedResonanceDetails.resonance.label ||
-              expandedResonance.label,
-            description: selectedResonanceDetails.resonance.description,
-            strength: expandedResonance.strength,
+          isLoading={false}
+          onClose={() => {
+            setIsPanelOpen(false)
+            setExpandedState({ type: null, id: null })
           }}
-          links={selectedResonanceDetails.links}
+          resonance={{
+            id: expandedState.id,
+            label:
+              fieldResonances.find((r) => r.id === expandedState.id)?.label ||
+              'Unknown',
+            description:
+              fieldResonances.find((r) => r.id === expandedState.id)
+                ?.description || '',
+            strength:
+              (fieldResonances.find((r) => r.id === expandedState.id)
+                ?.confidence || 0) * 100,
+          }}
+          links={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (linksData?.resonanceLinks as any[])
+              ?.filter(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (link: any) => link.resonance?.[0]?.id === expandedState.id
+              )
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((link: any) => ({
+                id: link.id,
+                confidence: link.confidence,
+                evidence: link.evidence,
+                createdAt: link.createdAt,
+                source: {
+                  id: link.source?.[0]?.id || '',
+                  content: link.source?.[0]?.content || 'Unknown',
+                  __typename: link.source?.[0]?.__typename || 'Unknown',
+                },
+                target: {
+                  id: link.target?.[0]?.id || '',
+                  content: link.target?.[0]?.content || 'Unknown',
+                  __typename: link.target?.[0]?.__typename || 'Unknown',
+                },
+              })) || []
+          }
+        />
+      )}
+
+      {/* Panel for Resonance Link */}
+      {expandedState.type === 'resonance-link' && expandedState.id && (
+        <ResonancePanel
+          isOpen={isPanelOpen}
+          isLoading={false}
+          onClose={() => {
+            setIsPanelOpen(false)
+            setExpandedState({ type: null, id: null })
+          }}
+          resonance={{
+            id: expandedState.id,
+            label: 'Resonance Link Details',
+            description: 'Connection between two pulses',
+          }}
+          links={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (linksData?.resonanceLinks as any[])
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ?.filter((link: any) => link.id === expandedState.id)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((link: any) => ({
+                id: link.id,
+                confidence: link.confidence,
+                evidence: link.evidence,
+                createdAt: link.createdAt,
+                source: {
+                  id: link.source?.[0]?.id || '',
+                  content: link.source?.[0]?.content || 'Unknown',
+                  __typename: link.source?.[0]?.__typename || 'Unknown',
+                },
+                target: {
+                  id: link.target?.[0]?.id || '',
+                  content: link.target?.[0]?.content || 'Unknown',
+                  __typename: link.target?.[0]?.__typename || 'Unknown',
+                },
+              })) || []
+          }
+        />
+      )}
+
+      {/* Panel for Pulse Details */}
+      {isPulsePanelOpen && selectedPulse && (
+        <PulsePanel
+          isOpen={isPulsePanelOpen}
+          isLoading={false}
+          pulse={selectedPulse}
+          onClose={() => setIsPulsePanelOpen(false)}
         />
       )}
     </>
   )
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+function getPulseType(typename: string): 'goal' | 'resource' | 'story' {
+  if (typename === 'GoalPulse') return 'goal'
+  if (typename === 'ResourcePulse') return 'resource'
+  return 'story'
+}
+
+function getPulseIcon(type: 'goal' | 'resource' | 'story'): string {
+  if (type === 'goal') return 'flag'
+  if (type === 'resource') return 'diamond'
+  return 'auto_stories'
 }

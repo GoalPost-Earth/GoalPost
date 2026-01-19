@@ -129,7 +129,11 @@ export function ResonancePanel({
         <div className="flex items-center gap-2 mt-3">
           <span className="flex h-2 w-2 rounded-full bg-gp-primary animate-pulse" />
           <span className="text-xs text-blue-500 dark:text-blue-200">
-            Active • {resonance.strength ?? 0}% Confidence
+            Active •{' '}
+            {typeof resonance.strength === 'number'
+              ? resonance.strength.toFixed(2)
+              : '0.00'}
+            % Confidence
           </span>
         </div>
       </div>
