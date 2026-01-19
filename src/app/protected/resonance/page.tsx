@@ -1,13 +1,52 @@
 'use client'
 
-import { useState } from 'react'
-import { ResonanceNode } from '@/components/ui/resonance-node'
-import { PulseNode } from '@/components/ui/pulse-node'
-import { ResonanceConnections } from '@/components/ui/resonance-connections'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { GenericCanvas } from '@/components/canvas/generic-canvas'
+import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
+import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
+import {
+  ResonanceConnections,
+  type ConnectionLine,
+} from '@/components/ui/resonance-connections'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 
+interface PulseWithPosition {
+  id: string
+  label: string
+  type: 'goal' | 'resource' | 'story'
+  icon: string
+  description: string
+  connections: number
+  author: string
+  relevance: number
+  position: { top: string; left: string }
+}
+
+interface ResonanceDefinition {
+  id: string
+  label: string
+  description: string
+  icon: string
+  pulseCount: number
+  strength: number
+  position: { top: string; left: string }
+  connectedPulses: PulseWithPosition[]
+  connections: ConnectionLine[]
+}
+
+interface PositionedPulse extends PulseWithPosition {
+  x: number
+  y: number
+}
+
+interface PositionedResonance extends ResonanceDefinition {
+  x: number
+  y: number
+  connectedPulses: PositionedPulse[]
+}
+
 // Mock resonance data - would come from API/database
-const resonancesData = [
+const resonancesData: ResonanceDefinition[] = [
   {
     id: 'ecological-reciprocity',
     label: 'Ecological Reciprocity',
@@ -338,84 +377,160 @@ const resonancesData = [
 export default function ResonancePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
-  const expandedResonance = resonancesData.find((r) => r.id === expandedId)
+  const [resonances, setResonances] = useState<PositionedResonance[]>([])
+  const [currentScale, setCurrentScale] = useState(1)
+  const [canvasSize, setCanvasSize] = useState({
+    width: 1200 * 3,
+    height: 1200 * 3,
+  })
+
+  const toBandPx = useCallback((value: string, total: number, band = 0.7) => {
+    const numeric = parseFloat(value)
+    if (Number.isNaN(numeric)) return total / 2
+    const clamped = Math.min(Math.max(numeric, 0), 100)
+    const usable = total * band
+    const margin = (total - usable) / 2
+    return (clamped / 100) * usable + margin
+  }, [])
+
+  const buildPositions = useCallback(
+    (width: number, height: number) =>
+      resonancesData.map<PositionedResonance>((resonance) => ({
+        ...resonance,
+        x: toBandPx(resonance.position.left, width, 0.6),
+        y: toBandPx(resonance.position.top, height, 0.6),
+        connectedPulses: resonance.connectedPulses.map((pulse) => ({
+          ...pulse,
+          x: toBandPx(pulse.position.left, width, 0.5),
+          y: toBandPx(pulse.position.top, height, 0.5),
+        })),
+      })),
+    [toBandPx]
+  )
+
+  useEffect(() => {
+    const width = (window.innerWidth || 1200) * 3
+    const height = (window.innerHeight || 1200) * 3
+    setCanvasSize({ width, height })
+    setResonances(buildPositions(width, height))
+  }, [buildPositions])
+
+  const expandedResonance = useMemo(
+    () => resonances.find((r) => r.id === expandedId) || null,
+    [expandedId, resonances]
+  )
+
+  const buildConnectionLines = useCallback(
+    (resonance: PositionedResonance) =>
+      resonance.connections.map((line, idx) => {
+        const targetPulse = resonance.connectedPulses[idx]
+        const fallbackX2 = toBandPx(line.x2, canvasSize.width, 0.6)
+        const fallbackY2 = toBandPx(line.y2, canvasSize.height, 0.6)
+
+        return {
+          ...line,
+          x1: resonance.x.toString(),
+          y1: resonance.y.toString(),
+          x2: (targetPulse?.x ?? fallbackX2).toString(),
+          y2: (targetPulse?.y ?? fallbackY2).toString(),
+        }
+      }),
+    [canvasSize.height, canvasSize.width, toBandPx]
+  )
+
+  const handleToggleResonance = (resonanceId: string) => {
+    setExpandedId((prev) => {
+      if (prev === resonanceId) {
+        setIsPanelOpen(false)
+        return null
+      }
+      setIsPanelOpen(true)
+      return resonanceId
+    })
+  }
 
   return (
-    <main className="relative w-full h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
-      {/* Radial gradient overlays */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,164,236,0.05),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,164,236,0.08),transparent_70%)]" />
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_top_right,rgba(19,164,236,0.03),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top_right,rgba(19,164,236,0.05),transparent_60%)]" />
-
-      {/* Dot grid pattern */}
-      <div
-        className="absolute inset-0 opacity-30 dark:opacity-20"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, rgba(100, 116, 139, 0.3) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }}
-      />
-
-      {/* SVG Connection Lines - only for expanded resonance */}
-      {expandedResonance && (
-        <ResonanceConnections
-          isActive={true}
-          lines={expandedResonance.connections}
-        />
-      )}
-
-      {/* Canvas Container */}
-      <div className="relative w-full h-full">
-        {/* All Resonance Nodes */}
-        {resonancesData.map((resonance) => (
-          <div key={resonance.id}>
-            {/* Resonance Node */}
-            <ResonanceNode
-              id={resonance.id}
-              icon={resonance.icon}
-              label={resonance.label}
-              description="Resonance Pattern"
-              isActive={expandedId === resonance.id}
-              position={resonance.position}
-              onClick={() => {
-                if (expandedId === resonance.id) {
-                  // Toggle off
-                  setExpandedId(null)
-                  setIsPanelOpen(false)
-                } else {
-                  // Switch to new resonance
-                  setExpandedId(resonance.id)
-                  setIsPanelOpen(true)
-                }
-              }}
+    <>
+      <GenericCanvas
+        canvasScale={2}
+        onScaleChange={setCurrentScale}
+        enableZoomControls
+        showBackgroundDecor
+      >
+        <div className="relative w-full h-full">
+          {expandedResonance && (
+            <ResonanceConnections
+              isActive
+              lines={buildConnectionLines(expandedResonance)}
             />
+          )}
 
-            {/* Connected Pulse Nodes - only when expanded */}
-            {expandedId === resonance.id &&
-              resonance.connectedPulses.map((pulse) => (
-                <PulseNode
-                  key={pulse.id}
-                  icon={pulse.icon}
-                  label={pulse.label}
-                  type={pulse.type}
-                  position={
-                    pulse.position.top && pulse.position.left
-                      ? {
-                          top: pulse.position.top,
-                          left: pulse.position.left,
-                        }
-                      : undefined
-                  }
-                  animation="float"
-                  onClick={() => console.log('Pulse clicked:', pulse.label)}
-                  className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
-                />
-              ))}
-          </div>
-        ))}
-      </div>
+          {resonances.map((resonance) => (
+            <div key={resonance.id}>
+              <DraggableResonanceNode
+                id={resonance.id}
+                icon={resonance.icon}
+                label={resonance.label}
+                description={resonance.description}
+                isActive={expandedId === resonance.id}
+                canvasPosition={{ x: resonance.x, y: resonance.y }}
+                scale={currentScale}
+                onPositionChange={(x, y) =>
+                  setResonances((prev) =>
+                    prev.map((r) => {
+                      if (r.id !== resonance.id) return r
 
-      {/* Resonance Detail Panel - shows for expanded resonance */}
+                      const deltaX = x - r.x
+                      const deltaY = y - r.y
+
+                      return {
+                        ...r,
+                        x,
+                        y,
+                        connectedPulses: r.connectedPulses.map((p) => ({
+                          ...p,
+                          x: p.x + deltaX,
+                          y: p.y + deltaY,
+                        })),
+                      }
+                    })
+                  )
+                }
+                onClick={() => handleToggleResonance(resonance.id)}
+              />
+
+              {expandedId === resonance.id &&
+                resonance.connectedPulses.map((pulse) => (
+                  <DraggablePulseNode
+                    key={pulse.id}
+                    icon={pulse.icon}
+                    label={pulse.label}
+                    type={pulse.type}
+                    animation="float"
+                    canvasPosition={{ x: pulse.x, y: pulse.y }}
+                    scale={currentScale}
+                    onPositionChange={(x, y) =>
+                      setResonances((prev) =>
+                        prev.map((r) =>
+                          r.id === resonance.id
+                            ? {
+                                ...r,
+                                connectedPulses: r.connectedPulses.map((p) =>
+                                  p.id === pulse.id ? { ...p, x, y } : p
+                                ),
+                              }
+                            : r
+                        )
+                      )
+                    }
+                    onClick={() => console.log('Pulse clicked:', pulse.label)}
+                  />
+                ))}
+            </div>
+          ))}
+        </div>
+      </GenericCanvas>
+
       {expandedResonance && (
         <ResonancePanel
           isOpen={isPanelOpen}
@@ -429,6 +544,6 @@ export default function ResonancePage() {
           pulses={expandedResonance.connectedPulses}
         />
       )}
-    </main>
+    </>
   )
 }

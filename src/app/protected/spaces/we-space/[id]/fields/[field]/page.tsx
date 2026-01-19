@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useLazyQuery } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
+import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
 import { useApp } from '@/app/contexts/AppContext'
 
 interface PulsePosition {
@@ -39,10 +42,16 @@ function FieldDetailPage() {
   const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
+  const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
 
   const params = useParams()
   const fieldId = params?.field as string
   const { user } = useApp()
+
+  const [
+    fetchPulseDetails,
+    { data: pulseDetailsData, loading: pulseDetailsLoading },
+  ] = useLazyQuery(GET_PULSE_DETAILS)
 
   // Redirect if no field ID
   if (!fieldId) {
@@ -122,6 +131,41 @@ function FieldDetailPage() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  const pulseDetails: PulseDetails | null = useMemo(() => {
+    const goal = pulseDetailsData?.goalPulses?.[0]
+    const resource = pulseDetailsData?.resourcePulses?.[0]
+    const story = pulseDetailsData?.storyPulses?.[0]
+    const entry = goal ?? resource ?? story
+
+    if (!entry) return null
+
+    const type = goal ? 'goal' : resource ? 'resource' : 'story'
+
+    return {
+      id: entry.id,
+      type,
+      content: entry.content ?? '',
+      createdAt: entry.createdAt ?? null,
+      intensity: entry.intensity ?? null,
+      status: goal?.status ?? null,
+      horizon: goal?.horizon ?? null,
+      resourceType: resource?.resourceType ?? null,
+      initiators:
+        entry.initiatedBy?.map((initiator) => ({
+          id: initiator.id ?? initiator.name ?? 'unknown',
+          name: initiator.name ?? 'Unknown',
+          email:
+            'email' in initiator ? (initiator.email ?? undefined) : undefined,
+          kind: initiator.__typename === 'Community' ? 'community' : 'person',
+        })) ?? [],
+      contexts:
+        entry.context?.map((ctx) => ({
+          id: ctx.id,
+          title: ctx.title ?? 'Untitled Context',
+        })) ?? [],
+    }
+  }, [pulseDetailsData])
 
   const handleOfferingSubmit = async (
     value: string,
@@ -210,7 +254,7 @@ function FieldDetailPage() {
   }
 
   return (
-    <>
+    <div className="relative">
       <GenericPulseCanvas
         canvasScale={2}
         onScaleChange={setCurrentScale}
@@ -250,10 +294,22 @@ function FieldDetailPage() {
                   )
                 )
               }
-              onClick={() => console.log(`Clicked pulse: ${pos.label}`)}
+              onClick={() => {
+                setIsPulsePanelOpen(true)
+                fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+              }}
             />
           ))}
       </GenericPulseCanvas>
+
+      <PulsePanel
+        isOpen={isPulsePanelOpen}
+        isLoading={pulseDetailsLoading}
+        pulse={pulseDetails}
+        onClose={() => {
+          setIsPulsePanelOpen(false)
+        }}
+      />
 
       {
         /* Offering Modal */
@@ -286,7 +342,7 @@ function FieldDetailPage() {
           </div>
         </OfferingModal>
       }
-    </>
+    </div>
   )
 }
 
