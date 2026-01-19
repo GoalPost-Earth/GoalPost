@@ -2,31 +2,28 @@
 
 import { useRef, useState, useEffect } from 'react'
 import {
-  FieldBubble,
-  type FieldBubbleProps,
-} from '@/components/ui/field-bubble'
+  EntityBubble,
+  type EntityBubbleProps,
+} from '@/components/ui/entity-bubble'
 import { cn } from '@/lib/utils'
 
-export interface DraggableFieldBubbleProps extends Omit<
-  FieldBubbleProps,
-  'position' | 'animationType'
-> {
+export interface DraggableEntityBubbleProps extends EntityBubbleProps {
   canvasPosition: { x: number; y: number }
-  radius: number // For collision detection
+  radius: number
   scale?: number
   onPositionChange?: (x: number, y: number) => void
-  onCollision?: (collidingBubbleId: string) => void
   isDragging?: boolean
 }
 
-export function DraggableFieldBubble({
+export function DraggableEntityBubble({
   canvasPosition,
   radius,
   onPositionChange,
   scale = 1,
   isDragging = false,
+  onClick,
   ...bubbleProps
-}: DraggableFieldBubbleProps) {
+}: DraggableEntityBubbleProps) {
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -80,9 +77,7 @@ export function DraggableFieldBubble({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLocalDragging, dragContext, onPositionChange])
+  }, [isLocalDragging, dragContext, onPositionChange, scale])
 
   const handleClick = () => {
     if (hasDraggedRef.current) {
@@ -90,7 +85,7 @@ export function DraggableFieldBubble({
       hasDraggedRef.current = false
       return
     }
-    bubbleProps.onClick?.()
+    onClick?.()
   }
 
   return (
@@ -112,12 +107,7 @@ export function DraggableFieldBubble({
       }}
       onMouseDown={handleMouseDown}
     >
-      <FieldBubble
-        {...bubbleProps}
-        position="center"
-        animationType="none"
-        onClick={handleClick}
-      />
+      <EntityBubble {...bubbleProps} onClick={handleClick} />
     </div>
   )
 }

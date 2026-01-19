@@ -1,33 +1,28 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import {
-  FieldBubble,
-  type FieldBubbleProps,
-} from '@/components/ui/field-bubble'
+import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
 import { cn } from '@/lib/utils'
 
-export interface DraggableFieldBubbleProps extends Omit<
-  FieldBubbleProps,
-  'position' | 'animationType'
+export interface DraggablePulseNodeProps extends Omit<
+  PulseNodeProps,
+  'position'
 > {
   canvasPosition: { x: number; y: number }
-  radius: number // For collision detection
   scale?: number
   onPositionChange?: (x: number, y: number) => void
-  onCollision?: (collidingBubbleId: string) => void
   isDragging?: boolean
 }
 
-export function DraggableFieldBubble({
+export function DraggablePulseNode({
   canvasPosition,
-  radius,
   onPositionChange,
   scale = 1,
   isDragging = false,
-  ...bubbleProps
-}: DraggableFieldBubbleProps) {
-  const bubbleRef = useRef<HTMLDivElement>(null)
+  onClick,
+  ...nodeProps
+}: DraggablePulseNodeProps) {
+  const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
   const [dragContext, setDragContext] = useState<null | {
@@ -80,9 +75,7 @@ export function DraggableFieldBubble({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLocalDragging, dragContext, onPositionChange])
+  }, [isLocalDragging, dragContext, onPositionChange, scale])
 
   const handleClick = () => {
     if (hasDraggedRef.current) {
@@ -90,12 +83,12 @@ export function DraggableFieldBubble({
       hasDraggedRef.current = false
       return
     }
-    bubbleProps.onClick?.()
+    onClick?.()
   }
 
   return (
     <div
-      ref={bubbleRef}
+      ref={nodeRef}
       className={cn(
         'absolute',
         isLocalDragging
@@ -105,19 +98,12 @@ export function DraggableFieldBubble({
       style={{
         top: 0,
         left: 0,
-        width: radius * 2,
-        height: radius * 2,
         transform: `translate(${canvasPosition.x}px, ${canvasPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.8 : 1,
       }}
       onMouseDown={handleMouseDown}
     >
-      <FieldBubble
-        {...bubbleProps}
-        position="center"
-        animationType="none"
-        onClick={handleClick}
-      />
+      <PulseNode {...nodeProps} position="center" onClick={handleClick} />
     </div>
   )
 }
