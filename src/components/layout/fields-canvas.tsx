@@ -41,6 +41,25 @@ export function FieldsCanvas({
   const canvasRef = useRef<HTMLDivElement>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([])
+  const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
+  const [currentScale, setCurrentScale] = useState(1)
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      const width = (window.innerWidth || 1200) * 3
+      const height = (window.innerHeight || 1200) * 3
+      setCanvasSize({ width, height })
+      setViewportSize({
+        width: window.innerWidth || 1200,
+        height: window.innerHeight || 1200,
+      })
+    }
+
+    updateCanvasSize()
+    window.addEventListener('resize', updateCanvasSize)
+    return () => window.removeEventListener('resize', updateCanvasSize)
+  }, [])
 
   useEffect(() => {
     const sizeKeyForIndex = (idx: number): BubbleSize => {
@@ -64,22 +83,32 @@ export function FieldsCanvas({
       xl: 220,
     }
 
+    const centerX = canvasSize.width / 2
+    const centerY = canvasSize.height / 2
+    const radialDistance = Math.min(canvasSize.width, canvasSize.height) / 4
+
     const initialPositions: FieldPosition[] = fields.map((field, idx) => {
       const angle = (idx / Math.max(fields.length, 1)) * Math.PI * 2
-      const radialDistance = 250
       const size = sizeKeyForIndex(idx)
       const radius = radiusForSize[size]
 
       return {
         fieldId: field.id || `field-${idx}`,
-        x: Math.cos(angle) * radialDistance + 400,
-        y: Math.sin(angle) * radialDistance + 300,
+        x: Math.cos(angle) * radialDistance + centerX,
+        y: Math.sin(angle) * radialDistance + centerY,
         radius,
         size,
       }
     })
     setFieldPositions(initialPositions)
-  }, [fields])
+  }, [fields, canvasSize])
+
+  const initialPositionX = viewportSize.width
+    ? -(canvasSize.width - viewportSize.width) / 2
+    : 0
+  const initialPositionY = viewportSize.height
+    ? -(canvasSize.height - viewportSize.height) / 2
+    : 0
 
   const handleCreateField = async (description: string, name?: string) => {
     try {
@@ -109,15 +138,17 @@ export function FieldsCanvas({
     >
       <div className="w-full h-full">
         <TransformWrapper
+          key={`${canvasSize.width}x${canvasSize.height}`}
           initialScale={1}
-          initialPositionX={0}
-          initialPositionY={0}
-          minScale={0.5}
+          initialPositionX={initialPositionX}
+          initialPositionY={initialPositionY}
+          minScale={0.35}
           maxScale={3}
           wheel={{ step: 0.1 }}
           pinch={{ step: 5 }}
-          panning={{ disabled: true }}
+          panning={{ disabled: false, velocityDisabled: true }}
           doubleClick={{ disabled: false }}
+          onTransformed={(ctx) => setCurrentScale(ctx.state.scale)}
         >
           {({ zoomIn, zoomOut }) => (
             <>
@@ -125,7 +156,10 @@ export function FieldsCanvas({
                 wrapperClass="w-full h-full"
                 contentClass="w-full h-full relative"
                 wrapperStyle={{ width: '100%', height: '100%' }}
-                contentStyle={{ width: '100%', height: '100%' }}
+                contentStyle={{
+                  width: `${canvasSize.width}px`,
+                  height: `${canvasSize.height}px`,
+                }}
               >
                 <div
                   className={cn(
@@ -179,6 +213,7 @@ export function FieldsCanvas({
                           size={pos.size}
                           canvasPosition={{ x: pos.x, y: pos.y }}
                           radius={pos.radius}
+                          scale={currentScale}
                           onPositionChange={(x, y) =>
                             handleFieldPositionChange(pos.fieldId, x, y)
                           }

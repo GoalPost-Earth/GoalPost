@@ -13,6 +13,7 @@ export interface DraggableFieldBubbleProps extends Omit<
 > {
   canvasPosition: { x: number; y: number }
   radius: number // For collision detection
+  scale?: number
   onPositionChange?: (x: number, y: number) => void
   onCollision?: (collidingBubbleId: string) => void
   isDragging?: boolean
@@ -22,6 +23,7 @@ export function DraggableFieldBubble({
   canvasPosition,
   radius,
   onPositionChange,
+  scale = 1,
   isDragging = false,
   ...bubbleProps
 }: DraggableFieldBubbleProps) {
@@ -37,6 +39,7 @@ export function DraggableFieldBubble({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     hasDraggedRef.current = false
     setDragContext({
       startMouseX: e.clientX,
@@ -60,8 +63,8 @@ export function DraggableFieldBubble({
         hasDraggedRef.current = true
       }
       onPositionChange?.(
-        dragContext.startX + deltaX,
-        dragContext.startY + deltaY
+        dragContext.startX + deltaX / scale,
+        dragContext.startY + deltaY / scale
       )
     }
 

@@ -3,15 +3,14 @@
  * Manages background jobs for resonance discovery and pulse processing
  */
 
-import { Queue, QueueEvents } from 'bullmq'
-import Redis from 'ioredis'
+import { Queue, QueueEvents, type ConnectionOptions } from 'bullmq'
 
-// Redis connection configuration
-const redisConnection = new Redis({
+// Redis connection configuration shared by all queues
+const redisConnection: ConnectionOptions = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   maxRetriesPerRequest: null,
-})
+}
 
 // Job queue names
 export const QUEUE_NAMES = {
@@ -150,5 +149,4 @@ export async function closeQueues() {
   await pulseProcessingQueue.close()
   await resonanceDiscoveryQueue.close()
   await personEnrichmentQueue.close()
-  await redisConnection.quit()
 }
