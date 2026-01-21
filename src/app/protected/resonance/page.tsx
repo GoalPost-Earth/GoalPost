@@ -551,6 +551,33 @@ export default function ResonancePage() {
     )
   }, [activeResonanceId, resonanceLinks])
 
+  // Helper to calculate pulse positions relative to a link node
+  const calculatePulsePositions = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (linkNode: ResonanceLinkNode, sourceData: any, targetData: any) => {
+      const distance = 120
+      const verticalOffset = 50
+
+      return {
+        source: {
+          id: sourceData.id,
+          content: sourceData.content,
+          type: getPulseType(sourceData.__typename),
+          x: linkNode.x - distance,
+          y: linkNode.y - verticalOffset,
+        },
+        target: {
+          id: targetData.id,
+          content: targetData.content,
+          type: getPulseType(targetData.__typename),
+          x: linkNode.x + distance,
+          y: linkNode.y + verticalOffset,
+        },
+      }
+    },
+    []
+  )
+
   // Get pulses for currently expanded resonance link, anchored near the link node
   useEffect(() => {
     if (expandedState.type !== 'resonance-link' || !expandedState.id) {
@@ -577,27 +604,9 @@ export default function ResonancePage() {
       return
     }
 
-    const distance = 120 // bring pulses closer to the resonance link
-    const verticalOffset = 50
-
-    const sourcePulse: PulseNode = {
-      id: sourceData.id,
-      content: sourceData.content,
-      type: getPulseType(sourceData.__typename),
-      x: linkNode.x - distance,
-      y: linkNode.y - verticalOffset,
-    }
-
-    const targetPulse: PulseNode = {
-      id: targetData.id,
-      content: targetData.content,
-      type: getPulseType(targetData.__typename),
-      x: linkNode.x + distance,
-      y: linkNode.y + verticalOffset,
-    }
-
-    setLinkPulses({ source: sourcePulse, target: targetPulse })
-  }, [expandedState, linksData, resonanceLinks])
+    const positions = calculatePulsePositions(linkNode, sourceData, targetData)
+    setLinkPulses({ source: positions.source, target: positions.target })
+  }, [expandedState, linksData, resonanceLinks, calculatePulsePositions])
 
   const handleToggleResonance = (resonanceId: string) => {
     if (
@@ -666,6 +675,40 @@ export default function ResonancePage() {
     ],
     []
   )
+
+  // Reset pulse positions when panel closes
+  useEffect(() => {
+    if (isPulsePanelOpen) return
+
+    // When panel closes, reset pulses to original position near link node
+    if (expandedState.type === 'resonance-link' && expandedState.id) {
+      const linkNode = resonanceLinks.find((l) => l.id === expandedState.id)
+      const linkData = linksData?.resonanceLinks.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (l: any) => l.id === expandedState.id
+      )
+
+      if (linkNode && linkData) {
+        const sourceData = linkData.source?.[0]
+        const targetData = linkData.target?.[0]
+
+        if (sourceData && targetData) {
+          const positions = calculatePulsePositions(
+            linkNode,
+            sourceData,
+            targetData
+          )
+          setLinkPulses({ source: positions.source, target: positions.target })
+        }
+      }
+    }
+  }, [
+    isPulsePanelOpen,
+    expandedState,
+    resonanceLinks,
+    linksData,
+    calculatePulsePositions,
+  ])
 
   const handleOpenPulsePanel = useCallback((pulse: PulseNode) => {
     const details: PulseDetails = {
