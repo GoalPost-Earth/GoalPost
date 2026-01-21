@@ -254,26 +254,32 @@ export default function ResonancePage() {
   const resolveCollisions = useCallback(
     (
       mover: { id: string; kind: 'field' | 'link'; x: number; y: number },
-      fields: FieldResonanceNode[],
-      links: ResonanceLinkNode[]
+      initialFields: FieldResonanceNode[],
+      initialLinks: ResonanceLinkNode[]
     ) => {
       const moverRadius =
         mover.kind === 'field' ? FIELD_NODE_RADIUS : LINK_NODE_RADIUS
 
-      const pushNode = <T extends { id: string; x: number; y: number }>(
-        node: T,
-        radius: number
-      ): T => {
-        if (mover.kind === 'field' && node.id === mover.id) return node
-        if (mover.kind === 'link' && node.id === mover.id) return node
+      let fields = initialFields
+      let links = initialLinks
 
-        const minDist = radius + moverRadius
-        const dist = Math.max(distance(mover.x, mover.y, node.x, node.y), 0.001)
+      // Helper to push a single node away from a source
+      const pushNodeFrom = <T extends { id: string; x: number; y: number }>(
+        node: T,
+        radius: number,
+        source: { x: number; y: number },
+        sourceRadius: number
+      ): T => {
+        const minDist = radius + sourceRadius
+        const dist = Math.max(
+          distance(source.x, source.y, node.x, node.y),
+          0.001
+        )
         if (dist >= minDist) return node
 
         const overlap = minDist - dist + 1
-        const nx = (node.x - mover.x) / dist
-        const ny = (node.y - mover.y) / dist
+        const nx = (node.x - source.x) / dist
+        const ny = (node.y - source.y) / dist
 
         const newX = node.x + nx * overlap
         const newY = node.y + ny * overlap
@@ -282,10 +288,101 @@ export default function ResonancePage() {
         return { ...node, x: clamped.x, y: clamped.y } as T
       }
 
-      return {
-        fields: fields.map((f) => pushNode(f, FIELD_NODE_RADIUS)),
-        links: links.map((l) => pushNode(l, LINK_NODE_RADIUS)),
+      // Cascade collision detection: iteratively resolve collisions
+      const maxIterations = 5
+      for (let iter = 0; iter < maxIterations; iter++) {
+        let changed = false
+
+        // Push all nodes away from mover
+        const newFields = fields.map((f) => {
+          if (f.id === mover.id) return f
+          const pushed = pushNodeFrom(f, FIELD_NODE_RADIUS, mover, moverRadius)
+          if (pushed.x !== f.x || pushed.y !== f.y) changed = true
+          return pushed
+        })
+
+        const newLinks = links.map((l) => {
+          if (l.id === mover.id) return l
+          const pushed = pushNodeFrom(l, LINK_NODE_RADIUS, mover, moverRadius)
+          if (pushed.x !== l.x || pushed.y !== l.y) changed = true
+          return pushed
+        })
+
+        // Now check for collisions between other nodes (cascade effect)
+        let cascadeFields = newFields
+        let cascadeLinks = newLinks
+
+        // Check field-to-field collisions
+        for (let i = 0; i < cascadeFields.length; i++) {
+          for (let j = i + 1; j < cascadeFields.length; j++) {
+            const pushed = pushNodeFrom(
+              cascadeFields[j],
+              FIELD_NODE_RADIUS,
+              cascadeFields[i],
+              FIELD_NODE_RADIUS
+            )
+            if (
+              pushed.x !== cascadeFields[j].x ||
+              pushed.y !== cascadeFields[j].y
+            ) {
+              cascadeFields = cascadeFields.map((f) =>
+                f.id === pushed.id ? pushed : f
+              )
+              changed = true
+            }
+          }
+        }
+
+        // Check link-to-link collisions
+        for (let i = 0; i < cascadeLinks.length; i++) {
+          for (let j = i + 1; j < cascadeLinks.length; j++) {
+            const pushed = pushNodeFrom(
+              cascadeLinks[j],
+              LINK_NODE_RADIUS,
+              cascadeLinks[i],
+              LINK_NODE_RADIUS
+            )
+            if (
+              pushed.x !== cascadeLinks[j].x ||
+              pushed.y !== cascadeLinks[j].y
+            ) {
+              cascadeLinks = cascadeLinks.map((l) =>
+                l.id === pushed.id ? pushed : l
+              )
+              changed = true
+            }
+          }
+        }
+
+        // Check field-to-link collisions
+        for (let i = 0; i < cascadeFields.length; i++) {
+          for (let j = 0; j < cascadeLinks.length; j++) {
+            const pushed = pushNodeFrom(
+              cascadeLinks[j],
+              LINK_NODE_RADIUS,
+              cascadeFields[i],
+              FIELD_NODE_RADIUS
+            )
+            if (
+              pushed.x !== cascadeLinks[j].x ||
+              pushed.y !== cascadeLinks[j].y
+            ) {
+              cascadeLinks = cascadeLinks.map((l) =>
+                l.id === pushed.id ? pushed : l
+              )
+              changed = true
+            }
+          }
+        }
+
+        fields = cascadeFields
+        links = cascadeLinks
+
+        // Stop if no changes occurred
+        if (!changed) break
       }
+
+      return { fields, links }
     },
     [clampPosition]
   )
