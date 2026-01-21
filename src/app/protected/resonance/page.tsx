@@ -13,6 +13,7 @@ import {
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
+import { distance } from '@/lib/collision-detection'
 
 // ============================================================================
 // Type Definitions
@@ -79,6 +80,9 @@ interface ExpandedState {
   id: string | null
 }
 
+const FIELD_NODE_RADIUS = 90
+const LINK_NODE_RADIUS = 50
+
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -100,6 +104,191 @@ export default function ResonancePage() {
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
   const [selectedPulse, setSelectedPulse] = useState<PulseDetails | null>(null)
   const [currentScale, setCurrentScale] = useState(1)
+  const [canvasSize, setCanvasSize] = useState({ width: 3600, height: 3600 })
+
+  const clampPosition = useCallback(
+    (x: number, y: number, radius: number) => ({
+      x: Math.max(radius, Math.min(canvasSize.width - radius, x)),
+      y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
+    }),
+    [canvasSize.height, canvasSize.width]
+  )
+
+  const relaxLayout = useCallback(
+    (
+      initialFields: FieldResonanceNode[],
+      initialLinks: ResonanceLinkNode[]
+    ) => {
+      let fields = initialFields
+      let links = initialLinks
+
+      const pushPair = <T extends { x: number; y: number }>(
+        a: T,
+        b: T,
+        ra: number,
+        rb: number
+      ): [T, T, boolean] => {
+        const minDist = ra + rb
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        const dist = Math.max(Math.hypot(dx, dy), 0.001)
+        if (dist >= minDist) return [a, b, false]
+
+        const overlap = minDist - dist + 1
+        const nx = dx / dist
+        const ny = dy / dist
+        const shiftA = overlap * 0.5
+        const shiftB = overlap * 0.5
+
+        const clampedA = clampPosition(a.x - nx * shiftA, a.y - ny * shiftA, ra)
+        const movedA = {
+          ...a,
+          x: clampedA.x,
+          y: clampedA.y,
+        } as T
+
+        const clampedB = clampPosition(b.x + nx * shiftB, b.y + ny * shiftB, rb)
+        const movedB = {
+          ...b,
+          x: clampedB.x,
+          y: clampedB.y,
+        } as T
+
+        return [movedA, movedB, true]
+      }
+
+      const iterations = 8
+      for (let iter = 0; iter < iterations; iter++) {
+        let changed = false
+
+        for (let i = 0; i < fields.length; i++) {
+          for (let j = i + 1; j < fields.length; j++) {
+            const [fi, fj, moved] = pushPair(
+              fields[i],
+              fields[j],
+              FIELD_NODE_RADIUS,
+              FIELD_NODE_RADIUS
+            )
+            if (moved) {
+              fields = fields.map((f, idx) =>
+                idx === i ? fi : idx === j ? fj : f
+              )
+              changed = true
+            }
+          }
+        }
+
+        for (let i = 0; i < links.length; i++) {
+          for (let j = i + 1; j < links.length; j++) {
+            const [li, lj, moved] = pushPair(
+              links[i],
+              links[j],
+              LINK_NODE_RADIUS,
+              LINK_NODE_RADIUS
+            )
+            if (moved) {
+              links = links.map((l, idx) =>
+                idx === i ? li : idx === j ? lj : l
+              )
+              changed = true
+            }
+          }
+        }
+
+        for (let i = 0; i < fields.length; i++) {
+          for (let j = 0; j < links.length; j++) {
+            const dx = links[j].x - fields[i].x
+            const dy = links[j].y - fields[i].y
+            const dist = Math.max(Math.hypot(dx, dy), 0.001)
+            const minDist = FIELD_NODE_RADIUS + LINK_NODE_RADIUS
+
+            if (dist < minDist) {
+              const overlap = minDist - dist + 1
+              const nx = dx / dist
+              const ny = dy / dist
+              const shiftField = overlap * 0.5
+              const shiftLink = overlap * 0.5
+
+              const clampedField = clampPosition(
+                fields[i].x - nx * shiftField,
+                fields[i].y - ny * shiftField,
+                FIELD_NODE_RADIUS
+              )
+              fields = fields.map((f, idx) =>
+                idx === i
+                  ? ({
+                      ...f,
+                      x: clampedField.x,
+                      y: clampedField.y,
+                    } as FieldResonanceNode)
+                  : f
+              )
+
+              const clampedLink = clampPosition(
+                links[j].x + nx * shiftLink,
+                links[j].y + ny * shiftLink,
+                LINK_NODE_RADIUS
+              )
+              links = links.map((l, idx) =>
+                idx === j
+                  ? ({
+                      ...l,
+                      x: clampedLink.x,
+                      y: clampedLink.y,
+                    } as ResonanceLinkNode)
+                  : l
+              )
+              changed = true
+            }
+          }
+        }
+
+        if (!changed) break
+      }
+
+      return { fields, links }
+    },
+    [clampPosition]
+  )
+
+  const resolveCollisions = useCallback(
+    (
+      mover: { id: string; kind: 'field' | 'link'; x: number; y: number },
+      fields: FieldResonanceNode[],
+      links: ResonanceLinkNode[]
+    ) => {
+      const moverRadius =
+        mover.kind === 'field' ? FIELD_NODE_RADIUS : LINK_NODE_RADIUS
+
+      const pushNode = <T extends { id: string; x: number; y: number }>(
+        node: T,
+        radius: number
+      ): T => {
+        if (mover.kind === 'field' && node.id === mover.id) return node
+        if (mover.kind === 'link' && node.id === mover.id) return node
+
+        const minDist = radius + moverRadius
+        const dist = Math.max(distance(mover.x, mover.y, node.x, node.y), 0.001)
+        if (dist >= minDist) return node
+
+        const overlap = minDist - dist + 1
+        const nx = (node.x - mover.x) / dist
+        const ny = (node.y - mover.y) / dist
+
+        const newX = node.x + nx * overlap
+        const newY = node.y + ny * overlap
+
+        const clamped = clampPosition(newX, newY, radius)
+        return { ...node, x: clamped.x, y: clamped.y } as T
+      }
+
+      return {
+        fields: fields.map((f) => pushNode(f, FIELD_NODE_RADIUS)),
+        links: links.map((l) => pushNode(l, LINK_NODE_RADIUS)),
+      }
+    },
+    [clampPosition]
+  )
 
   // Fetch all resonance links
   const { data: linksData, loading: linksLoading } = useQuery(
@@ -144,12 +333,13 @@ export default function ResonancePage() {
       res.confidences.push(link.confidence)
     })
 
-    // Convert to array with positions
+    // Convert to array with random positions across the entire canvas
     const resonances = Array.from(resonanceMap.values())
       .sort((a, b) => b.links.length - a.links.length) // Largest first
-      .map((res, idx) => {
-        const col = idx % 3
-        const row = Math.floor(idx / 3)
+      .map((res) => {
+        // Generate random position across full canvas (10-90% range for safety margin)
+        const randomLeft = 10 + Math.random() * 80
+        const randomTop = 10 + Math.random() * 80
         return {
           id: res.id,
           label: res.label,
@@ -158,8 +348,8 @@ export default function ResonancePage() {
           confidence:
             res.confidences.reduce((a, b) => a + b, 0) / res.confidences.length,
           position: {
-            left: `${25 + col * 37.5}%`,
-            top: `${25 + row * 37.5}%`,
+            left: `${randomLeft}%`,
+            top: `${randomTop}%`,
           },
           x: 0,
           y: 0,
@@ -221,26 +411,29 @@ export default function ResonancePage() {
 
   // Update canvas size and positions
   useEffect(() => {
-    const width = (window.innerWidth || 1200) * 3
-    const height = (window.innerHeight || 1200) * 3
+    const width = (window.innerWidth || 1200) * 5
+    const height = (window.innerHeight || 1200) * 5
+    setCanvasSize({ width, height })
 
     // Convert field resonances
     const positioned = transformedData.resonances.map((res) => ({
       ...res,
-      x: toBandPx(res.position.left, width, 0.6),
-      y: toBandPx(res.position.top, height, 0.6),
+      x: toBandPx(res.position.left, width, 0.9),
+      y: toBandPx(res.position.top, height, 0.9),
     }))
 
     // Convert resonance links
     const positionedLinks = transformedData.links.map((link) => ({
       ...link,
-      x: toBandPx(link.position.left, width, 0.6),
-      y: toBandPx(link.position.top, height, 0.6),
+      x: toBandPx(link.position.left, width, 0.9),
+      y: toBandPx(link.position.top, height, 0.9),
     }))
 
-    setFieldResonances(positioned)
-    setResonanceLinks(positionedLinks)
-  }, [transformedData, toBandPx])
+    const relaxed = relaxLayout(positioned, positionedLinks)
+
+    setFieldResonances(relaxed.fields)
+    setResonanceLinks(relaxed.links)
+  }, [relaxLayout, toBandPx, transformedData])
 
   // Get resonance links for currently expanded resonance
   const activeResonanceId = useMemo(() => {
@@ -397,7 +590,7 @@ export default function ResonancePage() {
   return (
     <>
       <GenericCanvas
-        canvasScale={2}
+        canvasScale={5}
         onScaleChange={setCurrentScale}
         enableZoomControls
         showBackgroundDecor
@@ -438,21 +631,39 @@ export default function ResonancePage() {
                 canvasPosition={{ x: res.x, y: res.y }}
                 scale={currentScale}
                 onPositionChange={(x, y) => {
-                  setFieldResonances((prev) =>
-                    prev.map((r) => (r.id === res.id ? { ...r, x, y } : r))
-                  )
-                  // Update linked resonance link nodes
-                  setResonanceLinks((prev) =>
-                    prev.map((link) =>
+                  setFieldResonances((prevFields) => {
+                    const currentField = prevFields.find((r) => r.id === res.id)
+                    if (!currentField) return prevFields
+
+                    const { x: clampedX, y: clampedY } = clampPosition(
+                      x,
+                      y,
+                      FIELD_NODE_RADIUS
+                    )
+
+                    const deltaX = clampedX - currentField.x
+                    const deltaY = clampedY - currentField.y
+
+                    const updatedFields = prevFields.map((r) =>
+                      r.id === res.id ? { ...r, x: clampedX, y: clampedY } : r
+                    )
+
+                    const shiftedLinks = resonanceLinks.map((link) =>
                       link.resonanceId === res.id
-                        ? {
-                            ...link,
-                            x: link.x + (x - res.x),
-                            y: link.y + (y - res.y),
-                          }
+                        ? { ...link, x: link.x + deltaX, y: link.y + deltaY }
                         : link
                     )
-                  )
+
+                    const { fields: resolvedFields, links: resolvedLinks } =
+                      resolveCollisions(
+                        { id: res.id, kind: 'field', x: clampedX, y: clampedY },
+                        updatedFields,
+                        shiftedLinks
+                      )
+
+                    setResonanceLinks(resolvedLinks)
+                    return resolvedFields
+                  })
                 }}
                 onClick={() => handleToggleResonance(res.id)}
               />
@@ -470,9 +681,27 @@ export default function ResonancePage() {
                 isVisible={activeResonanceId === link.resonanceId}
                 delay={idx * 0.1}
                 onPositionChange={(x, y) => {
-                  setResonanceLinks((prev) =>
-                    prev.map((l) => (l.id === link.id ? { ...l, x, y } : l))
-                  )
+                  setResonanceLinks((prevLinks) => {
+                    const { x: clampedX, y: clampedY } = clampPosition(
+                      x,
+                      y,
+                      LINK_NODE_RADIUS
+                    )
+
+                    const updatedLinks = prevLinks.map((l) =>
+                      l.id === link.id ? { ...l, x: clampedX, y: clampedY } : l
+                    )
+
+                    const { fields: resolvedFields, links: resolvedLinks } =
+                      resolveCollisions(
+                        { id: link.id, kind: 'link', x: clampedX, y: clampedY },
+                        fieldResonances,
+                        updatedLinks
+                      )
+
+                    setFieldResonances(resolvedFields)
+                    return resolvedLinks
+                  })
                 }}
                 onClick={() => handleToggleLink(link.id)}
               />
@@ -579,10 +808,7 @@ export default function ResonancePage() {
         <ResonancePanel
           isOpen={isPanelOpen}
           isLoading={false}
-          onClose={() => {
-            setIsPanelOpen(false)
-            setExpandedState({ type: null, id: null })
-          }}
+          onClose={() => setIsPanelOpen(false)}
           resonance={{
             id: expandedState.id,
             label:
@@ -628,10 +854,7 @@ export default function ResonancePage() {
         <ResonancePanel
           isOpen={isPanelOpen}
           isLoading={false}
-          onClose={() => {
-            setIsPanelOpen(false)
-            setExpandedState({ type: null, id: null })
-          }}
+          onClose={() => setIsPanelOpen(false)}
           resonance={{
             id: expandedState.id,
             label: 'Resonance Link Details',

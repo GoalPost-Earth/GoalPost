@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 export interface GenericCanvasProps {
   children?: ReactNode
   className?: string
-  canvasScale?: 3 | 2 | 1 // Multiplier for viewport size
+  canvasScale?: 5 | 4 | 3 | 2 | 1 // Multiplier for viewport size
   minZoom?: number
   maxZoom?: number
   enablePanning?: boolean

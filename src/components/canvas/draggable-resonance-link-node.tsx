@@ -118,12 +118,19 @@ export function DraggableResonanceLinkNode({
     }
   }, [isVisible, delay])
 
-  const confidenceColor =
+  const iconColor =
     confidence > 0.85
-      ? 'from-green-400 to-emerald-500'
+      ? 'text-emerald-400'
       : confidence > 0.75
-        ? 'from-blue-400 to-cyan-500'
-        : 'from-amber-400 to-orange-500'
+        ? 'text-cyan-400'
+        : 'text-amber-400'
+
+  const ringColor =
+    confidence > 0.85
+      ? 'rgba(16,185,129,0.9)'
+      : confidence > 0.75
+        ? 'rgba(34,211,238,0.9)'
+        : 'rgba(251,191,36,0.9)'
 
   return (
     <div
@@ -143,38 +150,60 @@ export function DraggableResonanceLinkNode({
       onMouseDown={handleMouseDown}
     >
       <div
-        className="flex flex-col items-center gap-2 group cursor-pointer"
+        className="flex flex-col items-center gap-3 group cursor-pointer"
         onClick={handleClick}
       >
         {/* Link Node */}
         <div className="relative">
           <div
             className={cn(
-              'flex items-center justify-center size-12 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300',
-              'group-hover:scale-110 group-hover:shadow-xl',
-              `bg-gradient-to-br ${confidenceColor}`,
-              'border border-white/20'
+              'relative flex items-center justify-center size-14 rounded-full gp-glass border border-white/20',
+              'shadow-[0_0_30px_-12px_rgba(19,164,236,0.45)] dark:shadow-[0_0_30px_-12px_rgba(19,164,236,0.6)]',
+              'transition-all duration-300 ease-out group-hover:scale-105 group-hover:-translate-y-1'
             )}
           >
-            <span className="material-symbols-outlined text-xl text-white font-bold">
-              link
-            </span>
+            {/* Confidence ring */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `conic-gradient(${ringColor} ${Math.round(confidence * 100)}%, transparent ${Math.round(confidence * 100)}%)`,
+                filter: 'blur(6px)',
+                opacity: 0.6,
+              }}
+            />
+
+            {/* Inner core */}
+            <div
+              className={cn(
+                'relative flex items-center justify-center size-12 rounded-full',
+                'bg-white/75 dark:bg-black/40 backdrop-blur-md border border-white/30 dark:border-white/10'
+              )}
+            >
+              <span
+                className={cn(
+                  'material-symbols-outlined text-2xl font-bold',
+                  iconColor
+                )}
+              >
+                link
+              </span>
+            </div>
           </div>
 
           {/* Confidence Badge */}
-          <div className="absolute -top-2 -right-2 size-7 rounded-full bg-white dark:bg-neutral-800 border-2 border-slate-200 dark:border-white/30 flex items-center justify-center shadow-md">
-            <span className="text-[11px] font-bold text-slate-700 dark:text-white/90">
+          <div className="absolute -top-2 -right-2 size-7 rounded-full bg-white/90 dark:bg-black/60 border border-white/40 dark:border-white/20 flex items-center justify-center shadow-sm">
+            <span className="text-[10px] font-bold text-slate-700 dark:text-white/90">
               {Math.round(confidence * 100)}
             </span>
           </div>
         </div>
 
         {/* Label and Evidence */}
-        <div className="flex flex-col items-center text-center transition-all duration-300 group-hover:translate-y-1 max-w-[140px]">
-          <span className="text-[10px] font-medium text-slate-700 dark:text-white/90 tracking-wide drop-shadow-sm line-clamp-2">
-            {evidence?.substring(0, 40) || 'Resonance Link'}
+        <div className="flex flex-col items-center text-center transition-all duration-300 group-hover:translate-y-1 max-w-[150px]">
+          <span className="text-[11px] font-bold text-gp-ink-strong dark:text-white/90 leading-tight line-clamp-2">
+            {evidence?.substring(0, 50) || 'Resonance Link'}
           </span>
-          <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/40 mt-0.5">
+          <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-gp-ink-soft dark:text-white/60 mt-0.5">
             Connection
           </span>
         </div>
