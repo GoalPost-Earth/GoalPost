@@ -626,8 +626,13 @@ export default function ResonancePage() {
       expandedState.type === 'resonance-link' &&
       expandedState.id === linkId
     ) {
-      setExpandedState({ type: null, id: null })
-      setIsPanelOpen(false)
+      // Close pulse nodes but keep resonance links visible
+      // Find the parent resonance for this link
+      const link = resonanceLinks.find((l) => l.id === linkId)
+      if (link) {
+        setExpandedState({ type: 'field-resonance', id: link.resonanceId })
+        setIsPanelOpen(true)
+      }
     } else {
       setExpandedState({ type: 'resonance-link', id: linkId })
       setIsPanelOpen(true)
