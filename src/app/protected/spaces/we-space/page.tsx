@@ -16,6 +16,17 @@ interface SpacePosition {
   size: BubbleSize
 }
 
+// Deterministic pseudo-random number in [0,1) derived from an input string and salt
+function seededUnitValue(input: string, salt: number) {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i) + salt
+    hash |= 0
+  }
+  const value = Math.abs(Math.sin(hash + salt) * 10000)
+  return value - Math.floor(value)
+}
+
 // Size variations for visual interest
 const sizeVariations = ['xl', 'lg', 'md', 'md', 'sm', 'lg', 'md', 'sm'] as const
 const shapeVariations = [
@@ -140,15 +151,18 @@ export default function WeSpacePage() {
     const radialDistance = Math.min(canvasWidth, canvasHeight) / 4
 
     const initialPositions: SpacePosition[] = weSpaces.map((space, idx) => {
-      const angle = (idx / Math.max(weSpaces.length, 1)) * Math.PI * 2
+      const randomBase = `${space.id}-${idx}`
+      const angle = seededUnitValue(randomBase, 7) * Math.PI * 2
+      const radius =
+        Math.pow(seededUnitValue(randomBase, 13), 0.6) * radialDistance
       const size = space.size as BubbleSize
-      const radius = radiusForSize[size]
+      const bubbleRadius = radiusForSize[size]
 
       return {
         spaceId: space.id,
-        x: Math.cos(angle) * radialDistance + centerX,
-        y: Math.sin(angle) * radialDistance + centerY,
-        radius,
+        x: Math.cos(angle) * radius + centerX,
+        y: Math.sin(angle) * radius + centerY,
+        radius: bubbleRadius,
         size,
       }
     })

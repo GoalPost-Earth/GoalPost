@@ -35,6 +35,17 @@ const ANIMATION_ORDER: Array<
 
 const PULSE_NODE_RADIUS = 28 // Pixel radius for collision detection
 
+// Deterministic pseudo-random number in [0,1) derived from an input string and salt
+function seededUnitValue(input: string, salt: number) {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i) + salt
+    hash |= 0
+  }
+  const value = Math.abs(Math.sin(hash + salt) * 10000)
+  return value - Math.floor(value)
+}
+
 // Helper: Clamp position within canvas bounds
 function clampPosition(
   x: number,
@@ -150,16 +161,23 @@ function FieldDetailPage() {
       // Matches GenericPulseCanvas with canvasScale=5
       const centerX = canvasSize.width / 2
       const centerY = canvasSize.height / 2
-      const radialDistance = Math.min(canvasSize.width, canvasSize.height) / 4
+      const maxRadius = Math.min(canvasSize.width, canvasSize.height) / 3
 
       const positions: PulsePosition[] = pulseData.map((pulse, idx) => {
-        const angle = (idx / Math.max(pulseData.length, 1)) * Math.PI * 2
+        const randomBase = `${pulse.id}-${idx}`
+        const angle = seededUnitValue(randomBase, 7) * Math.PI * 2
+        const radius =
+          Math.pow(seededUnitValue(randomBase, 13), 0.6) * maxRadius
+        const jitterX =
+          (seededUnitValue(randomBase, 23) - 0.5) * PULSE_NODE_RADIUS
+        const jitterY =
+          (seededUnitValue(randomBase, 29) - 0.5) * PULSE_NODE_RADIUS
         const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
 
         return {
           pulseId: pulse.id,
-          x: Math.cos(angle) * radialDistance + centerX,
-          y: Math.sin(angle) * radialDistance + centerY,
+          x: Math.cos(angle) * radius + centerX + jitterX,
+          y: Math.sin(angle) * radius + centerY + jitterY,
           icon: pulseTypeIcons[pulse.type],
           label:
             pulse.content.substring(0, 50) +
@@ -229,11 +247,7 @@ function FieldDetailPage() {
           p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
         )
         // Apply collision resolution
-        return resolveCollisions(
-          updated,
-          canvasSize.width,
-          canvasSize.height
-        )
+        return resolveCollisions(updated, canvasSize.width, canvasSize.height)
       })
     },
     [canvasSize]
@@ -394,7 +408,9 @@ function FieldDetailPage() {
               animation={pos.animation}
               canvasPosition={{ x: pos.x, y: pos.y }}
               scale={currentScale}
-              onPositionChange={(x, y) => handlePulsePositionChange(pos.pulseId, x, y)}
+              onPositionChange={(x, y) =>
+                handlePulsePositionChange(pos.pulseId, x, y)
+              }
               onClick={() => {
                 setIsPulsePanelOpen(true)
                 fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
