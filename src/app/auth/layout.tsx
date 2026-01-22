@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 import { SplashScreenWrapper } from '@/components/screens/SplashScreenWrapper'
 
 export default function AuthLayout({

@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { UserDataProvider } from '@/app/contexts'
