@@ -15,6 +15,9 @@ import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
 import { distance } from '@/lib/collision-detection'
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 // ============================================================================
 // Type Definitions
 // ============================================================================

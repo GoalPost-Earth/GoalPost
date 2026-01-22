@@ -8,6 +8,9 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useApp } from '@/app/contexts'
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 const signupSchema = z
   .object({
     firstName: z.string().optional(),
