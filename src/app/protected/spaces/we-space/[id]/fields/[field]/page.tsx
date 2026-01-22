@@ -1,14 +1,26 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useLazyQuery } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
-import { PulseNode } from '@/components/ui/pulse-node'
+import type { NodeType } from '@/components/ui/pulse-node'
+import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
+import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
-import { AIChatButton } from '@/components/ui/ai-chat-button'
-import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
-import { cn } from '@/lib/utils'
-import { useApp } from '@/app/contexts'
+import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
+import { useApp } from '@/app/contexts/AppContext'
+
+interface PulsePosition {
+  pulseId: string
+  x: number
+  y: number
+  icon: string
+  label: string
+  type: NodeType
+  animation: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
+}
 
 // Icon mappings for pulse types
 const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
@@ -17,59 +29,168 @@ const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
   story: 'auto_stories',
 }
 
-const POSITION_ORDER: Array<
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right'
-  | 'top-center'
-  | 'right-center'
-> = [
-  'top-left',
-  'bottom-left',
-  'top-right',
-  'bottom-right',
-  'top-center',
-  'right-center',
-]
-
 const ANIMATION_ORDER: Array<
   'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
-> = [
-  'float',
-  'float-delayed',
-  'float-random',
-  'pulse-slow',
-  'float',
-  'float-delayed',
-]
+> = ['float', 'float-delayed', 'float-random', 'pulse-slow']
+
+const PULSE_NODE_RADIUS = 28 // Pixel radius for collision detection
+
+// Deterministic pseudo-random number in [0,1) derived from an input string and salt
+function seededUnitValue(input: string, salt: number) {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i) + salt
+    hash |= 0
+  }
+  const value = Math.abs(Math.sin(hash + salt) * 10000)
+  return value - Math.floor(value)
+}
+
+// Helper: Clamp position within canvas bounds
+function clampPosition(
+  x: number,
+  y: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  nodeRadius: number = PULSE_NODE_RADIUS
+): [number, number] {
+  const minX = nodeRadius
+  const maxX = canvasWidth - nodeRadius
+  const minY = nodeRadius
+  const maxY = canvasHeight - nodeRadius
+
+  return [Math.max(minX, Math.min(maxX, x)), Math.max(minY, Math.min(maxY, y))]
+}
+
+// Helper: Resolve collisions between pulse nodes with iterative separation
+function resolveCollisions(
+  positions: PulsePosition[],
+  canvasWidth: number = 6000,
+  canvasHeight: number = 6000,
+  iterations: number = 6
+): PulsePosition[] {
+  const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
+  const minDistance = PULSE_NODE_RADIUS * 2 // 56px separation
+  let collisionsFound = false
+
+  for (let iter = 0; iter < iterations; iter++) {
+    collisionsFound = false
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const dx = result[j].x - result[i].x
+        const dy = result[j].y - result[i].y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minDistance && distance > 0.1) {
+          collisionsFound = true
+          const angle = Math.atan2(dy, dx)
+          const overlap = minDistance - distance
+          const pushDistance = overlap / 2 + 1 // Increased buffer for better separation
+
+          result[i].x -= Math.cos(angle) * pushDistance
+          result[i].y -= Math.sin(angle) * pushDistance
+          result[j].x += Math.cos(angle) * pushDistance
+          result[j].y += Math.sin(angle) * pushDistance
+        }
+      }
+    }
+    // If no collisions found, we can exit early
+    if (!collisionsFound && iter > 0) break
+  }
+
+  // Clamp all positions to canvas bounds
+  return result.map((pos) => {
+    const [clampedX, clampedY] = clampPosition(
+      pos.x,
+      pos.y,
+      canvasWidth,
+      canvasHeight
+    )
+    return { ...pos, x: clampedX, y: clampedY }
+  })
+}
 
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [pulses, setPulses] = useState<
-    Array<{
-      icon: string
-      label: string
-      type: 'goal' | 'resource' | 'story'
-      position: string
-      animation: string
-    }>
-  >([])
+  const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
+  const [currentScale, setCurrentScale] = useState(1)
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
+  const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
 
   const params = useParams()
   const fieldId = params?.field as string
   const { user } = useApp()
 
+  const [
+    fetchPulseDetails,
+    { data: pulseDetailsData, loading: pulseDetailsLoading },
+  ] = useLazyQuery(GET_PULSE_DETAILS)
+
   // Redirect if no field ID
   if (!fieldId) {
     console.error('❌ No field ID in URL')
   }
+
+  // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
+  useEffect(() => {
+    const updateCanvas = () =>
+      setCanvasSize({
+        width: (window.innerWidth || 1200) * 5,
+        height: (window.innerHeight || 1200) * 5,
+      })
+
+    updateCanvas()
+    window.addEventListener('resize', updateCanvas)
+    return () => window.removeEventListener('resize', updateCanvas)
+  }, [])
+
+  // Compute positions for pulse nodes
+  const computePulsePositions = useCallback(
+    (
+      pulseData: Array<{
+        id: string
+        content: string
+        type: 'goal' | 'resource' | 'story'
+      }>
+    ) => {
+      // Matches GenericPulseCanvas with canvasScale=5
+      const centerX = canvasSize.width / 2
+      const centerY = canvasSize.height / 2
+      const maxRadius = Math.min(canvasSize.width, canvasSize.height) / 3
+
+      const positions: PulsePosition[] = pulseData.map((pulse, idx) => {
+        const randomBase = `${pulse.id}-${idx}`
+        const angle = seededUnitValue(randomBase, 7) * Math.PI * 2
+        const radius =
+          Math.pow(seededUnitValue(randomBase, 13), 0.6) * maxRadius
+        const jitterX =
+          (seededUnitValue(randomBase, 23) - 0.5) * PULSE_NODE_RADIUS
+        const jitterY =
+          (seededUnitValue(randomBase, 29) - 0.5) * PULSE_NODE_RADIUS
+        const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
+
+        return {
+          pulseId: pulse.id,
+          x: Math.cos(angle) * radius + centerX + jitterX,
+          y: Math.sin(angle) * radius + centerY + jitterY,
+          icon: pulseTypeIcons[pulse.type],
+          label:
+            pulse.content.substring(0, 50) +
+            (pulse.content.length > 50 ? '...' : ''),
+          type: pulse.type,
+          animation,
+        }
+      })
+      return positions
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvasSize]
+  )
 
   const fetchPulses = useCallback(async () => {
     try {
@@ -85,36 +206,24 @@ function FieldDetailPage() {
       const data = await response.json()
 
       if (data.success && data.pulses && data.pulses.length > 0) {
-        const pulseNodes = data.pulses.map(
-          (
-            pulse: {
-              content: string
-              type: 'goal' | 'resource' | 'story'
-            },
-            idx: number
-          ) => ({
-            icon: pulseTypeIcons[pulse.type],
-            label:
-              pulse.content.substring(0, 50) +
-              (pulse.content.length > 50 ? '...' : ''),
-            type: pulse.type,
-            position: POSITION_ORDER[idx % POSITION_ORDER.length],
-            animation: ANIMATION_ORDER[idx % ANIMATION_ORDER.length],
-          })
+        const positions = computePulsePositions(data.pulses)
+        setPulsePositions(
+          resolveCollisions(positions, canvasSize.width, canvasSize.height)
         )
-        setPulses(pulseNodes)
-        console.log(`✓ Loaded ${pulseNodes.length} pulses for field ${fieldId}`)
+        console.log(`✓ Loaded ${positions.length} pulses for field ${fieldId}`)
       } else {
-        setPulses([])
+        setPulsePositions([])
         console.log(`ℹ️ No pulses found for field ${fieldId}`)
       }
     } catch (error) {
       console.error('Error fetching pulses:', error)
-      setPulses([])
+      setPulsePositions([])
     } finally {
       setIsLoadingPulses(false)
     }
-  }, [fieldId])
+
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldId, computePulsePositions])
 
   useEffect(() => {
     fetchPulses()
@@ -124,14 +233,60 @@ function FieldDetailPage() {
     setIsMounted(true)
   }, [])
 
-  const positionMap: Record<string, string> = {
-    'top-left': 'top-[28%] left-[68%]',
-    'top-right': 'top-[35%] left-[32%]',
-    'bottom-left': 'top-[62%] left-[22%]',
-    'bottom-right': 'top-[75%] left-[72%]',
-    'top-center': 'top-[20%] left-[25%]',
-    'right-center': 'top-[45%] left-[82%]',
-  }
+  // Handle position changes with collision detection
+  const handlePulsePositionChange = useCallback(
+    (pulseId: string, x: number, y: number) => {
+      setPulsePositions((prev) => {
+        const [clampedX, clampedY] = clampPosition(
+          x,
+          y,
+          canvasSize.width,
+          canvasSize.height
+        )
+        const updated = prev.map((p) =>
+          p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
+        )
+        // Apply collision resolution
+        return resolveCollisions(updated, canvasSize.width, canvasSize.height)
+      })
+    },
+    [canvasSize]
+  )
+
+  const pulseDetails: PulseDetails | null = useMemo(() => {
+    const goal = pulseDetailsData?.goalPulses?.[0]
+    const resource = pulseDetailsData?.resourcePulses?.[0]
+    const story = pulseDetailsData?.storyPulses?.[0]
+    const entry = goal ?? resource ?? story
+
+    if (!entry) return null
+
+    const type = goal ? 'goal' : resource ? 'resource' : 'story'
+
+    return {
+      id: entry.id,
+      type,
+      content: entry.content ?? '',
+      createdAt: entry.createdAt ?? null,
+      intensity: entry.intensity ?? null,
+      status: goal?.status ?? null,
+      horizon: goal?.horizon ?? null,
+      resourceType: resource?.resourceType ?? null,
+      initiators:
+        entry.initiatedBy?.map((initiator) => ({
+          id: initiator.id ?? initiator.name ?? 'unknown',
+          name: initiator.name ?? 'Unknown',
+          email:
+            'email' in initiator ? (initiator.email ?? undefined) : undefined,
+          kind: initiator.__typename === 'Community' ? 'community' : 'person',
+        })) ?? [],
+      contexts:
+        entry.context?.map((ctx) => ({
+          id: ctx.id,
+          title: ctx.title ?? 'Untitled Context',
+        })) ?? [],
+    }
+  }, [pulseDetailsData])
 
   const handleOfferingSubmit = async (
     value: string,
@@ -220,147 +375,91 @@ function FieldDetailPage() {
   }
 
   return (
-    <main className="relative w-full h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
-      {/* Radial gradient overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.05),transparent_70%)]" />
-
-      {/* Dot grid pattern */}
-      <div
-        className="absolute inset-0 opacity-40 dark:opacity-20"
-        style={{
-          backgroundImage:
-            'radial-gradient(var(--gp-ink-soft) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }}
-      />
-
-      {/* Pulse dots (background animation) */}
-      <div className="absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-pulse" />
-      <div
-        className="absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/30 dark:bg-white/10 rounded-full"
-        style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
-      />
-      <div className="absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-float" />
-
-      {/* Content Container - Positioned below navbar with relative positioning */}
-      <div className="relative w-full h-full pt-24">
-        {/* Nodes Canvas */}
-        <div className="relative w-full h-full">
-          {isMounted && isLoadingPulses && (
-            <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-4">
-                <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
-                  hourglass_bottom
-                </span>
-                <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-                  Loading pulses...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isMounted && !isLoadingPulses && pulses.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-slate-600 dark:text-white/60 mb-2">
-                  No pulses yet
-                </p>
-                <p className="text-xs text-slate-500 dark:text-white/40">
-                  Create one with the button below
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isMounted &&
-            !isLoadingPulses &&
-            pulses.map((node, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  'absolute',
-                  positionMap[node.position] ||
-                    'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-                )}
+    <div className="relative">
+      <GenericPulseCanvas
+        canvasScale={5}
+        onScaleChange={setCurrentScale}
+        isLoading={isLoadingPulses}
+        isEmpty={pulsePositions.length === 0}
+        actionButton={
+          isMounted && (
+            <div className="group flex flex-col items-center gap-3">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass bg-white/50 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.2)] transition-all duration-500 ease-out border border-slate-200 dark:border-white/10 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/30 backdrop-blur-md group-hover:-translate-y-1"
               >
-                <PulseNode
-                  icon={node.icon}
-                  label={node.label}
-                  type={node.type}
-                  animation={
-                    node.animation as
-                      | 'float'
-                      | 'float-delayed'
-                      | 'float-random'
-                      | 'pulse-slow'
-                      | 'none'
-                  }
-                  onClick={() => console.log(`Clicked pulse: ${node.label}`)}
-                />
-              </div>
-            ))}
-        </div>
-
-        {/* Bottom Action Button */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 group flex flex-col items-center gap-3">
-          {isMounted && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass bg-white/50 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.2)] transition-all duration-500 ease-out border border-slate-200 dark:border-white/10 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/30 backdrop-blur-md group-hover:-translate-y-1"
-            >
-              <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-white group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
-                spa
-              </span>
-              <div className="absolute inset-0 rounded-full border border-slate-400/20 dark:border-white/15 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Offering Modal */}
-      <OfferingModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setSubmitError(null)
-          setSubmitSuccess(false)
-        }}
-        position="bottom"
+                <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-white group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
+                  spa
+                </span>
+                <div className="absolute inset-0 rounded-full border border-slate-400/20 dark:border-white/15 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
+            </div>
+          )
+        }
       >
-        <div className="w-full max-w-160">
-          {submitError && (
-            <div className="mb-4 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
-              {submitError}
-            </div>
-          )}
-          {submitSuccess && (
-            <div className="mb-4 p-4 rounded-xl bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
-              Pulse created successfully!
-            </div>
-          )}
-          <OfferingInput
-            onSubmit={(value, type, name) => {
-              handleOfferingSubmit(value, type, name)
-            }}
-            isLoading={isSubmitting}
-          />
-        </div>
-      </OfferingModal>
+        {isMounted &&
+          !isLoadingPulses &&
+          pulsePositions.map((pos) => (
+            <DraggablePulseNode
+              key={pos.pulseId}
+              icon={pos.icon}
+              label={pos.label}
+              type={pos.type}
+              animation={pos.animation}
+              canvasPosition={{ x: pos.x, y: pos.y }}
+              scale={currentScale}
+              onPositionChange={(x, y) =>
+                handlePulsePositionChange(pos.pulseId, x, y)
+              }
+              onClick={() => {
+                setIsPulsePanelOpen(true)
+                fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+              }}
+            />
+          ))}
+      </GenericPulseCanvas>
 
-      {/* AI Chat Components */}
-      {isMounted && (
-        <>
-          <AIChatButton
-            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
-            isOpen={isAIChatOpen}
-          />
-          <AIAssistantPanel
-            isOpen={isAIChatOpen}
-            onClose={() => setIsAIChatOpen(false)}
-          />
-        </>
-      )}
-    </main>
+      <PulsePanel
+        isOpen={isPulsePanelOpen}
+        isLoading={pulseDetailsLoading}
+        pulse={pulseDetails}
+        onClose={() => {
+          setIsPulsePanelOpen(false)
+        }}
+      />
+
+      {
+        /* Offering Modal */
+        <OfferingModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setSubmitError(null)
+            setSubmitSuccess(false)
+          }}
+          position="bottom"
+        >
+          <div className="w-full max-w-160">
+            {submitError && (
+              <div className="mb-4 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
+                {submitError}
+              </div>
+            )}
+            {submitSuccess && (
+              <div className="mb-4 p-4 rounded-xl bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
+                Pulse created successfully!
+              </div>
+            )}
+            <OfferingInput
+              onSubmit={(value: string, type: string, name: string) => {
+                handleOfferingSubmit(value, type, name)
+              }}
+              isLoading={isSubmitting}
+            />
+          </div>
+        </OfferingModal>
+      }
+    </div>
   )
 }
 

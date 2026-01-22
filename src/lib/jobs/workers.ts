@@ -3,8 +3,7 @@
  * Run this file separately: node src/lib/jobs/workers.ts
  */
 
-import { Worker, Job } from 'bullmq'
-import Redis from 'ioredis'
+import { Worker, Job, type ConnectionOptions } from 'bullmq'
 import {
   QUEUE_NAMES,
   PulseProcessingJobData,
@@ -15,12 +14,12 @@ import { generatePulseEmbeddings } from '../resonance/embeddings/pulse-embedder'
 import { enrichPersonFromPulses } from '../resonance/embeddings/person-enricher'
 import { discoverGlobalResonances } from '../resonance/discovery/pattern-detector'
 
-// Redis connection
-const redisConnection = new Redis({
+// Redis connection options (BullMQ manages the client internally)
+const redisConnection: ConnectionOptions = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   maxRetriesPerRequest: null,
-})
+}
 
 // Track last run timestamp for resonance discovery
 let lastResonanceDiscoveryRun: string | undefined
@@ -173,7 +172,6 @@ process.on('SIGINT', async () => {
   await pulseProcessingWorker.close()
   await resonanceDiscoveryWorker.close()
   await personEnrichmentWorker.close()
-  await redisConnection.quit()
   process.exit(0)
 })
 
