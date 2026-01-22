@@ -995,11 +995,19 @@ export default function ResonancePage() {
           isOpen={isPanelOpen}
           isLoading={false}
           onClose={() => setIsPanelOpen(false)}
-          resonance={{
-            id: expandedState.id,
-            label: 'Resonance Link Details',
-            description: 'Connection between two pulses',
-          }}
+          resonance={(() => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const link = (linksData?.resonanceLinks as any[])?.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (l: any) => l.id === expandedState.id
+            )
+            return {
+              id: expandedState.id,
+              label: 'Resonance Link Details',
+              description: 'Connection between two pulses',
+              strength: (link?.confidence || 0) * 100,
+            }
+          })()}
           links={
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (linksData?.resonanceLinks as any[])
