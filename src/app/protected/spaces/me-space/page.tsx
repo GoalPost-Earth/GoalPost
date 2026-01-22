@@ -25,6 +25,7 @@ export default function MeSpacePage() {
   const [error, setError] = useState('')
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
+  const [canvasSize, setCanvasSize] = useState({ width: 2400, height: 2400 })
   const [userMeSpaces, setUserMeSpaces] = useState<
     Array<{
       id: string
@@ -46,6 +47,78 @@ export default function MeSpacePage() {
     'circle',
   ]
 
+  // Track canvas size (matches GenericSpaceCanvas canvasScale=5)
+  useEffect(() => {
+    const updateCanvas = () =>
+      setCanvasSize({
+        width: (window.innerWidth || 1200) * 5,
+        height: (window.innerHeight || 1200) * 5,
+      })
+
+    updateCanvas()
+    window.addEventListener('resize', updateCanvas)
+    return () => window.removeEventListener('resize', updateCanvas)
+  }, [])
+
+  const clampPosition = useCallback(
+    (x: number, y: number, radius: number) => ({
+      x: Math.max(radius, Math.min(canvasSize.width - radius, x)),
+      y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
+    }),
+    [canvasSize.height, canvasSize.width]
+  )
+
+  const resolveCollisions = useCallback(
+    (positions: SpacePosition[]) => {
+      let updated = positions
+      const iterations = 6
+
+      for (let iter = 0; iter < iterations; iter++) {
+        let changed = false
+
+        for (let i = 0; i < updated.length; i++) {
+          for (let j = i + 1; j < updated.length; j++) {
+            const a = updated[i]
+            const b = updated[j]
+            const dx = b.x - a.x
+            const dy = b.y - a.y
+            const dist = Math.max(Math.hypot(dx, dy), 0.001)
+            const minDist = a.radius + b.radius
+
+            if (dist < minDist) {
+              const overlap = (minDist - dist + 1) / 2
+              const nx = dx / dist
+              const ny = dy / dist
+
+              const movedA = clampPosition(
+                a.x - nx * overlap,
+                a.y - ny * overlap,
+                a.radius
+              )
+              const movedB = clampPosition(
+                b.x + nx * overlap,
+                b.y + ny * overlap,
+                b.radius
+              )
+
+              updated = updated.map((p, idx) => {
+                if (idx === i) return { ...p, ...movedA }
+                if (idx === j) return { ...p, ...movedB }
+                return p
+              })
+              changed = true
+            }
+          }
+        }
+
+        if (!changed) break
+      }
+
+      return updated
+    },
+    [clampPosition]
+  )
+
   // Compute positions for space bubbles
   const computeSpacePositions = useCallback(() => {
     const radiusForSize: Record<BubbleSize, number> = {
@@ -55,9 +128,9 @@ export default function MeSpacePage() {
       xl: 220,
     }
 
-    // 2x canvas size (GenericCanvas with canvasScale={2})
-    const canvasWidth = (window.innerWidth || 1200) * 2
-    const canvasHeight = (window.innerHeight || 1200) * 2
+    // Matches GenericSpaceCanvas canvasScale={5}
+    const canvasWidth = canvasSize.width
+    const canvasHeight = canvasSize.height
     const centerX = canvasWidth / 2
     const centerY = canvasHeight / 2
     const radialDistance = Math.min(canvasWidth, canvasHeight) / 4
@@ -76,14 +149,14 @@ export default function MeSpacePage() {
       }
     })
     return initialPositions
-  }, [userMeSpaces])
+  }, [canvasSize.height, canvasSize.width, userMeSpaces])
 
   // Update positions when spaces change
   useEffect(() => {
     if (userMeSpaces.length > 0) {
-      setSpacePositions(computeSpacePositions())
+      setSpacePositions(resolveCollisions(computeSpacePositions()))
     }
-  }, [userMeSpaces, computeSpacePositions])
+  }, [userMeSpaces, computeSpacePositions, resolveCollisions])
 
   const fetchUserMeSpaces = useCallback(async () => {
     if (!user?.id) {
@@ -240,11 +313,15 @@ export default function MeSpacePage() {
               radius={pos.radius}
               scale={currentScale}
               onPositionChange={(x, y) =>
-                setSpacePositions((prev) =>
-                  prev.map((p) =>
-                    p.spaceId === pos.spaceId ? { ...p, x, y } : p
+                setSpacePositions((prev) => {
+                  const clamped = clampPosition(x, y, pos.radius)
+                  const updated = prev.map((p) =>
+                    p.spaceId === pos.spaceId
+                      ? { ...p, x: clamped.x, y: clamped.y }
+                      : p
                   )
-                )
+                  return resolveCollisions(updated)
+                })
               }
               onClick={() => handleSpaceClick(space.id)}
             />

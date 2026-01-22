@@ -40,6 +40,79 @@ export function FieldsCanvas({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
+  const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
+
+  // Track canvas size (5x viewport to match GenericCanvas canvasScale=5)
+  useEffect(() => {
+    const updateCanvas = () =>
+      setCanvasSize({
+        width: (window.innerWidth || 1200) * 5,
+        height: (window.innerHeight || 1200) * 5,
+      })
+
+    updateCanvas()
+    window.addEventListener('resize', updateCanvas)
+    return () => window.removeEventListener('resize', updateCanvas)
+  }, [])
+
+  const clampPosition = useCallback(
+    (x: number, y: number, radius: number) => ({
+      x: Math.max(radius, Math.min(canvasSize.width - radius, x)),
+      y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
+    }),
+    [canvasSize.height, canvasSize.width]
+  )
+
+  const resolveCollisions = useCallback(
+    (positions: FieldPosition[]) => {
+      let updated = positions
+      const iterations = 6
+
+      for (let iter = 0; iter < iterations; iter++) {
+        let changed = false
+
+        for (let i = 0; i < updated.length; i++) {
+          for (let j = i + 1; j < updated.length; j++) {
+            const a = updated[i]
+            const b = updated[j]
+            const dx = b.x - a.x
+            const dy = b.y - a.y
+            const dist = Math.max(Math.hypot(dx, dy), 0.001)
+            const minDist = a.radius + b.radius
+
+            if (dist < minDist) {
+              const overlap = (minDist - dist + 1) / 2
+              const nx = dx / dist
+              const ny = dy / dist
+
+              const movedA = clampPosition(
+                a.x - nx * overlap,
+                a.y - ny * overlap,
+                a.radius
+              )
+              const movedB = clampPosition(
+                b.x + nx * overlap,
+                b.y + ny * overlap,
+                b.radius
+              )
+
+              updated = updated.map((p, idx) => {
+                if (idx === i) return { ...p, ...movedA }
+                if (idx === j) return { ...p, ...movedB }
+                return p
+              })
+              changed = true
+            }
+          }
+        }
+
+        if (!changed) break
+      }
+
+      return updated
+    },
+    [clampPosition]
+  )
 
   // Compute positions based on fields
   const computeFieldPositions = useCallback(() => {
@@ -64,9 +137,9 @@ export function FieldsCanvas({
       xl: 220,
     }
 
-    // 3x canvas size (GenericCanvas default)
-    const canvasWidth = (window.innerWidth || 1200) * 3
-    const canvasHeight = (window.innerHeight || 1200) * 3
+    // 5x canvas size (GenericCanvas with canvasScale=5)
+    const canvasWidth = canvasSize.width
+    const canvasHeight = canvasSize.height
     const centerX = canvasWidth / 2
     const centerY = canvasHeight / 2
     const radialDistance = Math.min(canvasWidth, canvasHeight) / 4
@@ -85,12 +158,14 @@ export function FieldsCanvas({
       }
     })
     return initialPositions
-  }, [fields])
+  }, [canvasSize.height, canvasSize.width, fields])
 
   // Update positions when fields change
   useEffect(() => {
-    setFieldPositions(computeFieldPositions())
-  }, [fields, computeFieldPositions])
+    if (fields.length > 0) {
+      setFieldPositions(resolveCollisions(computeFieldPositions()))
+    }
+  }, [fields, computeFieldPositions, resolveCollisions])
 
   const handleCreateField = async (description: string, name?: string) => {
     try {
@@ -104,6 +179,7 @@ export function FieldsCanvas({
   return (
     <>
       <GenericCanvas
+        canvasScale={5}
         className={className}
         onScaleChange={setCurrentScale}
         actionButton={
@@ -158,11 +234,15 @@ export function FieldsCanvas({
                   radius={pos.radius}
                   scale={currentScale}
                   onPositionChange={(x, y) =>
-                    setFieldPositions((prev) =>
-                      prev.map((p) =>
-                        p.fieldId === pos.fieldId ? { ...p, x, y } : p
+                    setFieldPositions((prev) => {
+                      const clamped = clampPosition(x, y, pos.radius)
+                      const updated = prev.map((p) =>
+                        p.fieldId === pos.fieldId
+                          ? { ...p, x: clamped.x, y: clamped.y }
+                          : p
                       )
-                    )
+                      return resolveCollisions(updated)
+                    })
                   }
                   onClick={() => onFieldClick?.(field.id || field.title || '')}
                   className="transition-opacity duration-200"

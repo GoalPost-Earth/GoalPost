@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 export interface GenericPulseCanvasProps {
   children?: ReactNode
   className?: string
-  canvasScale?: 3 | 2 | 1
+  canvasScale?: 5 | 4 | 3 | 2 | 1
   minZoom?: number
   maxZoom?: number
   enablePanning?: boolean
@@ -26,7 +26,7 @@ export interface GenericPulseCanvasProps {
 export function GenericPulseCanvas({
   children,
   className,
-  canvasScale = 2,
+  canvasScale = 5,
   minZoom = 0.5,
   maxZoom = 3,
   enablePanning = true,

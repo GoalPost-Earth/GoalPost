@@ -33,6 +33,72 @@ const ANIMATION_ORDER: Array<
   'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
 > = ['float', 'float-delayed', 'float-random', 'pulse-slow']
 
+const PULSE_NODE_RADIUS = 28 // Pixel radius for collision detection
+
+// Helper: Clamp position within canvas bounds
+function clampPosition(
+  x: number,
+  y: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  nodeRadius: number = PULSE_NODE_RADIUS
+): [number, number] {
+  const minX = nodeRadius
+  const maxX = canvasWidth - nodeRadius
+  const minY = nodeRadius
+  const maxY = canvasHeight - nodeRadius
+
+  return [Math.max(minX, Math.min(maxX, x)), Math.max(minY, Math.min(maxY, y))]
+}
+
+// Helper: Resolve collisions between pulse nodes with iterative separation
+function resolveCollisions(
+  positions: PulsePosition[],
+  canvasWidth: number = 6000,
+  canvasHeight: number = 6000,
+  iterations: number = 6
+): PulsePosition[] {
+  const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
+  const minDistance = PULSE_NODE_RADIUS * 2 // 56px separation
+  let collisionsFound = false
+
+  for (let iter = 0; iter < iterations; iter++) {
+    collisionsFound = false
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const dx = result[j].x - result[i].x
+        const dy = result[j].y - result[i].y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minDistance && distance > 0.1) {
+          collisionsFound = true
+          const angle = Math.atan2(dy, dx)
+          const overlap = minDistance - distance
+          const pushDistance = overlap / 2 + 1 // Increased buffer for better separation
+
+          result[i].x -= Math.cos(angle) * pushDistance
+          result[i].y -= Math.sin(angle) * pushDistance
+          result[j].x += Math.cos(angle) * pushDistance
+          result[j].y += Math.sin(angle) * pushDistance
+        }
+      }
+    }
+    // If no collisions found, we can exit early
+    if (!collisionsFound && iter > 0) break
+  }
+
+  // Clamp all positions to canvas bounds
+  return result.map((pos) => {
+    const [clampedX, clampedY] = clampPosition(
+      pos.x,
+      pos.y,
+      canvasWidth,
+      canvasHeight
+    )
+    return { ...pos, x: clampedX, y: clampedY }
+  })
+}
+
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -43,6 +109,7 @@ function FieldDetailPage() {
   const [currentScale, setCurrentScale] = useState(1)
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
 
   const params = useParams()
   const fieldId = params?.field as string
@@ -58,6 +125,19 @@ function FieldDetailPage() {
     console.error('❌ No field ID in URL')
   }
 
+  // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
+  useEffect(() => {
+    const updateCanvas = () =>
+      setCanvasSize({
+        width: (window.innerWidth || 1200) * 5,
+        height: (window.innerHeight || 1200) * 5,
+      })
+
+    updateCanvas()
+    window.addEventListener('resize', updateCanvas)
+    return () => window.removeEventListener('resize', updateCanvas)
+  }, [])
+
   // Compute positions for pulse nodes
   const computePulsePositions = useCallback(
     (
@@ -67,12 +147,10 @@ function FieldDetailPage() {
         type: 'goal' | 'resource' | 'story'
       }>
     ) => {
-      // 2x canvas size (GenericPulseCanvas with canvasScale={2})
-      const canvasWidth = (window.innerWidth || 1200) * 2
-      const canvasHeight = (window.innerHeight || 1200) * 2
-      const centerX = canvasWidth / 2
-      const centerY = canvasHeight / 2
-      const radialDistance = Math.min(canvasWidth, canvasHeight) / 4
+      // Matches GenericPulseCanvas with canvasScale=5
+      const centerX = canvasSize.width / 2
+      const centerY = canvasSize.height / 2
+      const radialDistance = Math.min(canvasSize.width, canvasSize.height) / 4
 
       const positions: PulsePosition[] = pulseData.map((pulse, idx) => {
         const angle = (idx / Math.max(pulseData.length, 1)) * Math.PI * 2
@@ -92,7 +170,8 @@ function FieldDetailPage() {
       })
       return positions
     },
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvasSize]
   )
 
   const fetchPulses = useCallback(async () => {
@@ -110,7 +189,9 @@ function FieldDetailPage() {
 
       if (data.success && data.pulses && data.pulses.length > 0) {
         const positions = computePulsePositions(data.pulses)
-        setPulsePositions(positions)
+        setPulsePositions(
+          resolveCollisions(positions, canvasSize.width, canvasSize.height)
+        )
         console.log(`✓ Loaded ${positions.length} pulses for field ${fieldId}`)
       } else {
         setPulsePositions([])
@@ -122,6 +203,8 @@ function FieldDetailPage() {
     } finally {
       setIsLoadingPulses(false)
     }
+
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldId, computePulsePositions])
 
   useEffect(() => {
@@ -131,6 +214,30 @@ function FieldDetailPage() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  // Handle position changes with collision detection
+  const handlePulsePositionChange = useCallback(
+    (pulseId: string, x: number, y: number) => {
+      setPulsePositions((prev) => {
+        const [clampedX, clampedY] = clampPosition(
+          x,
+          y,
+          canvasSize.width,
+          canvasSize.height
+        )
+        const updated = prev.map((p) =>
+          p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
+        )
+        // Apply collision resolution
+        return resolveCollisions(
+          updated,
+          canvasSize.width,
+          canvasSize.height
+        )
+      })
+    },
+    [canvasSize]
+  )
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
     const goal = pulseDetailsData?.goalPulses?.[0]
@@ -256,7 +363,7 @@ function FieldDetailPage() {
   return (
     <div className="relative">
       <GenericPulseCanvas
-        canvasScale={2}
+        canvasScale={5}
         onScaleChange={setCurrentScale}
         isLoading={isLoadingPulses}
         isEmpty={pulsePositions.length === 0}
@@ -287,13 +394,7 @@ function FieldDetailPage() {
               animation={pos.animation}
               canvasPosition={{ x: pos.x, y: pos.y }}
               scale={currentScale}
-              onPositionChange={(x, y) =>
-                setPulsePositions((prev) =>
-                  prev.map((p) =>
-                    p.pulseId === pos.pulseId ? { ...p, x, y } : p
-                  )
-                )
-              }
+              onPositionChange={(x, y) => handlePulsePositionChange(pos.pulseId, x, y)}
               onClick={() => {
                 setIsPulsePanelOpen(true)
                 fetchPulseDetails({ variables: { pulseId: pos.pulseId } })

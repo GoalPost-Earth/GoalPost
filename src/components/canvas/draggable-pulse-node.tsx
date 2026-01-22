@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { gsap } from 'gsap'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +26,13 @@ export function DraggablePulseNode({
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
+  const animationRef = useRef<gsap.core.Tween | null>(null)
+  const floatingRef = useRef<gsap.core.Tween | null>(null)
+  const displayPositionRef = useRef({
+    x: canvasPosition.x,
+    y: canvasPosition.y,
+  })
+  const [displayPosition, setDisplayPosition] = useState(canvasPosition)
   const [dragContext, setDragContext] = useState<null | {
     startMouseX: number
     startMouseY: number
@@ -35,6 +43,10 @@ export function DraggablePulseNode({
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    // Stop floating animation when dragging starts
+    if (floatingRef.current) {
+      floatingRef.current.kill()
+    }
     hasDraggedRef.current = false
     setDragContext({
       startMouseX: e.clientX,
@@ -57,15 +69,21 @@ export function DraggablePulseNode({
       ) {
         hasDraggedRef.current = true
       }
-      onPositionChange?.(
-        dragContext.startX + deltaX / scale,
-        dragContext.startY + deltaY / scale
-      )
+      const nextX = dragContext.startX + deltaX / scale
+      const nextY = dragContext.startY + deltaY / scale
+
+      // Update visual position immediately while dragging
+      displayPositionRef.current = { x: nextX, y: nextY }
+      setDisplayPosition(displayPositionRef.current)
+
+      onPositionChange?.(nextX, nextY)
     }
 
     const handleMouseUp = () => {
       setIsLocalDragging(false)
       setDragContext(null)
+      // Restart floating animation after drag ends
+      startFloatingAnimation()
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -86,6 +104,60 @@ export function DraggablePulseNode({
     onClick?.()
   }
 
+  // Start or restart floating animation
+  const startFloatingAnimation = () => {
+    if (floatingRef.current) {
+      floatingRef.current.kill()
+    }
+    floatingRef.current = gsap.to(displayPositionRef.current, {
+      y: displayPositionRef.current.y - 6,
+      duration: 2.5,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      overwrite: false,
+      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+    })
+  }
+
+  // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
+  useEffect(() => {
+    if (isLocalDragging) return
+
+    const { x, y } = canvasPosition
+    const current = displayPositionRef.current
+
+    if (Math.abs(current.x - x) < 0.1 && Math.abs(current.y - y) < 0.1) {
+      return
+    }
+
+    if (animationRef.current) {
+      animationRef.current.kill()
+    }
+
+    animationRef.current = gsap.to(displayPositionRef.current, {
+      x,
+      y,
+      duration: 0.45,
+      ease: 'elastic.out(0.42, 0.8)',
+      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+    })
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasPosition.x, canvasPosition.y, isLocalDragging])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.kill()
+      }
+      if (floatingRef.current) {
+        floatingRef.current.kill()
+      }
+    }
+  }, [])
+
   return (
     <div
       ref={nodeRef}
@@ -98,7 +170,7 @@ export function DraggablePulseNode({
       style={{
         top: 0,
         left: 0,
-        transform: `translate(${canvasPosition.x}px, ${canvasPosition.y}px) translate(-50%, -50%)`,
+        transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.8 : 1,
       }}
       onMouseDown={handleMouseDown}

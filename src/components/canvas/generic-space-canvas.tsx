@@ -31,7 +31,7 @@ export function GenericSpaceCanvas({
 }: GenericSpaceCanvasProps) {
   return (
     <GenericCanvas
-      canvasScale={2}
+      canvasScale={5}
       minZoom={minZoom}
       maxZoom={maxZoom}
       enablePanning={enablePanning}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { gsap } from 'gsap'
 import {
   EntityBubble,
   type EntityBubbleProps,
@@ -27,6 +28,12 @@ export function DraggableEntityBubble({
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
+  const animationRef = useRef<gsap.core.Tween | null>(null)
+  const displayPositionRef = useRef({
+    x: canvasPosition.x,
+    y: canvasPosition.y,
+  })
+  const [displayPosition, setDisplayPosition] = useState(canvasPosition)
   const [dragContext, setDragContext] = useState<null | {
     startMouseX: number
     startMouseY: number
@@ -59,10 +66,15 @@ export function DraggableEntityBubble({
       ) {
         hasDraggedRef.current = true
       }
-      onPositionChange?.(
-        dragContext.startX + deltaX / scale,
-        dragContext.startY + deltaY / scale
-      )
+
+      const nextX = dragContext.startX + deltaX / scale
+      const nextY = dragContext.startY + deltaY / scale
+
+      // Update visual position immediately while dragging
+      displayPositionRef.current = { x: nextX, y: nextY }
+      setDisplayPosition(displayPositionRef.current)
+
+      onPositionChange?.(nextX, nextY)
     }
 
     const handleMouseUp = () => {
@@ -78,6 +90,35 @@ export function DraggableEntityBubble({
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isLocalDragging, dragContext, onPositionChange, scale])
+
+  // Animate to externally imposed positions with a soft bounce when not dragging
+  useEffect(() => {
+    if (isLocalDragging) return
+
+    const { x, y } = canvasPosition
+    const current = displayPositionRef.current
+
+    if (Math.abs(current.x - x) < 0.1 && Math.abs(current.y - y) < 0.1) {
+      return
+    }
+
+    if (animationRef.current) {
+      animationRef.current.kill()
+    }
+
+    animationRef.current = gsap.to(displayPositionRef.current, {
+      x,
+      y,
+      duration: 0.45,
+      ease: 'elastic.out(0.42, 0.8)',
+      overwrite: true,
+      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+    })
+
+    return () => {
+      animationRef.current?.kill()
+    }
+  }, [canvasPosition, isLocalDragging])
 
   const handleClick = () => {
     if (hasDraggedRef.current) {
@@ -102,7 +143,7 @@ export function DraggableEntityBubble({
         left: 0,
         width: radius * 2,
         height: radius * 2,
-        transform: `translate(${canvasPosition.x}px, ${canvasPosition.y}px) translate(-50%, -50%)`,
+        transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.8 : 1,
       }}
       onMouseDown={handleMouseDown}
