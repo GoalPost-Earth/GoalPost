@@ -257,6 +257,8 @@ export default function WeSpacePage() {
     const space = weSpaces.find((s) => s.id === spaceId)
     if (space) {
       setPageTitle(space.title)
+      // Persist space name in localStorage to avoid API call on page reload
+      localStorage.setItem(`space_${spaceId}`, space.title)
     }
     router.push(`/protected/spaces/we-space/${spaceId}`)
   }

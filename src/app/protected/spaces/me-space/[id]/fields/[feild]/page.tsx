@@ -230,6 +230,13 @@ function FieldDetailPage() {
   useEffect(() => {
     if (!fieldId) return
 
+    // Try to get field name from localStorage first (persisted from navigation)
+    const cachedFieldName = localStorage.getItem(`field_${fieldId}`)
+    if (cachedFieldName) {
+      setPageTitle(cachedFieldName)
+      return
+    }
+
     const fetchFieldName = async () => {
       try {
         const meSpaceId = params?.id as string
@@ -246,6 +253,8 @@ function FieldDetailPage() {
           const field = data.fields?.find((f: any) => f.id === fieldId)
           if (field) {
             setPageTitle(field.title)
+            // Cache the field name for future reloads
+            localStorage.setItem(`field_${fieldId}`, field.title)
           }
         }
       } catch (err) {

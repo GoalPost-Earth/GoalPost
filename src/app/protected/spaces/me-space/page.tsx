@@ -238,6 +238,8 @@ export default function MeSpacePage() {
     const space = userMeSpaces.find((s) => s.id === spaceId)
     if (space) {
       setPageTitle(space.name)
+      // Persist space name in localStorage to avoid API call on page reload
+      localStorage.setItem(`space_${spaceId}`, space.name)
     }
     router.push(`/protected/spaces/me-space/${spaceId}`)
   }

@@ -44,6 +44,16 @@ export default function MeSpaceFieldsPage() {
   const [error, setError] = useState<string | null>(null)
   const { createField, loading: isCreating } = useCreateField()
 
+  // Restore space name from localStorage on mount
+  useEffect(() => {
+    if (meSpaceId) {
+      const cachedSpaceName = localStorage.getItem(`space_${meSpaceId}`)
+      if (cachedSpaceName) {
+        setPageTitle(cachedSpaceName)
+      }
+    }
+  }, [meSpaceId, setPageTitle])
+
   const fetchFields = useCallback(async () => {
     if (!meSpaceId) return
     try {
@@ -75,6 +85,8 @@ export default function MeSpaceFieldsPage() {
     const field = fields.find((f) => f.id === fieldId)
     if (field) {
       setPageTitle(field.title)
+      // Persist field name in localStorage to avoid API call on page reload
+      localStorage.setItem(`field_${fieldId}`, field.title)
     }
     router.push(`/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`)
   }

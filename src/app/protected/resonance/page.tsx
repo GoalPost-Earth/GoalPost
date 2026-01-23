@@ -14,6 +14,7 @@ import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
 import { distance } from '@/lib/collision-detection'
+import { usePageContext } from '@/app/contexts'
 
 // ============================================================================
 // Type Definitions
@@ -88,6 +89,7 @@ const LINK_NODE_RADIUS = 50
 // ============================================================================
 
 export default function ResonancePage() {
+  const { setPageTitle } = usePageContext()
   const [expandedState, setExpandedState] = useState<ExpandedState>({
     type: null,
     id: null,
@@ -105,6 +107,11 @@ export default function ResonancePage() {
   const [selectedPulse, setSelectedPulse] = useState<PulseDetails | null>(null)
   const [currentScale, setCurrentScale] = useState(1)
   const [canvasSize, setCanvasSize] = useState({ width: 3600, height: 3600 })
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Resonance')
+  }, [setPageTitle])
 
   const clampPosition = useCallback(
     (x: number, y: number, radius: number) => ({
