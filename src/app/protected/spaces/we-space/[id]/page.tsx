@@ -42,7 +42,6 @@ export default function WeSpaceFieldsPage() {
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [spaceName, setSpaceName] = useState<string>('')
   const { createField, loading: isCreating } = useCreateField()
 
   const fetchFields = useCallback(async () => {

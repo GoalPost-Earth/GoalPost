@@ -32,6 +32,7 @@ export function GenericCanvas({
   isLoading = false,
 }: GenericCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformRef = useRef<any>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })

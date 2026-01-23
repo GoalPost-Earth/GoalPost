@@ -52,7 +52,6 @@ export function FieldsCanvas({
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
   const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
-  const canvasRef = useRef<any>(null)
 
   // Track canvas size (5x viewport to match GenericCanvas canvasScale=5)
   useEffect(() => {

@@ -246,6 +246,7 @@ function FieldDetailPage() {
         })
         const data = await res.json()
         if (res.ok) {
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
           const field = data.fields?.find((f: any) => f.id === fieldId)
           if (field) {
             setPageTitle(field.title)
