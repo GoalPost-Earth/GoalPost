@@ -29,17 +29,20 @@ const typeConfig: Record<
 > = {
   goal: {
     color: 'text-gp-goal',
-    shadowColor: 'rgba(56,189,248,0.3)',
+    shadowColor:
+      'color-mix(in srgb, var(--gp-goal, var(--gp-primary)) 55%, transparent)',
     bgClass: 'bg-white/70 dark:bg-black/60',
   },
   resource: {
     color: 'text-gp-resource',
-    shadowColor: 'rgba(74,222,128,0.3)',
+    shadowColor:
+      'color-mix(in srgb, var(--gp-resource, var(--gp-primary)) 55%, transparent)',
     bgClass: 'bg-white/70 dark:bg-[#1a1a1a]/60',
   },
   story: {
     color: 'text-gp-story',
-    shadowColor: 'rgba(192,132,252,0.3)',
+    shadowColor:
+      'color-mix(in srgb, var(--gp-story, var(--gp-primary)) 55%, transparent)',
     bgClass: 'bg-white/70 dark:bg-[#262626]/60',
   },
 }

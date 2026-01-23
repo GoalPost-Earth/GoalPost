@@ -40,6 +40,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const themeInitScript = `(() => {
+    try {
+      const key = 'goalpost-theme-color';
+      const saved = window.localStorage.getItem(key);
+      const themes = ['theme-warm','theme-forest','theme-purple','theme-emerald'];
+      document.documentElement.classList.remove(...themes);
+      if (saved && saved !== 'default') {
+        document.documentElement.classList.add('theme-' + saved);
+      }
+    } catch (_) {
+      // no-op
+    }
+  })();`
+
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <head>
@@ -47,6 +61,10 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
           rel="stylesheet"
+        />
+        <script
+          id="gp-theme-init"
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
       </head>
       <body className="isolate">

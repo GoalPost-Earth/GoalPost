@@ -99,42 +99,35 @@ function SignupPage() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden py-5"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden py-5 bg-gp-surface dark:bg-gp-surface-dark transition-colors"
       style={{
-        backgroundColor: '#f8fafc',
         backgroundImage: `
-        radial-gradient(at 0% 0%, hsla(199,100%,93%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, hsla(187,100%,92%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 100%, hsla(210,100%,95%,1) 0, transparent 50%), 
-        radial-gradient(at 0% 100%, hsla(190,100%,94%,1) 0, transparent 50%)
+        radial-gradient(at 18% 18%, color-mix(in srgb, var(--gp-primary) 12%, transparent) 0, transparent 55%),
+        radial-gradient(at 82% 16%, color-mix(in srgb, var(--gp-accent-glow) 12%, transparent) 0, transparent 55%),
+        radial-gradient(at 80% 85%, color-mix(in srgb, var(--gp-goal) 10%, transparent) 0, transparent 55%),
+        radial-gradient(at 16% 86%, color-mix(in srgb, var(--gp-resource) 12%, transparent) 0, transparent 55%)
       `,
       }}
     >
-      {/* Dark mode gradient overlay */}
       <div
-        className="hidden dark:block absolute inset-0"
+        className="absolute inset-0 opacity-70 dark:opacity-90 pointer-events-none"
         style={{
-          backgroundColor: '#0a0f1d',
-          backgroundImage: `
-          radial-gradient(at 0% 0%, hsla(220, 40%, 15%, 1) 0, transparent 60%), 
-          radial-gradient(at 100% 0%, hsla(240, 30%, 10%, 1) 0, transparent 60%), 
-          radial-gradient(at 100% 100%, hsla(210, 50%, 12%, 1) 0, transparent 60%), 
-          radial-gradient(at 0% 100%, hsla(230, 40%, 14%, 1) 0, transparent 60%)
-        `,
+          backgroundImage:
+            'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gp-primary) 14%, transparent), transparent 75%)',
         }}
       />
 
       {/* Main Content Container */}
       <div className="relative w-full max-w-4xl flex flex-col items-center justify-center px-4">
         {/* Floating Gradient Blobs */}
-        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] bg-cyan-500/20 dark:bg-cyan-500/15 rounded-full blur-[100px] opacity-40 dark:opacity-35" />
-        <div className="absolute -bottom-20 -right-20 w-[600px] h-[600px] bg-teal-500/20 dark:bg-teal-500/10 rounded-full blur-[100px] opacity-40 dark:opacity-35" />
-        <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] bg-purple-200/30 dark:bg-indigo-500/10 rounded-full blur-[100px] opacity-40 dark:opacity-35" />
-        <div className="hidden dark:block absolute bottom-[20%] left-[10%] w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[100px] opacity-35" />
+        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] bg-gp-primary/12 dark:bg-gp-primary/10 rounded-full blur-[100px] opacity-50" />
+        <div className="absolute -bottom-20 -right-20 w-[600px] h-[600px] bg-gp-accent-glow/12 dark:bg-gp-accent-glow/10 rounded-full blur-[100px] opacity-45" />
+        <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] bg-gp-goal/10 dark:bg-gp-goal/12 rounded-full blur-[100px] opacity-45" />
+        <div className="hidden dark:block absolute bottom-[20%] left-[10%] w-[350px] h-[350px] bg-gp-resource/12 rounded-full blur-[100px] opacity-35" />
 
         {/* Organic Cloud Container */}
         <div
-          className="w-full max-w-xl min-h-[600px] flex flex-col items-center justify-center p-12 md:p-20 relative z-10 transition-all duration-300 bg-white/60 backdrop-blur-[40px] border border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.05),inset_0_0_40px_rgba(255,255,255,0.5)] dark:bg-[rgba(15,23,42,0.7)] dark:border-white/12 dark:shadow-[0_25px_50px_rgba(0,0,0,0.5),inset_0_0_20px_rgba(255,255,255,0.05)]"
+          className="w-full max-w-xl min-h-[600px] flex flex-col items-center justify-center p-12 md:p-20 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
           style={{
             borderRadius: '42% 58% 70% 30% / 45% 45% 55% 55%',
           }}
@@ -142,15 +135,15 @@ function SignupPage() {
           <div className="flex flex-col items-center w-full max-w-sm space-y-10">
             {/* Header Section */}
             <div className="text-center space-y-3">
-              <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-white/60 dark:bg-white/5 shadow-sm dark:shadow-inner border border-white dark:border-white/10 mb-6">
+              <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-white/65 dark:bg-white/10 shadow-sm dark:shadow-inner border border-white dark:border-white/10 mb-6">
                 <span className="material-symbols-outlined text-gp-primary text-3xl">
                   hub
                 </span>
               </div>
-              <h1 className="text-4xl font-semibold text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-4xl font-semibold text-gp-ink-strong dark:text-gp-ink-strong tracking-tight">
                 Begin Your Journey
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft font-medium">
                 Step into a living space of shared intentions.
               </p>
             </div>
@@ -175,7 +168,7 @@ function SignupPage() {
                     placeholder="Alex"
                     autoComplete="given-name"
                     disabled={loading}
-                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-all duration-300 bg-white/40 backdrop-blur-[10px] border border-white/60 dark:bg-white/[0.03] dark:border-white/10 focus:bg-white/80 focus:border-cyan-500/30 focus:shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:focus:bg-white/[0.07] dark:focus:border-[rgba(56,189,248,0.4)] dark:focus:shadow-[0_0_15px_rgba(56,189,248,0.1)]"
+                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                   />
                 </div>
               </div>
@@ -195,7 +188,7 @@ function SignupPage() {
                     placeholder="Rivers"
                     autoComplete="family-name"
                     disabled={loading}
-                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-all duration-300 bg-white/40 backdrop-blur-[10px] border border-white/60 dark:bg-white/3 dark:border-white/10 focus:bg-white/80 focus:border-cyan-500/30 focus:shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:focus:bg-white/[0.07] dark:focus:border-[rgba(56,189,248,0.4)] dark:focus:shadow-[0_0_15px_rgba(56,189,248,0.1)]"
+                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                   />
                 </div>
               </div>
@@ -215,7 +208,7 @@ function SignupPage() {
                     placeholder="alex@goalpost.io"
                     autoComplete="email"
                     disabled={loading}
-                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-all duration-300 bg-white/40 backdrop-blur-[10px] border border-white/60 dark:bg-white/[0.03] dark:border-white/10 focus:bg-white/80 focus:border-cyan-500/30 focus:shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:focus:bg-white/[0.07] dark:focus:border-[rgba(56,189,248,0.4)] dark:focus:shadow-[0_0_15px_rgba(56,189,248,0.1)]"
+                    className="w-full rounded-2xl py-4 pl-12 pr-6 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                   />
                 </div>
                 {errors.email && (
@@ -246,7 +239,7 @@ function SignupPage() {
                     placeholder="••••••••"
                     autoComplete="new-password"
                     disabled={loading}
-                    className="w-full rounded-2xl py-4 pl-12 pr-12 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-all duration-300 bg-white/40 backdrop-blur-[10px] border border-white/60 dark:bg-white/[0.03] dark:border-white/10 focus:bg-white/80 focus:border-cyan-500/30 focus:shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:focus:bg-white/[0.07] dark:focus:border-[rgba(56,189,248,0.4)] dark:focus:shadow-[0_0_15px_rgba(56,189,248,0.1)]"
+                    className="w-full rounded-2xl py-4 pl-12 pr-12 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                   />
                   <button
                     type="button"
@@ -284,7 +277,7 @@ function SignupPage() {
                     placeholder="••••••••"
                     autoComplete="new-password"
                     disabled={loading}
-                    className="w-full rounded-2xl py-4 pl-12 pr-12 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-all duration-300 bg-white/40 backdrop-blur-[10px] border border-white/60 dark:bg-white/[0.03] dark:border-white/10 focus:bg-white/80 focus:border-cyan-500/30 focus:shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:focus:bg-white/[0.07] dark:focus:border-[rgba(56,189,248,0.4)] dark:focus:shadow-[0_0_15px_rgba(56,189,248,0.1)]"
+                    className="w-full rounded-2xl py-4 pl-12 pr-12 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                   />
                   <button
                     type="button"
@@ -315,34 +308,24 @@ function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="cursor-pointer w-full text-white rounded-2xl py-3.5 text-sm font-medium tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:translate-y-0 dark:hover:brightness-110 flex items-center justify-center gap-2"
+                  className="cursor-pointer w-full text-white rounded-2xl py-4 text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   style={{
                     background:
-                      'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                      'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 78%, black 22%))',
+                    boxShadow:
+                      '0 12px 32px color-mix(in srgb, var(--gp-primary) 48%, transparent)',
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
                       e.currentTarget.style.transform = 'translateY(-1px)'
-                      const isDark =
-                        document.documentElement.classList.contains('dark')
-                      if (isDark) {
-                        e.currentTarget.style.boxShadow =
-                          '0 8px 25px rgba(59, 130, 246, 0.5)'
-                        e.currentTarget.style.background =
-                          'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-                      } else {
-                        e.currentTarget.style.boxShadow =
-                          '0 6px 20px rgba(59, 130, 246, 0.5)'
-                      }
+                      e.currentTarget.style.boxShadow =
+                        '0 16px 42px color-mix(in srgb, var(--gp-primary) 55%, transparent)'
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)'
                     e.currentTarget.style.boxShadow =
-                      '0 4px 15px rgba(59, 130, 246, 0.4)'
-                    e.currentTarget.style.background =
-                      'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                      '0 12px 32px color-mix(in srgb, var(--gp-primary) 48%, transparent)'
                   }}
                 >
                   <span>{loading ? 'Creating...' : 'Create Sphere'}</span>
@@ -355,11 +338,11 @@ function SignupPage() {
 
             {/* Sign In Link */}
             <div className="mt-8 text-center">
-              <p className="text-slate-500 dark:text-slate-400 text-sm">
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft text-sm">
                 Already part of a field?{' '}
                 <Link
                   href="/auth/login"
-                  className="text-cyan-500 dark:text-cyan-400 font-semibold hover:underline underline-offset-4 ml-1 dark:hover:text-cyan-400/80 transition-colors"
+                  className="text-gp-primary font-semibold hover:underline underline-offset-4 ml-1 transition-colors"
                 >
                   Sign In
                 </Link>

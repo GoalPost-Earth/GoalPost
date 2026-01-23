@@ -152,7 +152,9 @@ export function GenericCanvas({
                     </div>
                   )}
 
-                  {actionButton}
+                  {actionButton && (
+                    <div className="gp-action-button-shell">{actionButton}</div>
+                  )}
                 </div>
               )}
             </>

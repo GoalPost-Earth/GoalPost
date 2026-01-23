@@ -28,6 +28,7 @@ export function DraggableResonanceNode({
 }: DraggableResonanceNodeProps) {
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
+  const [isActiveLocal, setIsActiveLocal] = useState(false)
   const hasDraggedRef = useRef(false)
   const velocityRef = useRef({ x: 0, y: 0 })
   const lastMoveTimeRef = useRef(Date.now())
@@ -124,6 +125,7 @@ export function DraggableResonanceNode({
       hasDraggedRef.current = false
       return
     }
+    setIsActiveLocal((prev) => !prev)
     onClick?.()
   }
 
@@ -172,6 +174,12 @@ export function DraggableResonanceNode({
         left: 0,
         transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.85 : 1,
+        boxShadow:
+          ((nodeProps as unknown as { isActive?: boolean }).isActive ??
+            false) ||
+          isActiveLocal
+            ? '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)'
+            : undefined,
       }}
       onMouseDown={handleMouseDown}
     >

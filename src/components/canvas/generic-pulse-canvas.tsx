@@ -112,29 +112,35 @@ export function GenericPulseCanvas({
                 >
                   {showBackgroundDecor && (
                     <>
-                      {/* Radial gradient overlay */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.05),transparent_70%)]" />
+                      {/* Radial gradient overlay tinted by theme primary */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage:
+                            'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gp-primary) 14%, transparent), transparent 70%)',
+                        }}
+                      />
 
                       {/* Dot grid pattern */}
                       <div
                         className="absolute inset-0 opacity-40 dark:opacity-20"
                         style={{
                           backgroundImage:
-                            'radial-gradient(var(--gp-ink-soft) 1px, transparent 1px)',
+                            'radial-gradient(color-mix(in srgb, var(--gp-ink-soft) 75%, transparent) 1px, transparent 1px)',
                           backgroundSize: '60px 60px',
                         }}
                       />
 
                       {/* Pulse dots (background animation) */}
-                      <div className="absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-pulse" />
+                      <div className="absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 rounded-full animate-pulse" />
                       <div
-                        className="absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/30 dark:bg-white/10 rounded-full"
+                        className="absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/35 rounded-full"
                         style={{
                           animation:
                             'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         }}
                       />
-                      <div className="absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-float" />
+                      <div className="absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 rounded-full animate-float" />
                     </>
                   )}
 

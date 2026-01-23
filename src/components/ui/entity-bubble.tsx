@@ -251,7 +251,7 @@ export function EntityBubble({
         shapeClasses[shape],
         'gp-glass',
         'transition-all duration-300',
-        'hover:shadow-xl',
+        'shadow-[0_0_26px_color-mix(in_srgb,var(--gp-primary)_24%,transparent)] hover:shadow-[0_0_34px_color-mix(in_srgb,var(--gp-primary)_36%,transparent)]',
         onClick && 'cursor-pointer',
         className
       )}

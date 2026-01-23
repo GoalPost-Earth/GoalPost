@@ -56,47 +56,19 @@ export function ResonanceConnections({
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        {/* Gradient for light mode */}
-        <linearGradient
-          id="pulseGradientLight"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
+        {/* Theme-driven gradient using var(--gp-primary) */}
+        <linearGradient id="pulseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop
             offset="0%"
-            style={{ stopColor: 'rgba(0, 113, 227, 0)', stopOpacity: 1 }}
+            style={{ stopColor: 'var(--gp-primary)', stopOpacity: 0 }}
           />
           <stop
             offset="50%"
-            style={{ stopColor: 'rgba(0, 113, 227, 0.4)', stopOpacity: 1 }}
+            style={{ stopColor: 'var(--gp-primary)', stopOpacity: 0.45 }}
           />
           <stop
             offset="100%"
-            style={{ stopColor: 'rgba(0, 113, 227, 0)', stopOpacity: 1 }}
-          />
-        </linearGradient>
-
-        {/* Gradient for dark mode */}
-        <linearGradient
-          id="pulseGradientDark"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop
-            offset="0%"
-            style={{ stopColor: 'rgba(19, 164, 236, 0)', stopOpacity: 1 }}
-          />
-          <stop
-            offset="50%"
-            style={{ stopColor: 'rgba(19, 164, 236, 0.4)', stopOpacity: 1 }}
-          />
-          <stop
-            offset="100%"
-            style={{ stopColor: 'rgba(19, 164, 236, 0)', stopOpacity: 1 }}
+            style={{ stopColor: 'var(--gp-primary)', stopOpacity: 0 }}
           />
         </linearGradient>
 
@@ -112,35 +84,15 @@ export function ResonanceConnections({
         {lines.map((line) => (
           <line
             key={line.id}
-            className={cn('dark:hidden')}
             filter="url(#glow-line)"
-            stroke="url(#pulseGradientLight)"
+            stroke="url(#pulseGradient)"
             strokeDasharray={line.dashArray}
             strokeWidth="2"
             x1={line.x1}
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            style={{
-              animation: `dash ${line.duration}s linear infinite`,
-            }}
-          />
-        ))}
-        {lines.map((line) => (
-          <line
-            key={`${line.id}-dark`}
-            className={cn('hidden dark:block')}
-            filter="url(#glow-line)"
-            stroke="url(#pulseGradientDark)"
-            strokeDasharray={line.dashArray}
-            strokeWidth="2"
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            style={{
-              animation: `dash ${line.duration}s linear infinite`,
-            }}
+            style={{ animation: `dash ${line.duration}s linear infinite` }}
           />
         ))}
       </g>

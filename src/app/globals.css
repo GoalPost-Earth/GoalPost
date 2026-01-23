@@ -372,6 +372,20 @@
     animation: glow 2s ease-in-out infinite;
   }
 
+  /* Theme-aware wrapper for floating action buttons */
+  .gp-action-button-shell {
+    display: inline-block;
+    border-radius: 9999px;
+    transition:
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .gp-action-button-shell:hover {
+    box-shadow: 0 0 28px color-mix(in srgb, var(--gp-primary) 42%, transparent);
+    transform: translateY(-1px);
+  }
+
   .glass-panel {
     background-clip: padding-box;
     border: 1px solid rgba(255, 255, 255, 0.1);

@@ -1,6 +1,11 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useLayoutEffect,
+} from 'react'
 
 export type ThemeColor = 'default' | 'warm' | 'forest' | 'purple' | 'emerald'
 
@@ -17,16 +22,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeColor, setThemeColorState] = useState<ThemeColor>('default')
   const [mounted, setMounted] = useState(false)
 
-  // Load theme from localStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeColor
-    if (savedTheme) {
-      setThemeColorState(savedTheme)
-      applyTheme(savedTheme)
-    }
-    setMounted(true)
-  }, [])
-
   const applyTheme = (color: ThemeColor) => {
     // Remove all theme classes
     document.documentElement.classList.remove(
@@ -41,6 +36,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.add(`theme-${color}`)
     }
   }
+
+  // Load and apply theme before first paint to avoid flashes of default theme
+  useLayoutEffect(() => {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeColor
+    const nextTheme = savedTheme || 'default'
+    setThemeColorState(nextTheme)
+    applyTheme(nextTheme)
+    setMounted(true)
+  }, [])
 
   const setThemeColor = (color: ThemeColor) => {
     setThemeColorState(color)

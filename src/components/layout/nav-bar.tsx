@@ -125,7 +125,7 @@ export default function NavBar() {
       <div className="flex items-center gap-4">
         <button
           onClick={toggleTheme}
-          className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+          className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
           aria-label="Toggle theme"
         >
           {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
@@ -138,7 +138,7 @@ export default function NavBar() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all"
+            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all cursor-pointer"
             style={{
               backgroundImage:
                 'url("https://api.dicebear.com/7.x/avataaars/svg?seed=User")',
@@ -216,8 +216,8 @@ export default function NavBar() {
               </span>
               Confirm Logout
             </DialogTitle>
-            <DialogDescription className="text-gp-ink-muted dark:text-gp-ink-muted">
-              Are you sure you want to log out? You`&apos;ll need to sign in
+            <DialogDescription className="text-slate-800 dark:text-slate-50">
+              Are you sure you want to log out? You&apos;ll need to sign in
               again to access your account.
             </DialogDescription>
           </DialogHeader>

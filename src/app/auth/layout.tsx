@@ -1,3 +1,6 @@
+'use client'
+
+import { ThemeProvider } from '@/app/contexts/theme-context'
 import { SplashScreenWrapper } from '@/components/screens/SplashScreenWrapper'
 
 export default function AuthLayout({
@@ -5,5 +8,9 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <SplashScreenWrapper duration={3000}>{children}</SplashScreenWrapper>
+  return (
+    <ThemeProvider>
+      <SplashScreenWrapper duration={3000}>{children}</SplashScreenWrapper>
+    </ThemeProvider>
+  )
 }

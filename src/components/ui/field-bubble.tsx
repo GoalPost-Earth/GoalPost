@@ -145,9 +145,9 @@ export function FieldBubble({
 
   const badgeVariantClasses = {
     primary:
-      'bg-gp-primary/20 border-gp-primary/30 text-gp-primary shadow-[0_0_10px_rgba(19,127,236,0.2)]',
+      'bg-gp-primary/20 border-gp-primary/30 text-gp-primary shadow-[0_0_10px_color-mix(in_srgb,var(--gp-primary)_65%,transparent)]',
     accent:
-      'bg-gp-accent-glow/20 border-gp-accent-glow/30 text-gp-accent-glow shadow-[0_0_10px_rgba(79,255,203,0.2)]',
+      'bg-gp-accent-glow/20 border-gp-accent-glow/30 text-gp-accent-glow shadow-[0_0_10px_color-mix(in_srgb,var(--gp-accent-glow)_65%,transparent)]',
     default: 'bg-white/10 border-white/20 text-white/80',
   }
 
@@ -168,7 +168,7 @@ export function FieldBubble({
           shapeClasses[shape],
           'bg-gp-glass dark:bg-gp-glass backdrop-blur-md transition-all duration-500',
           'border border-white/5 dark:border-white/10 hover:border-white/20 dark:hover:border-white/20',
-          'group-hover:shadow-[0_0_40px_rgba(19,127,236,0.15)] group-hover:dark:shadow-[0_0_40px_rgba(19,127,236,0.25)] transition-all'
+          'group-hover:shadow-[0_0_40px_color-mix(in_srgb,var(--gp-primary)_55%,transparent)] group-hover:dark:shadow-[0_0_40px_color-mix(in_srgb,var(--gp-primary)_70%,transparent)] transition-all'
         )}
       >
         {/* Rotating border rings */}
