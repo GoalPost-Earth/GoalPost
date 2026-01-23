@@ -117,15 +117,15 @@ export function OfferingInput({
             </div>
 
             {/* Input Field */}
-            <input
+            <textarea
               autoFocus
               disabled={isLoading}
-              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Speak your intention..."
-              className="flex-1 w-full bg-transparent border-0 focus:ring-0 focus:outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 font-light px-4 h-14 caret-gp-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              rows={3}
+              className="flex-1 w-full bg-transparent border-0 focus:ring-0 focus:outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 font-light px-4 py-2 caret-gp-primary disabled:opacity-50 disabled:cursor-not-allowed resize-none"
             />
 
             {/* Action Buttons */}
