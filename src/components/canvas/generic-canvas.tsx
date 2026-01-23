@@ -1,13 +1,13 @@
 'use client'
 
-import { ReactNode, useRef, useState, useEffect } from 'react'
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
+import { useEffect, useRef, useState, ReactNode } from 'react'
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { cn } from '@/lib/utils'
 
 export interface GenericCanvasProps {
   children?: ReactNode
   className?: string
-  canvasScale?: 5 | 4 | 3 | 2 | 1 // Multiplier for viewport size
+  canvasScale?: 5 | 4 | 3 | 2 | 1
   minZoom?: number
   maxZoom?: number
   enablePanning?: boolean
@@ -99,7 +99,7 @@ export function GenericCanvas({
                   )}
                   style={{
                     backgroundImage: `
-                radial-gradient(circle at 50% 50%, rgba(19,127,236,0.08), transparent 70%),
+                radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gp-primary) 18%, transparent), transparent 70%),
                 url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E")
               `,
                     backgroundSize: '100% 100%, 40px 40px',
