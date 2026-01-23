@@ -1,10 +1,17 @@
 'use client'
 
+import { useEffect } from 'react'
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
+import { usePageContext } from '@/app/contexts'
 
 export default function SpacesPage() {
   const router = useRouter()
+  const { setPageTitle } = usePageContext()
+
+  useEffect(() => {
+    setPageTitle('Spaces')
+  }, [setPageTitle])
 
   return (
     <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-hidden pt-24">
@@ -34,7 +41,10 @@ export default function SpacesPage() {
             subtitle="Inner Sanctuary"
             description="Self-reflection, personal growth, and individual purpose."
             variant="mespace"
-            onClick={() => router.push('/protected/spaces/me-space')}
+            onClick={() => {
+              setPageTitle('Me Space')
+              router.push('/protected/spaces/me-space')
+            }}
           />
 
           {/* WeSpace - Community Space */}
@@ -43,7 +53,10 @@ export default function SpacesPage() {
             subtitle="Collective Field"
             description="Community sensing, shared intent, and collaborative evolution."
             variant="wespace"
-            onClick={() => router.push('/protected/spaces/we-space')}
+            onClick={() => {
+              setPageTitle('We Space')
+              router.push('/protected/spaces/we-space')
+            }}
           />
         </div>
       </div>

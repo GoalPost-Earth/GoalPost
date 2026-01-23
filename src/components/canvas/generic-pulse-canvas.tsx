@@ -42,6 +42,7 @@ export function GenericPulseCanvas({
   },
 }: GenericPulseCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
+  const transformRef = useRef<any>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
 
@@ -60,6 +61,15 @@ export function GenericPulseCanvas({
     window.addEventListener('resize', updateCanvasSize)
     return () => window.removeEventListener('resize', updateCanvasSize)
   }, [canvasScale])
+
+  // Auto-zoom to maximum when loading completes
+  useEffect(() => {
+    if (!isLoading && transformRef.current?.setScale) {
+      setTimeout(() => {
+        transformRef.current?.setScale?.(maxZoom)
+      }, 100)
+    }
+  }, [isLoading, maxZoom])
 
   const initialPositionX = viewportSize.width
     ? -(canvasSize.width - viewportSize.width) / 2
@@ -82,6 +92,7 @@ export function GenericPulseCanvas({
     >
       <div className="w-full h-full">
         <TransformWrapper
+          ref={transformRef}
           key={`${canvasSize.width}x${canvasSize.height}`}
           initialScale={1}
           initialPositionX={initialPositionX}

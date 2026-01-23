@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { DraggableEntityBubble } from '@/components/canvas/draggable-entity-bubble'
-import { useApp } from '@/app/contexts/AppContext'
+import { useApp, usePageContext } from '@/app/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { GenericSpaceCanvas } from '@/components/canvas/generic-space-canvas'
 
@@ -43,6 +43,7 @@ const shapeVariations = [
 export default function WeSpacePage() {
   const router = useRouter()
   const { user } = useApp()
+  const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
@@ -248,7 +249,15 @@ export default function WeSpacePage() {
     fetchWeSpaces()
   }, [fetchWeSpaces])
 
+  useEffect(() => {
+    setPageTitle('We Space')
+  }, [setPageTitle])
+
   const handleSpaceClick = (spaceId: string) => {
+    const space = weSpaces.find((s) => s.id === spaceId)
+    if (space) {
+      setPageTitle(space.title)
+    }
     router.push(`/protected/spaces/we-space/${spaceId}`)
   }
 

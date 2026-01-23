@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { useCreateField } from '@/hooks'
+import { usePageContext } from '@/app/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
@@ -35,11 +36,13 @@ export default function WeSpaceFieldsPage() {
   const router = useRouter()
   const params = useParams()
   const weSpaceId = params?.id as string
+  const { setPageTitle } = usePageContext()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [spaceName, setSpaceName] = useState<string>('')
   const { createField, loading: isCreating } = useCreateField()
 
   const fetchFields = useCallback(async () => {
@@ -70,6 +73,10 @@ export default function WeSpaceFieldsPage() {
   }, [fetchFields])
 
   const handleFieldClick = (fieldId: string) => {
+    const field = fields.find((f) => f.id === fieldId)
+    if (field) {
+      setPageTitle(field.title)
+    }
     router.push(`/protected/spaces/we-space/${weSpaceId}/fields/${fieldId}`)
   }
 

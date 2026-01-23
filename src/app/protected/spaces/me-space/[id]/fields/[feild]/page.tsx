@@ -10,7 +10,7 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
-import { useApp } from '@/app/contexts/AppContext'
+import { useApp, usePageContext } from '@/app/contexts'
 
 interface PulsePosition {
   pulseId: string
@@ -125,6 +125,7 @@ function FieldDetailPage() {
   const params = useParams()
   const fieldId = params?.feild as string // Note: folder name is [feild] (typo)
   const { user } = useApp()
+  const { setPageTitle } = usePageContext()
 
   // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
   useEffect(() => {
@@ -224,6 +225,35 @@ function FieldDetailPage() {
 
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldId, computePulsePositions])
+
+  // Fetch field name
+  useEffect(() => {
+    if (!fieldId) return
+
+    const fetchFieldName = async () => {
+      try {
+        const meSpaceId = params?.id as string
+        if (!meSpaceId) return
+
+        const res = await fetch('/api/field/get-fields-by-space', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spaceId: meSpaceId }),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          const field = data.fields?.find((f: any) => f.id === fieldId)
+          if (field) {
+            setPageTitle(field.title)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch field name:', err)
+      }
+    }
+
+    fetchFieldName()
+  }, [fieldId, params?.id, setPageTitle])
 
   useEffect(() => {
     fetchPulses()

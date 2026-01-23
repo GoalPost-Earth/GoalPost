@@ -15,6 +15,7 @@ export interface GenericCanvasProps {
   actionButton?: ReactNode
   onScaleChange?: (scale: number) => void
   showBackgroundDecor?: boolean
+  isLoading?: boolean
 }
 
 export function GenericCanvas({
@@ -28,8 +29,10 @@ export function GenericCanvas({
   actionButton,
   onScaleChange,
   showBackgroundDecor = true,
+  isLoading = false,
 }: GenericCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
+  const transformRef = useRef<any>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
 
@@ -48,6 +51,15 @@ export function GenericCanvas({
     window.addEventListener('resize', updateCanvasSize)
     return () => window.removeEventListener('resize', updateCanvasSize)
   }, [canvasScale])
+
+  // Auto-zoom to maximum when loading completes
+  useEffect(() => {
+    if (!isLoading && transformRef.current?.zoomToElement) {
+      setTimeout(() => {
+        transformRef.current?.setScale?.(maxZoom)
+      }, 100)
+    }
+  }, [isLoading, maxZoom])
 
   const initialPositionX = viewportSize.width
     ? -(canvasSize.width - viewportSize.width) / 2
@@ -70,6 +82,7 @@ export function GenericCanvas({
     >
       <div className="w-full h-full">
         <TransformWrapper
+          ref={transformRef}
           key={`${canvasSize.width}x${canvasSize.height}`}
           initialScale={1}
           initialPositionX={initialPositionX}
