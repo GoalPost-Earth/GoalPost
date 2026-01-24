@@ -72,9 +72,6 @@ export default function NavBar() {
       <div className="flex items-center gap-8">
         <Link href="/" className="flex items-center gap-4 text-gp-primary">
           <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
-          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
-            GoalPost
-          </h2>
         </Link>
         <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
           {pageTitle}
