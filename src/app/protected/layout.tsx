@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { UserDataProvider } from '@/app/contexts'
+import { UserDataProvider, PageContextProvider } from '@/app/contexts'
 import { ThemeProvider } from '@/app/contexts/theme-context'
 import { AnimationProvider } from '@/app/contexts/animation-context'
 import NavBar from '@/components/layout/nav-bar'
@@ -20,18 +20,20 @@ export default function ProtectedLayout({
     <ProtectedRoute>
       <ThemeProvider>
         <AnimationProvider>
-          <div className="flex flex-col h-screen">
-            <NavBar />
-            <UserDataProvider>{children}</UserDataProvider>
-            <AIChatButton
-              onClick={() => setIsAIChatOpen(!isAIChatOpen)}
-              isOpen={isAIChatOpen}
-            />
-            <AIAssistantPanel
-              isOpen={isAIChatOpen}
-              onClose={() => setIsAIChatOpen(false)}
-            />
-          </div>
+          <PageContextProvider>
+            <div className="flex flex-col h-screen">
+              <NavBar />
+              <UserDataProvider>{children}</UserDataProvider>
+              <AIChatButton
+                onClick={() => setIsAIChatOpen(!isAIChatOpen)}
+                isOpen={isAIChatOpen}
+              />
+              <AIAssistantPanel
+                isOpen={isAIChatOpen}
+                onClose={() => setIsAIChatOpen(false)}
+              />
+            </div>
+          </PageContextProvider>
         </AnimationProvider>
       </ThemeProvider>
     </ProtectedRoute>

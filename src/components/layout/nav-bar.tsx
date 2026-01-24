@@ -19,7 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useApp } from '@/app/contexts'
+import { useApp, usePageContext } from '@/app/contexts'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
@@ -28,6 +28,7 @@ export default function NavBar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useApp()
+  const { pageTitle } = usePageContext()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -71,10 +72,13 @@ export default function NavBar() {
       <div className="flex items-center gap-8">
         <Link href="/" className="flex items-center gap-4 text-gp-primary">
           <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
-          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
-            GoalPost
-          </h2>
         </Link>
+        <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
+          {pageTitle}
+        </h2>
+      </div>
+
+      <div className="flex items-center gap-6">
         <nav className="hidden md:flex items-center gap-6">
           <Link
             className={cn(
@@ -121,8 +125,7 @@ export default function NavBar() {
             History
           </Link>
         </nav>
-      </div>
-      <div className="flex items-center gap-4">
+
         <button
           onClick={toggleTheme}
           className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"

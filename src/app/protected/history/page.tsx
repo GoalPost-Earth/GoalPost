@@ -1,11 +1,19 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Sidebar } from '@/components/history/sidebar'
 import { ActivePulses } from '@/components/history/active-pulses'
 import { FieldsList } from '@/components/history/fields-list'
+import { usePageContext } from '@/app/contexts'
 
 export default function HistoryPage() {
+  const { setPageTitle } = usePageContext()
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('History')
+  }, [setPageTitle])
+
   return (
     <div className="relative flex flex-1 overflow-hidden pt-24">
       {/* Background decorative elements */}

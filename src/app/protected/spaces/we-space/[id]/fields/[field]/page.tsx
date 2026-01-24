@@ -10,7 +10,7 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
-import { useApp } from '@/app/contexts/AppContext'
+import { useApp, usePageContext } from '@/app/contexts'
 
 interface PulsePosition {
   pulseId: string
@@ -125,6 +125,7 @@ function FieldDetailPage() {
   const params = useParams()
   const fieldId = params?.field as string
   const { user } = useApp()
+  const { setPageTitle } = usePageContext()
 
   const [
     fetchPulseDetails,
@@ -228,6 +229,45 @@ function FieldDetailPage() {
   useEffect(() => {
     fetchPulses()
   }, [fetchPulses])
+
+  // Fetch field name
+  useEffect(() => {
+    if (!fieldId) return
+
+    // Try to get field name from localStorage first (persisted from navigation)
+    const cachedFieldName = localStorage.getItem(`field_${fieldId}`)
+    if (cachedFieldName) {
+      setPageTitle(cachedFieldName)
+      return
+    }
+
+    const fetchFieldName = async () => {
+      try {
+        const weSpaceId = params?.id as string
+        if (!weSpaceId) return
+
+        const res = await fetch('/api/field/get-fields-by-space', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spaceId: weSpaceId }),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const field = data.fields?.find((f: any) => f.id === fieldId)
+          if (field) {
+            setPageTitle(field.title)
+            // Cache the field name for future reloads
+            localStorage.setItem(`field_${fieldId}`, field.title)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch field name:', err)
+      }
+    }
+
+    fetchFieldName()
+  }, [fieldId, params?.id, setPageTitle])
 
   useEffect(() => {
     setIsMounted(true)

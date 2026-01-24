@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { useCreateField } from '@/hooks'
+import { usePageContext } from '@/app/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
@@ -35,12 +36,23 @@ export default function WeSpaceFieldsPage() {
   const router = useRouter()
   const params = useParams()
   const weSpaceId = params?.id as string
+  const { setPageTitle } = usePageContext()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { createField, loading: isCreating } = useCreateField()
+
+  // Restore space name from localStorage on mount
+  useEffect(() => {
+    if (weSpaceId) {
+      const cachedSpaceName = localStorage.getItem(`space_${weSpaceId}`)
+      if (cachedSpaceName) {
+        setPageTitle(cachedSpaceName)
+      }
+    }
+  }, [weSpaceId, setPageTitle])
 
   const fetchFields = useCallback(async () => {
     if (!weSpaceId) return
@@ -70,6 +82,12 @@ export default function WeSpaceFieldsPage() {
   }, [fetchFields])
 
   const handleFieldClick = (fieldId: string) => {
+    const field = fields.find((f) => f.id === fieldId)
+    if (field) {
+      setPageTitle(field.title)
+      // Persist field name in localStorage to avoid API call on page reload
+      localStorage.setItem(`field_${fieldId}`, field.title)
+    }
     router.push(`/protected/spaces/we-space/${weSpaceId}/fields/${fieldId}`)
   }
 

@@ -198,6 +198,7 @@ export function FieldsCanvas({
       <GenericCanvas
         canvasScale={5}
         className={className}
+        isLoading={isLoading}
         onScaleChange={setCurrentScale}
         actionButton={
           <button

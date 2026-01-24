@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { DraggableEntityBubble } from '@/components/canvas/draggable-entity-bubble'
-import { useApp } from '@/app/contexts/AppContext'
+import { useApp, usePageContext } from '@/app/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { GenericSpaceCanvas } from '@/components/canvas/generic-space-canvas'
 
@@ -30,6 +30,7 @@ function seededUnitValue(input: string, salt: number) {
 export default function MeSpacePage() {
   const router = useRouter()
   const { user } = useApp()
+  const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
@@ -229,7 +230,17 @@ export default function MeSpacePage() {
     fetchUserMeSpaces()
   }, [fetchUserMeSpaces])
 
+  useEffect(() => {
+    setPageTitle('Me Space')
+  }, [setPageTitle])
+
   const handleSpaceClick = (spaceId: string) => {
+    const space = userMeSpaces.find((s) => s.id === spaceId)
+    if (space) {
+      setPageTitle(space.name)
+      // Persist space name in localStorage to avoid API call on page reload
+      localStorage.setItem(`space_${spaceId}`, space.name)
+    }
     router.push(`/protected/spaces/me-space/${spaceId}`)
   }
 
