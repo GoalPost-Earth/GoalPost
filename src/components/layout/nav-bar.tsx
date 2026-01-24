@@ -69,9 +69,12 @@ export default function NavBar() {
 
   return (
     <header className="fixed top-6 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-gp-glass-border px-10 py-4 gp-glass mx-10 rounded-full shadow-lg">
-      <div className="flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-gp-primary">
-          <div className="size-6">{isMounted && <GoalPostLogo />}</div>
+      <div className="flex items-center gap-8">
+        <Link href="/" className="flex items-center gap-4 text-gp-primary">
+          <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
+          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
+            GoalPost
+          </h2>
         </Link>
         <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
           {pageTitle}
