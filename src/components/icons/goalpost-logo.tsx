@@ -7,7 +7,7 @@ export interface GoalPostLogoProps {
 
 export function GoalPostLogo({ className }: GoalPostLogoProps) {
   return (
-    <div className={cn('w-full h-full relative', className)}>
+    <div className={cn('w-full h-full relative p-0 m-0', className)}>
       <Image
         src="/goalpost-logo.png"
         alt="GoalPost Logo"
