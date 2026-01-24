@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
@@ -15,6 +16,7 @@ import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
 import { distance } from '@/lib/collision-detection'
 import { usePageContext } from '@/app/contexts'
+import { cn } from '@/lib/utils'
 
 // ============================================================================
 // Type Definitions
@@ -90,6 +92,7 @@ const LINK_NODE_RADIUS = 50
 
 export default function ResonancePage() {
   const { setPageTitle } = usePageContext()
+  const { animationsEnabled } = useAnimations()
   const [expandedState, setExpandedState] = useState<ExpandedState>({
     type: null,
     id: null,
@@ -931,7 +934,12 @@ export default function ResonancePage() {
         {linksLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
+              <span
+                className={cn(
+                  'material-symbols-outlined text-5xl text-gp-primary',
+                  animationsEnabled && 'animate-spin'
+                )}
+              >
                 hourglass_bottom
               </span>
               <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">

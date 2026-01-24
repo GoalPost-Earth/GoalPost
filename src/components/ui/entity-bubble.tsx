@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from 'react'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export type BubbleSize = 'sm' | 'md' | 'lg' | 'xl'
 export type BubbleShape = 'circle' | 'organic-1' | 'organic-2' | 'organic-3'
@@ -79,6 +80,7 @@ export function EntityBubble({
   onClick,
   children,
 }: EntityBubbleProps) {
+  const { animationsEnabled } = useAnimations()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const ringRef1 = useRef<HTMLDivElement>(null)
@@ -95,36 +97,45 @@ export function EntityBubble({
     () => {
       if (!bubbleRef.current) return
 
-      // Entrance animation with delay
-      gsap.fromTo(
-        bubbleRef.current,
-        {
-          opacity: 0,
-          scale: 0.8,
-          y: 50,
-        },
-        {
+      if (animationsEnabled) {
+        // Entrance animation with delay
+        gsap.fromTo(
+          bubbleRef.current,
+          {
+            opacity: 0,
+            scale: 0.8,
+            y: 50,
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 1.2,
+            delay: animationDelay,
+            ease: 'power3.out',
+            force3D: true,
+          }
+        )
+
+        // Continuous floating animation
+        gsap.to(bubbleRef.current, {
+          y: '-=15',
+          duration: 4 + animationDelay,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        })
+      } else {
+        // Instantly show without animation
+        gsap.set(bubbleRef.current, {
           opacity: 1,
           scale: 1,
           y: 0,
-          duration: 1.2,
-          delay: animationDelay,
-          ease: 'power3.out',
-          force3D: true,
-        }
-      )
-
-      // Continuous floating animation
-      gsap.to(bubbleRef.current, {
-        y: '-=15',
-        duration: 4 + animationDelay,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      })
+        })
+      }
 
       // Wavy edge animation using border-radius morphing with randomization
-      if (shape === 'circle') {
+      if (shape === 'circle' && animationsEnabled) {
         const { duration, offset, intensity } = randomSeedRef.current
 
         // Initialize bubble to perfect circle before animation starts
@@ -160,30 +171,35 @@ export function EntityBubble({
       }
 
       // Rotate decorative rings
-      if (ringRef1.current) {
-        gsap.to(ringRef1.current, {
-          rotation: 360,
-          duration: 80,
-          repeat: -1,
-          ease: 'none',
-        })
-      }
+      if (animationsEnabled) {
+        if (ringRef1.current) {
+          gsap.to(ringRef1.current, {
+            rotation: 360,
+            duration: 80,
+            repeat: -1,
+            ease: 'none',
+          })
+        }
 
-      if (ringRef2.current) {
-        gsap.to(ringRef2.current, {
-          rotation: -360,
-          duration: 60,
-          repeat: -1,
-          ease: 'none',
-        })
+        if (ringRef2.current) {
+          gsap.to(ringRef2.current, {
+            rotation: -360,
+            duration: 60,
+            repeat: -1,
+            ease: 'none',
+          })
+        }
       }
     },
-    { scope: bubbleRef, dependencies: [animationDelay, shape] }
+    {
+      scope: bubbleRef,
+      dependencies: [animationDelay, shape, animationsEnabled],
+    }
   )
 
   // Hover animation
   const handleMouseEnter = () => {
-    if (!bubbleRef.current || !contentRef.current) return
+    if (!bubbleRef.current || !contentRef.current || !animationsEnabled) return
 
     gsap.to(bubbleRef.current, {
       scale: 1.05,
@@ -213,7 +229,7 @@ export function EntityBubble({
   }
 
   const handleMouseLeave = () => {
-    if (!bubbleRef.current || !contentRef.current) return
+    if (!bubbleRef.current || !contentRef.current || !animationsEnabled) return
 
     gsap.to(bubbleRef.current, {
       scale: 1,
@@ -250,8 +266,9 @@ export function EntityBubble({
         sizeClasses[size],
         shapeClasses[shape],
         'gp-glass',
-        'transition-all duration-300',
-        'hover:shadow-xl',
+        animationsEnabled && 'transition-all duration-300',
+        animationsEnabled &&
+          'shadow-[0_0_26px_color-mix(in_srgb,var(--gp-primary)_24%,transparent)] hover:shadow-[0_0_34px_color-mix(in_srgb,var(--gp-primary)_36%,transparent)]',
         onClick && 'cursor-pointer',
         className
       )}
@@ -281,7 +298,8 @@ export function EntityBubble({
           className={cn(
             'absolute z-10',
             decoratorPositions[decorator.position || 'top-left'],
-            decoratorAnimations[decorator.animate || 'none'],
+            animationsEnabled &&
+              decoratorAnimations[decorator.animate || 'none'],
             decorator.className
           )}
         >

@@ -3,6 +3,7 @@
 import { ReactNode, useRef, useState, useEffect } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export interface GenericPulseCanvasProps {
   children?: ReactNode
@@ -41,6 +42,7 @@ export function GenericPulseCanvas({
     subtitle: 'Create one with the button below',
   },
 }: GenericPulseCanvasProps) {
+  const { animationsEnabled } = useAnimations()
   const canvasRef = useRef<HTMLDivElement>(null)
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformRef = useRef<any>(null)
@@ -124,29 +126,44 @@ export function GenericPulseCanvas({
                 >
                   {showBackgroundDecor && (
                     <>
-                      {/* Radial gradient overlay */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.05),transparent_70%)]" />
+                      {/* Radial gradient overlay tinted by theme primary */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage:
+                            'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gp-primary) 14%, transparent), transparent 70%)',
+                        }}
+                      />
 
                       {/* Dot grid pattern */}
                       <div
                         className="absolute inset-0 opacity-40 dark:opacity-20"
                         style={{
                           backgroundImage:
-                            'radial-gradient(var(--gp-ink-soft) 1px, transparent 1px)',
+                            'radial-gradient(color-mix(in srgb, var(--gp-ink-soft) 75%, transparent) 1px, transparent 1px)',
                           backgroundSize: '60px 60px',
                         }}
                       />
 
                       {/* Pulse dots (background animation) */}
-                      <div className="absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-pulse" />
                       <div
-                        className="absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/30 dark:bg-white/10 rounded-full"
-                        style={{
-                          animation:
-                            'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        }}
+                        className={cn(
+                          'absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 rounded-full',
+                          animationsEnabled && 'animate-pulse'
+                        )}
                       />
-                      <div className="absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 dark:bg-white/20 rounded-full animate-float" />
+                      <div
+                        className={cn(
+                          'absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/35 rounded-full',
+                          animationsEnabled && 'animate-pulse'
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          'absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 rounded-full',
+                          animationsEnabled && 'animate-float'
+                        )}
+                      />
                     </>
                   )}
 
@@ -154,7 +171,12 @@ export function GenericPulseCanvas({
                   {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
                       <div className="flex flex-col items-center gap-4">
-                        <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
+                        <span
+                          className={cn(
+                            'material-symbols-outlined text-5xl text-gp-primary',
+                            animationsEnabled && 'animate-spin'
+                          )}
+                        >
                           hourglass_bottom
                         </span>
                         <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">

@@ -426,12 +426,12 @@ function FieldDetailPage() {
             <div className="group flex flex-col items-center gap-3">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass bg-white/50 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-lg hover:shadow-[0_0_35px_rgba(79,255,203,0.3)] dark:hover:shadow-[0_0_35px_rgba(79,255,203,0.2)] transition-all duration-500 ease-out border border-slate-200 dark:border-white/10 hover:border-gp-accent-glow/40 dark:hover:border-gp-accent-glow/30 backdrop-blur-md group-hover:-translate-y-1"
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
               >
-                <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-white group-hover:text-gp-accent-glow dark:group-hover:text-gp-accent-glow transition-colors duration-500">
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
                   spa
                 </span>
-                <div className="absolute inset-0 rounded-full border border-slate-400/20 dark:border-white/15 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
               </button>
             </div>
           )

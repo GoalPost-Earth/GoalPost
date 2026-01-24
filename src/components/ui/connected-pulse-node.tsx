@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export type ConnectedPulseType = 'goal' | 'resource' | 'story'
 
@@ -36,6 +37,7 @@ export function ConnectedPulseNode({
   onClick,
   onPositionChange,
 }: ConnectedPulseNodeProps) {
+  const { animationsEnabled } = useAnimations()
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -105,37 +107,52 @@ export function ConnectedPulseNode({
   useEffect(() => {
     if (nodeRef.current) {
       if (isVisible) {
-        gsap.fromTo(
-          nodeRef.current,
-          {
-            opacity: 0,
-            scale: 0,
-          },
-          {
+        if (animationsEnabled) {
+          gsap.fromTo(
+            nodeRef.current,
+            {
+              opacity: 0,
+              scale: 0,
+            },
+            {
+              opacity: 0.8,
+              scale: 1,
+              duration: 0.6,
+              delay: delay,
+              ease: 'back.out(1.7)',
+            }
+          )
+        } else {
+          gsap.set(nodeRef.current, {
             opacity: 0.8,
             scale: 1,
-            duration: 0.6,
-            delay: delay,
-            ease: 'back.out(1.7)',
-          }
-        )
+          })
+        }
       } else {
-        gsap.to(nodeRef.current, {
-          opacity: 0,
-          scale: 0,
-          duration: 0.3,
-          ease: 'power2.in',
-        })
+        if (animationsEnabled) {
+          gsap.to(nodeRef.current, {
+            opacity: 0,
+            scale: 0,
+            duration: 0.3,
+            ease: 'power2.in',
+          })
+        } else {
+          gsap.set(nodeRef.current, {
+            opacity: 0,
+            scale: 0,
+          })
+        }
       }
     }
-  }, [isVisible, delay])
+  }, [isVisible, delay, animationsEnabled])
 
   return (
     <div
       ref={nodeRef}
       className={cn(
         'absolute -translate-x-1/2 -translate-y-1/2 z-10 opacity-0 scale-0',
-        'hover:opacity-100 transition-opacity duration-300',
+        animationsEnabled &&
+          'hover:opacity-100 transition-opacity duration-300',
         isLocalDragging
           ? 'cursor-grabbing transition-none'
           : 'cursor-grab transition-transform duration-150 ease-out'

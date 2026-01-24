@@ -101,9 +101,9 @@ export function PulsePanel({
   return (
     <div
       ref={panelRef}
-      className="absolute top-4 right-4 bottom-20 w-96 bg-glass-bg/80 backdrop-blur-xl border border-glass-border rounded-2xl flex flex-col shadow-2xl z-40 overflow-hidden"
+      className="absolute top-4 right-4 bottom-20 w-96 backdrop-blur-xl rounded-2xl flex flex-col shadow-2xl z-40 overflow-hidden bg-gp-glass-bg/80 border border-gp-glass-border"
     >
-      <div className="p-6 border-b border-glass-border bg-white/5 dark:bg-white/5">
+      <div className="p-6 border-b border-gp-glass-border bg-white/5 dark:bg-white/5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span
@@ -123,19 +123,20 @@ export function PulsePanel({
               >
                 {config.label}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-white/50">
+              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
                 Pulse ID • {pulse?.id ?? '—'}
               </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 dark:text-white/60 hover:text-slate-700 dark:hover:text-white transition-colors"
+            className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            aria-label="Close"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white leading-tight line-clamp-3">
+        <h2 className="text-xl font-semibold text-gp-ink-strong leading-tight line-clamp-3">
           {pulse?.content || 'No content available'}
         </h2>
       </div>
@@ -152,66 +153,66 @@ export function PulsePanel({
         {!isLoading && pulse && (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+              <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border">
+                <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                   Type
                 </span>
-                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <div className="mt-1 text-sm font-semibold text-gp-ink-strong flex items-center gap-2">
                   <span className="material-symbols-outlined text-base">
                     {config.icon}
                   </span>
                   {config.label}
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+              <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border">
+                <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                   Created
                 </span>
-                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                <div className="mt-1 text-sm font-semibold text-gp-ink-strong">
                   {createdAtText}
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+              <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border">
+                <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                   Intensity
                 </span>
-                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                <div className="mt-1 text-sm font-semibold text-gp-ink-strong">
                   {pulse.intensity ?? 'Not set'}
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-1">
+              <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border space-y-1">
                 {pulse.status && (
                   <div>
-                    <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+                    <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                       Status
                     </span>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white capitalize">
+                    <div className="mt-1 text-sm font-semibold text-gp-ink-strong capitalize">
                       {pulse.status.toLowerCase()}
                     </div>
                   </div>
                 )}
                 {pulse.horizon && (
                   <div>
-                    <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+                    <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                       Horizon
                     </span>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white capitalize">
+                    <div className="mt-1 text-sm font-semibold text-gp-ink-strong capitalize">
                       {pulse.horizon.toLowerCase()}
                     </div>
                   </div>
                 )}
                 {pulse.resourceType && (
                   <div>
-                    <span className="text-[11px] uppercase text-slate-500 dark:text-white/50 font-semibold">
+                    <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
                       Resource Type
                     </span>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white capitalize">
+                    <div className="mt-1 text-sm font-semibold text-gp-ink-strong capitalize">
                       {pulse.resourceType.toLowerCase()}
                     </div>
                   </div>
                 )}
                 {!pulse.status && !pulse.horizon && !pulse.resourceType && (
-                  <div className="text-sm text-slate-500 dark:text-white/50">
+                  <div className="text-sm text-gp-ink-muted">
                     No additional metadata
                   </div>
                 )}
@@ -220,16 +221,16 @@ export function PulsePanel({
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base text-slate-500 dark:text-white/50">
+                <span className="material-symbols-outlined text-base text-gp-ink-muted">
                   groups
                 </span>
-                <span className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">
+                <span className="text-xs font-semibold uppercase text-gp-ink-muted">
                   Initiated By
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {pulse.initiators.length === 0 && (
-                  <span className="text-sm text-slate-500 dark:text-white/50">
+                  <span className="text-sm text-gp-ink-muted">
                     No initiators recorded
                   </span>
                 )}
@@ -250,23 +251,23 @@ export function PulsePanel({
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base text-slate-500 dark:text-white/50">
+                <span className="material-symbols-outlined text-base text-gp-ink-muted">
                   share
                 </span>
-                <span className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">
+                <span className="text-xs font-semibold uppercase text-gp-ink-muted">
                   Contexts
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {pulse.contexts.length === 0 && (
-                  <span className="text-sm text-slate-500 dark:text-white/50">
+                  <span className="text-sm text-gp-ink-muted">
                     No contexts linked
                   </span>
                 )}
                 {pulse.contexts.map((context) => (
                   <span
                     key={context.id}
-                    className="text-xs px-3 py-1 rounded-full bg-white/60 dark:bg-white/10 border border-slate-200 dark:border-white/20 text-slate-700 dark:text-white"
+                    className="text-xs px-3 py-1 rounded-full bg-gp-glass-bg border border-gp-glass-border text-gp-ink-strong"
                   >
                     {context.title || 'Untitled Context'}
                   </span>
@@ -277,14 +278,22 @@ export function PulsePanel({
         )}
       </div>
 
-      <div className="p-6 border-t border-glass-border bg-glass-bg backdrop-blur-md">
-        <button className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-gp-primary hover:bg-blue-500 transition-colors text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-blue-500/20">
+      <div className="p-6 border-t border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
+        <button
+          className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg transition-all"
+          style={{
+            background:
+              'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+            boxShadow:
+              '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+          }}
+        >
           <span className="material-symbols-outlined text-[20px]">
             visibility
           </span>
           <span className="truncate">View Pulse Thread</span>
         </button>
-        <button className="flex w-full mt-3 cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-transparent border border-slate-300 dark:border-white/20 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-slate-700 dark:text-white gap-2 text-sm font-medium leading-normal">
+        <button className="flex w-full mt-3 cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-transparent border border-gp-glass-border hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-gp-ink-strong gap-2 text-sm font-medium leading-normal">
           <span className="material-symbols-outlined text-[20px]">share</span>
           <span className="truncate">Share Pulse</span>
         </button>

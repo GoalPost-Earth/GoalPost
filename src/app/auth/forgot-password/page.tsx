@@ -45,42 +45,33 @@ function ForgotPasswordPage() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors"
       style={{
-        backgroundColor: '#f3f4f6',
         backgroundImage: `
-        radial-gradient(at 0% 0%, hsla(199,100%,93%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, hsla(187,100%,92%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 100%, hsla(210,100%,95%,1) 0, transparent 50%), 
-        radial-gradient(at 0% 100%, hsla(190,100%,94%,1) 0, transparent 50%)
+        radial-gradient(at 18% 18%, color-mix(in srgb, var(--gp-primary) 12%, transparent) 0, transparent 55%),
+        radial-gradient(at 82% 16%, color-mix(in srgb, var(--gp-accent-glow) 12%, transparent) 0, transparent 55%),
+        radial-gradient(at 80% 85%, color-mix(in srgb, var(--gp-goal) 10%, transparent) 0, transparent 55%),
+        radial-gradient(at 16% 86%, color-mix(in srgb, var(--gp-resource) 12%, transparent) 0, transparent 55%)
       `,
       }}
-      data-light-bg={true}
-      data-dark-bg="true"
     >
-      {/* Dark mode gradient overlay */}
       <div
-        className="hidden dark:block absolute inset-0"
+        className="absolute inset-0 opacity-70 dark:opacity-90 pointer-events-none"
         style={{
-          backgroundColor: '#05070a',
-          backgroundImage: `
-          radial-gradient(at 0% 0%, hsla(220, 40%, 15%, 1) 0, transparent 60%), 
-          radial-gradient(at 100% 0%, hsla(240, 30%, 10%, 1) 0, transparent 60%), 
-          radial-gradient(at 100% 100%, hsla(210, 50%, 12%, 1) 0, transparent 60%), 
-          radial-gradient(at 0% 100%, hsla(230, 40%, 14%, 1) 0, transparent 60%)
-        `,
+          backgroundImage:
+            'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gp-primary) 14%, transparent), transparent 75%)',
         }}
       />
 
       {/* Main Content Container */}
       <div className="relative w-full max-w-4xl flex flex-col items-center justify-center px-4">
         {/* Floating Gradient Blobs */}
-        <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-cyan-100/30 dark:bg-indigo-900/10 rounded-full blur-[100px]" />
+        <div className="absolute -top-20 -left-20 w-64 h-64 bg-gp-primary/12 dark:bg-gp-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gp-accent-glow/12 dark:bg-gp-accent-glow/10 rounded-full blur-[100px]" />
 
         {/* Organic Cloud Container */}
         <div
-          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-12 relative z-10 transition-all duration-300 bg-white/45 backdrop-blur-[40px] border border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.04),inset_0_0_40px_rgba(255,255,255,0.4)] dark:bg-[rgba(15,18,25,0.7)] dark:border-white/10 dark:shadow-[0_25px_80px_rgba(0,0,0,0.5),inset_0_0_40px_rgba(255,255,255,0.02),inset_0_1px_1px_rgba(255,255,255,0.1)]"
+          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
           style={{
             borderRadius: '60% 40% 70% 30% / 40% 50% 60% 50%',
           }}
@@ -93,10 +84,10 @@ function ForgotPasswordPage() {
                   lock_reset
                 </span>
               </div>
-              <h1 className="text-3xl font-light text-slate-800 dark:text-slate-100 tracking-tight">
+              <h1 className="text-3xl font-light text-gp-ink-strong dark:text-gp-ink-strong tracking-tight">
                 Reset Access
               </h1>
-              <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-[0.2em] font-medium">
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs uppercase tracking-[0.2em] font-medium">
                 Recover Your Account
               </p>
             </div>
@@ -114,7 +105,7 @@ function ForgotPasswordPage() {
                   placeholder="Email"
                   autoComplete="email"
                   disabled={loading}
-                  className="w-full rounded-2xl px-5 py-3.5 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-sm font-light transition-all duration-300 bg-white/60 backdrop-blur-[10px] border border-white/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] dark:bg-white/[0.05] dark:border-white/[0.08] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] focus:bg-white/90 focus:border-cyan-500 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.1)] dark:focus:bg-white/10 dark:focus:border-blue-500 dark:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.15)]"
+                  className="w-full rounded-2xl px-5 py-3.5 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none text-sm font-light transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                 />
                 {errors.email && (
                   <p className="text-red-500 text-xs mt-1 ml-2">
@@ -144,31 +135,21 @@ function ForgotPasswordPage() {
                 className="cursor-pointer w-full text-white rounded-2xl py-3.5 text-sm font-medium tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:translate-y-0 dark:hover:brightness-110"
                 style={{
                   background:
-                    'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                    'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 78%, black 22%))',
+                  boxShadow:
+                    '0 12px 32px color-mix(in srgb, var(--gp-primary) 48%, transparent)',
                 }}
                 onMouseEnter={(e) => {
                   if (!loading) {
                     e.currentTarget.style.transform = 'translateY(-1px)'
-                    const isDark =
-                      document.documentElement.classList.contains('dark')
-                    if (isDark) {
-                      e.currentTarget.style.boxShadow =
-                        '0 8px 25px rgba(59, 130, 246, 0.5)'
-                      e.currentTarget.style.background =
-                        'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-                    } else {
-                      e.currentTarget.style.boxShadow =
-                        '0 6px 20px rgba(59, 130, 246, 0.5)'
-                    }
+                    e.currentTarget.style.boxShadow =
+                      '0 16px 42px color-mix(in srgb, var(--gp-primary) 55%, transparent)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
                   e.currentTarget.style.boxShadow =
-                    '0 4px 15px rgba(59, 130, 246, 0.4)'
-                  e.currentTarget.style.background =
-                    'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                    '0 12px 32px color-mix(in srgb, var(--gp-primary) 48%, transparent)'
                 }}
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}

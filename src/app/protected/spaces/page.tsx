@@ -4,10 +4,13 @@ import { useEffect } from 'react'
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
 import { usePageContext } from '@/app/contexts'
+import { useAnimations } from '@/app/contexts/animation-context'
+import { cn } from '@/lib/utils'
 
 export default function SpacesPage() {
   const router = useRouter()
   const { setPageTitle } = usePageContext()
+  const { animationsEnabled } = useAnimations()
 
   useEffect(() => {
     setPageTitle('Spaces')
@@ -17,9 +20,24 @@ export default function SpacesPage() {
     <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-hidden pt-24">
       {/* Background effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.15),transparent_70%)]" />
-      <div className="absolute top-[15%] left-[15%] w-125 h-125 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[120px] animate-blob" />
-      <div className="absolute bottom-[15%] right-[15%] w-100 h-100 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[100px] animate-blob [animation-delay:2s]" />
-      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px] animate-blob [animation-delay:4s]" />
+      <div
+        className={cn(
+          'absolute top-[15%] left-[15%] w-125 h-125 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[120px]',
+          animationsEnabled && 'animate-blob'
+        )}
+      />
+      <div
+        className={cn(
+          'absolute bottom-[15%] right-[15%] w-100 h-100 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[100px]',
+          animationsEnabled && 'animate-blob [animation-delay:2s]'
+        )}
+      />
+      <div
+        className={cn(
+          'absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px]',
+          animationsEnabled && 'animate-blob [animation-delay:4s]'
+        )}
+      />
 
       {/* Dot grid pattern */}
       <div className="absolute inset-0 gp-dot-grid opacity-30 dark:opacity-20" />

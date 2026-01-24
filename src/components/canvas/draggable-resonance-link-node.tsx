@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableResonanceLinkNodeProps {
@@ -28,6 +29,7 @@ export function DraggableResonanceLinkNode({
   isVisible = true,
   delay = 0,
 }: DraggableResonanceLinkNodeProps) {
+  const { animationsEnabled } = useAnimations()
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -144,46 +146,60 @@ export function DraggableResonanceLinkNode({
       animationRef.current.kill()
     }
 
-    animationRef.current = gsap.to(displayPositionRef.current, {
-      x,
-      y,
-      duration: 0.45,
-      ease: 'elastic.out(0.42, 0.8)',
-      overwrite: true,
-      onUpdate: () => {
-        setDisplayPosition({ ...displayPositionRef.current })
-      },
-    })
+    if (animationsEnabled) {
+      animationRef.current = gsap.to(displayPositionRef.current, {
+        x,
+        y,
+        duration: 0.45,
+        ease: 'elastic.out(0.42, 0.8)',
+        overwrite: true,
+        onUpdate: () => {
+          setDisplayPosition({ ...displayPositionRef.current })
+        },
+      })
+    } else {
+      // Instantly update position without animation
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+    }
 
     return () => {
       animationRef.current?.kill()
     }
-  }, [canvasPosition, isLocalDragging])
+  }, [canvasPosition, isLocalDragging, animationsEnabled])
 
   useEffect(() => {
     if (nodeRef.current) {
       if (isVisible) {
-        gsap.fromTo(
-          nodeRef.current,
-          { opacity: 0, scale: 0 },
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.6,
-            delay: delay,
-            ease: 'back.out(1.7)',
-          }
-        )
+        if (animationsEnabled) {
+          gsap.fromTo(
+            nodeRef.current,
+            { opacity: 0, scale: 0 },
+            {
+              opacity: 1,
+              scale: 1,
+              duration: 0.6,
+              delay: delay,
+              ease: 'back.out(1.7)',
+            }
+          )
+        } else {
+          gsap.set(nodeRef.current, { opacity: 1, scale: 1 })
+        }
       } else {
-        gsap.to(nodeRef.current, {
-          opacity: 0,
-          scale: 0,
-          duration: 0.3,
-          ease: 'power2.in',
-        })
+        if (animationsEnabled) {
+          gsap.to(nodeRef.current, {
+            opacity: 0,
+            scale: 0,
+            duration: 0.3,
+            ease: 'power2.in',
+          })
+        } else {
+          gsap.set(nodeRef.current, { opacity: 0, scale: 0 })
+        }
       }
     }
-  }, [isVisible, delay])
+  }, [isVisible, delay, animationsEnabled])
 
   const iconColor =
     confidence > 0.85
@@ -266,7 +282,7 @@ export function DraggableResonanceLinkNode({
         </div>
 
         {/* Label and Evidence */}
-        <div className="flex flex-col items-center text-center transition-all duration-300 group-hover:translate-y-1 max-w-[150px]">
+        <div className="flex flex-col items-center text-center transition-all duration-300 group-hover:translate-y-1 max-w-37.5">
           <span className="text-[11px] font-bold text-gp-ink-strong dark:text-white/90 leading-tight line-clamp-2">
             {evidence?.substring(0, 50) || 'Resonance Link'}
           </span>

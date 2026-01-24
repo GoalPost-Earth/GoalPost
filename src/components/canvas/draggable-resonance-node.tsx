@@ -6,6 +6,7 @@ import {
   ResonanceNode,
   type ResonanceNodeProps,
 } from '@/components/ui/resonance-node'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableResonanceNodeProps extends Omit<
@@ -26,8 +27,10 @@ export function DraggableResonanceNode({
   onClick,
   ...nodeProps
 }: DraggableResonanceNodeProps) {
+  const { animationsEnabled } = useAnimations()
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
+  const [isActiveLocal, setIsActiveLocal] = useState(false)
   const hasDraggedRef = useRef(false)
   const velocityRef = useRef({ x: 0, y: 0 })
   const lastMoveTimeRef = useRef(Date.now())
@@ -124,6 +127,7 @@ export function DraggableResonanceNode({
       hasDraggedRef.current = false
       return
     }
+    setIsActiveLocal((prev) => !prev)
     onClick?.()
   }
 
@@ -142,21 +146,27 @@ export function DraggableResonanceNode({
       animationRef.current.kill()
     }
 
-    animationRef.current = gsap.to(displayPositionRef.current, {
-      x,
-      y,
-      duration: 0.45,
-      ease: 'elastic.out(0.42, 0.8)',
-      overwrite: true,
-      onUpdate: () => {
-        setDisplayPosition({ ...displayPositionRef.current })
-      },
-    })
+    if (animationsEnabled) {
+      animationRef.current = gsap.to(displayPositionRef.current, {
+        x,
+        y,
+        duration: 0.45,
+        ease: 'elastic.out(0.42, 0.8)',
+        overwrite: true,
+        onUpdate: () => {
+          setDisplayPosition({ ...displayPositionRef.current })
+        },
+      })
+    } else {
+      // Instantly update position without animation
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+    }
 
     return () => {
       animationRef.current?.kill()
     }
-  }, [canvasPosition, isLocalDragging])
+  }, [canvasPosition, isLocalDragging, animationsEnabled])
 
   return (
     <div
@@ -172,6 +182,12 @@ export function DraggableResonanceNode({
         left: 0,
         transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.85 : 1,
+        boxShadow:
+          ((nodeProps as unknown as { isActive?: boolean }).isActive ??
+            false) ||
+          isActiveLocal
+            ? '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)'
+            : undefined,
       }}
       onMouseDown={handleMouseDown}
     >

@@ -58,9 +58,17 @@ export function ResonanceNode({
             'gp-glass border flex flex-col items-center justify-center text-center p-4',
             'border-white/20 dark:border-white/20',
             isActive
-              ? 'shadow-[0_0_50px_-10px_rgba(19,164,236,0.6)] dark:shadow-[0_0_50px_-10px_rgba(19,164,236,0.6)] border-gp-primary/50 dark:border-gp-primary/50 scale-110'
+              ? 'border-gp-primary/50 dark:border-gp-primary/50 scale-110'
               : 'hover:scale-105'
           )}
+          style={
+            isActive
+              ? {
+                  boxShadow:
+                    '0 0 50px -10px color-mix(in srgb, var(--gp-primary) 60%, transparent)',
+                }
+              : undefined
+          }
         >
           {/* Icon */}
           <div
@@ -70,10 +78,15 @@ export function ResonanceNode({
                 ? 'text-slate-900 dark:text-white'
                 : 'text-gp-primary/80 dark:text-gp-primary/80 group-hover:text-gp-primary dark:group-hover:text-gp-primary'
             )}
+            style={{
+              filter: isActive
+                ? 'drop-shadow(0 0 10px color-mix(in srgb, var(--gp-primary) 50%, transparent))'
+                : 'drop-shadow(0 0 8px color-mix(in srgb, var(--gp-primary) 35%, transparent))',
+            }}
           >
             <span
               className={cn(
-                'material-symbols-outlined text-[48px] drop-shadow-[0_0_10px_rgba(19,164,236,0.5)] transition-all duration-300'
+                'material-symbols-outlined text-[48px] transition-all duration-300'
               )}
             >
               {icon}
