@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggablePulseNodeProps extends Omit<
@@ -23,6 +24,7 @@ export function DraggablePulseNode({
   onClick,
   ...nodeProps
 }: DraggablePulseNodeProps) {
+  const { animationsEnabled } = useAnimations()
   const nodeRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -105,7 +107,8 @@ export function DraggablePulseNode({
   }
 
   // Start or restart floating animation
-  const startFloatingAnimation = () => {
+  const startFloatingAnimation = useCallback(() => {
+    if (!animationsEnabled) return
     if (floatingRef.current) {
       floatingRef.current.kill()
     }
@@ -118,7 +121,7 @@ export function DraggablePulseNode({
       overwrite: false,
       onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
     })
-  }
+  }, [animationsEnabled])
 
   // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
   useEffect(() => {
@@ -135,16 +138,22 @@ export function DraggablePulseNode({
       animationRef.current.kill()
     }
 
-    animationRef.current = gsap.to(displayPositionRef.current, {
-      x,
-      y,
-      duration: 0.45,
-      ease: 'elastic.out(0.42, 0.8)',
-      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
-    })
+    if (animationsEnabled) {
+      animationRef.current = gsap.to(displayPositionRef.current, {
+        x,
+        y,
+        duration: 0.45,
+        ease: 'elastic.out(0.42, 0.8)',
+        onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+      })
+    } else {
+      // Instantly update position without animation
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasPosition.x, canvasPosition.y, isLocalDragging])
+  }, [canvasPosition.x, canvasPosition.y, isLocalDragging, animationsEnabled])
 
   // Cleanup on unmount
   useEffect(() => {

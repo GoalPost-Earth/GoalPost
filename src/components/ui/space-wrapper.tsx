@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { SpaIcon, DiversityIcon } from '@/components/icons'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 interface SpaceWrapperProps {
   title: string
@@ -20,20 +21,32 @@ export function SpaceWrapper({
   onClick,
   className,
 }: SpaceWrapperProps) {
+  const { animationsEnabled } = useAnimations()
   const hoverGlowColor =
     variant === 'mespace'
       ? 'bg-blue-200/5 dark:bg-blue-200/10'
       : 'bg-emerald-200/5 dark:bg-emerald-200/10'
-  
+
   const Icon = variant === 'mespace' ? SpaIcon : DiversityIcon
 
   return (
     <div
-      className={cn('relative group cursor-pointer animate-float', className)}
+      className={cn(
+        'relative group cursor-pointer',
+        animationsEnabled && 'animate-float',
+        className
+      )}
       onClick={onClick}
     >
       {/* Main container */}
-      <div className="gp-glass w-[320px] h-80 lg:w-110 lg:h-110 rounded-full flex flex-col items-center justify-center transition-all duration-700 hover:scale-105 active:scale-95 group-hover:rotate-2">
+      <div
+        className={cn(
+          'gp-glass w-[320px] h-80 lg:w-110 lg:h-110 rounded-full flex flex-col items-center justify-center',
+          animationsEnabled
+            ? 'transition-all duration-700 hover:scale-105 active:scale-95 group-hover:rotate-2'
+            : ''
+        )}
+      >
         {/* Content */}
         <div className="flex flex-col items-center gap-6 p-8 text-center relative z-10">
           {/* Icon */}
@@ -60,17 +73,31 @@ export function SpaceWrapper({
         {/* Hover glow effect */}
         <div
           className={cn(
-            'absolute inset-0 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700',
+            'absolute inset-0 rounded-full blur-2xl opacity-0',
+            animationsEnabled &&
+              'group-hover:opacity-100 transition-opacity duration-700',
             hoverGlowColor
           )}
         />
 
         {/* Rotating border ring */}
-        <div className="absolute -inset-4 border border-dashed border-gp-glass-border rounded-full animate-[spin_60s_linear_infinite] opacity-40" />
+        <div
+          className={cn(
+            'absolute -inset-4 border border-dashed border-gp-glass-border rounded-full opacity-40',
+            animationsEnabled && 'animate-[spin_60s_linear_infinite]'
+          )}
+        />
       </div>
 
       {/* Hover button */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+      <div
+        className={cn(
+          'absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0',
+          animationsEnabled
+            ? 'group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0'
+            : ''
+        )}
+      >
         <span className="px-6 py-2 rounded-full bg-gp-ink-strong dark:bg-gp-ink-strong text-white dark:text-gp-surface text-xs font-medium tracking-wider transition-colors">
           {variant === 'mespace' ? 'ENTER FIELD' : 'ENTER COMMONS'}
         </span>

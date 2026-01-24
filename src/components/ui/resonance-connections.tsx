@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export interface ConnectionLine {
   id: string
@@ -25,26 +26,39 @@ export function ResonanceConnections({
   lines,
   className,
 }: ResonanceConnectionsProps) {
+  const { animationsEnabled } = useAnimations()
   const svgRef = useRef<SVGSVGElement>(null)
   const groupRef = useRef<SVGGElement>(null)
 
   useEffect(() => {
     if (groupRef.current) {
       if (isActive) {
-        gsap.to(groupRef.current, {
-          opacity: 1,
-          duration: 1,
-          ease: 'power2.out',
-        })
+        if (animationsEnabled) {
+          gsap.to(groupRef.current, {
+            opacity: 1,
+            duration: 1,
+            ease: 'power2.out',
+          })
+        } else {
+          gsap.set(groupRef.current, {
+            opacity: 1,
+          })
+        }
       } else {
-        gsap.to(groupRef.current, {
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power2.in',
-        })
+        if (animationsEnabled) {
+          gsap.to(groupRef.current, {
+            opacity: 0,
+            duration: 0.5,
+            ease: 'power2.in',
+          })
+        } else {
+          gsap.set(groupRef.current, {
+            opacity: 0,
+          })
+        }
       }
     }
-  }, [isActive])
+  }, [isActive, animationsEnabled])
 
   return (
     <svg
@@ -80,7 +94,13 @@ export function ResonanceConnections({
       </defs>
 
       {/* Lines group with fade in/out */}
-      <g ref={groupRef} className="opacity-0 transition-opacity duration-1000">
+      <g
+        ref={groupRef}
+        className={cn(
+          'opacity-0',
+          animationsEnabled && 'transition-opacity duration-1000'
+        )}
+      >
         {lines.map((line) => (
           <line
             key={line.id}
@@ -92,7 +112,11 @@ export function ResonanceConnections({
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            style={{ animation: `dash ${line.duration}s linear infinite` }}
+            style={
+              animationsEnabled
+                ? { animation: `dash ${line.duration}s linear infinite` }
+                : undefined
+            }
           />
         ))}
       </g>

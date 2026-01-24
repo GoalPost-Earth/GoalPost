@@ -1,11 +1,12 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { gsap } from 'gsap'
 import {
   FieldBubble,
   type FieldBubbleProps,
 } from '@/components/ui/field-bubble'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableFieldBubbleProps extends Omit<
@@ -28,6 +29,7 @@ export function DraggableFieldBubble({
   isDragging = false,
   ...bubbleProps
 }: DraggableFieldBubbleProps) {
+  const { animationsEnabled } = useAnimations()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -103,7 +105,8 @@ export function DraggableFieldBubble({
   }, [isLocalDragging, dragContext, onPositionChange])
 
   // Start or restart floating animation
-  const startFloatingAnimation = () => {
+  const startFloatingAnimation = useCallback(() => {
+    if (!animationsEnabled) return
     if (floatingRef.current) {
       floatingRef.current.kill()
     }
@@ -116,7 +119,7 @@ export function DraggableFieldBubble({
       overwrite: false,
       onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
     })
-  }
+  }, [animationsEnabled])
 
   // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
   useEffect(() => {
@@ -133,20 +136,26 @@ export function DraggableFieldBubble({
       animationRef.current.kill()
     }
 
-    animationRef.current = gsap.to(displayPositionRef.current, {
-      x,
-      y,
-      duration: 0.45,
-      ease: 'elastic.out(0.42, 0.8)',
-      overwrite: true,
-      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
-      onComplete: () => startFloatingAnimation(),
-    })
+    if (animationsEnabled) {
+      animationRef.current = gsap.to(displayPositionRef.current, {
+        x,
+        y,
+        duration: 0.45,
+        ease: 'elastic.out(0.42, 0.8)',
+        overwrite: true,
+        onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+        onComplete: () => startFloatingAnimation(),
+      })
+    } else {
+      // Instantly update position without animation
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+    }
 
     return () => {
       animationRef.current?.kill()
     }
-  }, [canvasPosition, isLocalDragging])
+  }, [canvasPosition, isLocalDragging, animationsEnabled])
 
   // Initialize floating animation on mount
   useEffect(() => {
@@ -155,7 +164,7 @@ export function DraggableFieldBubble({
       floatingRef.current?.kill()
       animationRef.current?.kill()
     }
-  }, [])
+  }, [startFloatingAnimation])
 
   const handleClick = () => {
     if (hasDraggedRef.current) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export type NodeType = 'goal' | 'resource' | 'story'
 
@@ -81,6 +82,7 @@ export function PulseNode({
   onClick,
   className,
 }: PulseNodeProps) {
+  const { animationsEnabled } = useAnimations()
   const config = typeConfig[type]
   const posClass = typeof position === 'string' ? positionClasses[position] : ''
   const animClass = animationClasses[animation]
@@ -91,7 +93,7 @@ export function PulseNode({
       className={cn(
         'pulse-node group cursor-pointer flex flex-col items-center gap-3 w-32',
         posClass,
-        animClass,
+        animationsEnabled && animClass,
         className
       )}
       onClick={onClick}
@@ -109,11 +111,15 @@ export function PulseNode({
       <div
         className={cn(
           'relative flex items-center justify-center size-20 rounded-2xl',
-          'glass-panel transition-all duration-300',
-          'group-hover:scale-110 group-hover:-translate-y-2',
+          'glass-panel',
+          animationsEnabled && 'transition-all duration-300',
+          animationsEnabled &&
+            'group-hover:scale-110 group-hover:-translate-y-2',
           config.bgClass,
-          'shadow-[0_0_20px_var(--shadow-color)] group-hover:shadow-[0_0_40px_var(--shadow-color)]',
-          `group-hover:border-${type}-tint/30 border border-transparent`
+          animationsEnabled &&
+            'shadow-[0_0_20px_var(--shadow-color)] group-hover:shadow-[0_0_40px_var(--shadow-color)]',
+          animationsEnabled &&
+            `group-hover:border-${type}-tint/30 border border-transparent`
         )}
         style={
           {
@@ -123,7 +129,8 @@ export function PulseNode({
       >
         <span
           className={cn(
-            'material-symbols-outlined text-4xl drop-shadow-sm group-hover:drop-shadow-md',
+            'material-symbols-outlined text-4xl',
+            animationsEnabled && 'drop-shadow-sm group-hover:drop-shadow-md',
             config.color
           )}
         >

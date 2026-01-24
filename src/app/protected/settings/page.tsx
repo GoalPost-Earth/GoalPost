@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { useTheme, ThemeColor } from '@/app/contexts/theme-context'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 type SettingSectionProps = {
   icon: string
@@ -14,6 +15,7 @@ type SettingToggleProps = {
   label: string
   description: string
   active?: boolean
+  onToggle?: (active: boolean) => void
 }
 
 type SettingSwatchProps = {
@@ -51,8 +53,14 @@ function SettingToggle({
   label,
   description,
   active = true,
+  onToggle,
 }: SettingToggleProps) {
   const [isActive, setIsActive] = useState(active)
+
+  const handleToggle = (newState: boolean) => {
+    setIsActive(newState)
+    onToggle?.(newState)
+  }
 
   return (
     <SettingCard>
@@ -65,7 +73,7 @@ function SettingToggle({
             {description}
           </p>
         </div>
-        <Switch checked={isActive} onCheckedChange={setIsActive} />
+        <Switch checked={isActive} onCheckedChange={handleToggle} />
       </div>
     </SettingCard>
   )
@@ -93,6 +101,7 @@ function SettingSwatch({
 
 export default function SettingsPage() {
   const { themeColor, setThemeColor } = useTheme()
+  const { animationsEnabled, setAnimationsEnabled } = useAnimations()
 
   const themeColors: Array<{ color: string; themeColor: ThemeColor }> = [
     { color: '#0A84FF', themeColor: 'default' },
@@ -158,7 +167,8 @@ export default function SettingsPage() {
                 <SettingToggle
                   label="Animations"
                   description="Fluid UI transitions and field drifts"
-                  active
+                  active={animationsEnabled}
+                  onToggle={setAnimationsEnabled}
                 />
                 <SettingToggle
                   label="Haptic Echo"

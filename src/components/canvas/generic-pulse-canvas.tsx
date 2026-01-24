@@ -3,6 +3,7 @@
 import { ReactNode, useRef, useState, useEffect } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts/animation-context'
 
 export interface GenericPulseCanvasProps {
   children?: ReactNode
@@ -41,6 +42,7 @@ export function GenericPulseCanvas({
     subtitle: 'Create one with the button below',
   },
 }: GenericPulseCanvasProps) {
+  const { animationsEnabled } = useAnimations()
   const canvasRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
@@ -132,15 +134,24 @@ export function GenericPulseCanvas({
                       />
 
                       {/* Pulse dots (background animation) */}
-                      <div className="absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 rounded-full animate-pulse" />
                       <div
-                        className="absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/35 rounded-full"
-                        style={{
-                          animation:
-                            'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        }}
+                        className={cn(
+                          'absolute top-[20%] left-[10%] size-1 bg-gp-primary/40 rounded-full',
+                          animationsEnabled && 'animate-pulse'
+                        )}
                       />
-                      <div className="absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 rounded-full animate-float" />
+                      <div
+                        className={cn(
+                          'absolute top-[80%] left-[20%] size-1.5 bg-gp-primary/35 rounded-full',
+                          animationsEnabled && 'animate-pulse'
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          'absolute top-[40%] right-[15%] size-1 bg-gp-primary/40 rounded-full',
+                          animationsEnabled && 'animate-float'
+                        )}
+                      />
                     </>
                   )}
 
@@ -148,7 +159,12 @@ export function GenericPulseCanvas({
                   {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
                       <div className="flex flex-col items-center gap-4">
-                        <span className="material-symbols-outlined text-5xl text-gp-primary animate-spin">
+                        <span
+                          className={cn(
+                            'material-symbols-outlined text-5xl text-gp-primary',
+                            animationsEnabled && 'animate-spin'
+                          )}
+                        >
                           hourglass_bottom
                         </span>
                         <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">

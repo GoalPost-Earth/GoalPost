@@ -6,6 +6,7 @@ import {
   EntityBubble,
   type EntityBubbleProps,
 } from '@/components/ui/entity-bubble'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableEntityBubbleProps extends EntityBubbleProps {
@@ -25,6 +26,7 @@ export function DraggableEntityBubble({
   onClick,
   ...bubbleProps
 }: DraggableEntityBubbleProps) {
+  const { animationsEnabled } = useAnimations()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
@@ -106,19 +108,25 @@ export function DraggableEntityBubble({
       animationRef.current.kill()
     }
 
-    animationRef.current = gsap.to(displayPositionRef.current, {
-      x,
-      y,
-      duration: 0.45,
-      ease: 'elastic.out(0.42, 0.8)',
-      overwrite: true,
-      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
-    })
+    if (animationsEnabled) {
+      animationRef.current = gsap.to(displayPositionRef.current, {
+        x,
+        y,
+        duration: 0.45,
+        ease: 'elastic.out(0.42, 0.8)',
+        overwrite: true,
+        onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+      })
+    } else {
+      // Instantly update position without animation
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+    }
 
     return () => {
       animationRef.current?.kill()
     }
-  }, [canvasPosition, isLocalDragging])
+  }, [canvasPosition, isLocalDragging, animationsEnabled])
 
   const handleClick = () => {
     if (hasDraggedRef.current) {

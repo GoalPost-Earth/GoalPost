@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, ReactNode } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
+import { useAnimations } from '@/app/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface GenericCanvasProps {
@@ -29,6 +30,7 @@ export function GenericCanvas({
   onScaleChange,
   showBackgroundDecor = true,
 }: GenericCanvasProps) {
+  const { animationsEnabled } = useAnimations()
   const canvasRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
@@ -107,9 +109,26 @@ export function GenericCanvas({
                 >
                   {showBackgroundDecor && (
                     <>
-                      <div className="absolute top-[20%] left-[20%] w-96 h-96 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[100px] animate-blob" />
-                      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[80px] animate-blob [animation-delay:2s]" />
-                      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px] animate-blob [animation-delay:4s]" />
+                      <div
+                        className={cn(
+                          'absolute top-[20%] left-[20%] w-96 h-96 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[100px]',
+                          animationsEnabled && 'animate-blob'
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          'absolute bottom-[20%] right-[20%] w-80 h-80 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[80px]',
+                          animationsEnabled &&
+                            'animate-blob [animation-delay:2s]'
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          'absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px]',
+                          animationsEnabled &&
+                            'animate-blob [animation-delay:4s]'
+                        )}
+                      />
                     </>
                   )}
                 </div>
