@@ -19,14 +19,14 @@ const AnimationContext = createContext<AnimationContextType | undefined>(
 const ANIMATION_STORAGE_KEY = 'goalpost-animations-enabled'
 
 export function AnimationProvider({ children }: { children: React.ReactNode }) {
-  const [animationsEnabled, setAnimationsEnabledState] = useState(true)
+  const [animationsEnabled, setAnimationsEnabledState] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   // Load animation preference before first paint
   useLayoutEffect(() => {
     const savedPreference = localStorage.getItem(ANIMATION_STORAGE_KEY)
     const nextEnabled =
-      savedPreference === null ? true : savedPreference === 'true'
+      savedPreference === null ? false : savedPreference === 'true'
     setAnimationsEnabledState(nextEnabled)
     setMounted(true)
   }, [])
