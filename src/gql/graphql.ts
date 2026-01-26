@@ -7645,7 +7645,6 @@ export type SearchAllQuery = {
       content: string
       createdAt: any
       intensity?: number | null
-      resourceType: string
     }>
     storyPulses: Array<{
       __typename?: 'StoryPulse'
@@ -14575,10 +14574,6 @@ export const SearchAllDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'intensity' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'resourceType' },
                       },
                     ],
                   },

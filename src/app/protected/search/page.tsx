@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAnimations } from '@/app/contexts/animation-context'
 import { usePageContext } from '@/app/contexts/PageContext'
 import { SEARCH_ALL } from '@/app/graphql/queries'
@@ -109,7 +110,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       type: 'meSpace',
       title: space.name,
       subtitle: 'Me Space',
-      description: `Personal Space ${capitalizeString(space.visibility)}`,
+      description: `${capitalizeString(space.visibility)}`,
       href: `/protected/spaces/me-space/${space.id}`,
     })
   })
@@ -121,7 +122,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       type: 'weSpace',
       title: space.name,
       subtitle: 'We Space',
-      description: `Collaborative space - ${capitalizeString(space.visibility)}`,
+      description: `${capitalizeString(space.visibility)}`,
       href: `/protected/spaces/we-space/${space.id}`,
     })
   })
@@ -218,6 +219,7 @@ const typePillClass: Record<EntityType, string> = {
 }
 
 export default function SearchPage() {
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeType, setActiveType] = useState<EntityType | 'all'>('all')
   const { animationsEnabled } = useAnimations()
@@ -230,6 +232,26 @@ export default function SearchPage() {
   useEffect(() => {
     setPageTitle('Search')
   }, [setPageTitle])
+
+  // Handle entity click to set title and localStorage before navigation
+  const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
+    e.preventDefault()
+
+    // For spaces and fields, set title and localStorage before navigating
+    if (entity.type === 'meSpace' || entity.type === 'weSpace') {
+      setPageTitle(entity.title)
+      localStorage.setItem(`space_${entity.id}`, entity.title)
+    } else if (entity.type === 'context') {
+      // For field contexts, store as field
+      setPageTitle(entity.title)
+      localStorage.setItem(`field_${entity.id}`, entity.title)
+    } else {
+      // For other entities, just set the title
+      setPageTitle(entity.title)
+    }
+
+    router.push(entity.href)
+  }
 
   const filteredEntities = useMemo(() => {
     if (!data) return []
@@ -346,7 +368,12 @@ export default function SearchPage() {
           )}
 
           {filteredEntities.map((entity) => (
-            <Link key={entity.id} href={entity.href} className="group">
+            <Link
+              key={entity.id}
+              href={entity.href}
+              className="group"
+              onClick={(e) => handleEntityClick(entity, e)}
+            >
               <article
                 className={`h-full rounded-2xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-5 shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_70px_-28px_rgba(0,0,0,0.6)] transition-all ${
                   animationsEnabled

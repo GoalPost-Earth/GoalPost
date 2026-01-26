@@ -86,12 +86,12 @@ export default function NavBar() {
           <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
         </Link>
         <div className="flex flex-col gap-1">
-          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors whitespace-normal break-words md:whitespace-nowrap">
+          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors whitespace-normal wrap-break-word md:whitespace-nowrap">
             {pageTitle === 'Spaces' && user?.firstName
               ? `${user.firstName}'s Spaces`
               : pageTitle}
           </h2>
-          {pageTitle !== 'Spaces' && (
+          {pathname?.includes('/spaces/') && pageTitle !== 'Spaces' && (
             <div className="text-xs text-gp-ink-muted dark:text-gp-ink-soft flex items-center gap-2">
               <Link
                 href="/protected/spaces"
@@ -117,6 +117,22 @@ export default function NavBar() {
                   </Link>
                 </>
               ) : null}
+              {pathname?.includes('/fields/') && (
+                <>
+                  <span>•</span>
+                  <Link
+                    href={(() => {
+                      // Extract space URL from field URL
+                      // e.g., /protected/spaces/we-space/space_id/fields/field_id -> /protected/spaces/we-space/space_id
+                      const parts = pathname.split('/fields/')
+                      return parts[0]
+                    })()}
+                    className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
+                  >
+                    Fields
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -180,6 +196,13 @@ export default function NavBar() {
         <button className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
           {isMounted && <NotificationIcon />}
         </button>
+        <Link
+          href="/protected/search"
+          className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+          aria-label="Search"
+        >
+          <span className="material-symbols-outlined">search</span>
+        </Link>
 
         {/* User Menu */}
         <div className="relative" ref={menuRef}>

@@ -31,7 +31,6 @@ export const SEARCH_ALL = gql`
         content
         createdAt
         intensity
-        resourceType
       }
       storyPulses {
         id
