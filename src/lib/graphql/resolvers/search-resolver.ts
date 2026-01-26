@@ -171,19 +171,19 @@ export const searchResolvers = {
 
       // Extract properties from Neo4j records
       const extractProperties = (
-        records: Array<{ get: (key: string) => { properties: EntityRecord } }>
-      ): EntityRecord[] =>
-        records.map((record) => record.get(record.keys[0]).properties)
+        records: Array<{ get: (key: string) => { properties: EntityRecord } }>,
+        key: string
+      ): EntityRecord[] => records.map((record) => record.get(key).properties)
 
       return {
-        people: extractProperties(peopleResult.records),
-        communities: extractProperties(communitiesResult.records),
-        meSpaces: extractProperties(meSpacesResult.records),
-        weSpaces: extractProperties(weSpacesResult.records),
-        contexts: extractProperties(contextsResult.records),
-        goalPulses: extractProperties(goalPulsesResult.records),
-        resourcePulses: extractProperties(resourcePulsesResult.records),
-        storyPulses: extractProperties(storyPulsesResult.records),
+        people: extractProperties(peopleResult.records, 'p'),
+        communities: extractProperties(communitiesResult.records, 'c'),
+        meSpaces: extractProperties(meSpacesResult.records, 's'),
+        weSpaces: extractProperties(weSpacesResult.records, 's'),
+        contexts: extractProperties(contextsResult.records, 'f'),
+        goalPulses: extractProperties(goalPulsesResult.records, 'p'),
+        resourcePulses: extractProperties(resourcePulsesResult.records, 'p'),
+        storyPulses: extractProperties(storyPulsesResult.records, 'p'),
       }
     } catch (error) {
       console.error('❌ Search error:', error)
