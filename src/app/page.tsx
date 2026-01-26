@@ -2,13 +2,21 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useApp } from '@/app/contexts'
 
 export default function Home() {
   const router = useRouter()
+  const { isAuthenticated, isLoading } = useApp()
 
   useEffect(() => {
-    router.push('/protected/spaces')
-  }, [router])
+    if (isLoading) return
+
+    if (isAuthenticated) {
+      router.push('/protected/spaces')
+    } else {
+      router.push('/auth/login')
+    }
+  }, [isAuthenticated, isLoading, router])
 
   return null
 }

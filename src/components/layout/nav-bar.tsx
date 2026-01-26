@@ -73,9 +73,41 @@ export default function NavBar() {
         <Link href="/" className="flex items-center gap-4 text-gp-primary">
           <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
         </Link>
-        <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
-          {pageTitle}
-        </h2>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
+            {pageTitle === 'Spaces' && user?.firstName
+              ? `${user.firstName}'s Spaces`
+              : pageTitle}
+          </h2>
+          {pageTitle !== 'Spaces' && (
+            <div className="text-xs text-gp-ink-muted dark:text-gp-ink-soft flex items-center gap-2">
+              <Link
+                href="/protected/spaces"
+                className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
+              >
+                {user?.firstName + "'s Spaces" || 'My Spaces'}
+              </Link>
+              {(pathname?.includes('/me-space') &&
+                pathname !== '/protected/spaces/me-space') ||
+              (pathname?.includes('/we-space') &&
+                pathname !== '/protected/spaces/we-space') ? (
+                <>
+                  <span>•</span>
+                  <Link
+                    href={
+                      pathname?.includes('/me-space')
+                        ? '/protected/spaces/me-space'
+                        : '/protected/spaces/we-space'
+                    }
+                    className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
+                  >
+                    {pathname?.includes('/me-space') ? 'Me Space' : 'We Space'}
+                  </Link>
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-6">
