@@ -26,10 +26,12 @@ export default function NavBar() {
   const [isMounted, setIsMounted] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useApp()
   const { pageTitle } = usePageContext()
   const menuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Check initial theme from localStorage or system preference
@@ -47,18 +49,28 @@ export default function NavBar() {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const isMobileMenuButton = target.closest('[data-mobile-menu-button]')
+
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        !isMobileMenuButton
+      ) {
+        setShowMobileMenu(false)
+      }
     }
 
-    if (showUserMenu) {
+    if (showUserMenu || showMobileMenu) {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showUserMenu])
+  }, [showUserMenu, showMobileMenu])
 
   const toggleTheme = () => {
     const newTheme = !isDark
@@ -68,18 +80,18 @@ export default function NavBar() {
   }
 
   return (
-    <header className="fixed top-6 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-gp-glass-border px-10 py-4 gp-glass mx-10 rounded-full shadow-lg">
-      <div className="flex items-center gap-8">
+    <header className="fixed top-6 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-gp-glass-border px-5 lg:px-10 py-4 gp-glass mx-8 lg:mx-10 rounded-full shadow-lg">
+      <div className="flex items-center gap-2 md:gap-6 lg:gap-8">
         <Link href="/" className="flex items-center gap-4 text-gp-primary">
           <div className="size-10 p-0 m-0">{isMounted && <GoalPostLogo />}</div>
         </Link>
-        <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors">
+        <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
           {pageTitle}
         </h2>
       </div>
 
-      <div className="flex items-center gap-6">
-        <nav className="hidden md:flex items-center gap-6">
+      <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
+        <nav className="hidden md:flex items-center gap-2 md:gap-4 lg:gap-6">
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
@@ -128,12 +140,12 @@ export default function NavBar() {
 
         <button
           onClick={toggleTheme}
-          className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+          className="hidden md:flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
           aria-label="Toggle theme"
         >
           {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
         </button>
-        <button className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
+        <button className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
           {isMounted && <NotificationIcon />}
         </button>
 
@@ -151,7 +163,7 @@ export default function NavBar() {
 
           {/* Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl gp-glass border border-gp-glass-border shadow-xl py-2 z-50">
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-black/90 border border-gp-glass-border shadow-xl py-2 z-50">
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gp-glass-border">
                 <p className="text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
@@ -207,6 +219,105 @@ export default function NavBar() {
             </div>
           )}
         </div>
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="md:hidden flex items-center justify-center size-10 rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+          aria-label="Toggle mobile menu"
+          data-mobile-menu-button
+        >
+          <span className="material-symbols-outlined text-xl">
+            {showMobileMenu ? 'close' : 'menu'}
+          </span>
+        </button>
+        {/* Mobile Menu Dropdown */}
+        {showMobileMenu && (
+          <div
+            ref={mobileMenuRef}
+            className="absolute top-20 left-4 right-4 md:hidden rounded-2xl bg-white dark:bg-black/90 border border-gp-glass-border shadow-xl py-2 z-50"
+          >
+            <Link
+              href="/protected/spaces/me-space"
+              className={cn(
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
+                pathname === '/protected/spaces/me-space'
+                  ? 'text-gp-primary bg-gp-primary/10'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
+              )}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="material-symbols-outlined">person</span>
+              Me Space
+            </Link>
+            <Link
+              href="/protected/spaces/we-space"
+              className={cn(
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
+                pathname === '/protected/spaces/we-space'
+                  ? 'text-gp-primary bg-gp-primary/10'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
+              )}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="material-symbols-outlined">group</span>
+              We Space
+            </Link>
+            <Link
+              href="/protected/resonance"
+              className={cn(
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
+                pathname === '/protected/resonance'
+                  ? 'text-gp-primary bg-gp-primary/10'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
+              )}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="material-symbols-outlined">auto_awesome</span>
+              Resonance
+            </Link>
+            <Link
+              href="/protected/history"
+              className={cn(
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
+                pathname === '/protected/history'
+                  ? 'text-gp-primary bg-gp-primary/10'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
+              )}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="material-symbols-outlined">history</span>
+              History
+            </Link>
+            <Link
+              href="/protected/search"
+              className={cn(
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors border-t border-gp-glass-border mt-1 pt-2',
+                pathname === '/protected/search'
+                  ? 'text-gp-primary bg-gp-primary/10'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
+              )}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="material-symbols-outlined">search</span>
+              Search
+            </Link>
+            <div className="border-t border-gp-glass-border mt-2 pt-2 px-4 py-2 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  toggleTheme()
+                  setShowMobileMenu(false)
+                }}
+                className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+                aria-label="Toggle theme"
+              >
+                {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
+              </button>
+              <button className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
+                {isMounted && <NotificationIcon />}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Logout Confirmation Modal */}
