@@ -1,6 +1,7 @@
 import { Person } from '@/gql/graphql'
 import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
+import { searchResolvers } from './search-resolver'
 
 const resolvers = {
   // Resolver Parameters
@@ -21,7 +22,9 @@ const resolvers = {
     ...chatbotResolvers,
     ...inviteMutations,
   },
-  Query: {},
+  Query: {
+    ...searchResolvers,
+  },
 }
 
 export default resolvers
