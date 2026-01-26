@@ -6,7 +6,7 @@ Looking for docs? Start with the consolidated index at [docs/README.md](docs/REA
 
 ## Installation Instructions
 
-This document provides step-by-step instructions for setting up the GoalPost prototype on your local machine. 
+This document provides step-by-step instructions for setting up and running the GoalPost prototype on your local machine. 
 
 The prototype is built using Next.js, Neo4j, and includes optional AI features powered by OpenAI.
 

@@ -17,7 +17,7 @@ extend schema @authentication
 A human user of the system.
 Multi-label: ["Person", "User"]
 """
-type Person @node(labels: ["Person", "User"]) {
+type Person @node(labels: ["Person"]) {
   id: ID! @id
   firstName: String!
   lastName: String!
@@ -223,6 +223,25 @@ type ResonanceLink @node(labels: ["ResonanceLink"]) {
 }
 
 # ============================================================================
+# SEARCH LAYER (Cross-Entity Discovery)
+# ============================================================================
+
+"""
+Structured response for categorized search results.
+Returns up to 10 results of each entity type matching the search query.
+"""
+type SearchResults {
+  people: [Person!]!
+  communities: [Community!]!
+  meSpaces: [MeSpace!]!
+  weSpaces: [WeSpace!]!
+  contexts: [FieldContext!]!
+  goalPulses: [GoalPulse!]!
+  resourcePulses: [ResourcePulse!]!
+  storyPulses: [StoryPulse!]!
+}
+
+# ============================================================================
 # MUTATIONS (Custom Operations)
 # ============================================================================
 
@@ -252,4 +271,22 @@ type Mutation {
   Removes the User label and invite-related properties.
   """
   cancelInvite(personId: String!): Person
+}
+
+type Query {
+  """
+  Global federated search across all entity types.
+  Searches using case-insensitive substring matching on:
+    - Pulses: content field
+    - People: firstName, lastName, email
+    - Contexts: title field
+    - Spaces (MeSpace/WeSpace): name field
+    - Communities: name field
+
+  Args:
+    - query: Search term (required, case-insensitive substring match)
+
+  Returns: SearchResults with up to 10 results of each entity type
+  """
+  searchAll(query: String!): SearchResults
 }
