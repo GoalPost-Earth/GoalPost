@@ -4,8 +4,19 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useAnimations } from '@/app/contexts/animation-context'
 import { usePageContext } from '@/app/contexts/PageContext'
+import { SEARCH_ALL } from '@/app/graphql/queries'
+import { useQuery } from '@apollo/client/react'
+import { capitalizeString } from '@/lib/utils'
 
-type EntityType = 'person' | 'space' | 'resonance' | 'pulse'
+type EntityType =
+  | 'person'
+  | 'community'
+  | 'meSpace'
+  | 'weSpace'
+  | 'context'
+  | 'goalPulse'
+  | 'resourcePulse'
+  | 'storyPulse'
 
 type SearchEntity = {
   id: string
@@ -17,85 +28,193 @@ type SearchEntity = {
   href: string
 }
 
-const sampleEntities: SearchEntity[] = [
-  {
-    id: 'person-1',
-    type: 'person',
-    title: 'Elena Vance',
-    subtitle: 'Synthesizer',
-    description:
-      'Exploring collective intelligence and decentralized governance models.',
-    tags: ['DAO', 'Ethics'],
-    href: '/protected/people/person-1',
-  },
-  {
-    id: 'space-1',
-    type: 'space',
-    title: 'Pattern Library',
-    subtitle: 'Community Space',
-    description: 'Community-led design systems for social coordination.',
-    tags: ['Design', 'Systems'],
-    href: '/protected/spaces/pattern-library',
-  },
-  {
-    id: 'resonance-1',
-    type: 'resonance',
-    title: 'Shared Vision',
-    subtitle: 'Alignment Signal',
-    description:
-      'High cohesion across neighboring pulses in the governance domain.',
-    tags: ['Alignment', 'Governance'],
-    href: '/protected/resonance/shared-vision',
-  },
-  {
-    id: 'pulse-1',
-    type: 'pulse',
-    title: 'Weekly Sync',
-    subtitle: 'Pulse',
-    description: 'Participants converge on priorities and unblock shared work.',
-    tags: ['Collaboration', 'Meeting'],
-    href: '/protected/pulses/weekly-sync',
-  },
-  {
-    id: 'person-2',
-    type: 'person',
-    title: 'Malik Soto',
-    subtitle: 'Field Catalyst',
-    description: 'Connecting early-stage projects to the right collaborators.',
-    tags: ['Network', 'Funding'],
-    href: '/protected/people/malik-soto',
-  },
-  {
-    id: 'space-2',
-    type: 'space',
-    title: 'Governance Guild',
-    subtitle: 'We Space',
-    description:
-      'A shared lab for incentive design, protocols, and decision tooling.',
-    tags: ['Governance', 'Protocols'],
-    href: '/protected/spaces/governance-guild',
-  },
-]
+interface GraphQLSearchResult {
+  searchAll: {
+    people: Array<{
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    }>
+    communities: Array<{ id: string; name: string; type?: string }>
+    meSpaces: Array<{
+      id: string
+      name: string
+      visibility: string
+      createdAt: string
+    }>
+    weSpaces: Array<{
+      id: string
+      name: string
+      visibility: string
+      createdAt: string
+    }>
+    contexts: Array<{ id: string; title: string }>
+    goalPulses: Array<{
+      id: string
+      content: string
+      createdAt: string
+      intensity: number
+    }>
+    resourcePulses: Array<{
+      id: string
+      content: string
+      createdAt: string
+      intensity: number
+      resourceType: string
+    }>
+    storyPulses: Array<{
+      id: string
+      content: string
+      createdAt: string
+      intensity: number
+    }>
+  }
+}
+
+/**
+ * Transform GraphQL search results into SearchEntity array for display
+ */
+const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
+  const entities: SearchEntity[] = []
+
+  // Transform people
+  data.searchAll.people.forEach((person) => {
+    entities.push({
+      id: person.id,
+      type: 'person',
+      title: `${person.firstName} ${person.lastName}`,
+      subtitle: person.email,
+      description: `A person in the network`,
+      href: `/protected/people/${person.id}`,
+    })
+  })
+
+  // Transform communities
+  data.searchAll.communities.forEach((community) => {
+    entities.push({
+      id: community.id,
+      type: 'community',
+      title: community.name,
+      subtitle: community.type ? `${community.type} Community` : 'Community',
+      description: `A collective community`,
+      href: `/protected/communities/${community.id}`,
+    })
+  })
+
+  // Transform me spaces
+  data.searchAll.meSpaces.forEach((space) => {
+    entities.push({
+      id: space.id,
+      type: 'meSpace',
+      title: space.name,
+      subtitle: 'Me Space',
+      description: `Personal Space ${capitalizeString(space.visibility)}`,
+      href: `/protected/spaces/me-space/${space.id}`,
+    })
+  })
+
+  // Transform we spaces
+  data.searchAll.weSpaces.forEach((space) => {
+    entities.push({
+      id: space.id,
+      type: 'weSpace',
+      title: space.name,
+      subtitle: 'We Space',
+      description: `Collaborative space - ${capitalizeString(space.visibility)}`,
+      href: `/protected/spaces/we-space/${space.id}`,
+    })
+  })
+
+  // Transform contexts
+  data.searchAll.contexts.forEach((context) => {
+    entities.push({
+      id: context.id,
+      type: 'context',
+      title: context.title,
+      subtitle: 'Field Context',
+      description: `A thematic container for related pulses`,
+      href: `/protected/contexts/${context.id}`,
+    })
+  })
+
+  // Transform goal pulses
+  data.searchAll.goalPulses.forEach((pulse) => {
+    entities.push({
+      id: pulse.id,
+      type: 'goalPulse',
+      title:
+        pulse.content.substring(0, 50) +
+        (pulse.content.length > 50 ? '...' : ''),
+      subtitle: 'Goal',
+      description: pulse.content,
+      href: `/protected/pulses/${pulse.id}`,
+    })
+  })
+
+  // Transform resource pulses
+  data.searchAll.resourcePulses.forEach((pulse) => {
+    entities.push({
+      id: pulse.id,
+      type: 'resourcePulse',
+      title:
+        pulse.content.substring(0, 50) +
+        (pulse.content.length > 50 ? '...' : ''),
+      subtitle: pulse.resourceType,
+      description: pulse.content,
+      tags: [pulse.resourceType],
+      href: `/protected/pulses/${pulse.id}`,
+    })
+  })
+
+  // Transform story pulses
+  data.searchAll.storyPulses.forEach((pulse) => {
+    entities.push({
+      id: pulse.id,
+      type: 'storyPulse',
+      title:
+        pulse.content.substring(0, 50) +
+        (pulse.content.length > 50 ? '...' : ''),
+      subtitle: 'Story',
+      description: pulse.content,
+      href: `/protected/pulses/${pulse.id}`,
+    })
+  })
+
+  return entities
+}
 
 const typeLabel: Record<EntityType, string> = {
   person: 'Person',
-  space: 'Space',
-  resonance: 'Resonance',
-  pulse: 'Pulse',
+  community: 'Community',
+  meSpace: 'Me Space',
+  weSpace: 'We Space',
+  context: 'Context',
+  goalPulse: 'Goal',
+  resourcePulse: 'Resource',
+  storyPulse: 'Story',
 }
 
 const typeAccentClass: Record<EntityType, string> = {
   person: 'text-gp-primary',
-  space: 'text-gp-goal',
-  resonance: 'text-gp-story',
-  pulse: 'text-gp-resource',
+  community: 'text-gp-primary',
+  meSpace: 'text-gp-goal',
+  weSpace: 'text-gp-goal',
+  context: 'text-gp-story',
+  goalPulse: 'text-gp-resource',
+  resourcePulse: 'text-gp-resource',
+  storyPulse: 'text-gp-story',
 }
 
 const typePillClass: Record<EntityType, string> = {
   person: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
-  space: 'bg-gp-goal/10 text-gp-goal border-gp-goal/20',
-  resonance: 'bg-gp-story/10 text-gp-story border-gp-story/20',
-  pulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
+  community: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
+  meSpace: 'bg-gp-goal/10 text-gp-goal border-gp-goal/20',
+  weSpace: 'bg-gp-goal/10 text-gp-goal border-gp-goal/20',
+  context: 'bg-gp-story/10 text-gp-story border-gp-story/20',
+  goalPulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
+  resourcePulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
+  storyPulse: 'bg-gp-story/10 text-gp-story border-gp-story/20',
 }
 
 export default function SearchPage() {
@@ -103,20 +222,22 @@ export default function SearchPage() {
   const [activeType, setActiveType] = useState<EntityType | 'all'>('all')
   const { animationsEnabled } = useAnimations()
   const { setPageTitle } = usePageContext()
+  const { data, loading, error } = useQuery<GraphQLSearchResult>(SEARCH_ALL, {
+    variables: { query },
+    skip: query.length === 0,
+  })
 
   useEffect(() => {
     setPageTitle('Search')
   }, [setPageTitle])
 
   const filteredEntities = useMemo(() => {
-    return sampleEntities.filter((entity) => {
-      const matchesType = activeType === 'all' || entity.type === activeType
-      const text =
-        `${entity.title} ${entity.subtitle ?? ''} ${entity.description} ${(entity.tags ?? []).join(' ')}`.toLowerCase()
-      const matchesQuery = text.includes(query.toLowerCase())
-      return matchesType && matchesQuery
+    if (!data) return []
+    const transformedEntities = transformSearchResults(data)
+    return transformedEntities.filter((entity) => {
+      return activeType === 'all' || entity.type === activeType
     })
-  }, [activeType, query])
+  }, [data, activeType])
 
   return (
     <div
@@ -170,9 +291,13 @@ export default function SearchPage() {
               {[
                 { key: 'all', label: 'All' },
                 { key: 'person', label: 'People' },
-                { key: 'space', label: 'Spaces' },
-                { key: 'resonance', label: 'Resonance' },
-                { key: 'pulse', label: 'Pulses' },
+                { key: 'community', label: 'Communities' },
+                { key: 'meSpace', label: 'Me Spaces' },
+                { key: 'weSpace', label: 'We Spaces' },
+                { key: 'context', label: 'Contexts' },
+                { key: 'goalPulse', label: 'Goals' },
+                { key: 'resourcePulse', label: 'Resources' },
+                { key: 'storyPulse', label: 'Stories' },
               ].map((option) => {
                 const isActive = activeType === option.key
                 return (
@@ -196,9 +321,27 @@ export default function SearchPage() {
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredEntities.length === 0 && (
+          {loading && query.length > 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
-              No results yet. Try another query or filter.
+              Searching...
+            </div>
+          )}
+
+          {error && (
+            <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 dark:bg-red-900/20 backdrop-blur-xl p-10 text-center text-red-600 dark:text-red-400">
+              Error searching: {error.message}
+            </div>
+          )}
+
+          {query.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+              Enter a search term to explore people, spaces, and pulses.
+            </div>
+          )}
+
+          {filteredEntities.length === 0 && query.length > 0 && !loading && (
+            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+              No results found. Try another query or filter.
             </div>
           )}
 
