@@ -35,11 +35,21 @@ export const searchResolvers = {
     },
     context: Context
   ): Promise<SearchResults> => {
-    const session = context.executionContext.session()
-    const searchTerm = `%${args.query}%`.toUpperCase()
+    // Create separate sessions for each query to avoid transaction conflicts
+    const peopleSession = context.executionContext.session()
+    const communitiesSession = context.executionContext.session()
+    const meSpacesSession = context.executionContext.session()
+    const weSpacesSession = context.executionContext.session()
+    const contextsSession = context.executionContext.session()
+    const goalPulsesSession = context.executionContext.session()
+    const resourcePulsesSession = context.executionContext.session()
+    const storyPulsesSession = context.executionContext.session()
+
+    const searchTerm = args.query.toLowerCase()
+    console.log('🚀 ~ search-resolver.ts:49 ~ searchTerm:', searchTerm)
 
     try {
-      // Execute all searches in parallel
+      // Execute all searches in parallel using separate sessions
       const [
         peopleResult,
         communitiesResult,
@@ -51,96 +61,113 @@ export const searchResolvers = {
         storyPulsesResult,
       ] = await Promise.all([
         // Search people by firstName, lastName, or email
-        session.run(
-          `
-          MATCH (p:Person)
-          WHERE 
-            UPPER(p.firstName) CONTAINS $searchTerm OR
-            UPPER(p.lastName) CONTAINS $searchTerm OR
-            UPPER(p.email) CONTAINS $searchTerm
-          RETURN p
-          LIMIT 10
-          `,
-          { searchTerm }
+        peopleSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (p:Person)
+            WHERE 
+              toLower(p.firstName) CONTAINS $searchTerm OR
+              toLower(p.lastName) CONTAINS $searchTerm OR
+              toLower(p.email) CONTAINS $searchTerm
+            RETURN p
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search communities by name
-        session.run(
-          `
-          MATCH (c:Community)
-          WHERE UPPER(c.name) CONTAINS $searchTerm
-          RETURN c
-          LIMIT 10
-          `,
-          { searchTerm }
+        communitiesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (c:Community)
+            WHERE toLower(c.name) CONTAINS $searchTerm
+            RETURN c
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search MeSpaces by name
-        session.run(
-          `
-          MATCH (s:MeSpace)
-          WHERE UPPER(s.name) CONTAINS $searchTerm
-          RETURN s
-          LIMIT 10
-          `,
-          { searchTerm }
+        meSpacesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (s:MeSpace)
+            WHERE toLower(s.name) CONTAINS $searchTerm
+            RETURN s
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search WeSpaces by name
-        session.run(
-          `
-          MATCH (s:WeSpace)
-          WHERE UPPER(s.name) CONTAINS $searchTerm
-          RETURN s
-          LIMIT 10
-          `,
-          { searchTerm }
+        weSpacesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (s:WeSpace)
+            WHERE toLower(s.name) CONTAINS $searchTerm
+            RETURN s
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search FieldContexts by title
-        session.run(
-          `
-          MATCH (f:FieldContext)
-          WHERE UPPER(f.title) CONTAINS $searchTerm
-          RETURN f
-          LIMIT 10
-          `,
-          { searchTerm }
+        contextsSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (f:FieldContext)
+            WHERE toLower(f.title) CONTAINS $searchTerm
+            RETURN f
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search GoalPulses by content
-        session.run(
-          `
-          MATCH (p:GoalPulse)
-          WHERE UPPER(p.content) CONTAINS $searchTerm
-          RETURN p
-          LIMIT 10
-          `,
-          { searchTerm }
+        goalPulsesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (p:GoalPulse)
+            WHERE toLower(p.content) CONTAINS $searchTerm
+            RETURN p
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search ResourcePulses by content
-        session.run(
-          `
-          MATCH (p:ResourcePulse)
-          WHERE UPPER(p.content) CONTAINS $searchTerm
-          RETURN p
-          LIMIT 10
-          `,
-          { searchTerm }
+        resourcePulsesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (p:ResourcePulse)
+            WHERE toLower(p.content) CONTAINS $searchTerm
+            RETURN p
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
 
         // Search StoryPulses by content
-        session.run(
-          `
-          MATCH (p:StoryPulse)
-          WHERE UPPER(p.content) CONTAINS $searchTerm
-          RETURN p
-          LIMIT 10
-          `,
-          { searchTerm }
+        storyPulsesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (p:StoryPulse)
+            WHERE toLower(p.content) CONTAINS $searchTerm
+            RETURN p
+            LIMIT 10
+            `,
+            { searchTerm }
+          )
         ),
       ])
+      console.log('🚀 ~ search-resolver.ts:170 ~ peopleResult:', peopleResult)
 
       // Extract properties from Neo4j records
       const extractProperties = (
@@ -161,6 +188,18 @@ export const searchResolvers = {
     } catch (error) {
       console.error('❌ Search error:', error)
       throw error
+    } finally {
+      // Close all sessions
+      await Promise.all([
+        peopleSession.close(),
+        communitiesSession.close(),
+        meSpacesSession.close(),
+        weSpacesSession.close(),
+        contextsSession.close(),
+        goalPulsesSession.close(),
+        resourcePulsesSession.close(),
+        storyPulsesSession.close(),
+      ])
     }
   },
 }
