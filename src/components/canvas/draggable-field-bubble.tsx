@@ -155,6 +155,7 @@ export function DraggableFieldBubble({
     return () => {
       animationRef.current?.kill()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasPosition, isLocalDragging, animationsEnabled])
 
   // Initialize floating animation on mount
