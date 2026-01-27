@@ -221,17 +221,27 @@ const typePillClass: Record<EntityType, string> = {
 export default function SearchPage() {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [activeType, setActiveType] = useState<EntityType | 'all'>('all')
   const { animationsEnabled } = useAnimations()
   const { setPageTitle } = usePageContext()
   const { data, loading, error } = useQuery<GraphQLSearchResult>(SEARCH_ALL, {
-    variables: { query },
-    skip: query.length === 0,
+    variables: { query: debouncedQuery },
+    skip: debouncedQuery.length === 0,
   })
 
   useEffect(() => {
     setPageTitle('Search')
   }, [setPageTitle])
+
+  // Debounce search query to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query)
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [query])
 
   // Handle entity click to set title and localStorage before navigation
   const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
@@ -343,7 +353,7 @@ export default function SearchPage() {
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {loading && query.length > 0 && (
+          {loading && debouncedQuery.length > 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
               Searching...
             </div>
