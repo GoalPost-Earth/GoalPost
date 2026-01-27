@@ -50,6 +50,16 @@ union LifeSensor = Person | Community
 # ============================================================================
 
 """
+Role-based permission for space membership.
+VIEW: Can read pulses and contexts in the space
+EDIT: Can modify pulses and contexts in the space
+"""
+enum SpaceRole {
+  VIEW
+  EDIT
+}
+
+"""
 Abstract space type.
 Never instantiated directly - use MeSpace or WeSpace.
 """
@@ -76,7 +86,7 @@ type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
   visibility: SpaceVisibility!
   createdAt: DateTime!
   owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
-  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
@@ -91,8 +101,19 @@ type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
   visibility: SpaceVisibility!
   createdAt: DateTime!
   owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
-  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
+}
+
+"""
+Represents a person or community as a member of a space with a specific role.
+Label: ["SpaceMembership"]
+"""
+type SpaceMembership @node(labels: ["SpaceMembership"]) {
+  id: ID! @id
+  role: SpaceRole!
+  addedAt: DateTime!
+  member: [LifeSensor!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
 
 # ============================================================================
@@ -280,8 +301,12 @@ type Query {
     - Pulses: content field
     - People: firstName, lastName, email
     - Contexts: title field
-    - Spaces (MeSpace/WeSpace): name field
+    - Spaces (MeSpace/WeSpace): name field (filtered by user ownership/membership)
     - Communities: name field
+
+  Space Filtering:
+    - Only returns spaces where the current user is the owner OR a member with any role (VIEW or EDIT)
+    - Private spaces not owned or joined by the user are excluded from results
 
   Args:
     - query: Search term (required, case-insensitive substring match)

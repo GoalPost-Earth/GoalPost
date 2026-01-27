@@ -46,7 +46,7 @@ export const searchResolvers = {
     const storyPulsesSession = context.executionContext.session()
 
     const searchTerm = args.query.toLowerCase()
-    console.log('🚀 ~ search-resolver.ts:49 ~ searchTerm:', searchTerm)
+    const currentUserId = context.auth.jwt.sub
 
     try {
       // Execute all searches in parallel using separate sessions
@@ -89,29 +89,51 @@ export const searchResolvers = {
           )
         ),
 
-        // Search MeSpaces by name
+        // Search MeSpaces by name - only if user is owner or member
         meSpacesSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (s:MeSpace)
             WHERE toLower(s.name) CONTAINS $searchTerm
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN s
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search WeSpaces by name
+        // Search WeSpaces by name - only if user is owner or member
         weSpacesSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (s:WeSpace)
             WHERE toLower(s.name) CONTAINS $searchTerm
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN s
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
@@ -167,7 +189,6 @@ export const searchResolvers = {
           )
         ),
       ])
-      console.log('🚀 ~ search-resolver.ts:170 ~ peopleResult:', peopleResult)
 
       // Extract properties from Neo4j records
       const extractProperties = (
