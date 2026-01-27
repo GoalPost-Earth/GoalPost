@@ -95,6 +95,7 @@ export function DraggablePulseNode({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocalDragging, dragContext, onPositionChange, scale])
 
   const handleClick = () => {

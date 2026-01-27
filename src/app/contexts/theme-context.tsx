@@ -20,7 +20,6 @@ const THEME_STORAGE_KEY = 'goalpost-theme-color'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeColor, setThemeColorState] = useState<ThemeColor>('default')
-  const [mounted, setMounted] = useState(false)
 
   const applyTheme = (color: ThemeColor) => {
     // Remove all theme classes
@@ -43,7 +42,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const nextTheme = savedTheme || 'default'
     setThemeColorState(nextTheme)
     applyTheme(nextTheme)
-    setMounted(true)
   }, [])
 
   const setThemeColor = (color: ThemeColor) => {
@@ -52,11 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(color)
   }
 
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Always render provider so consumers never see undefined context
   return (
     <ThemeContext.Provider value={{ themeColor, setThemeColor }}>
       {children}
