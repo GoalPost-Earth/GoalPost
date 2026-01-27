@@ -632,6 +632,12 @@ export type CreateResourcePulsesMutationResponse = {
   resourcePulses: Array<ResourcePulse>
 }
 
+export type CreateSearchResultsMutationResponse = {
+  __typename?: 'CreateSearchResultsMutationResponse'
+  info: CreateInfo
+  searchResults: Array<SearchResults>
+}
+
 export type CreateStoryPulsesMutationResponse = {
   __typename?: 'CreateStoryPulsesMutationResponse'
   info: CreateInfo
@@ -2506,6 +2512,7 @@ export type Mutation = {
   createPeople: CreatePeopleMutationResponse
   createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
+  createSearchResults: CreateSearchResultsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
   deleteChatbotResponses: DeleteInfo
@@ -2517,6 +2524,7 @@ export type Mutation = {
   deletePeople: DeleteInfo
   deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
+  deleteSearchResults: DeleteInfo
   deleteStoryPulses: DeleteInfo
   deleteWeSpaces: DeleteInfo
   /**
@@ -2538,6 +2546,7 @@ export type Mutation = {
   updatePeople: UpdatePeopleMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
+  updateSearchResults: UpdateSearchResultsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
   updateWeSpaces: UpdateWeSpacesMutationResponse
 }
@@ -2580,6 +2589,10 @@ export type MutationCreateResonanceLinksArgs = {
 
 export type MutationCreateResourcePulsesArgs = {
   input: Array<ResourcePulseCreateInput>
+}
+
+export type MutationCreateSearchResultsArgs = {
+  input: Array<SearchResultsCreateInput>
 }
 
 export type MutationCreateStoryPulsesArgs = {
@@ -2631,6 +2644,10 @@ export type MutationDeleteResonanceLinksArgs = {
 export type MutationDeleteResourcePulsesArgs = {
   delete?: InputMaybe<ResourcePulseDeleteInput>
   where?: InputMaybe<ResourcePulseWhere>
+}
+
+export type MutationDeleteSearchResultsArgs = {
+  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type MutationDeleteStoryPulsesArgs = {
@@ -2695,6 +2712,11 @@ export type MutationUpdateResonanceLinksArgs = {
 export type MutationUpdateResourcePulsesArgs = {
   update?: InputMaybe<ResourcePulseUpdateInput>
   where?: InputMaybe<ResourcePulseWhere>
+}
+
+export type MutationUpdateSearchResultsArgs = {
+  update?: InputMaybe<SearchResultsUpdateInput>
+  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type MutationUpdateStoryPulsesArgs = {
@@ -3048,6 +3070,25 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "resourcePulsesConnection" instead */
   resourcePulsesAggregate: ResourcePulseAggregateSelection
   resourcePulsesConnection: ResourcePulsesConnection
+  /**
+   * Global federated search across all entity types.
+   * Searches using case-insensitive substring matching on:
+   *   - Pulses: content field
+   *   - People: firstName, lastName, email
+   *   - Contexts: title field
+   *   - Spaces (MeSpace/WeSpace): name field
+   *   - Communities: name field
+   *
+   * Args:
+   *   - query: Search term (required, case-insensitive substring match)
+   *
+   * Returns: SearchResults with up to 10 results of each entity type
+   */
+  searchAll?: Maybe<SearchResults>
+  searchResults: Array<SearchResults>
+  /** @deprecated Please use the explicit field "aggregate" inside "searchResultsConnection" instead */
+  searchResultsAggregate: SearchResultsAggregateSelection
+  searchResultsConnection: SearchResultsConnection
   spaces: Array<Space>
   /** @deprecated Please use the explicit field "aggregate" inside "spacesConnection" instead */
   spacesAggregate: SpaceAggregateSelection
@@ -3246,6 +3287,26 @@ export type QueryResourcePulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<ResourcePulseSort>>
   where?: InputMaybe<ResourcePulseWhere>
+}
+
+export type QuerySearchAllArgs = {
+  query: Scalars['String']['input']
+}
+
+export type QuerySearchResultsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  where?: InputMaybe<SearchResultsWhere>
+}
+
+export type QuerySearchResultsAggregateArgs = {
+  where?: InputMaybe<SearchResultsWhere>
+}
+
+export type QuerySearchResultsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type QuerySpacesArgs = {
@@ -4667,6 +4728,62 @@ export type ResourcePulsesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+/**
+ * Structured response for categorized search results.
+ * Returns up to 10 results of each entity type matching the search query.
+ */
+export type SearchResults = {
+  __typename?: 'SearchResults'
+  communities: Array<Community>
+  contexts: Array<FieldContext>
+  goalPulses: Array<GoalPulse>
+  meSpaces: Array<MeSpace>
+  people: Array<Person>
+  resourcePulses: Array<ResourcePulse>
+  storyPulses: Array<StoryPulse>
+  weSpaces: Array<WeSpace>
+}
+
+export type SearchResultsAggregate = {
+  __typename?: 'SearchResultsAggregate'
+  count: Count
+}
+
+export type SearchResultsAggregateSelection = {
+  __typename?: 'SearchResultsAggregateSelection'
+  count: Scalars['Int']['output']
+}
+
+export type SearchResultsConnection = {
+  __typename?: 'SearchResultsConnection'
+  aggregate: SearchResultsAggregate
+  edges: Array<SearchResultsEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type SearchResultsCreateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type SearchResultsEdge = {
+  __typename?: 'SearchResultsEdge'
+  cursor: Scalars['String']['output']
+  node: SearchResults
+}
+
+export type SearchResultsUpdateInput = {
+  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
+  _emptyInput?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type SearchResultsWhere = {
+  AND?: InputMaybe<Array<SearchResultsWhere>>
+  NOT?: InputMaybe<SearchResultsWhere>
+  OR?: InputMaybe<Array<SearchResultsWhere>>
+}
+
 /** An enum for sorting in either ascending or descending order. */
 export enum SortDirection {
   /** Sort by field values in ascending order. */
@@ -5312,6 +5429,12 @@ export type UpdateResourcePulsesMutationResponse = {
   __typename?: 'UpdateResourcePulsesMutationResponse'
   info: UpdateInfo
   resourcePulses: Array<ResourcePulse>
+}
+
+export type UpdateSearchResultsMutationResponse = {
+  __typename?: 'UpdateSearchResultsMutationResponse'
+  info: UpdateInfo
+  searchResults: Array<SearchResults>
 }
 
 export type UpdateStoryPulsesMutationResponse = {
@@ -7302,6 +7425,169 @@ export type GetLinksForResonanceQuery = {
           intensity?: number | null
         }
     >
+  }>
+}
+
+export type GetAllPulsesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetAllPulsesQuery = {
+  __typename?: 'Query'
+  goalPulses: Array<{
+    __typename: 'GoalPulse'
+    id: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    initiatedBy: Array<
+      | { __typename: 'Community'; id: string; name: string }
+      | {
+          __typename: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+  }>
+  resourcePulses: Array<{
+    __typename: 'ResourcePulse'
+    id: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    initiatedBy: Array<
+      | { __typename: 'Community'; id: string; name: string }
+      | {
+          __typename: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+  }>
+  storyPulses: Array<{
+    __typename: 'StoryPulse'
+    id: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    initiatedBy: Array<
+      | { __typename: 'Community'; id: string; name: string }
+      | {
+          __typename: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+  }>
+}
+
+export type GetAllFieldContextsQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetAllFieldContextsQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+    pulses: Array<
+      | { __typename: 'GoalPulse'; id: string; createdAt: any }
+      | { __typename: 'ResourcePulse'; id: string; createdAt: any }
+      | { __typename: 'StoryPulse'; id: string; createdAt: any }
+    >
+  }>
+}
+
+export type GetAllMeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetAllMeSpacesQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    owner: Array<
+      | { __typename?: 'Community'; id: string; name: string }
+      | {
+          __typename?: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    members: Array<
+      | { __typename?: 'Community'; id: string; name: string }
+      | {
+          __typename?: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    contexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      createdAt: any
+    }>
+  }>
+}
+
+export type GetAllWeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetAllWeSpacesQuery = {
+  __typename?: 'Query'
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    owner: Array<
+      | { __typename?: 'Community'; id: string; name: string }
+      | {
+          __typename?: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    members: Array<
+      | { __typename?: 'Community'; id: string; name: string }
+      | {
+          __typename?: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    contexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      createdAt: any
+    }>
   }>
 }
 
@@ -13590,6 +13876,695 @@ export const GetLinksForResonanceDocument = {
   GetLinksForResonanceQuery,
   GetLinksForResonanceQueryVariables
 >
+export const GetAllPulsesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllPulses' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalPulses' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'initiatedBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'initiatedBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'initiatedBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetAllPulsesQuery, GetAllPulsesQueryVariables>
+export const GetAllFieldContextsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllFieldContexts' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'GoalPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'ResourcePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'StoryPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllFieldContextsQuery,
+  GetAllFieldContextsQueryVariables
+>
+export const GetAllMeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllMeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetAllMeSpacesQuery, GetAllMeSpacesQueryVariables>
+export const GetAllWeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllWeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetAllWeSpacesQuery, GetAllWeSpacesQueryVariables>
 export const GetPersonDocument = {
   kind: 'Document',
   definitions: [

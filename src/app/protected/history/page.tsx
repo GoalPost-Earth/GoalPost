@@ -1,13 +1,18 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Sidebar } from '@/components/history/sidebar'
 import { ActivePulses } from '@/components/history/active-pulses'
 import { FieldsList } from '@/components/history/fields-list'
+import { SpacesList } from '@/components/history/spaces-list'
 import { usePageContext } from '@/app/contexts'
+
+type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces'
 
 export default function HistoryPage() {
   const { setPageTitle } = usePageContext()
+  const [activeView, setActiveView] = useState<ViewType>('overview')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Set page title
   useEffect(() => {
@@ -16,21 +21,74 @@ export default function HistoryPage() {
 
   return (
     <div className="relative flex flex-1 overflow-hidden pt-24">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile left side indicator */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 md:hidden h-16 bg-gradient-to-r from-gp-primary via-gp-primary to-gp-accent-glow hover:left-0.5 rounded-r-xl transition-all duration-300 shadow-lg hover:shadow-2xl p-1 flex items-center justify-center group"
+        aria-label="Toggle sidebar"
+      >
+        <span className="material-symbols-outlined text-white text-2xl group-hover:translate-x-0.5 transition-transform">
+          {sidebarOpen ? 'chevron_left' : 'chevron_right'}
+        </span>
+      </button>
+
       {/* Background decorative elements */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Light mode: bright radial gradient, Dark mode: subtle gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]"></div>
-        <div className="absolute top-[10%] left-[10%] w-125 h-125 bg-blue-400/10 dark:bg-primary/5 rounded-full blur-[120px] animate-blob"></div>
-        <div className="absolute bottom-[10%] right-[10%] w-100 h-100 bg-teal-400/10 dark:bg-accent-glow/5 rounded-full blur-[100px] animate-blob [animation-delay:2s]"></div>
-        <div className="absolute top-[40%] left-[60%] w-75 h-75 bg-purple-400/10 dark:bg-purple-500/5 rounded-full blur-[100px] animate-blob [animation-delay:4s]"></div>
+        <div
+          className="absolute top-[10%] left-[10%] w-125 h-125 rounded-full blur-[120px] animate-blob"
+          style={{
+            backgroundColor:
+              'color-mix(in srgb, var(--gp-primary) 10%, transparent)',
+          }}
+        ></div>
+        <div
+          className="absolute bottom-[10%] right-[10%] w-100 h-100 rounded-full blur-[100px] animate-blob [animation-delay:2s]"
+          style={{
+            backgroundColor:
+              'color-mix(in srgb, var(--gp-accent-glow) 10%, transparent)',
+          }}
+        ></div>
+        <div
+          className="absolute top-[40%] left-[60%] w-75 h-75 rounded-full blur-[100px] animate-blob [animation-delay:4s]"
+          style={{
+            backgroundColor:
+              'color-mix(in srgb, var(--gp-goal) 10%, transparent)',
+          }}
+        ></div>
       </div>
 
-      <Sidebar />
+      <Sidebar
+        activeView={activeView}
+        onViewChange={(view) => {
+          setActiveView(view)
+          setSidebarOpen(false)
+        }}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <main className="flex-1 relative z-10 overflow-y-auto scroller p-8">
         <div className="max-w-6xl mx-auto space-y-10">
-          <ActivePulses />
-          <FieldsList />
+          {activeView === 'overview' && (
+            <>
+              <ActivePulses />
+              <FieldsList />
+              <SpacesList />
+            </>
+          )}
+          {activeView === 'pulses' && <ActivePulses />}
+          {activeView === 'fields' && <FieldsList />}
+          {activeView === 'spaces' && <SpacesList />}
         </div>
       </main>
     </div>
