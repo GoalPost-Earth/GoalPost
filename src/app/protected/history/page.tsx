@@ -5,9 +5,10 @@ import { Sidebar } from '@/components/history/sidebar'
 import { ActivePulses } from '@/components/history/active-pulses'
 import { FieldsList } from '@/components/history/fields-list'
 import { SpacesList } from '@/components/history/spaces-list'
+import { PeopleList } from '@/components/history/people-list'
 import { usePageContext } from '@/app/contexts'
 
-type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces'
+type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces' | 'people'
 
 export default function HistoryPage() {
   const { setPageTitle } = usePageContext()
@@ -32,7 +33,7 @@ export default function HistoryPage() {
       {/* Mobile left side indicator */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 md:hidden h-16 bg-gradient-to-r from-gp-primary via-gp-primary to-gp-accent-glow hover:left-0.5 rounded-r-xl transition-all duration-300 shadow-lg hover:shadow-2xl p-1 flex items-center justify-center group"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 md:hidden h-16 bg-linear-to-r from-gp-primary via-gp-primary to-gp-accent-glow hover:left-0.5 rounded-r-xl transition-all duration-300 shadow-lg hover:shadow-2xl p-1 flex items-center justify-center group"
         aria-label="Toggle sidebar"
       >
         <span className="material-symbols-outlined text-white text-2xl group-hover:translate-x-0.5 transition-transform">
@@ -84,11 +85,13 @@ export default function HistoryPage() {
               <ActivePulses />
               <FieldsList />
               <SpacesList />
+              <PeopleList />
             </>
           )}
           {activeView === 'pulses' && <ActivePulses />}
           {activeView === 'fields' && <FieldsList />}
           {activeView === 'spaces' && <SpacesList />}
+          {activeView === 'people' && <PeopleList />}
         </div>
       </main>
     </div>
