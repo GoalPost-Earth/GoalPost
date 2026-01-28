@@ -54,7 +54,6 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
         role
         addedAt
         member {
-          __typename
           ... on Person {
             id
             name
@@ -75,7 +74,6 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
         role
         addedAt
         member {
-          __typename
           ... on Person {
             id
             name
@@ -103,7 +101,6 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
       visibility
       createdAt
       owner {
-        __typename
         ... on Person {
           id
           name
@@ -119,7 +116,6 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
         role
         addedAt
         member {
-          __typename
           ... on Person {
             id
             name
@@ -153,7 +149,6 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
       visibility
       createdAt
       owner {
-        __typename
         ... on Person {
           id
           name
@@ -169,7 +164,6 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
         role
         addedAt
         member {
-          __typename
           ... on Person {
             id
             name

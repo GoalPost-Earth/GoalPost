@@ -136,14 +136,19 @@ export const GET_ALL_ME_SPACES = graphql(`
         }
       }
       members {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
+        id
+        role
+        addedAt
+        member {
+          ... on Person {
+            id
+            name
+            email
+          }
+          ... on Community {
+            id
+            name
+          }
         }
       }
       contexts {
@@ -177,14 +182,19 @@ export const GET_ALL_WE_SPACES = graphql(`
         }
       }
       members {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
+        id
+        role
+        addedAt
+        member {
+          ... on Person {
+            id
+            name
+            email
+          }
+          ... on Community {
+            id
+            name
+          }
         }
       }
       contexts {

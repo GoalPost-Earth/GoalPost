@@ -1,11 +1,13 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { GET_ALL_FIELD_CONTEXTS } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 
 export function FieldsList() {
+  const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS)
 
   if (error) {
@@ -83,6 +85,11 @@ export function FieldsList() {
               return (
                 <div
                   key={field.id}
+                  onClick={() =>
+                    router.push(
+                      `/protected/dashboard/field-context/${field.id}`
+                    )
+                  }
                   className="chat-card rounded-2xl p-5 flex items-center gap-5 cursor-pointer group relative overflow-hidden"
                 >
                   {/* Left accent line */}

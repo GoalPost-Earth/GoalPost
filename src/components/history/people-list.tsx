@@ -1,10 +1,12 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { GET_ALL_PEOPLE } from '@/app/graphql/queries'
 
 export function PeopleList() {
+  const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
 
   if (error) {
@@ -72,6 +74,9 @@ export function PeopleList() {
             return (
               <div
                 key={person.id}
+                onClick={() =>
+                  router.push(`/protected/dashboard/persons/${person.id}`)
+                }
                 className="chat-card rounded-2xl p-5 flex items-center gap-4 cursor-pointer group relative overflow-hidden"
               >
                 {/* Left accent line */}

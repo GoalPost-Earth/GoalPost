@@ -1,12 +1,14 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@apollo/client/react'
 
 export function SpacesList() {
+  const router = useRouter()
   const {
     data: meSpacesData,
     loading: meSpacesLoading,
@@ -123,6 +125,9 @@ export function SpacesList() {
             return (
               <div
                 key={space.id}
+                onClick={() =>
+                  router.push(`/protected/dashboard/space/${space.id}`)
+                }
                 className="chat-card rounded-2xl p-5 cursor-pointer group hover:shadow-lg transition-all"
               >
                 {/* Header */}

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { GET_ALL_PULSES } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -36,6 +37,7 @@ const pulseConfig: Record<PulseType, PulseConfig> = {
 }
 
 export function ActivePulses() {
+  const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PULSES)
 
   // Combine all pulse types into a single array
@@ -123,6 +125,9 @@ export function ActivePulses() {
             return (
               <div
                 key={pulse.id}
+                onClick={() =>
+                  router.push(`/protected/dashboard/pulses/${pulse.id}`)
+                }
                 className="chat-card rounded-xl p-4 cursor-pointer group"
               >
                 <div className="flex items-start justify-between mb-2">

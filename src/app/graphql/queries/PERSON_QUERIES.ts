@@ -16,6 +16,50 @@ export const GET_PERSON = graphql(`
   }
 `)
 
+export const GET_PERSON_PROFILE = graphql(`
+  query getPersonProfile($personId: ID!) {
+    people(where: { id_EQ: $personId }) {
+      id
+      firstName
+      lastName
+      name
+      email
+      ownsSpaces {
+        ... on MeSpace {
+          id
+          name
+          visibility
+          createdAt
+          contexts {
+            id
+            title
+            pulses {
+              id
+              title
+              intensity
+            }
+          }
+        }
+        ... on WeSpace {
+          id
+          name
+          visibility
+          createdAt
+          contexts {
+            id
+            title
+            pulses {
+              id
+              title
+              intensity
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
 export const GET_ALL_PEOPLE = graphql(`
   query getAllPeople($where: PersonWhere) {
     people(where: $where) {

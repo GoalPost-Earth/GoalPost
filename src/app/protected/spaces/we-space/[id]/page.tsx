@@ -119,10 +119,9 @@ export default function WeSpaceFieldsPage() {
           const memberData = m.member[0]
           return {
             id: m.id,
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            role: m.role as any,
+            role: m.role as 'ADMIN' | 'MEMBER' | 'GUEST',
             member: {
-              __typename: memberData.__typename,
+              __typename: memberData.__typename || 'Unknown',
               id: memberData.id,
               name: memberData.name,
               email:
