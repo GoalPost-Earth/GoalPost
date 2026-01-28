@@ -147,6 +147,7 @@ Never instantiate directly - use concrete types (GoalPulse, ResourcePulse, Story
 """
 interface FieldPulse {
   id: ID!
+  title: String!
   content: String!
   createdAt: DateTime!
   intensity: Float
@@ -160,6 +161,7 @@ Multi-label: ["FieldPulse", "GoalPulse"]
 type GoalPulse implements FieldPulse
   @node(labels: ["FieldPulse", "GoalPulse"]) {
   id: ID! @id
+  title: String!
   content: String!
   createdAt: DateTime!
   intensity: Float
@@ -189,6 +191,7 @@ Multi-label: ["FieldPulse", "ResourcePulse"]
 type ResourcePulse implements FieldPulse
   @node(labels: ["FieldPulse", "ResourcePulse"]) {
   id: ID! @id
+  title: String!
   content: String!
   createdAt: DateTime!
   intensity: Float
@@ -206,6 +209,7 @@ Multi-label: ["FieldPulse", "StoryPulse"]
 type StoryPulse implements FieldPulse
   @node(labels: ["FieldPulse", "StoryPulse"]) {
   id: ID! @id
+  title: String!
   content: String!
   createdAt: DateTime!
   intensity: Float
