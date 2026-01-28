@@ -20,7 +20,6 @@ const ANIMATION_STORAGE_KEY = 'goalpost-animations-enabled'
 
 export function AnimationProvider({ children }: { children: React.ReactNode }) {
   const [animationsEnabled, setAnimationsEnabledState] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   // Load animation preference before first paint
   useLayoutEffect(() => {
@@ -28,14 +27,13 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
     const nextEnabled =
       savedPreference === null ? false : savedPreference === 'true'
     setAnimationsEnabledState(nextEnabled)
-    setMounted(true)
   }, [])
 
   const setAnimationsEnabled = (enabled: boolean) => {
     setAnimationsEnabledState(enabled)
-    if (mounted) {
-      localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
-    }
+    // Always save to localStorage, not just when mounted
+    // This ensures the preference persists immediately
+    localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
   }
 
   return (

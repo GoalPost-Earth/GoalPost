@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { useTheme, ThemeColor } from '@/app/contexts/theme-context'
 import { useAnimations } from '@/app/contexts/animation-context'
@@ -56,6 +56,11 @@ function SettingToggle({
   onToggle,
 }: SettingToggleProps) {
   const [isActive, setIsActive] = useState(active)
+
+  // Sync local state with prop when it changes (e.g., after context rehydration)
+  useEffect(() => {
+    setIsActive(active)
+  }, [active])
 
   const handleToggle = (newState: boolean) => {
     setIsActive(newState)
