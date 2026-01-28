@@ -2,6 +2,7 @@ import { Person } from '@/gql/graphql'
 import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
 import { searchResolvers } from './search-resolver'
+import { spaceMembershipResolvers } from './space-membership-resolver'
 
 const resolvers = {
   // Resolver Parameters
@@ -21,6 +22,7 @@ const resolvers = {
   Mutation: {
     ...chatbotResolvers,
     ...inviteMutations,
+    ...spaceMembershipResolvers,
   },
   Query: {
     ...searchResolvers,

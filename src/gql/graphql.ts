@@ -31,6 +31,73 @@ export type Scalars = {
   DateTime: { input: any; output: any }
 }
 
+/** Response when adding a member to a space. */
+export type AddSpaceMemberResponse = {
+  __typename?: 'AddSpaceMemberResponse'
+  membership?: Maybe<SpaceMembership>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type AddSpaceMemberResponseAggregate = {
+  __typename?: 'AddSpaceMemberResponseAggregate'
+  count: Count
+  node: AddSpaceMemberResponseAggregateNode
+}
+
+export type AddSpaceMemberResponseAggregateNode = {
+  __typename?: 'AddSpaceMemberResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type AddSpaceMemberResponseAggregateSelection = {
+  __typename?: 'AddSpaceMemberResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type AddSpaceMemberResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type AddSpaceMemberResponseEdge = {
+  __typename?: 'AddSpaceMemberResponseEdge'
+  cursor: Scalars['String']['output']
+  node: AddSpaceMemberResponse
+}
+
+/** Fields to sort AddSpaceMemberResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one AddSpaceMemberResponseSort object. */
+export type AddSpaceMemberResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type AddSpaceMemberResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type AddSpaceMemberResponseWhere = {
+  AND?: InputMaybe<Array<AddSpaceMemberResponseWhere>>
+  NOT?: InputMaybe<AddSpaceMemberResponseWhere>
+  OR?: InputMaybe<Array<AddSpaceMemberResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type AddSpaceMemberResponsesConnection = {
+  __typename?: 'AddSpaceMemberResponsesConnection'
+  aggregate: AddSpaceMemberResponseAggregate
+  edges: Array<AddSpaceMemberResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** Response from the chatbot containing the message and session ID. */
 export type ChatbotResponse = {
   __typename?: 'ChatbotResponse'
@@ -571,6 +638,12 @@ export type CountConnection = {
   nodes: Scalars['Int']['output']
 }
 
+export type CreateAddSpaceMemberResponsesMutationResponse = {
+  __typename?: 'CreateAddSpaceMemberResponsesMutationResponse'
+  addSpaceMemberResponses: Array<AddSpaceMemberResponse>
+  info: CreateInfo
+}
+
 export type CreateChatbotResponsesMutationResponse = {
   __typename?: 'CreateChatbotResponsesMutationResponse'
   chatbotResponses: Array<ChatbotResponse>
@@ -620,6 +693,12 @@ export type CreatePeopleMutationResponse = {
   people: Array<Person>
 }
 
+export type CreateRemoveSpaceMemberResponsesMutationResponse = {
+  __typename?: 'CreateRemoveSpaceMemberResponsesMutationResponse'
+  info: CreateInfo
+  removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
+}
+
 export type CreateResonanceLinksMutationResponse = {
   __typename?: 'CreateResonanceLinksMutationResponse'
   info: CreateInfo
@@ -638,10 +717,22 @@ export type CreateSearchResultsMutationResponse = {
   searchResults: Array<SearchResults>
 }
 
+export type CreateSpaceMembershipsMutationResponse = {
+  __typename?: 'CreateSpaceMembershipsMutationResponse'
+  info: CreateInfo
+  spaceMemberships: Array<SpaceMembership>
+}
+
 export type CreateStoryPulsesMutationResponse = {
   __typename?: 'CreateStoryPulsesMutationResponse'
   info: CreateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type CreateUpdateSpaceMemberRoleResponsesMutationResponse = {
+  __typename?: 'CreateUpdateSpaceMemberRoleResponsesMutationResponse'
+  info: CreateInfo
+  updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
 export type CreateWeSpacesMutationResponse = {
@@ -842,6 +933,7 @@ export type FieldContextPulsesAggregateInput = {
 }
 
 export type FieldContextPulsesConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
   where?: InputMaybe<FieldPulseConnectWhere>
 }
 
@@ -869,10 +961,12 @@ export type FieldContextPulsesCreateFieldInput = {
 }
 
 export type FieldContextPulsesDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
   where?: InputMaybe<FieldContextPulsesConnectionWhere>
 }
 
 export type FieldContextPulsesDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
   where?: InputMaybe<FieldContextPulsesConnectionWhere>
 }
 
@@ -1160,9 +1254,25 @@ export type FieldContextsConnection = {
 
 export type FieldPulse = {
   content: Scalars['String']['output']
+  context: Array<FieldContext>
+  contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
+}
+
+export type FieldPulseContextArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+export type FieldPulseContextConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type FieldPulseAggregate = {
@@ -1190,14 +1300,140 @@ export type FieldPulseAggregateSelection = {
   intensity: FloatAggregateSelection
 }
 
+export type FieldPulseConnectInput = {
+  context?: InputMaybe<Array<FieldPulseContextConnectFieldInput>>
+}
+
 export type FieldPulseConnectWhere = {
   node: FieldPulseWhere
+}
+
+export type FieldPulseContextAggregateInput = {
+  AND?: InputMaybe<Array<FieldPulseContextAggregateInput>>
+  NOT?: InputMaybe<FieldPulseContextAggregateInput>
+  OR?: InputMaybe<Array<FieldPulseContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldPulseContextNodeAggregationWhereInput>
+}
+
+export type FieldPulseContextConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type FieldPulseContextConnection = {
+  __typename?: 'FieldPulseContextConnection'
+  edges: Array<FieldPulseContextRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldPulseContextConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type FieldPulseContextConnectionWhere = {
+  AND?: InputMaybe<Array<FieldPulseContextConnectionWhere>>
+  NOT?: InputMaybe<FieldPulseContextConnectionWhere>
+  OR?: InputMaybe<Array<FieldPulseContextConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type FieldPulseContextCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type FieldPulseContextDeleteFieldInput = {
+  delete?: InputMaybe<FieldContextDeleteInput>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type FieldPulseContextDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type FieldPulseContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldPulseContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldPulseContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldPulseContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldPulseContextRelationship = {
+  __typename?: 'FieldPulseContextRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type FieldPulseContextUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type FieldPulseContextUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldPulseContextConnectFieldInput>>
+  create?: InputMaybe<Array<FieldPulseContextCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
+  update?: InputMaybe<FieldPulseContextUpdateConnectionInput>
 }
 
 export type FieldPulseCreateInput = {
   GoalPulse?: InputMaybe<GoalPulseCreateInput>
   ResourcePulse?: InputMaybe<ResourcePulseCreateInput>
   StoryPulse?: InputMaybe<StoryPulseCreateInput>
+}
+
+export type FieldPulseDeleteInput = {
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+}
+
+export type FieldPulseDisconnectInput = {
+  context?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
 }
 
 export type FieldPulseEdge = {
@@ -1222,6 +1458,7 @@ export type FieldPulseSort = {
 
 export type FieldPulseUpdateInput = {
   content_SET?: InputMaybe<Scalars['String']['input']>
+  context?: InputMaybe<Array<FieldPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   id_SET?: InputMaybe<Scalars['ID']['input']>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
@@ -1240,6 +1477,23 @@ export type FieldPulseWhere = {
   content_EQ?: InputMaybe<Scalars['String']['input']>
   content_IN?: InputMaybe<Array<Scalars['String']['input']>>
   content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  contextAggregate?: InputMaybe<FieldPulseContextAggregateInput>
+  /** Return FieldPulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return FieldPulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return FieldPulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return FieldPulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return FieldPulses where all of the related FieldContexts match this filter */
+  context_ALL?: InputMaybe<FieldContextWhere>
+  /** Return FieldPulses where none of the related FieldContexts match this filter */
+  context_NONE?: InputMaybe<FieldContextWhere>
+  /** Return FieldPulses where one of the related FieldContexts match this filter */
+  context_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return FieldPulses where some of the related FieldContexts match this filter */
+  context_SOME?: InputMaybe<FieldContextWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -1383,7 +1637,7 @@ export type GoalPulse = FieldPulse & {
   context: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
   contextAggregate?: Maybe<GoalPulseFieldContextContextAggregationSelection>
-  contextConnection: GoalPulseContextConnection
+  contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
   horizon?: Maybe<GoalHorizon>
   id: Scalars['ID']['output']
@@ -1419,8 +1673,8 @@ export type GoalPulseContextAggregateArgs = {
 export type GoalPulseContextConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<GoalPulseContextConnectionSort>>
-  where?: InputMaybe<GoalPulseContextConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 /**
@@ -1485,37 +1739,8 @@ export type GoalPulseContextConnectFieldInput = {
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
-export type GoalPulseContextConnection = {
-  __typename?: 'GoalPulseContextConnection'
-  aggregate: GoalPulseFieldContextContextAggregateSelection
-  edges: Array<GoalPulseContextRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type GoalPulseContextConnectionSort = {
-  node?: InputMaybe<FieldContextSort>
-}
-
-export type GoalPulseContextConnectionWhere = {
-  AND?: InputMaybe<Array<GoalPulseContextConnectionWhere>>
-  NOT?: InputMaybe<GoalPulseContextConnectionWhere>
-  OR?: InputMaybe<Array<GoalPulseContextConnectionWhere>>
-  node?: InputMaybe<FieldContextWhere>
-}
-
 export type GoalPulseContextCreateFieldInput = {
   node: FieldContextCreateInput
-}
-
-export type GoalPulseContextDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<GoalPulseContextConnectionWhere>
-}
-
-export type GoalPulseContextDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<GoalPulseContextConnectionWhere>
 }
 
 export type GoalPulseContextFieldInput = {
@@ -1569,22 +1794,16 @@ export type GoalPulseContextNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type GoalPulseContextRelationship = {
-  __typename?: 'GoalPulseContextRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldContext
-}
-
 export type GoalPulseContextUpdateConnectionInput = {
   node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<GoalPulseContextConnectionWhere>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type GoalPulseContextUpdateFieldInput = {
   connect?: InputMaybe<Array<GoalPulseContextConnectFieldInput>>
   create?: InputMaybe<Array<GoalPulseContextCreateFieldInput>>
-  delete?: InputMaybe<Array<GoalPulseContextDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<GoalPulseContextDisconnectFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseContextUpdateConnectionInput>
 }
 
@@ -1599,7 +1818,7 @@ export type GoalPulseCreateInput = {
 }
 
 export type GoalPulseDeleteInput = {
-  context?: InputMaybe<Array<GoalPulseContextDeleteFieldInput>>
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   initiatedBy?: InputMaybe<GoalPulseInitiatedByDeleteInput>
 }
 
@@ -1607,12 +1826,6 @@ export type GoalPulseEdge = {
   __typename?: 'GoalPulseEdge'
   cursor: Scalars['String']['output']
   node: GoalPulse
-}
-
-export type GoalPulseFieldContextContextAggregateSelection = {
-  __typename?: 'GoalPulseFieldContextContextAggregateSelection'
-  count: CountConnection
-  node?: Maybe<GoalPulseFieldContextContextNodeAggregateSelection>
 }
 
 export type GoalPulseFieldContextContextAggregationSelection = {
@@ -1787,14 +2000,14 @@ export type GoalPulseWhere = {
   content_IN?: InputMaybe<Array<Scalars['String']['input']>>
   content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   contextAggregate?: InputMaybe<GoalPulseContextAggregateInput>
-  /** Return GoalPulses where all of the related GoalPulseContextConnections match this filter */
-  contextConnection_ALL?: InputMaybe<GoalPulseContextConnectionWhere>
-  /** Return GoalPulses where none of the related GoalPulseContextConnections match this filter */
-  contextConnection_NONE?: InputMaybe<GoalPulseContextConnectionWhere>
-  /** Return GoalPulses where one of the related GoalPulseContextConnections match this filter */
-  contextConnection_SINGLE?: InputMaybe<GoalPulseContextConnectionWhere>
-  /** Return GoalPulses where some of the related GoalPulseContextConnections match this filter */
-  contextConnection_SOME?: InputMaybe<GoalPulseContextConnectionWhere>
+  /** Return GoalPulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return GoalPulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return GoalPulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return GoalPulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
   /** Return GoalPulses where all of the related FieldContexts match this filter */
   context_ALL?: InputMaybe<FieldContextWhere>
   /** Return GoalPulses where none of the related FieldContexts match this filter */
@@ -1886,7 +2099,9 @@ export type MeSpace = Space & {
   contextsConnection: MeSpaceContextsConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
-  members: Array<LifeSensor>
+  members: Array<SpaceMembership>
+  /** @deprecated Please use field "aggregate" inside "membersConnection" instead */
+  membersAggregate?: Maybe<MeSpaceSpaceMembershipMembersAggregationSelection>
   membersConnection: MeSpaceMembersConnection
   name: Scalars['String']['output']
   owner: Array<LifeSensor>
@@ -1935,7 +2150,17 @@ export type MeSpaceContextsConnectionArgs = {
 export type MeSpaceMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<SpaceMembershipSort>>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
+/**
+ * A personal space owned by one person or community.
+ * Can be private (only owner) or shared with specific members.
+ * Multi-label: ["Space", "MeSpace"]
+ */
+export type MeSpaceMembersAggregateArgs = {
+  where?: InputMaybe<SpaceMembershipWhere>
 }
 
 /**
@@ -1946,6 +2171,7 @@ export type MeSpaceMembersArgs = {
 export type MeSpaceMembersConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<MeSpaceMembersConnectionSort>>
   where?: InputMaybe<MeSpaceMembersConnectionWhere>
 }
 
@@ -2117,7 +2343,7 @@ export type MeSpaceContextsUpdateFieldInput = {
 export type MeSpaceCreateInput = {
   contexts?: InputMaybe<MeSpaceContextsFieldInput>
   createdAt: Scalars['DateTime']['input']
-  members?: InputMaybe<MeSpaceMembersCreateInput>
+  members?: InputMaybe<MeSpaceMembersFieldInput>
   name: Scalars['String']['input']
   owner?: InputMaybe<MeSpaceOwnerCreateInput>
   visibility: SpaceVisibility
@@ -2125,7 +2351,7 @@ export type MeSpaceCreateInput = {
 
 export type MeSpaceDeleteInput = {
   contexts?: InputMaybe<Array<MeSpaceContextsDeleteFieldInput>>
-  members?: InputMaybe<MeSpaceMembersDeleteInput>
+  members?: InputMaybe<Array<MeSpaceMembersDeleteFieldInput>>
   owner?: InputMaybe<MeSpaceOwnerDeleteInput>
 }
 
@@ -2156,125 +2382,94 @@ export type MeSpaceFieldContextContextsNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type MeSpaceMembersCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type MeSpaceMembersAggregateInput = {
+  AND?: InputMaybe<Array<MeSpaceMembersAggregateInput>>
+  NOT?: InputMaybe<MeSpaceMembersAggregateInput>
+  OR?: InputMaybe<Array<MeSpaceMembersAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<MeSpaceMembersNodeAggregationWhereInput>
 }
 
-export type MeSpaceMembersCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceMembersCommunityConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceMembersCommunityConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceMembersCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type MeSpaceMembersCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type MeSpaceMembersCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<MeSpaceMembersCommunityConnectionWhere>
-}
-
-export type MeSpaceMembersCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<MeSpaceMembersCommunityConnectionWhere>
-}
-
-export type MeSpaceMembersCommunityFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceMembersCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceMembersCommunityCreateFieldInput>>
-}
-
-export type MeSpaceMembersCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<MeSpaceMembersCommunityConnectionWhere>
-}
-
-export type MeSpaceMembersCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceMembersCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceMembersCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceMembersCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceMembersCommunityDisconnectFieldInput>>
-  update?: InputMaybe<MeSpaceMembersCommunityUpdateConnectionInput>
+export type MeSpaceMembersConnectFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
 export type MeSpaceMembersConnection = {
   __typename?: 'MeSpaceMembersConnection'
+  aggregate: MeSpaceSpaceMembershipMembersAggregateSelection
   edges: Array<MeSpaceMembersRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
+export type MeSpaceMembersConnectionSort = {
+  node?: InputMaybe<SpaceMembershipSort>
+}
+
 export type MeSpaceMembersConnectionWhere = {
-  Community?: InputMaybe<MeSpaceMembersCommunityConnectionWhere>
-  Person?: InputMaybe<MeSpaceMembersPersonConnectionWhere>
+  AND?: InputMaybe<Array<MeSpaceMembersConnectionWhere>>
+  NOT?: InputMaybe<MeSpaceMembersConnectionWhere>
+  OR?: InputMaybe<Array<MeSpaceMembersConnectionWhere>>
+  node?: InputMaybe<SpaceMembershipWhere>
 }
 
-export type MeSpaceMembersCreateInput = {
-  Community?: InputMaybe<MeSpaceMembersCommunityFieldInput>
-  Person?: InputMaybe<MeSpaceMembersPersonFieldInput>
+export type MeSpaceMembersCreateFieldInput = {
+  node: SpaceMembershipCreateInput
 }
 
-export type MeSpaceMembersDeleteInput = {
-  Community?: InputMaybe<Array<MeSpaceMembersCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<MeSpaceMembersPersonDeleteFieldInput>>
+export type MeSpaceMembersDeleteFieldInput = {
+  delete?: InputMaybe<SpaceMembershipDeleteInput>
+  where?: InputMaybe<MeSpaceMembersConnectionWhere>
 }
 
-export type MeSpaceMembersPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
+export type MeSpaceMembersDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceMembershipDisconnectInput>
+  where?: InputMaybe<MeSpaceMembersConnectionWhere>
 }
 
-export type MeSpaceMembersPersonConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceMembersPersonConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceMembersPersonConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceMembersPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
+export type MeSpaceMembersFieldInput = {
+  connect?: InputMaybe<Array<MeSpaceMembersConnectFieldInput>>
+  create?: InputMaybe<Array<MeSpaceMembersCreateFieldInput>>
 }
 
-export type MeSpaceMembersPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type MeSpaceMembersPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<MeSpaceMembersPersonConnectionWhere>
-}
-
-export type MeSpaceMembersPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<MeSpaceMembersPersonConnectionWhere>
-}
-
-export type MeSpaceMembersPersonFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceMembersPersonConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceMembersPersonCreateFieldInput>>
-}
-
-export type MeSpaceMembersPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<MeSpaceMembersPersonConnectionWhere>
-}
-
-export type MeSpaceMembersPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceMembersPersonConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceMembersPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceMembersPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceMembersPersonDisconnectFieldInput>>
-  update?: InputMaybe<MeSpaceMembersPersonUpdateConnectionInput>
+export type MeSpaceMembersNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<MeSpaceMembersNodeAggregationWhereInput>>
+  NOT?: InputMaybe<MeSpaceMembersNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<MeSpaceMembersNodeAggregationWhereInput>>
+  addedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
 export type MeSpaceMembersRelationship = {
   __typename?: 'MeSpaceMembersRelationship'
   cursor: Scalars['String']['output']
-  node: LifeSensor
+  node: SpaceMembership
 }
 
-export type MeSpaceMembersUpdateInput = {
-  Community?: InputMaybe<Array<MeSpaceMembersCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<MeSpaceMembersPersonUpdateFieldInput>>
+export type MeSpaceMembersUpdateConnectionInput = {
+  node?: InputMaybe<SpaceMembershipUpdateInput>
+  where?: InputMaybe<MeSpaceMembersConnectionWhere>
+}
+
+export type MeSpaceMembersUpdateFieldInput = {
+  connect?: InputMaybe<Array<MeSpaceMembersConnectFieldInput>>
+  create?: InputMaybe<Array<MeSpaceMembersCreateFieldInput>>
+  delete?: InputMaybe<Array<MeSpaceMembersDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<MeSpaceMembersDisconnectFieldInput>>
+  update?: InputMaybe<MeSpaceMembersUpdateConnectionInput>
 }
 
 export type MeSpaceOwnerCommunityConnectFieldInput = {
@@ -2406,10 +2601,29 @@ export type MeSpaceSort = {
   visibility?: InputMaybe<SortDirection>
 }
 
+export type MeSpaceSpaceMembershipMembersAggregateSelection = {
+  __typename?: 'MeSpaceSpaceMembershipMembersAggregateSelection'
+  count: CountConnection
+  node?: Maybe<MeSpaceSpaceMembershipMembersNodeAggregateSelection>
+}
+
+export type MeSpaceSpaceMembershipMembersAggregationSelection = {
+  __typename?: 'MeSpaceSpaceMembershipMembersAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<MeSpaceSpaceMembershipMembersNodeAggregateSelection>
+}
+
+export type MeSpaceSpaceMembershipMembersNodeAggregateSelection = {
+  __typename?: 'MeSpaceSpaceMembershipMembersNodeAggregateSelection'
+  addedAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+}
+
 export type MeSpaceUpdateInput = {
   contexts?: InputMaybe<Array<MeSpaceContextsUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  members?: InputMaybe<MeSpaceMembersUpdateInput>
+  members?: InputMaybe<Array<MeSpaceMembersUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
   owner?: InputMaybe<MeSpaceOwnerUpdateInput>
   visibility_SET?: InputMaybe<SpaceVisibility>
@@ -2447,6 +2661,7 @@ export type MeSpaceWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  membersAggregate?: InputMaybe<MeSpaceMembersAggregateInput>
   /** Return MeSpaces where all of the related MeSpaceMembersConnections match this filter */
   membersConnection_ALL?: InputMaybe<MeSpaceMembersConnectionWhere>
   /** Return MeSpaces where none of the related MeSpaceMembersConnections match this filter */
@@ -2455,14 +2670,14 @@ export type MeSpaceWhere = {
   membersConnection_SINGLE?: InputMaybe<MeSpaceMembersConnectionWhere>
   /** Return MeSpaces where some of the related MeSpaceMembersConnections match this filter */
   membersConnection_SOME?: InputMaybe<MeSpaceMembersConnectionWhere>
-  /** Return MeSpaces where all of the related LifeSensors match this filter */
-  members_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where none of the related LifeSensors match this filter */
-  members_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where one of the related LifeSensors match this filter */
-  members_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where some of the related LifeSensors match this filter */
-  members_SOME?: InputMaybe<LifeSensorWhere>
+  /** Return MeSpaces where all of the related SpaceMemberships match this filter */
+  members_ALL?: InputMaybe<SpaceMembershipWhere>
+  /** Return MeSpaces where none of the related SpaceMemberships match this filter */
+  members_NONE?: InputMaybe<SpaceMembershipWhere>
+  /** Return MeSpaces where one of the related SpaceMemberships match this filter */
+  members_SINGLE?: InputMaybe<SpaceMembershipWhere>
+  /** Return MeSpaces where some of the related SpaceMemberships match this filter */
+  members_SOME?: InputMaybe<SpaceMembershipWhere>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
@@ -2499,10 +2714,16 @@ export type MeSpacesConnection = {
 export type Mutation = {
   __typename?: 'Mutation'
   /**
+   * Add a member to a space with a specific role.
+   * Only the space owner or members with ADMIN role can add new members.
+   */
+  addSpaceMember: AddSpaceMemberResponse
+  /**
    * Cancel an invitation for a person.
    * Removes the User label and invite-related properties.
    */
   cancelInvite?: Maybe<Person>
+  createAddSpaceMemberResponses: CreateAddSpaceMemberResponsesMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
@@ -2510,11 +2731,15 @@ export type Mutation = {
   createGoalPulses: CreateGoalPulsesMutationResponse
   createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
+  createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
   createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
   createSearchResults: CreateSearchResultsMutationResponse
+  createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
+  createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
+  deleteAddSpaceMemberResponses: DeleteInfo
   deleteChatbotResponses: DeleteInfo
   deleteCommunities: DeleteInfo
   deleteFieldContexts: DeleteInfo
@@ -2522,10 +2747,13 @@ export type Mutation = {
   deleteGoalPulses: DeleteInfo
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
+  deleteRemoveSpaceMemberResponses: DeleteInfo
   deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
   deleteSearchResults: DeleteInfo
+  deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
+  deleteUpdateSpaceMemberRoleResponses: DeleteInfo
   deleteWeSpaces: DeleteInfo
   /**
    * Invite a person to join the platform.
@@ -2533,10 +2761,17 @@ export type Mutation = {
    */
   invitePerson?: Maybe<Person>
   /**
+   * Remove a member from a space.
+   * Only the space owner or members with ADMIN role can remove members.
+   * Cannot remove the space owner.
+   */
+  removeSpaceMember: RemoveSpaceMemberResponse
+  /**
    * Send a message to the chatbot and receive a response.
    * Placeholder for future chatbot functionality.
    */
   sendMessageToChatbot?: Maybe<ChatbotResponse>
+  updateAddSpaceMemberResponses: UpdateAddSpaceMemberResponsesMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
@@ -2544,15 +2779,33 @@ export type Mutation = {
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
+  updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
   updateSearchResults: UpdateSearchResultsMutationResponse
+  /**
+   * Update a space member's role.
+   * Only the space owner or members with ADMIN role can change roles.
+   */
+  updateSpaceMemberRole: UpdateSpaceMemberRoleResponse
+  updateSpaceMemberships: UpdateSpaceMembershipsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
+  updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
   updateWeSpaces: UpdateWeSpacesMutationResponse
+}
+
+export type MutationAddSpaceMemberArgs = {
+  memberId: Scalars['ID']['input']
+  role: SpaceRole
+  spaceId: Scalars['ID']['input']
 }
 
 export type MutationCancelInviteArgs = {
   personId: Scalars['String']['input']
+}
+
+export type MutationCreateAddSpaceMemberResponsesArgs = {
+  input: Array<AddSpaceMemberResponseCreateInput>
 }
 
 export type MutationCreateChatbotResponsesArgs = {
@@ -2583,6 +2836,10 @@ export type MutationCreatePeopleArgs = {
   input: Array<PersonCreateInput>
 }
 
+export type MutationCreateRemoveSpaceMemberResponsesArgs = {
+  input: Array<RemoveSpaceMemberResponseCreateInput>
+}
+
 export type MutationCreateResonanceLinksArgs = {
   input: Array<ResonanceLinkCreateInput>
 }
@@ -2595,12 +2852,24 @@ export type MutationCreateSearchResultsArgs = {
   input: Array<SearchResultsCreateInput>
 }
 
+export type MutationCreateSpaceMembershipsArgs = {
+  input: Array<SpaceMembershipCreateInput>
+}
+
 export type MutationCreateStoryPulsesArgs = {
   input: Array<StoryPulseCreateInput>
 }
 
+export type MutationCreateUpdateSpaceMemberRoleResponsesArgs = {
+  input: Array<UpdateSpaceMemberRoleResponseCreateInput>
+}
+
 export type MutationCreateWeSpacesArgs = {
   input: Array<WeSpaceCreateInput>
+}
+
+export type MutationDeleteAddSpaceMemberResponsesArgs = {
+  where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
 export type MutationDeleteChatbotResponsesArgs = {
@@ -2636,6 +2905,10 @@ export type MutationDeletePeopleArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type MutationDeleteRemoveSpaceMemberResponsesArgs = {
+  where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
 export type MutationDeleteResonanceLinksArgs = {
   delete?: InputMaybe<ResonanceLinkDeleteInput>
   where?: InputMaybe<ResonanceLinkWhere>
@@ -2650,9 +2923,18 @@ export type MutationDeleteSearchResultsArgs = {
   where?: InputMaybe<SearchResultsWhere>
 }
 
+export type MutationDeleteSpaceMembershipsArgs = {
+  delete?: InputMaybe<SpaceMembershipDeleteInput>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
 export type MutationDeleteStoryPulsesArgs = {
   delete?: InputMaybe<StoryPulseDeleteInput>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type MutationDeleteUpdateSpaceMemberRoleResponsesArgs = {
+  where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
 }
 
 export type MutationDeleteWeSpacesArgs = {
@@ -2664,9 +2946,19 @@ export type MutationInvitePersonArgs = {
   personId: Scalars['String']['input']
 }
 
+export type MutationRemoveSpaceMemberArgs = {
+  memberId: Scalars['ID']['input']
+  spaceId: Scalars['ID']['input']
+}
+
 export type MutationSendMessageToChatbotArgs = {
   message: Scalars['String']['input']
   sessionId?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationUpdateAddSpaceMemberResponsesArgs = {
+  update?: InputMaybe<AddSpaceMemberResponseUpdateInput>
+  where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
 export type MutationUpdateChatbotResponsesArgs = {
@@ -2704,6 +2996,11 @@ export type MutationUpdatePeopleArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
+  update?: InputMaybe<RemoveSpaceMemberResponseUpdateInput>
+  where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
 export type MutationUpdateResonanceLinksArgs = {
   update?: InputMaybe<ResonanceLinkUpdateInput>
   where?: InputMaybe<ResonanceLinkWhere>
@@ -2719,9 +3016,25 @@ export type MutationUpdateSearchResultsArgs = {
   where?: InputMaybe<SearchResultsWhere>
 }
 
+export type MutationUpdateSpaceMemberRoleArgs = {
+  memberId: Scalars['ID']['input']
+  role: SpaceRole
+  spaceId: Scalars['ID']['input']
+}
+
+export type MutationUpdateSpaceMembershipsArgs = {
+  update?: InputMaybe<SpaceMembershipUpdateInput>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
 export type MutationUpdateStoryPulsesArgs = {
   update?: InputMaybe<StoryPulseUpdateInput>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type MutationUpdateUpdateSpaceMemberRoleResponsesArgs = {
+  update?: InputMaybe<UpdateSpaceMemberRoleResponseUpdateInput>
+  where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
 }
 
 export type MutationUpdateWeSpacesArgs = {
@@ -3029,6 +3342,10 @@ export type PersonWhere = {
 
 export type Query = {
   __typename?: 'Query'
+  addSpaceMemberResponses: Array<AddSpaceMemberResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "addSpaceMemberResponsesConnection" instead */
+  addSpaceMemberResponsesAggregate: AddSpaceMemberResponseAggregateSelection
+  addSpaceMemberResponsesConnection: AddSpaceMemberResponsesConnection
   chatbotResponses: Array<ChatbotResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "chatbotResponsesConnection" instead */
   chatbotResponsesAggregate: ChatbotResponseAggregateSelection
@@ -3062,6 +3379,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "peopleConnection" instead */
   peopleAggregate: PersonAggregateSelection
   peopleConnection: PeopleConnection
+  removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "removeSpaceMemberResponsesConnection" instead */
+  removeSpaceMemberResponsesAggregate: RemoveSpaceMemberResponseAggregateSelection
+  removeSpaceMemberResponsesConnection: RemoveSpaceMemberResponsesConnection
   resonanceLinks: Array<ResonanceLink>
   /** @deprecated Please use the explicit field "aggregate" inside "resonanceLinksConnection" instead */
   resonanceLinksAggregate: ResonanceLinkAggregateSelection
@@ -3076,8 +3397,12 @@ export type Query = {
    *   - Pulses: content field
    *   - People: firstName, lastName, email
    *   - Contexts: title field
-   *   - Spaces (MeSpace/WeSpace): name field
+   *   - Spaces (MeSpace/WeSpace): name field (filtered by user ownership/membership)
    *   - Communities: name field
+   *
+   * Space Filtering:
+   *   - Only returns spaces where the current user is the owner OR a member with any role (ADMIN, MEMBER, or GUEST)
+   *   - Private spaces not owned or joined by the user are excluded from results
    *
    * Args:
    *   - query: Search term (required, case-insensitive substring match)
@@ -3089,6 +3414,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "searchResultsConnection" instead */
   searchResultsAggregate: SearchResultsAggregateSelection
   searchResultsConnection: SearchResultsConnection
+  spaceMemberships: Array<SpaceMembership>
+  /** @deprecated Please use the explicit field "aggregate" inside "spaceMembershipsConnection" instead */
+  spaceMembershipsAggregate: SpaceMembershipAggregateSelection
+  spaceMembershipsConnection: SpaceMembershipsConnection
   spaces: Array<Space>
   /** @deprecated Please use the explicit field "aggregate" inside "spacesConnection" instead */
   spacesAggregate: SpaceAggregateSelection
@@ -3097,10 +3426,32 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "storyPulsesConnection" instead */
   storyPulsesAggregate: StoryPulseAggregateSelection
   storyPulsesConnection: StoryPulsesConnection
+  updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "updateSpaceMemberRoleResponsesConnection" instead */
+  updateSpaceMemberRoleResponsesAggregate: UpdateSpaceMemberRoleResponseAggregateSelection
+  updateSpaceMemberRoleResponsesConnection: UpdateSpaceMemberRoleResponsesConnection
   weSpaces: Array<WeSpace>
   /** @deprecated Please use the explicit field "aggregate" inside "weSpacesConnection" instead */
   weSpacesAggregate: WeSpaceAggregateSelection
   weSpacesConnection: WeSpacesConnection
+}
+
+export type QueryAddSpaceMemberResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<AddSpaceMemberResponseSort>>
+  where?: InputMaybe<AddSpaceMemberResponseWhere>
+}
+
+export type QueryAddSpaceMemberResponsesAggregateArgs = {
+  where?: InputMaybe<AddSpaceMemberResponseWhere>
+}
+
+export type QueryAddSpaceMemberResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<AddSpaceMemberResponseSort>>
+  where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
 export type QueryChatbotResponsesArgs = {
@@ -3253,6 +3604,24 @@ export type QueryPeopleConnectionArgs = {
   where?: InputMaybe<PersonWhere>
 }
 
+export type QueryRemoveSpaceMemberResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<RemoveSpaceMemberResponseSort>>
+  where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
+export type QueryRemoveSpaceMemberResponsesAggregateArgs = {
+  where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
+export type QueryRemoveSpaceMemberResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<RemoveSpaceMemberResponseSort>>
+  where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
 export type QueryResonanceLinksArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -3309,6 +3678,24 @@ export type QuerySearchResultsConnectionArgs = {
   where?: InputMaybe<SearchResultsWhere>
 }
 
+export type QuerySpaceMembershipsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceMembershipSort>>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type QuerySpaceMembershipsAggregateArgs = {
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type QuerySpaceMembershipsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceMembershipSort>>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
 export type QuerySpacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -3345,6 +3732,24 @@ export type QueryStoryPulsesConnectionArgs = {
   where?: InputMaybe<StoryPulseWhere>
 }
 
+export type QueryUpdateSpaceMemberRoleResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdateSpaceMemberRoleResponseSort>>
+  where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
+export type QueryUpdateSpaceMemberRoleResponsesAggregateArgs = {
+  where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
+export type QueryUpdateSpaceMemberRoleResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdateSpaceMemberRoleResponseSort>>
+  where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
 export type QueryWeSpacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -3361,6 +3766,72 @@ export type QueryWeSpacesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<WeSpaceSort>>
   where?: InputMaybe<WeSpaceWhere>
+}
+
+/** Response when removing a member from a space. */
+export type RemoveSpaceMemberResponse = {
+  __typename?: 'RemoveSpaceMemberResponse'
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type RemoveSpaceMemberResponseAggregate = {
+  __typename?: 'RemoveSpaceMemberResponseAggregate'
+  count: Count
+  node: RemoveSpaceMemberResponseAggregateNode
+}
+
+export type RemoveSpaceMemberResponseAggregateNode = {
+  __typename?: 'RemoveSpaceMemberResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type RemoveSpaceMemberResponseAggregateSelection = {
+  __typename?: 'RemoveSpaceMemberResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type RemoveSpaceMemberResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type RemoveSpaceMemberResponseEdge = {
+  __typename?: 'RemoveSpaceMemberResponseEdge'
+  cursor: Scalars['String']['output']
+  node: RemoveSpaceMemberResponse
+}
+
+/** Fields to sort RemoveSpaceMemberResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one RemoveSpaceMemberResponseSort object. */
+export type RemoveSpaceMemberResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type RemoveSpaceMemberResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type RemoveSpaceMemberResponseWhere = {
+  AND?: InputMaybe<Array<RemoveSpaceMemberResponseWhere>>
+  NOT?: InputMaybe<RemoveSpaceMemberResponseWhere>
+  OR?: InputMaybe<Array<RemoveSpaceMemberResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type RemoveSpaceMemberResponsesConnection = {
+  __typename?: 'RemoveSpaceMemberResponsesConnection'
+  aggregate: RemoveSpaceMemberResponseAggregate
+  edges: Array<RemoveSpaceMemberResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 /**
@@ -3878,6 +4349,7 @@ export type ResonanceLinkSourceAggregateInput = {
 }
 
 export type ResonanceLinkSourceConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
   where?: InputMaybe<FieldPulseConnectWhere>
 }
 
@@ -3905,10 +4377,12 @@ export type ResonanceLinkSourceCreateFieldInput = {
 }
 
 export type ResonanceLinkSourceDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
   where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
 }
 
 export type ResonanceLinkSourceDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
   where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
 }
 
@@ -4000,6 +4474,7 @@ export type ResonanceLinkTargetAggregateInput = {
 }
 
 export type ResonanceLinkTargetConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
   where?: InputMaybe<FieldPulseConnectWhere>
 }
 
@@ -4027,10 +4502,12 @@ export type ResonanceLinkTargetCreateFieldInput = {
 }
 
 export type ResonanceLinkTargetDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
   where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
 }
 
 export type ResonanceLinkTargetDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
   where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
 }
 
@@ -4237,7 +4714,7 @@ export type ResourcePulse = FieldPulse & {
   context: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
   contextAggregate?: Maybe<ResourcePulseFieldContextContextAggregationSelection>
-  contextConnection: ResourcePulseContextConnection
+  contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
   initiatedBy: Array<LifeSensor>
@@ -4272,8 +4749,8 @@ export type ResourcePulseContextAggregateArgs = {
 export type ResourcePulseContextConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResourcePulseContextConnectionSort>>
-  where?: InputMaybe<ResourcePulseContextConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 /**
@@ -4342,37 +4819,8 @@ export type ResourcePulseContextConnectFieldInput = {
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
-export type ResourcePulseContextConnection = {
-  __typename?: 'ResourcePulseContextConnection'
-  aggregate: ResourcePulseFieldContextContextAggregateSelection
-  edges: Array<ResourcePulseContextRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResourcePulseContextConnectionSort = {
-  node?: InputMaybe<FieldContextSort>
-}
-
-export type ResourcePulseContextConnectionWhere = {
-  AND?: InputMaybe<Array<ResourcePulseContextConnectionWhere>>
-  NOT?: InputMaybe<ResourcePulseContextConnectionWhere>
-  OR?: InputMaybe<Array<ResourcePulseContextConnectionWhere>>
-  node?: InputMaybe<FieldContextWhere>
-}
-
 export type ResourcePulseContextCreateFieldInput = {
   node: FieldContextCreateInput
-}
-
-export type ResourcePulseContextDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<ResourcePulseContextConnectionWhere>
-}
-
-export type ResourcePulseContextDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<ResourcePulseContextConnectionWhere>
 }
 
 export type ResourcePulseContextFieldInput = {
@@ -4426,22 +4874,16 @@ export type ResourcePulseContextNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type ResourcePulseContextRelationship = {
-  __typename?: 'ResourcePulseContextRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldContext
-}
-
 export type ResourcePulseContextUpdateConnectionInput = {
   node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<ResourcePulseContextConnectionWhere>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type ResourcePulseContextUpdateFieldInput = {
   connect?: InputMaybe<Array<ResourcePulseContextConnectFieldInput>>
   create?: InputMaybe<Array<ResourcePulseContextCreateFieldInput>>
-  delete?: InputMaybe<Array<ResourcePulseContextDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<ResourcePulseContextDisconnectFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseContextUpdateConnectionInput>
 }
 
@@ -4456,7 +4898,7 @@ export type ResourcePulseCreateInput = {
 }
 
 export type ResourcePulseDeleteInput = {
-  context?: InputMaybe<Array<ResourcePulseContextDeleteFieldInput>>
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   initiatedBy?: InputMaybe<ResourcePulseInitiatedByDeleteInput>
 }
 
@@ -4464,12 +4906,6 @@ export type ResourcePulseEdge = {
   __typename?: 'ResourcePulseEdge'
   cursor: Scalars['String']['output']
   node: ResourcePulse
-}
-
-export type ResourcePulseFieldContextContextAggregateSelection = {
-  __typename?: 'ResourcePulseFieldContextContextAggregateSelection'
-  count: CountConnection
-  node?: Maybe<ResourcePulseFieldContextContextNodeAggregateSelection>
 }
 
 export type ResourcePulseFieldContextContextAggregationSelection = {
@@ -4664,14 +5100,14 @@ export type ResourcePulseWhere = {
   content_IN?: InputMaybe<Array<Scalars['String']['input']>>
   content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   contextAggregate?: InputMaybe<ResourcePulseContextAggregateInput>
-  /** Return ResourcePulses where all of the related ResourcePulseContextConnections match this filter */
-  contextConnection_ALL?: InputMaybe<ResourcePulseContextConnectionWhere>
-  /** Return ResourcePulses where none of the related ResourcePulseContextConnections match this filter */
-  contextConnection_NONE?: InputMaybe<ResourcePulseContextConnectionWhere>
-  /** Return ResourcePulses where one of the related ResourcePulseContextConnections match this filter */
-  contextConnection_SINGLE?: InputMaybe<ResourcePulseContextConnectionWhere>
-  /** Return ResourcePulses where some of the related ResourcePulseContextConnections match this filter */
-  contextConnection_SOME?: InputMaybe<ResourcePulseContextConnectionWhere>
+  /** Return ResourcePulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return ResourcePulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return ResourcePulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return ResourcePulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
   /** Return ResourcePulses where all of the related FieldContexts match this filter */
   context_ALL?: InputMaybe<FieldContextWhere>
   /** Return ResourcePulses where none of the related FieldContexts match this filter */
@@ -4842,6 +5278,293 @@ export enum SpaceImplementation {
   WeSpace = 'WeSpace',
 }
 
+/**
+ * Represents a person or community as a member of a space with a specific role.
+ * Label: ["SpaceMembership"]
+ */
+export type SpaceMembership = {
+  __typename?: 'SpaceMembership'
+  addedAt: Scalars['DateTime']['output']
+  id: Scalars['ID']['output']
+  member: Array<LifeSensor>
+  memberConnection: SpaceMembershipMemberConnection
+  role: SpaceRole
+}
+
+/**
+ * Represents a person or community as a member of a space with a specific role.
+ * Label: ["SpaceMembership"]
+ */
+export type SpaceMembershipMemberArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  where?: InputMaybe<LifeSensorWhere>
+}
+
+/**
+ * Represents a person or community as a member of a space with a specific role.
+ * Label: ["SpaceMembership"]
+ */
+export type SpaceMembershipMemberConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+}
+
+export type SpaceMembershipAggregate = {
+  __typename?: 'SpaceMembershipAggregate'
+  count: Count
+  node: SpaceMembershipAggregateNode
+}
+
+export type SpaceMembershipAggregateNode = {
+  __typename?: 'SpaceMembershipAggregateNode'
+  addedAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+}
+
+export type SpaceMembershipAggregateSelection = {
+  __typename?: 'SpaceMembershipAggregateSelection'
+  addedAt: DateTimeAggregateSelection
+  count: Scalars['Int']['output']
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+}
+
+export type SpaceMembershipConnectInput = {
+  member?: InputMaybe<SpaceMembershipMemberConnectInput>
+}
+
+export type SpaceMembershipConnectWhere = {
+  node: SpaceMembershipWhere
+}
+
+export type SpaceMembershipCreateInput = {
+  addedAt: Scalars['DateTime']['input']
+  member?: InputMaybe<SpaceMembershipMemberCreateInput>
+  role: SpaceRole
+}
+
+export type SpaceMembershipDeleteInput = {
+  member?: InputMaybe<SpaceMembershipMemberDeleteInput>
+}
+
+export type SpaceMembershipDisconnectInput = {
+  member?: InputMaybe<SpaceMembershipMemberDisconnectInput>
+}
+
+export type SpaceMembershipEdge = {
+  __typename?: 'SpaceMembershipEdge'
+  cursor: Scalars['String']['output']
+  node: SpaceMembership
+}
+
+export type SpaceMembershipMemberCommunityConnectFieldInput = {
+  connect?: InputMaybe<Array<CommunityConnectInput>>
+  where?: InputMaybe<CommunityConnectWhere>
+}
+
+export type SpaceMembershipMemberCommunityConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectionWhere>>
+  NOT?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
+  OR?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectionWhere>>
+  node?: InputMaybe<CommunityWhere>
+}
+
+export type SpaceMembershipMemberCommunityCreateFieldInput = {
+  node: CommunityCreateInput
+}
+
+export type SpaceMembershipMemberCommunityDeleteFieldInput = {
+  delete?: InputMaybe<CommunityDeleteInput>
+  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
+}
+
+export type SpaceMembershipMemberCommunityDisconnectFieldInput = {
+  disconnect?: InputMaybe<CommunityDisconnectInput>
+  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
+}
+
+export type SpaceMembershipMemberCommunityFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberCommunityCreateFieldInput>>
+}
+
+export type SpaceMembershipMemberCommunityUpdateConnectionInput = {
+  node?: InputMaybe<CommunityUpdateInput>
+  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
+}
+
+export type SpaceMembershipMemberCommunityUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberCommunityCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembershipMemberCommunityDeleteFieldInput>>
+  disconnect?: InputMaybe<
+    Array<SpaceMembershipMemberCommunityDisconnectFieldInput>
+  >
+  update?: InputMaybe<SpaceMembershipMemberCommunityUpdateConnectionInput>
+}
+
+export type SpaceMembershipMemberConnectInput = {
+  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
+  Person?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
+}
+
+export type SpaceMembershipMemberConnection = {
+  __typename?: 'SpaceMembershipMemberConnection'
+  edges: Array<SpaceMembershipMemberRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type SpaceMembershipMemberConnectionWhere = {
+  Community?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
+  Person?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+}
+
+export type SpaceMembershipMemberCreateInput = {
+  Community?: InputMaybe<SpaceMembershipMemberCommunityFieldInput>
+  Person?: InputMaybe<SpaceMembershipMemberPersonFieldInput>
+}
+
+export type SpaceMembershipMemberDeleteInput = {
+  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityDeleteFieldInput>>
+  Person?: InputMaybe<Array<SpaceMembershipMemberPersonDeleteFieldInput>>
+}
+
+export type SpaceMembershipMemberDisconnectInput = {
+  Community?: InputMaybe<
+    Array<SpaceMembershipMemberCommunityDisconnectFieldInput>
+  >
+  Person?: InputMaybe<Array<SpaceMembershipMemberPersonDisconnectFieldInput>>
+}
+
+export type SpaceMembershipMemberPersonConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type SpaceMembershipMemberPersonConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceMembershipMemberPersonConnectionWhere>>
+  NOT?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+  OR?: InputMaybe<Array<SpaceMembershipMemberPersonConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type SpaceMembershipMemberPersonCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type SpaceMembershipMemberPersonDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+}
+
+export type SpaceMembershipMemberPersonDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+}
+
+export type SpaceMembershipMemberPersonFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberPersonCreateFieldInput>>
+}
+
+export type SpaceMembershipMemberPersonUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+}
+
+export type SpaceMembershipMemberPersonUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberPersonCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembershipMemberPersonDeleteFieldInput>>
+  disconnect?: InputMaybe<
+    Array<SpaceMembershipMemberPersonDisconnectFieldInput>
+  >
+  update?: InputMaybe<SpaceMembershipMemberPersonUpdateConnectionInput>
+}
+
+export type SpaceMembershipMemberRelationship = {
+  __typename?: 'SpaceMembershipMemberRelationship'
+  cursor: Scalars['String']['output']
+  node: LifeSensor
+}
+
+export type SpaceMembershipMemberUpdateInput = {
+  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityUpdateFieldInput>>
+  Person?: InputMaybe<Array<SpaceMembershipMemberPersonUpdateFieldInput>>
+}
+
+/** Fields to sort SpaceMemberships by. The order in which sorts are applied is not guaranteed when specifying many fields in one SpaceMembershipSort object. */
+export type SpaceMembershipSort = {
+  addedAt?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  role?: InputMaybe<SortDirection>
+}
+
+export type SpaceMembershipUpdateInput = {
+  addedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  member?: InputMaybe<SpaceMembershipMemberUpdateInput>
+  role_SET?: InputMaybe<SpaceRole>
+}
+
+export type SpaceMembershipWhere = {
+  AND?: InputMaybe<Array<SpaceMembershipWhere>>
+  NOT?: InputMaybe<SpaceMembershipWhere>
+  OR?: InputMaybe<Array<SpaceMembershipWhere>>
+  addedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  addedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  /** Return SpaceMemberships where all of the related SpaceMembershipMemberConnections match this filter */
+  memberConnection_ALL?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+  /** Return SpaceMemberships where none of the related SpaceMembershipMemberConnections match this filter */
+  memberConnection_NONE?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+  /** Return SpaceMemberships where one of the related SpaceMembershipMemberConnections match this filter */
+  memberConnection_SINGLE?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+  /** Return SpaceMemberships where some of the related SpaceMembershipMemberConnections match this filter */
+  memberConnection_SOME?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+  /** Return SpaceMemberships where all of the related LifeSensors match this filter */
+  member_ALL?: InputMaybe<LifeSensorWhere>
+  /** Return SpaceMemberships where none of the related LifeSensors match this filter */
+  member_NONE?: InputMaybe<LifeSensorWhere>
+  /** Return SpaceMemberships where one of the related LifeSensors match this filter */
+  member_SINGLE?: InputMaybe<LifeSensorWhere>
+  /** Return SpaceMemberships where some of the related LifeSensors match this filter */
+  member_SOME?: InputMaybe<LifeSensorWhere>
+  role_EQ?: InputMaybe<SpaceRole>
+  role_IN?: InputMaybe<Array<SpaceRole>>
+}
+
+export type SpaceMembershipsConnection = {
+  __typename?: 'SpaceMembershipsConnection'
+  aggregate: SpaceMembershipAggregate
+  edges: Array<SpaceMembershipEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+/**
+ * Role-based permission for space membership.
+ * ADMIN: Can manage members and modify pulses/contexts
+ * MEMBER: Can create and modify pulses/contexts
+ * GUEST: Can view pulses and contexts (read-only)
+ */
+export enum SpaceRole {
+  Admin = 'ADMIN',
+  Guest = 'GUEST',
+  Member = 'MEMBER',
+}
+
 /** Fields to sort Spaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one SpaceSort object. */
 export type SpaceSort = {
   createdAt?: InputMaybe<SortDirection>
@@ -4905,7 +5628,7 @@ export type StoryPulse = FieldPulse & {
   context: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
   contextAggregate?: Maybe<StoryPulseFieldContextContextAggregationSelection>
-  contextConnection: StoryPulseContextConnection
+  contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
   initiatedBy: Array<LifeSensor>
@@ -4939,8 +5662,8 @@ export type StoryPulseContextAggregateArgs = {
 export type StoryPulseContextConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<StoryPulseContextConnectionSort>>
-  where?: InputMaybe<StoryPulseContextConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 /**
@@ -5005,37 +5728,8 @@ export type StoryPulseContextConnectFieldInput = {
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
-export type StoryPulseContextConnection = {
-  __typename?: 'StoryPulseContextConnection'
-  aggregate: StoryPulseFieldContextContextAggregateSelection
-  edges: Array<StoryPulseContextRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type StoryPulseContextConnectionSort = {
-  node?: InputMaybe<FieldContextSort>
-}
-
-export type StoryPulseContextConnectionWhere = {
-  AND?: InputMaybe<Array<StoryPulseContextConnectionWhere>>
-  NOT?: InputMaybe<StoryPulseContextConnectionWhere>
-  OR?: InputMaybe<Array<StoryPulseContextConnectionWhere>>
-  node?: InputMaybe<FieldContextWhere>
-}
-
 export type StoryPulseContextCreateFieldInput = {
   node: FieldContextCreateInput
-}
-
-export type StoryPulseContextDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<StoryPulseContextConnectionWhere>
-}
-
-export type StoryPulseContextDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<StoryPulseContextConnectionWhere>
 }
 
 export type StoryPulseContextFieldInput = {
@@ -5089,22 +5783,16 @@ export type StoryPulseContextNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type StoryPulseContextRelationship = {
-  __typename?: 'StoryPulseContextRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldContext
-}
-
 export type StoryPulseContextUpdateConnectionInput = {
   node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<StoryPulseContextConnectionWhere>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type StoryPulseContextUpdateFieldInput = {
   connect?: InputMaybe<Array<StoryPulseContextConnectFieldInput>>
   create?: InputMaybe<Array<StoryPulseContextCreateFieldInput>>
-  delete?: InputMaybe<Array<StoryPulseContextDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<StoryPulseContextDisconnectFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseContextUpdateConnectionInput>
 }
 
@@ -5117,7 +5805,7 @@ export type StoryPulseCreateInput = {
 }
 
 export type StoryPulseDeleteInput = {
-  context?: InputMaybe<Array<StoryPulseContextDeleteFieldInput>>
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   initiatedBy?: InputMaybe<StoryPulseInitiatedByDeleteInput>
 }
 
@@ -5125,12 +5813,6 @@ export type StoryPulseEdge = {
   __typename?: 'StoryPulseEdge'
   cursor: Scalars['String']['output']
   node: StoryPulse
-}
-
-export type StoryPulseFieldContextContextAggregateSelection = {
-  __typename?: 'StoryPulseFieldContextContextAggregateSelection'
-  count: CountConnection
-  node?: Maybe<StoryPulseFieldContextContextNodeAggregateSelection>
 }
 
 export type StoryPulseFieldContextContextAggregationSelection = {
@@ -5303,14 +5985,14 @@ export type StoryPulseWhere = {
   content_IN?: InputMaybe<Array<Scalars['String']['input']>>
   content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   contextAggregate?: InputMaybe<StoryPulseContextAggregateInput>
-  /** Return StoryPulses where all of the related StoryPulseContextConnections match this filter */
-  contextConnection_ALL?: InputMaybe<StoryPulseContextConnectionWhere>
-  /** Return StoryPulses where none of the related StoryPulseContextConnections match this filter */
-  contextConnection_NONE?: InputMaybe<StoryPulseContextConnectionWhere>
-  /** Return StoryPulses where one of the related StoryPulseContextConnections match this filter */
-  contextConnection_SINGLE?: InputMaybe<StoryPulseContextConnectionWhere>
-  /** Return StoryPulses where some of the related StoryPulseContextConnections match this filter */
-  contextConnection_SOME?: InputMaybe<StoryPulseContextConnectionWhere>
+  /** Return StoryPulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return StoryPulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return StoryPulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return StoryPulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
   /** Return StoryPulses where all of the related FieldContexts match this filter */
   context_ALL?: InputMaybe<FieldContextWhere>
   /** Return StoryPulses where none of the related FieldContexts match this filter */
@@ -5368,6 +6050,12 @@ export type StringAggregateSelection = {
   shortest?: Maybe<Scalars['String']['output']>
 }
 
+export type UpdateAddSpaceMemberResponsesMutationResponse = {
+  __typename?: 'UpdateAddSpaceMemberResponsesMutationResponse'
+  addSpaceMemberResponses: Array<AddSpaceMemberResponse>
+  info: UpdateInfo
+}
+
 export type UpdateChatbotResponsesMutationResponse = {
   __typename?: 'UpdateChatbotResponsesMutationResponse'
   chatbotResponses: Array<ChatbotResponse>
@@ -5419,6 +6107,12 @@ export type UpdatePeopleMutationResponse = {
   people: Array<Person>
 }
 
+export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
+  __typename?: 'UpdateRemoveSpaceMemberResponsesMutationResponse'
+  info: UpdateInfo
+  removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
+}
+
 export type UpdateResonanceLinksMutationResponse = {
   __typename?: 'UpdateResonanceLinksMutationResponse'
   info: UpdateInfo
@@ -5437,10 +6131,89 @@ export type UpdateSearchResultsMutationResponse = {
   searchResults: Array<SearchResults>
 }
 
+/** Response when updating a space member's role. */
+export type UpdateSpaceMemberRoleResponse = {
+  __typename?: 'UpdateSpaceMemberRoleResponse'
+  membership?: Maybe<SpaceMembership>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type UpdateSpaceMemberRoleResponseAggregate = {
+  __typename?: 'UpdateSpaceMemberRoleResponseAggregate'
+  count: Count
+  node: UpdateSpaceMemberRoleResponseAggregateNode
+}
+
+export type UpdateSpaceMemberRoleResponseAggregateNode = {
+  __typename?: 'UpdateSpaceMemberRoleResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type UpdateSpaceMemberRoleResponseAggregateSelection = {
+  __typename?: 'UpdateSpaceMemberRoleResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type UpdateSpaceMemberRoleResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type UpdateSpaceMemberRoleResponseEdge = {
+  __typename?: 'UpdateSpaceMemberRoleResponseEdge'
+  cursor: Scalars['String']['output']
+  node: UpdateSpaceMemberRoleResponse
+}
+
+/** Fields to sort UpdateSpaceMemberRoleResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one UpdateSpaceMemberRoleResponseSort object. */
+export type UpdateSpaceMemberRoleResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type UpdateSpaceMemberRoleResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdateSpaceMemberRoleResponseWhere = {
+  AND?: InputMaybe<Array<UpdateSpaceMemberRoleResponseWhere>>
+  NOT?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+  OR?: InputMaybe<Array<UpdateSpaceMemberRoleResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdateSpaceMemberRoleResponsesConnection = {
+  __typename?: 'UpdateSpaceMemberRoleResponsesConnection'
+  aggregate: UpdateSpaceMemberRoleResponseAggregate
+  edges: Array<UpdateSpaceMemberRoleResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type UpdateSpaceMembershipsMutationResponse = {
+  __typename?: 'UpdateSpaceMembershipsMutationResponse'
+  info: UpdateInfo
+  spaceMemberships: Array<SpaceMembership>
+}
+
 export type UpdateStoryPulsesMutationResponse = {
   __typename?: 'UpdateStoryPulsesMutationResponse'
   info: UpdateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type UpdateUpdateSpaceMemberRoleResponsesMutationResponse = {
+  __typename?: 'UpdateUpdateSpaceMemberRoleResponsesMutationResponse'
+  info: UpdateInfo
+  updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
 export type UpdateWeSpacesMutationResponse = {
@@ -5462,7 +6235,9 @@ export type WeSpace = Space & {
   contextsConnection: WeSpaceContextsConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
-  members: Array<LifeSensor>
+  members: Array<SpaceMembership>
+  /** @deprecated Please use field "aggregate" inside "membersConnection" instead */
+  membersAggregate?: Maybe<WeSpaceSpaceMembershipMembersAggregationSelection>
   membersConnection: WeSpaceMembersConnection
   name: Scalars['String']['output']
   owner: Array<LifeSensor>
@@ -5511,7 +6286,17 @@ export type WeSpaceContextsConnectionArgs = {
 export type WeSpaceMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<SpaceMembershipSort>>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
+/**
+ * A collaborative space shared with other people.
+ * Has an owner and members who can all participate.
+ * Multi-label: ["Space", "WeSpace"]
+ */
+export type WeSpaceMembersAggregateArgs = {
+  where?: InputMaybe<SpaceMembershipWhere>
 }
 
 /**
@@ -5522,6 +6307,7 @@ export type WeSpaceMembersArgs = {
 export type WeSpaceMembersConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<WeSpaceMembersConnectionSort>>
   where?: InputMaybe<WeSpaceMembersConnectionWhere>
 }
 
@@ -5693,7 +6479,7 @@ export type WeSpaceContextsUpdateFieldInput = {
 export type WeSpaceCreateInput = {
   contexts?: InputMaybe<WeSpaceContextsFieldInput>
   createdAt: Scalars['DateTime']['input']
-  members?: InputMaybe<WeSpaceMembersCreateInput>
+  members?: InputMaybe<WeSpaceMembersFieldInput>
   name: Scalars['String']['input']
   owner?: InputMaybe<WeSpaceOwnerCreateInput>
   visibility: SpaceVisibility
@@ -5701,7 +6487,7 @@ export type WeSpaceCreateInput = {
 
 export type WeSpaceDeleteInput = {
   contexts?: InputMaybe<Array<WeSpaceContextsDeleteFieldInput>>
-  members?: InputMaybe<WeSpaceMembersDeleteInput>
+  members?: InputMaybe<Array<WeSpaceMembersDeleteFieldInput>>
   owner?: InputMaybe<WeSpaceOwnerDeleteInput>
 }
 
@@ -5732,125 +6518,94 @@ export type WeSpaceFieldContextContextsNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type WeSpaceMembersCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type WeSpaceMembersAggregateInput = {
+  AND?: InputMaybe<Array<WeSpaceMembersAggregateInput>>
+  NOT?: InputMaybe<WeSpaceMembersAggregateInput>
+  OR?: InputMaybe<Array<WeSpaceMembersAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<WeSpaceMembersNodeAggregationWhereInput>
 }
 
-export type WeSpaceMembersCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceMembersCommunityConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceMembersCommunityConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceMembersCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type WeSpaceMembersCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type WeSpaceMembersCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<WeSpaceMembersCommunityConnectionWhere>
-}
-
-export type WeSpaceMembersCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<WeSpaceMembersCommunityConnectionWhere>
-}
-
-export type WeSpaceMembersCommunityFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceMembersCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceMembersCommunityCreateFieldInput>>
-}
-
-export type WeSpaceMembersCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<WeSpaceMembersCommunityConnectionWhere>
-}
-
-export type WeSpaceMembersCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceMembersCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceMembersCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceMembersCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceMembersCommunityDisconnectFieldInput>>
-  update?: InputMaybe<WeSpaceMembersCommunityUpdateConnectionInput>
+export type WeSpaceMembersConnectFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
 export type WeSpaceMembersConnection = {
   __typename?: 'WeSpaceMembersConnection'
+  aggregate: WeSpaceSpaceMembershipMembersAggregateSelection
   edges: Array<WeSpaceMembersRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
+export type WeSpaceMembersConnectionSort = {
+  node?: InputMaybe<SpaceMembershipSort>
+}
+
 export type WeSpaceMembersConnectionWhere = {
-  Community?: InputMaybe<WeSpaceMembersCommunityConnectionWhere>
-  Person?: InputMaybe<WeSpaceMembersPersonConnectionWhere>
+  AND?: InputMaybe<Array<WeSpaceMembersConnectionWhere>>
+  NOT?: InputMaybe<WeSpaceMembersConnectionWhere>
+  OR?: InputMaybe<Array<WeSpaceMembersConnectionWhere>>
+  node?: InputMaybe<SpaceMembershipWhere>
 }
 
-export type WeSpaceMembersCreateInput = {
-  Community?: InputMaybe<WeSpaceMembersCommunityFieldInput>
-  Person?: InputMaybe<WeSpaceMembersPersonFieldInput>
+export type WeSpaceMembersCreateFieldInput = {
+  node: SpaceMembershipCreateInput
 }
 
-export type WeSpaceMembersDeleteInput = {
-  Community?: InputMaybe<Array<WeSpaceMembersCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<WeSpaceMembersPersonDeleteFieldInput>>
+export type WeSpaceMembersDeleteFieldInput = {
+  delete?: InputMaybe<SpaceMembershipDeleteInput>
+  where?: InputMaybe<WeSpaceMembersConnectionWhere>
 }
 
-export type WeSpaceMembersPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
+export type WeSpaceMembersDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceMembershipDisconnectInput>
+  where?: InputMaybe<WeSpaceMembersConnectionWhere>
 }
 
-export type WeSpaceMembersPersonConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceMembersPersonConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceMembersPersonConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceMembersPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
+export type WeSpaceMembersFieldInput = {
+  connect?: InputMaybe<Array<WeSpaceMembersConnectFieldInput>>
+  create?: InputMaybe<Array<WeSpaceMembersCreateFieldInput>>
 }
 
-export type WeSpaceMembersPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type WeSpaceMembersPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<WeSpaceMembersPersonConnectionWhere>
-}
-
-export type WeSpaceMembersPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<WeSpaceMembersPersonConnectionWhere>
-}
-
-export type WeSpaceMembersPersonFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceMembersPersonConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceMembersPersonCreateFieldInput>>
-}
-
-export type WeSpaceMembersPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<WeSpaceMembersPersonConnectionWhere>
-}
-
-export type WeSpaceMembersPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceMembersPersonConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceMembersPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceMembersPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceMembersPersonDisconnectFieldInput>>
-  update?: InputMaybe<WeSpaceMembersPersonUpdateConnectionInput>
+export type WeSpaceMembersNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WeSpaceMembersNodeAggregationWhereInput>>
+  NOT?: InputMaybe<WeSpaceMembersNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<WeSpaceMembersNodeAggregationWhereInput>>
+  addedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
 export type WeSpaceMembersRelationship = {
   __typename?: 'WeSpaceMembersRelationship'
   cursor: Scalars['String']['output']
-  node: LifeSensor
+  node: SpaceMembership
 }
 
-export type WeSpaceMembersUpdateInput = {
-  Community?: InputMaybe<Array<WeSpaceMembersCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<WeSpaceMembersPersonUpdateFieldInput>>
+export type WeSpaceMembersUpdateConnectionInput = {
+  node?: InputMaybe<SpaceMembershipUpdateInput>
+  where?: InputMaybe<WeSpaceMembersConnectionWhere>
+}
+
+export type WeSpaceMembersUpdateFieldInput = {
+  connect?: InputMaybe<Array<WeSpaceMembersConnectFieldInput>>
+  create?: InputMaybe<Array<WeSpaceMembersCreateFieldInput>>
+  delete?: InputMaybe<Array<WeSpaceMembersDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<WeSpaceMembersDisconnectFieldInput>>
+  update?: InputMaybe<WeSpaceMembersUpdateConnectionInput>
 }
 
 export type WeSpaceOwnerCommunityConnectFieldInput = {
@@ -5982,10 +6737,29 @@ export type WeSpaceSort = {
   visibility?: InputMaybe<SortDirection>
 }
 
+export type WeSpaceSpaceMembershipMembersAggregateSelection = {
+  __typename?: 'WeSpaceSpaceMembershipMembersAggregateSelection'
+  count: CountConnection
+  node?: Maybe<WeSpaceSpaceMembershipMembersNodeAggregateSelection>
+}
+
+export type WeSpaceSpaceMembershipMembersAggregationSelection = {
+  __typename?: 'WeSpaceSpaceMembershipMembersAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<WeSpaceSpaceMembershipMembersNodeAggregateSelection>
+}
+
+export type WeSpaceSpaceMembershipMembersNodeAggregateSelection = {
+  __typename?: 'WeSpaceSpaceMembershipMembersNodeAggregateSelection'
+  addedAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+}
+
 export type WeSpaceUpdateInput = {
   contexts?: InputMaybe<Array<WeSpaceContextsUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  members?: InputMaybe<WeSpaceMembersUpdateInput>
+  members?: InputMaybe<Array<WeSpaceMembersUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
   owner?: InputMaybe<WeSpaceOwnerUpdateInput>
   visibility_SET?: InputMaybe<SpaceVisibility>
@@ -6023,6 +6797,7 @@ export type WeSpaceWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  membersAggregate?: InputMaybe<WeSpaceMembersAggregateInput>
   /** Return WeSpaces where all of the related WeSpaceMembersConnections match this filter */
   membersConnection_ALL?: InputMaybe<WeSpaceMembersConnectionWhere>
   /** Return WeSpaces where none of the related WeSpaceMembersConnections match this filter */
@@ -6031,14 +6806,14 @@ export type WeSpaceWhere = {
   membersConnection_SINGLE?: InputMaybe<WeSpaceMembersConnectionWhere>
   /** Return WeSpaces where some of the related WeSpaceMembersConnections match this filter */
   membersConnection_SOME?: InputMaybe<WeSpaceMembersConnectionWhere>
-  /** Return WeSpaces where all of the related LifeSensors match this filter */
-  members_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where none of the related LifeSensors match this filter */
-  members_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where one of the related LifeSensors match this filter */
-  members_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where some of the related LifeSensors match this filter */
-  members_SOME?: InputMaybe<LifeSensorWhere>
+  /** Return WeSpaces where all of the related SpaceMemberships match this filter */
+  members_ALL?: InputMaybe<SpaceMembershipWhere>
+  /** Return WeSpaces where none of the related SpaceMemberships match this filter */
+  members_NONE?: InputMaybe<SpaceMembershipWhere>
+  /** Return WeSpaces where one of the related SpaceMemberships match this filter */
+  members_SINGLE?: InputMaybe<SpaceMembershipWhere>
+  /** Return WeSpaces where some of the related SpaceMemberships match this filter */
+  members_SOME?: InputMaybe<SpaceMembershipWhere>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
@@ -6335,6 +7110,76 @@ export type CancelInviteMutation = {
     name: string
     email?: string | null
   } | null
+}
+
+export type ResolvePersonByEmailQueryVariables = Exact<{
+  email: Scalars['String']['input']
+}>
+
+export type ResolvePersonByEmailQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    email?: string | null
+  }>
+}
+
+export type AddSpaceMemberMutationVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+  memberId: Scalars['ID']['input']
+  role: SpaceRole
+}>
+
+export type AddSpaceMemberMutation = {
+  __typename?: 'Mutation'
+  addSpaceMember: {
+    __typename?: 'AddSpaceMemberResponse'
+    success: boolean
+    message: string
+    membership?: {
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+    } | null
+  }
+}
+
+export type UpdateSpaceMemberRoleMutationVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+  memberId: Scalars['ID']['input']
+  role: SpaceRole
+}>
+
+export type UpdateSpaceMemberRoleMutation = {
+  __typename?: 'Mutation'
+  updateSpaceMemberRole: {
+    __typename?: 'UpdateSpaceMemberRoleResponse'
+    success: boolean
+    message: string
+    membership?: {
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+    } | null
+  }
+}
+
+export type RemoveSpaceMemberMutationVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+  memberId: Scalars['ID']['input']
+}>
+
+export type RemoveSpaceMemberMutation = {
+  __typename?: 'Mutation'
+  removeSpaceMember: {
+    __typename?: 'RemoveSpaceMemberResponse'
+    success: boolean
+    message: string
+  }
 }
 
 export type GetCommunityQueryVariables = Exact<{
@@ -6712,10 +7557,16 @@ export type GetGraphSpacesQuery = {
       | { __typename?: 'Community'; id: string; name: string }
       | { __typename?: 'Person'; id: string; name: string }
     >
-    members: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | { __typename?: 'Person'; id: string; name: string }
-    >
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename?: 'Community'; id: string; name: string }
+        | { __typename?: 'Person'; id: string; name: string }
+      >
+    }>
   }>
   weSpaces: Array<{
     __typename?: 'WeSpace'
@@ -6727,10 +7578,16 @@ export type GetGraphSpacesQuery = {
       | { __typename?: 'Community'; id: string; name: string }
       | { __typename?: 'Person'; id: string; name: string }
     >
-    members: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | { __typename?: 'Person'; id: string; name: string }
-    >
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename?: 'Community'; id: string; name: string }
+        | { __typename?: 'Person'; id: string; name: string }
+      >
+    }>
   }>
 }
 
@@ -7837,6 +8694,179 @@ export type SearchAllQuery = {
       type?: string | null
     }>
   } | null
+}
+
+export type GetUserMeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetUserMeSpacesQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+  }>
+}
+
+export type GetUserWeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetUserWeSpacesQuery = {
+  __typename?: 'Query'
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+    }>
+    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+  }>
+}
+
+export type GetSpaceMembersQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetSpaceMembersQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename: 'Community'; id: string; name: string }
+        | {
+            __typename: 'Person'
+            id: string
+            name: string
+            email?: string | null
+          }
+      >
+    }>
+  }>
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename: 'Community'; id: string; name: string }
+        | {
+            __typename: 'Person'
+            id: string
+            name: string
+            email?: string | null
+          }
+      >
+    }>
+  }>
+}
+
+export type GetWeSpaceDetailsQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetWeSpaceDetailsQuery = {
+  __typename?: 'Query'
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    owner: Array<
+      | { __typename: 'Community'; id: string; name: string }
+      | {
+          __typename: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename: 'Community'; id: string; name: string }
+        | {
+            __typename: 'Person'
+            id: string
+            name: string
+            email?: string | null
+          }
+      >
+    }>
+    contexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+    }>
+  }>
+}
+
+export type GetMeSpaceDetailsQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetMeSpaceDetailsQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    owner: Array<
+      | { __typename: 'Community'; id: string; name: string }
+      | {
+          __typename: 'Person'
+          id: string
+          name: string
+          email?: string | null
+        }
+    >
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<
+        | { __typename: 'Community'; id: string; name: string }
+        | {
+            __typename: 'Person'
+            id: string
+            name: string
+            email?: string | null
+          }
+      >
+    }>
+    contexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+    }>
+  }>
 }
 
 export const CreateFieldContextDocument = {
@@ -8954,6 +9984,352 @@ export const CancelInviteDocument = {
 } as unknown as DocumentNode<
   CancelInviteMutation,
   CancelInviteMutationVariables
+>
+export const ResolvePersonByEmailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ResolvePersonByEmail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'email' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'email_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'email' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ResolvePersonByEmailQuery,
+  ResolvePersonByEmailQueryVariables
+>
+export const AddSpaceMemberDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddSpaceMember' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'memberId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'role' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SpaceRole' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addSpaceMember' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'spaceId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'spaceId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'memberId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'memberId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'role' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'role' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'membership' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddSpaceMemberMutation,
+  AddSpaceMemberMutationVariables
+>
+export const UpdateSpaceMemberRoleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateSpaceMemberRole' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'memberId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'role' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SpaceRole' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateSpaceMemberRole' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'spaceId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'spaceId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'memberId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'memberId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'role' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'role' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'membership' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateSpaceMemberRoleMutation,
+  UpdateSpaceMemberRoleMutationVariables
+>
+export const RemoveSpaceMemberDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveSpaceMember' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'memberId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeSpaceMember' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'spaceId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'spaceId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'memberId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'memberId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveSpaceMemberMutation,
+  RemoveSpaceMemberMutationVariables
 >
 export const GetCommunityDocument = {
   kind: 'Document',
@@ -10110,42 +11486,57 @@ export const GetGraphSpacesDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
                             },
                             {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -10221,42 +11612,57 @@ export const GetGraphSpacesDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
                             },
                             {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -15510,3 +16916,755 @@ export const SearchAllDocument = {
     },
   ],
 } as unknown as DocumentNode<SearchAllQuery, SearchAllQueryVariables>
+export const GetUserMeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetUserMeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUserMeSpacesQuery,
+  GetUserMeSpacesQueryVariables
+>
+export const GetUserWeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetUserWeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUserWeSpacesQuery,
+  GetUserWeSpacesQueryVariables
+>
+export const GetSpaceMembersDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetSpaceMembers' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'spaceId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'spaceId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSpaceMembersQuery,
+  GetSpaceMembersQueryVariables
+>
+export const GetWeSpaceDetailsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetWeSpaceDetails' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'spaceId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetWeSpaceDetailsQuery,
+  GetWeSpaceDetailsQueryVariables
+>
+export const GetMeSpaceDetailsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetMeSpaceDetails' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'spaceId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Person' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'Community' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Person' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'Community' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMeSpaceDetailsQuery,
+  GetMeSpaceDetailsQueryVariables
+>

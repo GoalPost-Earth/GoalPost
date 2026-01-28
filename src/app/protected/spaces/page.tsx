@@ -17,30 +17,30 @@ export default function SpacesPage() {
   }, [setPageTitle])
 
   return (
-    <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-hidden pt-24">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.15),transparent_70%)]" />
+    <main className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark transition-colors overflow-x-hidden overflow-y-auto pt-24">
+      {/* Background effects - fixed so they don't scroll */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.08),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.15),transparent_70%)] pointer-events-none" />
       <div
         className={cn(
-          'absolute top-[15%] left-[15%] w-125 h-125 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[120px]',
+          'fixed top-[15%] left-[15%] w-125 h-125 bg-gp-primary/10 dark:bg-gp-primary/5 rounded-full blur-[120px] pointer-events-none',
           animationsEnabled && 'animate-blob'
         )}
       />
       <div
         className={cn(
-          'absolute bottom-[15%] right-[15%] w-100 h-100 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[100px]',
+          'fixed bottom-[15%] right-[15%] w-100 h-100 bg-gp-accent-glow/10 dark:bg-gp-accent-glow/5 rounded-full blur-[100px] pointer-events-none',
           animationsEnabled && 'animate-blob [animation-delay:2s]'
         )}
       />
       <div
         className={cn(
-          'absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px]',
+          'fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-gp-goal/5 dark:bg-gp-goal/3 rounded-full blur-[80px] pointer-events-none',
           animationsEnabled && 'animate-blob [animation-delay:4s]'
         )}
       />
 
-      {/* Dot grid pattern */}
-      <div className="absolute inset-0 gp-dot-grid opacity-30 dark:opacity-20" />
+      {/* Dot grid pattern - fixed so it doesn't scroll */}
+      <div className="fixed inset-0 gp-dot-grid opacity-30 dark:opacity-20 pointer-events-none" />
       <div className="relative z-10 container mx-auto px-6 py-12 max-w-7xl">
         <div className="text-center mb-16 z-20">
           <h2 className="text-4xl md:text-5xl font-extralight text-gp-ink-strong dark:text-gp-ink-strong tracking-tight transition-colors">

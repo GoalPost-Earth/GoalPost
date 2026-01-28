@@ -14,6 +14,7 @@ export interface GenericCanvasProps {
   enablePanning?: boolean
   enableZoomControls?: boolean
   actionButton?: ReactNode
+  toolbar?: ReactNode
   onScaleChange?: (scale: number) => void
   showBackgroundDecor?: boolean
   isLoading?: boolean
@@ -28,6 +29,7 @@ export function GenericCanvas({
   enablePanning = true,
   enableZoomControls = true,
   actionButton,
+  toolbar,
   onScaleChange,
   showBackgroundDecor = true,
   isLoading = false,
@@ -152,7 +154,7 @@ export function GenericCanvas({
                 )}
               </TransformComponent>
 
-              {(enableZoomControls || actionButton) && (
+              {(enableZoomControls || actionButton || toolbar) && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
                   {enableZoomControls && (
                     <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass shadow-xl">
@@ -184,6 +186,8 @@ export function GenericCanvas({
                       </button>
                     </div>
                   )}
+
+                  {toolbar && <div>{toolbar}</div>}
 
                   {actionButton && (
                     <div className="gp-action-button-shell">{actionButton}</div>

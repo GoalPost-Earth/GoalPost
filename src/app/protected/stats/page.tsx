@@ -167,7 +167,7 @@ export default function StatsVisualization() {
       spaceType: 'MeSpace',
       visibility: space.visibility || 'PRIVATE',
       owner: space.owner?.[0]?.name || '',
-      members: space.members?.map((m) => m.name || '') || [],
+      members: space.members?.map((m) => m.member?.[0]?.name || '') || [],
     })) || []),
     ...(spacesData?.weSpaces?.map((space) => ({
       id: space.id,
@@ -175,7 +175,7 @@ export default function StatsVisualization() {
       spaceType: 'WeSpace',
       visibility: space.visibility || 'SHARED',
       owner: space.owner?.[0]?.name || '',
-      members: space.members?.map((m) => m.name || '') || [],
+      members: space.members?.map((m) => m.member?.[0]?.name || '') || [],
     })) || []),
   ]
 

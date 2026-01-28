@@ -11,6 +11,7 @@ import { initGraph } from '@/modules/graph'
 import { chunkConversationMessages } from '@/lib/resonance/utils/sentence-chunker'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import { enrichPersonFromPulses } from '@/lib/resonance/embeddings/person-enricher'
+import { generatePulseTitle } from '@/lib/resonance/utils/title-generator'
 
 interface CreatePulseRequest {
   contextId: string // FieldContext where pulse belongs
@@ -22,6 +23,7 @@ interface CreatePulseRequest {
     | 'CarePulse'
     | 'TimePulse'
   content: string // Main pulse content
+  title?: string // Optional title - will be AI-generated if not provided
   intensity?: number
   why?: string
   // Pulse-type specific fields
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
       personId,
       pulseType,
       content,
+      title: providedTitle,
       intensity,
       why,
       status,
@@ -73,6 +76,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate title if not provided
+    const title = providedTitle || (await generatePulseTitle(content))
+
     const graph = await initGraph()
 
     // Create pulse node with appropriate labels
@@ -80,7 +86,12 @@ export async function POST(request: NextRequest) {
 
     // Build property setters for optional fields
     const optionalProps: string[] = []
-    const params: Record<string, unknown> = { contextId, personId, content }
+    const params: Record<string, unknown> = {
+      contextId,
+      personId,
+      content,
+      title,
+    }
 
     if (intensity !== undefined) {
       optionalProps.push('pulse.intensity = $intensity')
@@ -117,6 +128,7 @@ export async function POST(request: NextRequest) {
       MATCH (person:Person {id: $personId})
       CREATE (pulse:${pulseLabels.join(':')} {
         id: 'pulse_' + randomUUID(),
+        title: $title,
         content: $content,
         createdAt: datetime(),
         modifiedAt: datetime()

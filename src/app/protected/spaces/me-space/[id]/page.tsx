@@ -1,10 +1,11 @@
 'use client'
 
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useQuery } from '@apollo/client/react'
 import { useCreateField } from '@/hooks'
 import { usePageContext } from '@/app/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
+import { GET_ME_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
 // Icon mapping for fields - can be customized per field
@@ -38,48 +39,19 @@ export default function MeSpaceFieldsPage() {
   const meSpaceId = params?.id as string
   const { setPageTitle } = usePageContext()
 
-  //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [fields, setFields] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const { createField, loading: isCreating } = useCreateField()
 
-  // Restore space name from localStorage on mount
-  useEffect(() => {
-    if (meSpaceId) {
-      const cachedSpaceName = localStorage.getItem(`space_${meSpaceId}`)
-      if (cachedSpaceName) {
-        setPageTitle(cachedSpaceName)
-      }
+  // Fetch MeSpace details and field contexts using GraphQL
+  const { data, loading, error, refetch } = useQuery(
+    GET_ME_SPACE_DETAILS_QUERY,
+    {
+      variables: { spaceId: meSpaceId },
+      skip: !meSpaceId,
     }
-  }, [meSpaceId, setPageTitle])
+  )
 
-  const fetchFields = useCallback(async () => {
-    if (!meSpaceId) return
-    try {
-      setLoading(true)
-      setError(null)
-      const res = await fetch('/api/field/get-fields-by-space', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spaceId: meSpaceId }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch fields')
-      }
-      setFields(data.fields || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      setFields([])
-    } finally {
-      setLoading(false)
-    }
-  }, [meSpaceId])
-
-  useEffect(() => {
-    fetchFields()
-  }, [fetchFields])
+  const meSpace = data?.meSpaces?.[0]
+  const fields = meSpace?.contexts || []
 
   const handleFieldClick = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
@@ -100,7 +72,7 @@ export default function MeSpaceFieldsPage() {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
       await createField(title, meSpaceId)
-      await fetchFields()
+      await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
     }
@@ -113,7 +85,7 @@ export default function MeSpaceFieldsPage() {
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
           <p className="text-sm text-red-700 dark:text-red-400">
-            Error: {error}
+            Error: {error.message}
           </p>
         </div>
       )}

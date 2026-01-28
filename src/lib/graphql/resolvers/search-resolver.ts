@@ -35,6 +35,14 @@ export const searchResolvers = {
     },
     context: Context
   ): Promise<SearchResults> => {
+    // Extract user ID from context, or null if unauthenticated
+    const currentUserId = context.jwt?.user.id || null
+
+    // Require authentication to use search
+    if (!currentUserId) {
+      throw new Error('Authentication required to search. Please log in.')
+    }
+
     // Create separate sessions for each query to avoid transaction conflicts
     const peopleSession = context.executionContext.session()
     const communitiesSession = context.executionContext.session()
@@ -46,7 +54,6 @@ export const searchResolvers = {
     const storyPulsesSession = context.executionContext.session()
 
     const searchTerm = args.query.toLowerCase()
-    console.log('🚀 ~ search-resolver.ts:49 ~ searchTerm:', searchTerm)
 
     try {
       // Execute all searches in parallel using separate sessions
@@ -89,85 +96,155 @@ export const searchResolvers = {
           )
         ),
 
-        // Search MeSpaces by name
+        // Search MeSpaces by name - only if user is owner or member
         meSpacesSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (s:MeSpace)
             WHERE toLower(s.name) CONTAINS $searchTerm
+            AND $userId IS NOT NULL
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN s
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search WeSpaces by name
+        // Search WeSpaces by name - only if user is owner or member
         weSpacesSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (s:WeSpace)
             WHERE toLower(s.name) CONTAINS $searchTerm
+            AND $userId IS NOT NULL
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN s
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search FieldContexts by title
+        // Search FieldContexts by title - only in spaces user can access
         contextsSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (f:FieldContext)
+            MATCH (f:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
             WHERE toLower(f.title) CONTAINS $searchTerm
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN f
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search GoalPulses by content
+        // Search GoalPulses by content - only in spaces user can access
         goalPulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:GoalPulse)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-            RETURN p
+            MATCH (p:GoalPulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
+            RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search ResourcePulses by content
+        // Search ResourcePulses by content - only in spaces user can access
         resourcePulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:ResourcePulse)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-            RETURN p
+            MATCH (p:ResourcePulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
+            RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search StoryPulses by content
+        // Search StoryPulses by content - only in spaces user can access
         storyPulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:StoryPulse)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-            RETURN p
+            MATCH (p:StoryPulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
+            RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
       ])
-      console.log('🚀 ~ search-resolver.ts:170 ~ peopleResult:', peopleResult)
 
       // Extract properties from Neo4j records
       const extractProperties = (
@@ -175,15 +252,42 @@ export const searchResolvers = {
         key: string
       ): EntityRecord[] => records.map((record) => record.get(key).properties)
 
+      // Extract pulse properties with related context
+      const extractPulsesWithContext = (
+        records: Array<{ get: (key: string) => { properties: EntityRecord } }>,
+        pulseKey: string,
+        contextKey: string
+      ): EntityRecord[] =>
+        records.map((record) => {
+          const pulse = record.get(pulseKey).properties
+          const context = record.get(contextKey)?.properties
+          return {
+            ...pulse,
+            context: context ? [context] : [],
+          }
+        })
+
       return {
         people: extractProperties(peopleResult.records, 'p'),
         communities: extractProperties(communitiesResult.records, 'c'),
         meSpaces: extractProperties(meSpacesResult.records, 's'),
         weSpaces: extractProperties(weSpacesResult.records, 's'),
         contexts: extractProperties(contextsResult.records, 'f'),
-        goalPulses: extractProperties(goalPulsesResult.records, 'p'),
-        resourcePulses: extractProperties(resourcePulsesResult.records, 'p'),
-        storyPulses: extractProperties(storyPulsesResult.records, 'p'),
+        goalPulses: extractPulsesWithContext(
+          goalPulsesResult.records,
+          'p',
+          'ctx'
+        ),
+        resourcePulses: extractPulsesWithContext(
+          resourcePulsesResult.records,
+          'p',
+          'ctx'
+        ),
+        storyPulses: extractPulsesWithContext(
+          storyPulsesResult.records,
+          'p',
+          'ctx'
+        ),
       }
     } catch (error) {
       console.error('❌ Search error:', error)
