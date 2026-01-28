@@ -1,6 +1,46 @@
 import { graphql } from '@/gql'
 
 /**
+ * Get all MeSpaces owned by the current user
+ */
+export const GET_USER_ME_SPACES_QUERY = graphql(`
+  query GetUserMeSpaces {
+    meSpaces {
+      id
+      name
+      visibility
+      createdAt
+      contexts {
+        id
+        title
+      }
+    }
+  }
+`)
+
+/**
+ * Get all WeSpaces where the current user is a member
+ */
+export const GET_USER_WE_SPACES_QUERY = graphql(`
+  query GetUserWeSpaces {
+    weSpaces {
+      id
+      name
+      visibility
+      createdAt
+      members {
+        id
+        role
+      }
+      contexts {
+        id
+        title
+      }
+    }
+  }
+`)
+
+/**
  * Get space members with their roles
  * Query a space by ID and return its members with their roles
  */

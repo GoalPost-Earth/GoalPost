@@ -7164,15 +7164,6 @@ export type UpdateSpaceMemberRoleMutation = {
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename: 'Community'; id: string; name: string }
-        | {
-            __typename: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
     } | null
   }
 }
@@ -8540,6 +8531,39 @@ export type SearchAllQuery = {
       type?: string | null
     }>
   } | null
+}
+
+export type GetUserMeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetUserMeSpacesQuery = {
+  __typename?: 'Query'
+  meSpaces: Array<{
+    __typename?: 'MeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+  }>
+}
+
+export type GetUserWeSpacesQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetUserWeSpacesQuery = {
+  __typename?: 'Query'
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    visibility: SpaceVisibility
+    createdAt: any
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+    }>
+    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+  }>
 }
 
 export type GetSpaceMembersQueryVariables = Exact<{
@@ -10058,63 +10082,6 @@ export const UpdateSpaceMemberRoleDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: '__typename' },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
                       },
                     ],
                   },
@@ -16097,6 +16064,101 @@ export const SearchAllDocument = {
     },
   ],
 } as unknown as DocumentNode<SearchAllQuery, SearchAllQueryVariables>
+export const GetUserMeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetUserMeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'meSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUserMeSpacesQuery,
+  GetUserMeSpacesQueryVariables
+>
+export const GetUserWeSpacesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetUserWeSpaces' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUserWeSpacesQuery,
+  GetUserWeSpacesQueryVariables
+>
 export const GetSpaceMembersDocument = {
   kind: 'Document',
   definitions: [

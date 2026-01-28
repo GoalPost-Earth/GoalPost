@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@apollo/client/react'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { DraggableEntityBubble } from '@/components/canvas/draggable-entity-bubble'
 import { useApp, usePageContext } from '@/app/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { GenericSpaceCanvas } from '@/components/canvas/generic-space-canvas'
+import { GET_USER_ME_SPACES_QUERY } from '@/app/graphql/queries'
 
 interface SpacePosition {
   spaceId: string
@@ -33,8 +35,6 @@ export default function MeSpacePage() {
   const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(true)
-  const [error, setError] = useState('')
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
   const [canvasSize, setCanvasSize] = useState({ width: 2400, height: 2400 })
@@ -49,6 +49,13 @@ export default function MeSpacePage() {
       subtitle?: string
     }>
   >([])
+
+  // Fetch MeSpaces using GraphQL
+  const {
+    data: meSpacesData,
+    loading: meSpacesLoading,
+    refetch: refetchMeSpaces,
+  } = useQuery(GET_USER_ME_SPACES_QUERY)
 
   const sizes: Array<'xl' | 'lg' | 'md' | 'sm'> = ['xl', 'lg', 'md', 'md', 'sm']
   const shapes: Array<'circle' | 'organic-1' | 'organic-2' | 'organic-3'> = [
@@ -175,56 +182,32 @@ export default function MeSpacePage() {
 
   const fetchUserMeSpaces = useCallback(async () => {
     if (!user?.id) {
-      setIsFetching(false)
       return
     }
 
-    try {
-      setIsFetching(true)
-      const res = await fetch('/api/me-space/get-all', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
+    // Transform GraphQL response to component format
+    const spaces = (meSpacesData?.meSpaces || []).map(
+      (
+        space: { id: string; name: string; contexts?: Array<{ id: string }> },
+        idx: number
+      ) => ({
+        id: space.id,
+        name: space.name,
+        description: '',
+        size: sizes[idx % sizes.length] as 'xl' | 'lg' | 'md' | 'sm',
+        shape: shapes[idx % shapes.length] as
+          | 'circle'
+          | 'organic-1'
+          | 'organic-2'
+          | 'organic-3',
+        icon: 'hub',
+        subtitle: `${space.contexts?.length || 0} contexts`,
       })
+    )
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        console.error('Failed to fetch meSpaces:', data.error)
-        setUserMeSpaces([])
-        return
-      }
-
-      // Transform API response to component format
-      const spaces = data.meSpaces.map(
-        (
-          space: { id: string; name: string; description?: string },
-          idx: number
-        ) => ({
-          id: space.id,
-          name: space.name,
-          description: space.description || '',
-          size: sizes[idx % sizes.length] as 'xl' | 'lg' | 'md' | 'sm',
-          shape: shapes[idx % shapes.length] as
-            | 'circle'
-            | 'organic-1'
-            | 'organic-2'
-            | 'organic-3',
-          icon: 'hub',
-          subtitle: space.description || 'Personal space',
-        })
-      )
-
-      setUserMeSpaces(spaces)
-    } catch (err) {
-      console.error('Error fetching meSpaces:', err)
-      setUserMeSpaces([])
-    } finally {
-      setIsFetching(false)
-    }
-
+    setUserMeSpaces(spaces)
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
+  }, [meSpacesData, user?.id])
 
   useEffect(() => {
     fetchUserMeSpaces()
@@ -252,17 +235,16 @@ export default function MeSpacePage() {
     description?: string
   }) => {
     if (!name?.trim()) {
-      setError('Space name is required')
+      console.error('Space name is required')
       return
     }
 
     if (!user?.id) {
-      setError('User not authenticated')
+      console.error('User not authenticated')
       return
     }
 
     setIsLoading(true)
-    setError('')
 
     try {
       const res = await fetch('/api/me-space/create', {
@@ -278,14 +260,14 @@ export default function MeSpacePage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Failed to create space')
+        console.error(data.error || 'Failed to create space')
         return
       }
 
       setShowCreateModal(false)
-      await fetchUserMeSpaces()
+      await refetchMeSpaces()
     } catch (err) {
-      setError(
+      console.error(
         'An error occurred while creating the space: ' + (err as Error).message
       )
     } finally {
@@ -295,16 +277,9 @@ export default function MeSpacePage() {
 
   return (
     <main className="flex flex-col h-screen w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-          <p className="text-sm text-red-700 dark:text-red-400">
-            Error: {error}
-          </p>
-        </div>
-      )}
       <GenericSpaceCanvas
         onScaleChange={setCurrentScale}
-        isLoading={isFetching}
+        isLoading={meSpacesLoading}
         isEmpty={spacePositions.length === 0}
         actionButton={
           <button
@@ -353,13 +328,11 @@ export default function MeSpacePage() {
           )
         })}
       </GenericSpaceCanvas>
-      {/* Create Space Modal (styled to match CreateFieldModal) */}
       {showCreateModal && (
         <CreateSpaceModal
           isOpen={showCreateModal}
           onClose={() => {
             setShowCreateModal(false)
-            setError('')
           }}
           onCreate={handleCreateSpace}
           isLoading={isLoading}

@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@apollo/client/react'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { DraggableEntityBubble } from '@/components/canvas/draggable-entity-bubble'
 import { useApp, usePageContext } from '@/app/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { GenericSpaceCanvas } from '@/components/canvas/generic-space-canvas'
+import { GET_USER_WE_SPACES_QUERY } from '@/app/graphql/queries'
 
 interface SpacePosition {
   spaceId: string
@@ -46,7 +48,6 @@ export default function WeSpacePage() {
   const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
@@ -62,6 +63,11 @@ export default function WeSpacePage() {
       badge?: { text: string; variant: 'primary' | 'accent' | 'default' }
     }>
   >([])
+
+  // Fetch WeSpaces using GraphQL
+  const { data: weSpacesData, loading: weSpacesLoading } = useQuery(
+    GET_USER_WE_SPACES_QUERY
+  )
 
   // Track canvas size (aligned with GenericSpaceCanvas canvasScale=5)
   useEffect(() => {
@@ -178,72 +184,46 @@ export default function WeSpacePage() {
   }, [weSpaces, computeSpacePositions, resolveCollisions])
 
   const fetchWeSpaces = useCallback(async () => {
-    if (!user?.id) {
-      console.log('⏳ No user ID yet, skipping fetch')
+    if (!weSpacesData?.weSpaces) {
       return
     }
 
-    try {
-      setIsFetching(true)
-      console.log('🔍 Fetching WeSpaces for user:', user.id)
+    const transformedSpaces = weSpacesData.weSpaces.map(
+      (
+        space: {
+          id: string
+          name: string
+          members?: Array<{ id: string }>
+          contexts?: Array<{ id: string }>
+        },
+        idx: number
+      ) => {
+        const memberCount = space.members?.length ?? 0
+        const contextCount = space.contexts?.length ?? 0
 
-      const response = await fetch(
-        `/api/we-space/get-by-member?userId=${user.id}`
-      )
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch WeSpaces: ${response.status}`)
+        return {
+          id: space.id,
+          size: sizeVariations[idx % sizeVariations.length],
+          shape: shapeVariations[idx % shapeVariations.length],
+          icon: 'groups',
+          title: space.name,
+          subtitle:
+            memberCount > 0
+              ? `${memberCount} member${memberCount !== 1 ? 's' : ''}`
+              : 'Collaborative space',
+          badge:
+            contextCount > 0
+              ? {
+                  text: `${contextCount} Field${contextCount !== 1 ? 's' : ''}`,
+                  variant: 'primary' as const,
+                }
+              : undefined,
+        }
       }
-
-      const data = await response.json()
-
-      if (data.success && data.spaces && data.spaces.length > 0) {
-        const transformedSpaces = data.spaces.map(
-          (
-            space: {
-              id: string
-              name: string
-              memberCount?: number
-              contextCount?: number
-            },
-            idx: number
-          ) => {
-            const memberCount = space.memberCount ?? 0
-            const contextCount = space.contextCount ?? 0
-
-            return {
-              id: space.id,
-              size: sizeVariations[idx % sizeVariations.length],
-              shape: shapeVariations[idx % shapeVariations.length],
-              icon: 'groups',
-              title: space.name,
-              subtitle:
-                memberCount > 0
-                  ? `${memberCount} member${memberCount !== 1 ? 's' : ''}`
-                  : 'Collaborative space',
-              badge:
-                contextCount > 0
-                  ? {
-                      text: `${contextCount} Field${contextCount !== 1 ? 's' : ''}`,
-                      variant: 'primary' as const,
-                    }
-                  : undefined,
-            }
-          }
-        )
-        setWeSpaces(transformedSpaces)
-        console.log(`✓ Loaded ${transformedSpaces.length} WeSpaces`)
-      } else {
-        setWeSpaces([])
-        console.log('ℹ️ No WeSpaces found for user')
-      }
-    } catch (error) {
-      console.error('Error fetching WeSpaces:', error)
-      setWeSpaces([])
-    } finally {
-      setIsFetching(false)
-    }
-  }, [user?.id])
+    )
+    setWeSpaces(transformedSpaces)
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weSpacesData])
 
   useEffect(() => {
     fetchWeSpaces()
@@ -325,7 +305,7 @@ export default function WeSpacePage() {
       )}
       <GenericSpaceCanvas
         onScaleChange={setCurrentScale}
-        isLoading={isFetching}
+        isLoading={weSpacesLoading}
         isEmpty={spacePositions.length === 0}
         emptyStateMessage={{
           title: 'No spaces yet',
