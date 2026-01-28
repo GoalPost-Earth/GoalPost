@@ -82,13 +82,18 @@ export const GET_GRAPH_SPACES = graphql(`
         }
       }
       members {
-        ... on Person {
-          id
-          name
-        }
-        ... on Community {
-          id
-          name
+        id
+        role
+        addedAt
+        member {
+          ... on Person {
+            id
+            name
+          }
+          ... on Community {
+            id
+            name
+          }
         }
       }
     }
@@ -108,13 +113,18 @@ export const GET_GRAPH_SPACES = graphql(`
         }
       }
       members {
-        ... on Person {
-          id
-          name
-        }
-        ... on Community {
-          id
-          name
+        id
+        role
+        addedAt
+        member {
+          ... on Person {
+            id
+            name
+          }
+          ... on Community {
+            id
+            name
+          }
         }
       }
     }

@@ -92,7 +92,7 @@ export default function NavBar() {
               : pageTitle}
           </h2>
           {pathname?.includes('/spaces/') && pageTitle !== 'Spaces' && (
-            <div className="text-xs text-gp-ink-muted dark:text-gp-ink-soft flex items-center gap-2">
+            <div className="text-xs text-gp-ink-muted dark:text-gp-ink-soft flex flex-wrap items-center gap-2">
               <Link
                 href="/protected/spaces"
                 className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"

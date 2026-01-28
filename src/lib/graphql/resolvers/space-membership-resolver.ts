@@ -29,20 +29,26 @@ interface MutationResponse {
   message: string
 }
 
+interface SpaceMemberObject {
+  __typename: 'Person' | 'Community'
+  id: string
+  name: string
+  email?: string
+}
+
+interface MembershipObject {
+  id: string
+  role: SpaceRole
+  addedAt: string
+  member: SpaceMemberObject[]
+}
+
 interface AddSpaceMemberResponse extends MutationResponse {
-  membership?: {
-    id: string
-    role: SpaceRole
-    addedAt: string
-  }
+  membership?: MembershipObject
 }
 
 interface UpdateSpaceMemberRoleResponse extends MutationResponse {
-  membership?: {
-    id: string
-    role: SpaceRole
-    addedAt: string
-  }
+  membership?: MembershipObject
 }
 
 type RemoveSpaceMemberResponse = MutationResponse
@@ -57,8 +63,16 @@ export const spaceMembershipResolvers = {
     args: AddSpaceMemberInput,
     context: Context
   ): Promise<AddSpaceMemberResponse> => {
-    const currentUserId = context.auth.jwt.sub
+    const currentUserId = context.jwt?.user.id
     const { spaceId, memberId, role } = args
+
+    // Validate authentication
+    if (!currentUserId) {
+      return {
+        success: false,
+        message: 'Authentication required. Please log in.',
+      }
+    }
 
     const session = context.executionContext.session()
 
@@ -104,7 +118,14 @@ export const spaceMembershipResolvers = {
             addedAt: datetime($addedAt)
           })
           CREATE (space)-[:HAS_MEMBER]->(sm)-[:IS_MEMBER]->(member)
-          RETURN sm.id as id, sm.role as role, sm.addedAt as addedAt
+          RETURN 
+            sm.id as id, 
+            sm.role as role, 
+            sm.addedAt as addedAt,
+            member.id as memberId,
+            member.name as memberName,
+            member.email as memberEmail,
+            labels(member) as memberLabels
           `,
           {
             spaceId,
@@ -125,6 +146,9 @@ export const spaceMembershipResolvers = {
       }
 
       const record = result.records[0]
+      const memberLabels = record.get('memberLabels')
+      const isPersonType = memberLabels.includes('Person')
+
       return {
         success: true,
         message: `Successfully added member with ${role} role to space.`,
@@ -132,6 +156,14 @@ export const spaceMembershipResolvers = {
           id: record.get('id'),
           role: record.get('role'),
           addedAt: record.get('addedAt').toString(),
+          member: [
+            {
+              __typename: isPersonType ? 'Person' : 'Community',
+              id: record.get('memberId'),
+              name: record.get('memberName'),
+              email: record.get('memberEmail'),
+            },
+          ],
         },
       }
     } catch (error) {
@@ -154,8 +186,17 @@ export const spaceMembershipResolvers = {
     args: UpdateSpaceMemberRoleInput,
     context: Context
   ): Promise<UpdateSpaceMemberRoleResponse> => {
-    const currentUserId = context.auth.jwt.sub
+    const currentUserId = context.jwt?.user.id
     const { spaceId, memberId, role } = args
+
+    // Validate authentication
+    if (!currentUserId) {
+      return {
+        success: false,
+        message: 'Authentication required. Please log in.',
+      }
+    }
+
     const session = context.executionContext.session()
 
     try {
@@ -197,7 +238,14 @@ export const spaceMembershipResolvers = {
           `
           MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:LifeSensor {id: $memberId})
           SET sm.role = $role
-          RETURN sm.id as id, sm.role as role, sm.addedAt as addedAt
+          RETURN 
+            sm.id as id, 
+            sm.role as role, 
+            sm.addedAt as addedAt,
+            member.id as memberId,
+            member.name as memberName,
+            member.email as memberEmail,
+            labels(member) as memberLabels
           `,
           { spaceId, memberId, role }
         )
@@ -211,6 +259,9 @@ export const spaceMembershipResolvers = {
       }
 
       const record = result.records[0]
+      const memberLabels = record.get('memberLabels')
+      const isPersonType = memberLabels.includes('Person')
+
       return {
         success: true,
         message: `Successfully updated member role to ${role}.`,
@@ -218,6 +269,14 @@ export const spaceMembershipResolvers = {
           id: record.get('id'),
           role: record.get('role'),
           addedAt: record.get('addedAt').toString(),
+          member: [
+            {
+              __typename: isPersonType ? 'Person' : 'Community',
+              id: record.get('memberId'),
+              name: record.get('memberName'),
+              email: record.get('memberEmail'),
+            },
+          ],
         },
       }
     } catch (error) {
@@ -241,8 +300,16 @@ export const spaceMembershipResolvers = {
     args: RemoveSpaceMemberInput,
     context: Context
   ): Promise<RemoveSpaceMemberResponse> => {
-    const currentUserId = context.auth.jwt.sub
+    const currentUserId = context.jwt?.user.id
     const { spaceId, memberId } = args
+
+    // Validate authentication
+    if (!currentUserId) {
+      return {
+        success: false,
+        message: 'Authentication required. Please log in.',
+      }
+    }
 
     const session = context.executionContext.session()
 

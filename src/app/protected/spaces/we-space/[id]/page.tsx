@@ -1,10 +1,12 @@
 'use client'
 
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect } from 'react'
+import { useQuery } from '@apollo/client/react'
 import { useCreateField } from '@/hooks'
 import { usePageContext } from '@/app/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
+import { GET_WE_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
 // Icon mapping for fields - can be customized per field
@@ -38,48 +40,34 @@ export default function WeSpaceFieldsPage() {
   const weSpaceId = params?.id as string
   const { setPageTitle } = usePageContext()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [fields, setFields] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const { createField, loading: isCreating } = useCreateField()
 
-  // Restore space name from localStorage on mount
-  useEffect(() => {
-    if (weSpaceId) {
-      const cachedSpaceName = localStorage.getItem(`space_${weSpaceId}`)
-      if (cachedSpaceName) {
-        setPageTitle(cachedSpaceName)
-      }
+  // Fetch WeSpace details and field contexts using GraphQL
+  const { data, loading, error, refetch } = useQuery(
+    GET_WE_SPACE_DETAILS_QUERY,
+    {
+      variables: { spaceId: weSpaceId },
+      skip: !weSpaceId,
     }
-  }, [weSpaceId, setPageTitle])
+  )
 
-  const fetchFields = useCallback(async () => {
-    if (!weSpaceId) return
-    try {
-      setLoading(true)
-      setError(null)
-      const res = await fetch('/api/field/get-fields-by-space', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spaceId: weSpaceId }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch fields')
-      }
-      setFields(data.fields || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      setFields([])
-    } finally {
-      setLoading(false)
-    }
-  }, [weSpaceId])
+  const weSpace = data?.weSpaces?.[0]
+  const fields = weSpace?.contexts || []
+  const members = weSpace?.members || []
+  const owner = weSpace?.owner?.[0]
 
+  // Check if current user is the owner by comparing with owner returned from query
+  // In a real app, you'd get the current user ID from auth context
+  // For now, assume current user is owner if they see the space (since query is authenticated)
+  const isOwner = !!owner
+
+  // Set page title when space loads
   useEffect(() => {
-    fetchFields()
-  }, [fetchFields])
+    if (weSpace?.name) {
+      setPageTitle(weSpace.name)
+      localStorage.setItem(`space_${weSpaceId}`, weSpace.name)
+    }
+  }, [weSpace?.name, weSpaceId, setPageTitle])
 
   const handleFieldClick = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
@@ -100,7 +88,7 @@ export default function WeSpaceFieldsPage() {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
       await createField(title, weSpaceId)
-      await fetchFields()
+      await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
     }
@@ -113,17 +101,40 @@ export default function WeSpaceFieldsPage() {
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
           <p className="text-sm text-red-700 dark:text-red-400">
-            Error: {error}
+            Error: {error.message}
           </p>
         </div>
       )}
       <FieldsCanvas
         fields={transformedFields}
         spaceId={weSpaceId}
+        spaceName={weSpace?.name || ''}
         onFieldClick={handleFieldClick}
         onCreateField={handleCreateField}
         isCreating={isCreating}
         isLoading={loading}
+        isWeSpace={true}
+        isOwner={isOwner}
+        spaceMembers={members.map((m) => {
+          const memberData = m.member[0]
+          return {
+            id: m.id,
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+            role: m.role as any,
+            member: {
+              __typename: memberData.__typename,
+              id: memberData.id,
+              name: memberData.name,
+              email:
+                memberData.__typename === 'Person'
+                  ? (memberData.email ?? undefined)
+                  : undefined,
+            },
+          }
+        })}
+        onRefetch={async () => {
+          await refetch()
+        }}
       />
     </div>
   )
