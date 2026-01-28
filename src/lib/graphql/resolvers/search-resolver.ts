@@ -165,6 +165,7 @@ export const searchResolvers = {
             `
             MATCH (p:GoalPulse)<-[:HAS_PULSE]-(ctx:FieldContext)
             WHERE toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm
             RETURN p, ctx
             LIMIT 10
             `,
@@ -178,6 +179,7 @@ export const searchResolvers = {
             `
             MATCH (p:ResourcePulse)<-[:HAS_PULSE]-(ctx:FieldContext)
             WHERE toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm
             RETURN p, ctx
             LIMIT 10
             `,
@@ -191,6 +193,7 @@ export const searchResolvers = {
             `
             MATCH (p:StoryPulse)<-[:HAS_PULSE]-(ctx:FieldContext)
             WHERE toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm
             RETURN p, ctx
             LIMIT 10
             `,
