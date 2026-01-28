@@ -50,6 +50,18 @@ union LifeSensor = Person | Community
 # ============================================================================
 
 """
+Role-based permission for space membership.
+ADMIN: Can manage members and modify pulses/contexts
+MEMBER: Can create and modify pulses/contexts
+GUEST: Can view pulses and contexts (read-only)
+"""
+enum SpaceRole {
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+"""
 Abstract space type.
 Never instantiated directly - use MeSpace or WeSpace.
 """
@@ -76,7 +88,7 @@ type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
   visibility: SpaceVisibility!
   createdAt: DateTime!
   owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
-  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
@@ -91,8 +103,19 @@ type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
   visibility: SpaceVisibility!
   createdAt: DateTime!
   owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
-  members: [LifeSensor!]! @relationship(type: "HAS_MEMBER", direction: OUT)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
+}
+
+"""
+Represents a person or community as a member of a space with a specific role.
+Label: ["SpaceMembership"]
+"""
+type SpaceMembership @node(labels: ["SpaceMembership"]) {
+  id: ID! @id
+  role: SpaceRole!
+  addedAt: DateTime!
+  member: [LifeSensor!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
 
 # ============================================================================
@@ -127,6 +150,7 @@ interface FieldPulse {
   content: String!
   createdAt: DateTime!
   intensity: Float
+  context: [FieldContext!]! @declareRelationship
 }
 
 """
@@ -253,6 +277,32 @@ type ChatbotResponse {
   sessionId: String!
 }
 
+"""
+Response when adding a member to a space.
+"""
+type AddSpaceMemberResponse {
+  success: Boolean!
+  message: String!
+  membership: SpaceMembership
+}
+
+"""
+Response when updating a space member's role.
+"""
+type UpdateSpaceMemberRoleResponse {
+  success: Boolean!
+  message: String!
+  membership: SpaceMembership
+}
+
+"""
+Response when removing a member from a space.
+"""
+type RemoveSpaceMemberResponse {
+  success: Boolean!
+  message: String!
+}
+
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -271,6 +321,33 @@ type Mutation {
   Removes the User label and invite-related properties.
   """
   cancelInvite(personId: String!): Person
+
+  """
+  Add a member to a space with a specific role.
+  Only the space owner or members with ADMIN role can add new members.
+  """
+  addSpaceMember(
+    spaceId: ID!
+    memberId: ID!
+    role: SpaceRole!
+  ): AddSpaceMemberResponse!
+
+  """
+  Update a space member's role.
+  Only the space owner or members with ADMIN role can change roles.
+  """
+  updateSpaceMemberRole(
+    spaceId: ID!
+    memberId: ID!
+    role: SpaceRole!
+  ): UpdateSpaceMemberRoleResponse!
+
+  """
+  Remove a member from a space.
+  Only the space owner or members with ADMIN role can remove members.
+  Cannot remove the space owner.
+  """
+  removeSpaceMember(spaceId: ID!, memberId: ID!): RemoveSpaceMemberResponse!
 }
 
 type Query {
@@ -280,8 +357,12 @@ type Query {
     - Pulses: content field
     - People: firstName, lastName, email
     - Contexts: title field
-    - Spaces (MeSpace/WeSpace): name field
+    - Spaces (MeSpace/WeSpace): name field (filtered by user ownership/membership)
     - Communities: name field
+
+  Space Filtering:
+    - Only returns spaces where the current user is the owner OR a member with any role (ADMIN, MEMBER, or GUEST)
+    - Private spaces not owned or joined by the user are excluded from results
 
   Args:
     - query: Search term (required, case-insensitive substring match)
