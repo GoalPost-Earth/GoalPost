@@ -7,7 +7,11 @@ import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@apollo/client/react'
 
-export function SpacesList() {
+interface SpacesListProps {
+  showAll?: boolean
+}
+
+export function SpacesList({ showAll = false }: SpacesListProps) {
   const router = useRouter()
   const {
     data: meSpacesData,
@@ -102,7 +106,7 @@ export function SpacesList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allSpaces.slice(0, 5).map((space) => {
+          {allSpaces.slice(0, showAll ? undefined : 5).map((space) => {
             const isMeSpace = space.type === 'MeSpace'
             const icon = isMeSpace ? 'person' : 'groups'
             const iconBg = isMeSpace

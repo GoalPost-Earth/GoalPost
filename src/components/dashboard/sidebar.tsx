@@ -52,7 +52,7 @@ export function Sidebar({
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
-            className={`nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg group transition-all duration-300 ${
+            className={`nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg group transition-all duration-300 cursor-pointer ${
               activeView === item.id
                 ? 'active bg-white/80 text-slate-800 shadow-sm dark:bg-white/5 dark:text-white'
                 : 'text-slate-900 hover:bg-white/60 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white'

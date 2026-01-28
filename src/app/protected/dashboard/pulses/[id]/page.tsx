@@ -7,11 +7,13 @@ import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
+import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts'
 
 export default function PulseDetailsPage() {
   const params = useParams()
   const pulseId = params?.id as string
-
+  const { animationsEnabled } = useAnimations()
   const { data, loading, error } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
     variables: { pulseId },
     skip: !pulseId,
@@ -24,8 +26,20 @@ export default function PulseDetailsPage() {
 
   if (loading) {
     return (
-      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center">
-        <div className="text-gp-ink-muted">Loading...</div>
+      <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <span
+            className={cn(
+              'material-symbols-outlined text-5xl text-gp-primary',
+              animationsEnabled && 'animate-spin'
+            )}
+          >
+            hourglass_bottom
+          </span>
+          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+            Loading...
+          </p>
+        </div>
       </div>
     )
   }
@@ -200,7 +214,7 @@ export default function PulseDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 w-full">
+          {/* <div className="flex items-center justify-center gap-6 w-full">
             <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
               Edit Pulse
             </button>
@@ -210,12 +224,12 @@ export default function PulseDetailsPage() {
               </span>
               Share
             </button>
-          </div>
+          </div> */}
         </ProfileLayout>
       </main>
 
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
+      {/* <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
         <div className="flex items-center gap-2 p-1.5 rounded-full bg-gp-glass-bg border border-gp-glass-border backdrop-blur-2xl shadow-xl dark:shadow-2xl">
           <button className="size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors hover:bg-gp-primary/10 dark:hover:bg-gp-primary/20">
             <span className="material-symbols-outlined">message</span>
@@ -225,7 +239,7 @@ export default function PulseDetailsPage() {
             <span className="material-symbols-outlined">bookmark</span>
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

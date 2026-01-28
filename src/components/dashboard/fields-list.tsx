@@ -6,7 +6,11 @@ import { useQuery } from '@apollo/client/react'
 import { GET_ALL_FIELD_CONTEXTS } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 
-export function FieldsList() {
+interface FieldsListProps {
+  showAll?: boolean
+}
+
+export function FieldsList({ showAll = false }: FieldsListProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS)
 
@@ -72,7 +76,7 @@ export function FieldsList() {
                 : new Date(b.createdAt).getTime()
               return bTime - aTime // Most recent first
             })
-            .slice(0, 5)
+            .slice(0, showAll ? undefined : 5)
             .map((field) => {
               const pulseCount = field.pulses.length
               const lastPulse = field.pulses[0]

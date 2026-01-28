@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { GET_ALL_PEOPLE } from '@/app/graphql/queries'
 
-export function PeopleList() {
+interface PeopleListProps {
+  showAll?: boolean
+}
+
+export function PeopleList({ showAll = false }: PeopleListProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
 
@@ -61,7 +65,7 @@ export function PeopleList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.people.slice(0, 6).map((person) => {
+          {data.people.slice(0, showAll ? undefined : 6).map((person) => {
             const spaceCount = person.ownsSpaces?.length || 0
             const initials = person.name
               ? person.name

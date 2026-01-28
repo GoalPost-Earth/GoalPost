@@ -33,9 +33,9 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
 
   const setAnimationsEnabled = (enabled: boolean) => {
     setAnimationsEnabledState(enabled)
-    if (mounted) {
-      localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
-    }
+    // Always save to localStorage, not just when mounted
+    // This ensures the preference persists immediately
+    localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
   }
 
   return (

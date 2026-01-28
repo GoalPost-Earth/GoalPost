@@ -1,23 +1,23 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Sidebar } from '@/components/history/sidebar'
-import { ActivePulses } from '@/components/history/active-pulses'
-import { FieldsList } from '@/components/history/fields-list'
-import { SpacesList } from '@/components/history/spaces-list'
-import { PeopleList } from '@/components/history/people-list'
+import { Sidebar } from '@/components/dashboard/sidebar'
+import { ActivePulses } from '@/components/dashboard/active-pulses'
+import { FieldsList } from '@/components/dashboard/fields-list'
+import { SpacesList } from '@/components/dashboard/spaces-list'
+import { PeopleList } from '@/components/dashboard/people-list'
 import { usePageContext } from '@/app/contexts'
 
 type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces' | 'people'
 
-export default function HistoryPage() {
+export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
   const [activeView, setActiveView] = useState<ViewType>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Set page title
   useEffect(() => {
-    setPageTitle('History')
+    setPageTitle('Dashboard')
   }, [setPageTitle])
 
   return (
@@ -88,10 +88,10 @@ export default function HistoryPage() {
               <PeopleList />
             </>
           )}
-          {activeView === 'pulses' && <ActivePulses />}
-          {activeView === 'fields' && <FieldsList />}
-          {activeView === 'spaces' && <SpacesList />}
-          {activeView === 'people' && <PeopleList />}
+          {activeView === 'pulses' && <ActivePulses showAll />}
+          {activeView === 'fields' && <FieldsList showAll />}
+          {activeView === 'spaces' && <SpacesList showAll />}
+          {activeView === 'people' && <PeopleList showAll />}
         </div>
       </main>
     </div>

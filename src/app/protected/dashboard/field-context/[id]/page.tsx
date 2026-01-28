@@ -7,11 +7,13 @@ import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { cn } from '@/lib/utils'
+import { useAnimations } from '@/app/contexts'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
   const contextId = params?.id as string
-
+  const { animationsEnabled } = useAnimations()
   const { data, loading, error } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
     variables: { contextId },
     skip: !contextId,
@@ -23,8 +25,20 @@ export default function FieldContextDetailsPage() {
 
   if (loading) {
     return (
-      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center">
-        <div className="text-gp-ink-muted">Loading...</div>
+      <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <span
+            className={cn(
+              'material-symbols-outlined text-5xl text-gp-primary',
+              animationsEnabled && 'animate-spin'
+            )}
+          >
+            hourglass_bottom
+          </span>
+          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+            Loading...
+          </p>
+        </div>
       </div>
     )
   }
@@ -166,7 +180,7 @@ export default function FieldContextDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 w-full">
+          {/* <div className="flex items-center justify-center gap-6 w-full">
             <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
               Edit Context
             </button>
@@ -174,7 +188,7 @@ export default function FieldContextDetailsPage() {
               <span className="material-symbols-outlined text-[18px]">add</span>
               New Pulse
             </button>
-          </div>
+          </div> */}
         </ProfileLayout>
       </main>
     </div>

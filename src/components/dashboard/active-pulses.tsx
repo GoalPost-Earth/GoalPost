@@ -36,7 +36,11 @@ const pulseConfig: Record<PulseType, PulseConfig> = {
   },
 }
 
-export function ActivePulses() {
+interface ActivePulsesProps {
+  showAll?: boolean
+}
+
+export function ActivePulses({ showAll = false }: ActivePulsesProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PULSES)
 
@@ -112,7 +116,7 @@ export function ActivePulses() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allPulses.slice(0, 5).map((pulse) => {
+          {(showAll ? allPulses : allPulses.slice(0, 5)).map((pulse) => {
             const config = pulseConfig[pulse.__typename as PulseType]
             const author =
               pulse.initiatedBy[0]?.__typename === 'Person'
