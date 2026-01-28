@@ -146,58 +146,102 @@ export const searchResolvers = {
           )
         ),
 
-        // Search FieldContexts by title
+        // Search FieldContexts by title - only in spaces user can access
         contextsSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (f:FieldContext)
+            MATCH (f:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
             WHERE toLower(f.title) CONTAINS $searchTerm
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN f
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search GoalPulses by content
+        // Search GoalPulses by content - only in spaces user can access
         goalPulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:GoalPulse)<-[:HAS_PULSE]-(ctx:FieldContext)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-               OR toLower(p.title) CONTAINS $searchTerm
+            MATCH (p:GoalPulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search ResourcePulses by content
+        // Search ResourcePulses by content - only in spaces user can access
         resourcePulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:ResourcePulse)<-[:HAS_PULSE]-(ctx:FieldContext)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-               OR toLower(p.title) CONTAINS $searchTerm
+            MATCH (p:ResourcePulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
 
-        // Search StoryPulses by content
+        // Search StoryPulses by content - only in spaces user can access
         storyPulsesSession.executeRead((tx) =>
           tx.run(
             `
-            MATCH (p:StoryPulse)<-[:HAS_PULSE]-(ctx:FieldContext)
-            WHERE toLower(p.content) CONTAINS $searchTerm
-               OR toLower(p.title) CONTAINS $searchTerm
+            MATCH (p:StoryPulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
             RETURN p, ctx
             LIMIT 10
             `,
-            { searchTerm }
+            { searchTerm, userId: currentUserId }
           )
         ),
       ])
