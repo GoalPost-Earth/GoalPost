@@ -52,6 +52,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<ContextUser | undefined>(undefined)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Set mounted state on client only
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -161,7 +167,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     login,
     isLoading,
     // isAuthenticated requires both user and access token
-    isAuthenticated: !!(user?.id && localStorage.getItem('accessToken')),
+    // Safe for SSR - only access localStorage on client after mount
+    isAuthenticated: !!(
+      isMounted &&
+      user?.id &&
+      typeof window !== 'undefined' &&
+      localStorage.getItem('accessToken')
+    ),
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
