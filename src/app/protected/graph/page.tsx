@@ -1,11 +1,21 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { Node, Relationship } from '@neo4j-nvl/base'
-import { InteractiveNvlWrapper } from '@neo4j-nvl/react'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+
+// Import graph visualizer dynamically to prevent server-side rendering
+const GraphVisualizer = dynamic(
+  () =>
+    import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-screen bg-slate-900" />,
+  }
+)
 
 // Node metadata for the ontology
 const nodeMetadata: Record<
@@ -278,9 +288,9 @@ export default function GraphVisualization() {
 
       {/* Main Graph Visualization */}
       <div className="flex-1">
-        <InteractiveNvlWrapper
+        <GraphVisualizer
           nodes={nodes}
-          rels={relationships}
+          relationships={relationships}
           mouseEventCallbacks={mouseEventCallbacks}
         />
       </div>

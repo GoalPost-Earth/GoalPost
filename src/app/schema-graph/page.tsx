@@ -1,9 +1,16 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { Node, Relationship } from '@neo4j-nvl/base'
-import { InteractiveNvlWrapper } from '@neo4j-nvl/react'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
+
+// Import graph visualizer dynamically to prevent server-side rendering
+const GraphVisualizer = dynamic(
+  () =>
+    import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
+  { ssr: false, loading: () => <div className="w-full h-screen bg-gray-900" /> }
+)
 
 export default function SchemaGraphVisualization() {
   // Define schema nodes
@@ -213,9 +220,9 @@ export default function SchemaGraphVisualization() {
       </div>
 
       {/* Graph Visualization */}
-      <InteractiveNvlWrapper
+      <GraphVisualizer
         nodes={nodes}
-        rels={relationships}
+        relationships={relationships}
         mouseEventCallbacks={mouseEventCallbacks}
         nvlOptions={{
           layout: 'forceDirected',
