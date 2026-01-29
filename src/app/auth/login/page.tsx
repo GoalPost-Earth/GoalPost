@@ -1,46 +1,53 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+import React, { useState } from 'react'
 import { useApp } from '@/contexts'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-
-const loginSchema = z.object({
-  email: z.email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 function LoginPage() {
-  const router = useRouter()
-  const { login, isLoading, isAuthenticated } = useApp()
+  const { setUser } = useApp()
   const {
-    register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
+    formState: { errors, isSubmitting },
+    setError: setFormError,
+    register,
+  } = useForm({
     defaultValues: { email: '', password: '' },
   })
 
+  const router = useRouter()
   const [error, setError] = useState('')
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/protected/spaces')
-    }
-  }, [isAuthenticated, router])
 
   const onSubmit = async (values: { email: string; password: string }) => {
     setError('')
     try {
-      await login(values.email, values.password)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed'
-      setError(errorMessage)
+      const res = await fetch('/api/auth/login?returnTo=/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+      const data = await res.json()
+      if (data.user) {
+        setUser(data.user)
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        // Set a cookie (expires in 7 days)
+        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
+      }
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken)
+      }
+      if (!res.ok) {
+        setError(data.error || 'Login failed')
+        setFormError('email', { message: data.error || 'Login failed' })
+      } else {
+        router.push(data.returnTo || '/')
+      }
+    } catch {
+      setError('An unexpected error occurred')
     }
   }
 
@@ -104,7 +111,7 @@ function LoginPage() {
                   type="email"
                   placeholder="Email"
                   autoComplete="email"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className="w-full rounded-2xl px-5 py-3.5 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none text-sm font-light transition-all duration-300 bg-white/65 backdrop-blur-[10px] border border-gp-glass-border shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:bg-white/[0.05] dark:border-white/[0.08] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] focus:bg-white/90 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                 />
                 {errors.email && (
@@ -123,7 +130,7 @@ function LoginPage() {
                   type="password"
                   placeholder="Password"
                   autoComplete="current-password"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className="w-full rounded-2xl px-5 py-3.5 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none text-sm font-light transition-all duration-300 bg-white/65 backdrop-blur-[10px] border border-gp-glass-border shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:bg-white/[0.05] dark:border-white/[0.08] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] focus:bg-white/90 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
                 />
                 {errors.password && (
@@ -143,7 +150,7 @@ function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="cursor-pointer w-full text-white rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:translate-y-0"
                 style={{
                   background:
@@ -152,7 +159,7 @@ function LoginPage() {
                     '0 10px 30px color-mix(in srgb, var(--gp-primary) 45%, transparent)',
                 }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) {
+                  if (!isSubmitting) {
                     e.currentTarget.style.transform = 'translateY(-1px)'
                     e.currentTarget.style.boxShadow =
                       '0 14px 38px color-mix(in srgb, var(--gp-primary) 55%, transparent)'
@@ -164,7 +171,7 @@ function LoginPage() {
                     '0 10px 30px color-mix(in srgb, var(--gp-primary) 45%, transparent)'
                 }}
               >
-                {isLoading ? 'Entering...' : 'Enter Space'}
+                {isSubmitting ? 'Entering...' : 'Enter Space'}
               </button>
             </form>
 

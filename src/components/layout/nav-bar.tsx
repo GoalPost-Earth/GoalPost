@@ -340,8 +340,8 @@ export default function NavBar() {
               )}
               onClick={() => setShowMobileMenu(false)}
             >
-              <span className="material-symbols-outlined">history</span>
-              History
+              <span className="material-symbols-outlined">dashboard</span>
+              Dashboard
             </Link>
             <Link
               href="/protected/search"

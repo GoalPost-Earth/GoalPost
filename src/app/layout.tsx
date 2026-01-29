@@ -29,9 +29,9 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AppProvider>
-      <ApolloWrapper>{children}</ApolloWrapper>
-    </AppProvider>
+    <ApolloWrapper>
+      <AppProvider>{children}</AppProvider>
+    </ApolloWrapper>
   )
 }
 
