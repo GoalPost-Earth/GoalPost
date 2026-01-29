@@ -1,18 +1,17 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useApp } from '@/contexts'
 
 const signupSchema = z
   .object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    email: z.string().email('Please enter a valid email address'),
+    email: z.email('Please enter a valid email address'),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
@@ -29,7 +28,6 @@ const signupSchema = z
 
 function SignupPage() {
   const router = useRouter()
-  const { isAuthenticated } = useApp()
   const {
     register,
     handleSubmit,
@@ -51,13 +49,6 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const password = watch('password')
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/protected/spaces')
-    }
-  }, [isAuthenticated, router])
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
     setLoading(true)
