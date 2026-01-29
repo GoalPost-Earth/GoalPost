@@ -87,7 +87,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       title: `${person.firstName} ${person.lastName}`,
       subtitle: person.email,
       description: `A person in the network`,
-      href: `/protected/people/${person.id}`,
+      href: `/protected/dashboard/persons/${person.id}`,
     })
   })
 
@@ -99,7 +99,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       title: community.name,
       subtitle: community.type ? `${community.type} Community` : 'Community',
       description: `A collective community`,
-      href: `/protected/communities/${community.id}`,
+      href: `/protected/dashboard/community/${community.id}`,
     })
   })
 
@@ -111,7 +111,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       title: space.name,
       subtitle: 'Me Space',
       description: `${capitalizeString(space.visibility)}`,
-      href: `/protected/spaces/me-space/${space.id}`,
+      href: `/protected/dashboard/space/${space.id}`,
     })
   })
 
@@ -123,7 +123,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       title: space.name,
       subtitle: 'We Space',
       description: `${capitalizeString(space.visibility)}`,
-      href: `/protected/spaces/we-space/${space.id}`,
+      href: `/protected/dashboard/space/${space.id}`,
     })
   })
 
@@ -135,7 +135,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       title: context.title,
       subtitle: 'Field Context',
       description: `A thematic container for related pulses`,
-      href: `/protected/contexts/${context.id}`,
+      href: `/protected/dashboard/field-context/${context.id}`,
     })
   })
 
@@ -149,7 +149,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
         (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Goal',
       description: pulse.content,
-      href: `/protected/pulses/${pulse.id}`,
+      href: `/protected/dashboard/pulses/${pulse.id}`,
     })
   })
 
@@ -164,7 +164,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       subtitle: pulse.resourceType,
       description: pulse.content,
       tags: [pulse.resourceType],
-      href: `/protected/pulses/${pulse.id}`,
+      href: `/protected/dashboard/pulses/${pulse.id}`,
     })
   })
 
@@ -178,7 +178,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
         (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Story',
       description: pulse.content,
-      href: `/protected/pulses/${pulse.id}`,
+      href: `/protected/dashboard/pulses/${pulse.id}`,
     })
   })
 
