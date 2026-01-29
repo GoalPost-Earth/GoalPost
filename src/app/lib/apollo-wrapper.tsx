@@ -17,7 +17,7 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { Token } from '../../types'
 import { toast } from 'sonner'
-import { useApp } from '../contexts'
+import { useApp } from '@/contexts'
 
 // have a function to create a client for you
 // you need to create a component to wrap your app in

@@ -1,6 +1,6 @@
 'use client'
 
-import { ThemeProvider } from '@/app/contexts/theme-context'
+import { ThemeProvider } from '@/contexts/theme-context'
 import { SplashScreenWrapper } from '@/components/screens/SplashScreenWrapper'
 
 export default function AuthLayout({

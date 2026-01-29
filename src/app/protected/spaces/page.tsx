@@ -3,8 +3,8 @@
 import { useEffect } from 'react'
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
-import { usePageContext } from '@/app/contexts'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { usePageContext } from '@/contexts'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export default function SpacesPage() {

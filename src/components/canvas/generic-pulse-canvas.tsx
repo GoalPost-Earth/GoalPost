@@ -3,7 +3,7 @@
 import { ReactNode, useRef, useState, useEffect } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 export interface GenericPulseCanvasProps {
   children?: ReactNode

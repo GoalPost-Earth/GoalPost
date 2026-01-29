@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useApp } from '@/app/contexts'
+import { useApp } from '@/contexts'
 
 const signupSchema = z
   .object({

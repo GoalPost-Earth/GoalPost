@@ -1,6 +1,6 @@
 'use client'
 
-import { useApp } from '@/app/contexts'
+import { useApp } from '@/contexts'
 import { useRouter } from 'next/navigation'
 import { useEffect, ReactNode } from 'react'
 

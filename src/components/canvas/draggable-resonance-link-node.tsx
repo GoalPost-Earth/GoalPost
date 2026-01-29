@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableResonanceLinkNodeProps {

@@ -6,7 +6,7 @@ import {
   ResonanceNode,
   type ResonanceNodeProps,
 } from '@/components/ui/resonance-node'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableResonanceNodeProps extends Omit<

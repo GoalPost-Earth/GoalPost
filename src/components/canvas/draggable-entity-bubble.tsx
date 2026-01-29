@@ -6,7 +6,7 @@ import {
   EntityBubble,
   type EntityBubbleProps,
 } from '@/components/ui/entity-bubble'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableEntityBubbleProps extends EntityBubbleProps {

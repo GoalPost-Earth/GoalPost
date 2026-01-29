@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 export interface ConnectionLine {
   id: string

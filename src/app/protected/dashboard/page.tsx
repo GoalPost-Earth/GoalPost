@@ -6,7 +6,7 @@ import { ActivePulses } from '@/components/dashboard/active-pulses'
 import { FieldsList } from '@/components/dashboard/fields-list'
 import { SpacesList } from '@/components/dashboard/spaces-list'
 import { PeopleList } from '@/components/dashboard/people-list'
-import { usePageContext } from '@/app/contexts'
+import { usePageContext } from '@/contexts'
 
 type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces' | 'people'
 

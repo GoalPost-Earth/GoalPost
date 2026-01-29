@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
-import { AppProvider } from '@/app/contexts'
+import { AppProvider } from '@/contexts'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import './globals.css'
 

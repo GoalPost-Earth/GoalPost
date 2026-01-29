@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 export type ConnectedPulseType = 'goal' | 'resource' | 'story'
 

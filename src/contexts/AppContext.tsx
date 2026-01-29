@@ -52,29 +52,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<ContextUser | undefined>(undefined)
-  const [isMounted, setIsMounted] = useState(false)
-
-  // Set mounted state on client only
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeAuth = () => {
       try {
         if (typeof window === 'undefined') {
           return
         }
 
-        // First, check if access token exists in cookies via API
-        const tokenResponse = await fetch('/api/auth/access-token', {
-          method: 'GET',
-          credentials: 'include', // Include cookies
-        })
-
+        const storedToken = localStorage.getItem('accessToken')
         const storedUser = localStorage.getItem('user')
 
-        if (tokenResponse.ok && storedUser) {
+        if (storedToken && storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser)
             if (parsedUser.id) {
@@ -84,11 +73,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             // Invalid JSON in localStorage
             localStorage.removeItem('user')
           }
-        } else {
-          // No valid token, clear auth state
-          localStorage.removeItem('user')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error)
@@ -125,7 +109,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // Include cookies
           body: JSON.stringify({ email, password }),
         })
 
@@ -137,12 +120,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const data = await response.json()
         const { user, token, refreshToken } = data
 
-        // Store user in localStorage (token is in httpOnly cookie)
+        // Store auth data
+        localStorage.setItem('accessToken', token)
         localStorage.setItem('user', JSON.stringify(user))
-        // Also store token in localStorage for client-side verification
-        if (token) {
-          localStorage.setItem('accessToken', token)
-        }
         if (refreshToken) {
           localStorage.setItem('refreshToken', refreshToken)
         }
@@ -166,14 +146,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     logout,
     login,
     isLoading,
-    // isAuthenticated requires both user and access token
-    // Safe for SSR - only access localStorage on client after mount
-    isAuthenticated: !!(
-      isMounted &&
-      user?.id &&
-      typeof window !== 'undefined' &&
-      localStorage.getItem('accessToken')
-    ),
+    isAuthenticated: !!user && !!localStorage.getItem('accessToken'),
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

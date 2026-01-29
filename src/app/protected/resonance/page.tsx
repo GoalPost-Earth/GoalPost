@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
@@ -15,7 +15,7 @@ import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql/queries'
 import { distance } from '@/lib/collision-detection'
-import { usePageContext } from '@/app/contexts'
+import { usePageContext } from '@/contexts'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
