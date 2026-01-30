@@ -70,7 +70,7 @@ export const GET_ALL_FIELD_CONTEXTS = graphql(`
       title
       emergentName
       createdAt
-      meSpace {
+      space {
         id
         name
         visibility

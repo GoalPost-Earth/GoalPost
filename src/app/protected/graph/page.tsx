@@ -68,7 +68,7 @@ const nodeMetadata: Record<
   GoalPulse: {
     category: 'FieldPulse',
     description: 'Goal-oriented contribution',
-    properties: ['id', 'content', 'status', 'horizon', 'initiatedBy'],
+    properties: ['id', 'content', 'status', 'horizon', 'createdBy'],
     relationships: [
       'CONTAINED_IN Context',
       'INITIATED_BY Person',
@@ -88,7 +88,7 @@ const nodeMetadata: Record<
   StoryPulse: {
     category: 'FieldPulse',
     description: 'Narrative or experience contribution',
-    properties: ['id', 'content', 'narrative', 'initiatedBy'],
+    properties: ['id', 'content', 'narrative', 'createdBy'],
     relationships: [
       'CONTAINED_IN Context',
       'INITIATED_BY Person',

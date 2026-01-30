@@ -119,9 +119,9 @@ export function ActivePulses({ showAll = false }: ActivePulsesProps) {
           {(showAll ? allPulses : allPulses.slice(0, 5)).map((pulse) => {
             const config = pulseConfig[pulse.__typename as PulseType]
             const author =
-              pulse.initiatedBy[0]?.__typename === 'Person'
-                ? pulse.initiatedBy[0].name
-                : pulse.initiatedBy[0]?.name || 'Unknown'
+              pulse.createdBy[0]?.__typename === 'Person'
+                ? pulse.createdBy[0].name
+                : pulse.createdBy[0]?.name || 'Unknown'
             const timeAgo = formatDistanceToNow(new Date(pulse.createdAt), {
               addSuffix: true,
             })

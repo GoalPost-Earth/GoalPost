@@ -732,12 +732,6 @@ export type CreateUpdateSpaceMemberRoleResponsesMutationResponse = {
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
-export type CreateUpdateUserAiResponsesMutationResponse = {
-  __typename?: 'CreateUpdateUserAiResponsesMutationResponse'
-  info: CreateInfo
-  updateUserAiResponses: Array<UpdateUserAiResponse>
-}
-
 export type CreateUsersMutationResponse = {
   __typename?: 'CreateUsersMutationResponse'
   info: CreateInfo
@@ -3921,7 +3915,6 @@ export type Mutation = {
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
-  createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
   createUsers: CreateUsersMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
   deleteAddSpaceMemberResponses: DeleteInfo
@@ -3938,7 +3931,6 @@ export type Mutation = {
   deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
   deleteUpdateSpaceMemberRoleResponses: DeleteInfo
-  deleteUpdateUserAiResponses: DeleteInfo
   deleteUsers: DeleteInfo
   deleteWeSpaces: DeleteInfo
   /**
@@ -3976,12 +3968,6 @@ export type Mutation = {
   updateSpaceMemberships: UpdateSpaceMembershipsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
   updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
-  updateUpdateUserAiResponses: UpdateUpdateUserAiResponsesMutationResponse
-  /**
-   * Update AI functionality preferences for a user.
-   * Users can enable or disable AI features in the application.
-   */
-  updateUserAI: UpdateUserAiResponse
   updateUsers: UpdateUsersMutationResponse
   updateWeSpaces: UpdateWeSpacesMutationResponse
 }
@@ -4050,10 +4036,6 @@ export type MutationCreateStoryPulsesArgs = {
 
 export type MutationCreateUpdateSpaceMemberRoleResponsesArgs = {
   input: Array<UpdateSpaceMemberRoleResponseCreateInput>
-}
-
-export type MutationCreateUpdateUserAiResponsesArgs = {
-  input: Array<UpdateUserAiResponseCreateInput>
 }
 
 export type MutationCreateUsersArgs = {
@@ -4127,10 +4109,6 @@ export type MutationDeleteStoryPulsesArgs = {
 
 export type MutationDeleteUpdateSpaceMemberRoleResponsesArgs = {
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
-}
-
-export type MutationDeleteUpdateUserAiResponsesArgs = {
-  where?: InputMaybe<UpdateUserAiResponseWhere>
 }
 
 export type MutationDeleteUsersArgs = {
@@ -4231,16 +4209,6 @@ export type MutationUpdateStoryPulsesArgs = {
 export type MutationUpdateUpdateSpaceMemberRoleResponsesArgs = {
   update?: InputMaybe<UpdateSpaceMemberRoleResponseUpdateInput>
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
-}
-
-export type MutationUpdateUpdateUserAiResponsesArgs = {
-  update?: InputMaybe<UpdateUserAiResponseUpdateInput>
-  where?: InputMaybe<UpdateUserAiResponseWhere>
-}
-
-export type MutationUpdateUserAiArgs = {
-  aiEnabled: Scalars['Boolean']['input']
-  userId: Scalars['ID']['input']
 }
 
 export type MutationUpdateUsersArgs = {
@@ -4640,10 +4608,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "updateSpaceMemberRoleResponsesConnection" instead */
   updateSpaceMemberRoleResponsesAggregate: UpdateSpaceMemberRoleResponseAggregateSelection
   updateSpaceMemberRoleResponsesConnection: UpdateSpaceMemberRoleResponsesConnection
-  updateUserAiResponses: Array<UpdateUserAiResponse>
-  /** @deprecated Please use the explicit field "aggregate" inside "updateUserAiResponsesConnection" instead */
-  updateUserAiResponsesAggregate: UpdateUserAiResponseAggregateSelection
-  updateUserAiResponsesConnection: UpdateUserAiResponsesConnection
   users: Array<User>
   /** @deprecated Please use the explicit field "aggregate" inside "usersConnection" instead */
   usersAggregate: UserAggregateSelection
@@ -4948,24 +4912,6 @@ export type QueryUpdateSpaceMemberRoleResponsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<UpdateSpaceMemberRoleResponseSort>>
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
-}
-
-export type QueryUpdateUserAiResponsesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<UpdateUserAiResponseSort>>
-  where?: InputMaybe<UpdateUserAiResponseWhere>
-}
-
-export type QueryUpdateUserAiResponsesAggregateArgs = {
-  where?: InputMaybe<UpdateUserAiResponseWhere>
-}
-
-export type QueryUpdateUserAiResponsesConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<UpdateUserAiResponseSort>>
-  where?: InputMaybe<UpdateUserAiResponseWhere>
 }
 
 export type QueryUsersArgs = {
@@ -7036,79 +6982,6 @@ export type UpdateUpdateSpaceMemberRoleResponsesMutationResponse = {
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
-export type UpdateUpdateUserAiResponsesMutationResponse = {
-  __typename?: 'UpdateUpdateUserAiResponsesMutationResponse'
-  info: UpdateInfo
-  updateUserAiResponses: Array<UpdateUserAiResponse>
-}
-
-/** Response when updating user AI preferences. */
-export type UpdateUserAiResponse = {
-  __typename?: 'UpdateUserAIResponse'
-  message: Scalars['String']['output']
-  success: Scalars['Boolean']['output']
-  user?: Maybe<User>
-}
-
-export type UpdateUserAiResponseAggregate = {
-  __typename?: 'UpdateUserAIResponseAggregate'
-  count: Count
-  node: UpdateUserAiResponseAggregateNode
-}
-
-export type UpdateUserAiResponseAggregateNode = {
-  __typename?: 'UpdateUserAIResponseAggregateNode'
-  message: StringAggregateSelection
-}
-
-export type UpdateUserAiResponseAggregateSelection = {
-  __typename?: 'UpdateUserAIResponseAggregateSelection'
-  count: Scalars['Int']['output']
-  message: StringAggregateSelection
-}
-
-export type UpdateUserAiResponseCreateInput = {
-  message: Scalars['String']['input']
-  success: Scalars['Boolean']['input']
-}
-
-export type UpdateUserAiResponseEdge = {
-  __typename?: 'UpdateUserAIResponseEdge'
-  cursor: Scalars['String']['output']
-  node: UpdateUserAiResponse
-}
-
-/** Fields to sort UpdateUserAiResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one UpdateUserAIResponseSort object. */
-export type UpdateUserAiResponseSort = {
-  message?: InputMaybe<SortDirection>
-  success?: InputMaybe<SortDirection>
-}
-
-export type UpdateUserAiResponseUpdateInput = {
-  message_SET?: InputMaybe<Scalars['String']['input']>
-  success_SET?: InputMaybe<Scalars['Boolean']['input']>
-}
-
-export type UpdateUserAiResponseWhere = {
-  AND?: InputMaybe<Array<UpdateUserAiResponseWhere>>
-  NOT?: InputMaybe<UpdateUserAiResponseWhere>
-  OR?: InputMaybe<Array<UpdateUserAiResponseWhere>>
-  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  message_EQ?: InputMaybe<Scalars['String']['input']>
-  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
-}
-
-export type UpdateUserAiResponsesConnection = {
-  __typename?: 'UpdateUserAiResponsesConnection'
-  aggregate: UpdateUserAiResponseAggregate
-  edges: Array<UpdateUserAiResponseEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
 export type UpdateUsersMutationResponse = {
   __typename?: 'UpdateUsersMutationResponse'
   info: UpdateInfo
@@ -8711,12 +8584,20 @@ export type GetAllFieldContextsQuery = {
     title: string
     emergentName?: string | null
     createdAt: any
-    meSpace: Array<{
-      __typename?: 'MeSpace'
-      id: string
-      name: string
-      visibility: SpaceVisibility
-    }>
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
     weSpace: Array<{
       __typename?: 'WeSpace'
       id: string
@@ -12319,7 +12200,7 @@ export const GetAllFieldContextsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'meSpace' },
+                  name: { kind: 'Name', value: 'space' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [

@@ -16,14 +16,39 @@ extend schema @authentication
 """
 A human user of the system.
 Multi-label: ["Person", "User"]
+Authorization: Can only view people who are owners or members of shared spaces.
 """
-type Person @node(labels: ["Person"]) {
+type Person
+  @node(labels: ["Person"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            OR: [
+              # Person owns a space where current user is owner
+              { ownsSpaces_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              # Person owns a space where current user is member
+              {
+                ownsSpaces_SOME: {
+                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                }
+              }
+              # Current user is the person themselves
+              { id_EQ: "$jwt.user.id" }
+            ]
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   firstName: String!
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   email: String
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
+  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
 }
 
 """
@@ -136,6 +161,7 @@ type SpaceMembership @node(labels: ["SpaceMembership"]) {
   role: SpaceRole!
   addedAt: DateTime!
   member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 
 # ============================================================================
@@ -147,7 +173,32 @@ A thematic or temporal container inside a Space.
 Groups related pulses together.
 Label: ["FieldContext"]
 """
-type FieldContext @node(labels: ["FieldContext"]) {
+type FieldContext
+  @node(labels: ["FieldContext"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            OR: [
+              { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              {
+                meSpace_SOME: {
+                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                }
+              }
+              { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              {
+                weSpace_SOME: {
+                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   title: String!
   emergentName: String
@@ -199,7 +250,33 @@ A pulse that functions as a goal in its context.
 Multi-label: ["FieldPulse", "GoalPulse"]
 """
 type GoalPulse implements FieldPulse
-  @node(labels: ["FieldPulse", "GoalPulse"]) {
+  @node(labels: ["FieldPulse", "GoalPulse"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   title: String!
   content: String!
@@ -231,7 +308,33 @@ A pulse that functions as a resource in its context.
 Multi-label: ["FieldPulse", "ResourcePulse"]
 """
 type ResourcePulse implements FieldPulse
-  @node(labels: ["FieldPulse", "ResourcePulse"]) {
+  @node(labels: ["FieldPulse", "ResourcePulse"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   title: String!
   content: String!
@@ -248,7 +351,33 @@ Narrative or reflective pulse.
 Multi-label: ["FieldPulse", "StoryPulse"]
 """
 type StoryPulse implements FieldPulse
-  @node(labels: ["FieldPulse", "StoryPulse"]) {
+  @node(labels: ["FieldPulse", "StoryPulse"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   title: String!
   content: String!
@@ -329,6 +458,15 @@ type RemoveSpaceMemberResponse {
   message: String!
 }
 
+"""
+Response when updating user AI preferences.
+"""
+type UpdateUserAIResponse {
+  success: Boolean!
+  message: String!
+  user: User
+}
+
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -379,6 +517,7 @@ type Mutation {
   Update AI functionality preferences for a user.
   Users can enable or disable AI features in the application.
   """
+  updateUserAI(userId: ID!, aiEnabled: Boolean!): UpdateUserAIResponse!
 }
 
 type Query {

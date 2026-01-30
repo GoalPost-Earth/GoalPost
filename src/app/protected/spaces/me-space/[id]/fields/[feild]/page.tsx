@@ -313,7 +313,7 @@ function FieldDetailPage() {
       horizon: goal?.horizon ?? null,
       resourceType: resource?.resourceType ?? null,
       initiators:
-        entry.initiatedBy?.map((initiator) => ({
+        entry.createdBy?.map((initiator) => ({
           id: initiator.id ?? initiator.name ?? 'unknown',
           name: initiator.name ?? 'Unknown',
           email:
