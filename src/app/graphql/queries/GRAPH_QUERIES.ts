@@ -139,15 +139,10 @@ export const GET_PERSON_DETAILS = graphql(`
                 status
                 intensity
                 createdBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
               ... on ResourcePulse {
@@ -157,15 +152,10 @@ export const GET_PERSON_DETAILS = graphql(`
                 resourceType
                 intensity
                 createdBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
               ... on StoryPulse {
@@ -174,15 +164,10 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 intensity
                 createdBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
             }
@@ -200,15 +185,10 @@ export const GET_PERSON_DETAILS = graphql(`
                 status
                 intensity
                 createdBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
               ... on ResourcePulse {
@@ -218,15 +198,10 @@ export const GET_PERSON_DETAILS = graphql(`
                 resourceType
                 intensity
                 createdBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
               ... on StoryPulse {
@@ -241,6 +216,15 @@ export const GET_PERSON_DETAILS = graphql(`
                   email
                 }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
+export const GET_SPACE_DETAILS = graphql(`
   query getSpaceDetails($spaceId: ID!) {
     meSpaces(where: { id_EQ: $spaceId }) {
       id
@@ -259,15 +243,10 @@ export const GET_PERSON_DETAILS = graphql(`
             status
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
           ... on ResourcePulse {
@@ -277,15 +256,10 @@ export const GET_PERSON_DETAILS = graphql(`
             resourceType
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
           ... on StoryPulse {
@@ -294,15 +268,10 @@ export const GET_PERSON_DETAILS = graphql(`
             createdAt
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
         }
@@ -325,15 +294,10 @@ export const GET_PERSON_DETAILS = graphql(`
             status
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
           ... on ResourcePulse {
@@ -343,15 +307,10 @@ export const GET_PERSON_DETAILS = graphql(`
             resourceType
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
           ... on StoryPulse {
@@ -360,15 +319,10 @@ export const GET_PERSON_DETAILS = graphql(`
             createdAt
             intensity
             createdBy {
-              ... on Person {
-                id
-                name
-                email
-              }
-              ... on Community {
-                id
-                name
-              }
+              id
+              firstName
+              lastName
+              email
             }
           }
         }
@@ -383,12 +337,6 @@ export const GET_RESONANCE_DETAILS = graphql(`
       id
       label
       description
-    }
-    resonanceLinks(where: { resonance_SOME: { id_EQ: $resonanceId } }) {
-      id
-      confidence
-      evidence
-      createdAt
       source {
         ... on GoalPulse {
           id
@@ -397,15 +345,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           status
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on ResourcePulse {
@@ -415,15 +358,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           resourceType
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on StoryPulse {
@@ -432,15 +370,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
       }
@@ -452,15 +385,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           status
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on ResourcePulse {
@@ -470,15 +398,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           resourceType
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on StoryPulse {
@@ -487,15 +410,10 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           intensity
           createdBy {
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
       }
@@ -509,12 +427,6 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
       id
       label
       description
-    }
-    resonanceLinks(where: { resonance_SOME: { id_EQ: $resonanceId } }) {
-      id
-      confidence
-      evidence
-      createdAt
       source {
         __typename
         ... on GoalPulse {
@@ -524,16 +436,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           status
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on ResourcePulse {
@@ -543,16 +449,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           resourceType
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on StoryPulse {
@@ -561,16 +461,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
       }
@@ -583,16 +477,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           status
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on ResourcePulse {
@@ -602,16 +490,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           resourceType
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         ... on StoryPulse {
@@ -620,16 +502,10 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           intensity
           createdBy {
-            __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
       }
@@ -648,22 +524,16 @@ export const GET_ALL_RESONANCES = graphql(`
 `)
 
 /**
- * Query to fetch all ResonanceLinks with their connected FieldResonances
- * This is the primary query for the new three-level resonance page
- * Returns links grouped by their resonance for hierarchical display
+ * Query to fetch a specific FieldResonance with its source and target pulses
+ * Used when a resonance node is clicked to show connected pulses
  */
-export const GET_ALL_RESONANCE_LINKS_WITH_RESONANCES = graphql(`
-  query getAllResonanceLinksWithResonances {
-    resonanceLinks {
+export const GET_LINKS_FOR_RESONANCE = graphql(`
+  query getLinksForResonance($resonanceId: ID!) {
+    fieldResonances(where: { id_EQ: $resonanceId }) {
       id
+      label
+      description
       confidence
-      evidence
-      createdAt
-      resonance {
-        id
-        label
-        description
-      }
       source {
         __typename
         ... on GoalPulse {
@@ -714,22 +584,13 @@ export const GET_ALL_RESONANCE_LINKS_WITH_RESONANCES = graphql(`
   }
 `)
 
-/**
- * Query to fetch resonance links for a specific FieldResonance
- * Used when a resonance node is clicked to show connected links
- */
-export const GET_LINKS_FOR_RESONANCE = graphql(`
-  query getLinksForResonance($resonanceId: ID!) {
-    resonanceLinks(where: { resonance_SOME: { id_EQ: $resonanceId } }) {
+export const GET_ALL_RESONANCE_LINKS_WITH_RESONANCES = graphql(`
+  query getAllResonanceLinksWithResonances {
+    fieldResonances {
       id
+      label
+      description
       confidence
-      evidence
-      createdAt
-      resonance {
-        id
-        label
-        description
-      }
       source {
         __typename
         ... on GoalPulse {

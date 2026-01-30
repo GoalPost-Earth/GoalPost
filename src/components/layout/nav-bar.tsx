@@ -162,7 +162,7 @@ export default function NavBar() {
           >
             We Space
           </Link>
-          {/* <Link
+          <Link
             className={cn(
               'text-sm font-medium transition-colors',
               pathname === '/protected/resonance'
@@ -172,7 +172,7 @@ export default function NavBar() {
             href="/protected/resonance"
           >
             Resonance
-          </Link> */}
+          </Link>
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
