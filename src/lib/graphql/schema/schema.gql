@@ -27,6 +27,21 @@ type Person @node(labels: ["Person"]) {
 }
 
 """
+User authentication and preferences.
+Extends Person with login and feature flags.
+Multi-label: ["Person", "User"]
+"""
+type User @node(labels: ["Person", "User"]) {
+  id: ID! @id
+  firstName: String!
+  lastName: String!
+  name: String! @customResolver(requires: "firstName lastName")
+  email: String
+  aiEnabled: Boolean!
+  ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
+}
+
+"""
 A collective identity (team, family, cohort, etc).
 Has members and can own spaces and initiate pulses.
 Multi-label: ["Community"]
@@ -314,6 +329,15 @@ type RemoveSpaceMemberResponse {
   message: String!
 }
 
+"""
+Response when updating user AI preferences.
+"""
+type UpdateUserAIResponse {
+  success: Boolean!
+  message: String!
+  user: User
+}
+
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -359,6 +383,12 @@ type Mutation {
   Cannot remove the space owner.
   """
   removeSpaceMember(spaceId: ID!, memberId: ID!): RemoveSpaceMemberResponse!
+
+  """
+  Update AI functionality preferences for a user.
+  Users can enable or disable AI features in the application.
+  """
+  updateUserAI(userId: ID!, aiEnabled: Boolean!): UpdateUserAIResponse!
 }
 
 type Query {
