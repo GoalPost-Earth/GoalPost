@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggablePulseNodeProps extends Omit<

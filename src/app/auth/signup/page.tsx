@@ -1,43 +1,17 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useApp } from '@/app/contexts'
-
-const signupSchema = z
-  .object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    email: z.string().email('Please enter a valid email address'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+import Link from 'next/link'
 
 function SignupPage() {
-  const router = useRouter()
-  const { isAuthenticated } = useApp()
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting: loading },
     setError: setFormError,
     watch,
-  } = useForm<z.infer<typeof signupSchema>>({
-    resolver: zodResolver(signupSchema),
+  } = useForm({
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -46,31 +20,25 @@ function SignupPage() {
       confirmPassword: '',
     },
   })
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const password = watch('password')
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/protected/spaces')
-    }
-  }, [isAuthenticated, router])
-
-  const onSubmit = async (values: z.infer<typeof signupSchema>) => {
-    setLoading(true)
+  const onSubmit = async (values: {
+    firstName?: string
+    lastName?: string
+    email: string
+    password: string
+    confirmPassword: string
+  }) => {
     setError('')
-
-    // Check if passwords match
     if (values.password !== values.confirmPassword) {
       setError('Passwords do not match')
       setFormError('confirmPassword', { message: 'Passwords do not match' })
-      setLoading(false)
       return
     }
-
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -87,13 +55,10 @@ function SignupPage() {
         setError(data.error || 'Sign up failed')
         setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        // Redirect to login page after successful signup
-        router.push('/auth/login')
+        router.push('/')
       }
     } catch {
       setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -120,19 +85,17 @@ function SignupPage() {
       {/* Main Content Container */}
       <div className="relative w-full max-w-4xl flex flex-col items-center justify-center px-4">
         {/* Floating Gradient Blobs */}
-        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] bg-gp-primary/12 dark:bg-gp-primary/10 rounded-full blur-[100px] opacity-50" />
-        <div className="absolute -bottom-20 -right-20 w-[600px] h-[600px] bg-gp-accent-glow/12 dark:bg-gp-accent-glow/10 rounded-full blur-[100px] opacity-45" />
-        <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] bg-gp-goal/10 dark:bg-gp-goal/12 rounded-full blur-[100px] opacity-45" />
-        <div className="hidden dark:block absolute bottom-[20%] left-[10%] w-[350px] h-[350px] bg-gp-resource/12 rounded-full blur-[100px] opacity-35" />
+        <div className="absolute -top-20 -left-20 w-64 h-64 bg-gp-primary/12 dark:bg-gp-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gp-accent-glow/12 dark:bg-gp-accent-glow/10 rounded-full blur-[100px]" />
 
         {/* Organic Cloud Container */}
         <div
-          className="w-full max-w-xl min-h-[600px] flex flex-col items-center justify-center p-12 md:p-20 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
+          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
           style={{
-            borderRadius: '42% 58% 70% 30% / 45% 45% 55% 55%',
+            borderRadius: '60% 40% 70% 30% / 40% 50% 60% 50%',
           }}
         >
-          <div className="flex flex-col items-center w-full max-w-sm space-y-10">
+          <div className="flex flex-col items-center w-full max-w-xs space-y-8">
             {/* Header Section */}
             <div className="text-center space-y-3">
               <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-white/65 dark:bg-white/10 shadow-sm dark:shadow-inner border border-white dark:border-white/10 mb-6">
@@ -151,7 +114,7 @@ function SignupPage() {
             {/* Form */}
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="w-full space-y-5"
+              className="w-full space-y-4"
             >
               {/* First Name Input */}
               <div className="space-y-1 dark:space-y-1.5">

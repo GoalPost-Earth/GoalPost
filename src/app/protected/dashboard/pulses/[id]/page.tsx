@@ -8,7 +8,7 @@ import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/app/contexts'
+import { useAnimations } from '@/contexts'
 
 export default function PulseDetailsPage() {
   const params = useParams()

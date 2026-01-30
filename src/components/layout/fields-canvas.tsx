@@ -6,7 +6,7 @@ import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { useCallback, useEffect, useState } from 'react'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 import { SpaceSettingsToolbar } from '@/components/spaces'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 type BubbleSize = NonNullable<FieldBubbleProps['size']>

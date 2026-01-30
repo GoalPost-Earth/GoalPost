@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     }
 
     // Convert messages and build payload with simulation prompts if active
-    const convertedMessages = convertToModelMessages(messages)
+    const convertedMessages = await convertToModelMessages(messages)
     const messagesWithSimulation = buildMessagePayload(
       convertedMessages as ChatMessage[]
     )

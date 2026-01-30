@@ -8,7 +8,7 @@ import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/app/contexts'
+import { useAnimations } from '@/contexts'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@apollo/client/react'
 import { ReactNode, useEffect } from 'react'
-import { GET_LOGGED_IN_USER } from '../graphql'
+import { GET_LOGGED_IN_USER } from '@/app/graphql'
 import { useApp } from './AppContext'
 
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {

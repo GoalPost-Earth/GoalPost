@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, ReactNode } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface GenericCanvasProps {
@@ -42,6 +42,9 @@ export function GenericCanvas({
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
+    // Guard against SSR - only run on client
+    if (typeof window === 'undefined') return
+
     const updateCanvasSize = () => {
       const width = (window.innerWidth || 1200) * canvasScale
       const height = (window.innerHeight || 1200) * canvasScale

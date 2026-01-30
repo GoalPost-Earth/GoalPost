@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { UserDataProvider, PageContextProvider } from '@/app/contexts'
-import { ThemeProvider } from '@/app/contexts/theme-context'
-import { AnimationProvider } from '@/app/contexts/animation-context'
+import { UserDataProvider, PageContextProvider } from '@/contexts'
+import { ThemeProvider } from '@/contexts/theme-context'
+import { AnimationProvider } from '@/contexts/animation-context'
 import NavBar from '@/components/layout/nav-bar'
 import { AIChatButton } from '@/components/ui/ai-chat-button'
 import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'

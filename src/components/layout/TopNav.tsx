@@ -1,5 +1,5 @@
 import React from 'react'
-import { useApp } from '@/app/contexts'
+import { useApp } from '@/contexts'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {

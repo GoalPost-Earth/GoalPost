@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { SpaIcon, DiversityIcon } from '@/components/icons'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 interface SpaceWrapperProps {
   title: string

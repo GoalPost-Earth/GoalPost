@@ -3,15 +3,29 @@ import { NextRequest, NextResponse } from 'next/server'
 // Routes that require authentication
 const protectedRoutes = ['/protected']
 
+// Generate CSP nonce (Edge compatible)
+function generateNonce(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+
+  // Base64 encode without Buffer
+  const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join(
+    ''
+  )
+  return btoa(binString)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+}
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const token = request.cookies.get('accessToken')?.value
 
-  // --- CSP Configuration ---
-  // 1. Generate a unique nonce for this request
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  // Generate nonce
+  const nonce = generateNonce()
 
-  // 2. Define your CSP header
+  // CSP Header
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://vercel.live;
@@ -24,53 +38,60 @@ export function middleware(request: NextRequest) {
     frame-ancestors 'none';
     connect-src 'self';
   `
-
-  // 3. Clean up the header
-  const contentSecurityPolicyHeaderValue = cspHeader
     .replace(/\s{2,}/g, ' ')
     .trim()
 
-  // --- Authentication Logic ---
+  // Auth logic
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   )
 
-  // Handle protected routes
-  if (isProtectedRoute && !token) {
-    const response = NextResponse.redirect(new URL('/auth/login', request.url))
-    // Still add CSP to redirect responses
-    response.headers.set(
-      'Content-Security-Policy',
-      contentSecurityPolicyHeaderValue
-    )
+  // IMPORTANT: Skip middleware for static files and API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.')
+  ) {
+    const response = NextResponse.next()
+    response.headers.set('Content-Security-Policy', cspHeader)
     response.headers.set('x-nonce', nonce)
     return response
   }
 
-  // Handle auth routes when already logged in
+  // Protected routes without token → redirect to login
+  if (isProtectedRoute && !token) {
+    const response = NextResponse.redirect(new URL('/auth/login', request.url))
+    response.headers.set('Content-Security-Policy', cspHeader)
+    response.headers.set('x-nonce', nonce)
+    return response
+  }
+
+  // Already logged in but trying to access auth routes → redirect to spaces
   if (pathname.startsWith('/auth') && token) {
     const response = NextResponse.redirect(
       new URL('/protected/spaces', request.url)
     )
-    response.headers.set(
-      'Content-Security-Policy',
-      contentSecurityPolicyHeaderValue
-    )
+    response.headers.set('Content-Security-Policy', cspHeader)
     response.headers.set('x-nonce', nonce)
     return response
   }
 
-  // Normal response
+  // Normal request
   const response = NextResponse.next()
-  response.headers.set(
-    'Content-Security-Policy',
-    contentSecurityPolicyHeaderValue
-  )
+  response.headers.set('Content-Security-Policy', cspHeader)
   response.headers.set('x-nonce', nonce)
-
   return response
 }
 
 export const config = {
-  matcher: ['/((?!_next|.*\\..*|api).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }

@@ -4,7 +4,7 @@ import { useRef, type ReactNode } from 'react'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 export type BubbleSize = 'sm' | 'md' | 'lg' | 'xl'
 export type BubbleShape = 'circle' | 'organic-1' | 'organic-2' | 'organic-3'

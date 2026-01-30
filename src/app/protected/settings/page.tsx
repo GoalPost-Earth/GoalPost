@@ -2,8 +2,8 @@
 
 import { ReactNode, useState, useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
-import { useTheme, ThemeColor } from '@/app/contexts/theme-context'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useTheme, ThemeColor } from '@/contexts/theme-context'
+import { useAnimations } from '@/contexts/animation-context'
 
 type SettingSectionProps = {
   icon: string

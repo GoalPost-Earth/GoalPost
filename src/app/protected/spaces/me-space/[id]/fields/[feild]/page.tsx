@@ -10,7 +10,7 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
-import { useApp, usePageContext } from '@/app/contexts'
+import { useApp, usePageContext } from '@/contexts'
 
 interface PulsePosition {
   pulseId: string

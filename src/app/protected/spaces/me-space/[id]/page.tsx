@@ -3,7 +3,7 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { useCreateField } from '@/hooks'
-import { usePageContext } from '@/app/contexts'
+import { usePageContext } from '@/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
 import { GET_ME_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'

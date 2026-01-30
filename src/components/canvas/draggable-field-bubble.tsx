@@ -6,7 +6,7 @@ import {
   FieldBubble,
   type FieldBubbleProps,
 } from '@/components/ui/field-bubble'
-import { useAnimations } from '@/app/contexts/animation-context'
+import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface DraggableFieldBubbleProps extends Omit<
