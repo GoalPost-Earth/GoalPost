@@ -17,21 +17,27 @@ const PageContext = createContext<PageContextType | undefined>(undefined)
 
 export function PageContextProvider({ children }: { children: ReactNode }) {
   const [pageTitle, setPageTitle] = useState('GoalPost')
+  const [isClient, setIsClient] = useState(false)
 
-  // Initialize from localStorage on mount
+  // Mark when client-side hydration is complete
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsClient(true)
+  }, [])
+
+  // Initialize from localStorage on mount (only after hydration)
+  useEffect(() => {
+    if (isClient && typeof window !== 'undefined') {
       const cachedTitle = localStorage.getItem('pageTitle')
       if (cachedTitle) {
         setPageTitle(cachedTitle)
       }
     }
-  }, [])
+  }, [isClient])
 
-  // Persist title to localStorage whenever it changes
+  // Persist title to localStorage whenever it changes (only on client)
   const updatePageTitle = (title: string) => {
     setPageTitle(title)
-    if (typeof window !== 'undefined') {
+    if (isClient && typeof window !== 'undefined') {
       localStorage.setItem('pageTitle', title)
     }
   }

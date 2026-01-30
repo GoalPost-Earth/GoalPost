@@ -3,9 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { useAnimations } from '@/contexts/animation-context'
-
-// Force dynamic rendering for this page (required for Vercel production)
-export const dynamic = 'force-dynamic'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
