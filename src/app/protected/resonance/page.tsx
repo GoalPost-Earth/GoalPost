@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
-import { useAnimations } from '@/contexts/animation-context'
+import { useAnimations } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
@@ -398,9 +398,14 @@ export default function ResonancePage() {
   )
 
   // Fetch all resonance links
-  const { data: linksData, loading: linksLoading } = useQuery(
-    GET_ALL_RESONANCE_LINKS_WITH_RESONANCES
-  )
+  const {
+    data: linksData,
+    loading: linksLoading,
+    error: linksError,
+  } = useQuery(GET_ALL_RESONANCE_LINKS_WITH_RESONANCES, {
+    ssr: false, // Disable SSR for this query
+    fetchPolicy: 'cache-and-network',
+  })
 
   // Transform resonance links into field resonances and link nodes
   const transformedData = useMemo(() => {
@@ -744,6 +749,22 @@ export default function ResonancePage() {
     setSelectedPulse(details)
     setIsPulsePanelOpen(true)
   }, [])
+
+  // Show error state if query failed
+  if (linksError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+            Error loading resonances
+          </p>
+          <p className="text-sm text-gp-ink-soft dark:text-white/40">
+            {linksError.message}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
