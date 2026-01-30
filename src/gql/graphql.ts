@@ -9019,6 +9019,7 @@ export type GetAllPulsesQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
   }>
@@ -9034,6 +9035,7 @@ export type GetAllPulsesQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
   }>
@@ -9049,6 +9051,7 @@ export type GetAllPulsesQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
   }>
@@ -9146,6 +9149,7 @@ export type GetAllWeSpacesQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
     members: Array<{
@@ -9614,6 +9618,7 @@ export type GetPulseDetailsQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
   }>
@@ -9629,6 +9634,7 @@ export type GetPulseDetailsQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
   }>
@@ -9712,6 +9718,7 @@ export type GetSpaceDetailsCompleteQuery = {
           id: string
           firstName: string
           lastName: string
+          name: string
           email?: string | null
         }>
         members: Array<{
@@ -9724,6 +9731,7 @@ export type GetSpaceDetailsCompleteQuery = {
             id: string
             firstName: string
             lastName: string
+            name: string
             email?: string | null
           }>
         }>
@@ -9766,6 +9774,7 @@ export type GetSpaceDetailsCompleteQuery = {
           id: string
           firstName: string
           lastName: string
+          name: string
           email?: string | null
         }>
         members: Array<{
@@ -9778,6 +9787,7 @@ export type GetSpaceDetailsCompleteQuery = {
             id: string
             firstName: string
             lastName: string
+            name: string
             email?: string | null
           }>
         }>
@@ -9865,6 +9875,7 @@ export type GetSpaceMembersQuery = {
         id: string
         firstName: string
         lastName: string
+        name: string
         email?: string | null
       }>
     }>
@@ -9883,6 +9894,7 @@ export type GetSpaceMembersQuery = {
         id: string
         firstName: string
         lastName: string
+        name: string
         email?: string | null
       }>
     }>
@@ -9906,6 +9918,7 @@ export type GetWeSpaceDetailsQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
     members: Array<{
@@ -9918,6 +9931,7 @@ export type GetWeSpaceDetailsQuery = {
         id: string
         firstName: string
         lastName: string
+        name: string
         email?: string | null
       }>
     }>
@@ -9948,6 +9962,7 @@ export type GetMeSpaceDetailsQuery = {
       id: string
       firstName: string
       lastName: string
+      name: string
       email?: string | null
     }>
     members: Array<{
@@ -9960,6 +9975,7 @@ export type GetMeSpaceDetailsQuery = {
         id: string
         firstName: string
         lastName: string
+        name: string
         email?: string | null
       }>
     }>
@@ -12555,6 +12571,7 @@ export const GetAllPulsesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -12599,6 +12616,7 @@ export const GetAllPulsesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -12643,6 +12661,7 @@ export const GetAllPulsesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -12937,6 +12956,7 @@ export const GetAllWeSpacesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -13906,6 +13926,7 @@ export const GetPulseDetailsDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -13969,6 +13990,7 @@ export const GetPulseDetailsDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -14275,6 +14297,10 @@ export const GetSpaceDetailsCompleteDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'email' },
                             },
                           ],
@@ -14319,6 +14345,10 @@ export const GetSpaceDetailsCompleteDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
                                   },
                                   {
                                     kind: 'Field',
@@ -14426,6 +14456,10 @@ export const GetSpaceDetailsCompleteDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'email' },
                             },
                           ],
@@ -14470,6 +14504,10 @@ export const GetSpaceDetailsCompleteDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
                                   },
                                   {
                                     kind: 'Field',
@@ -14722,6 +14760,10 @@ export const GetSpaceMembersDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'email' },
                             },
                           ],
@@ -14789,6 +14831,10 @@ export const GetSpaceMembersDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
                             },
                             {
                               kind: 'Field',
@@ -14878,6 +14924,7 @@ export const GetWeSpaceDetailsDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -14911,6 +14958,10 @@ export const GetWeSpaceDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
                             },
                             {
                               kind: 'Field',
@@ -15019,6 +15070,7 @@ export const GetMeSpaceDetailsDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
@@ -15052,6 +15104,10 @@ export const GetMeSpaceDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
                             },
                             {
                               kind: 'Field',

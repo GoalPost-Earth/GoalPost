@@ -27,7 +27,13 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       return
     }
 
-    const mergedUser = { ...user, ...personData, email: personData.email }
+    // Only merge specific fields to avoid type conflicts with partial Space objects
+    const mergedUser = {
+      ...user,
+      id: personData.id,
+      name: personData.name,
+      email: personData.email,
+    }
 
     // Only update if the user data actually changed to prevent infinite loops
     if (JSON.stringify(user) !== JSON.stringify(mergedUser)) {
