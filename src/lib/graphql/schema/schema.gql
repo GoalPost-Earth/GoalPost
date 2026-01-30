@@ -34,6 +34,14 @@ type Person
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
                 }
               }
+              # Person is a member of a space where current user is also a member
+              {
+                memberOf_SOME: {
+                  space_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              }
               # Current user is the person themselves
               { id_EQ: "$jwt.user.id" }
             ]
