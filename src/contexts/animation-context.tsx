@@ -20,20 +20,29 @@ const ANIMATION_STORAGE_KEY = 'goalpost-animations-enabled'
 
 export function AnimationProvider({ children }: { children: React.ReactNode }) {
   const [animationsEnabled, setAnimationsEnabledState] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
-  // Load animation preference before first paint
+  // Mark when client-side hydration is complete
   useLayoutEffect(() => {
-    const savedPreference = localStorage.getItem(ANIMATION_STORAGE_KEY)
-    const nextEnabled =
-      savedPreference === null ? false : savedPreference === 'true'
-    setAnimationsEnabledState(nextEnabled)
+    setIsClient(true)
   }, [])
+
+  // Load animation preference after hydration
+  useLayoutEffect(() => {
+    if (isClient && typeof window !== 'undefined') {
+      const savedPreference = localStorage.getItem(ANIMATION_STORAGE_KEY)
+      const nextEnabled =
+        savedPreference === null ? false : savedPreference === 'true'
+      setAnimationsEnabledState(nextEnabled)
+    }
+  }, [isClient])
 
   const setAnimationsEnabled = (enabled: boolean) => {
     setAnimationsEnabledState(enabled)
-    // Always save to localStorage, not just when mounted
-    // This ensures the preference persists immediately
-    localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
+    // Only save to localStorage on client
+    if (isClient && typeof window !== 'undefined') {
+      localStorage.setItem(ANIMATION_STORAGE_KEY, String(enabled))
+    }
   }
 
   return (
