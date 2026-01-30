@@ -96,24 +96,18 @@ export const searchResolvers = {
           )
         ),
 
-        // Search MeSpaces by name - only if user is owner or member
+        // Search MeSpaces by name - only if user is the owner
+        // MeSpaces are personal spaces and cannot be shared with members
         meSpacesSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (s:MeSpace)
             WHERE toLower(s.name) CONTAINS $searchTerm
             AND $userId IS NOT NULL
-            AND (
-              EXISTS {
-                MATCH (owner)-[r:OWNS]->(s)
-                WHERE owner.id = $userId
-              }
-              OR
-              EXISTS {
-                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
-                WHERE member.id = $userId
-              }
-            )
+            AND EXISTS {
+              MATCH (owner)-[r:OWNS]->(s)
+              WHERE owner.id = $userId
+            }
             RETURN s
             LIMIT 10
             `,

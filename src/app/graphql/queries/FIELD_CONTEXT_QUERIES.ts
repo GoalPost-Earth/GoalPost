@@ -32,12 +32,9 @@ export const GET_ME_SPACE_FIELDS = graphql(`
       id
       name
       owner {
-        ... on Person {
-          id
-        }
-        ... on Community {
-          id
-        }
+        id
+        firstName
+        lastName
       }
       contexts {
         id
@@ -50,12 +47,19 @@ export const GET_ME_SPACE_FIELDS = graphql(`
 `)
 
 /**
- * Query to fetch fields for a specific WeSpace
- * Filters by space_SOME with id_EQ to get only fields linked to that WeSpace
+ * Query to fetch fields for a specific Space (MeSpace or WeSpace)
+ * Filters by meSpace_SOME or weSpace_SOME with id_EQ to get only fields linked to that space
  */
 export const GET_FIELDS_FOR_SPACE = graphql(`
   query GetFieldsForSpace($spaceId: ID!) {
-    fieldContexts(where: { space_SOME: { id_EQ: $spaceId } }) {
+    fieldContexts(
+      where: {
+        OR: [
+          { meSpace_SOME: { id_EQ: $spaceId } }
+          { weSpace_SOME: { id_EQ: $spaceId } }
+        ]
+      }
+    ) {
       id
       title
       emergentName
@@ -96,7 +100,12 @@ export const GET_FIELD_CONTEXT_BY_ID = graphql(`
 export const GET_FIELDS_FOR_SPACE_PAGINATED = graphql(`
   query GetFieldsForSpacePaginated($spaceId: ID!, $offset: Int, $limit: Int) {
     fieldContexts(
-      where: { space_SOME: { id_EQ: $spaceId } }
+      where: {
+        OR: [
+          { meSpace_SOME: { id_EQ: $spaceId } }
+          { weSpace_SOME: { id_EQ: $spaceId } }
+        ]
+      }
       offset: $offset
       limit: $limit
     ) {

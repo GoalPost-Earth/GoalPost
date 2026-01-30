@@ -14,17 +14,12 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
       }
     }
     resourcePulses(where: { id_EQ: $pulseId }) {
@@ -38,17 +33,11 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        email
       }
     }
     storyPulses(where: { id_EQ: $pulseId }) {
@@ -61,17 +50,11 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        email
       }
     }
   }

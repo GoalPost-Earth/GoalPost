@@ -70,6 +70,9 @@ interface Space {
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
+  owner: [Person!]! @declareRelationship
+  members: [SpaceMembership!]! @declareRelationship
+  contexts: [FieldContext!]! @declareRelationship
 }
 
 enum SpaceVisibility {
@@ -81,13 +84,14 @@ enum SpaceVisibility {
 A personal space owned by one person or community.
 Can be private (only owner) or shared with specific members.
 Multi-label: ["Space", "MeSpace"]
+Authorization: Only the owner can view, create, update, or delete a MeSpace.
 """
 type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
   id: ID! @id
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
+  owner: [Person!]! @relationship(type: "OWNS", direction: IN)
   members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
@@ -96,13 +100,14 @@ type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
 A collaborative space shared with other people.
 Has an owner and members who can all participate.
 Multi-label: ["Space", "WeSpace"]
+Authorization: Owner and members can access. Non-members cannot.
 """
 type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
   id: ID! @id
   name: String!
   visibility: SpaceVisibility!
   createdAt: DateTime!
-  owner: [LifeSensor!]! @relationship(type: "OWNS", direction: IN)
+  owner: [Person!]! @relationship(type: "OWNS", direction: IN)
   members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
@@ -115,7 +120,7 @@ type SpaceMembership @node(labels: ["SpaceMembership"]) {
   id: ID! @id
   role: SpaceRole!
   addedAt: DateTime!
-  member: [LifeSensor!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
 
 # ============================================================================
@@ -132,8 +137,26 @@ type FieldContext @node(labels: ["FieldContext"]) {
   title: String!
   emergentName: String
   createdAt: DateTime!
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
-  space: [Space!]! @relationship(type: "HAS_CONTEXT", direction: IN)
+  meSpace: [MeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
+  weSpace: [WeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
+  space: [Space!]!
+    @cypher(
+      statement: """
+      MATCH (this)<-[:HAS_CONTEXT]-(space:Space)
+      RETURN space
+      """
+      columnName: "space"
+    )
+  owner: [Person!]!
+    @cypher(
+      statement: """
+      MATCH (this)<-[:HAS_CONTEXT]-(space:Space)-[:OWNS]->(owner:Person)
+      RETURN owner
+      """
+      columnName: "owner"
+    )
 }
 
 # ============================================================================
@@ -143,6 +166,7 @@ type FieldContext @node(labels: ["FieldContext"]) {
 """
 Base pulse type.
 Represents a single contributed unit of meaning.
+Authorization: Only accessible by users with access to the parent FieldContext's Space.
 Never instantiate directly - use concrete types (GoalPulse, ResourcePulse, StoryPulse).
 """
 interface FieldPulse {
@@ -151,6 +175,7 @@ interface FieldPulse {
   content: String!
   createdAt: DateTime!
   intensity: Float
+  createdBy: [Person!]! @declareRelationship
   context: [FieldContext!]! @declareRelationship
 }
 
@@ -167,10 +192,12 @@ type GoalPulse implements FieldPulse
   intensity: Float
   status: GoalStatus!
   horizon: GoalHorizon
-  initiatedBy: [LifeSensor!]!
-    @relationship(type: "INITIATED_BY", direction: OUT)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
+
+# Authorization for pulses is handled through FieldContext.
+# When a user queries a pulse through its context relationship, Neo4j GraphQL applies the context's auth rules.
 
 enum GoalStatus {
   ACTIVE
@@ -197,8 +224,7 @@ type ResourcePulse implements FieldPulse
   intensity: Float
   resourceType: String!
   availability: Float
-  initiatedBy: [LifeSensor!]!
-    @relationship(type: "INITIATED_BY", direction: OUT)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
@@ -213,41 +239,22 @@ type StoryPulse implements FieldPulse
   content: String!
   createdAt: DateTime!
   intensity: Float
-  initiatedBy: [LifeSensor!]!
-    @relationship(type: "INITIATED_BY", direction: OUT)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }
 
-# ============================================================================
-# RESONANCE LAYER (AI + Meaning - The Read Path)
-# ============================================================================
-
 """
-A semantic or symbolic pattern discovered across pulses.
-Usually AI-generated.
-Label: ["FieldResonance"]
+A discovered pattern of semantic resonance between pulses.
+Multi-label: ["FieldResonance"]
 """
 type FieldResonance @node(labels: ["FieldResonance"]) {
   id: ID! @id
   label: String!
   description: String
-}
-
-"""
-A justified resonance connection between two pulses.
-This is the explainability layer for AI-generated insights.
-Label: ["ResonanceLink"]
-"""
-type ResonanceLink @node(labels: ["ResonanceLink"]) {
-  id: ID! @id
-  confidence: Float!
-  evidence: String
-  createdAt: DateTime!
+  confidence: Float
   source: [FieldPulse!]! @relationship(type: "SOURCE", direction: OUT)
   target: [FieldPulse!]! @relationship(type: "TARGET", direction: OUT)
-  resonance: [FieldResonance!]!
-    @relationship(type: "RESONATES_AS", direction: OUT)
-  detectedBy: [LifeSensor!]! @relationship(type: "DETECTED_BY", direction: OUT)
+  detectedBy: [Person!]! @relationship(type: "DETECTED_BY", direction: OUT)
 }
 
 # ============================================================================

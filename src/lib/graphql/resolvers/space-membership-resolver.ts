@@ -108,6 +108,34 @@ export const spaceMembershipResolvers = {
       const membershipId = generateId()
       const addedAt = new Date().toISOString()
 
+      // Check if this is a MeSpace and if we need to convert it to WeSpace
+      const conversionResult = await session.executeWrite((tx) =>
+        tx.run(
+          `
+          MATCH (space:MeSpace {id: $spaceId})
+          RETURN space.id as id
+          LIMIT 1
+          `,
+          { spaceId }
+        )
+      )
+
+      const isMeSpace = conversionResult.records.length > 0
+
+      // If it's a MeSpace, convert it to WeSpace by removing MeSpace label and adding WeSpace label
+      if (isMeSpace) {
+        await session.executeWrite((tx) =>
+          tx.run(
+            `
+            MATCH (space:MeSpace {id: $spaceId})
+            REMOVE space:MeSpace
+            SET space:WeSpace
+            `,
+            { spaceId }
+          )
+        )
+      }
+
       const result = await session.executeWrite((tx) =>
         tx.run(
           `
@@ -151,7 +179,9 @@ export const spaceMembershipResolvers = {
 
       return {
         success: true,
-        message: `Successfully added member with ${role} role to space.`,
+        message: isMeSpace
+          ? `Successfully added member with ${role} role to space. Space converted from MeSpace to WeSpace.`
+          : `Successfully added member with ${role} role to space.`,
         membership: {
           id: record.get('id'),
           role: record.get('role'),

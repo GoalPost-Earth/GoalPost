@@ -450,6 +450,7 @@ export type CommunityOwnsSpacesAggregateInput = {
 }
 
 export type CommunityOwnsSpacesConnectFieldInput = {
+  connect?: InputMaybe<SpaceConnectInput>
   where?: InputMaybe<SpaceConnectWhere>
 }
 
@@ -477,10 +478,12 @@ export type CommunityOwnsSpacesCreateFieldInput = {
 }
 
 export type CommunityOwnsSpacesDeleteFieldInput = {
+  delete?: InputMaybe<SpaceDeleteInput>
   where?: InputMaybe<CommunityOwnsSpacesConnectionWhere>
 }
 
 export type CommunityOwnsSpacesDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceDisconnectInput>
   where?: InputMaybe<CommunityOwnsSpacesConnectionWhere>
 }
 
@@ -699,12 +702,6 @@ export type CreateRemoveSpaceMemberResponsesMutationResponse = {
   removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
 }
 
-export type CreateResonanceLinksMutationResponse = {
-  __typename?: 'CreateResonanceLinksMutationResponse'
-  info: CreateInfo
-  resonanceLinks: Array<ResonanceLink>
-}
-
 export type CreateResourcePulsesMutationResponse = {
   __typename?: 'CreateResourcePulsesMutationResponse'
   info: CreateInfo
@@ -762,17 +759,93 @@ export type DeleteInfo = {
 export type FieldContext = {
   __typename?: 'FieldContext'
   createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<FieldContextPersonCreatedByAggregationSelection>
+  createdByConnection: FieldContextCreatedByConnection
   emergentName?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
+  meSpace: Array<MeSpace>
+  /** @deprecated Please use field "aggregate" inside "meSpaceConnection" instead */
+  meSpaceAggregate?: Maybe<FieldContextMeSpaceMeSpaceAggregationSelection>
+  meSpaceConnection: FieldContextMeSpaceConnection
+  owner: Array<Person>
   pulses: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "pulsesConnection" instead */
   pulsesAggregate?: Maybe<FieldContextFieldPulsePulsesAggregationSelection>
   pulsesConnection: FieldContextPulsesConnection
   space: Array<Space>
-  /** @deprecated Please use field "aggregate" inside "spaceConnection" instead */
-  spaceAggregate?: Maybe<FieldContextSpaceSpaceAggregationSelection>
-  spaceConnection: FieldContextSpaceConnection
   title: Scalars['String']['output']
+  weSpace: Array<WeSpace>
+  /** @deprecated Please use field "aggregate" inside "weSpaceConnection" instead */
+  weSpaceAggregate?: Maybe<FieldContextWeSpaceWeSpaceAggregationSelection>
+  weSpaceConnection: FieldContextWeSpaceConnection
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextCreatedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextCreatedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextCreatedByConnectionSort>>
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextMeSpaceArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<MeSpaceSort>>
+  where?: InputMaybe<MeSpaceWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextMeSpaceAggregateArgs = {
+  where?: InputMaybe<MeSpaceWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextMeSpaceConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextMeSpaceConnectionSort>>
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
 }
 
 /**
@@ -813,11 +886,11 @@ export type FieldContextPulsesConnectionArgs = {
  * Groups related pulses together.
  * Label: ["FieldContext"]
  */
-export type FieldContextSpaceArgs = {
+export type FieldContextWeSpaceArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<SpaceSort>>
-  where?: InputMaybe<SpaceWhere>
+  sort?: InputMaybe<Array<WeSpaceSort>>
+  where?: InputMaybe<WeSpaceWhere>
 }
 
 /**
@@ -825,8 +898,8 @@ export type FieldContextSpaceArgs = {
  * Groups related pulses together.
  * Label: ["FieldContext"]
  */
-export type FieldContextSpaceAggregateArgs = {
-  where?: InputMaybe<SpaceWhere>
+export type FieldContextWeSpaceAggregateArgs = {
+  where?: InputMaybe<WeSpaceWhere>
 }
 
 /**
@@ -834,11 +907,11 @@ export type FieldContextSpaceAggregateArgs = {
  * Groups related pulses together.
  * Label: ["FieldContext"]
  */
-export type FieldContextSpaceConnectionArgs = {
+export type FieldContextWeSpaceConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldContextSpaceConnectionSort>>
-  where?: InputMaybe<FieldContextSpaceConnectionWhere>
+  sort?: InputMaybe<Array<FieldContextWeSpaceConnectionSort>>
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
 }
 
 export type FieldContextAggregate = {
@@ -867,8 +940,10 @@ export type FieldContextAggregateSelection = {
 }
 
 export type FieldContextConnectInput = {
+  createdBy?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
+  meSpace?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
-  space?: InputMaybe<Array<FieldContextSpaceConnectFieldInput>>
+  weSpace?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
 }
 
 export type FieldContextConnectWhere = {
@@ -877,20 +952,151 @@ export type FieldContextConnectWhere = {
 
 export type FieldContextCreateInput = {
   createdAt: Scalars['DateTime']['input']
+  createdBy?: InputMaybe<FieldContextCreatedByFieldInput>
   emergentName?: InputMaybe<Scalars['String']['input']>
+  meSpace?: InputMaybe<FieldContextMeSpaceFieldInput>
   pulses?: InputMaybe<FieldContextPulsesFieldInput>
-  space?: InputMaybe<FieldContextSpaceFieldInput>
   title: Scalars['String']['input']
+  weSpace?: InputMaybe<FieldContextWeSpaceFieldInput>
+}
+
+export type FieldContextCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextCreatedByAggregateInput>>
+  NOT?: InputMaybe<FieldContextCreatedByAggregateInput>
+  OR?: InputMaybe<Array<FieldContextCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextCreatedByNodeAggregationWhereInput>
+}
+
+export type FieldContextCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type FieldContextCreatedByConnection = {
+  __typename?: 'FieldContextCreatedByConnection'
+  aggregate: FieldContextPersonCreatedByAggregateSelection
+  edges: Array<FieldContextCreatedByRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextCreatedByConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type FieldContextCreatedByConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextCreatedByConnectionWhere>>
+  NOT?: InputMaybe<FieldContextCreatedByConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextCreatedByConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type FieldContextCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type FieldContextCreatedByDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
+}
+
+export type FieldContextCreatedByDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
+}
+
+export type FieldContextCreatedByFieldInput = {
+  connect?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextCreatedByCreateFieldInput>>
+}
+
+export type FieldContextCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextCreatedByRelationship = {
+  __typename?: 'FieldContextCreatedByRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type FieldContextCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
+}
+
+export type FieldContextCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextCreatedByUpdateConnectionInput>
 }
 
 export type FieldContextDeleteInput = {
+  createdBy?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
+  meSpace?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
-  space?: InputMaybe<Array<FieldContextSpaceDeleteFieldInput>>
+  weSpace?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
 }
 
 export type FieldContextDisconnectInput = {
+  createdBy?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
+  meSpace?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
-  space?: InputMaybe<Array<FieldContextSpaceDisconnectFieldInput>>
+  weSpace?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
 }
 
 export type FieldContextEdge = {
@@ -919,6 +1125,152 @@ export type FieldContextFieldPulsePulsesNodeAggregateSelection = {
   id: IdAggregateSelection
   intensity: FloatAggregateSelection
   title: StringAggregateSelection
+}
+
+export type FieldContextMeSpaceAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextMeSpaceAggregateInput>>
+  NOT?: InputMaybe<FieldContextMeSpaceAggregateInput>
+  OR?: InputMaybe<Array<FieldContextMeSpaceAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextMeSpaceNodeAggregationWhereInput>
+}
+
+export type FieldContextMeSpaceConnectFieldInput = {
+  connect?: InputMaybe<Array<MeSpaceConnectInput>>
+  where?: InputMaybe<MeSpaceConnectWhere>
+}
+
+export type FieldContextMeSpaceConnection = {
+  __typename?: 'FieldContextMeSpaceConnection'
+  aggregate: FieldContextMeSpaceMeSpaceAggregateSelection
+  edges: Array<FieldContextMeSpaceRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextMeSpaceConnectionSort = {
+  node?: InputMaybe<MeSpaceSort>
+}
+
+export type FieldContextMeSpaceConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextMeSpaceConnectionWhere>>
+  NOT?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextMeSpaceConnectionWhere>>
+  node?: InputMaybe<MeSpaceWhere>
+}
+
+export type FieldContextMeSpaceCreateFieldInput = {
+  node: MeSpaceCreateInput
+}
+
+export type FieldContextMeSpaceDeleteFieldInput = {
+  delete?: InputMaybe<MeSpaceDeleteInput>
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+}
+
+export type FieldContextMeSpaceDisconnectFieldInput = {
+  disconnect?: InputMaybe<MeSpaceDisconnectInput>
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+}
+
+export type FieldContextMeSpaceFieldInput = {
+  connect?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextMeSpaceCreateFieldInput>>
+}
+
+export type FieldContextMeSpaceMeSpaceAggregateSelection = {
+  __typename?: 'FieldContextMeSpaceMeSpaceAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextMeSpaceMeSpaceNodeAggregateSelection>
+}
+
+export type FieldContextMeSpaceMeSpaceAggregationSelection = {
+  __typename?: 'FieldContextMeSpaceMeSpaceAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextMeSpaceMeSpaceNodeAggregateSelection>
+}
+
+export type FieldContextMeSpaceMeSpaceNodeAggregateSelection = {
+  __typename?: 'FieldContextMeSpaceMeSpaceNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+}
+
+export type FieldContextMeSpaceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextMeSpaceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextMeSpaceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextMeSpaceNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextMeSpaceRelationship = {
+  __typename?: 'FieldContextMeSpaceRelationship'
+  cursor: Scalars['String']['output']
+  node: MeSpace
+}
+
+export type FieldContextMeSpaceUpdateConnectionInput = {
+  node?: InputMaybe<MeSpaceUpdateInput>
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+}
+
+export type FieldContextMeSpaceUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextMeSpaceCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextMeSpaceUpdateConnectionInput>
+}
+
+export type FieldContextPersonCreatedByAggregateSelection = {
+  __typename?: 'FieldContextPersonCreatedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextPersonCreatedByNodeAggregateSelection>
+}
+
+export type FieldContextPersonCreatedByAggregationSelection = {
+  __typename?: 'FieldContextPersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextPersonCreatedByNodeAggregateSelection>
+}
+
+export type FieldContextPersonCreatedByNodeAggregateSelection = {
+  __typename?: 'FieldContextPersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 export type FieldContextPulsesAggregateInput = {
@@ -1069,62 +1421,75 @@ export type FieldContextSort = {
   title?: InputMaybe<SortDirection>
 }
 
-export type FieldContextSpaceAggregateInput = {
-  AND?: InputMaybe<Array<FieldContextSpaceAggregateInput>>
-  NOT?: InputMaybe<FieldContextSpaceAggregateInput>
-  OR?: InputMaybe<Array<FieldContextSpaceAggregateInput>>
+export type FieldContextUpdateInput = {
+  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  createdBy?: InputMaybe<Array<FieldContextCreatedByUpdateFieldInput>>
+  emergentName_SET?: InputMaybe<Scalars['String']['input']>
+  meSpace?: InputMaybe<Array<FieldContextMeSpaceUpdateFieldInput>>
+  pulses?: InputMaybe<Array<FieldContextPulsesUpdateFieldInput>>
+  title_SET?: InputMaybe<Scalars['String']['input']>
+  weSpace?: InputMaybe<Array<FieldContextWeSpaceUpdateFieldInput>>
+}
+
+export type FieldContextWeSpaceAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextWeSpaceAggregateInput>>
+  NOT?: InputMaybe<FieldContextWeSpaceAggregateInput>
+  OR?: InputMaybe<Array<FieldContextWeSpaceAggregateInput>>
   count_EQ?: InputMaybe<Scalars['Int']['input']>
   count_GT?: InputMaybe<Scalars['Int']['input']>
   count_GTE?: InputMaybe<Scalars['Int']['input']>
   count_LT?: InputMaybe<Scalars['Int']['input']>
   count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<FieldContextSpaceNodeAggregationWhereInput>
+  node?: InputMaybe<FieldContextWeSpaceNodeAggregationWhereInput>
 }
 
-export type FieldContextSpaceConnectFieldInput = {
-  where?: InputMaybe<SpaceConnectWhere>
+export type FieldContextWeSpaceConnectFieldInput = {
+  connect?: InputMaybe<Array<WeSpaceConnectInput>>
+  where?: InputMaybe<WeSpaceConnectWhere>
 }
 
-export type FieldContextSpaceConnection = {
-  __typename?: 'FieldContextSpaceConnection'
-  aggregate: FieldContextSpaceSpaceAggregateSelection
-  edges: Array<FieldContextSpaceRelationship>
+export type FieldContextWeSpaceConnection = {
+  __typename?: 'FieldContextWeSpaceConnection'
+  aggregate: FieldContextWeSpaceWeSpaceAggregateSelection
+  edges: Array<FieldContextWeSpaceRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
-export type FieldContextSpaceConnectionSort = {
-  node?: InputMaybe<SpaceSort>
+export type FieldContextWeSpaceConnectionSort = {
+  node?: InputMaybe<WeSpaceSort>
 }
 
-export type FieldContextSpaceConnectionWhere = {
-  AND?: InputMaybe<Array<FieldContextSpaceConnectionWhere>>
-  NOT?: InputMaybe<FieldContextSpaceConnectionWhere>
-  OR?: InputMaybe<Array<FieldContextSpaceConnectionWhere>>
-  node?: InputMaybe<SpaceWhere>
+export type FieldContextWeSpaceConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextWeSpaceConnectionWhere>>
+  NOT?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextWeSpaceConnectionWhere>>
+  node?: InputMaybe<WeSpaceWhere>
 }
 
-export type FieldContextSpaceCreateFieldInput = {
-  node: SpaceCreateInput
+export type FieldContextWeSpaceCreateFieldInput = {
+  node: WeSpaceCreateInput
 }
 
-export type FieldContextSpaceDeleteFieldInput = {
-  where?: InputMaybe<FieldContextSpaceConnectionWhere>
+export type FieldContextWeSpaceDeleteFieldInput = {
+  delete?: InputMaybe<WeSpaceDeleteInput>
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
 }
 
-export type FieldContextSpaceDisconnectFieldInput = {
-  where?: InputMaybe<FieldContextSpaceConnectionWhere>
+export type FieldContextWeSpaceDisconnectFieldInput = {
+  disconnect?: InputMaybe<WeSpaceDisconnectInput>
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
 }
 
-export type FieldContextSpaceFieldInput = {
-  connect?: InputMaybe<Array<FieldContextSpaceConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextSpaceCreateFieldInput>>
+export type FieldContextWeSpaceFieldInput = {
+  connect?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextWeSpaceCreateFieldInput>>
 }
 
-export type FieldContextSpaceNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<FieldContextSpaceNodeAggregationWhereInput>>
-  NOT?: InputMaybe<FieldContextSpaceNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<FieldContextSpaceNodeAggregationWhereInput>>
+export type FieldContextWeSpaceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextWeSpaceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextWeSpaceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextWeSpaceNodeAggregationWhereInput>>
   createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -1152,51 +1517,43 @@ export type FieldContextSpaceNodeAggregationWhereInput = {
   name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type FieldContextSpaceRelationship = {
-  __typename?: 'FieldContextSpaceRelationship'
+export type FieldContextWeSpaceRelationship = {
+  __typename?: 'FieldContextWeSpaceRelationship'
   cursor: Scalars['String']['output']
-  node: Space
+  node: WeSpace
 }
 
-export type FieldContextSpaceSpaceAggregateSelection = {
-  __typename?: 'FieldContextSpaceSpaceAggregateSelection'
+export type FieldContextWeSpaceUpdateConnectionInput = {
+  node?: InputMaybe<WeSpaceUpdateInput>
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+}
+
+export type FieldContextWeSpaceUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextWeSpaceCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextWeSpaceUpdateConnectionInput>
+}
+
+export type FieldContextWeSpaceWeSpaceAggregateSelection = {
+  __typename?: 'FieldContextWeSpaceWeSpaceAggregateSelection'
   count: CountConnection
-  node?: Maybe<FieldContextSpaceSpaceNodeAggregateSelection>
+  node?: Maybe<FieldContextWeSpaceWeSpaceNodeAggregateSelection>
 }
 
-export type FieldContextSpaceSpaceAggregationSelection = {
-  __typename?: 'FieldContextSpaceSpaceAggregationSelection'
+export type FieldContextWeSpaceWeSpaceAggregationSelection = {
+  __typename?: 'FieldContextWeSpaceWeSpaceAggregationSelection'
   count: Scalars['Int']['output']
-  node?: Maybe<FieldContextSpaceSpaceNodeAggregateSelection>
+  node?: Maybe<FieldContextWeSpaceWeSpaceNodeAggregateSelection>
 }
 
-export type FieldContextSpaceSpaceNodeAggregateSelection = {
-  __typename?: 'FieldContextSpaceSpaceNodeAggregateSelection'
+export type FieldContextWeSpaceWeSpaceNodeAggregateSelection = {
+  __typename?: 'FieldContextWeSpaceWeSpaceNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   name: StringAggregateSelection
-}
-
-export type FieldContextSpaceUpdateConnectionInput = {
-  node?: InputMaybe<SpaceUpdateInput>
-  where?: InputMaybe<FieldContextSpaceConnectionWhere>
-}
-
-export type FieldContextSpaceUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldContextSpaceConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextSpaceCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldContextSpaceDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldContextSpaceDisconnectFieldInput>>
-  update?: InputMaybe<FieldContextSpaceUpdateConnectionInput>
-}
-
-export type FieldContextUpdateInput = {
-  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  emergentName_SET?: InputMaybe<Scalars['String']['input']>
-  pulses?: InputMaybe<Array<FieldContextPulsesUpdateFieldInput>>
-  space?: InputMaybe<Array<FieldContextSpaceUpdateFieldInput>>
-  title_SET?: InputMaybe<Scalars['String']['input']>
 }
 
 export type FieldContextWhere = {
@@ -1209,6 +1566,23 @@ export type FieldContextWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<FieldContextCreatedByAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldContextCreatedByConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldContextCreatedByConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldContextCreatedByConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldContextCreatedByConnectionWhere>
+  /** Return FieldContexts where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
   emergentName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   emergentName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   emergentName_EQ?: InputMaybe<Scalars['String']['input']>
@@ -1219,6 +1593,28 @@ export type FieldContextWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  meSpaceAggregate?: InputMaybe<FieldContextMeSpaceAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextMeSpaceConnections match this filter */
+  meSpaceConnection_ALL?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextMeSpaceConnections match this filter */
+  meSpaceConnection_NONE?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextMeSpaceConnections match this filter */
+  meSpaceConnection_SINGLE?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextMeSpaceConnections match this filter */
+  meSpaceConnection_SOME?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+  /** Return FieldContexts where all of the related MeSpaces match this filter */
+  meSpace_ALL?: InputMaybe<MeSpaceWhere>
+  /** Return FieldContexts where none of the related MeSpaces match this filter */
+  meSpace_NONE?: InputMaybe<MeSpaceWhere>
+  /** Return FieldContexts where one of the related MeSpaces match this filter */
+  meSpace_SINGLE?: InputMaybe<MeSpaceWhere>
+  /** Return FieldContexts where some of the related MeSpaces match this filter */
+  meSpace_SOME?: InputMaybe<MeSpaceWhere>
+  owner?: InputMaybe<PersonWhere>
+  owner_ALL?: InputMaybe<PersonWhere>
+  owner_NONE?: InputMaybe<PersonWhere>
+  owner_SINGLE?: InputMaybe<PersonWhere>
+  owner_SOME?: InputMaybe<PersonWhere>
   pulsesAggregate?: InputMaybe<FieldContextPulsesAggregateInput>
   /** Return FieldContexts where all of the related FieldContextPulsesConnections match this filter */
   pulsesConnection_ALL?: InputMaybe<FieldContextPulsesConnectionWhere>
@@ -1236,28 +1632,28 @@ export type FieldContextWhere = {
   pulses_SINGLE?: InputMaybe<FieldPulseWhere>
   /** Return FieldContexts where some of the related FieldPulses match this filter */
   pulses_SOME?: InputMaybe<FieldPulseWhere>
-  spaceAggregate?: InputMaybe<FieldContextSpaceAggregateInput>
-  /** Return FieldContexts where all of the related FieldContextSpaceConnections match this filter */
-  spaceConnection_ALL?: InputMaybe<FieldContextSpaceConnectionWhere>
-  /** Return FieldContexts where none of the related FieldContextSpaceConnections match this filter */
-  spaceConnection_NONE?: InputMaybe<FieldContextSpaceConnectionWhere>
-  /** Return FieldContexts where one of the related FieldContextSpaceConnections match this filter */
-  spaceConnection_SINGLE?: InputMaybe<FieldContextSpaceConnectionWhere>
-  /** Return FieldContexts where some of the related FieldContextSpaceConnections match this filter */
-  spaceConnection_SOME?: InputMaybe<FieldContextSpaceConnectionWhere>
-  /** Return FieldContexts where all of the related Spaces match this filter */
-  space_ALL?: InputMaybe<SpaceWhere>
-  /** Return FieldContexts where none of the related Spaces match this filter */
-  space_NONE?: InputMaybe<SpaceWhere>
-  /** Return FieldContexts where one of the related Spaces match this filter */
-  space_SINGLE?: InputMaybe<SpaceWhere>
-  /** Return FieldContexts where some of the related Spaces match this filter */
-  space_SOME?: InputMaybe<SpaceWhere>
   title_CONTAINS?: InputMaybe<Scalars['String']['input']>
   title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   title_EQ?: InputMaybe<Scalars['String']['input']>
   title_IN?: InputMaybe<Array<Scalars['String']['input']>>
   title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  weSpaceAggregate?: InputMaybe<FieldContextWeSpaceAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextWeSpaceConnections match this filter */
+  weSpaceConnection_ALL?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextWeSpaceConnections match this filter */
+  weSpaceConnection_NONE?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextWeSpaceConnections match this filter */
+  weSpaceConnection_SINGLE?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextWeSpaceConnections match this filter */
+  weSpaceConnection_SOME?: InputMaybe<FieldContextWeSpaceConnectionWhere>
+  /** Return FieldContexts where all of the related WeSpaces match this filter */
+  weSpace_ALL?: InputMaybe<WeSpaceWhere>
+  /** Return FieldContexts where none of the related WeSpaces match this filter */
+  weSpace_NONE?: InputMaybe<WeSpaceWhere>
+  /** Return FieldContexts where one of the related WeSpaces match this filter */
+  weSpace_SINGLE?: InputMaybe<WeSpaceWhere>
+  /** Return FieldContexts where some of the related WeSpaces match this filter */
+  weSpace_SOME?: InputMaybe<WeSpaceWhere>
 }
 
 export type FieldContextsConnection = {
@@ -1273,6 +1669,8 @@ export type FieldPulse = {
   context: Array<FieldContext>
   contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  createdByConnection: FieldPulseCreatedByConnection
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
   title: Scalars['String']['output']
@@ -1290,6 +1688,20 @@ export type FieldPulseContextConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
   where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type FieldPulseCreatedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+export type FieldPulseCreatedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type FieldPulseAggregate = {
@@ -1321,6 +1733,7 @@ export type FieldPulseAggregateSelection = {
 
 export type FieldPulseConnectInput = {
   context?: InputMaybe<Array<FieldPulseContextConnectFieldInput>>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByConnectFieldInput>>
 }
 
 export type FieldPulseConnectWhere = {
@@ -1447,12 +1860,133 @@ export type FieldPulseCreateInput = {
   StoryPulse?: InputMaybe<StoryPulseCreateInput>
 }
 
+export type FieldPulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<FieldPulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<FieldPulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<FieldPulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldPulseCreatedByNodeAggregationWhereInput>
+}
+
+export type FieldPulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type FieldPulseCreatedByConnection = {
+  __typename?: 'FieldPulseCreatedByConnection'
+  edges: Array<FieldPulseCreatedByRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldPulseCreatedByConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type FieldPulseCreatedByConnectionWhere = {
+  AND?: InputMaybe<Array<FieldPulseCreatedByConnectionWhere>>
+  NOT?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  OR?: InputMaybe<Array<FieldPulseCreatedByConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type FieldPulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type FieldPulseCreatedByDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type FieldPulseCreatedByDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type FieldPulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldPulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldPulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldPulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldPulseCreatedByRelationship = {
+  __typename?: 'FieldPulseCreatedByRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type FieldPulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type FieldPulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldPulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<FieldPulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<FieldPulseCreatedByUpdateConnectionInput>
+}
+
 export type FieldPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
 }
 
 export type FieldPulseDisconnectInput = {
   context?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
 }
 
 export type FieldPulseEdge = {
@@ -1480,6 +2014,7 @@ export type FieldPulseUpdateInput = {
   content_SET?: InputMaybe<Scalars['String']['input']>
   context?: InputMaybe<Array<FieldPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByUpdateFieldInput>>
   id_SET?: InputMaybe<Scalars['ID']['input']>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
@@ -1521,6 +2056,23 @@ export type FieldPulseWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<FieldPulseCreatedByAggregateInput>
+  /** Return FieldPulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return FieldPulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return FieldPulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return FieldPulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return FieldPulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return FieldPulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return FieldPulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return FieldPulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -1549,15 +2101,117 @@ export type FieldPulsesConnection = {
 }
 
 /**
- * A semantic or symbolic pattern discovered across pulses.
- * Usually AI-generated.
- * Label: ["FieldResonance"]
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
  */
 export type FieldResonance = {
   __typename?: 'FieldResonance'
+  confidence?: Maybe<Scalars['Float']['output']>
   description?: Maybe<Scalars['String']['output']>
+  detectedBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "detectedByConnection" instead */
+  detectedByAggregate?: Maybe<FieldResonancePersonDetectedByAggregationSelection>
+  detectedByConnection: FieldResonanceDetectedByConnection
   id: Scalars['ID']['output']
   label: Scalars['String']['output']
+  source: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
+  sourceAggregate?: Maybe<FieldResonanceFieldPulseSourceAggregationSelection>
+  sourceConnection: FieldResonanceSourceConnection
+  target: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "targetConnection" instead */
+  targetAggregate?: Maybe<FieldResonanceFieldPulseTargetAggregationSelection>
+  targetConnection: FieldResonanceTargetConnection
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceDetectedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceDetectedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceDetectedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldResonanceDetectedByConnectionSort>>
+  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceSourceArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceSourceAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceSourceConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldResonanceSourceConnectionSort>>
+  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceTargetArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceTargetAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceTargetConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldResonanceTargetConnectionSort>>
+  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
 }
 
 export type FieldResonanceAggregate = {
@@ -1568,6 +2222,7 @@ export type FieldResonanceAggregate = {
 
 export type FieldResonanceAggregateNode = {
   __typename?: 'FieldResonanceAggregateNode'
+  confidence: FloatAggregateSelection
   description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -1576,6 +2231,7 @@ export type FieldResonanceAggregateNode = {
 
 export type FieldResonanceAggregateSelection = {
   __typename?: 'FieldResonanceAggregateSelection'
+  confidence: FloatAggregateSelection
   count: Scalars['Int']['output']
   description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
@@ -1583,13 +2239,144 @@ export type FieldResonanceAggregateSelection = {
   label: StringAggregateSelection
 }
 
-export type FieldResonanceConnectWhere = {
-  node: FieldResonanceWhere
+export type FieldResonanceCreateInput = {
+  confidence?: InputMaybe<Scalars['Float']['input']>
+  description?: InputMaybe<Scalars['String']['input']>
+  detectedBy?: InputMaybe<FieldResonanceDetectedByFieldInput>
+  label: Scalars['String']['input']
+  source?: InputMaybe<FieldResonanceSourceFieldInput>
+  target?: InputMaybe<FieldResonanceTargetFieldInput>
 }
 
-export type FieldResonanceCreateInput = {
-  description?: InputMaybe<Scalars['String']['input']>
-  label: Scalars['String']['input']
+export type FieldResonanceDeleteInput = {
+  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByDeleteFieldInput>>
+  source?: InputMaybe<Array<FieldResonanceSourceDeleteFieldInput>>
+  target?: InputMaybe<Array<FieldResonanceTargetDeleteFieldInput>>
+}
+
+export type FieldResonanceDetectedByAggregateInput = {
+  AND?: InputMaybe<Array<FieldResonanceDetectedByAggregateInput>>
+  NOT?: InputMaybe<FieldResonanceDetectedByAggregateInput>
+  OR?: InputMaybe<Array<FieldResonanceDetectedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldResonanceDetectedByNodeAggregationWhereInput>
+}
+
+export type FieldResonanceDetectedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type FieldResonanceDetectedByConnection = {
+  __typename?: 'FieldResonanceDetectedByConnection'
+  aggregate: FieldResonancePersonDetectedByAggregateSelection
+  edges: Array<FieldResonanceDetectedByRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldResonanceDetectedByConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type FieldResonanceDetectedByConnectionWhere = {
+  AND?: InputMaybe<Array<FieldResonanceDetectedByConnectionWhere>>
+  NOT?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+  OR?: InputMaybe<Array<FieldResonanceDetectedByConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type FieldResonanceDetectedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type FieldResonanceDetectedByDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+}
+
+export type FieldResonanceDetectedByDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+}
+
+export type FieldResonanceDetectedByFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceDetectedByCreateFieldInput>>
+}
+
+export type FieldResonanceDetectedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldResonanceDetectedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldResonanceDetectedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldResonanceDetectedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldResonanceDetectedByRelationship = {
+  __typename?: 'FieldResonanceDetectedByRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type FieldResonanceDetectedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+}
+
+export type FieldResonanceDetectedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceDetectedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldResonanceDetectedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldResonanceDetectedByDisconnectFieldInput>>
+  update?: InputMaybe<FieldResonanceDetectedByUpdateConnectionInput>
 }
 
 export type FieldResonanceEdge = {
@@ -1598,27 +2385,404 @@ export type FieldResonanceEdge = {
   node: FieldResonance
 }
 
+export type FieldResonanceFieldPulseSourceAggregateSelection = {
+  __typename?: 'FieldResonanceFieldPulseSourceAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldResonanceFieldPulseSourceNodeAggregateSelection>
+}
+
+export type FieldResonanceFieldPulseSourceAggregationSelection = {
+  __typename?: 'FieldResonanceFieldPulseSourceAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldResonanceFieldPulseSourceNodeAggregateSelection>
+}
+
+export type FieldResonanceFieldPulseSourceNodeAggregateSelection = {
+  __typename?: 'FieldResonanceFieldPulseSourceNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type FieldResonanceFieldPulseTargetAggregateSelection = {
+  __typename?: 'FieldResonanceFieldPulseTargetAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldResonanceFieldPulseTargetNodeAggregateSelection>
+}
+
+export type FieldResonanceFieldPulseTargetAggregationSelection = {
+  __typename?: 'FieldResonanceFieldPulseTargetAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldResonanceFieldPulseTargetNodeAggregateSelection>
+}
+
+export type FieldResonanceFieldPulseTargetNodeAggregateSelection = {
+  __typename?: 'FieldResonanceFieldPulseTargetNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type FieldResonancePersonDetectedByAggregateSelection = {
+  __typename?: 'FieldResonancePersonDetectedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldResonancePersonDetectedByNodeAggregateSelection>
+}
+
+export type FieldResonancePersonDetectedByAggregationSelection = {
+  __typename?: 'FieldResonancePersonDetectedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldResonancePersonDetectedByNodeAggregateSelection>
+}
+
+export type FieldResonancePersonDetectedByNodeAggregateSelection = {
+  __typename?: 'FieldResonancePersonDetectedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+}
+
 /** Fields to sort FieldResonances by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldResonanceSort object. */
 export type FieldResonanceSort = {
+  confidence?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   label?: InputMaybe<SortDirection>
 }
 
+export type FieldResonanceSourceAggregateInput = {
+  AND?: InputMaybe<Array<FieldResonanceSourceAggregateInput>>
+  NOT?: InputMaybe<FieldResonanceSourceAggregateInput>
+  OR?: InputMaybe<Array<FieldResonanceSourceAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldResonanceSourceNodeAggregationWhereInput>
+}
+
+export type FieldResonanceSourceConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
+  where?: InputMaybe<FieldPulseConnectWhere>
+}
+
+export type FieldResonanceSourceConnection = {
+  __typename?: 'FieldResonanceSourceConnection'
+  aggregate: FieldResonanceFieldPulseSourceAggregateSelection
+  edges: Array<FieldResonanceSourceRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldResonanceSourceConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type FieldResonanceSourceConnectionWhere = {
+  AND?: InputMaybe<Array<FieldResonanceSourceConnectionWhere>>
+  NOT?: InputMaybe<FieldResonanceSourceConnectionWhere>
+  OR?: InputMaybe<Array<FieldResonanceSourceConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type FieldResonanceSourceCreateFieldInput = {
+  node: FieldPulseCreateInput
+}
+
+export type FieldResonanceSourceDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
+  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
+}
+
+export type FieldResonanceSourceDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
+}
+
+export type FieldResonanceSourceFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceSourceCreateFieldInput>>
+}
+
+export type FieldResonanceSourceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldResonanceSourceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldResonanceSourceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldResonanceSourceNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldResonanceSourceRelationship = {
+  __typename?: 'FieldResonanceSourceRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type FieldResonanceSourceUpdateConnectionInput = {
+  node?: InputMaybe<FieldPulseUpdateInput>
+  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
+}
+
+export type FieldResonanceSourceUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceSourceCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldResonanceSourceDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldResonanceSourceDisconnectFieldInput>>
+  update?: InputMaybe<FieldResonanceSourceUpdateConnectionInput>
+}
+
+export type FieldResonanceTargetAggregateInput = {
+  AND?: InputMaybe<Array<FieldResonanceTargetAggregateInput>>
+  NOT?: InputMaybe<FieldResonanceTargetAggregateInput>
+  OR?: InputMaybe<Array<FieldResonanceTargetAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldResonanceTargetNodeAggregationWhereInput>
+}
+
+export type FieldResonanceTargetConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
+  where?: InputMaybe<FieldPulseConnectWhere>
+}
+
+export type FieldResonanceTargetConnection = {
+  __typename?: 'FieldResonanceTargetConnection'
+  aggregate: FieldResonanceFieldPulseTargetAggregateSelection
+  edges: Array<FieldResonanceTargetRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldResonanceTargetConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type FieldResonanceTargetConnectionWhere = {
+  AND?: InputMaybe<Array<FieldResonanceTargetConnectionWhere>>
+  NOT?: InputMaybe<FieldResonanceTargetConnectionWhere>
+  OR?: InputMaybe<Array<FieldResonanceTargetConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type FieldResonanceTargetCreateFieldInput = {
+  node: FieldPulseCreateInput
+}
+
+export type FieldResonanceTargetDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
+  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
+}
+
+export type FieldResonanceTargetDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
+}
+
+export type FieldResonanceTargetFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceTargetCreateFieldInput>>
+}
+
+export type FieldResonanceTargetNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldResonanceTargetNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldResonanceTargetNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldResonanceTargetNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldResonanceTargetRelationship = {
+  __typename?: 'FieldResonanceTargetRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type FieldResonanceTargetUpdateConnectionInput = {
+  node?: InputMaybe<FieldPulseUpdateInput>
+  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
+}
+
+export type FieldResonanceTargetUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceTargetCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldResonanceTargetDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldResonanceTargetDisconnectFieldInput>>
+  update?: InputMaybe<FieldResonanceTargetUpdateConnectionInput>
+}
+
 export type FieldResonanceUpdateInput = {
+  confidence_ADD?: InputMaybe<Scalars['Float']['input']>
+  confidence_DIVIDE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
+  confidence_SET?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
   description_SET?: InputMaybe<Scalars['String']['input']>
+  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByUpdateFieldInput>>
   label_SET?: InputMaybe<Scalars['String']['input']>
+  source?: InputMaybe<Array<FieldResonanceSourceUpdateFieldInput>>
+  target?: InputMaybe<Array<FieldResonanceTargetUpdateFieldInput>>
 }
 
 export type FieldResonanceWhere = {
   AND?: InputMaybe<Array<FieldResonanceWhere>>
   NOT?: InputMaybe<FieldResonanceWhere>
   OR?: InputMaybe<Array<FieldResonanceWhere>>
+  confidence_EQ?: InputMaybe<Scalars['Float']['input']>
+  confidence_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_IN?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>
+  confidence_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_LTE?: InputMaybe<Scalars['Float']['input']>
   description_CONTAINS?: InputMaybe<Scalars['String']['input']>
   description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   description_EQ?: InputMaybe<Scalars['String']['input']>
   description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  detectedByAggregate?: InputMaybe<FieldResonanceDetectedByAggregateInput>
+  /** Return FieldResonances where all of the related FieldResonanceDetectedByConnections match this filter */
+  detectedByConnection_ALL?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+  /** Return FieldResonances where none of the related FieldResonanceDetectedByConnections match this filter */
+  detectedByConnection_NONE?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+  /** Return FieldResonances where one of the related FieldResonanceDetectedByConnections match this filter */
+  detectedByConnection_SINGLE?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+  /** Return FieldResonances where some of the related FieldResonanceDetectedByConnections match this filter */
+  detectedByConnection_SOME?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+  /** Return FieldResonances where all of the related People match this filter */
+  detectedBy_ALL?: InputMaybe<PersonWhere>
+  /** Return FieldResonances where none of the related People match this filter */
+  detectedBy_NONE?: InputMaybe<PersonWhere>
+  /** Return FieldResonances where one of the related People match this filter */
+  detectedBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return FieldResonances where some of the related People match this filter */
+  detectedBy_SOME?: InputMaybe<PersonWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -1629,6 +2793,40 @@ export type FieldResonanceWhere = {
   label_EQ?: InputMaybe<Scalars['String']['input']>
   label_IN?: InputMaybe<Array<Scalars['String']['input']>>
   label_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceAggregate?: InputMaybe<FieldResonanceSourceAggregateInput>
+  /** Return FieldResonances where all of the related FieldResonanceSourceConnections match this filter */
+  sourceConnection_ALL?: InputMaybe<FieldResonanceSourceConnectionWhere>
+  /** Return FieldResonances where none of the related FieldResonanceSourceConnections match this filter */
+  sourceConnection_NONE?: InputMaybe<FieldResonanceSourceConnectionWhere>
+  /** Return FieldResonances where one of the related FieldResonanceSourceConnections match this filter */
+  sourceConnection_SINGLE?: InputMaybe<FieldResonanceSourceConnectionWhere>
+  /** Return FieldResonances where some of the related FieldResonanceSourceConnections match this filter */
+  sourceConnection_SOME?: InputMaybe<FieldResonanceSourceConnectionWhere>
+  /** Return FieldResonances where all of the related FieldPulses match this filter */
+  source_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where none of the related FieldPulses match this filter */
+  source_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where one of the related FieldPulses match this filter */
+  source_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where some of the related FieldPulses match this filter */
+  source_SOME?: InputMaybe<FieldPulseWhere>
+  targetAggregate?: InputMaybe<FieldResonanceTargetAggregateInput>
+  /** Return FieldResonances where all of the related FieldResonanceTargetConnections match this filter */
+  targetConnection_ALL?: InputMaybe<FieldResonanceTargetConnectionWhere>
+  /** Return FieldResonances where none of the related FieldResonanceTargetConnections match this filter */
+  targetConnection_NONE?: InputMaybe<FieldResonanceTargetConnectionWhere>
+  /** Return FieldResonances where one of the related FieldResonanceTargetConnections match this filter */
+  targetConnection_SINGLE?: InputMaybe<FieldResonanceTargetConnectionWhere>
+  /** Return FieldResonances where some of the related FieldResonanceTargetConnections match this filter */
+  targetConnection_SOME?: InputMaybe<FieldResonanceTargetConnectionWhere>
+  /** Return FieldResonances where all of the related FieldPulses match this filter */
+  target_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where none of the related FieldPulses match this filter */
+  target_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where one of the related FieldPulses match this filter */
+  target_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return FieldResonances where some of the related FieldPulses match this filter */
+  target_SOME?: InputMaybe<FieldPulseWhere>
 }
 
 export type FieldResonancesConnection = {
@@ -1665,10 +2863,12 @@ export type GoalPulse = FieldPulse & {
   contextAggregate?: Maybe<GoalPulseFieldContextContextAggregationSelection>
   contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<GoalPulsePersonCreatedByAggregationSelection>
+  createdByConnection: FieldPulseCreatedByConnection
   horizon?: Maybe<GoalHorizon>
   id: Scalars['ID']['output']
-  initiatedBy: Array<LifeSensor>
-  initiatedByConnection: GoalPulseInitiatedByConnection
   intensity?: Maybe<Scalars['Float']['output']>
   status: GoalStatus
   title: Scalars['String']['output']
@@ -1708,20 +2908,30 @@ export type GoalPulseContextConnectionArgs = {
  * A pulse that functions as a goal in its context.
  * Multi-label: ["FieldPulse", "GoalPulse"]
  */
-export type GoalPulseInitiatedByArgs = {
+export type GoalPulseCreatedByArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
  * A pulse that functions as a goal in its context.
  * Multi-label: ["FieldPulse", "GoalPulse"]
  */
-export type GoalPulseInitiatedByConnectionArgs = {
+export type GoalPulseCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A pulse that functions as a goal in its context.
+ * Multi-label: ["FieldPulse", "GoalPulse"]
+ */
+export type GoalPulseCreatedByConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<GoalPulseInitiatedByConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type GoalPulseAggregate = {
@@ -1840,16 +3050,106 @@ export type GoalPulseCreateInput = {
   content: Scalars['String']['input']
   context?: InputMaybe<GoalPulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
+  createdBy?: InputMaybe<GoalPulseCreatedByFieldInput>
   horizon?: InputMaybe<GoalHorizon>
-  initiatedBy?: InputMaybe<GoalPulseInitiatedByCreateInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   status: GoalStatus
   title: Scalars['String']['input']
 }
 
+export type GoalPulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<GoalPulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<GoalPulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<GoalPulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<GoalPulseCreatedByNodeAggregationWhereInput>
+}
+
+export type GoalPulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type GoalPulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type GoalPulseCreatedByFieldInput = {
+  connect?: InputMaybe<Array<GoalPulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<GoalPulseCreatedByCreateFieldInput>>
+}
+
+export type GoalPulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<GoalPulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<GoalPulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<GoalPulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type GoalPulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type GoalPulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<GoalPulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<GoalPulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<GoalPulseCreatedByUpdateConnectionInput>
+}
+
 export type GoalPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
-  initiatedBy?: InputMaybe<GoalPulseInitiatedByDeleteInput>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
 }
 
 export type GoalPulseEdge = {
@@ -1873,127 +3173,19 @@ export type GoalPulseFieldContextContextNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type GoalPulseInitiatedByCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type GoalPulsePersonCreatedByAggregationSelection = {
+  __typename?: 'GoalPulsePersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<GoalPulsePersonCreatedByNodeAggregateSelection>
 }
 
-export type GoalPulseInitiatedByCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<GoalPulseInitiatedByCommunityConnectionWhere>>
-  NOT?: InputMaybe<GoalPulseInitiatedByCommunityConnectionWhere>
-  OR?: InputMaybe<Array<GoalPulseInitiatedByCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type GoalPulseInitiatedByCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type GoalPulseInitiatedByCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<GoalPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type GoalPulseInitiatedByCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<GoalPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type GoalPulseInitiatedByCommunityFieldInput = {
-  connect?: InputMaybe<Array<GoalPulseInitiatedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<GoalPulseInitiatedByCommunityCreateFieldInput>>
-}
-
-export type GoalPulseInitiatedByCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<GoalPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type GoalPulseInitiatedByCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<GoalPulseInitiatedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<GoalPulseInitiatedByCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<GoalPulseInitiatedByCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<GoalPulseInitiatedByCommunityDisconnectFieldInput>
-  >
-  update?: InputMaybe<GoalPulseInitiatedByCommunityUpdateConnectionInput>
-}
-
-export type GoalPulseInitiatedByConnection = {
-  __typename?: 'GoalPulseInitiatedByConnection'
-  edges: Array<GoalPulseInitiatedByRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type GoalPulseInitiatedByConnectionWhere = {
-  Community?: InputMaybe<GoalPulseInitiatedByCommunityConnectionWhere>
-  Person?: InputMaybe<GoalPulseInitiatedByPersonConnectionWhere>
-}
-
-export type GoalPulseInitiatedByCreateInput = {
-  Community?: InputMaybe<GoalPulseInitiatedByCommunityFieldInput>
-  Person?: InputMaybe<GoalPulseInitiatedByPersonFieldInput>
-}
-
-export type GoalPulseInitiatedByDeleteInput = {
-  Community?: InputMaybe<Array<GoalPulseInitiatedByCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<GoalPulseInitiatedByPersonDeleteFieldInput>>
-}
-
-export type GoalPulseInitiatedByPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type GoalPulseInitiatedByPersonConnectionWhere = {
-  AND?: InputMaybe<Array<GoalPulseInitiatedByPersonConnectionWhere>>
-  NOT?: InputMaybe<GoalPulseInitiatedByPersonConnectionWhere>
-  OR?: InputMaybe<Array<GoalPulseInitiatedByPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type GoalPulseInitiatedByPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type GoalPulseInitiatedByPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<GoalPulseInitiatedByPersonConnectionWhere>
-}
-
-export type GoalPulseInitiatedByPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<GoalPulseInitiatedByPersonConnectionWhere>
-}
-
-export type GoalPulseInitiatedByPersonFieldInput = {
-  connect?: InputMaybe<Array<GoalPulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<GoalPulseInitiatedByPersonCreateFieldInput>>
-}
-
-export type GoalPulseInitiatedByPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<GoalPulseInitiatedByPersonConnectionWhere>
-}
-
-export type GoalPulseInitiatedByPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<GoalPulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<GoalPulseInitiatedByPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<GoalPulseInitiatedByPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<GoalPulseInitiatedByPersonDisconnectFieldInput>>
-  update?: InputMaybe<GoalPulseInitiatedByPersonUpdateConnectionInput>
-}
-
-export type GoalPulseInitiatedByRelationship = {
-  __typename?: 'GoalPulseInitiatedByRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
-}
-
-export type GoalPulseInitiatedByUpdateInput = {
-  Community?: InputMaybe<Array<GoalPulseInitiatedByCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<GoalPulseInitiatedByPersonUpdateFieldInput>>
+export type GoalPulsePersonCreatedByNodeAggregateSelection = {
+  __typename?: 'GoalPulsePersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort GoalPulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one GoalPulseSort object. */
@@ -2011,8 +3203,8 @@ export type GoalPulseUpdateInput = {
   content_SET?: InputMaybe<Scalars['String']['input']>
   context?: InputMaybe<Array<GoalPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  createdBy?: InputMaybe<Array<GoalPulseCreatedByUpdateFieldInput>>
   horizon_SET?: InputMaybe<GoalHorizon>
-  initiatedBy?: InputMaybe<GoalPulseInitiatedByUpdateInput>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -2054,6 +3246,23 @@ export type GoalPulseWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<GoalPulseCreatedByAggregateInput>
+  /** Return GoalPulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return GoalPulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return GoalPulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return GoalPulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return GoalPulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return GoalPulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return GoalPulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return GoalPulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
   horizon_EQ?: InputMaybe<GoalHorizon>
   horizon_IN?: InputMaybe<Array<InputMaybe<GoalHorizon>>>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
@@ -2061,22 +3270,6 @@ export type GoalPulseWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  /** Return GoalPulses where all of the related GoalPulseInitiatedByConnections match this filter */
-  initiatedByConnection_ALL?: InputMaybe<GoalPulseInitiatedByConnectionWhere>
-  /** Return GoalPulses where none of the related GoalPulseInitiatedByConnections match this filter */
-  initiatedByConnection_NONE?: InputMaybe<GoalPulseInitiatedByConnectionWhere>
-  /** Return GoalPulses where one of the related GoalPulseInitiatedByConnections match this filter */
-  initiatedByConnection_SINGLE?: InputMaybe<GoalPulseInitiatedByConnectionWhere>
-  /** Return GoalPulses where some of the related GoalPulseInitiatedByConnections match this filter */
-  initiatedByConnection_SOME?: InputMaybe<GoalPulseInitiatedByConnectionWhere>
-  /** Return GoalPulses where all of the related LifeSensors match this filter */
-  initiatedBy_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return GoalPulses where none of the related LifeSensors match this filter */
-  initiatedBy_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return GoalPulses where one of the related LifeSensors match this filter */
-  initiatedBy_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return GoalPulses where some of the related LifeSensors match this filter */
-  initiatedBy_SOME?: InputMaybe<LifeSensorWhere>
   intensity_EQ?: InputMaybe<Scalars['Float']['input']>
   intensity_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2127,22 +3320,25 @@ export type LifeSensorWhere = {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpace = Space & {
   __typename?: 'MeSpace'
   contexts: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextsConnection" instead */
   contextsAggregate?: Maybe<MeSpaceFieldContextContextsAggregationSelection>
-  contextsConnection: MeSpaceContextsConnection
+  contextsConnection: SpaceContextsConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
   members: Array<SpaceMembership>
   /** @deprecated Please use field "aggregate" inside "membersConnection" instead */
   membersAggregate?: Maybe<MeSpaceSpaceMembershipMembersAggregationSelection>
-  membersConnection: MeSpaceMembersConnection
+  membersConnection: SpaceMembersConnection
   name: Scalars['String']['output']
-  owner: Array<LifeSensor>
-  ownerConnection: MeSpaceOwnerConnection
+  owner: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "ownerConnection" instead */
+  ownerAggregate?: Maybe<MeSpacePersonOwnerAggregationSelection>
+  ownerConnection: SpaceOwnerConnection
   visibility: SpaceVisibility
 }
 
@@ -2150,6 +3346,7 @@ export type MeSpace = Space & {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceContextsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -2162,6 +3359,7 @@ export type MeSpaceContextsArgs = {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceContextsAggregateArgs = {
   where?: InputMaybe<FieldContextWhere>
@@ -2171,18 +3369,20 @@ export type MeSpaceContextsAggregateArgs = {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceContextsConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<MeSpaceContextsConnectionSort>>
-  where?: InputMaybe<MeSpaceContextsConnectionWhere>
+  sort?: InputMaybe<Array<SpaceContextsConnectionSort>>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 /**
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -2195,6 +3395,7 @@ export type MeSpaceMembersArgs = {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceMembersAggregateArgs = {
   where?: InputMaybe<SpaceMembershipWhere>
@@ -2204,34 +3405,49 @@ export type MeSpaceMembersAggregateArgs = {
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceMembersConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<MeSpaceMembersConnectionSort>>
-  where?: InputMaybe<MeSpaceMembersConnectionWhere>
+  sort?: InputMaybe<Array<SpaceMembersConnectionSort>>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 /**
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceOwnerArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
  * A personal space owned by one person or community.
  * Can be private (only owner) or shared with specific members.
  * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
+ */
+export type MeSpaceOwnerAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A personal space owned by one person or community.
+ * Can be private (only owner) or shared with specific members.
+ * Multi-label: ["Space", "MeSpace"]
+ * Authorization: Only the owner can view, create, update, or delete a MeSpace.
  */
 export type MeSpaceOwnerConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<MeSpaceOwnerConnectionWhere>
+  sort?: InputMaybe<Array<SpaceOwnerConnectionSort>>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type MeSpaceAggregate = {
@@ -2257,6 +3473,16 @@ export type MeSpaceAggregateSelection = {
   name: StringAggregateSelection
 }
 
+export type MeSpaceConnectInput = {
+  contexts?: InputMaybe<Array<MeSpaceContextsConnectFieldInput>>
+  members?: InputMaybe<Array<MeSpaceMembersConnectFieldInput>>
+  owner?: InputMaybe<Array<MeSpaceOwnerConnectFieldInput>>
+}
+
+export type MeSpaceConnectWhere = {
+  node: MeSpaceWhere
+}
+
 export type MeSpaceContextsAggregateInput = {
   AND?: InputMaybe<Array<MeSpaceContextsAggregateInput>>
   NOT?: InputMaybe<MeSpaceContextsAggregateInput>
@@ -2274,37 +3500,8 @@ export type MeSpaceContextsConnectFieldInput = {
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
-export type MeSpaceContextsConnection = {
-  __typename?: 'MeSpaceContextsConnection'
-  aggregate: MeSpaceFieldContextContextsAggregateSelection
-  edges: Array<MeSpaceContextsRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type MeSpaceContextsConnectionSort = {
-  node?: InputMaybe<FieldContextSort>
-}
-
-export type MeSpaceContextsConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceContextsConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceContextsConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceContextsConnectionWhere>>
-  node?: InputMaybe<FieldContextWhere>
-}
-
 export type MeSpaceContextsCreateFieldInput = {
   node: FieldContextCreateInput
-}
-
-export type MeSpaceContextsDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<MeSpaceContextsConnectionWhere>
-}
-
-export type MeSpaceContextsDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<MeSpaceContextsConnectionWhere>
 }
 
 export type MeSpaceContextsFieldInput = {
@@ -2358,22 +3555,16 @@ export type MeSpaceContextsNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type MeSpaceContextsRelationship = {
-  __typename?: 'MeSpaceContextsRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldContext
-}
-
 export type MeSpaceContextsUpdateConnectionInput = {
   node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<MeSpaceContextsConnectionWhere>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type MeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<MeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<MeSpaceContextsCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceContextsDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceContextsDisconnectFieldInput>>
+  delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceContextsUpdateConnectionInput>
 }
 
@@ -2382,26 +3573,26 @@ export type MeSpaceCreateInput = {
   createdAt: Scalars['DateTime']['input']
   members?: InputMaybe<MeSpaceMembersFieldInput>
   name: Scalars['String']['input']
-  owner?: InputMaybe<MeSpaceOwnerCreateInput>
+  owner?: InputMaybe<MeSpaceOwnerFieldInput>
   visibility: SpaceVisibility
 }
 
 export type MeSpaceDeleteInput = {
-  contexts?: InputMaybe<Array<MeSpaceContextsDeleteFieldInput>>
-  members?: InputMaybe<Array<MeSpaceMembersDeleteFieldInput>>
-  owner?: InputMaybe<MeSpaceOwnerDeleteInput>
+  contexts?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+}
+
+export type MeSpaceDisconnectInput = {
+  contexts?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
 }
 
 export type MeSpaceEdge = {
   __typename?: 'MeSpaceEdge'
   cursor: Scalars['String']['output']
   node: MeSpace
-}
-
-export type MeSpaceFieldContextContextsAggregateSelection = {
-  __typename?: 'MeSpaceFieldContextContextsAggregateSelection'
-  count: CountConnection
-  node?: Maybe<MeSpaceFieldContextContextsNodeAggregateSelection>
 }
 
 export type MeSpaceFieldContextContextsAggregationSelection = {
@@ -2436,37 +3627,8 @@ export type MeSpaceMembersConnectFieldInput = {
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
-export type MeSpaceMembersConnection = {
-  __typename?: 'MeSpaceMembersConnection'
-  aggregate: MeSpaceSpaceMembershipMembersAggregateSelection
-  edges: Array<MeSpaceMembersRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type MeSpaceMembersConnectionSort = {
-  node?: InputMaybe<SpaceMembershipSort>
-}
-
-export type MeSpaceMembersConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceMembersConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceMembersConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceMembersConnectionWhere>>
-  node?: InputMaybe<SpaceMembershipWhere>
-}
-
 export type MeSpaceMembersCreateFieldInput = {
   node: SpaceMembershipCreateInput
-}
-
-export type MeSpaceMembersDeleteFieldInput = {
-  delete?: InputMaybe<SpaceMembershipDeleteInput>
-  where?: InputMaybe<MeSpaceMembersConnectionWhere>
-}
-
-export type MeSpaceMembersDisconnectFieldInput = {
-  disconnect?: InputMaybe<SpaceMembershipDisconnectInput>
-  where?: InputMaybe<MeSpaceMembersConnectionWhere>
 }
 
 export type MeSpaceMembersFieldInput = {
@@ -2490,144 +3652,122 @@ export type MeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
-export type MeSpaceMembersRelationship = {
-  __typename?: 'MeSpaceMembersRelationship'
-  cursor: Scalars['String']['output']
-  node: SpaceMembership
-}
-
 export type MeSpaceMembersUpdateConnectionInput = {
   node?: InputMaybe<SpaceMembershipUpdateInput>
-  where?: InputMaybe<MeSpaceMembersConnectionWhere>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type MeSpaceMembersUpdateFieldInput = {
   connect?: InputMaybe<Array<MeSpaceMembersConnectFieldInput>>
   create?: InputMaybe<Array<MeSpaceMembersCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceMembersDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceMembersDisconnectFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceMembersUpdateConnectionInput>
 }
 
-export type MeSpaceOwnerCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type MeSpaceOwnerAggregateInput = {
+  AND?: InputMaybe<Array<MeSpaceOwnerAggregateInput>>
+  NOT?: InputMaybe<MeSpaceOwnerAggregateInput>
+  OR?: InputMaybe<Array<MeSpaceOwnerAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<MeSpaceOwnerNodeAggregationWhereInput>
 }
 
-export type MeSpaceOwnerCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceOwnerCommunityConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceOwnerCommunityConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceOwnerCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type MeSpaceOwnerCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type MeSpaceOwnerCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<MeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type MeSpaceOwnerCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<MeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type MeSpaceOwnerCommunityFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceOwnerCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceOwnerCommunityCreateFieldInput>>
-}
-
-export type MeSpaceOwnerCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<MeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type MeSpaceOwnerCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceOwnerCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceOwnerCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceOwnerCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceOwnerCommunityDisconnectFieldInput>>
-  update?: InputMaybe<MeSpaceOwnerCommunityUpdateConnectionInput>
-}
-
-export type MeSpaceOwnerConnection = {
-  __typename?: 'MeSpaceOwnerConnection'
-  edges: Array<MeSpaceOwnerRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type MeSpaceOwnerConnectionWhere = {
-  Community?: InputMaybe<MeSpaceOwnerCommunityConnectionWhere>
-  Person?: InputMaybe<MeSpaceOwnerPersonConnectionWhere>
-}
-
-export type MeSpaceOwnerCreateInput = {
-  Community?: InputMaybe<MeSpaceOwnerCommunityFieldInput>
-  Person?: InputMaybe<MeSpaceOwnerPersonFieldInput>
-}
-
-export type MeSpaceOwnerDeleteInput = {
-  Community?: InputMaybe<Array<MeSpaceOwnerCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<MeSpaceOwnerPersonDeleteFieldInput>>
-}
-
-export type MeSpaceOwnerPersonConnectFieldInput = {
+export type MeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
   where?: InputMaybe<PersonConnectWhere>
 }
 
-export type MeSpaceOwnerPersonConnectionWhere = {
-  AND?: InputMaybe<Array<MeSpaceOwnerPersonConnectionWhere>>
-  NOT?: InputMaybe<MeSpaceOwnerPersonConnectionWhere>
-  OR?: InputMaybe<Array<MeSpaceOwnerPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type MeSpaceOwnerPersonCreateFieldInput = {
+export type MeSpaceOwnerCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type MeSpaceOwnerPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<MeSpaceOwnerPersonConnectionWhere>
+export type MeSpaceOwnerFieldInput = {
+  connect?: InputMaybe<Array<MeSpaceOwnerConnectFieldInput>>
+  create?: InputMaybe<Array<MeSpaceOwnerCreateFieldInput>>
 }
 
-export type MeSpaceOwnerPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<MeSpaceOwnerPersonConnectionWhere>
+export type MeSpaceOwnerNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<MeSpaceOwnerNodeAggregationWhereInput>>
+  NOT?: InputMaybe<MeSpaceOwnerNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<MeSpaceOwnerNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type MeSpaceOwnerPersonFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceOwnerPersonConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceOwnerPersonCreateFieldInput>>
-}
-
-export type MeSpaceOwnerPersonUpdateConnectionInput = {
+export type MeSpaceOwnerUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<MeSpaceOwnerPersonConnectionWhere>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
-export type MeSpaceOwnerPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<MeSpaceOwnerPersonConnectFieldInput>>
-  create?: InputMaybe<Array<MeSpaceOwnerPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<MeSpaceOwnerPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<MeSpaceOwnerPersonDisconnectFieldInput>>
-  update?: InputMaybe<MeSpaceOwnerPersonUpdateConnectionInput>
+export type MeSpaceOwnerUpdateFieldInput = {
+  connect?: InputMaybe<Array<MeSpaceOwnerConnectFieldInput>>
+  create?: InputMaybe<Array<MeSpaceOwnerCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
+  update?: InputMaybe<MeSpaceOwnerUpdateConnectionInput>
 }
 
-export type MeSpaceOwnerRelationship = {
-  __typename?: 'MeSpaceOwnerRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
+export type MeSpacePersonOwnerAggregationSelection = {
+  __typename?: 'MeSpacePersonOwnerAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<MeSpacePersonOwnerNodeAggregateSelection>
 }
 
-export type MeSpaceOwnerUpdateInput = {
-  Community?: InputMaybe<Array<MeSpaceOwnerCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<MeSpaceOwnerPersonUpdateFieldInput>>
+export type MeSpacePersonOwnerNodeAggregateSelection = {
+  __typename?: 'MeSpacePersonOwnerNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort MeSpaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one MeSpaceSort object. */
@@ -2636,12 +3776,6 @@ export type MeSpaceSort = {
   id?: InputMaybe<SortDirection>
   name?: InputMaybe<SortDirection>
   visibility?: InputMaybe<SortDirection>
-}
-
-export type MeSpaceSpaceMembershipMembersAggregateSelection = {
-  __typename?: 'MeSpaceSpaceMembershipMembersAggregateSelection'
-  count: CountConnection
-  node?: Maybe<MeSpaceSpaceMembershipMembersNodeAggregateSelection>
 }
 
 export type MeSpaceSpaceMembershipMembersAggregationSelection = {
@@ -2662,7 +3796,7 @@ export type MeSpaceUpdateInput = {
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   members?: InputMaybe<Array<MeSpaceMembersUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
-  owner?: InputMaybe<MeSpaceOwnerUpdateInput>
+  owner?: InputMaybe<Array<MeSpaceOwnerUpdateFieldInput>>
   visibility_SET?: InputMaybe<SpaceVisibility>
 }
 
@@ -2671,14 +3805,14 @@ export type MeSpaceWhere = {
   NOT?: InputMaybe<MeSpaceWhere>
   OR?: InputMaybe<Array<MeSpaceWhere>>
   contextsAggregate?: InputMaybe<MeSpaceContextsAggregateInput>
-  /** Return MeSpaces where all of the related MeSpaceContextsConnections match this filter */
-  contextsConnection_ALL?: InputMaybe<MeSpaceContextsConnectionWhere>
-  /** Return MeSpaces where none of the related MeSpaceContextsConnections match this filter */
-  contextsConnection_NONE?: InputMaybe<MeSpaceContextsConnectionWhere>
-  /** Return MeSpaces where one of the related MeSpaceContextsConnections match this filter */
-  contextsConnection_SINGLE?: InputMaybe<MeSpaceContextsConnectionWhere>
-  /** Return MeSpaces where some of the related MeSpaceContextsConnections match this filter */
-  contextsConnection_SOME?: InputMaybe<MeSpaceContextsConnectionWhere>
+  /** Return MeSpaces where all of the related SpaceContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return MeSpaces where none of the related SpaceContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return MeSpaces where one of the related SpaceContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return MeSpaces where some of the related SpaceContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<SpaceContextsConnectionWhere>
   /** Return MeSpaces where all of the related FieldContexts match this filter */
   contexts_ALL?: InputMaybe<FieldContextWhere>
   /** Return MeSpaces where none of the related FieldContexts match this filter */
@@ -2699,14 +3833,14 @@ export type MeSpaceWhere = {
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
   membersAggregate?: InputMaybe<MeSpaceMembersAggregateInput>
-  /** Return MeSpaces where all of the related MeSpaceMembersConnections match this filter */
-  membersConnection_ALL?: InputMaybe<MeSpaceMembersConnectionWhere>
-  /** Return MeSpaces where none of the related MeSpaceMembersConnections match this filter */
-  membersConnection_NONE?: InputMaybe<MeSpaceMembersConnectionWhere>
-  /** Return MeSpaces where one of the related MeSpaceMembersConnections match this filter */
-  membersConnection_SINGLE?: InputMaybe<MeSpaceMembersConnectionWhere>
-  /** Return MeSpaces where some of the related MeSpaceMembersConnections match this filter */
-  membersConnection_SOME?: InputMaybe<MeSpaceMembersConnectionWhere>
+  /** Return MeSpaces where all of the related SpaceMembersConnections match this filter */
+  membersConnection_ALL?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return MeSpaces where none of the related SpaceMembersConnections match this filter */
+  membersConnection_NONE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return MeSpaces where one of the related SpaceMembersConnections match this filter */
+  membersConnection_SINGLE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return MeSpaces where some of the related SpaceMembersConnections match this filter */
+  membersConnection_SOME?: InputMaybe<SpaceMembersConnectionWhere>
   /** Return MeSpaces where all of the related SpaceMemberships match this filter */
   members_ALL?: InputMaybe<SpaceMembershipWhere>
   /** Return MeSpaces where none of the related SpaceMemberships match this filter */
@@ -2720,22 +3854,23 @@ export type MeSpaceWhere = {
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  /** Return MeSpaces where all of the related MeSpaceOwnerConnections match this filter */
-  ownerConnection_ALL?: InputMaybe<MeSpaceOwnerConnectionWhere>
-  /** Return MeSpaces where none of the related MeSpaceOwnerConnections match this filter */
-  ownerConnection_NONE?: InputMaybe<MeSpaceOwnerConnectionWhere>
-  /** Return MeSpaces where one of the related MeSpaceOwnerConnections match this filter */
-  ownerConnection_SINGLE?: InputMaybe<MeSpaceOwnerConnectionWhere>
-  /** Return MeSpaces where some of the related MeSpaceOwnerConnections match this filter */
-  ownerConnection_SOME?: InputMaybe<MeSpaceOwnerConnectionWhere>
-  /** Return MeSpaces where all of the related LifeSensors match this filter */
-  owner_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where none of the related LifeSensors match this filter */
-  owner_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where one of the related LifeSensors match this filter */
-  owner_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return MeSpaces where some of the related LifeSensors match this filter */
-  owner_SOME?: InputMaybe<LifeSensorWhere>
+  ownerAggregate?: InputMaybe<MeSpaceOwnerAggregateInput>
+  /** Return MeSpaces where all of the related SpaceOwnerConnections match this filter */
+  ownerConnection_ALL?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return MeSpaces where none of the related SpaceOwnerConnections match this filter */
+  ownerConnection_NONE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return MeSpaces where one of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SINGLE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return MeSpaces where some of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SOME?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return MeSpaces where all of the related People match this filter */
+  owner_ALL?: InputMaybe<PersonWhere>
+  /** Return MeSpaces where none of the related People match this filter */
+  owner_NONE?: InputMaybe<PersonWhere>
+  /** Return MeSpaces where one of the related People match this filter */
+  owner_SINGLE?: InputMaybe<PersonWhere>
+  /** Return MeSpaces where some of the related People match this filter */
+  owner_SOME?: InputMaybe<PersonWhere>
   visibility_EQ?: InputMaybe<SpaceVisibility>
   visibility_IN?: InputMaybe<Array<SpaceVisibility>>
 }
@@ -2769,7 +3904,6 @@ export type Mutation = {
   createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
   createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
-  createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
   createSearchResults: CreateSearchResultsMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
@@ -2785,7 +3919,6 @@ export type Mutation = {
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
   deleteRemoveSpaceMemberResponses: DeleteInfo
-  deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
   deleteSearchResults: DeleteInfo
   deleteSpaceMemberships: DeleteInfo
@@ -2817,7 +3950,6 @@ export type Mutation = {
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
-  updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
   updateSearchResults: UpdateSearchResultsMutationResponse
   /**
@@ -2877,10 +4009,6 @@ export type MutationCreateRemoveSpaceMemberResponsesArgs = {
   input: Array<RemoveSpaceMemberResponseCreateInput>
 }
 
-export type MutationCreateResonanceLinksArgs = {
-  input: Array<ResonanceLinkCreateInput>
-}
-
 export type MutationCreateResourcePulsesArgs = {
   input: Array<ResourcePulseCreateInput>
 }
@@ -2924,6 +4052,7 @@ export type MutationDeleteFieldContextsArgs = {
 }
 
 export type MutationDeleteFieldResonancesArgs = {
+  delete?: InputMaybe<FieldResonanceDeleteInput>
   where?: InputMaybe<FieldResonanceWhere>
 }
 
@@ -2944,11 +4073,6 @@ export type MutationDeletePeopleArgs = {
 
 export type MutationDeleteRemoveSpaceMemberResponsesArgs = {
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
-}
-
-export type MutationDeleteResonanceLinksArgs = {
-  delete?: InputMaybe<ResonanceLinkDeleteInput>
-  where?: InputMaybe<ResonanceLinkWhere>
 }
 
 export type MutationDeleteResourcePulsesArgs = {
@@ -3036,11 +4160,6 @@ export type MutationUpdatePeopleArgs = {
 export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
   update?: InputMaybe<RemoveSpaceMemberResponseUpdateInput>
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
-}
-
-export type MutationUpdateResonanceLinksArgs = {
-  update?: InputMaybe<ResonanceLinkUpdateInput>
-  where?: InputMaybe<ResonanceLinkWhere>
 }
 
 export type MutationUpdateResourcePulsesArgs = {
@@ -3210,6 +4329,7 @@ export type PersonOwnsSpacesAggregateInput = {
 }
 
 export type PersonOwnsSpacesConnectFieldInput = {
+  connect?: InputMaybe<SpaceConnectInput>
   where?: InputMaybe<SpaceConnectWhere>
 }
 
@@ -3237,10 +4357,12 @@ export type PersonOwnsSpacesCreateFieldInput = {
 }
 
 export type PersonOwnsSpacesDeleteFieldInput = {
+  delete?: InputMaybe<SpaceDeleteInput>
   where?: InputMaybe<PersonOwnsSpacesConnectionWhere>
 }
 
 export type PersonOwnsSpacesDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceDisconnectInput>
   where?: InputMaybe<PersonOwnsSpacesConnectionWhere>
 }
 
@@ -3420,10 +4542,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "removeSpaceMemberResponsesConnection" instead */
   removeSpaceMemberResponsesAggregate: RemoveSpaceMemberResponseAggregateSelection
   removeSpaceMemberResponsesConnection: RemoveSpaceMemberResponsesConnection
-  resonanceLinks: Array<ResonanceLink>
-  /** @deprecated Please use the explicit field "aggregate" inside "resonanceLinksConnection" instead */
-  resonanceLinksAggregate: ResonanceLinkAggregateSelection
-  resonanceLinksConnection: ResonanceLinksConnection
   resourcePulses: Array<ResourcePulse>
   /** @deprecated Please use the explicit field "aggregate" inside "resourcePulsesConnection" instead */
   resourcePulsesAggregate: ResourcePulseAggregateSelection
@@ -3659,24 +4777,6 @@ export type QueryRemoveSpaceMemberResponsesConnectionArgs = {
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
 }
 
-export type QueryResonanceLinksArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkSort>>
-  where?: InputMaybe<ResonanceLinkWhere>
-}
-
-export type QueryResonanceLinksAggregateArgs = {
-  where?: InputMaybe<ResonanceLinkWhere>
-}
-
-export type QueryResonanceLinksConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkSort>>
-  where?: InputMaybe<ResonanceLinkWhere>
-}
-
 export type QueryResourcePulsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -3872,907 +4972,6 @@ export type RemoveSpaceMemberResponsesConnection = {
 }
 
 /**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLink = {
-  __typename?: 'ResonanceLink'
-  confidence: Scalars['Float']['output']
-  createdAt: Scalars['DateTime']['output']
-  detectedBy: Array<LifeSensor>
-  detectedByConnection: ResonanceLinkDetectedByConnection
-  evidence?: Maybe<Scalars['String']['output']>
-  id: Scalars['ID']['output']
-  resonance: Array<FieldResonance>
-  /** @deprecated Please use field "aggregate" inside "resonanceConnection" instead */
-  resonanceAggregate?: Maybe<ResonanceLinkFieldResonanceResonanceAggregationSelection>
-  resonanceConnection: ResonanceLinkResonanceConnection
-  source: Array<FieldPulse>
-  /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
-  sourceAggregate?: Maybe<ResonanceLinkFieldPulseSourceAggregationSelection>
-  sourceConnection: ResonanceLinkSourceConnection
-  target: Array<FieldPulse>
-  /** @deprecated Please use field "aggregate" inside "targetConnection" instead */
-  targetAggregate?: Maybe<ResonanceLinkFieldPulseTargetAggregationSelection>
-  targetConnection: ResonanceLinkTargetConnection
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkDetectedByArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkDetectedByConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<ResonanceLinkDetectedByConnectionWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkResonanceArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceSort>>
-  where?: InputMaybe<FieldResonanceWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkResonanceAggregateArgs = {
-  where?: InputMaybe<FieldResonanceWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkResonanceConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkResonanceConnectionSort>>
-  where?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkSourceArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldPulseSort>>
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkSourceAggregateArgs = {
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkSourceConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkSourceConnectionSort>>
-  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkTargetArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldPulseSort>>
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkTargetAggregateArgs = {
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A justified resonance connection between two pulses.
- * This is the explainability layer for AI-generated insights.
- * Label: ["ResonanceLink"]
- */
-export type ResonanceLinkTargetConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkTargetConnectionSort>>
-  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-}
-
-export type ResonanceLinkAggregate = {
-  __typename?: 'ResonanceLinkAggregate'
-  count: Count
-  node: ResonanceLinkAggregateNode
-}
-
-export type ResonanceLinkAggregateNode = {
-  __typename?: 'ResonanceLinkAggregateNode'
-  confidence: FloatAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  evidence: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-}
-
-export type ResonanceLinkAggregateSelection = {
-  __typename?: 'ResonanceLinkAggregateSelection'
-  confidence: FloatAggregateSelection
-  count: Scalars['Int']['output']
-  createdAt: DateTimeAggregateSelection
-  evidence: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-}
-
-export type ResonanceLinkCreateInput = {
-  confidence: Scalars['Float']['input']
-  createdAt: Scalars['DateTime']['input']
-  detectedBy?: InputMaybe<ResonanceLinkDetectedByCreateInput>
-  evidence?: InputMaybe<Scalars['String']['input']>
-  resonance?: InputMaybe<ResonanceLinkResonanceFieldInput>
-  source?: InputMaybe<ResonanceLinkSourceFieldInput>
-  target?: InputMaybe<ResonanceLinkTargetFieldInput>
-}
-
-export type ResonanceLinkDeleteInput = {
-  detectedBy?: InputMaybe<ResonanceLinkDetectedByDeleteInput>
-  resonance?: InputMaybe<Array<ResonanceLinkResonanceDeleteFieldInput>>
-  source?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
-  target?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
-}
-
-export type ResonanceLinkDetectedByCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
-}
-
-export type ResonanceLinkDetectedByCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkDetectedByCommunityConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkDetectedByCommunityConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkDetectedByCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type ResonanceLinkDetectedByCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type ResonanceLinkDetectedByCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<ResonanceLinkDetectedByCommunityConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<ResonanceLinkDetectedByCommunityConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByCommunityFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkDetectedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkDetectedByCommunityCreateFieldInput>>
-}
-
-export type ResonanceLinkDetectedByCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<ResonanceLinkDetectedByCommunityConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkDetectedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkDetectedByCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkDetectedByCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<ResonanceLinkDetectedByCommunityDisconnectFieldInput>
-  >
-  update?: InputMaybe<ResonanceLinkDetectedByCommunityUpdateConnectionInput>
-}
-
-export type ResonanceLinkDetectedByConnection = {
-  __typename?: 'ResonanceLinkDetectedByConnection'
-  edges: Array<ResonanceLinkDetectedByRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResonanceLinkDetectedByConnectionWhere = {
-  Community?: InputMaybe<ResonanceLinkDetectedByCommunityConnectionWhere>
-  Person?: InputMaybe<ResonanceLinkDetectedByPersonConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByCreateInput = {
-  Community?: InputMaybe<ResonanceLinkDetectedByCommunityFieldInput>
-  Person?: InputMaybe<ResonanceLinkDetectedByPersonFieldInput>
-}
-
-export type ResonanceLinkDetectedByDeleteInput = {
-  Community?: InputMaybe<
-    Array<ResonanceLinkDetectedByCommunityDeleteFieldInput>
-  >
-  Person?: InputMaybe<Array<ResonanceLinkDetectedByPersonDeleteFieldInput>>
-}
-
-export type ResonanceLinkDetectedByPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type ResonanceLinkDetectedByPersonConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkDetectedByPersonConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkDetectedByPersonConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkDetectedByPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type ResonanceLinkDetectedByPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type ResonanceLinkDetectedByPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<ResonanceLinkDetectedByPersonConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<ResonanceLinkDetectedByPersonConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByPersonFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkDetectedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkDetectedByPersonCreateFieldInput>>
-}
-
-export type ResonanceLinkDetectedByPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<ResonanceLinkDetectedByPersonConnectionWhere>
-}
-
-export type ResonanceLinkDetectedByPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkDetectedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkDetectedByPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkDetectedByPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<ResonanceLinkDetectedByPersonDisconnectFieldInput>
-  >
-  update?: InputMaybe<ResonanceLinkDetectedByPersonUpdateConnectionInput>
-}
-
-export type ResonanceLinkDetectedByRelationship = {
-  __typename?: 'ResonanceLinkDetectedByRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
-}
-
-export type ResonanceLinkDetectedByUpdateInput = {
-  Community?: InputMaybe<
-    Array<ResonanceLinkDetectedByCommunityUpdateFieldInput>
-  >
-  Person?: InputMaybe<Array<ResonanceLinkDetectedByPersonUpdateFieldInput>>
-}
-
-export type ResonanceLinkEdge = {
-  __typename?: 'ResonanceLinkEdge'
-  cursor: Scalars['String']['output']
-  node: ResonanceLink
-}
-
-export type ResonanceLinkFieldPulseSourceAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldPulseSourceAggregateSelection'
-  count: CountConnection
-  node?: Maybe<ResonanceLinkFieldPulseSourceNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldPulseSourceAggregationSelection = {
-  __typename?: 'ResonanceLinkFieldPulseSourceAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<ResonanceLinkFieldPulseSourceNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldPulseSourceNodeAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldPulseSourceNodeAggregateSelection'
-  content: StringAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  intensity: FloatAggregateSelection
-  title: StringAggregateSelection
-}
-
-export type ResonanceLinkFieldPulseTargetAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldPulseTargetAggregateSelection'
-  count: CountConnection
-  node?: Maybe<ResonanceLinkFieldPulseTargetNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldPulseTargetAggregationSelection = {
-  __typename?: 'ResonanceLinkFieldPulseTargetAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<ResonanceLinkFieldPulseTargetNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldPulseTargetNodeAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldPulseTargetNodeAggregateSelection'
-  content: StringAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  intensity: FloatAggregateSelection
-  title: StringAggregateSelection
-}
-
-export type ResonanceLinkFieldResonanceResonanceAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldResonanceResonanceAggregateSelection'
-  count: CountConnection
-  node?: Maybe<ResonanceLinkFieldResonanceResonanceNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldResonanceResonanceAggregationSelection = {
-  __typename?: 'ResonanceLinkFieldResonanceResonanceAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<ResonanceLinkFieldResonanceResonanceNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldResonanceResonanceNodeAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldResonanceResonanceNodeAggregateSelection'
-  description: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  label: StringAggregateSelection
-}
-
-export type ResonanceLinkResonanceAggregateInput = {
-  AND?: InputMaybe<Array<ResonanceLinkResonanceAggregateInput>>
-  NOT?: InputMaybe<ResonanceLinkResonanceAggregateInput>
-  OR?: InputMaybe<Array<ResonanceLinkResonanceAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<ResonanceLinkResonanceNodeAggregationWhereInput>
-}
-
-export type ResonanceLinkResonanceConnectFieldInput = {
-  where?: InputMaybe<FieldResonanceConnectWhere>
-}
-
-export type ResonanceLinkResonanceConnection = {
-  __typename?: 'ResonanceLinkResonanceConnection'
-  aggregate: ResonanceLinkFieldResonanceResonanceAggregateSelection
-  edges: Array<ResonanceLinkResonanceRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResonanceLinkResonanceConnectionSort = {
-  node?: InputMaybe<FieldResonanceSort>
-}
-
-export type ResonanceLinkResonanceConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkResonanceConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkResonanceConnectionWhere>>
-  node?: InputMaybe<FieldResonanceWhere>
-}
-
-export type ResonanceLinkResonanceCreateFieldInput = {
-  node: FieldResonanceCreateInput
-}
-
-export type ResonanceLinkResonanceDeleteFieldInput = {
-  where?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-}
-
-export type ResonanceLinkResonanceDisconnectFieldInput = {
-  where?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-}
-
-export type ResonanceLinkResonanceFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkResonanceConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkResonanceCreateFieldInput>>
-}
-
-export type ResonanceLinkResonanceNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<ResonanceLinkResonanceNodeAggregationWhereInput>>
-  NOT?: InputMaybe<ResonanceLinkResonanceNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<ResonanceLinkResonanceNodeAggregationWhereInput>>
-  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  label_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type ResonanceLinkResonanceRelationship = {
-  __typename?: 'ResonanceLinkResonanceRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldResonance
-}
-
-export type ResonanceLinkResonanceUpdateConnectionInput = {
-  node?: InputMaybe<FieldResonanceUpdateInput>
-  where?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-}
-
-export type ResonanceLinkResonanceUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkResonanceConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkResonanceCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkResonanceDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<ResonanceLinkResonanceDisconnectFieldInput>>
-  update?: InputMaybe<ResonanceLinkResonanceUpdateConnectionInput>
-}
-
-/** Fields to sort ResonanceLinks by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResonanceLinkSort object. */
-export type ResonanceLinkSort = {
-  confidence?: InputMaybe<SortDirection>
-  createdAt?: InputMaybe<SortDirection>
-  evidence?: InputMaybe<SortDirection>
-  id?: InputMaybe<SortDirection>
-}
-
-export type ResonanceLinkSourceAggregateInput = {
-  AND?: InputMaybe<Array<ResonanceLinkSourceAggregateInput>>
-  NOT?: InputMaybe<ResonanceLinkSourceAggregateInput>
-  OR?: InputMaybe<Array<ResonanceLinkSourceAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<ResonanceLinkSourceNodeAggregationWhereInput>
-}
-
-export type ResonanceLinkSourceConnectFieldInput = {
-  connect?: InputMaybe<FieldPulseConnectInput>
-  where?: InputMaybe<FieldPulseConnectWhere>
-}
-
-export type ResonanceLinkSourceConnection = {
-  __typename?: 'ResonanceLinkSourceConnection'
-  aggregate: ResonanceLinkFieldPulseSourceAggregateSelection
-  edges: Array<ResonanceLinkSourceRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResonanceLinkSourceConnectionSort = {
-  node?: InputMaybe<FieldPulseSort>
-}
-
-export type ResonanceLinkSourceConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkSourceConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkSourceConnectionWhere>>
-  node?: InputMaybe<FieldPulseWhere>
-}
-
-export type ResonanceLinkSourceCreateFieldInput = {
-  node: FieldPulseCreateInput
-}
-
-export type ResonanceLinkSourceDeleteFieldInput = {
-  delete?: InputMaybe<FieldPulseDeleteInput>
-  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-}
-
-export type ResonanceLinkSourceDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldPulseDisconnectInput>
-  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-}
-
-export type ResonanceLinkSourceFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkSourceCreateFieldInput>>
-}
-
-export type ResonanceLinkSourceNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<ResonanceLinkSourceNodeAggregationWhereInput>>
-  NOT?: InputMaybe<ResonanceLinkSourceNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<ResonanceLinkSourceNodeAggregationWhereInput>>
-  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type ResonanceLinkSourceRelationship = {
-  __typename?: 'ResonanceLinkSourceRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldPulse
-}
-
-export type ResonanceLinkSourceUpdateConnectionInput = {
-  node?: InputMaybe<FieldPulseUpdateInput>
-  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-}
-
-export type ResonanceLinkSourceUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkSourceCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
-  update?: InputMaybe<ResonanceLinkSourceUpdateConnectionInput>
-}
-
-export type ResonanceLinkTargetAggregateInput = {
-  AND?: InputMaybe<Array<ResonanceLinkTargetAggregateInput>>
-  NOT?: InputMaybe<ResonanceLinkTargetAggregateInput>
-  OR?: InputMaybe<Array<ResonanceLinkTargetAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<ResonanceLinkTargetNodeAggregationWhereInput>
-}
-
-export type ResonanceLinkTargetConnectFieldInput = {
-  connect?: InputMaybe<FieldPulseConnectInput>
-  where?: InputMaybe<FieldPulseConnectWhere>
-}
-
-export type ResonanceLinkTargetConnection = {
-  __typename?: 'ResonanceLinkTargetConnection'
-  aggregate: ResonanceLinkFieldPulseTargetAggregateSelection
-  edges: Array<ResonanceLinkTargetRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResonanceLinkTargetConnectionSort = {
-  node?: InputMaybe<FieldPulseSort>
-}
-
-export type ResonanceLinkTargetConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkTargetConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkTargetConnectionWhere>>
-  node?: InputMaybe<FieldPulseWhere>
-}
-
-export type ResonanceLinkTargetCreateFieldInput = {
-  node: FieldPulseCreateInput
-}
-
-export type ResonanceLinkTargetDeleteFieldInput = {
-  delete?: InputMaybe<FieldPulseDeleteInput>
-  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-}
-
-export type ResonanceLinkTargetDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldPulseDisconnectInput>
-  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-}
-
-export type ResonanceLinkTargetFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkTargetCreateFieldInput>>
-}
-
-export type ResonanceLinkTargetNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<ResonanceLinkTargetNodeAggregationWhereInput>>
-  NOT?: InputMaybe<ResonanceLinkTargetNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<ResonanceLinkTargetNodeAggregationWhereInput>>
-  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type ResonanceLinkTargetRelationship = {
-  __typename?: 'ResonanceLinkTargetRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldPulse
-}
-
-export type ResonanceLinkTargetUpdateConnectionInput = {
-  node?: InputMaybe<FieldPulseUpdateInput>
-  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-}
-
-export type ResonanceLinkTargetUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkTargetCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
-  update?: InputMaybe<ResonanceLinkTargetUpdateConnectionInput>
-}
-
-export type ResonanceLinkUpdateInput = {
-  confidence_ADD?: InputMaybe<Scalars['Float']['input']>
-  confidence_DIVIDE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
-  confidence_SET?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
-  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  detectedBy?: InputMaybe<ResonanceLinkDetectedByUpdateInput>
-  evidence_SET?: InputMaybe<Scalars['String']['input']>
-  resonance?: InputMaybe<Array<ResonanceLinkResonanceUpdateFieldInput>>
-  source?: InputMaybe<Array<ResonanceLinkSourceUpdateFieldInput>>
-  target?: InputMaybe<Array<ResonanceLinkTargetUpdateFieldInput>>
-}
-
-export type ResonanceLinkWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkWhere>>
-  NOT?: InputMaybe<ResonanceLinkWhere>
-  OR?: InputMaybe<Array<ResonanceLinkWhere>>
-  confidence_EQ?: InputMaybe<Scalars['Float']['input']>
-  confidence_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_IN?: InputMaybe<Array<Scalars['Float']['input']>>
-  confidence_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_LTE?: InputMaybe<Scalars['Float']['input']>
-  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
-  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  /** Return ResonanceLinks where all of the related ResonanceLinkDetectedByConnections match this filter */
-  detectedByConnection_ALL?: InputMaybe<ResonanceLinkDetectedByConnectionWhere>
-  /** Return ResonanceLinks where none of the related ResonanceLinkDetectedByConnections match this filter */
-  detectedByConnection_NONE?: InputMaybe<ResonanceLinkDetectedByConnectionWhere>
-  /** Return ResonanceLinks where one of the related ResonanceLinkDetectedByConnections match this filter */
-  detectedByConnection_SINGLE?: InputMaybe<ResonanceLinkDetectedByConnectionWhere>
-  /** Return ResonanceLinks where some of the related ResonanceLinkDetectedByConnections match this filter */
-  detectedByConnection_SOME?: InputMaybe<ResonanceLinkDetectedByConnectionWhere>
-  /** Return ResonanceLinks where all of the related LifeSensors match this filter */
-  detectedBy_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return ResonanceLinks where none of the related LifeSensors match this filter */
-  detectedBy_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return ResonanceLinks where one of the related LifeSensors match this filter */
-  detectedBy_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return ResonanceLinks where some of the related LifeSensors match this filter */
-  detectedBy_SOME?: InputMaybe<LifeSensorWhere>
-  evidence_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  evidence_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  evidence_EQ?: InputMaybe<Scalars['String']['input']>
-  evidence_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  evidence_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
-  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
-  id_EQ?: InputMaybe<Scalars['ID']['input']>
-  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
-  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  resonanceAggregate?: InputMaybe<ResonanceLinkResonanceAggregateInput>
-  /** Return ResonanceLinks where all of the related ResonanceLinkResonanceConnections match this filter */
-  resonanceConnection_ALL?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-  /** Return ResonanceLinks where none of the related ResonanceLinkResonanceConnections match this filter */
-  resonanceConnection_NONE?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-  /** Return ResonanceLinks where one of the related ResonanceLinkResonanceConnections match this filter */
-  resonanceConnection_SINGLE?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-  /** Return ResonanceLinks where some of the related ResonanceLinkResonanceConnections match this filter */
-  resonanceConnection_SOME?: InputMaybe<ResonanceLinkResonanceConnectionWhere>
-  /** Return ResonanceLinks where all of the related FieldResonances match this filter */
-  resonance_ALL?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where none of the related FieldResonances match this filter */
-  resonance_NONE?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where one of the related FieldResonances match this filter */
-  resonance_SINGLE?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where some of the related FieldResonances match this filter */
-  resonance_SOME?: InputMaybe<FieldResonanceWhere>
-  sourceAggregate?: InputMaybe<ResonanceLinkSourceAggregateInput>
-  /** Return ResonanceLinks where all of the related ResonanceLinkSourceConnections match this filter */
-  sourceConnection_ALL?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-  /** Return ResonanceLinks where none of the related ResonanceLinkSourceConnections match this filter */
-  sourceConnection_NONE?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-  /** Return ResonanceLinks where one of the related ResonanceLinkSourceConnections match this filter */
-  sourceConnection_SINGLE?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-  /** Return ResonanceLinks where some of the related ResonanceLinkSourceConnections match this filter */
-  sourceConnection_SOME?: InputMaybe<ResonanceLinkSourceConnectionWhere>
-  /** Return ResonanceLinks where all of the related FieldPulses match this filter */
-  source_ALL?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where none of the related FieldPulses match this filter */
-  source_NONE?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where one of the related FieldPulses match this filter */
-  source_SINGLE?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where some of the related FieldPulses match this filter */
-  source_SOME?: InputMaybe<FieldPulseWhere>
-  targetAggregate?: InputMaybe<ResonanceLinkTargetAggregateInput>
-  /** Return ResonanceLinks where all of the related ResonanceLinkTargetConnections match this filter */
-  targetConnection_ALL?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-  /** Return ResonanceLinks where none of the related ResonanceLinkTargetConnections match this filter */
-  targetConnection_NONE?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-  /** Return ResonanceLinks where one of the related ResonanceLinkTargetConnections match this filter */
-  targetConnection_SINGLE?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-  /** Return ResonanceLinks where some of the related ResonanceLinkTargetConnections match this filter */
-  targetConnection_SOME?: InputMaybe<ResonanceLinkTargetConnectionWhere>
-  /** Return ResonanceLinks where all of the related FieldPulses match this filter */
-  target_ALL?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where none of the related FieldPulses match this filter */
-  target_NONE?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where one of the related FieldPulses match this filter */
-  target_SINGLE?: InputMaybe<FieldPulseWhere>
-  /** Return ResonanceLinks where some of the related FieldPulses match this filter */
-  target_SOME?: InputMaybe<FieldPulseWhere>
-}
-
-export type ResonanceLinksConnection = {
-  __typename?: 'ResonanceLinksConnection'
-  aggregate: ResonanceLinkAggregate
-  edges: Array<ResonanceLinkEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-/**
  * A pulse that functions as a resource in its context.
  * Multi-label: ["FieldPulse", "ResourcePulse"]
  */
@@ -4785,9 +4984,11 @@ export type ResourcePulse = FieldPulse & {
   contextAggregate?: Maybe<ResourcePulseFieldContextContextAggregationSelection>
   contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<ResourcePulsePersonCreatedByAggregationSelection>
+  createdByConnection: FieldPulseCreatedByConnection
   id: Scalars['ID']['output']
-  initiatedBy: Array<LifeSensor>
-  initiatedByConnection: ResourcePulseInitiatedByConnection
   intensity?: Maybe<Scalars['Float']['output']>
   resourceType: Scalars['String']['output']
   title: Scalars['String']['output']
@@ -4827,20 +5028,30 @@ export type ResourcePulseContextConnectionArgs = {
  * A pulse that functions as a resource in its context.
  * Multi-label: ["FieldPulse", "ResourcePulse"]
  */
-export type ResourcePulseInitiatedByArgs = {
+export type ResourcePulseCreatedByArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
  * A pulse that functions as a resource in its context.
  * Multi-label: ["FieldPulse", "ResourcePulse"]
  */
-export type ResourcePulseInitiatedByConnectionArgs = {
+export type ResourcePulseCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A pulse that functions as a resource in its context.
+ * Multi-label: ["FieldPulse", "ResourcePulse"]
+ */
+export type ResourcePulseCreatedByConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<ResourcePulseInitiatedByConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type ResourcePulseAggregate = {
@@ -4964,15 +5175,105 @@ export type ResourcePulseCreateInput = {
   content: Scalars['String']['input']
   context?: InputMaybe<ResourcePulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
-  initiatedBy?: InputMaybe<ResourcePulseInitiatedByCreateInput>
+  createdBy?: InputMaybe<ResourcePulseCreatedByFieldInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   resourceType: Scalars['String']['input']
   title: Scalars['String']['input']
 }
 
+export type ResourcePulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<ResourcePulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<ResourcePulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<ResourcePulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResourcePulseCreatedByNodeAggregationWhereInput>
+}
+
+export type ResourcePulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type ResourcePulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type ResourcePulseCreatedByFieldInput = {
+  connect?: InputMaybe<Array<ResourcePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<ResourcePulseCreatedByCreateFieldInput>>
+}
+
+export type ResourcePulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourcePulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourcePulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourcePulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResourcePulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type ResourcePulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourcePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<ResourcePulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<ResourcePulseCreatedByUpdateConnectionInput>
+}
+
 export type ResourcePulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
-  initiatedBy?: InputMaybe<ResourcePulseInitiatedByDeleteInput>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
 }
 
 export type ResourcePulseEdge = {
@@ -4996,137 +5297,19 @@ export type ResourcePulseFieldContextContextNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type ResourcePulseInitiatedByCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type ResourcePulsePersonCreatedByAggregationSelection = {
+  __typename?: 'ResourcePulsePersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResourcePulsePersonCreatedByNodeAggregateSelection>
 }
 
-export type ResourcePulseInitiatedByCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<ResourcePulseInitiatedByCommunityConnectionWhere>>
-  NOT?: InputMaybe<ResourcePulseInitiatedByCommunityConnectionWhere>
-  OR?: InputMaybe<Array<ResourcePulseInitiatedByCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type ResourcePulseInitiatedByCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type ResourcePulseInitiatedByCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<ResourcePulseInitiatedByCommunityConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<ResourcePulseInitiatedByCommunityConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByCommunityFieldInput = {
-  connect?: InputMaybe<
-    Array<ResourcePulseInitiatedByCommunityConnectFieldInput>
-  >
-  create?: InputMaybe<Array<ResourcePulseInitiatedByCommunityCreateFieldInput>>
-}
-
-export type ResourcePulseInitiatedByCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<ResourcePulseInitiatedByCommunityConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByCommunityUpdateFieldInput = {
-  connect?: InputMaybe<
-    Array<ResourcePulseInitiatedByCommunityConnectFieldInput>
-  >
-  create?: InputMaybe<Array<ResourcePulseInitiatedByCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<ResourcePulseInitiatedByCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<ResourcePulseInitiatedByCommunityDisconnectFieldInput>
-  >
-  update?: InputMaybe<ResourcePulseInitiatedByCommunityUpdateConnectionInput>
-}
-
-export type ResourcePulseInitiatedByConnection = {
-  __typename?: 'ResourcePulseInitiatedByConnection'
-  edges: Array<ResourcePulseInitiatedByRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResourcePulseInitiatedByConnectionWhere = {
-  Community?: InputMaybe<ResourcePulseInitiatedByCommunityConnectionWhere>
-  Person?: InputMaybe<ResourcePulseInitiatedByPersonConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByCreateInput = {
-  Community?: InputMaybe<ResourcePulseInitiatedByCommunityFieldInput>
-  Person?: InputMaybe<ResourcePulseInitiatedByPersonFieldInput>
-}
-
-export type ResourcePulseInitiatedByDeleteInput = {
-  Community?: InputMaybe<
-    Array<ResourcePulseInitiatedByCommunityDeleteFieldInput>
-  >
-  Person?: InputMaybe<Array<ResourcePulseInitiatedByPersonDeleteFieldInput>>
-}
-
-export type ResourcePulseInitiatedByPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type ResourcePulseInitiatedByPersonConnectionWhere = {
-  AND?: InputMaybe<Array<ResourcePulseInitiatedByPersonConnectionWhere>>
-  NOT?: InputMaybe<ResourcePulseInitiatedByPersonConnectionWhere>
-  OR?: InputMaybe<Array<ResourcePulseInitiatedByPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type ResourcePulseInitiatedByPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type ResourcePulseInitiatedByPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<ResourcePulseInitiatedByPersonConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<ResourcePulseInitiatedByPersonConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByPersonFieldInput = {
-  connect?: InputMaybe<Array<ResourcePulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<ResourcePulseInitiatedByPersonCreateFieldInput>>
-}
-
-export type ResourcePulseInitiatedByPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<ResourcePulseInitiatedByPersonConnectionWhere>
-}
-
-export type ResourcePulseInitiatedByPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResourcePulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<ResourcePulseInitiatedByPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<ResourcePulseInitiatedByPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<ResourcePulseInitiatedByPersonDisconnectFieldInput>
-  >
-  update?: InputMaybe<ResourcePulseInitiatedByPersonUpdateConnectionInput>
-}
-
-export type ResourcePulseInitiatedByRelationship = {
-  __typename?: 'ResourcePulseInitiatedByRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
-}
-
-export type ResourcePulseInitiatedByUpdateInput = {
-  Community?: InputMaybe<
-    Array<ResourcePulseInitiatedByCommunityUpdateFieldInput>
-  >
-  Person?: InputMaybe<Array<ResourcePulseInitiatedByPersonUpdateFieldInput>>
+export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
+  __typename?: 'ResourcePulsePersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort ResourcePulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResourcePulseSort object. */
@@ -5149,7 +5332,7 @@ export type ResourcePulseUpdateInput = {
   content_SET?: InputMaybe<Scalars['String']['input']>
   context?: InputMaybe<Array<ResourcePulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  initiatedBy?: InputMaybe<ResourcePulseInitiatedByUpdateInput>
+  createdBy?: InputMaybe<Array<ResourcePulseCreatedByUpdateFieldInput>>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -5197,27 +5380,28 @@ export type ResourcePulseWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<ResourcePulseCreatedByAggregateInput>
+  /** Return ResourcePulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return ResourcePulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return ResourcePulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return ResourcePulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return ResourcePulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return ResourcePulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return ResourcePulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return ResourcePulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  /** Return ResourcePulses where all of the related ResourcePulseInitiatedByConnections match this filter */
-  initiatedByConnection_ALL?: InputMaybe<ResourcePulseInitiatedByConnectionWhere>
-  /** Return ResourcePulses where none of the related ResourcePulseInitiatedByConnections match this filter */
-  initiatedByConnection_NONE?: InputMaybe<ResourcePulseInitiatedByConnectionWhere>
-  /** Return ResourcePulses where one of the related ResourcePulseInitiatedByConnections match this filter */
-  initiatedByConnection_SINGLE?: InputMaybe<ResourcePulseInitiatedByConnectionWhere>
-  /** Return ResourcePulses where some of the related ResourcePulseInitiatedByConnections match this filter */
-  initiatedByConnection_SOME?: InputMaybe<ResourcePulseInitiatedByConnectionWhere>
-  /** Return ResourcePulses where all of the related LifeSensors match this filter */
-  initiatedBy_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return ResourcePulses where none of the related LifeSensors match this filter */
-  initiatedBy_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return ResourcePulses where one of the related LifeSensors match this filter */
-  initiatedBy_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return ResourcePulses where some of the related LifeSensors match this filter */
-  initiatedBy_SOME?: InputMaybe<LifeSensorWhere>
   intensity_EQ?: InputMaybe<Scalars['Float']['input']>
   intensity_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5309,10 +5493,58 @@ export enum SortDirection {
 }
 
 export type Space = {
+  contexts: Array<FieldContext>
+  contextsConnection: SpaceContextsConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
+  members: Array<SpaceMembership>
+  membersConnection: SpaceMembersConnection
   name: Scalars['String']['output']
+  owner: Array<Person>
+  ownerConnection: SpaceOwnerConnection
   visibility: SpaceVisibility
+}
+
+export type SpaceContextsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+export type SpaceContextsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceContextsConnectionSort>>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
+}
+
+export type SpaceMembersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceMembershipSort>>
+  where?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type SpaceMembersConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceMembersConnectionSort>>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
+}
+
+export type SpaceOwnerArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+export type SpaceOwnerConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceOwnerConnectionSort>>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type SpaceAggregate = {
@@ -5338,13 +5570,145 @@ export type SpaceAggregateSelection = {
   name: StringAggregateSelection
 }
 
+export type SpaceConnectInput = {
+  contexts?: InputMaybe<Array<SpaceContextsConnectFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersConnectFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerConnectFieldInput>>
+}
+
 export type SpaceConnectWhere = {
   node: SpaceWhere
+}
+
+export type SpaceContextsAggregateInput = {
+  AND?: InputMaybe<Array<SpaceContextsAggregateInput>>
+  NOT?: InputMaybe<SpaceContextsAggregateInput>
+  OR?: InputMaybe<Array<SpaceContextsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceContextsNodeAggregationWhereInput>
+}
+
+export type SpaceContextsConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type SpaceContextsConnection = {
+  __typename?: 'SpaceContextsConnection'
+  edges: Array<SpaceContextsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type SpaceContextsConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type SpaceContextsConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceContextsConnectionWhere>>
+  NOT?: InputMaybe<SpaceContextsConnectionWhere>
+  OR?: InputMaybe<Array<SpaceContextsConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type SpaceContextsCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type SpaceContextsDeleteFieldInput = {
+  delete?: InputMaybe<FieldContextDeleteInput>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
+}
+
+export type SpaceContextsDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
+}
+
+export type SpaceContextsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceContextsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceContextsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceContextsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type SpaceContextsRelationship = {
+  __typename?: 'SpaceContextsRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type SpaceContextsUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
+}
+
+export type SpaceContextsUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceContextsConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceContextsCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
+  update?: InputMaybe<SpaceContextsUpdateConnectionInput>
 }
 
 export type SpaceCreateInput = {
   MeSpace?: InputMaybe<MeSpaceCreateInput>
   WeSpace?: InputMaybe<WeSpaceCreateInput>
+}
+
+export type SpaceDeleteInput = {
+  contexts?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+}
+
+export type SpaceDisconnectInput = {
+  contexts?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
 }
 
 export type SpaceEdge = {
@@ -5358,6 +5722,90 @@ export enum SpaceImplementation {
   WeSpace = 'WeSpace',
 }
 
+export type SpaceMembersAggregateInput = {
+  AND?: InputMaybe<Array<SpaceMembersAggregateInput>>
+  NOT?: InputMaybe<SpaceMembersAggregateInput>
+  OR?: InputMaybe<Array<SpaceMembersAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceMembersNodeAggregationWhereInput>
+}
+
+export type SpaceMembersConnectFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  where?: InputMaybe<SpaceMembershipConnectWhere>
+}
+
+export type SpaceMembersConnection = {
+  __typename?: 'SpaceMembersConnection'
+  edges: Array<SpaceMembersRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type SpaceMembersConnectionSort = {
+  node?: InputMaybe<SpaceMembershipSort>
+}
+
+export type SpaceMembersConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceMembersConnectionWhere>>
+  NOT?: InputMaybe<SpaceMembersConnectionWhere>
+  OR?: InputMaybe<Array<SpaceMembersConnectionWhere>>
+  node?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type SpaceMembersCreateFieldInput = {
+  node: SpaceMembershipCreateInput
+}
+
+export type SpaceMembersDeleteFieldInput = {
+  delete?: InputMaybe<SpaceMembershipDeleteInput>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
+}
+
+export type SpaceMembersDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceMembershipDisconnectInput>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
+}
+
+export type SpaceMembersNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceMembersNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceMembersNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceMembersNodeAggregationWhereInput>>
+  addedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type SpaceMembersRelationship = {
+  __typename?: 'SpaceMembersRelationship'
+  cursor: Scalars['String']['output']
+  node: SpaceMembership
+}
+
+export type SpaceMembersUpdateConnectionInput = {
+  node?: InputMaybe<SpaceMembershipUpdateInput>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
+}
+
+export type SpaceMembersUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembersConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembersCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
+  update?: InputMaybe<SpaceMembersUpdateConnectionInput>
+}
+
 /**
  * Represents a person or community as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
@@ -5366,7 +5814,9 @@ export type SpaceMembership = {
   __typename?: 'SpaceMembership'
   addedAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
-  member: Array<LifeSensor>
+  member: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "memberConnection" instead */
+  memberAggregate?: Maybe<SpaceMembershipPersonMemberAggregationSelection>
   memberConnection: SpaceMembershipMemberConnection
   role: SpaceRole
 }
@@ -5378,7 +5828,16 @@ export type SpaceMembership = {
 export type SpaceMembershipMemberArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Represents a person or community as a member of a space with a specific role.
+ * Label: ["SpaceMembership"]
+ */
+export type SpaceMembershipMemberAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
@@ -5388,6 +5847,7 @@ export type SpaceMembershipMemberArgs = {
 export type SpaceMembershipMemberConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceMembershipMemberConnectionSort>>
   where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
 }
 
@@ -5413,7 +5873,7 @@ export type SpaceMembershipAggregateSelection = {
 }
 
 export type SpaceMembershipConnectInput = {
-  member?: InputMaybe<SpaceMembershipMemberConnectInput>
+  member?: InputMaybe<Array<SpaceMembershipMemberConnectFieldInput>>
 }
 
 export type SpaceMembershipConnectWhere = {
@@ -5422,16 +5882,16 @@ export type SpaceMembershipConnectWhere = {
 
 export type SpaceMembershipCreateInput = {
   addedAt: Scalars['DateTime']['input']
-  member?: InputMaybe<SpaceMembershipMemberCreateInput>
+  member?: InputMaybe<SpaceMembershipMemberFieldInput>
   role: SpaceRole
 }
 
 export type SpaceMembershipDeleteInput = {
-  member?: InputMaybe<SpaceMembershipMemberDeleteInput>
+  member?: InputMaybe<Array<SpaceMembershipMemberDeleteFieldInput>>
 }
 
 export type SpaceMembershipDisconnectInput = {
-  member?: InputMaybe<SpaceMembershipMemberDisconnectInput>
+  member?: InputMaybe<Array<SpaceMembershipMemberDisconnectFieldInput>>
 }
 
 export type SpaceMembershipEdge = {
@@ -5440,141 +5900,150 @@ export type SpaceMembershipEdge = {
   node: SpaceMembership
 }
 
-export type SpaceMembershipMemberCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type SpaceMembershipMemberAggregateInput = {
+  AND?: InputMaybe<Array<SpaceMembershipMemberAggregateInput>>
+  NOT?: InputMaybe<SpaceMembershipMemberAggregateInput>
+  OR?: InputMaybe<Array<SpaceMembershipMemberAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceMembershipMemberNodeAggregationWhereInput>
 }
 
-export type SpaceMembershipMemberCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectionWhere>>
-  NOT?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
-  OR?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type SpaceMembershipMemberCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type SpaceMembershipMemberCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
-}
-
-export type SpaceMembershipMemberCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
-}
-
-export type SpaceMembershipMemberCommunityFieldInput = {
-  connect?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<SpaceMembershipMemberCommunityCreateFieldInput>>
-}
-
-export type SpaceMembershipMemberCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
-}
-
-export type SpaceMembershipMemberCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<SpaceMembershipMemberCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<SpaceMembershipMemberCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<SpaceMembershipMemberCommunityDisconnectFieldInput>
-  >
-  update?: InputMaybe<SpaceMembershipMemberCommunityUpdateConnectionInput>
-}
-
-export type SpaceMembershipMemberConnectInput = {
-  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityConnectFieldInput>>
-  Person?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
+export type SpaceMembershipMemberConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
 }
 
 export type SpaceMembershipMemberConnection = {
   __typename?: 'SpaceMembershipMemberConnection'
+  aggregate: SpaceMembershipPersonMemberAggregateSelection
   edges: Array<SpaceMembershipMemberRelationship>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
 
+export type SpaceMembershipMemberConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
 export type SpaceMembershipMemberConnectionWhere = {
-  Community?: InputMaybe<SpaceMembershipMemberCommunityConnectionWhere>
-  Person?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
-}
-
-export type SpaceMembershipMemberCreateInput = {
-  Community?: InputMaybe<SpaceMembershipMemberCommunityFieldInput>
-  Person?: InputMaybe<SpaceMembershipMemberPersonFieldInput>
-}
-
-export type SpaceMembershipMemberDeleteInput = {
-  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<SpaceMembershipMemberPersonDeleteFieldInput>>
-}
-
-export type SpaceMembershipMemberDisconnectInput = {
-  Community?: InputMaybe<
-    Array<SpaceMembershipMemberCommunityDisconnectFieldInput>
-  >
-  Person?: InputMaybe<Array<SpaceMembershipMemberPersonDisconnectFieldInput>>
-}
-
-export type SpaceMembershipMemberPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type SpaceMembershipMemberPersonConnectionWhere = {
-  AND?: InputMaybe<Array<SpaceMembershipMemberPersonConnectionWhere>>
-  NOT?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
-  OR?: InputMaybe<Array<SpaceMembershipMemberPersonConnectionWhere>>
+  AND?: InputMaybe<Array<SpaceMembershipMemberConnectionWhere>>
+  NOT?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+  OR?: InputMaybe<Array<SpaceMembershipMemberConnectionWhere>>
   node?: InputMaybe<PersonWhere>
 }
 
-export type SpaceMembershipMemberPersonCreateFieldInput = {
+export type SpaceMembershipMemberCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type SpaceMembershipMemberPersonDeleteFieldInput = {
+export type SpaceMembershipMemberDeleteFieldInput = {
   delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
 }
 
-export type SpaceMembershipMemberPersonDisconnectFieldInput = {
+export type SpaceMembershipMemberDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
 }
 
-export type SpaceMembershipMemberPersonFieldInput = {
-  connect?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
-  create?: InputMaybe<Array<SpaceMembershipMemberPersonCreateFieldInput>>
+export type SpaceMembershipMemberFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberCreateFieldInput>>
 }
 
-export type SpaceMembershipMemberPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<SpaceMembershipMemberPersonConnectionWhere>
-}
-
-export type SpaceMembershipMemberPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<SpaceMembershipMemberPersonConnectFieldInput>>
-  create?: InputMaybe<Array<SpaceMembershipMemberPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<SpaceMembershipMemberPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<SpaceMembershipMemberPersonDisconnectFieldInput>
-  >
-  update?: InputMaybe<SpaceMembershipMemberPersonUpdateConnectionInput>
+export type SpaceMembershipMemberNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceMembershipMemberNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceMembershipMemberNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceMembershipMemberNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type SpaceMembershipMemberRelationship = {
   __typename?: 'SpaceMembershipMemberRelationship'
   cursor: Scalars['String']['output']
-  node: LifeSensor
+  node: Person
 }
 
-export type SpaceMembershipMemberUpdateInput = {
-  Community?: InputMaybe<Array<SpaceMembershipMemberCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<SpaceMembershipMemberPersonUpdateFieldInput>>
+export type SpaceMembershipMemberUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
+}
+
+export type SpaceMembershipMemberUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceMembershipMemberConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceMembershipMemberCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembershipMemberDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceMembershipMemberDisconnectFieldInput>>
+  update?: InputMaybe<SpaceMembershipMemberUpdateConnectionInput>
+}
+
+export type SpaceMembershipPersonMemberAggregateSelection = {
+  __typename?: 'SpaceMembershipPersonMemberAggregateSelection'
+  count: CountConnection
+  node?: Maybe<SpaceMembershipPersonMemberNodeAggregateSelection>
+}
+
+export type SpaceMembershipPersonMemberAggregationSelection = {
+  __typename?: 'SpaceMembershipPersonMemberAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<SpaceMembershipPersonMemberNodeAggregateSelection>
+}
+
+export type SpaceMembershipPersonMemberNodeAggregateSelection = {
+  __typename?: 'SpaceMembershipPersonMemberNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort SpaceMemberships by. The order in which sorts are applied is not guaranteed when specifying many fields in one SpaceMembershipSort object. */
@@ -5586,7 +6055,7 @@ export type SpaceMembershipSort = {
 
 export type SpaceMembershipUpdateInput = {
   addedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  member?: InputMaybe<SpaceMembershipMemberUpdateInput>
+  member?: InputMaybe<Array<SpaceMembershipMemberUpdateFieldInput>>
   role_SET?: InputMaybe<SpaceRole>
 }
 
@@ -5605,6 +6074,7 @@ export type SpaceMembershipWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  memberAggregate?: InputMaybe<SpaceMembershipMemberAggregateInput>
   /** Return SpaceMemberships where all of the related SpaceMembershipMemberConnections match this filter */
   memberConnection_ALL?: InputMaybe<SpaceMembershipMemberConnectionWhere>
   /** Return SpaceMemberships where none of the related SpaceMembershipMemberConnections match this filter */
@@ -5613,14 +6083,14 @@ export type SpaceMembershipWhere = {
   memberConnection_SINGLE?: InputMaybe<SpaceMembershipMemberConnectionWhere>
   /** Return SpaceMemberships where some of the related SpaceMembershipMemberConnections match this filter */
   memberConnection_SOME?: InputMaybe<SpaceMembershipMemberConnectionWhere>
-  /** Return SpaceMemberships where all of the related LifeSensors match this filter */
-  member_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return SpaceMemberships where none of the related LifeSensors match this filter */
-  member_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return SpaceMemberships where one of the related LifeSensors match this filter */
-  member_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return SpaceMemberships where some of the related LifeSensors match this filter */
-  member_SOME?: InputMaybe<LifeSensorWhere>
+  /** Return SpaceMemberships where all of the related People match this filter */
+  member_ALL?: InputMaybe<PersonWhere>
+  /** Return SpaceMemberships where none of the related People match this filter */
+  member_NONE?: InputMaybe<PersonWhere>
+  /** Return SpaceMemberships where one of the related People match this filter */
+  member_SINGLE?: InputMaybe<PersonWhere>
+  /** Return SpaceMemberships where some of the related People match this filter */
+  member_SOME?: InputMaybe<PersonWhere>
   role_EQ?: InputMaybe<SpaceRole>
   role_IN?: InputMaybe<Array<SpaceRole>>
 }
@@ -5631,6 +6101,125 @@ export type SpaceMembershipsConnection = {
   edges: Array<SpaceMembershipEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type SpaceOwnerAggregateInput = {
+  AND?: InputMaybe<Array<SpaceOwnerAggregateInput>>
+  NOT?: InputMaybe<SpaceOwnerAggregateInput>
+  OR?: InputMaybe<Array<SpaceOwnerAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceOwnerNodeAggregationWhereInput>
+}
+
+export type SpaceOwnerConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type SpaceOwnerConnection = {
+  __typename?: 'SpaceOwnerConnection'
+  edges: Array<SpaceOwnerRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type SpaceOwnerConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type SpaceOwnerConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceOwnerConnectionWhere>>
+  NOT?: InputMaybe<SpaceOwnerConnectionWhere>
+  OR?: InputMaybe<Array<SpaceOwnerConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type SpaceOwnerCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type SpaceOwnerDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
+}
+
+export type SpaceOwnerDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
+}
+
+export type SpaceOwnerNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceOwnerNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceOwnerNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceOwnerNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type SpaceOwnerRelationship = {
+  __typename?: 'SpaceOwnerRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type SpaceOwnerUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
+}
+
+export type SpaceOwnerUpdateFieldInput = {
+  connect?: InputMaybe<Array<SpaceOwnerConnectFieldInput>>
+  create?: InputMaybe<Array<SpaceOwnerCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
+  update?: InputMaybe<SpaceOwnerUpdateConnectionInput>
 }
 
 /**
@@ -5654,9 +6243,12 @@ export type SpaceSort = {
 }
 
 export type SpaceUpdateInput = {
+  contexts?: InputMaybe<Array<SpaceContextsUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   id_SET?: InputMaybe<Scalars['ID']['input']>
+  members?: InputMaybe<Array<SpaceMembersUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
+  owner?: InputMaybe<Array<SpaceOwnerUpdateFieldInput>>
   visibility_SET?: InputMaybe<SpaceVisibility>
 }
 
@@ -5669,6 +6261,23 @@ export type SpaceWhere = {
   AND?: InputMaybe<Array<SpaceWhere>>
   NOT?: InputMaybe<SpaceWhere>
   OR?: InputMaybe<Array<SpaceWhere>>
+  contextsAggregate?: InputMaybe<SpaceContextsAggregateInput>
+  /** Return Spaces where all of the related SpaceContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return Spaces where none of the related SpaceContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return Spaces where one of the related SpaceContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return Spaces where some of the related SpaceContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return Spaces where all of the related FieldContexts match this filter */
+  contexts_ALL?: InputMaybe<FieldContextWhere>
+  /** Return Spaces where none of the related FieldContexts match this filter */
+  contexts_NONE?: InputMaybe<FieldContextWhere>
+  /** Return Spaces where one of the related FieldContexts match this filter */
+  contexts_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return Spaces where some of the related FieldContexts match this filter */
+  contexts_SOME?: InputMaybe<FieldContextWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -5680,11 +6289,45 @@ export type SpaceWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  membersAggregate?: InputMaybe<SpaceMembersAggregateInput>
+  /** Return Spaces where all of the related SpaceMembersConnections match this filter */
+  membersConnection_ALL?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return Spaces where none of the related SpaceMembersConnections match this filter */
+  membersConnection_NONE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return Spaces where one of the related SpaceMembersConnections match this filter */
+  membersConnection_SINGLE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return Spaces where some of the related SpaceMembersConnections match this filter */
+  membersConnection_SOME?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return Spaces where all of the related SpaceMemberships match this filter */
+  members_ALL?: InputMaybe<SpaceMembershipWhere>
+  /** Return Spaces where none of the related SpaceMemberships match this filter */
+  members_NONE?: InputMaybe<SpaceMembershipWhere>
+  /** Return Spaces where one of the related SpaceMemberships match this filter */
+  members_SINGLE?: InputMaybe<SpaceMembershipWhere>
+  /** Return Spaces where some of the related SpaceMemberships match this filter */
+  members_SOME?: InputMaybe<SpaceMembershipWhere>
   name_CONTAINS?: InputMaybe<Scalars['String']['input']>
   name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  ownerAggregate?: InputMaybe<SpaceOwnerAggregateInput>
+  /** Return Spaces where all of the related SpaceOwnerConnections match this filter */
+  ownerConnection_ALL?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return Spaces where none of the related SpaceOwnerConnections match this filter */
+  ownerConnection_NONE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return Spaces where one of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SINGLE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return Spaces where some of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SOME?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return Spaces where all of the related People match this filter */
+  owner_ALL?: InputMaybe<PersonWhere>
+  /** Return Spaces where none of the related People match this filter */
+  owner_NONE?: InputMaybe<PersonWhere>
+  /** Return Spaces where one of the related People match this filter */
+  owner_SINGLE?: InputMaybe<PersonWhere>
+  /** Return Spaces where some of the related People match this filter */
+  owner_SOME?: InputMaybe<PersonWhere>
   typename?: InputMaybe<Array<SpaceImplementation>>
   visibility_EQ?: InputMaybe<SpaceVisibility>
   visibility_IN?: InputMaybe<Array<SpaceVisibility>>
@@ -5710,9 +6353,11 @@ export type StoryPulse = FieldPulse & {
   contextAggregate?: Maybe<StoryPulseFieldContextContextAggregationSelection>
   contextConnection: FieldPulseContextConnection
   createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<StoryPulsePersonCreatedByAggregationSelection>
+  createdByConnection: FieldPulseCreatedByConnection
   id: Scalars['ID']['output']
-  initiatedBy: Array<LifeSensor>
-  initiatedByConnection: StoryPulseInitiatedByConnection
   intensity?: Maybe<Scalars['Float']['output']>
   title: Scalars['String']['output']
 }
@@ -5751,20 +6396,30 @@ export type StoryPulseContextConnectionArgs = {
  * Narrative or reflective pulse.
  * Multi-label: ["FieldPulse", "StoryPulse"]
  */
-export type StoryPulseInitiatedByArgs = {
+export type StoryPulseCreatedByArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
  * Narrative or reflective pulse.
  * Multi-label: ["FieldPulse", "StoryPulse"]
  */
-export type StoryPulseInitiatedByConnectionArgs = {
+export type StoryPulseCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Narrative or reflective pulse.
+ * Multi-label: ["FieldPulse", "StoryPulse"]
+ */
+export type StoryPulseCreatedByConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<StoryPulseInitiatedByConnectionWhere>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type StoryPulseAggregate = {
@@ -5883,14 +6538,104 @@ export type StoryPulseCreateInput = {
   content: Scalars['String']['input']
   context?: InputMaybe<StoryPulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
-  initiatedBy?: InputMaybe<StoryPulseInitiatedByCreateInput>
+  createdBy?: InputMaybe<StoryPulseCreatedByFieldInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   title: Scalars['String']['input']
 }
 
+export type StoryPulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<StoryPulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<StoryPulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<StoryPulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<StoryPulseCreatedByNodeAggregationWhereInput>
+}
+
+export type StoryPulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type StoryPulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type StoryPulseCreatedByFieldInput = {
+  connect?: InputMaybe<Array<StoryPulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<StoryPulseCreatedByCreateFieldInput>>
+}
+
+export type StoryPulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<StoryPulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<StoryPulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<StoryPulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type StoryPulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type StoryPulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<StoryPulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<StoryPulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<StoryPulseCreatedByUpdateConnectionInput>
+}
+
 export type StoryPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
-  initiatedBy?: InputMaybe<StoryPulseInitiatedByDeleteInput>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
 }
 
 export type StoryPulseEdge = {
@@ -5914,129 +6659,19 @@ export type StoryPulseFieldContextContextNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type StoryPulseInitiatedByCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type StoryPulsePersonCreatedByAggregationSelection = {
+  __typename?: 'StoryPulsePersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<StoryPulsePersonCreatedByNodeAggregateSelection>
 }
 
-export type StoryPulseInitiatedByCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<StoryPulseInitiatedByCommunityConnectionWhere>>
-  NOT?: InputMaybe<StoryPulseInitiatedByCommunityConnectionWhere>
-  OR?: InputMaybe<Array<StoryPulseInitiatedByCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type StoryPulseInitiatedByCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type StoryPulseInitiatedByCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<StoryPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type StoryPulseInitiatedByCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<StoryPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type StoryPulseInitiatedByCommunityFieldInput = {
-  connect?: InputMaybe<Array<StoryPulseInitiatedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<StoryPulseInitiatedByCommunityCreateFieldInput>>
-}
-
-export type StoryPulseInitiatedByCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<StoryPulseInitiatedByCommunityConnectionWhere>
-}
-
-export type StoryPulseInitiatedByCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<StoryPulseInitiatedByCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<StoryPulseInitiatedByCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<StoryPulseInitiatedByCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<StoryPulseInitiatedByCommunityDisconnectFieldInput>
-  >
-  update?: InputMaybe<StoryPulseInitiatedByCommunityUpdateConnectionInput>
-}
-
-export type StoryPulseInitiatedByConnection = {
-  __typename?: 'StoryPulseInitiatedByConnection'
-  edges: Array<StoryPulseInitiatedByRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type StoryPulseInitiatedByConnectionWhere = {
-  Community?: InputMaybe<StoryPulseInitiatedByCommunityConnectionWhere>
-  Person?: InputMaybe<StoryPulseInitiatedByPersonConnectionWhere>
-}
-
-export type StoryPulseInitiatedByCreateInput = {
-  Community?: InputMaybe<StoryPulseInitiatedByCommunityFieldInput>
-  Person?: InputMaybe<StoryPulseInitiatedByPersonFieldInput>
-}
-
-export type StoryPulseInitiatedByDeleteInput = {
-  Community?: InputMaybe<Array<StoryPulseInitiatedByCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<StoryPulseInitiatedByPersonDeleteFieldInput>>
-}
-
-export type StoryPulseInitiatedByPersonConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type StoryPulseInitiatedByPersonConnectionWhere = {
-  AND?: InputMaybe<Array<StoryPulseInitiatedByPersonConnectionWhere>>
-  NOT?: InputMaybe<StoryPulseInitiatedByPersonConnectionWhere>
-  OR?: InputMaybe<Array<StoryPulseInitiatedByPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type StoryPulseInitiatedByPersonCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type StoryPulseInitiatedByPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<StoryPulseInitiatedByPersonConnectionWhere>
-}
-
-export type StoryPulseInitiatedByPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<StoryPulseInitiatedByPersonConnectionWhere>
-}
-
-export type StoryPulseInitiatedByPersonFieldInput = {
-  connect?: InputMaybe<Array<StoryPulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<StoryPulseInitiatedByPersonCreateFieldInput>>
-}
-
-export type StoryPulseInitiatedByPersonUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<StoryPulseInitiatedByPersonConnectionWhere>
-}
-
-export type StoryPulseInitiatedByPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<StoryPulseInitiatedByPersonConnectFieldInput>>
-  create?: InputMaybe<Array<StoryPulseInitiatedByPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<StoryPulseInitiatedByPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<
-    Array<StoryPulseInitiatedByPersonDisconnectFieldInput>
-  >
-  update?: InputMaybe<StoryPulseInitiatedByPersonUpdateConnectionInput>
-}
-
-export type StoryPulseInitiatedByRelationship = {
-  __typename?: 'StoryPulseInitiatedByRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
-}
-
-export type StoryPulseInitiatedByUpdateInput = {
-  Community?: InputMaybe<Array<StoryPulseInitiatedByCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<StoryPulseInitiatedByPersonUpdateFieldInput>>
+export type StoryPulsePersonCreatedByNodeAggregateSelection = {
+  __typename?: 'StoryPulsePersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort StoryPulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one StoryPulseSort object. */
@@ -6052,7 +6687,7 @@ export type StoryPulseUpdateInput = {
   content_SET?: InputMaybe<Scalars['String']['input']>
   context?: InputMaybe<Array<StoryPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
-  initiatedBy?: InputMaybe<StoryPulseInitiatedByUpdateInput>
+  createdBy?: InputMaybe<Array<StoryPulseCreatedByUpdateFieldInput>>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -6093,27 +6728,28 @@ export type StoryPulseWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<StoryPulseCreatedByAggregateInput>
+  /** Return StoryPulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return StoryPulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return StoryPulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return StoryPulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return StoryPulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return StoryPulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return StoryPulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return StoryPulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  /** Return StoryPulses where all of the related StoryPulseInitiatedByConnections match this filter */
-  initiatedByConnection_ALL?: InputMaybe<StoryPulseInitiatedByConnectionWhere>
-  /** Return StoryPulses where none of the related StoryPulseInitiatedByConnections match this filter */
-  initiatedByConnection_NONE?: InputMaybe<StoryPulseInitiatedByConnectionWhere>
-  /** Return StoryPulses where one of the related StoryPulseInitiatedByConnections match this filter */
-  initiatedByConnection_SINGLE?: InputMaybe<StoryPulseInitiatedByConnectionWhere>
-  /** Return StoryPulses where some of the related StoryPulseInitiatedByConnections match this filter */
-  initiatedByConnection_SOME?: InputMaybe<StoryPulseInitiatedByConnectionWhere>
-  /** Return StoryPulses where all of the related LifeSensors match this filter */
-  initiatedBy_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return StoryPulses where none of the related LifeSensors match this filter */
-  initiatedBy_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return StoryPulses where one of the related LifeSensors match this filter */
-  initiatedBy_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return StoryPulses where some of the related LifeSensors match this filter */
-  initiatedBy_SOME?: InputMaybe<LifeSensorWhere>
   intensity_EQ?: InputMaybe<Scalars['Float']['input']>
   intensity_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6202,12 +6838,6 @@ export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
   __typename?: 'UpdateRemoveSpaceMemberResponsesMutationResponse'
   info: UpdateInfo
   removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
-}
-
-export type UpdateResonanceLinksMutationResponse = {
-  __typename?: 'UpdateResonanceLinksMutationResponse'
-  info: UpdateInfo
-  resonanceLinks: Array<ResonanceLink>
 }
 
 export type UpdateResourcePulsesMutationResponse = {
@@ -6317,22 +6947,25 @@ export type UpdateWeSpacesMutationResponse = {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpace = Space & {
   __typename?: 'WeSpace'
   contexts: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextsConnection" instead */
   contextsAggregate?: Maybe<WeSpaceFieldContextContextsAggregationSelection>
-  contextsConnection: WeSpaceContextsConnection
+  contextsConnection: SpaceContextsConnection
   createdAt: Scalars['DateTime']['output']
   id: Scalars['ID']['output']
   members: Array<SpaceMembership>
   /** @deprecated Please use field "aggregate" inside "membersConnection" instead */
   membersAggregate?: Maybe<WeSpaceSpaceMembershipMembersAggregationSelection>
-  membersConnection: WeSpaceMembersConnection
+  membersConnection: SpaceMembersConnection
   name: Scalars['String']['output']
-  owner: Array<LifeSensor>
-  ownerConnection: WeSpaceOwnerConnection
+  owner: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "ownerConnection" instead */
+  ownerAggregate?: Maybe<WeSpacePersonOwnerAggregationSelection>
+  ownerConnection: SpaceOwnerConnection
   visibility: SpaceVisibility
 }
 
@@ -6340,6 +6973,7 @@ export type WeSpace = Space & {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceContextsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -6352,6 +6986,7 @@ export type WeSpaceContextsArgs = {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceContextsAggregateArgs = {
   where?: InputMaybe<FieldContextWhere>
@@ -6361,18 +6996,20 @@ export type WeSpaceContextsAggregateArgs = {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceContextsConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<WeSpaceContextsConnectionSort>>
-  where?: InputMaybe<WeSpaceContextsConnectionWhere>
+  sort?: InputMaybe<Array<SpaceContextsConnectionSort>>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 /**
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -6385,6 +7022,7 @@ export type WeSpaceMembersArgs = {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceMembersAggregateArgs = {
   where?: InputMaybe<SpaceMembershipWhere>
@@ -6394,34 +7032,49 @@ export type WeSpaceMembersAggregateArgs = {
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceMembersConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<WeSpaceMembersConnectionSort>>
-  where?: InputMaybe<WeSpaceMembersConnectionWhere>
+  sort?: InputMaybe<Array<SpaceMembersConnectionSort>>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 /**
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceOwnerArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
 }
 
 /**
  * A collaborative space shared with other people.
  * Has an owner and members who can all participate.
  * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
+ */
+export type WeSpaceOwnerAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A collaborative space shared with other people.
+ * Has an owner and members who can all participate.
+ * Multi-label: ["Space", "WeSpace"]
+ * Authorization: Owner and members can access. Non-members cannot.
  */
 export type WeSpaceOwnerConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<WeSpaceOwnerConnectionWhere>
+  sort?: InputMaybe<Array<SpaceOwnerConnectionSort>>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type WeSpaceAggregate = {
@@ -6447,6 +7100,16 @@ export type WeSpaceAggregateSelection = {
   name: StringAggregateSelection
 }
 
+export type WeSpaceConnectInput = {
+  contexts?: InputMaybe<Array<WeSpaceContextsConnectFieldInput>>
+  members?: InputMaybe<Array<WeSpaceMembersConnectFieldInput>>
+  owner?: InputMaybe<Array<WeSpaceOwnerConnectFieldInput>>
+}
+
+export type WeSpaceConnectWhere = {
+  node: WeSpaceWhere
+}
+
 export type WeSpaceContextsAggregateInput = {
   AND?: InputMaybe<Array<WeSpaceContextsAggregateInput>>
   NOT?: InputMaybe<WeSpaceContextsAggregateInput>
@@ -6464,37 +7127,8 @@ export type WeSpaceContextsConnectFieldInput = {
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
-export type WeSpaceContextsConnection = {
-  __typename?: 'WeSpaceContextsConnection'
-  aggregate: WeSpaceFieldContextContextsAggregateSelection
-  edges: Array<WeSpaceContextsRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type WeSpaceContextsConnectionSort = {
-  node?: InputMaybe<FieldContextSort>
-}
-
-export type WeSpaceContextsConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceContextsConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceContextsConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceContextsConnectionWhere>>
-  node?: InputMaybe<FieldContextWhere>
-}
-
 export type WeSpaceContextsCreateFieldInput = {
   node: FieldContextCreateInput
-}
-
-export type WeSpaceContextsDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<WeSpaceContextsConnectionWhere>
-}
-
-export type WeSpaceContextsDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<WeSpaceContextsConnectionWhere>
 }
 
 export type WeSpaceContextsFieldInput = {
@@ -6548,22 +7182,16 @@ export type WeSpaceContextsNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type WeSpaceContextsRelationship = {
-  __typename?: 'WeSpaceContextsRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldContext
-}
-
 export type WeSpaceContextsUpdateConnectionInput = {
   node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<WeSpaceContextsConnectionWhere>
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type WeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<WeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<WeSpaceContextsCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceContextsDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceContextsDisconnectFieldInput>>
+  delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceContextsUpdateConnectionInput>
 }
 
@@ -6572,26 +7200,26 @@ export type WeSpaceCreateInput = {
   createdAt: Scalars['DateTime']['input']
   members?: InputMaybe<WeSpaceMembersFieldInput>
   name: Scalars['String']['input']
-  owner?: InputMaybe<WeSpaceOwnerCreateInput>
+  owner?: InputMaybe<WeSpaceOwnerFieldInput>
   visibility: SpaceVisibility
 }
 
 export type WeSpaceDeleteInput = {
-  contexts?: InputMaybe<Array<WeSpaceContextsDeleteFieldInput>>
-  members?: InputMaybe<Array<WeSpaceMembersDeleteFieldInput>>
-  owner?: InputMaybe<WeSpaceOwnerDeleteInput>
+  contexts?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+}
+
+export type WeSpaceDisconnectInput = {
+  contexts?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
+  members?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
+  owner?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
 }
 
 export type WeSpaceEdge = {
   __typename?: 'WeSpaceEdge'
   cursor: Scalars['String']['output']
   node: WeSpace
-}
-
-export type WeSpaceFieldContextContextsAggregateSelection = {
-  __typename?: 'WeSpaceFieldContextContextsAggregateSelection'
-  count: CountConnection
-  node?: Maybe<WeSpaceFieldContextContextsNodeAggregateSelection>
 }
 
 export type WeSpaceFieldContextContextsAggregationSelection = {
@@ -6626,37 +7254,8 @@ export type WeSpaceMembersConnectFieldInput = {
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
-export type WeSpaceMembersConnection = {
-  __typename?: 'WeSpaceMembersConnection'
-  aggregate: WeSpaceSpaceMembershipMembersAggregateSelection
-  edges: Array<WeSpaceMembersRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type WeSpaceMembersConnectionSort = {
-  node?: InputMaybe<SpaceMembershipSort>
-}
-
-export type WeSpaceMembersConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceMembersConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceMembersConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceMembersConnectionWhere>>
-  node?: InputMaybe<SpaceMembershipWhere>
-}
-
 export type WeSpaceMembersCreateFieldInput = {
   node: SpaceMembershipCreateInput
-}
-
-export type WeSpaceMembersDeleteFieldInput = {
-  delete?: InputMaybe<SpaceMembershipDeleteInput>
-  where?: InputMaybe<WeSpaceMembersConnectionWhere>
-}
-
-export type WeSpaceMembersDisconnectFieldInput = {
-  disconnect?: InputMaybe<SpaceMembershipDisconnectInput>
-  where?: InputMaybe<WeSpaceMembersConnectionWhere>
 }
 
 export type WeSpaceMembersFieldInput = {
@@ -6680,144 +7279,122 @@ export type WeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
 }
 
-export type WeSpaceMembersRelationship = {
-  __typename?: 'WeSpaceMembersRelationship'
-  cursor: Scalars['String']['output']
-  node: SpaceMembership
-}
-
 export type WeSpaceMembersUpdateConnectionInput = {
   node?: InputMaybe<SpaceMembershipUpdateInput>
-  where?: InputMaybe<WeSpaceMembersConnectionWhere>
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type WeSpaceMembersUpdateFieldInput = {
   connect?: InputMaybe<Array<WeSpaceMembersConnectFieldInput>>
   create?: InputMaybe<Array<WeSpaceMembersCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceMembersDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceMembersDisconnectFieldInput>>
+  delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceMembersUpdateConnectionInput>
 }
 
-export type WeSpaceOwnerCommunityConnectFieldInput = {
-  connect?: InputMaybe<Array<CommunityConnectInput>>
-  where?: InputMaybe<CommunityConnectWhere>
+export type WeSpaceOwnerAggregateInput = {
+  AND?: InputMaybe<Array<WeSpaceOwnerAggregateInput>>
+  NOT?: InputMaybe<WeSpaceOwnerAggregateInput>
+  OR?: InputMaybe<Array<WeSpaceOwnerAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<WeSpaceOwnerNodeAggregationWhereInput>
 }
 
-export type WeSpaceOwnerCommunityConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceOwnerCommunityConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceOwnerCommunityConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceOwnerCommunityConnectionWhere>>
-  node?: InputMaybe<CommunityWhere>
-}
-
-export type WeSpaceOwnerCommunityCreateFieldInput = {
-  node: CommunityCreateInput
-}
-
-export type WeSpaceOwnerCommunityDeleteFieldInput = {
-  delete?: InputMaybe<CommunityDeleteInput>
-  where?: InputMaybe<WeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type WeSpaceOwnerCommunityDisconnectFieldInput = {
-  disconnect?: InputMaybe<CommunityDisconnectInput>
-  where?: InputMaybe<WeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type WeSpaceOwnerCommunityFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceOwnerCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceOwnerCommunityCreateFieldInput>>
-}
-
-export type WeSpaceOwnerCommunityUpdateConnectionInput = {
-  node?: InputMaybe<CommunityUpdateInput>
-  where?: InputMaybe<WeSpaceOwnerCommunityConnectionWhere>
-}
-
-export type WeSpaceOwnerCommunityUpdateFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceOwnerCommunityConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceOwnerCommunityCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceOwnerCommunityDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceOwnerCommunityDisconnectFieldInput>>
-  update?: InputMaybe<WeSpaceOwnerCommunityUpdateConnectionInput>
-}
-
-export type WeSpaceOwnerConnection = {
-  __typename?: 'WeSpaceOwnerConnection'
-  edges: Array<WeSpaceOwnerRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type WeSpaceOwnerConnectionWhere = {
-  Community?: InputMaybe<WeSpaceOwnerCommunityConnectionWhere>
-  Person?: InputMaybe<WeSpaceOwnerPersonConnectionWhere>
-}
-
-export type WeSpaceOwnerCreateInput = {
-  Community?: InputMaybe<WeSpaceOwnerCommunityFieldInput>
-  Person?: InputMaybe<WeSpaceOwnerPersonFieldInput>
-}
-
-export type WeSpaceOwnerDeleteInput = {
-  Community?: InputMaybe<Array<WeSpaceOwnerCommunityDeleteFieldInput>>
-  Person?: InputMaybe<Array<WeSpaceOwnerPersonDeleteFieldInput>>
-}
-
-export type WeSpaceOwnerPersonConnectFieldInput = {
+export type WeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
   where?: InputMaybe<PersonConnectWhere>
 }
 
-export type WeSpaceOwnerPersonConnectionWhere = {
-  AND?: InputMaybe<Array<WeSpaceOwnerPersonConnectionWhere>>
-  NOT?: InputMaybe<WeSpaceOwnerPersonConnectionWhere>
-  OR?: InputMaybe<Array<WeSpaceOwnerPersonConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type WeSpaceOwnerPersonCreateFieldInput = {
+export type WeSpaceOwnerCreateFieldInput = {
   node: PersonCreateInput
 }
 
-export type WeSpaceOwnerPersonDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<WeSpaceOwnerPersonConnectionWhere>
+export type WeSpaceOwnerFieldInput = {
+  connect?: InputMaybe<Array<WeSpaceOwnerConnectFieldInput>>
+  create?: InputMaybe<Array<WeSpaceOwnerCreateFieldInput>>
 }
 
-export type WeSpaceOwnerPersonDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<WeSpaceOwnerPersonConnectionWhere>
+export type WeSpaceOwnerNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<WeSpaceOwnerNodeAggregationWhereInput>>
+  NOT?: InputMaybe<WeSpaceOwnerNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<WeSpaceOwnerNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
 }
 
-export type WeSpaceOwnerPersonFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceOwnerPersonConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceOwnerPersonCreateFieldInput>>
-}
-
-export type WeSpaceOwnerPersonUpdateConnectionInput = {
+export type WeSpaceOwnerUpdateConnectionInput = {
   node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<WeSpaceOwnerPersonConnectionWhere>
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
-export type WeSpaceOwnerPersonUpdateFieldInput = {
-  connect?: InputMaybe<Array<WeSpaceOwnerPersonConnectFieldInput>>
-  create?: InputMaybe<Array<WeSpaceOwnerPersonCreateFieldInput>>
-  delete?: InputMaybe<Array<WeSpaceOwnerPersonDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<WeSpaceOwnerPersonDisconnectFieldInput>>
-  update?: InputMaybe<WeSpaceOwnerPersonUpdateConnectionInput>
+export type WeSpaceOwnerUpdateFieldInput = {
+  connect?: InputMaybe<Array<WeSpaceOwnerConnectFieldInput>>
+  create?: InputMaybe<Array<WeSpaceOwnerCreateFieldInput>>
+  delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
+  update?: InputMaybe<WeSpaceOwnerUpdateConnectionInput>
 }
 
-export type WeSpaceOwnerRelationship = {
-  __typename?: 'WeSpaceOwnerRelationship'
-  cursor: Scalars['String']['output']
-  node: LifeSensor
+export type WeSpacePersonOwnerAggregationSelection = {
+  __typename?: 'WeSpacePersonOwnerAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<WeSpacePersonOwnerNodeAggregateSelection>
 }
 
-export type WeSpaceOwnerUpdateInput = {
-  Community?: InputMaybe<Array<WeSpaceOwnerCommunityUpdateFieldInput>>
-  Person?: InputMaybe<Array<WeSpaceOwnerPersonUpdateFieldInput>>
+export type WeSpacePersonOwnerNodeAggregateSelection = {
+  __typename?: 'WeSpacePersonOwnerNodeAggregateSelection'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
 }
 
 /** Fields to sort WeSpaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one WeSpaceSort object. */
@@ -6826,12 +7403,6 @@ export type WeSpaceSort = {
   id?: InputMaybe<SortDirection>
   name?: InputMaybe<SortDirection>
   visibility?: InputMaybe<SortDirection>
-}
-
-export type WeSpaceSpaceMembershipMembersAggregateSelection = {
-  __typename?: 'WeSpaceSpaceMembershipMembersAggregateSelection'
-  count: CountConnection
-  node?: Maybe<WeSpaceSpaceMembershipMembersNodeAggregateSelection>
 }
 
 export type WeSpaceSpaceMembershipMembersAggregationSelection = {
@@ -6852,7 +7423,7 @@ export type WeSpaceUpdateInput = {
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   members?: InputMaybe<Array<WeSpaceMembersUpdateFieldInput>>
   name_SET?: InputMaybe<Scalars['String']['input']>
-  owner?: InputMaybe<WeSpaceOwnerUpdateInput>
+  owner?: InputMaybe<Array<WeSpaceOwnerUpdateFieldInput>>
   visibility_SET?: InputMaybe<SpaceVisibility>
 }
 
@@ -6861,14 +7432,14 @@ export type WeSpaceWhere = {
   NOT?: InputMaybe<WeSpaceWhere>
   OR?: InputMaybe<Array<WeSpaceWhere>>
   contextsAggregate?: InputMaybe<WeSpaceContextsAggregateInput>
-  /** Return WeSpaces where all of the related WeSpaceContextsConnections match this filter */
-  contextsConnection_ALL?: InputMaybe<WeSpaceContextsConnectionWhere>
-  /** Return WeSpaces where none of the related WeSpaceContextsConnections match this filter */
-  contextsConnection_NONE?: InputMaybe<WeSpaceContextsConnectionWhere>
-  /** Return WeSpaces where one of the related WeSpaceContextsConnections match this filter */
-  contextsConnection_SINGLE?: InputMaybe<WeSpaceContextsConnectionWhere>
-  /** Return WeSpaces where some of the related WeSpaceContextsConnections match this filter */
-  contextsConnection_SOME?: InputMaybe<WeSpaceContextsConnectionWhere>
+  /** Return WeSpaces where all of the related SpaceContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return WeSpaces where none of the related SpaceContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return WeSpaces where one of the related SpaceContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<SpaceContextsConnectionWhere>
+  /** Return WeSpaces where some of the related SpaceContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<SpaceContextsConnectionWhere>
   /** Return WeSpaces where all of the related FieldContexts match this filter */
   contexts_ALL?: InputMaybe<FieldContextWhere>
   /** Return WeSpaces where none of the related FieldContexts match this filter */
@@ -6889,14 +7460,14 @@ export type WeSpaceWhere = {
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
   membersAggregate?: InputMaybe<WeSpaceMembersAggregateInput>
-  /** Return WeSpaces where all of the related WeSpaceMembersConnections match this filter */
-  membersConnection_ALL?: InputMaybe<WeSpaceMembersConnectionWhere>
-  /** Return WeSpaces where none of the related WeSpaceMembersConnections match this filter */
-  membersConnection_NONE?: InputMaybe<WeSpaceMembersConnectionWhere>
-  /** Return WeSpaces where one of the related WeSpaceMembersConnections match this filter */
-  membersConnection_SINGLE?: InputMaybe<WeSpaceMembersConnectionWhere>
-  /** Return WeSpaces where some of the related WeSpaceMembersConnections match this filter */
-  membersConnection_SOME?: InputMaybe<WeSpaceMembersConnectionWhere>
+  /** Return WeSpaces where all of the related SpaceMembersConnections match this filter */
+  membersConnection_ALL?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return WeSpaces where none of the related SpaceMembersConnections match this filter */
+  membersConnection_NONE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return WeSpaces where one of the related SpaceMembersConnections match this filter */
+  membersConnection_SINGLE?: InputMaybe<SpaceMembersConnectionWhere>
+  /** Return WeSpaces where some of the related SpaceMembersConnections match this filter */
+  membersConnection_SOME?: InputMaybe<SpaceMembersConnectionWhere>
   /** Return WeSpaces where all of the related SpaceMemberships match this filter */
   members_ALL?: InputMaybe<SpaceMembershipWhere>
   /** Return WeSpaces where none of the related SpaceMemberships match this filter */
@@ -6910,22 +7481,23 @@ export type WeSpaceWhere = {
   name_EQ?: InputMaybe<Scalars['String']['input']>
   name_IN?: InputMaybe<Array<Scalars['String']['input']>>
   name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  /** Return WeSpaces where all of the related WeSpaceOwnerConnections match this filter */
-  ownerConnection_ALL?: InputMaybe<WeSpaceOwnerConnectionWhere>
-  /** Return WeSpaces where none of the related WeSpaceOwnerConnections match this filter */
-  ownerConnection_NONE?: InputMaybe<WeSpaceOwnerConnectionWhere>
-  /** Return WeSpaces where one of the related WeSpaceOwnerConnections match this filter */
-  ownerConnection_SINGLE?: InputMaybe<WeSpaceOwnerConnectionWhere>
-  /** Return WeSpaces where some of the related WeSpaceOwnerConnections match this filter */
-  ownerConnection_SOME?: InputMaybe<WeSpaceOwnerConnectionWhere>
-  /** Return WeSpaces where all of the related LifeSensors match this filter */
-  owner_ALL?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where none of the related LifeSensors match this filter */
-  owner_NONE?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where one of the related LifeSensors match this filter */
-  owner_SINGLE?: InputMaybe<LifeSensorWhere>
-  /** Return WeSpaces where some of the related LifeSensors match this filter */
-  owner_SOME?: InputMaybe<LifeSensorWhere>
+  ownerAggregate?: InputMaybe<WeSpaceOwnerAggregateInput>
+  /** Return WeSpaces where all of the related SpaceOwnerConnections match this filter */
+  ownerConnection_ALL?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return WeSpaces where none of the related SpaceOwnerConnections match this filter */
+  ownerConnection_NONE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return WeSpaces where one of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SINGLE?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return WeSpaces where some of the related SpaceOwnerConnections match this filter */
+  ownerConnection_SOME?: InputMaybe<SpaceOwnerConnectionWhere>
+  /** Return WeSpaces where all of the related People match this filter */
+  owner_ALL?: InputMaybe<PersonWhere>
+  /** Return WeSpaces where none of the related People match this filter */
+  owner_NONE?: InputMaybe<PersonWhere>
+  /** Return WeSpaces where one of the related People match this filter */
+  owner_SINGLE?: InputMaybe<PersonWhere>
+  /** Return WeSpaces where some of the related People match this filter */
+  owner_SOME?: InputMaybe<PersonWhere>
   visibility_EQ?: InputMaybe<SpaceVisibility>
   visibility_IN?: InputMaybe<Array<SpaceVisibility>>
 }
@@ -7506,10 +8078,12 @@ export type GetMeSpaceFieldsQuery = {
     __typename?: 'MeSpace'
     id: string
     name: string
-    owner: Array<
-      | { __typename?: 'Community'; id: string }
-      | { __typename?: 'Person'; id: string }
-    >
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+    }>
     contexts: Array<{
       __typename?: 'FieldContext'
       id: string
@@ -7609,825 +8183,6 @@ export type GetFieldsForSpacePaginatedQuery = {
   }>
 }
 
-export type GetGraphStatsQueryVariables = Exact<{ [key: string]: never }>
-
-export type GetGraphStatsQuery = {
-  __typename?: 'Query'
-  peopleAggregate: { __typename?: 'PersonAggregateSelection'; count: number }
-  communitiesAggregate: {
-    __typename?: 'CommunityAggregateSelection'
-    count: number
-  }
-  meSpacesAggregate: { __typename?: 'MeSpaceAggregateSelection'; count: number }
-  weSpacesAggregate: { __typename?: 'WeSpaceAggregateSelection'; count: number }
-  fieldContextsAggregate: {
-    __typename?: 'FieldContextAggregateSelection'
-    count: number
-  }
-  goalPulsesAggregate: {
-    __typename?: 'GoalPulseAggregateSelection'
-    count: number
-  }
-  resourcePulsesAggregate: {
-    __typename?: 'ResourcePulseAggregateSelection'
-    count: number
-  }
-  storyPulsesAggregate: {
-    __typename?: 'StoryPulseAggregateSelection'
-    count: number
-  }
-  fieldResonancesAggregate: {
-    __typename?: 'FieldResonanceAggregateSelection'
-    count: number
-  }
-  resonanceLinksAggregate: {
-    __typename?: 'ResonanceLinkAggregateSelection'
-    count: number
-  }
-}
-
-export type GetGraphPeopleQueryVariables = Exact<{ [key: string]: never }>
-
-export type GetGraphPeopleQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-    ownsSpaces: Array<
-      | {
-          __typename?: 'MeSpace'
-          id: string
-          contexts: Array<{
-            __typename?: 'FieldContext'
-            id: string
-            pulses: Array<
-              | { __typename?: 'GoalPulse'; id: string }
-              | { __typename?: 'ResourcePulse'; id: string }
-              | { __typename?: 'StoryPulse'; id: string }
-            >
-          }>
-        }
-      | {
-          __typename?: 'WeSpace'
-          id: string
-          contexts: Array<{
-            __typename?: 'FieldContext'
-            id: string
-            pulses: Array<
-              | { __typename?: 'GoalPulse'; id: string }
-              | { __typename?: 'ResourcePulse'; id: string }
-              | { __typename?: 'StoryPulse'; id: string }
-            >
-          }>
-        }
-    >
-  }>
-}
-
-export type GetGraphSpacesQueryVariables = Exact<{ [key: string]: never }>
-
-export type GetGraphSpacesQuery = {
-  __typename?: 'Query'
-  meSpaces: Array<{
-    __typename?: 'MeSpace'
-    id: string
-    name: string
-    visibility: SpaceVisibility
-    createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | { __typename?: 'Person'; id: string; name: string }
-    >
-    members: Array<{
-      __typename?: 'SpaceMembership'
-      id: string
-      role: SpaceRole
-      addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | { __typename?: 'Person'; id: string; name: string }
-      >
-    }>
-  }>
-  weSpaces: Array<{
-    __typename?: 'WeSpace'
-    id: string
-    name: string
-    visibility: SpaceVisibility
-    createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | { __typename?: 'Person'; id: string; name: string }
-    >
-    members: Array<{
-      __typename?: 'SpaceMembership'
-      id: string
-      role: SpaceRole
-      addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | { __typename?: 'Person'; id: string; name: string }
-      >
-    }>
-  }>
-}
-
-export type GetGraphResonancesQueryVariables = Exact<{ [key: string]: never }>
-
-export type GetGraphResonancesQuery = {
-  __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
-    id: string
-    label: string
-    description?: string | null
-  }>
-}
-
-export type GetPersonDetailsQueryVariables = Exact<{
-  email: Scalars['String']['input']
-}>
-
-export type GetPersonDetailsQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-    ownsSpaces: Array<
-      | {
-          __typename?: 'MeSpace'
-          id: string
-          name: string
-          contexts: Array<{
-            __typename?: 'FieldContext'
-            id: string
-            title: string
-            pulses: Array<
-              | {
-                  __typename?: 'GoalPulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  status: GoalStatus
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-              | {
-                  __typename?: 'ResourcePulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  resourceType: string
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-              | {
-                  __typename?: 'StoryPulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-            >
-          }>
-        }
-      | {
-          __typename?: 'WeSpace'
-          id: string
-          name: string
-          contexts: Array<{
-            __typename?: 'FieldContext'
-            id: string
-            title: string
-            pulses: Array<
-              | {
-                  __typename?: 'GoalPulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  status: GoalStatus
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-              | {
-                  __typename?: 'ResourcePulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  resourceType: string
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-              | {
-                  __typename?: 'StoryPulse'
-                  id: string
-                  content: string
-                  createdAt: any
-                  intensity?: number | null
-                  initiatedBy: Array<
-                    | { __typename?: 'Community'; id: string; name: string }
-                    | {
-                        __typename?: 'Person'
-                        id: string
-                        name: string
-                        email?: string | null
-                      }
-                  >
-                }
-            >
-          }>
-        }
-    >
-  }>
-}
-
-export type GetSpaceDetailsQueryVariables = Exact<{
-  spaceId: Scalars['ID']['input']
-}>
-
-export type GetSpaceDetailsQuery = {
-  __typename?: 'Query'
-  meSpaces: Array<{
-    __typename?: 'MeSpace'
-    id: string
-    name: string
-    visibility: SpaceVisibility
-    contexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      title: string
-      emergentName?: string | null
-      createdAt: any
-      pulses: Array<
-        | {
-            __typename?: 'GoalPulse'
-            id: string
-            content: string
-            createdAt: any
-            status: GoalStatus
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-        | {
-            __typename?: 'ResourcePulse'
-            id: string
-            content: string
-            createdAt: any
-            resourceType: string
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-        | {
-            __typename?: 'StoryPulse'
-            id: string
-            content: string
-            createdAt: any
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-      >
-    }>
-  }>
-  weSpaces: Array<{
-    __typename?: 'WeSpace'
-    id: string
-    name: string
-    visibility: SpaceVisibility
-    contexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      title: string
-      emergentName?: string | null
-      createdAt: any
-      pulses: Array<
-        | {
-            __typename?: 'GoalPulse'
-            id: string
-            content: string
-            createdAt: any
-            status: GoalStatus
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-        | {
-            __typename?: 'ResourcePulse'
-            id: string
-            content: string
-            createdAt: any
-            resourceType: string
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-        | {
-            __typename?: 'StoryPulse'
-            id: string
-            content: string
-            createdAt: any
-            intensity?: number | null
-            initiatedBy: Array<
-              | { __typename?: 'Community'; id: string; name: string }
-              | {
-                  __typename?: 'Person'
-                  id: string
-                  name: string
-                  email?: string | null
-                }
-            >
-          }
-      >
-    }>
-  }>
-}
-
-export type GetResonanceDetailsQueryVariables = Exact<{
-  resonanceId: Scalars['ID']['input']
-}>
-
-export type GetResonanceDetailsQuery = {
-  __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
-    id: string
-    label: string
-    description?: string | null
-  }>
-  resonanceLinks: Array<{
-    __typename?: 'ResonanceLink'
-    id: string
-    confidence: number
-    evidence?: string | null
-    createdAt: any
-    source: Array<
-      | {
-          __typename?: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename?: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename?: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-    >
-    target: Array<
-      | {
-          __typename?: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename?: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename?: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename?: 'Community'; id: string; name: string }
-            | {
-                __typename?: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-    >
-  }>
-}
-
-export type GetResonanceWithLinksQueryVariables = Exact<{
-  resonanceId: Scalars['ID']['input']
-}>
-
-export type GetResonanceWithLinksQuery = {
-  __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
-    id: string
-    label: string
-    description?: string | null
-  }>
-  resonanceLinks: Array<{
-    __typename?: 'ResonanceLink'
-    id: string
-    confidence: number
-    evidence?: string | null
-    createdAt: any
-    source: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-    >
-    target: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-          initiatedBy: Array<
-            | { __typename: 'Community'; id: string; name: string }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
-        }
-    >
-  }>
-}
-
-export type GetAllResonancesQueryVariables = Exact<{ [key: string]: never }>
-
-export type GetAllResonancesQuery = {
-  __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
-    id: string
-    label: string
-    description?: string | null
-  }>
-}
-
-export type GetAllResonanceLinksWithResonancesQueryVariables = Exact<{
-  [key: string]: never
-}>
-
-export type GetAllResonanceLinksWithResonancesQuery = {
-  __typename?: 'Query'
-  resonanceLinks: Array<{
-    __typename?: 'ResonanceLink'
-    id: string
-    confidence: number
-    evidence?: string | null
-    createdAt: any
-    resonance: Array<{
-      __typename?: 'FieldResonance'
-      id: string
-      label: string
-      description?: string | null
-    }>
-    source: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-        }
-    >
-    target: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-        }
-    >
-  }>
-}
-
-export type GetLinksForResonanceQueryVariables = Exact<{
-  resonanceId: Scalars['ID']['input']
-}>
-
-export type GetLinksForResonanceQuery = {
-  __typename?: 'Query'
-  resonanceLinks: Array<{
-    __typename?: 'ResonanceLink'
-    id: string
-    confidence: number
-    evidence?: string | null
-    createdAt: any
-    resonance: Array<{
-      __typename?: 'FieldResonance'
-      id: string
-      label: string
-      description?: string | null
-    }>
-    source: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-        }
-    >
-    target: Array<
-      | {
-          __typename: 'GoalPulse'
-          id: string
-          content: string
-          createdAt: any
-          status: GoalStatus
-          intensity?: number | null
-        }
-      | {
-          __typename: 'ResourcePulse'
-          id: string
-          content: string
-          createdAt: any
-          resourceType: string
-          intensity?: number | null
-        }
-      | {
-          __typename: 'StoryPulse'
-          id: string
-          content: string
-          createdAt: any
-          intensity?: number | null
-        }
-    >
-  }>
-}
-
 export type GetAllPulsesQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetAllPulsesQuery = {
@@ -8439,15 +8194,13 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -8456,15 +8209,13 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -8473,15 +8224,13 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
   }>
 }
 
@@ -8495,20 +8244,18 @@ export type GetAllFieldContextsQuery = {
     title: string
     emergentName?: string | null
     createdAt: any
-    space: Array<
-      | {
-          __typename?: 'MeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-        }
-      | {
-          __typename?: 'WeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-        }
-    >
+    meSpace: Array<{
+      __typename?: 'MeSpace'
+      id: string
+      name: string
+      visibility: SpaceVisibility
+    }>
+    weSpace: Array<{
+      __typename?: 'WeSpace'
+      id: string
+      name: string
+      visibility: SpaceVisibility
+    }>
     pulses: Array<
       | { __typename: 'GoalPulse'; id: string; createdAt: any }
       | { __typename: 'ResourcePulse'; id: string; createdAt: any }
@@ -8527,29 +8274,25 @@ export type GetAllMeSpacesQuery = {
     name: string
     visibility: SpaceVisibility
     createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | {
-          __typename?: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -8570,29 +8313,25 @@ export type GetAllWeSpacesQuery = {
     name: string
     visibility: SpaceVisibility
     createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | {
-          __typename?: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -8853,20 +8592,18 @@ export type GetPulseDetailsWithContextQuery = {
                 createdAt: any
               }
           >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
+          meSpace: Array<{
+            __typename: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
+          weSpace: Array<{
+            __typename: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
         }>
       }
     | {
@@ -8904,20 +8641,18 @@ export type GetPulseDetailsWithContextQuery = {
                 createdAt: any
               }
           >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
+          meSpace: Array<{
+            __typename: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
+          weSpace: Array<{
+            __typename: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
         }>
       }
     | {
@@ -8955,20 +8690,18 @@ export type GetPulseDetailsWithContextQuery = {
                 createdAt: any
               }
           >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
+          meSpace: Array<{
+            __typename: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
+          weSpace: Array<{
+            __typename: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+          }>
         }>
       }
   >
@@ -8989,15 +8722,14 @@ export type GetPulseDetailsQuery = {
     status: GoalStatus
     horizon?: GoalHorizon | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -9007,15 +8739,13 @@ export type GetPulseDetailsQuery = {
     intensity?: number | null
     resourceType: string
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -9024,15 +8754,13 @@ export type GetPulseDetailsQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    initiatedBy: Array<
-      | { __typename: 'Community'; id: string; name: string }
-      | {
-          __typename: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
   }>
 }
 
@@ -9109,39 +8837,25 @@ export type GetSpaceDetailsCompleteQuery = {
         name: string
         visibility: SpaceVisibility
         createdAt: any
-        owner: Array<
-          | {
-              __typename: 'Community'
-              id: string
-              name: string
-              type?: string | null
-            }
-          | {
-              __typename: 'Person'
-              id: string
-              name: string
-              email?: string | null
-            }
-        >
+        owner: Array<{
+          __typename: 'Person'
+          id: string
+          firstName: string
+          lastName: string
+          email?: string | null
+        }>
         members: Array<{
           __typename?: 'SpaceMembership'
           id: string
           role: SpaceRole
           addedAt: any
-          member: Array<
-            | {
-                __typename: 'Community'
-                id: string
-                name: string
-                type?: string | null
-              }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
+          member: Array<{
+            __typename: 'Person'
+            id: string
+            firstName: string
+            lastName: string
+            email?: string | null
+          }>
         }>
         contexts: Array<{
           __typename?: 'FieldContext'
@@ -9177,39 +8891,25 @@ export type GetSpaceDetailsCompleteQuery = {
         name: string
         visibility: SpaceVisibility
         createdAt: any
-        owner: Array<
-          | {
-              __typename: 'Community'
-              id: string
-              name: string
-              type?: string | null
-            }
-          | {
-              __typename: 'Person'
-              id: string
-              name: string
-              email?: string | null
-            }
-        >
+        owner: Array<{
+          __typename: 'Person'
+          id: string
+          firstName: string
+          lastName: string
+          email?: string | null
+        }>
         members: Array<{
           __typename?: 'SpaceMembership'
           id: string
           role: SpaceRole
           addedAt: any
-          member: Array<
-            | {
-                __typename: 'Community'
-                id: string
-                name: string
-                type?: string | null
-              }
-            | {
-                __typename: 'Person'
-                id: string
-                name: string
-                email?: string | null
-              }
-          >
+          member: Array<{
+            __typename: 'Person'
+            id: string
+            firstName: string
+            lastName: string
+            email?: string | null
+          }>
         }>
         contexts: Array<{
           __typename?: 'FieldContext'
@@ -9290,15 +8990,13 @@ export type GetSpaceMembersQuery = {
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
   }>
   weSpaces: Array<{
@@ -9310,15 +9008,13 @@ export type GetSpaceMembersQuery = {
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
   }>
 }
@@ -9335,29 +9031,25 @@ export type GetWeSpaceDetailsQuery = {
     name: string
     visibility: SpaceVisibility
     createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | {
-          __typename?: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -9381,29 +9073,25 @@ export type GetMeSpaceDetailsQuery = {
     name: string
     visibility: SpaceVisibility
     createdAt: any
-    owner: Array<
-      | { __typename?: 'Community'; id: string; name: string }
-      | {
-          __typename?: 'Person'
-          id: string
-          name: string
-          email?: string | null
-        }
-    >
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      email?: string | null
+    }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
       addedAt: any
-      member: Array<
-        | { __typename?: 'Community'; id: string; name: string }
-        | {
-            __typename?: 'Person'
-            id: string
-            name: string
-            email?: string | null
-          }
-      >
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        email?: string | null
+      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -9802,7 +9490,7 @@ export const ConnectFieldToSpaceDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'space' },
+                      name: { kind: 'Name', value: 'meSpace' },
                       value: {
                         kind: 'ObjectValue',
                         fields: [
@@ -11534,37 +11222,14 @@ export const GetMeSpaceFieldsDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
                     ],
                   },
@@ -11634,17 +11299,59 @@ export const GetFieldsForSpaceDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'space_SOME' },
+                      name: { kind: 'Name', value: 'OR' },
                       value: {
-                        kind: 'ObjectValue',
-                        fields: [
+                        kind: 'ListValue',
+                        values: [
                           {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'id_EQ' },
-                            value: {
-                              kind: 'Variable',
-                              name: { kind: 'Name', value: 'spaceId' },
-                            },
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'meSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'weSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
                           },
                         ],
                       },
@@ -11818,17 +11525,59 @@ export const GetFieldsForSpacePaginatedDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'space_SOME' },
+                      name: { kind: 'Name', value: 'OR' },
                       value: {
-                        kind: 'ObjectValue',
-                        fields: [
+                        kind: 'ListValue',
+                        values: [
                           {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'id_EQ' },
-                            value: {
-                              kind: 'Variable',
-                              name: { kind: 'Name', value: 'spaceId' },
-                            },
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'meSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'weSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
                           },
                         ],
                       },
@@ -11889,4165 +11638,6 @@ export const GetFieldsForSpacePaginatedDocument = {
   GetFieldsForSpacePaginatedQuery,
   GetFieldsForSpacePaginatedQueryVariables
 >
-export const GetGraphStatsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getGraphStats' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'peopleAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'communitiesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'meSpacesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'weSpacesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldContextsAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'goalPulsesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resourcePulsesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'storyPulsesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonancesAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resonanceLinksAggregate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetGraphStatsQuery, GetGraphStatsQueryVariables>
-export const GetGraphPeopleDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getGraphPeople' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'MeSpace' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'contexts' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'WeSpace' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'contexts' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetGraphPeopleQuery, GetGraphPeopleQueryVariables>
-export const GetGraphSpacesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getGraphSpaces' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'meSpaces' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'owner' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'members' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'weSpaces' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'owner' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'members' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetGraphSpacesQuery, GetGraphSpacesQueryVariables>
-export const GetGraphResonancesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getGraphResonances' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetGraphResonancesQuery,
-  GetGraphResonancesQueryVariables
->
-export const GetPersonDetailsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPersonDetails' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'email' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'email_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'email' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'MeSpace' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'contexts' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'title' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'GoalPulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'status',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'ResourcePulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'resourceType',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'StoryPulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'WeSpace' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'contexts' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'title' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'GoalPulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'status',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'ResourcePulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'resourceType',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'StoryPulse',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'content',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'createdAt',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'intensity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'initiatedBy',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Person',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'email',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value: 'Community',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'id',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'name',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPersonDetailsQuery,
-  GetPersonDetailsQueryVariables
->
-export const GetSpaceDetailsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getSpaceDetails' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'spaceId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'meSpaces' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'spaceId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'contexts' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'emergentName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pulses' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'GoalPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'status' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'ResourcePulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'resourceType',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'StoryPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'weSpaces' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'spaceId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'contexts' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'emergentName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pulses' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'GoalPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'status' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'ResourcePulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'resourceType',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'StoryPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'content' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'createdAt' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'initiatedBy',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Person',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'email',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'InlineFragment',
-                                          typeCondition: {
-                                            kind: 'NamedType',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'Community',
-                                            },
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'name',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetSpaceDetailsQuery,
-  GetSpaceDetailsQueryVariables
->
-export const GetResonanceDetailsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getResonanceDetails' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'resonanceId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'resonanceId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resonanceLinks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'resonance_SOME' },
-                      value: {
-                        kind: 'ObjectValue',
-                        fields: [
-                          {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'id_EQ' },
-                            value: {
-                              kind: 'Variable',
-                              name: { kind: 'Name', value: 'resonanceId' },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'evidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'source' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'target' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetResonanceDetailsQuery,
-  GetResonanceDetailsQueryVariables
->
-export const GetResonanceWithLinksDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getResonanceWithLinks' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'resonanceId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'resonanceId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resonanceLinks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'resonance_SOME' },
-                      value: {
-                        kind: 'ObjectValue',
-                        fields: [
-                          {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'id_EQ' },
-                            value: {
-                              kind: 'Variable',
-                              name: { kind: 'Name', value: 'resonanceId' },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'evidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'source' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'target' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'initiatedBy' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetResonanceWithLinksQuery,
-  GetResonanceWithLinksQueryVariables
->
-export const GetAllResonancesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getAllResonances' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetAllResonancesQuery,
-  GetAllResonancesQueryVariables
->
-export const GetAllResonanceLinksWithResonancesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getAllResonanceLinksWithResonances' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resonanceLinks' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'evidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'resonance' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'source' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'target' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetAllResonanceLinksWithResonancesQuery,
-  GetAllResonanceLinksWithResonancesQueryVariables
->
-export const GetLinksForResonanceDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getLinksForResonance' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'resonanceId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resonanceLinks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'resonance_SOME' },
-                      value: {
-                        kind: 'ObjectValue',
-                        fields: [
-                          {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'id_EQ' },
-                            value: {
-                              kind: 'Variable',
-                              name: { kind: 'Name', value: 'resonanceId' },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'evidence' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'resonance' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'source' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'target' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'GoalPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'ResourcePulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'resourceType' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'StoryPulse' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'intensity' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetLinksForResonanceQuery,
-  GetLinksForResonanceQueryVariables
->
 export const GetAllPulsesDocument = {
   kind: 'Document',
   definitions: [
@@ -16082,58 +11672,20 @@ export const GetAllPulsesDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -16164,58 +11716,20 @@ export const GetAllPulsesDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -16246,58 +11760,20 @@ export const GetAllPulsesDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -16334,7 +11810,22 @@ export const GetAllFieldContextsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'space' },
+                  name: { kind: 'Name', value: 'meSpace' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'weSpace' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -16465,50 +11956,16 @@ export const GetAllMeSpacesDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -16531,48 +11988,20 @@ export const GetAllMeSpacesDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -16629,50 +12058,16 @@ export const GetAllWeSpacesDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -16695,48 +12090,20 @@ export const GetAllWeSpacesDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -17433,10 +12800,14 @@ export const GetPulseDetailsWithContextDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'space' },
+                        name: { kind: 'Name', value: 'meSpace' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'id' },
@@ -17449,61 +12820,30 @@ export const GetPulseDetailsWithContextDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'visibility' },
                             },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'MeSpace' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'visibility' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'WeSpace' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: '__typename' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'visibility' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
                             },
                           ],
                         },
@@ -17590,58 +12930,21 @@ export const GetPulseDetailsDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -17695,58 +12998,20 @@ export const GetPulseDetailsDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -17796,58 +13061,20 @@ export const GetPulseDetailsDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'initiatedBy' },
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: '__typename' },
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -18140,52 +13367,20 @@ export const GetSpaceDetailsCompleteDocument = {
                               name: { kind: 'Name', value: '__typename' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'type' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -18219,58 +13414,20 @@ export const GetSpaceDetailsCompleteDocument = {
                                     name: { kind: 'Name', value: '__typename' },
                                   },
                                   {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
                                   },
                                   {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'type' },
-                                        },
-                                      ],
-                                    },
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'firstName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
                                   },
                                 ],
                               },
@@ -18361,52 +13518,20 @@ export const GetSpaceDetailsCompleteDocument = {
                               name: { kind: 'Name', value: '__typename' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'type' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -18440,58 +13565,20 @@ export const GetSpaceDetailsCompleteDocument = {
                                     name: { kind: 'Name', value: '__typename' },
                                   },
                                   {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: { kind: 'Name', value: 'Person' },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
                                   },
                                   {
-                                    kind: 'InlineFragment',
-                                    typeCondition: {
-                                      kind: 'NamedType',
-                                      name: {
-                                        kind: 'Name',
-                                        value: 'Community',
-                                      },
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'name' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'type' },
-                                        },
-                                      ],
-                                    },
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'firstName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
                                   },
                                 ],
                               },
@@ -18727,48 +13814,20 @@ export const GetSpaceMembersDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -18825,48 +13884,20 @@ export const GetSpaceMembersDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -18943,50 +13974,16 @@ export const GetWeSpaceDetailsDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -19009,48 +14006,20 @@ export const GetWeSpaceDetailsDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },
@@ -19146,50 +14115,16 @@ export const GetMeSpaceDetailsDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Person' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
                       },
                       {
-                        kind: 'InlineFragment',
-                        typeCondition: {
-                          kind: 'NamedType',
-                          name: { kind: 'Name', value: 'Community' },
-                        },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                     ],
                   },
                 },
@@ -19212,48 +14147,20 @@ export const GetMeSpaceDetailsDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Person' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'Community' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                ],
-                              },
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
                             },
                           ],
                         },

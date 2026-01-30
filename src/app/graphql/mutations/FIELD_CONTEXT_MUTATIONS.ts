@@ -14,23 +14,8 @@ import { graphql } from '@/gql'
  *   }
  * })
  *
- * @example
- * // Create field and link to existing space by ID
- * createFieldContexts({
- *   variables: {
- *     input: [{
- *       title: "Deep Work",
- *       createdAt: new Date().toISOString(),
- *       space: {
- *         connect: [{
- *           where: {
- *             node: { id_EQ: "space-uuid-here" }
- *           }
- *         }]
- *       }
- *     }]
- *   }
- * })
+ * Note: To link to a space, use the CONNECT_FIELD_TO_SPACE_MUTATION or create the relationship
+ * through the space's contexts mutation instead.
  */
 export const CREATE_FIELD_CONTEXT_MUTATION = graphql(`
   mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {
@@ -98,13 +83,15 @@ export const DELETE_FIELD_CONTEXT_MUTATION = graphql(`
 `)
 
 /**
- * Connect an existing FieldContext to a Space
+ * Connect an existing FieldContext to a Space (MeSpace)
  */
 export const CONNECT_FIELD_TO_SPACE_MUTATION = graphql(`
   mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {
     updateFieldContexts(
       where: { id_EQ: $fieldId }
-      update: { space: { connect: [{ where: { node: { id_EQ: $spaceId } } }] } }
+      update: {
+        meSpace: { connect: [{ where: { node: { id_EQ: $spaceId } } }] }
+      }
     ) {
       fieldContexts {
         id

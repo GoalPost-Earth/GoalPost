@@ -15,7 +15,7 @@ export interface PulseDetails {
   status?: string | null
   horizon?: string | null
   resourceType?: string | null
-  initiators: Array<{
+  createdBy: Array<{
     id: string
     name: string
     email?: string | null
@@ -225,25 +225,25 @@ export function PulsePanel({
                   groups
                 </span>
                 <span className="text-xs font-semibold uppercase text-gp-ink-muted">
-                  Initiated By
+                  Created By
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {pulse.initiators.length === 0 && (
+                {pulse.createdBy.length === 0 && (
                   <span className="text-sm text-gp-ink-muted">
-                    No initiators recorded
+                    No creators recorded
                   </span>
                 )}
-                {pulse.initiators.map((initiator) => (
+                {pulse.createdBy.map((creator) => (
                   <span
-                    key={initiator.id}
+                    key={creator.id}
                     className={cn(
                       'text-xs px-3 py-1 rounded-full border backdrop-blur-md',
                       config.chip
                     )}
                   >
-                    {initiator.name}
-                    {initiator.email ? ` • ${initiator.email}` : ''}
+                    {creator.name}
+                    {creator.email ? ` • ${creator.email}` : ''}
                   </span>
                 ))}
               </div>

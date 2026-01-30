@@ -29,9 +29,6 @@ export const GET_GRAPH_STATS = graphql(`
     fieldResonancesAggregate {
       count
     }
-    resonanceLinksAggregate {
-      count
-    }
   }
 `)
 
@@ -72,28 +69,18 @@ export const GET_GRAPH_SPACES = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
         }
       }
     }
@@ -103,28 +90,18 @@ export const GET_GRAPH_SPACES = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
         }
       }
     }
@@ -161,7 +138,7 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 status
                 intensity
-                initiatedBy {
+                createdBy {
                   ... on Person {
                     id
                     name
@@ -179,7 +156,7 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 resourceType
                 intensity
-                initiatedBy {
+                createdBy {
                   ... on Person {
                     id
                     name
@@ -196,7 +173,7 @@ export const GET_PERSON_DETAILS = graphql(`
                 content
                 createdAt
                 intensity
-                initiatedBy {
+                createdBy {
                   ... on Person {
                     id
                     name
@@ -222,7 +199,7 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 status
                 intensity
-                initiatedBy {
+                createdBy {
                   ... on Person {
                     id
                     name
@@ -240,7 +217,7 @@ export const GET_PERSON_DETAILS = graphql(`
                 createdAt
                 resourceType
                 intensity
-                initiatedBy {
+                createdBy {
                   ... on Person {
                     id
                     name
@@ -257,27 +234,13 @@ export const GET_PERSON_DETAILS = graphql(`
                 content
                 createdAt
                 intensity
-                initiatedBy {
-                  ... on Person {
-                    id
-                    name
-                    email
-                  }
-                  ... on Community {
-                    id
-                    name
-                  }
+                createdBy {
+                  id
+                  firstName
+                  lastName
+                  email
                 }
               }
-            }
-          }
-        }
-      }
-    }
-  }
-`)
-
-export const GET_SPACE_DETAILS = graphql(`
   query getSpaceDetails($spaceId: ID!) {
     meSpaces(where: { id_EQ: $spaceId }) {
       id
@@ -295,7 +258,7 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             status
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -313,7 +276,7 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             resourceType
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -330,7 +293,7 @@ export const GET_SPACE_DETAILS = graphql(`
             content
             createdAt
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -361,7 +324,7 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             status
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -379,7 +342,7 @@ export const GET_SPACE_DETAILS = graphql(`
             createdAt
             resourceType
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -396,7 +359,7 @@ export const GET_SPACE_DETAILS = graphql(`
             content
             createdAt
             intensity
-            initiatedBy {
+            createdBy {
               ... on Person {
                 id
                 name
@@ -433,7 +396,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           status
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -451,7 +414,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           resourceType
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -468,7 +431,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           content
           createdAt
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -488,7 +451,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           status
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -506,7 +469,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           createdAt
           resourceType
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -523,7 +486,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
           content
           createdAt
           intensity
-          initiatedBy {
+          createdBy {
             ... on Person {
               id
               name
@@ -560,7 +523,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           status
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id
@@ -579,7 +542,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           resourceType
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id
@@ -597,7 +560,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           content
           createdAt
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id
@@ -619,7 +582,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           status
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id
@@ -638,7 +601,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           createdAt
           resourceType
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id
@@ -656,7 +619,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
           content
           createdAt
           intensity
-          initiatedBy {
+          createdBy {
             __typename
             ... on Person {
               id

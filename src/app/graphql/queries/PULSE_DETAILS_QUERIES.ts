@@ -20,22 +20,17 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           createdAt
           __typename
         }
-        space {
+        meSpace {
+          __typename
           id
           name
           visibility
-          ... on MeSpace {
-            __typename
-            id
-            name
-            visibility
-          }
-          ... on WeSpace {
-            __typename
-            id
-            name
-            visibility
-          }
+        }
+        weSpace {
+          __typename
+          id
+          name
+          visibility
         }
       }
     }

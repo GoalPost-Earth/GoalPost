@@ -743,7 +743,7 @@ export default function ResonancePage() {
       status: null,
       horizon: null,
       resourceType: null,
-      initiators: [],
+      createdBy: [],
       contexts: [],
     }
     setSelectedPulse(details)

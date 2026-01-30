@@ -16,17 +16,11 @@ export const GET_ALL_PULSES = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        email
       }
     }
     resourcePulses {
@@ -39,17 +33,11 @@ export const GET_ALL_PULSES = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        email
       }
     }
     storyPulses {
@@ -62,17 +50,11 @@ export const GET_ALL_PULSES = graphql(`
         id
         title
       }
-      initiatedBy {
-        __typename
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+      createdBy {
+        id
+        firstName
+        lastName
+        email
       }
     }
   }
@@ -88,7 +70,12 @@ export const GET_ALL_FIELD_CONTEXTS = graphql(`
       title
       emergentName
       createdAt
-      space {
+      meSpace {
+        id
+        name
+        visibility
+      }
+      weSpace {
         id
         name
         visibility
@@ -125,30 +112,20 @@ export const GET_ALL_ME_SPACES = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
+        email
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
       contexts {
@@ -171,30 +148,20 @@ export const GET_ALL_WE_SPACES = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
+        email
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
       contexts {

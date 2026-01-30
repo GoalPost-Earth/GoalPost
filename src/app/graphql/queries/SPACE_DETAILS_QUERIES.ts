@@ -14,16 +14,10 @@ export const GET_SPACE_DETAILS = graphql(`
         createdAt
         owner {
           __typename
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-            type
-          }
+          id
+          firstName
+          lastName
+          email
         }
         members {
           id
@@ -31,16 +25,10 @@ export const GET_SPACE_DETAILS = graphql(`
           addedAt
           member {
             __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-              type
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         contexts {
@@ -63,16 +51,10 @@ export const GET_SPACE_DETAILS = graphql(`
         createdAt
         owner {
           __typename
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-            type
-          }
+          id
+          firstName
+          lastName
+          email
         }
         members {
           id
@@ -80,16 +62,10 @@ export const GET_SPACE_DETAILS = graphql(`
           addedAt
           member {
             __typename
-            ... on Person {
-              id
-              name
-              email
-            }
-            ... on Community {
-              id
-              name
-              type
-            }
+            id
+            firstName
+            lastName
+            email
           }
         }
         contexts {

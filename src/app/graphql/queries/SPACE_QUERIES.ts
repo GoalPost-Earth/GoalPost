@@ -54,15 +54,10 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
     }
@@ -74,15 +69,10 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
     }
@@ -101,30 +91,20 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
+        email
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
       contexts {
@@ -149,30 +129,20 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
       visibility
       createdAt
       owner {
-        ... on Person {
-          id
-          name
-          email
-        }
-        ... on Community {
-          id
-          name
-        }
+        id
+        firstName
+        lastName
+        email
       }
       members {
         id
         role
         addedAt
         member {
-          ... on Person {
-            id
-            name
-            email
-          }
-          ... on Community {
-            id
-            name
-          }
+          id
+          firstName
+          lastName
+          email
         }
       }
       contexts {
