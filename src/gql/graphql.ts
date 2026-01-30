@@ -732,6 +732,18 @@ export type CreateUpdateSpaceMemberRoleResponsesMutationResponse = {
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
+export type CreateUpdateUserAiResponsesMutationResponse = {
+  __typename?: 'CreateUpdateUserAiResponsesMutationResponse'
+  info: CreateInfo
+  updateUserAiResponses: Array<UpdateUserAiResponse>
+}
+
+export type CreateUsersMutationResponse = {
+  __typename?: 'CreateUsersMutationResponse'
+  info: CreateInfo
+  users: Array<User>
+}
+
 export type CreateWeSpacesMutationResponse = {
   __typename?: 'CreateWeSpacesMutationResponse'
   info: CreateInfo
@@ -3909,6 +3921,8 @@ export type Mutation = {
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
+  createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
+  createUsers: CreateUsersMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
   deleteAddSpaceMemberResponses: DeleteInfo
   deleteChatbotResponses: DeleteInfo
@@ -3924,6 +3938,8 @@ export type Mutation = {
   deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
   deleteUpdateSpaceMemberRoleResponses: DeleteInfo
+  deleteUpdateUserAiResponses: DeleteInfo
+  deleteUsers: DeleteInfo
   deleteWeSpaces: DeleteInfo
   /**
    * Invite a person to join the platform.
@@ -3960,6 +3976,13 @@ export type Mutation = {
   updateSpaceMemberships: UpdateSpaceMembershipsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
   updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
+  updateUpdateUserAiResponses: UpdateUpdateUserAiResponsesMutationResponse
+  /**
+   * Update AI functionality preferences for a user.
+   * Users can enable or disable AI features in the application.
+   */
+  updateUserAI: UpdateUserAiResponse
+  updateUsers: UpdateUsersMutationResponse
   updateWeSpaces: UpdateWeSpacesMutationResponse
 }
 
@@ -4029,6 +4052,14 @@ export type MutationCreateUpdateSpaceMemberRoleResponsesArgs = {
   input: Array<UpdateSpaceMemberRoleResponseCreateInput>
 }
 
+export type MutationCreateUpdateUserAiResponsesArgs = {
+  input: Array<UpdateUserAiResponseCreateInput>
+}
+
+export type MutationCreateUsersArgs = {
+  input: Array<UserCreateInput>
+}
+
 export type MutationCreateWeSpacesArgs = {
   input: Array<WeSpaceCreateInput>
 }
@@ -4096,6 +4127,15 @@ export type MutationDeleteStoryPulsesArgs = {
 
 export type MutationDeleteUpdateSpaceMemberRoleResponsesArgs = {
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
+export type MutationDeleteUpdateUserAiResponsesArgs = {
+  where?: InputMaybe<UpdateUserAiResponseWhere>
+}
+
+export type MutationDeleteUsersArgs = {
+  delete?: InputMaybe<UserDeleteInput>
+  where?: InputMaybe<UserWhere>
 }
 
 export type MutationDeleteWeSpacesArgs = {
@@ -4191,6 +4231,21 @@ export type MutationUpdateStoryPulsesArgs = {
 export type MutationUpdateUpdateSpaceMemberRoleResponsesArgs = {
   update?: InputMaybe<UpdateSpaceMemberRoleResponseUpdateInput>
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
+export type MutationUpdateUpdateUserAiResponsesArgs = {
+  update?: InputMaybe<UpdateUserAiResponseUpdateInput>
+  where?: InputMaybe<UpdateUserAiResponseWhere>
+}
+
+export type MutationUpdateUserAiArgs = {
+  aiEnabled: Scalars['Boolean']['input']
+  userId: Scalars['ID']['input']
+}
+
+export type MutationUpdateUsersArgs = {
+  update?: InputMaybe<UserUpdateInput>
+  where?: InputMaybe<UserWhere>
 }
 
 export type MutationUpdateWeSpacesArgs = {
@@ -4585,6 +4640,14 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "updateSpaceMemberRoleResponsesConnection" instead */
   updateSpaceMemberRoleResponsesAggregate: UpdateSpaceMemberRoleResponseAggregateSelection
   updateSpaceMemberRoleResponsesConnection: UpdateSpaceMemberRoleResponsesConnection
+  updateUserAiResponses: Array<UpdateUserAiResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "updateUserAiResponsesConnection" instead */
+  updateUserAiResponsesAggregate: UpdateUserAiResponseAggregateSelection
+  updateUserAiResponsesConnection: UpdateUserAiResponsesConnection
+  users: Array<User>
+  /** @deprecated Please use the explicit field "aggregate" inside "usersConnection" instead */
+  usersAggregate: UserAggregateSelection
+  usersConnection: UsersConnection
   weSpaces: Array<WeSpace>
   /** @deprecated Please use the explicit field "aggregate" inside "weSpacesConnection" instead */
   weSpacesAggregate: WeSpaceAggregateSelection
@@ -4885,6 +4948,42 @@ export type QueryUpdateSpaceMemberRoleResponsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<UpdateSpaceMemberRoleResponseSort>>
   where?: InputMaybe<UpdateSpaceMemberRoleResponseWhere>
+}
+
+export type QueryUpdateUserAiResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdateUserAiResponseSort>>
+  where?: InputMaybe<UpdateUserAiResponseWhere>
+}
+
+export type QueryUpdateUserAiResponsesAggregateArgs = {
+  where?: InputMaybe<UpdateUserAiResponseWhere>
+}
+
+export type QueryUpdateUserAiResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdateUserAiResponseSort>>
+  where?: InputMaybe<UpdateUserAiResponseWhere>
+}
+
+export type QueryUsersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UserSort>>
+  where?: InputMaybe<UserWhere>
+}
+
+export type QueryUsersAggregateArgs = {
+  where?: InputMaybe<UserWhere>
+}
+
+export type QueryUsersConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UserSort>>
+  where?: InputMaybe<UserWhere>
 }
 
 export type QueryWeSpacesArgs = {
@@ -6937,10 +7036,378 @@ export type UpdateUpdateSpaceMemberRoleResponsesMutationResponse = {
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
 }
 
+export type UpdateUpdateUserAiResponsesMutationResponse = {
+  __typename?: 'UpdateUpdateUserAiResponsesMutationResponse'
+  info: UpdateInfo
+  updateUserAiResponses: Array<UpdateUserAiResponse>
+}
+
+/** Response when updating user AI preferences. */
+export type UpdateUserAiResponse = {
+  __typename?: 'UpdateUserAIResponse'
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+  user?: Maybe<User>
+}
+
+export type UpdateUserAiResponseAggregate = {
+  __typename?: 'UpdateUserAIResponseAggregate'
+  count: Count
+  node: UpdateUserAiResponseAggregateNode
+}
+
+export type UpdateUserAiResponseAggregateNode = {
+  __typename?: 'UpdateUserAIResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type UpdateUserAiResponseAggregateSelection = {
+  __typename?: 'UpdateUserAIResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type UpdateUserAiResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type UpdateUserAiResponseEdge = {
+  __typename?: 'UpdateUserAIResponseEdge'
+  cursor: Scalars['String']['output']
+  node: UpdateUserAiResponse
+}
+
+/** Fields to sort UpdateUserAiResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one UpdateUserAIResponseSort object. */
+export type UpdateUserAiResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type UpdateUserAiResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdateUserAiResponseWhere = {
+  AND?: InputMaybe<Array<UpdateUserAiResponseWhere>>
+  NOT?: InputMaybe<UpdateUserAiResponseWhere>
+  OR?: InputMaybe<Array<UpdateUserAiResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdateUserAiResponsesConnection = {
+  __typename?: 'UpdateUserAiResponsesConnection'
+  aggregate: UpdateUserAiResponseAggregate
+  edges: Array<UpdateUserAiResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type UpdateUsersMutationResponse = {
+  __typename?: 'UpdateUsersMutationResponse'
+  info: UpdateInfo
+  users: Array<User>
+}
+
 export type UpdateWeSpacesMutationResponse = {
   __typename?: 'UpdateWeSpacesMutationResponse'
   info: UpdateInfo
   weSpaces: Array<WeSpace>
+}
+
+/**
+ * User authentication and preferences.
+ * Extends Person with login and feature flags.
+ * Multi-label: ["Person", "User"]
+ */
+export type User = {
+  __typename?: 'User'
+  aiEnabled: Scalars['Boolean']['output']
+  email?: Maybe<Scalars['String']['output']>
+  firstName: Scalars['String']['output']
+  id: Scalars['ID']['output']
+  lastName: Scalars['String']['output']
+  name: Scalars['String']['output']
+  ownsSpaces: Array<Space>
+  /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
+  ownsSpacesAggregate?: Maybe<UserSpaceOwnsSpacesAggregationSelection>
+  ownsSpacesConnection: UserOwnsSpacesConnection
+}
+
+/**
+ * User authentication and preferences.
+ * Extends Person with login and feature flags.
+ * Multi-label: ["Person", "User"]
+ */
+export type UserOwnsSpacesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SpaceSort>>
+  where?: InputMaybe<SpaceWhere>
+}
+
+/**
+ * User authentication and preferences.
+ * Extends Person with login and feature flags.
+ * Multi-label: ["Person", "User"]
+ */
+export type UserOwnsSpacesAggregateArgs = {
+  where?: InputMaybe<SpaceWhere>
+}
+
+/**
+ * User authentication and preferences.
+ * Extends Person with login and feature flags.
+ * Multi-label: ["Person", "User"]
+ */
+export type UserOwnsSpacesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UserOwnsSpacesConnectionSort>>
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
+}
+
+export type UserAggregate = {
+  __typename?: 'UserAggregate'
+  count: Count
+  node: UserAggregateNode
+}
+
+export type UserAggregateNode = {
+  __typename?: 'UserAggregateNode'
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+}
+
+export type UserAggregateSelection = {
+  __typename?: 'UserAggregateSelection'
+  count: Scalars['Int']['output']
+  email: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+}
+
+export type UserCreateInput = {
+  aiEnabled: Scalars['Boolean']['input']
+  email?: InputMaybe<Scalars['String']['input']>
+  firstName: Scalars['String']['input']
+  lastName: Scalars['String']['input']
+  ownsSpaces?: InputMaybe<UserOwnsSpacesFieldInput>
+}
+
+export type UserDeleteInput = {
+  ownsSpaces?: InputMaybe<Array<UserOwnsSpacesDeleteFieldInput>>
+}
+
+export type UserEdge = {
+  __typename?: 'UserEdge'
+  cursor: Scalars['String']['output']
+  node: User
+}
+
+export type UserOwnsSpacesAggregateInput = {
+  AND?: InputMaybe<Array<UserOwnsSpacesAggregateInput>>
+  NOT?: InputMaybe<UserOwnsSpacesAggregateInput>
+  OR?: InputMaybe<Array<UserOwnsSpacesAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<UserOwnsSpacesNodeAggregationWhereInput>
+}
+
+export type UserOwnsSpacesConnectFieldInput = {
+  connect?: InputMaybe<SpaceConnectInput>
+  where?: InputMaybe<SpaceConnectWhere>
+}
+
+export type UserOwnsSpacesConnection = {
+  __typename?: 'UserOwnsSpacesConnection'
+  aggregate: UserSpaceOwnsSpacesAggregateSelection
+  edges: Array<UserOwnsSpacesRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type UserOwnsSpacesConnectionSort = {
+  node?: InputMaybe<SpaceSort>
+}
+
+export type UserOwnsSpacesConnectionWhere = {
+  AND?: InputMaybe<Array<UserOwnsSpacesConnectionWhere>>
+  NOT?: InputMaybe<UserOwnsSpacesConnectionWhere>
+  OR?: InputMaybe<Array<UserOwnsSpacesConnectionWhere>>
+  node?: InputMaybe<SpaceWhere>
+}
+
+export type UserOwnsSpacesCreateFieldInput = {
+  node: SpaceCreateInput
+}
+
+export type UserOwnsSpacesDeleteFieldInput = {
+  delete?: InputMaybe<SpaceDeleteInput>
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
+}
+
+export type UserOwnsSpacesDisconnectFieldInput = {
+  disconnect?: InputMaybe<SpaceDisconnectInput>
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
+}
+
+export type UserOwnsSpacesFieldInput = {
+  connect?: InputMaybe<Array<UserOwnsSpacesConnectFieldInput>>
+  create?: InputMaybe<Array<UserOwnsSpacesCreateFieldInput>>
+}
+
+export type UserOwnsSpacesNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<UserOwnsSpacesNodeAggregationWhereInput>>
+  NOT?: InputMaybe<UserOwnsSpacesNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<UserOwnsSpacesNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type UserOwnsSpacesRelationship = {
+  __typename?: 'UserOwnsSpacesRelationship'
+  cursor: Scalars['String']['output']
+  node: Space
+}
+
+export type UserOwnsSpacesUpdateConnectionInput = {
+  node?: InputMaybe<SpaceUpdateInput>
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
+}
+
+export type UserOwnsSpacesUpdateFieldInput = {
+  connect?: InputMaybe<Array<UserOwnsSpacesConnectFieldInput>>
+  create?: InputMaybe<Array<UserOwnsSpacesCreateFieldInput>>
+  delete?: InputMaybe<Array<UserOwnsSpacesDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<UserOwnsSpacesDisconnectFieldInput>>
+  update?: InputMaybe<UserOwnsSpacesUpdateConnectionInput>
+}
+
+/** Fields to sort Users by. The order in which sorts are applied is not guaranteed when specifying many fields in one UserSort object. */
+export type UserSort = {
+  aiEnabled?: InputMaybe<SortDirection>
+  email?: InputMaybe<SortDirection>
+  firstName?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  lastName?: InputMaybe<SortDirection>
+}
+
+export type UserSpaceOwnsSpacesAggregateSelection = {
+  __typename?: 'UserSpaceOwnsSpacesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<UserSpaceOwnsSpacesNodeAggregateSelection>
+}
+
+export type UserSpaceOwnsSpacesAggregationSelection = {
+  __typename?: 'UserSpaceOwnsSpacesAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<UserSpaceOwnsSpacesNodeAggregateSelection>
+}
+
+export type UserSpaceOwnsSpacesNodeAggregateSelection = {
+  __typename?: 'UserSpaceOwnsSpacesNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+}
+
+export type UserUpdateInput = {
+  aiEnabled_SET?: InputMaybe<Scalars['Boolean']['input']>
+  email_SET?: InputMaybe<Scalars['String']['input']>
+  firstName_SET?: InputMaybe<Scalars['String']['input']>
+  lastName_SET?: InputMaybe<Scalars['String']['input']>
+  ownsSpaces?: InputMaybe<Array<UserOwnsSpacesUpdateFieldInput>>
+}
+
+export type UserWhere = {
+  AND?: InputMaybe<Array<UserWhere>>
+  NOT?: InputMaybe<UserWhere>
+  OR?: InputMaybe<Array<UserWhere>>
+  aiEnabled_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  email_EQ?: InputMaybe<Scalars['String']['input']>
+  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  firstName_EQ?: InputMaybe<Scalars['String']['input']>
+  firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastName_EQ?: InputMaybe<Scalars['String']['input']>
+  lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  ownsSpacesAggregate?: InputMaybe<UserOwnsSpacesAggregateInput>
+  /** Return Users where all of the related UserOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_ALL?: InputMaybe<UserOwnsSpacesConnectionWhere>
+  /** Return Users where none of the related UserOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_NONE?: InputMaybe<UserOwnsSpacesConnectionWhere>
+  /** Return Users where one of the related UserOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_SINGLE?: InputMaybe<UserOwnsSpacesConnectionWhere>
+  /** Return Users where some of the related UserOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_SOME?: InputMaybe<UserOwnsSpacesConnectionWhere>
+  /** Return Users where all of the related Spaces match this filter */
+  ownsSpaces_ALL?: InputMaybe<SpaceWhere>
+  /** Return Users where none of the related Spaces match this filter */
+  ownsSpaces_NONE?: InputMaybe<SpaceWhere>
+  /** Return Users where one of the related Spaces match this filter */
+  ownsSpaces_SINGLE?: InputMaybe<SpaceWhere>
+  /** Return Users where some of the related Spaces match this filter */
+  ownsSpaces_SOME?: InputMaybe<SpaceWhere>
+}
+
+export type UsersConnection = {
+  __typename?: 'UsersConnection'
+  aggregate: UserAggregate
+  edges: Array<UserEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 /**
@@ -8592,6 +9059,20 @@ export type GetPulseDetailsWithContextQuery = {
                 createdAt: any
               }
           >
+          space: Array<
+            | {
+                __typename: 'MeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
+              }
+            | {
+                __typename: 'WeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
+              }
+          >
           meSpace: Array<{
             __typename: 'MeSpace'
             id: string
@@ -8641,6 +9122,20 @@ export type GetPulseDetailsWithContextQuery = {
                 createdAt: any
               }
           >
+          space: Array<
+            | {
+                __typename: 'MeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
+              }
+            | {
+                __typename: 'WeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
+              }
+          >
           meSpace: Array<{
             __typename: 'MeSpace'
             id: string
@@ -8688,6 +9183,20 @@ export type GetPulseDetailsWithContextQuery = {
                 title: string
                 content: string
                 createdAt: any
+              }
+          >
+          space: Array<
+            | {
+                __typename: 'MeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
+              }
+            | {
+                __typename: 'WeSpace'
+                id: string
+                name: string
+                visibility: SpaceVisibility
               }
           >
           meSpace: Array<{
@@ -12794,6 +13303,31 @@ export const GetPulseDetailsWithContextDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: '__typename' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
                             },
                           ],
                         },

@@ -20,6 +20,12 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           createdAt
           __typename
         }
+        space {
+          __typename
+          id
+          name
+          visibility
+        }
         meSpace {
           __typename
           id

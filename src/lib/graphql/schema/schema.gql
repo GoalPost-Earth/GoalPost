@@ -329,15 +329,6 @@ type RemoveSpaceMemberResponse {
   message: String!
 }
 
-"""
-Response when updating user AI preferences.
-"""
-type UpdateUserAIResponse {
-  success: Boolean!
-  message: String!
-  user: User
-}
-
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -388,7 +379,6 @@ type Mutation {
   Update AI functionality preferences for a user.
   Users can enable or disable AI features in the application.
   """
-  updateUserAI(userId: ID!, aiEnabled: Boolean!): UpdateUserAIResponse!
 }
 
 type Query {
