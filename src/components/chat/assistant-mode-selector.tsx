@@ -64,35 +64,33 @@ export function AssistantModeSelector({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <label
-          className="text-sm font-medium text-gray-700"
-          htmlFor="assistant-mode-select"
-        >
-          Assistant Mode
-        </label>
-        <select
-          id="assistant-mode-select"
-          className="w-48 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          value={selectedMode}
-          onChange={(e) => handleModeChange(e.target.value as AssistantMode)}
-          disabled={disabled || isLoading}
-        >
-          {Object.entries(MODE_METADATA).map(([key, metadata]) => (
-            <option key={key} value={key}>
-              {`${metadata.icon} ${metadata.label}`}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="flex flex-col gap-3">
+      <label
+        className="text-[10px] font-bold text-gp-ink-muted dark:text-gp-ink-soft block uppercase tracking-[0.18em]"
+        htmlFor="assistant-mode-select"
+      >
+        Interaction Style
+      </label>
+      <select
+        id="assistant-mode-select"
+        className="w-full rounded-xl border bg-white/50 dark:bg-slate-900/50 border-gp-glass-border px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary/50 focus:border-gp-primary transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        value={selectedMode}
+        onChange={(e) => handleModeChange(e.target.value as AssistantMode)}
+        disabled={disabled || isLoading}
+      >
+        {Object.entries(MODE_METADATA).map(([key, metadata]) => (
+          <option key={key} value={key}>
+            {`${metadata.icon} ${metadata.label}`}
+          </option>
+        ))}
+      </select>
 
       {/* Show description of current mode */}
-      <div className="text-xs text-gray-600">
+      <div className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
         {MODE_METADATA[selectedMode]?.description}
       </div>
       {MODE_METADATA[selectedMode]?.subtitle && (
-        <div className="text-xs text-gray-500 italic">
+        <div className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft italic opacity-75">
           {MODE_METADATA[selectedMode].subtitle}
         </div>
       )}
@@ -114,10 +112,12 @@ export function AssistantModeIndicator({
   const metadata = MODE_METADATA[mode]
 
   return (
-    <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gp-primary/10 dark:bg-gp-primary/20 border border-gp-glass-border backdrop-blur-sm">
       <span className="text-sm">{metadata?.icon}</span>
       {showLabel && (
-        <span className="text-xs font-medium">{metadata?.label}</span>
+        <span className="text-xs font-medium text-slate-900 dark:text-white">
+          {metadata?.label}
+        </span>
       )}
     </div>
   )
@@ -128,23 +128,29 @@ export function AssistantModeIndicator({
  */
 export function AssistantModeInfo() {
   return (
-    <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-      <h3 className="font-semibold text-sm text-gray-900">How modes work:</h3>
+    <div className="space-y-4 p-5 rounded-2xl bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]">
+      <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-gp-ink-muted dark:text-gp-ink-soft">
+        How modes work
+      </h3>
 
       {Object.entries(MODE_METADATA).map(([key, metadata]) => (
         <div
           key={key}
-          className="space-y-1 pb-3 border-b border-gray-200 last:border-b-0 last:pb-0"
+          className="space-y-2 pb-4 border-b border-gp-glass-border last:border-b-0 last:pb-0"
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">{metadata.icon}</span>
-            <span className="font-medium text-sm text-gray-900">
+            <span className="font-medium text-sm text-slate-900 dark:text-white">
               {metadata.label}
             </span>
           </div>
-          <p className="text-sm text-gray-700 ml-6">{metadata.description}</p>
+          <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft ml-7 leading-relaxed">
+            {metadata.description}
+          </p>
           {metadata.subtitle && (
-            <p className="text-xs text-gray-500 ml-6">{metadata.subtitle}</p>
+            <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft ml-7 italic opacity-75">
+              {metadata.subtitle}
+            </p>
           )}
         </div>
       ))}

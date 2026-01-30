@@ -8,6 +8,8 @@ import {
   AssistantChatTransport,
 } from '@assistant-ui/react-ai-sdk'
 import { Thread } from '@/components/assistant-ui/thread'
+import { usePreferences } from '@/contexts/preferences-context'
+import { SYSTEM_PROMPTS } from '@/lib/simulation/system-prompts'
 
 interface AIAssistantPanelProps {
   isOpen: boolean
@@ -17,10 +19,14 @@ interface AIAssistantPanelProps {
 export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
+  const { aiMode } = usePreferences()
 
   const runtime = useChatRuntime({
     transport: new AssistantChatTransport({
       api: '/api/chat',
+      body: {
+        system: SYSTEM_PROMPTS[aiMode],
+      },
     }),
   })
 

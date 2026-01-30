@@ -4,6 +4,8 @@ import { ReactNode, useState, useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { useTheme, ThemeColor } from '@/contexts/theme-context'
 import { useAnimations } from '@/contexts/animation-context'
+import { usePreferences } from '@/contexts/preferences-context'
+import { AssistantModeSelector } from '@/components/chat/assistant-mode-selector'
 
 type SettingSectionProps = {
   icon: string
@@ -107,6 +109,7 @@ function SettingSwatch({
 export default function SettingsPage() {
   const { themeColor, setThemeColor } = useTheme()
   const { animationsEnabled, setAnimationsEnabled } = useAnimations()
+  const { aiMode, setAiMode } = usePreferences()
 
   const themeColors: Array<{ color: string; themeColor: ThemeColor }> = [
     { color: '#0A84FF', themeColor: 'default' },
@@ -188,6 +191,15 @@ export default function SettingsPage() {
                   description="Real-time alerts for community activity"
                   active
                 />
+              </SettingSection>
+
+              <SettingSection icon="smart_toy" title="AI Assistant">
+                <SettingCard>
+                  <AssistantModeSelector
+                    currentMode={aiMode}
+                    onModeChange={setAiMode}
+                  />
+                </SettingCard>
               </SettingSection>
 
               <SettingSection icon="hub" title="Coherence">
