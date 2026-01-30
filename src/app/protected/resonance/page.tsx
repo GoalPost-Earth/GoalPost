@@ -402,10 +402,7 @@ export default function ResonancePage() {
     data: linksData,
     loading: linksLoading,
     error: linksError,
-  } = useQuery(GET_ALL_RESONANCE_LINKS_WITH_RESONANCES, {
-    ssr: false, // Disable SSR for this query
-    fetchPolicy: 'cache-and-network',
-  })
+  } = useQuery(GET_ALL_RESONANCE_LINKS_WITH_RESONANCES)
 
   // Transform resonance links into field resonances and link nodes
   const transformedData = useMemo(() => {
