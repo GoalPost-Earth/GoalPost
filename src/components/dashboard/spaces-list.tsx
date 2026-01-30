@@ -115,9 +115,7 @@ export function SpacesList({ showAll = false }: SpacesListProps) {
 
             const owner = space.owner[0]
             const ownerName =
-              owner?.__typename === 'Person'
-                ? owner.name
-                : owner?.name || 'Unknown'
+              `${owner?.firstName} ${owner?.lastName}` || 'Unknown'
 
             const memberCount = space.members.length
             const contextCount = space.contexts.length

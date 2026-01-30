@@ -11,10 +11,7 @@ const driver = neo4j.driver(
   neo4j.auth.basic(
     process.env.NEO4J_USERNAME as string,
     process.env.NEO4J_PASSWORD as string
-  ),
-  {
-    database: process.env.NEO4J_DATABASE || 'neo4j',
-  }
+  )
 )
 
 export { driver }

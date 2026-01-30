@@ -317,7 +317,7 @@ function FieldDetailPage() {
           id: creator.id ?? creator.name ?? 'unknown',
           name: creator.name ?? 'Unknown',
           email: 'email' in creator ? (creator.email ?? undefined) : undefined,
-          kind: 'person',
+          kind: 'person' as const,
         })) ?? [],
       contexts:
         entry.context?.map((ctx) => ({

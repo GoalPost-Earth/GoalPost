@@ -57,6 +57,7 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
       }
@@ -72,6 +73,7 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
       }
@@ -94,6 +96,7 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
       members {
@@ -104,6 +107,7 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
       }
@@ -132,6 +136,7 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
       members {
@@ -142,6 +147,7 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
       }

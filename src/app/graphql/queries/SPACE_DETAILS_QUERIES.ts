@@ -17,6 +17,7 @@ export const GET_SPACE_DETAILS = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
         members {
@@ -28,6 +29,7 @@ export const GET_SPACE_DETAILS = graphql(`
             id
             firstName
             lastName
+            name
             email
           }
         }
@@ -54,6 +56,7 @@ export const GET_SPACE_DETAILS = graphql(`
           id
           firstName
           lastName
+          name
           email
         }
         members {
@@ -65,6 +68,7 @@ export const GET_SPACE_DETAILS = graphql(`
             id
             firstName
             lastName
+            name
             email
           }
         }

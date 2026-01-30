@@ -20,6 +20,7 @@ export const GET_ALL_PULSES = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
     }
@@ -37,6 +38,7 @@ export const GET_ALL_PULSES = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
     }
@@ -54,6 +56,7 @@ export const GET_ALL_PULSES = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
     }
@@ -151,6 +154,7 @@ export const GET_ALL_WE_SPACES = graphql(`
         id
         firstName
         lastName
+        name
         email
       }
       members {

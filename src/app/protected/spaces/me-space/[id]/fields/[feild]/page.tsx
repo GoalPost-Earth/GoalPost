@@ -312,13 +312,13 @@ function FieldDetailPage() {
       status: goal?.status ?? null,
       horizon: goal?.horizon ?? null,
       resourceType: resource?.resourceType ?? null,
-      initiators:
+      createdBy:
         entry.createdBy?.map((initiator) => ({
           id: initiator.id ?? initiator.name ?? 'unknown',
           name: initiator.name ?? 'Unknown',
           email:
             'email' in initiator ? (initiator.email ?? undefined) : undefined,
-          kind: initiator.__typename === 'Community' ? 'community' : 'person',
+          kind: 'person' as const,
         })) ?? [],
       contexts:
         entry.context?.map((ctx) => ({
