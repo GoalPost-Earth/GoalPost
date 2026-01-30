@@ -50,6 +50,9 @@ export function GenericPulseCanvas({
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
+    // Guard against SSR - only run on client
+    if (typeof window === 'undefined') return
+
     const updateCanvasSize = () => {
       const width = (window.innerWidth || 1200) * canvasScale
       const height = (window.innerHeight || 1200) * canvasScale
