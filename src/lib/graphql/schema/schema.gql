@@ -48,7 +48,7 @@ type Person
   name: String! @customResolver(requires: "firstName lastName")
   email: String
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
-  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
+  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
 
 """
