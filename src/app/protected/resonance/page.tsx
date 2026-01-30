@@ -518,6 +518,9 @@ export default function ResonancePage() {
 
   // Update canvas size and positions
   useEffect(() => {
+    // Guard against SSR - only run on client
+    if (typeof window === 'undefined') return
+
     const width = (window.innerWidth || 1200) * 5
     const height = (window.innerHeight || 1200) * 5
     setCanvasSize({ width, height })
