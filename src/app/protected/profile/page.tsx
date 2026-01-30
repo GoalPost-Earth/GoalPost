@@ -86,13 +86,11 @@ export default function ProfilePage() {
 
   const spaceCount = personData.ownsSpaces?.length || 0
   const meSpaces =
-    personData.ownsSpaces?.filter(
-      (space) => space.__typename === 'MeSpace'
-    ) || []
+    personData.ownsSpaces?.filter((space) => space.__typename === 'MeSpace') ||
+    []
   const weSpaces =
-    personData.ownsSpaces?.filter(
-      (space) => space.__typename === 'WeSpace'
-    ) || []
+    personData.ownsSpaces?.filter((space) => space.__typename === 'WeSpace') ||
+    []
 
   const initials = personData.name
     ? personData.name
@@ -103,7 +101,7 @@ export default function ProfilePage() {
     : 'U'
 
   return (
-    <div className="flex flex-col h-full w-full overflow-auto bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8">
+    <div className="flex flex-col h-full w-full overflow-auto bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8 pt-20">
       <div className="max-w-4xl mx-auto w-full space-y-8">
         {/* Profile Header Card */}
         <div className="chat-card rounded-2xl p-8 relative overflow-hidden">
@@ -234,9 +232,7 @@ export default function ProfilePage() {
                     key={space.id}
                     onClick={() => {
                       const spaceType = isMeSpace ? 'me-space' : 'we-space'
-                      router.push(
-                        `/protected/spaces/${spaceType}/${space.id}`
-                      )
+                      router.push(`/protected/spaces/${spaceType}/${space.id}`)
                     }}
                     className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group border border-transparent hover:border-gp-primary/20"
                   >
