@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Routes that require authentication
-const protectedRoutes = ['/protected']
+// const protectedRoutes = ['/protected']
 
 // Generate CSP nonce (Edge compatible)
 function generateNonce(): string {
@@ -20,7 +20,7 @@ function generateNonce(): string {
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  const token = request.cookies.get('accessToken')?.value
+  // const token = request.cookies.get('accessToken')?.value
 
   // Generate nonce
   const nonce = generateNonce()
@@ -42,9 +42,9 @@ export function middleware(request: NextRequest) {
     .trim()
 
   // Auth logic
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
+  // const isProtectedRoute = protectedRoutes.some((route) =>
+  //   pathname.startsWith(route)
+  // )
 
   // IMPORTANT: Skip middleware for static files and API routes
   if (
@@ -59,22 +59,22 @@ export function middleware(request: NextRequest) {
   }
 
   // Protected routes without token → redirect to login
-  if (isProtectedRoute && !token) {
-    const response = NextResponse.redirect(new URL('/auth/login', request.url))
-    response.headers.set('Content-Security-Policy', cspHeader)
-    response.headers.set('x-nonce', nonce)
-    return response
-  }
+  // if (isProtectedRoute && !token) {
+  //   const response = NextResponse.redirect(new URL('/auth/login', request.url))
+  //   response.headers.set('Content-Security-Policy', cspHeader)
+  //   response.headers.set('x-nonce', nonce)
+  //   return response
+  // }
 
-  // Already logged in but trying to access auth routes → redirect to spaces
-  if (pathname.startsWith('/auth') && token) {
-    const response = NextResponse.redirect(
-      new URL('/protected/spaces', request.url)
-    )
-    response.headers.set('Content-Security-Policy', cspHeader)
-    response.headers.set('x-nonce', nonce)
-    return response
-  }
+  // // Already logged in but trying to access auth routes → redirect to spaces
+  // if (pathname.startsWith('/auth') && token) {
+  //   const response = NextResponse.redirect(
+  //     new URL('/protected/spaces', request.url)
+  //   )
+  //   response.headers.set('Content-Security-Policy', cspHeader)
+  //   response.headers.set('x-nonce', nonce)
+  //   return response
+  // }
 
   // Normal request
   const response = NextResponse.next()

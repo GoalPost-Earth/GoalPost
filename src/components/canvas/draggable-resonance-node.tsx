@@ -147,15 +147,16 @@ export function DraggableResonanceNode({
     }
 
     if (animationsEnabled) {
+      // Update display position immediately to reflect the target
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
+
       animationRef.current = gsap.to(displayPositionRef.current, {
         x,
         y,
         duration: 0.45,
         ease: 'elastic.out(0.42, 0.8)',
         overwrite: true,
-        onUpdate: () => {
-          setDisplayPosition({ ...displayPositionRef.current })
-        },
       })
     } else {
       // Instantly update position without animation
