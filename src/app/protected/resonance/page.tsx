@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-// import { useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import { useAnimations } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
@@ -20,9 +20,9 @@ import {
   calculatePulsePositions,
   buildResonanceLinkLines,
   buildLinkPulseLines,
-  getPulseIcon,
   FIELD_NODE_RADIUS,
   LINK_NODE_RADIUS,
+  getPulseIcon,
 } from '@/lib/canvas-utils/resonance-utils'
 import {
   type FieldResonanceNode,
@@ -30,37 +30,33 @@ import {
   type PulseNode,
   type ExpandedState,
 } from '@/lib/canvas-utils/resonance-types'
-// import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql'
+import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql'
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
-// interface ResonanceLinkData {
-//   id: string
-//   confidence: number
-//   evidence: string | null
-//   createdAt: string
-//   resonance: Array<{
-//     id: string
-//     label: string
-//     description: string | null
-//   }>
-//   source: Array<{
-//     id: string
-//     content: string
-//     __typename: string
-//   }>
-//   target: Array<{
-//     id: string
-//     content: string
-//     __typename: string
-//   }>
-// }
-
-// ============================================================================
-// Expansion State Types
-// ============================================================================
+interface ResonanceLinkData {
+  id: string
+  confidence: number
+  evidence: string | null
+  createdAt: string
+  resonance: Array<{
+    id: string
+    label: string
+    description: string | null
+  }>
+  source: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+  target: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+}
 
 // ============================================================================
 // Main Component
@@ -92,115 +88,28 @@ export default function ResonancePage() {
     setPageTitle('Resonance')
   }, [setPageTitle])
 
-  // Create clamping function based on canvas size
-  const clampPosition = useMemo(
-    () => createClampPosition(canvasSize),
-    [canvasSize]
-  )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const clampPosition = useCallback(createClampPosition(canvasSize), [
+    canvasSize,
+  ])
 
-  // Create layout relaxation function
-  const relaxLayout = useMemo(
-    () => createRelaxLayout(clampPosition),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const relaxLayout = useCallback(createRelaxLayout(clampPosition), [
+    clampPosition,
+  ])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const resolveCollisions = useCallback(
+    createResolveCollisions(clampPosition),
     [clampPosition]
   )
 
-  // Create collision resolution function
-  const resolveCollisions = useMemo(
-    () => createResolveCollisions(clampPosition),
-    [clampPosition]
-  )
-
-  // Dummy data for testing
-  const linksData = useMemo(
-    () => ({
-      fieldResonances: [
-        {
-          id: 'resonance-1',
-          label: 'Learning & Growth',
-          description:
-            'Connection between self-improvement practices and career advancement',
-          confidence: 0.85,
-          source: [
-            {
-              id: 'pulse-1',
-              content: 'Started daily journaling practice for reflection',
-              __typename: 'StoryPulse',
-            },
-          ],
-          target: [
-            {
-              id: 'pulse-2',
-              content: 'Enrolled in advanced TypeScript course',
-              __typename: 'ResourcePulse',
-            },
-          ],
-        },
-        {
-          id: 'resonance-2',
-          label: 'Community & Impact',
-          description: 'Pattern of contributing to open source and mentoring',
-          confidence: 0.78,
-          source: [
-            {
-              id: 'pulse-3',
-              content: 'Mentored three junior developers this quarter',
-              __typename: 'GoalPulse',
-            },
-          ],
-          target: [
-            {
-              id: 'pulse-4',
-              content: 'Contributed to three open source projects',
-              __typename: 'ResourcePulse',
-            },
-          ],
-        },
-        {
-          id: 'resonance-3',
-          label: 'Health & Wellness',
-          description: 'Consistent exercise routine supporting energy levels',
-          confidence: 0.92,
-          source: [
-            {
-              id: 'pulse-5',
-              content: '30-day running challenge completed',
-              __typename: 'GoalPulse',
-            },
-          ],
-          target: [
-            {
-              id: 'pulse-6',
-              content: 'Increased productivity and focus at work',
-              __typename: 'StoryPulse',
-            },
-          ],
-        },
-        {
-          id: 'resonance-4',
-          label: 'Creative Expression',
-          description:
-            'Link between artistic pursuits and problem-solving skills',
-          confidence: 0.71,
-          source: [
-            {
-              id: 'pulse-7',
-              content: 'Started weekly photography sessions',
-              __typename: 'StoryPulse',
-            },
-          ],
-          target: [
-            {
-              id: 'pulse-8',
-              content: 'Improved design thinking in product development',
-              __typename: 'ResourcePulse',
-            },
-          ],
-        },
-      ],
-    }),
-    []
-  )
-  const linksLoading = false
+  // Fetch resonance links with their associated field resonances
+  const { data: linksData, loading: linksLoading } = useQuery<{
+    fieldResonances: ResonanceLinkData[]
+  }>(GET_ALL_RESONANCE_LINKS_WITH_RESONANCES, {
+    fetchPolicy: 'network-only',
+  })
 
   // Transform resonance links into field resonances and link nodes
   const transformedData = useMemo(() => {
@@ -243,19 +152,25 @@ export default function ResonancePage() {
   }, [linksData])
 
   // Helper to convert percentage to pixels
-  const toBandPx = useMemo(() => createToBandPx(), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const toBandPx = useCallback(createToBandPx(), [])
 
-  const [hasInitialized, setHasInitialized] = useState(false)
-
-  // Update canvas size and positions - only run once on mount
+  // Initialize canvas size from window (one-time)
   useEffect(() => {
-    // Guard against SSR - only run on client
     if (typeof window === 'undefined') return
-    if (hasInitialized) return
-
     const width = (window.innerWidth || 1200) * 5
     const height = (window.innerHeight || 1200) * 5
     setCanvasSize({ width, height })
+  }, []) // Empty deps - only runs once on mount
+
+  // Update canvas size and positions
+  useEffect(() => {
+    // Guard against SSR - only run on client
+    if (typeof window === 'undefined') return
+    if (transformedData.resonances.length === 0) return
+
+    const width = canvasSize.width
+    const height = canvasSize.height
 
     // Convert field resonances
     const positioned = transformedData.resonances.map((res) => ({
@@ -275,8 +190,7 @@ export default function ResonancePage() {
 
     setFieldResonances(relaxed.fields)
     setResonanceLinks(relaxed.links)
-    setHasInitialized(true)
-  }, [hasInitialized, relaxLayout, toBandPx, transformedData])
+  }, [canvasSize, toBandPx, transformedData, relaxLayout])
 
   // Get resonance links for currently expanded resonance
   const activeResonanceId = useMemo(() => {
@@ -517,7 +431,6 @@ export default function ResonancePage() {
                 isVisible={activeResonanceId === link.resonanceId}
                 delay={idx * 0.1}
                 onPositionChange={(x, y) => {
-                  // Update both state variables together to avoid race conditions
                   setResonanceLinks((prevLinks) => {
                     const { x: clampedX, y: clampedY } = clampPosition(
                       x,
@@ -529,17 +442,15 @@ export default function ResonancePage() {
                       l.id === link.id ? { ...l, x: clampedX, y: clampedY } : l
                     )
 
-                    // Use current state from prevLinks to resolve collisions
-                    setFieldResonances((prevFields) => {
-                      const { fields: resolvedFields } = resolveCollisions(
+                    const { fields: resolvedFields, links: resolvedLinks } =
+                      resolveCollisions(
                         { id: link.id, kind: 'link', x: clampedX, y: clampedY },
-                        prevFields,
+                        fieldResonances,
                         updatedLinks
                       )
-                      return resolvedFields
-                    })
 
-                    return updatedLinks
+                    setFieldResonances(resolvedFields)
+                    return resolvedLinks
                   })
                 }}
                 onClick={() => handleToggleLink(link.id)}
@@ -750,11 +661,3 @@ export default function ResonancePage() {
     </>
   )
 }
-
-// ============================================================================
-// Utility Functions (imported from resonance-utils)
-// ============================================================================
-
-// export default function ResonancePage() {
-//   return <div>Resonance Page Under Construction</div>
-// }
