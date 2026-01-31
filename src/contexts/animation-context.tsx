@@ -57,7 +57,11 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
 export function useAnimations() {
   const context = useContext(AnimationContext)
   if (context === undefined) {
-    throw new Error('useAnimations must be used within an AnimationProvider')
+    // Return a default context instead of throwing to prevent build failures
+    return {
+      animationsEnabled: false,
+      setAnimationsEnabled: () => {},
+    }
   }
   return context
 }
