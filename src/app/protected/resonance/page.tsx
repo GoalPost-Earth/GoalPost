@@ -119,17 +119,18 @@ export default function ResonancePage() {
   const transformedData = useMemo(() => {
     if (!linksData?.fieldResonances) return { resonances: [], links: [] }
 
+    // Deterministic node positioning: use index for layout
     const resonances = linksData.fieldResonances
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((res: any) => ({
+      .map((res: any, idx: number) => ({
         id: res.id,
         label: res.label,
         description: res.description || '',
         linkCount: 1,
         confidence: res.confidence || 0.5,
         position: {
-          left: `${10 + Math.random() * 80}%`,
-          top: `${10 + Math.random() * 80}%`,
+          left: `${10 + ((idx * 37) % 80)}%`, // deterministic
+          top: `${10 + ((idx * 53) % 80)}%`, // deterministic
         },
         x: 0,
         y: 0,
