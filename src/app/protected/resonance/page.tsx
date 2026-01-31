@@ -6,6 +6,7 @@ import { usePageContext } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
+import { ResonancePanel } from '@/components/ui/resonance-panel'
 import {
   type FieldResonanceNode,
   type ResonanceLinkNode,
@@ -50,6 +51,8 @@ export default function ResonancePage() {
   const [expandedResonanceId, setExpandedResonanceId] = useState<string | null>(
     null
   )
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null)
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
 
   useEffect(() => {
     setPageTitle('Resonance')
@@ -196,74 +199,181 @@ export default function ResonancePage() {
   }
 
   return (
-    <GenericCanvas
-      canvasScale={5}
-      onScaleChange={setCurrentScale}
-      enableZoomControls
-      showBackgroundDecor
-    >
-      {fieldResonances.length > 0 && (
-        <div className="relative w-full h-full">
-          {/* Field Resonance Nodes */}
-          {fieldResonances.map((res) => (
-            <DraggableResonanceNode
-              key={res.id}
-              id={res.id}
-              icon="psychology"
-              label={res.label}
-              description={res.description}
-              isActive={expandedResonanceId === res.id}
-              canvasPosition={{ x: res.x, y: res.y }}
-              scale={currentScale}
-              onPositionChange={(x, y) => handleResonanceDrag(res.id, x, y)}
-              onClick={() =>
-                setExpandedResonanceId(
-                  expandedResonanceId === res.id ? null : res.id
-                )
-              }
-            />
-          ))}
-
-          {/* Resonance Link Nodes */}
-          {resonanceLinks
-            .filter((link) => link.resonanceId === expandedResonanceId)
-            .map((link, idx) => (
-              <DraggableResonanceLinkNode
-                key={link.id}
-                id={link.id}
-                confidence={link.confidence}
-                evidence={link.evidence}
-                canvasPosition={{ x: link.x, y: link.y }}
+    <>
+      <GenericCanvas
+        canvasScale={5}
+        onScaleChange={setCurrentScale}
+        enableZoomControls
+        showBackgroundDecor
+      >
+        {fieldResonances.length > 0 && (
+          <div className="relative w-full h-full">
+            {/* Field Resonance Nodes */}
+            {fieldResonances.map((res) => (
+              <DraggableResonanceNode
+                key={res.id}
+                id={res.id}
+                icon="psychology"
+                label={res.label}
+                description={res.description}
+                isActive={expandedResonanceId === res.id}
+                canvasPosition={{ x: res.x, y: res.y }}
                 scale={currentScale}
-                isVisible={true}
-                delay={idx * 0.1}
-                onPositionChange={(x, y) => handleLinkDrag(link.id, x, y)}
-                onClick={() => {}}
+                onPositionChange={(x, y) => handleResonanceDrag(res.id, x, y)}
+                onClick={() => {
+                  if (expandedResonanceId === res.id) {
+                    setExpandedResonanceId(null)
+                    setExpandedLinkId(null)
+                    setIsPanelOpen(false)
+                  } else {
+                    setExpandedResonanceId(res.id)
+                    setExpandedLinkId(null)
+                    setIsPanelOpen(true)
+                  }
+                }}
               />
             ))}
-        </div>
-      )}
 
-      {linksLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-50">
-          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-            Loading resonances...
-          </p>
-        </div>
-      )}
+            {/* Resonance Link Nodes */}
+            {resonanceLinks
+              .filter((link) => link.resonanceId === expandedResonanceId)
+              .map((link, idx) => (
+                <DraggableResonanceLinkNode
+                  key={link.id}
+                  id={link.id}
+                  confidence={link.confidence}
+                  evidence={link.evidence}
+                  canvasPosition={{ x: link.x, y: link.y }}
+                  scale={currentScale}
+                  isVisible={true}
+                  delay={idx * 0.1}
+                  onPositionChange={(x, y) => handleLinkDrag(link.id, x, y)}
+                  onClick={() => {
+                    setExpandedLinkId(link.id)
+                    setIsPanelOpen(true)
+                  }}
+                />
+              ))}
+          </div>
+        )}
 
-      {!linksLoading && fieldResonances.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-              No resonances discovered yet
-            </p>
-            <p className="text-sm text-gp-ink-soft dark:text-white/40">
-              Create pulses to generate resonance patterns
+        {linksLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-50">
+            <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+              Loading resonances...
             </p>
           </div>
-        </div>
+        )}
+
+        {!linksLoading && fieldResonances.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                No resonances discovered yet
+              </p>
+              <p className="text-sm text-gp-ink-soft dark:text-white/40">
+                Create pulses to generate resonance patterns
+              </p>
+            </div>
+          </div>
+        )}
+      </GenericCanvas>
+
+      {/* Panel for Field Resonance */}
+      {expandedResonanceId && !expandedLinkId && (
+        <ResonancePanel
+          isOpen={isPanelOpen}
+          isLoading={false}
+          onClose={() => {
+            setIsPanelOpen(false)
+            setExpandedResonanceId(null)
+          }}
+          resonance={(() => {
+            const resonance = fieldResonances.find(
+              (r) => r.id === expandedResonanceId
+            )
+            return {
+              id: expandedResonanceId,
+              label: resonance?.label || 'Unknown',
+              description: resonance?.description || '',
+              strength: (resonance?.confidence || 0) * 100,
+            }
+          })()}
+          links={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (linksData?.fieldResonances as any[])
+              ?.filter(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (res: any) => res.id === expandedResonanceId
+              )
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((res: any) => ({
+                id: res.id,
+                confidence: res.confidence,
+                evidence: res.description || '',
+                createdAt: new Date().toISOString(),
+                source: {
+                  id: res.source?.[0]?.id || '',
+                  content: res.source?.[0]?.content || 'Unknown',
+                  __typename: res.source?.[0]?.__typename || 'Unknown',
+                },
+                target: {
+                  id: res.target?.[0]?.id || '',
+                  content: res.target?.[0]?.content || 'Unknown',
+                  __typename: res.target?.[0]?.__typename || 'Unknown',
+                },
+              })) || []
+          }
+        />
       )}
-    </GenericCanvas>
+
+      {/* Panel for Resonance Link */}
+      {expandedLinkId && (
+        <ResonancePanel
+          isOpen={isPanelOpen}
+          isLoading={false}
+          onClose={() => {
+            setIsPanelOpen(false)
+            setExpandedLinkId(null)
+          }}
+          resonance={(() => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const link = (linksData?.fieldResonances as any[])?.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (r: any) => `link-${r.id}` === expandedLinkId
+            )
+            return {
+              id: expandedLinkId,
+              label: 'Resonance Link Details',
+              description: 'Connection between two pulses',
+              strength: (link?.confidence || 0) * 100,
+            }
+          })()}
+          links={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (linksData?.fieldResonances as any[])
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ?.filter((res: any) => `link-${res.id}` === expandedLinkId)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((res: any) => ({
+                id: res.id,
+                confidence: res.confidence,
+                evidence: res.description || '',
+                createdAt: new Date().toISOString(),
+                source: {
+                  id: res.source?.[0]?.id || '',
+                  content: res.source?.[0]?.content || 'Unknown',
+                  __typename: res.source?.[0]?.__typename || 'Unknown',
+                },
+                target: {
+                  id: res.target?.[0]?.id || '',
+                  content: res.target?.[0]?.content || 'Unknown',
+                  __typename: res.target?.[0]?.__typename || 'Unknown',
+                },
+              })) || []
+          }
+        />
+      )}
+    </>
   )
 }
