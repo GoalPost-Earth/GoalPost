@@ -749,15 +749,21 @@ export default function ResonancePage() {
   }, [])
 
   // Stable drag handlers using refs (production-safe)
+  // Direct state updates - no functional updates to avoid closure issues
   const handleResonanceDrag = useCallback(
     (id: string, x: number, y: number) => {
       const canvas = canvasSizeRef.current
       const clampedX = Math.max(80, Math.min(canvas.width - 80, x))
       const clampedY = Math.max(80, Math.min(canvas.height - 80, y))
 
-      setFieldResonances((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, x: clampedX, y: clampedY } : r))
+      // Get current state from ref and compute new state directly
+      const currentResonances = fieldResonancesRef.current
+      const newResonances = currentResonances.map((r) =>
+        r.id === id ? { ...r, x: clampedX, y: clampedY } : r
       )
+
+      // Pass the computed state directly to setState
+      setFieldResonances(newResonances)
     },
     []
   )
@@ -767,9 +773,14 @@ export default function ResonancePage() {
     const clampedX = Math.max(60, Math.min(canvas.width - 60, x))
     const clampedY = Math.max(60, Math.min(canvas.height - 60, y))
 
-    setResonanceLinks((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, x: clampedX, y: clampedY } : l))
+    // Get current state from ref and compute new state directly
+    const currentLinks = resonanceLinksRef.current
+    const newLinks = currentLinks.map((l) =>
+      l.id === id ? { ...l, x: clampedX, y: clampedY } : l
     )
+
+    // Pass the computed state directly to setState
+    setResonanceLinks(newLinks)
   }, [])
 
   // Calculate line endpoints at the edge of circles
