@@ -897,29 +897,29 @@ export default function ResonancePage() {
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
               onPositionChange={(x, y) => {
-                // Find current resonance position to calculate delta
-                const currentRes = fieldResonances.find((r) => r.id === res.id)
-                if (!currentRes) return
-
                 const clamped = clampNodePosition(x, y, 80)
-                const deltaX = clamped.x - currentRes.x
-                const deltaY = clamped.y - currentRes.y
 
-                // Update resonance
-                setFieldResonances((prev) =>
-                  prev.map((r) =>
+                // Update resonance and calculate delta inside functional update
+                setFieldResonances((prev) => {
+                  const currentRes = prev.find((r) => r.id === res.id)
+                  if (!currentRes) return prev
+
+                  const deltaX = clamped.x - currentRes.x
+                  const deltaY = clamped.y - currentRes.y
+
+                  // Move associated links by same delta
+                  setResonanceLinks((prevLinks) =>
+                    prevLinks.map((l) =>
+                      l.resonanceId === res.id
+                        ? { ...l, x: l.x + deltaX, y: l.y + deltaY }
+                        : l
+                    )
+                  )
+
+                  return prev.map((r) =>
                     r.id === res.id ? { ...r, x: clamped.x, y: clamped.y } : r
                   )
-                )
-
-                // Move associated links by same delta (simple, production-safe)
-                setResonanceLinks((prev) =>
-                  prev.map((l) =>
-                    l.resonanceId === res.id
-                      ? { ...l, x: l.x + deltaX, y: l.y + deltaY }
-                      : l
-                  )
-                )
+                })
               }}
               onClick={() =>
                 setExpandedResonanceId(
