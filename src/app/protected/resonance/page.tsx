@@ -221,11 +221,18 @@ export default function ResonancePage() {
           <div className="relative w-full h-full">
             {/* Connection lines from resonance to its link nodes when expanded */}
             {expandedResonanceId &&
+              activeResonanceLinks.length > 0 &&
               (() => {
                 const activeResonance = fieldResonances.find(
                   (r) => r.id === expandedResonanceId
                 )
-                if (!activeResonance) return null
+                // Only render connection lines if resonance has valid position
+                if (
+                  !activeResonance ||
+                  activeResonance.x === 0 ||
+                  activeResonance.y === 0
+                )
+                  return null
                 return (
                   <ResonanceConnections
                     isActive
