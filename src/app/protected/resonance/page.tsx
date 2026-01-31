@@ -898,26 +898,9 @@ export default function ResonancePage() {
               scale={currentScale}
               onPositionChange={(x, y) => {
                 const clamped = clampNodePosition(x, y, 80)
-
-                // Calculate delta first (outside state updates)
-                const currentRes = fieldResonances.find((r) => r.id === res.id)
-                if (!currentRes) return
-
-                const deltaX = clamped.x - currentRes.x
-                const deltaY = clamped.y - currentRes.y
-
-                // Two independent updates (NOT nested)
                 setFieldResonances((prev) =>
                   prev.map((r) =>
                     r.id === res.id ? { ...r, x: clamped.x, y: clamped.y } : r
-                  )
-                )
-
-                setResonanceLinks((prev) =>
-                  prev.map((l) =>
-                    l.resonanceId === res.id
-                      ? { ...l, x: l.x + deltaX, y: l.y + deltaY }
-                      : l
                   )
                 )
               }}
