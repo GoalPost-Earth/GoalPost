@@ -668,7 +668,7 @@
 
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { usePageContext } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
@@ -714,6 +714,23 @@ export default function ResonancePage() {
     null
   )
 
+  // Use refs to avoid closure issues in production
+  const canvasSizeRef = useRef(canvasSize)
+  const fieldResonancesRef = useRef(fieldResonances)
+  const resonanceLinksRef = useRef(resonanceLinks)
+
+  useEffect(() => {
+    canvasSizeRef.current = canvasSize
+  }, [canvasSize])
+
+  useEffect(() => {
+    fieldResonancesRef.current = fieldResonances
+  }, [fieldResonances])
+
+  useEffect(() => {
+    resonanceLinksRef.current = resonanceLinks
+  }, [resonanceLinks])
+
   useEffect(() => {
     setPageTitle('Resonance')
   }, [setPageTitle])
@@ -731,11 +748,29 @@ export default function ResonancePage() {
     return () => window.removeEventListener('resize', updateCanvas)
   }, [])
 
-  // Simple clamp function (not a callback to avoid stale closures)
-  const clampNodePosition = (x: number, y: number, radius: number) => ({
-    x: Math.max(radius, Math.min(canvasSize.width - radius, x)),
-    y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
-  })
+  // Stable drag handlers using refs (production-safe)
+  const handleResonanceDrag = useCallback(
+    (id: string, x: number, y: number) => {
+      const canvas = canvasSizeRef.current
+      const clampedX = Math.max(80, Math.min(canvas.width - 80, x))
+      const clampedY = Math.max(80, Math.min(canvas.height - 80, y))
+
+      setFieldResonances((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, x: clampedX, y: clampedY } : r))
+      )
+    },
+    []
+  )
+
+  const handleLinkDrag = useCallback((id: string, x: number, y: number) => {
+    const canvas = canvasSizeRef.current
+    const clampedX = Math.max(60, Math.min(canvas.width - 60, x))
+    const clampedY = Math.max(60, Math.min(canvas.height - 60, y))
+
+    setResonanceLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, x: clampedX, y: clampedY } : l))
+    )
+  }, [])
 
   // Calculate line endpoints at the edge of circles
   const getLineEdgePoints = (
@@ -896,15 +931,7 @@ export default function ResonancePage() {
               isActive={expandedResonanceId === res.id}
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
-              onPositionChange={(x, y) => {
-                const resId = res.id // Capture immediately
-                const clamped = clampNodePosition(x, y, 80)
-                setFieldResonances((prev) =>
-                  prev.map((r) =>
-                    r.id === resId ? { ...r, x: clamped.x, y: clamped.y } : r
-                  )
-                )
-              }}
+              onPositionChange={(x, y) => handleResonanceDrag(res.id, x, y)}
               onClick={() =>
                 setExpandedResonanceId(
                   expandedResonanceId === res.id ? null : res.id
@@ -926,15 +953,7 @@ export default function ResonancePage() {
                 scale={currentScale}
                 isVisible={true}
                 delay={idx * 0.1}
-                onPositionChange={(x, y) => {
-                  const linkId = link.id // Capture immediately
-                  const clamped = clampNodePosition(x, y, 60)
-                  setResonanceLinks((prev) =>
-                    prev.map((l) =>
-                      l.id === linkId ? { ...l, x: clamped.x, y: clamped.y } : l
-                    )
-                  )
-                }}
+                onPositionChange={(x, y) => handleLinkDrag(link.id, x, y)}
                 onClick={() => {}}
               />
             ))}
