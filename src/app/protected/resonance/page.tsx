@@ -717,6 +717,20 @@ export default function ResonancePage() {
     setPageTitle('Resonance')
   }, [setPageTitle])
 
+  // Simple drag handler for resonance nodes - independent position updates
+  const handleResonanceDrag = (id: string, x: number, y: number) => {
+    setFieldResonances((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, x, y } : r))
+    )
+  }
+
+  // Simple drag handler for link nodes - independent position updates
+  const handleLinkDrag = (id: string, x: number, y: number) => {
+    setResonanceLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, x, y } : l))
+    )
+  }
+
   const {
     data: linksData,
     loading: linksLoading,
@@ -803,7 +817,7 @@ export default function ResonancePage() {
               isActive={expandedResonanceId === res.id}
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
-              onPositionChange={() => {}}
+              onPositionChange={(x, y) => handleResonanceDrag(res.id, x, y)}
               onClick={() =>
                 setExpandedResonanceId(
                   expandedResonanceId === res.id ? null : res.id
@@ -825,7 +839,7 @@ export default function ResonancePage() {
                 scale={currentScale}
                 isVisible={true}
                 delay={idx * 0.1}
-                onPositionChange={() => {}}
+                onPositionChange={(x, y) => handleLinkDrag(link.id, x, y)}
                 onClick={() => {}}
               />
             ))}
