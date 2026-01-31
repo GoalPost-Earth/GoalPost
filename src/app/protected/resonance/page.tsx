@@ -668,19 +668,127 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@apollo/client/react'
 import { usePageContext } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
+import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
+import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
+import { GET_ALL_RESONANCE_LINKS_WITH_RESONANCES } from '@/app/graphql'
+
+interface ResonanceLinkData {
+  id: string
+  confidence: number
+  evidence: string | null
+  createdAt: string
+  resonance: Array<{
+    id: string
+    label: string
+    description: string | null
+  }>
+  source: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+  target: Array<{
+    id: string
+    content: string
+    __typename: string
+  }>
+}
+
+interface FieldResonanceNode {
+  id: string
+  label: string
+  description: string
+  linkCount: number
+  confidence: number
+  x: number
+  y: number
+}
+
+interface ResonanceLinkNode {
+  id: string
+  confidence: number
+  evidence: string
+  resonanceId: string
+  x: number
+  y: number
+}
 
 export default function ResonancePage() {
   const { setPageTitle } = usePageContext()
-
-  //eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentScale, setCurrentScale] = useState(1)
+  const [fieldResonances, setFieldResonances] = useState<FieldResonanceNode[]>(
+    []
+  )
+  const [resonanceLinks, setResonanceLinks] = useState<ResonanceLinkNode[]>([])
+  const [expandedResonanceId, setExpandedResonanceId] = useState<string | null>(
+    null
+  )
 
   useEffect(() => {
     setPageTitle('Resonance')
   }, [setPageTitle])
+
+  const {
+    data: linksData,
+    loading: linksLoading,
+    error: linksError,
+  } = useQuery<{
+    fieldResonances: ResonanceLinkData[]
+  }>(GET_ALL_RESONANCE_LINKS_WITH_RESONANCES, {
+    fetchPolicy: 'network-only',
+  })
+
+  const transformedData = useMemo(() => {
+    if (!linksData?.fieldResonances) return { resonances: [], links: [] }
+
+    const resonances = linksData.fieldResonances
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((res: any, idx: number) => ({
+        id: res.id,
+        label: res.label,
+        description: res.description || '',
+        linkCount: 1,
+        confidence: res.confidence || 0.5,
+        x: 500 + idx * 400,
+        y: 500 + idx * 300,
+      }))
+      .sort((a, b) => b.confidence - a.confidence)
+
+    const linkNodes: ResonanceLinkNode[] = resonances.map((res) => ({
+      id: `link-${res.id}`,
+      confidence: res.confidence,
+      evidence: 'Connection between pulses',
+      resonanceId: res.id,
+      x: res.x + 200,
+      y: res.y + 150,
+    }))
+
+    return { resonances, links: linkNodes }
+  }, [linksData])
+
+  useEffect(() => {
+    setFieldResonances(transformedData.resonances)
+    setResonanceLinks(transformedData.links)
+  }, [transformedData])
+
+  if (linksError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+            Error loading resonances
+          </p>
+          <p className="text-sm text-gp-ink-soft dark:text-white/40">
+            {linksError.message}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <GenericCanvas
@@ -689,16 +797,68 @@ export default function ResonancePage() {
       enableZoomControls
       showBackgroundDecor
     >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-            No resonances discovered yet
-          </p>
-          <p className="text-sm text-gp-ink-soft dark:text-white/40">
-            Create pulses to generate resonance patterns
+      {fieldResonances.length > 0 && (
+        <div className="relative w-full h-full">
+          {/* Field Resonance Nodes */}
+          {fieldResonances.map((res) => (
+            <DraggableResonanceNode
+              key={res.id}
+              id={res.id}
+              icon="psychology"
+              label={res.label}
+              description={res.description}
+              isActive={expandedResonanceId === res.id}
+              canvasPosition={{ x: res.x, y: res.y }}
+              scale={currentScale}
+              onPositionChange={() => {}}
+              onClick={() =>
+                setExpandedResonanceId(
+                  expandedResonanceId === res.id ? null : res.id
+                )
+              }
+            />
+          ))}
+
+          {/* Resonance Link Nodes */}
+          {resonanceLinks
+            .filter((link) => link.resonanceId === expandedResonanceId)
+            .map((link) => (
+              <DraggableResonanceLinkNode
+                key={link.id}
+                id={link.id}
+                confidence={link.confidence}
+                evidence={link.evidence}
+                canvasPosition={{ x: link.x, y: link.y }}
+                scale={currentScale}
+                isVisible={true}
+                delay={0}
+                onPositionChange={() => {}}
+                onClick={() => {}}
+              />
+            ))}
+        </div>
+      )}
+
+      {linksLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-50">
+          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+            Loading resonances...
           </p>
         </div>
-      </div>
+      )}
+
+      {!linksLoading && fieldResonances.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+              No resonances discovered yet
+            </p>
+            <p className="text-sm text-gp-ink-soft dark:text-white/40">
+              Create pulses to generate resonance patterns
+            </p>
+          </div>
+        </div>
+      )}
     </GenericCanvas>
   )
 }
