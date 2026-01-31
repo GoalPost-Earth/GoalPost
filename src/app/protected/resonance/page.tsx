@@ -719,8 +719,23 @@ export default function ResonancePage() {
 
   // Simple drag handler for resonance nodes - independent position updates
   const handleResonanceDrag = (id: string, x: number, y: number) => {
+    // Find the current resonance to calculate delta
+    const currentResonance = fieldResonances.find((r) => r.id === id)
+    if (!currentResonance) return
+
+    const deltaX = x - currentResonance.x
+    const deltaY = y - currentResonance.y
+
+    // Update resonance position
     setFieldResonances((prev) =>
       prev.map((r) => (r.id === id ? { ...r, x, y } : r))
+    )
+
+    // Update all links belonging to this resonance by applying the same delta
+    setResonanceLinks((prev) =>
+      prev.map((l) =>
+        l.resonanceId === id ? { ...l, x: l.x + deltaX, y: l.y + deltaY } : l
+      )
     )
   }
 
