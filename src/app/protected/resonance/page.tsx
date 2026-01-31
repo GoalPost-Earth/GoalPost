@@ -668,18 +668,12 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { usePageContext } from '@/contexts'
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { DraggableResonanceNode } from '@/components/canvas/draggable-resonance-node'
 import { DraggableResonanceLinkNode } from '@/components/canvas/draggable-resonance-link-node'
-import {
-  createClampPosition,
-  createResolveCollisions,
-  FIELD_NODE_RADIUS,
-  LINK_NODE_RADIUS,
-} from '@/lib/canvas-utils/resonance-utils'
 import {
   type FieldResonanceNode,
   type ResonanceLinkNode,
@@ -724,24 +718,24 @@ export default function ResonancePage() {
     setPageTitle('Resonance')
   }, [setPageTitle])
 
-  // Initialize canvas size from window (one-time)
+  // Track canvas size
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const width = (window.innerWidth || 1200) * 5
-    const height = (window.innerHeight || 1200) * 5
-    setCanvasSize({ width, height })
+    const updateCanvas = () =>
+      setCanvasSize({
+        width: (window.innerWidth || 1200) * 5,
+        height: (window.innerHeight || 1200) * 5,
+      })
+
+    updateCanvas()
+    window.addEventListener('resize', updateCanvas)
+    return () => window.removeEventListener('resize', updateCanvas)
   }, [])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const clampPosition = useCallback(createClampPosition(canvasSize), [
-    canvasSize,
-  ])
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const resolveCollisions = useCallback(
-    createResolveCollisions(clampPosition),
-    [clampPosition]
-  )
+  // Simple clamp function (not a callback to avoid stale closures)
+  const clampNodePosition = (x: number, y: number, radius: number) => ({
+    x: Math.max(radius, Math.min(canvasSize.width - radius, x)),
+    y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
+  })
 
   const {
     data: linksData,
@@ -829,41 +823,14 @@ export default function ResonancePage() {
               isActive={expandedResonanceId === res.id}
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
-              onPositionChange={(x, y) => {
-                setFieldResonances((prevFields) => {
-                  const currentField = prevFields.find((r) => r.id === res.id)
-                  if (!currentField) return prevFields
-
-                  const { x: clampedX, y: clampedY } = clampPosition(
-                    x,
-                    y,
-                    FIELD_NODE_RADIUS
+              onPositionChange={(x, y) =>
+                setFieldResonances((prev) => {
+                  const clamped = clampNodePosition(x, y, 80)
+                  return prev.map((r) =>
+                    r.id === res.id ? { ...r, x: clamped.x, y: clamped.y } : r
                   )
-
-                  const deltaX = clampedX - currentField.x
-                  const deltaY = clampedY - currentField.y
-
-                  const updatedFields = prevFields.map((r) =>
-                    r.id === res.id ? { ...r, x: clampedX, y: clampedY } : r
-                  )
-
-                  const shiftedLinks = resonanceLinks.map((link) =>
-                    link.resonanceId === res.id
-                      ? { ...link, x: link.x + deltaX, y: link.y + deltaY }
-                      : link
-                  )
-
-                  const { fields: resolvedFields, links: resolvedLinks } =
-                    resolveCollisions(
-                      { id: res.id, kind: 'field', x: clampedX, y: clampedY },
-                      updatedFields,
-                      shiftedLinks
-                    )
-
-                  setResonanceLinks(resolvedLinks)
-                  return resolvedFields
                 })
-              }}
+              }
               onClick={() =>
                 setExpandedResonanceId(
                   expandedResonanceId === res.id ? null : res.id
@@ -885,29 +852,16 @@ export default function ResonancePage() {
                 scale={currentScale}
                 isVisible={true}
                 delay={idx * 0.1}
-                onPositionChange={(x, y) => {
-                  setResonanceLinks((prevLinks) => {
-                    const { x: clampedX, y: clampedY } = clampPosition(
-                      x,
-                      y,
-                      LINK_NODE_RADIUS
+                onPositionChange={(x, y) =>
+                  setResonanceLinks((prev) => {
+                    const clamped = clampNodePosition(x, y, 60)
+                    return prev.map((l) =>
+                      l.id === link.id
+                        ? { ...l, x: clamped.x, y: clamped.y }
+                        : l
                     )
-
-                    const updatedLinks = prevLinks.map((l) =>
-                      l.id === link.id ? { ...l, x: clampedX, y: clampedY } : l
-                    )
-
-                    const { fields: resolvedFields, links: resolvedLinks } =
-                      resolveCollisions(
-                        { id: link.id, kind: 'link', x: clampedX, y: clampedY },
-                        fieldResonances,
-                        updatedLinks
-                      )
-
-                    setFieldResonances(resolvedFields)
-                    return resolvedLinks
                   })
-                }}
+                }
                 onClick={() => {}}
               />
             ))}
