@@ -897,10 +897,11 @@ export default function ResonancePage() {
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
               onPositionChange={(x, y) => {
+                const resId = res.id // Capture immediately
                 const clamped = clampNodePosition(x, y, 80)
                 setFieldResonances((prev) =>
                   prev.map((r) =>
-                    r.id === res.id ? { ...r, x: clamped.x, y: clamped.y } : r
+                    r.id === resId ? { ...r, x: clamped.x, y: clamped.y } : r
                   )
                 )
               }}
@@ -925,16 +926,15 @@ export default function ResonancePage() {
                 scale={currentScale}
                 isVisible={true}
                 delay={idx * 0.1}
-                onPositionChange={(x, y) =>
-                  setResonanceLinks((prev) => {
-                    const clamped = clampNodePosition(x, y, 60)
-                    return prev.map((l) =>
-                      l.id === link.id
-                        ? { ...l, x: clamped.x, y: clamped.y }
-                        : l
+                onPositionChange={(x, y) => {
+                  const linkId = link.id // Capture immediately
+                  const clamped = clampNodePosition(x, y, 60)
+                  setResonanceLinks((prev) =>
+                    prev.map((l) =>
+                      l.id === linkId ? { ...l, x: clamped.x, y: clamped.y } : l
                     )
-                  })
-                }
+                  )
+                }}
                 onClick={() => {}}
               />
             ))}
