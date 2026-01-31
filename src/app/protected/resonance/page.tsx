@@ -737,6 +737,33 @@ export default function ResonancePage() {
     y: Math.max(radius, Math.min(canvasSize.height - radius, y)),
   })
 
+  // Calculate line endpoints at the edge of circles
+  const getLineEdgePoints = (
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    fromRadius: number,
+    toRadius: number
+  ) => {
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (distance === 0) return { from, to }
+
+    const angle = Math.atan2(dy, dx)
+
+    return {
+      from: {
+        x: from.x + Math.cos(angle) * fromRadius,
+        y: from.y + Math.sin(angle) * fromRadius,
+      },
+      to: {
+        x: to.x - Math.cos(angle) * toRadius,
+        y: to.y - Math.sin(angle) * toRadius,
+      },
+    }
+  }
+
   const {
     data: linksData,
     loading: linksLoading,
@@ -812,6 +839,52 @@ export default function ResonancePage() {
     >
       {fieldResonances.length > 0 && (
         <div className="relative w-full h-full">
+          {/* Connection lines from resonance to its links when expanded */}
+          {expandedResonanceId &&
+            (() => {
+              const activeResonance = fieldResonances.find(
+                (r) => r.id === expandedResonanceId
+              )
+              const activeLinks = resonanceLinks.filter(
+                (l) => l.resonanceId === expandedResonanceId
+              )
+
+              if (!activeResonance || activeLinks.length === 0) return null
+
+              const lines = activeLinks.map((link) => {
+                const edgePoints = getLineEdgePoints(
+                  { x: activeResonance.x, y: activeResonance.y },
+                  { x: link.x, y: link.y },
+                  80, // resonance node radius
+                  60 // link node radius
+                )
+                return edgePoints
+              })
+
+              return (
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+                  preserveAspectRatio="none"
+                  style={{ zIndex: 5 }}
+                >
+                  {lines.map((line, idx) => (
+                    <line
+                      key={idx}
+                      x1={line.from.x}
+                      y1={line.from.y}
+                      x2={line.to.x}
+                      y2={line.to.y}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="text-gp-primary/40 dark:text-gp-primary/30"
+                      strokeDasharray="4 4"
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
+
           {/* Field Resonance Nodes */}
           {fieldResonances.map((res) => (
             <DraggableResonanceNode
@@ -823,14 +896,31 @@ export default function ResonancePage() {
               isActive={expandedResonanceId === res.id}
               canvasPosition={{ x: res.x, y: res.y }}
               scale={currentScale}
-              onPositionChange={(x, y) =>
-                setFieldResonances((prev) => {
-                  const clamped = clampNodePosition(x, y, 80)
-                  return prev.map((r) =>
+              onPositionChange={(x, y) => {
+                // Find current resonance position to calculate delta
+                const currentRes = fieldResonances.find((r) => r.id === res.id)
+                if (!currentRes) return
+
+                const clamped = clampNodePosition(x, y, 80)
+                const deltaX = clamped.x - currentRes.x
+                const deltaY = clamped.y - currentRes.y
+
+                // Update resonance
+                setFieldResonances((prev) =>
+                  prev.map((r) =>
                     r.id === res.id ? { ...r, x: clamped.x, y: clamped.y } : r
                   )
-                })
-              }
+                )
+
+                // Move associated links by same delta (simple, production-safe)
+                setResonanceLinks((prev) =>
+                  prev.map((l) =>
+                    l.resonanceId === res.id
+                      ? { ...l, x: l.x + deltaX, y: l.y + deltaY }
+                      : l
+                  )
+                )
+              }}
               onClick={() =>
                 setExpandedResonanceId(
                   expandedResonanceId === res.id ? null : res.id
