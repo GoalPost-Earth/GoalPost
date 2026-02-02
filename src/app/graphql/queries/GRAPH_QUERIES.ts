@@ -26,7 +26,7 @@ export const GET_GRAPH_STATS = graphql(`
     storyPulsesAggregate {
       count
     }
-    fieldResonancesAggregate {
+    resonanceLinksAggregate {
       count
     }
   }
@@ -110,7 +110,7 @@ export const GET_GRAPH_SPACES = graphql(`
 
 export const GET_GRAPH_RESONANCES = graphql(`
   query getGraphResonances {
-    fieldResonances {
+    resonanceLinks {
       id
       label
       description
@@ -333,7 +333,7 @@ export const GET_SPACE_DETAILS = graphql(`
 
 export const GET_RESONANCE_DETAILS = graphql(`
   query getResonanceDetails($resonanceId: ID!) {
-    fieldResonances(where: { id_EQ: $resonanceId }) {
+    resonanceLinks(where: { id_EQ: $resonanceId }) {
       id
       label
       description
@@ -423,7 +423,7 @@ export const GET_RESONANCE_DETAILS = graphql(`
 
 export const GET_RESONANCE_WITH_LINKS = graphql(`
   query getResonanceWithLinks($resonanceId: ID!) {
-    fieldResonances(where: { id_EQ: $resonanceId }) {
+    resonanceLinks(where: { id_EQ: $resonanceId }) {
       id
       label
       description
@@ -515,7 +515,7 @@ export const GET_RESONANCE_WITH_LINKS = graphql(`
 
 export const GET_ALL_RESONANCES = graphql(`
   query getAllResonances {
-    fieldResonances {
+    resonanceLinks {
       id
       label
       description
@@ -529,7 +529,7 @@ export const GET_ALL_RESONANCES = graphql(`
  */
 export const GET_LINKS_FOR_RESONANCE = graphql(`
   query getLinksForResonance($resonanceId: ID!) {
-    fieldResonances(where: { id_EQ: $resonanceId }) {
+    resonanceLinks(where: { id_EQ: $resonanceId }) {
       id
       label
       description
@@ -586,7 +586,7 @@ export const GET_LINKS_FOR_RESONANCE = graphql(`
 
 export const GET_ALL_RESONANCE_LINKS_WITH_RESONANCES = graphql(`
   query getAllResonanceLinksWithResonances {
-    fieldResonances {
+    resonanceLinks {
       id
       label
       description

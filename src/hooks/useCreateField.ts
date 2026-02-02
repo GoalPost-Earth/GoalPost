@@ -10,8 +10,13 @@ export function useCreateField() {
    * Create a new field and optionally link it to a space
    * @param title - The field title/description
    * @param spaceId - Optional space ID to link the field to
+   * @param spaceType - The type of space ('meSpace' or 'weSpace'). Required if spaceId is provided.
    */
-  const createField = async (title: string, spaceId?: string) => {
+  const createField = async (
+    title: string,
+    spaceId?: string,
+    spaceType?: 'meSpace' | 'weSpace'
+  ) => {
     try {
       //eslint-disable-next-line @typescript-eslint/no-explicit-any
       const input: any = {
@@ -19,9 +24,9 @@ export function useCreateField() {
         createdAt: new Date().toISOString(),
       }
 
-      // If spaceId is provided, connect the field to that space
-      if (spaceId) {
-        input.space = {
+      // If spaceId is provided, connect the field to that space using the appropriate relationship
+      if (spaceId && spaceType) {
+        input[spaceType] = {
           connect: [
             {
               where: {

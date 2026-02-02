@@ -87,7 +87,7 @@ export default function WeSpaceFieldsPage() {
     try {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
-      await createField(title, weSpaceId)
+      await createField(title, weSpaceId, 'weSpace')
       await refetch()
     } catch (err) {
       console.error('Error creating field:', err)

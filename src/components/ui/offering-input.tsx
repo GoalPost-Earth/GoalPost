@@ -110,7 +110,7 @@ export function OfferingInput({
           <div className="dark:hidden absolute inset-0 -inset-x-2 bg-linear-to-r from-gp-primary/15 via-gp-accent-glow/15 to-gp-primary/15 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-1000" />
 
           {/* Input Container */}
-          <div className="relative flex items-center gap-0 p-2 pl-3 rounded-3xl overflow-hidden bg-white/85 dark:bg-black/70 backdrop-filter dark:backdrop-blur-24 border border-slate-200 dark:border-white/12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
+          <div className="relative flex items-center gap-0 p-2 pl-3 rounded-3xl overflow-hidden bg-white/85 dark:bg-black/70 backdrop-filter dark:backdrop-blur-24 border border-slate-200 dark:border-white/12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] -mt-16">
             {/* Icon */}
             <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-linear-to-br from-gp-primary/10 dark:from-gp-primary/20 to-transparent dark:to-gp-primary/5 border border-slate-300 dark:border-white/5 text-gp-primary shadow-sm dark:shadow-inner shrink-0 animate-breathing">
               <span className="material-symbols-outlined text-[26px]">spa</span>

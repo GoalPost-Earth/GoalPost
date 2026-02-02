@@ -1,15 +1,21 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useLazyQuery } from '@apollo/client/react'
+import { useLazyQuery, useMutation } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
+import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
-import { GET_PULSE_DETAILS } from '@/app/graphql/queries'
+import {
+  ResonanceLinkModal,
+  type PulseOption,
+} from '@/components/ui/resonance-link-modal'
+import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
+import { CREATE_RESONANCE_LINK_MUTATION } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 
 interface PulsePosition {
@@ -112,11 +118,19 @@ function resolveCollisions(
 
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
+    useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
+  const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [resonanceLinks, setResonanceLinks] = useState<any[]>([])
+  const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
+    Set<string>
+  >(new Set())
   const [currentScale, setCurrentScale] = useState(1)
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
@@ -144,6 +158,11 @@ function FieldDetailPage() {
     fetchPulseDetails,
     { data: pulseDetailsData, loading: pulseDetailsLoading },
   ] = useLazyQuery(GET_PULSE_DETAILS)
+
+  const [fetchPulsesByContext] = useLazyQuery(GET_PULSES_BY_CONTEXT)
+
+  const [createResonanceLink, { loading: isCreatingResonanceLink }] =
+    useMutation(CREATE_RESONANCE_LINK_MUTATION)
 
   // Redirect if no field ID
   if (!fieldId) {
@@ -196,25 +215,56 @@ function FieldDetailPage() {
   const fetchPulses = useCallback(async () => {
     try {
       setIsLoadingPulses(true)
-      const response = await fetch(
-        `/api/pulse/get-by-context?contextId=${fieldId}`
-      )
+      const { data } = await fetchPulsesByContext({
+        variables: { contextId: fieldId },
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch pulses: ${response.status}`)
-      }
+      if (data) {
+        // Combine all pulse types
+        const allPulses = [
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(data.goalPulses || []).map((p: any) => ({
+            id: p.id,
+            title: p.title || '',
+            content: p.content || '',
+            type: 'goal' as const,
+          })),
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(data.resourcePulses || []).map((p: any) => ({
+            id: p.id,
+            title: p.title || '',
+            content: p.content || '',
+            type: 'resource' as const,
+          })),
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(data.storyPulses || []).map((p: any) => ({
+            id: p.id,
+            title: p.title || '',
+            content: p.content || '',
+            type: 'story' as const,
+          })),
+        ]
 
-      const data = await response.json()
+        // Extract resonance links from context
+        const contextData = data.fieldContexts?.[0]
+        const resonances = contextData?.resonances || []
+        setResonanceLinks(resonances)
 
-      if (data.success && data.pulses && data.pulses.length > 0) {
-        const positions = computePulsePositions(data.pulses)
-        setPulsePositions(
-          resolveCollisions(positions, canvasSize.width, canvasSize.height)
-        )
-        console.log(`✓ Loaded ${positions.length} pulses for field ${fieldId}`)
-      } else {
-        setPulsePositions([])
-        console.log(`ℹ️ No pulses found for field ${fieldId}`)
+        if (allPulses.length > 0) {
+          const positions = computePulsePositions(allPulses)
+          setPulsePositions(
+            resolveCollisions(positions, canvasSize.width, canvasSize.height)
+          )
+          // Set pulse options for resonance link modal
+          setPulseOptions(allPulses)
+          console.log(
+            `✓ Loaded ${allPulses.length} pulses for field ${fieldId}`
+          )
+          console.log(`🔗 Loaded ${resonances.length} resonance links`)
+        } else {
+          setPulsePositions([])
+          console.log(`ℹ️ No pulses found for field ${fieldId}`)
+        }
       }
     } catch (error) {
       console.error('Error fetching pulses:', error)
@@ -328,6 +378,48 @@ function FieldDetailPage() {
     }
   }, [pulseDetailsData])
 
+  const handleResonanceLinkSubmit = async (data: {
+    label: string
+    confidence: number
+    description: string
+    sourceId: string
+    targetId: string
+  }) => {
+    console.log('🔗 Creating resonance link:', data)
+
+    try {
+      const { data: response } = await createResonanceLink({
+        variables: {
+          input: [
+            {
+              label: data.label,
+              confidence: data.confidence,
+              description: data.description || undefined,
+              createdAt: new Date().toISOString(),
+              source: {
+                connect: [{ where: { node: { id_EQ: data.sourceId } } }],
+              },
+              target: {
+                connect: [{ where: { node: { id_EQ: data.targetId } } }],
+              },
+              context: {
+                connect: [{ where: { node: { id_EQ: fieldId } } }],
+              },
+            },
+          ],
+        },
+      })
+
+      console.log('✅ Resonance link created:', response)
+      return
+    } catch (error) {
+      console.error('❌ Error creating resonance link:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to create resonance link')
+    }
+  }
+
   const handleOfferingSubmit = async (
     value: string,
     type: string,
@@ -420,10 +512,29 @@ function FieldDetailPage() {
         canvasScale={5}
         onScaleChange={setCurrentScale}
         isLoading={isLoadingPulses}
-        isEmpty={pulsePositions.length === 0}
+        isEmpty={
+          !isLoadingPulses &&
+          pulsePositions.length === 0 &&
+          pulseOptions.length > 0
+        }
         actionButton={
           isMounted && (
-            <div className="group flex flex-col items-center gap-3">
+            <div className="group flex flex-row items-center gap-3">
+              <button
+                onClick={() => setIsResonanceLinkModalOpen(true)}
+                disabled={pulseOptions.length < 2}
+                title={
+                  pulseOptions.length < 2
+                    ? 'Need at least 2 pulses to create a resonance link'
+                    : 'Create Resonance Link'
+                }
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+              >
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                  link
+                </span>
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
@@ -437,26 +548,46 @@ function FieldDetailPage() {
           )
         }
       >
-        {isMounted &&
-          !isLoadingPulses &&
-          pulsePositions.map((pos) => (
-            <DraggablePulseNode
-              key={pos.pulseId}
-              icon={pos.icon}
-              label={pos.label}
-              type={pos.type}
-              animation={pos.animation}
-              canvasPosition={{ x: pos.x, y: pos.y }}
-              scale={currentScale}
-              onPositionChange={(x, y) =>
-                handlePulsePositionChange(pos.pulseId, x, y)
-              }
-              onClick={() => {
-                setIsPulsePanelOpen(true)
-                fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+        {isMounted && !isLoadingPulses && (
+          <>
+            <ResonanceLinksVisualization
+              pulsePositions={pulsePositions}
+              resonanceLinks={resonanceLinks}
+              canvasWidth={canvasSize.width}
+              canvasHeight={canvasSize.height}
+              expandedLinks={expandedResonanceLinks}
+              onResonanceNodeClick={(linkId: string) => {
+                setExpandedResonanceLinks((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(linkId)) {
+                    next.delete(linkId)
+                  } else {
+                    next.add(linkId)
+                  }
+                  return next
+                })
               }}
             />
-          ))}
+            {pulsePositions.map((pos) => (
+              <DraggablePulseNode
+                key={pos.pulseId}
+                icon={pos.icon}
+                label={pos.label}
+                type={pos.type}
+                animation={pos.animation}
+                canvasPosition={{ x: pos.x, y: pos.y }}
+                scale={currentScale}
+                onPositionChange={(x, y) =>
+                  handlePulsePositionChange(pos.pulseId, x, y)
+                }
+                onClick={() => {
+                  setIsPulsePanelOpen(true)
+                  fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+                }}
+              />
+            ))}
+          </>
+        )}
       </GenericPulseCanvas>
 
       <PulsePanel
@@ -497,6 +628,14 @@ function FieldDetailPage() {
           />
         </div>
       </OfferingModal>
+
+      <ResonanceLinkModal
+        isOpen={isResonanceLinkModalOpen}
+        onClose={() => setIsResonanceLinkModalOpen(false)}
+        pulses={pulseOptions}
+        onSubmit={handleResonanceLinkSubmit}
+        isLoading={isCreatingResonanceLink}
+      />
     </div>
   )
 }

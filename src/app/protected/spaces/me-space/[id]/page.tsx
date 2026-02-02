@@ -71,7 +71,7 @@ export default function MeSpaceFieldsPage() {
     try {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
-      await createField(title, meSpaceId)
+      await createField(title, meSpaceId, 'meSpace')
       await refetch()
     } catch (err) {
       console.error('Error creating field:', err)

@@ -121,3 +121,72 @@ export const GET_FIELDS_FOR_SPACE_PAGINATED = graphql(`
     }
   }
 `)
+
+/**
+ * Fetch all resonance links within a specific FieldContext
+ *
+ * @example
+ * // Get all resonance links for a field
+ * const { data } = await client.query({
+ *   query: GET_RESONANCE_LINKS_BY_CONTEXT_QUERY,
+ *   variables: {
+ *     contextId: "context_123"
+ *   }
+ * })
+ */
+export const GET_RESONANCE_LINKS_BY_CONTEXT_QUERY = graphql(`
+  query GetResonanceLinksByContext($contextId: ID!) {
+    fieldContexts(where: { id_EQ: $contextId }) {
+      id
+      title
+      resonances {
+        id
+        label
+        description
+        confidence
+        evidence
+        createdAt
+        source {
+          ... on GoalPulse {
+            id
+            title
+            content
+            type: __typename
+          }
+          ... on ResourcePulse {
+            id
+            title
+            content
+            type: __typename
+          }
+          ... on StoryPulse {
+            id
+            title
+            content
+            type: __typename
+          }
+        }
+        target {
+          ... on GoalPulse {
+            id
+            title
+            content
+            type: __typename
+          }
+          ... on ResourcePulse {
+            id
+            title
+            content
+            type: __typename
+          }
+          ... on StoryPulse {
+            id
+            title
+            content
+            type: __typename
+          }
+        }
+      }
+    }
+  }
+`)
