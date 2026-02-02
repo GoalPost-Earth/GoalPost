@@ -665,12 +665,6 @@ export type CreateFieldContextsMutationResponse = {
   info: CreateInfo
 }
 
-export type CreateFieldResonancesMutationResponse = {
-  __typename?: 'CreateFieldResonancesMutationResponse'
-  fieldResonances: Array<FieldResonance>
-  info: CreateInfo
-}
-
 export type CreateGoalPulsesMutationResponse = {
   __typename?: 'CreateGoalPulsesMutationResponse'
   goalPulses: Array<GoalPulse>
@@ -792,6 +786,10 @@ export type FieldContext = {
   /** @deprecated Please use field "aggregate" inside "pulsesConnection" instead */
   pulsesAggregate?: Maybe<FieldContextFieldPulsePulsesAggregationSelection>
   pulsesConnection: FieldContextPulsesConnection
+  resonances: Array<ResonanceLink>
+  /** @deprecated Please use field "aggregate" inside "resonancesConnection" instead */
+  resonancesAggregate?: Maybe<FieldContextResonanceLinkResonancesAggregationSelection>
+  resonancesConnection: FieldContextResonancesConnection
   space: Array<Space>
   title: Scalars['String']['output']
   weSpace: Array<WeSpace>
@@ -904,6 +902,39 @@ export type FieldContextPulsesConnectionArgs = {
  * Groups related pulses together.
  * Label: ["FieldContext"]
  */
+export type FieldContextResonancesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkSort>>
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextResonancesAggregateArgs = {
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
+export type FieldContextResonancesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextResonancesConnectionSort>>
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ */
 export type FieldContextWeSpaceArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -961,6 +992,7 @@ export type FieldContextConnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
+  resonances?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
 }
 
@@ -974,6 +1006,7 @@ export type FieldContextCreateInput = {
   emergentName?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<FieldContextMeSpaceFieldInput>
   pulses?: InputMaybe<FieldContextPulsesFieldInput>
+  resonances?: InputMaybe<FieldContextResonancesFieldInput>
   title: Scalars['String']['input']
   weSpace?: InputMaybe<FieldContextWeSpaceFieldInput>
 }
@@ -1107,6 +1140,7 @@ export type FieldContextDeleteInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
+  resonances?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
 }
 
@@ -1114,6 +1148,7 @@ export type FieldContextDisconnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
+  resonances?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
 }
 
@@ -1431,6 +1466,200 @@ export type FieldContextPulsesUpdateFieldInput = {
   update?: InputMaybe<FieldContextPulsesUpdateConnectionInput>
 }
 
+export type FieldContextResonanceLinkResonancesAggregateSelection = {
+  __typename?: 'FieldContextResonanceLinkResonancesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextResonanceLinkResonancesNodeAggregateSelection>
+}
+
+export type FieldContextResonanceLinkResonancesAggregationSelection = {
+  __typename?: 'FieldContextResonanceLinkResonancesAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextResonanceLinkResonancesNodeAggregateSelection>
+}
+
+export type FieldContextResonanceLinkResonancesNodeAggregateSelection = {
+  __typename?: 'FieldContextResonanceLinkResonancesNodeAggregateSelection'
+  confidence: FloatAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  evidence: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  label: StringAggregateSelection
+  mergedFrom: StringAggregateSelection
+}
+
+export type FieldContextResonancesAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextResonancesAggregateInput>>
+  NOT?: InputMaybe<FieldContextResonancesAggregateInput>
+  OR?: InputMaybe<Array<FieldContextResonancesAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextResonancesNodeAggregationWhereInput>
+}
+
+export type FieldContextResonancesConnectFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkConnectInput>>
+  where?: InputMaybe<ResonanceLinkConnectWhere>
+}
+
+export type FieldContextResonancesConnection = {
+  __typename?: 'FieldContextResonancesConnection'
+  aggregate: FieldContextResonanceLinkResonancesAggregateSelection
+  edges: Array<FieldContextResonancesRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextResonancesConnectionSort = {
+  node?: InputMaybe<ResonanceLinkSort>
+}
+
+export type FieldContextResonancesConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextResonancesConnectionWhere>>
+  NOT?: InputMaybe<FieldContextResonancesConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextResonancesConnectionWhere>>
+  node?: InputMaybe<ResonanceLinkWhere>
+}
+
+export type FieldContextResonancesCreateFieldInput = {
+  node: ResonanceLinkCreateInput
+}
+
+export type FieldContextResonancesDeleteFieldInput = {
+  delete?: InputMaybe<ResonanceLinkDeleteInput>
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
+}
+
+export type FieldContextResonancesDisconnectFieldInput = {
+  disconnect?: InputMaybe<ResonanceLinkDisconnectInput>
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
+}
+
+export type FieldContextResonancesFieldInput = {
+  connect?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextResonancesCreateFieldInput>>
+}
+
+export type FieldContextResonancesNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextResonancesNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextResonancesNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextResonancesNodeAggregationWhereInput>>
+  confidence_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  evidence_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  label_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextResonancesRelationship = {
+  __typename?: 'FieldContextResonancesRelationship'
+  cursor: Scalars['String']['output']
+  node: ResonanceLink
+}
+
+export type FieldContextResonancesUpdateConnectionInput = {
+  node?: InputMaybe<ResonanceLinkUpdateInput>
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
+}
+
+export type FieldContextResonancesUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextResonancesCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextResonancesUpdateConnectionInput>
+}
+
 /** Fields to sort FieldContexts by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldContextSort object. */
 export type FieldContextSort = {
   createdAt?: InputMaybe<SortDirection>
@@ -1445,6 +1674,7 @@ export type FieldContextUpdateInput = {
   emergentName_SET?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceUpdateFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesUpdateFieldInput>>
+  resonances?: InputMaybe<Array<FieldContextResonancesUpdateFieldInput>>
   title_SET?: InputMaybe<Scalars['String']['input']>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceUpdateFieldInput>>
 }
@@ -1650,6 +1880,23 @@ export type FieldContextWhere = {
   pulses_SINGLE?: InputMaybe<FieldPulseWhere>
   /** Return FieldContexts where some of the related FieldPulses match this filter */
   pulses_SOME?: InputMaybe<FieldPulseWhere>
+  resonancesAggregate?: InputMaybe<FieldContextResonancesAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextResonancesConnections match this filter */
+  resonancesConnection_ALL?: InputMaybe<FieldContextResonancesConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextResonancesConnections match this filter */
+  resonancesConnection_NONE?: InputMaybe<FieldContextResonancesConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextResonancesConnections match this filter */
+  resonancesConnection_SINGLE?: InputMaybe<FieldContextResonancesConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextResonancesConnections match this filter */
+  resonancesConnection_SOME?: InputMaybe<FieldContextResonancesConnectionWhere>
+  /** Return FieldContexts where all of the related ResonanceLinks match this filter */
+  resonances_ALL?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldContexts where none of the related ResonanceLinks match this filter */
+  resonances_NONE?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldContexts where one of the related ResonanceLinks match this filter */
+  resonances_SINGLE?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldContexts where some of the related ResonanceLinks match this filter */
+  resonances_SOME?: InputMaybe<ResonanceLinkWhere>
   title_CONTAINS?: InputMaybe<Scalars['String']['input']>
   title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   title_EQ?: InputMaybe<Scalars['String']['input']>
@@ -2114,977 +2361,6 @@ export type FieldPulsesConnection = {
   __typename?: 'FieldPulsesConnection'
   aggregate: FieldPulseAggregate
   edges: Array<FieldPulseEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonance = {
-  __typename?: 'FieldResonance'
-  confidence?: Maybe<Scalars['Float']['output']>
-  description?: Maybe<Scalars['String']['output']>
-  detectedBy: Array<Person>
-  /** @deprecated Please use field "aggregate" inside "detectedByConnection" instead */
-  detectedByAggregate?: Maybe<FieldResonancePersonDetectedByAggregationSelection>
-  detectedByConnection: FieldResonanceDetectedByConnection
-  id: Scalars['ID']['output']
-  label: Scalars['String']['output']
-  links: Array<ResonanceLink>
-  /** @deprecated Please use field "aggregate" inside "linksConnection" instead */
-  linksAggregate?: Maybe<FieldResonanceResonanceLinkLinksAggregationSelection>
-  linksConnection: FieldResonanceLinksConnection
-  source: Array<FieldPulse>
-  /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
-  sourceAggregate?: Maybe<FieldResonanceFieldPulseSourceAggregationSelection>
-  sourceConnection: FieldResonanceSourceConnection
-  target: Array<FieldPulse>
-  /** @deprecated Please use field "aggregate" inside "targetConnection" instead */
-  targetAggregate?: Maybe<FieldResonanceFieldPulseTargetAggregationSelection>
-  targetConnection: FieldResonanceTargetConnection
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceDetectedByArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonSort>>
-  where?: InputMaybe<PersonWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceDetectedByAggregateArgs = {
-  where?: InputMaybe<PersonWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceDetectedByConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceDetectedByConnectionSort>>
-  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceLinksArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkSort>>
-  where?: InputMaybe<ResonanceLinkWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceLinksAggregateArgs = {
-  where?: InputMaybe<ResonanceLinkWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceLinksConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceLinksConnectionSort>>
-  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceSourceArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldPulseSort>>
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceSourceAggregateArgs = {
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceSourceConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceSourceConnectionSort>>
-  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceTargetArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldPulseSort>>
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceTargetAggregateArgs = {
-  where?: InputMaybe<FieldPulseWhere>
-}
-
-/**
- * A discovered pattern of semantic resonance between pulses.
- * Multi-label: ["FieldResonance"]
- */
-export type FieldResonanceTargetConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceTargetConnectionSort>>
-  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
-}
-
-export type FieldResonanceAggregate = {
-  __typename?: 'FieldResonanceAggregate'
-  count: Count
-  node: FieldResonanceAggregateNode
-}
-
-export type FieldResonanceAggregateNode = {
-  __typename?: 'FieldResonanceAggregateNode'
-  confidence: FloatAggregateSelection
-  description: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  label: StringAggregateSelection
-}
-
-export type FieldResonanceAggregateSelection = {
-  __typename?: 'FieldResonanceAggregateSelection'
-  confidence: FloatAggregateSelection
-  count: Scalars['Int']['output']
-  description: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  label: StringAggregateSelection
-}
-
-export type FieldResonanceConnectInput = {
-  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
-  links?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
-  source?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
-  target?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
-}
-
-export type FieldResonanceConnectWhere = {
-  node: FieldResonanceWhere
-}
-
-export type FieldResonanceCreateInput = {
-  confidence?: InputMaybe<Scalars['Float']['input']>
-  description?: InputMaybe<Scalars['String']['input']>
-  detectedBy?: InputMaybe<FieldResonanceDetectedByFieldInput>
-  label: Scalars['String']['input']
-  links?: InputMaybe<FieldResonanceLinksFieldInput>
-  source?: InputMaybe<FieldResonanceSourceFieldInput>
-  target?: InputMaybe<FieldResonanceTargetFieldInput>
-}
-
-export type FieldResonanceDeleteInput = {
-  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByDeleteFieldInput>>
-  links?: InputMaybe<Array<FieldResonanceLinksDeleteFieldInput>>
-  source?: InputMaybe<Array<FieldResonanceSourceDeleteFieldInput>>
-  target?: InputMaybe<Array<FieldResonanceTargetDeleteFieldInput>>
-}
-
-export type FieldResonanceDetectedByAggregateInput = {
-  AND?: InputMaybe<Array<FieldResonanceDetectedByAggregateInput>>
-  NOT?: InputMaybe<FieldResonanceDetectedByAggregateInput>
-  OR?: InputMaybe<Array<FieldResonanceDetectedByAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<FieldResonanceDetectedByNodeAggregationWhereInput>
-}
-
-export type FieldResonanceDetectedByConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type FieldResonanceDetectedByConnection = {
-  __typename?: 'FieldResonanceDetectedByConnection'
-  aggregate: FieldResonancePersonDetectedByAggregateSelection
-  edges: Array<FieldResonanceDetectedByRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type FieldResonanceDetectedByConnectionSort = {
-  node?: InputMaybe<PersonSort>
-}
-
-export type FieldResonanceDetectedByConnectionWhere = {
-  AND?: InputMaybe<Array<FieldResonanceDetectedByConnectionWhere>>
-  NOT?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-  OR?: InputMaybe<Array<FieldResonanceDetectedByConnectionWhere>>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type FieldResonanceDetectedByCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type FieldResonanceDetectedByDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-}
-
-export type FieldResonanceDetectedByDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-}
-
-export type FieldResonanceDetectedByFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceDetectedByCreateFieldInput>>
-}
-
-export type FieldResonanceDetectedByNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<FieldResonanceDetectedByNodeAggregationWhereInput>>
-  NOT?: InputMaybe<FieldResonanceDetectedByNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<FieldResonanceDetectedByNodeAggregationWhereInput>>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type FieldResonanceDetectedByRelationship = {
-  __typename?: 'FieldResonanceDetectedByRelationship'
-  cursor: Scalars['String']['output']
-  node: Person
-}
-
-export type FieldResonanceDetectedByUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-}
-
-export type FieldResonanceDetectedByUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceDetectedByCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldResonanceDetectedByDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldResonanceDetectedByDisconnectFieldInput>>
-  update?: InputMaybe<FieldResonanceDetectedByUpdateConnectionInput>
-}
-
-export type FieldResonanceDisconnectInput = {
-  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByDisconnectFieldInput>>
-  links?: InputMaybe<Array<FieldResonanceLinksDisconnectFieldInput>>
-  source?: InputMaybe<Array<FieldResonanceSourceDisconnectFieldInput>>
-  target?: InputMaybe<Array<FieldResonanceTargetDisconnectFieldInput>>
-}
-
-export type FieldResonanceEdge = {
-  __typename?: 'FieldResonanceEdge'
-  cursor: Scalars['String']['output']
-  node: FieldResonance
-}
-
-export type FieldResonanceFieldPulseSourceAggregateSelection = {
-  __typename?: 'FieldResonanceFieldPulseSourceAggregateSelection'
-  count: CountConnection
-  node?: Maybe<FieldResonanceFieldPulseSourceNodeAggregateSelection>
-}
-
-export type FieldResonanceFieldPulseSourceAggregationSelection = {
-  __typename?: 'FieldResonanceFieldPulseSourceAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<FieldResonanceFieldPulseSourceNodeAggregateSelection>
-}
-
-export type FieldResonanceFieldPulseSourceNodeAggregateSelection = {
-  __typename?: 'FieldResonanceFieldPulseSourceNodeAggregateSelection'
-  content: StringAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  intensity: FloatAggregateSelection
-  title: StringAggregateSelection
-}
-
-export type FieldResonanceFieldPulseTargetAggregateSelection = {
-  __typename?: 'FieldResonanceFieldPulseTargetAggregateSelection'
-  count: CountConnection
-  node?: Maybe<FieldResonanceFieldPulseTargetNodeAggregateSelection>
-}
-
-export type FieldResonanceFieldPulseTargetAggregationSelection = {
-  __typename?: 'FieldResonanceFieldPulseTargetAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<FieldResonanceFieldPulseTargetNodeAggregateSelection>
-}
-
-export type FieldResonanceFieldPulseTargetNodeAggregateSelection = {
-  __typename?: 'FieldResonanceFieldPulseTargetNodeAggregateSelection'
-  content: StringAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  intensity: FloatAggregateSelection
-  title: StringAggregateSelection
-}
-
-export type FieldResonanceLinksAggregateInput = {
-  AND?: InputMaybe<Array<FieldResonanceLinksAggregateInput>>
-  NOT?: InputMaybe<FieldResonanceLinksAggregateInput>
-  OR?: InputMaybe<Array<FieldResonanceLinksAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<FieldResonanceLinksNodeAggregationWhereInput>
-}
-
-export type FieldResonanceLinksConnectFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkConnectInput>>
-  where?: InputMaybe<ResonanceLinkConnectWhere>
-}
-
-export type FieldResonanceLinksConnection = {
-  __typename?: 'FieldResonanceLinksConnection'
-  aggregate: FieldResonanceResonanceLinkLinksAggregateSelection
-  edges: Array<FieldResonanceLinksRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type FieldResonanceLinksConnectionSort = {
-  node?: InputMaybe<ResonanceLinkSort>
-}
-
-export type FieldResonanceLinksConnectionWhere = {
-  AND?: InputMaybe<Array<FieldResonanceLinksConnectionWhere>>
-  NOT?: InputMaybe<FieldResonanceLinksConnectionWhere>
-  OR?: InputMaybe<Array<FieldResonanceLinksConnectionWhere>>
-  node?: InputMaybe<ResonanceLinkWhere>
-}
-
-export type FieldResonanceLinksCreateFieldInput = {
-  node: ResonanceLinkCreateInput
-}
-
-export type FieldResonanceLinksDeleteFieldInput = {
-  delete?: InputMaybe<ResonanceLinkDeleteInput>
-  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
-}
-
-export type FieldResonanceLinksDisconnectFieldInput = {
-  disconnect?: InputMaybe<ResonanceLinkDisconnectInput>
-  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
-}
-
-export type FieldResonanceLinksFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceLinksCreateFieldInput>>
-}
-
-export type FieldResonanceLinksNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<FieldResonanceLinksNodeAggregationWhereInput>>
-  NOT?: InputMaybe<FieldResonanceLinksNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<FieldResonanceLinksNodeAggregationWhereInput>>
-  confidence_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  evidence_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  evidence_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  evidence_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  evidence_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  evidence_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  evidence_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  evidence_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  evidence_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  evidence_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  evidence_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  evidence_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  evidence_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  evidence_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  evidence_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  evidence_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  mergedFrom_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  mergedFrom_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  mergedFrom_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  mergedFrom_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  mergedFrom_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  mergedFrom_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type FieldResonanceLinksRelationship = {
-  __typename?: 'FieldResonanceLinksRelationship'
-  cursor: Scalars['String']['output']
-  node: ResonanceLink
-}
-
-export type FieldResonanceLinksUpdateConnectionInput = {
-  node?: InputMaybe<ResonanceLinkUpdateInput>
-  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
-}
-
-export type FieldResonanceLinksUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceLinksCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldResonanceLinksDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldResonanceLinksDisconnectFieldInput>>
-  update?: InputMaybe<FieldResonanceLinksUpdateConnectionInput>
-}
-
-export type FieldResonancePersonDetectedByAggregateSelection = {
-  __typename?: 'FieldResonancePersonDetectedByAggregateSelection'
-  count: CountConnection
-  node?: Maybe<FieldResonancePersonDetectedByNodeAggregateSelection>
-}
-
-export type FieldResonancePersonDetectedByAggregationSelection = {
-  __typename?: 'FieldResonancePersonDetectedByAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<FieldResonancePersonDetectedByNodeAggregateSelection>
-}
-
-export type FieldResonancePersonDetectedByNodeAggregateSelection = {
-  __typename?: 'FieldResonancePersonDetectedByNodeAggregateSelection'
-  email: StringAggregateSelection
-  firstName: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  lastName: StringAggregateSelection
-}
-
-export type FieldResonanceResonanceLinkLinksAggregateSelection = {
-  __typename?: 'FieldResonanceResonanceLinkLinksAggregateSelection'
-  count: CountConnection
-  node?: Maybe<FieldResonanceResonanceLinkLinksNodeAggregateSelection>
-}
-
-export type FieldResonanceResonanceLinkLinksAggregationSelection = {
-  __typename?: 'FieldResonanceResonanceLinkLinksAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<FieldResonanceResonanceLinkLinksNodeAggregateSelection>
-}
-
-export type FieldResonanceResonanceLinkLinksNodeAggregateSelection = {
-  __typename?: 'FieldResonanceResonanceLinkLinksNodeAggregateSelection'
-  confidence: FloatAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  evidence: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  mergedFrom: StringAggregateSelection
-}
-
-/** Fields to sort FieldResonances by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldResonanceSort object. */
-export type FieldResonanceSort = {
-  confidence?: InputMaybe<SortDirection>
-  description?: InputMaybe<SortDirection>
-  id?: InputMaybe<SortDirection>
-  label?: InputMaybe<SortDirection>
-}
-
-export type FieldResonanceSourceAggregateInput = {
-  AND?: InputMaybe<Array<FieldResonanceSourceAggregateInput>>
-  NOT?: InputMaybe<FieldResonanceSourceAggregateInput>
-  OR?: InputMaybe<Array<FieldResonanceSourceAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<FieldResonanceSourceNodeAggregationWhereInput>
-}
-
-export type FieldResonanceSourceConnectFieldInput = {
-  connect?: InputMaybe<FieldPulseConnectInput>
-  where?: InputMaybe<FieldPulseConnectWhere>
-}
-
-export type FieldResonanceSourceConnection = {
-  __typename?: 'FieldResonanceSourceConnection'
-  aggregate: FieldResonanceFieldPulseSourceAggregateSelection
-  edges: Array<FieldResonanceSourceRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type FieldResonanceSourceConnectionSort = {
-  node?: InputMaybe<FieldPulseSort>
-}
-
-export type FieldResonanceSourceConnectionWhere = {
-  AND?: InputMaybe<Array<FieldResonanceSourceConnectionWhere>>
-  NOT?: InputMaybe<FieldResonanceSourceConnectionWhere>
-  OR?: InputMaybe<Array<FieldResonanceSourceConnectionWhere>>
-  node?: InputMaybe<FieldPulseWhere>
-}
-
-export type FieldResonanceSourceCreateFieldInput = {
-  node: FieldPulseCreateInput
-}
-
-export type FieldResonanceSourceDeleteFieldInput = {
-  delete?: InputMaybe<FieldPulseDeleteInput>
-  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
-}
-
-export type FieldResonanceSourceDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldPulseDisconnectInput>
-  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
-}
-
-export type FieldResonanceSourceFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceSourceCreateFieldInput>>
-}
-
-export type FieldResonanceSourceNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<FieldResonanceSourceNodeAggregationWhereInput>>
-  NOT?: InputMaybe<FieldResonanceSourceNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<FieldResonanceSourceNodeAggregationWhereInput>>
-  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type FieldResonanceSourceRelationship = {
-  __typename?: 'FieldResonanceSourceRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldPulse
-}
-
-export type FieldResonanceSourceUpdateConnectionInput = {
-  node?: InputMaybe<FieldPulseUpdateInput>
-  where?: InputMaybe<FieldResonanceSourceConnectionWhere>
-}
-
-export type FieldResonanceSourceUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceSourceCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldResonanceSourceDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldResonanceSourceDisconnectFieldInput>>
-  update?: InputMaybe<FieldResonanceSourceUpdateConnectionInput>
-}
-
-export type FieldResonanceTargetAggregateInput = {
-  AND?: InputMaybe<Array<FieldResonanceTargetAggregateInput>>
-  NOT?: InputMaybe<FieldResonanceTargetAggregateInput>
-  OR?: InputMaybe<Array<FieldResonanceTargetAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<FieldResonanceTargetNodeAggregationWhereInput>
-}
-
-export type FieldResonanceTargetConnectFieldInput = {
-  connect?: InputMaybe<FieldPulseConnectInput>
-  where?: InputMaybe<FieldPulseConnectWhere>
-}
-
-export type FieldResonanceTargetConnection = {
-  __typename?: 'FieldResonanceTargetConnection'
-  aggregate: FieldResonanceFieldPulseTargetAggregateSelection
-  edges: Array<FieldResonanceTargetRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type FieldResonanceTargetConnectionSort = {
-  node?: InputMaybe<FieldPulseSort>
-}
-
-export type FieldResonanceTargetConnectionWhere = {
-  AND?: InputMaybe<Array<FieldResonanceTargetConnectionWhere>>
-  NOT?: InputMaybe<FieldResonanceTargetConnectionWhere>
-  OR?: InputMaybe<Array<FieldResonanceTargetConnectionWhere>>
-  node?: InputMaybe<FieldPulseWhere>
-}
-
-export type FieldResonanceTargetCreateFieldInput = {
-  node: FieldPulseCreateInput
-}
-
-export type FieldResonanceTargetDeleteFieldInput = {
-  delete?: InputMaybe<FieldPulseDeleteInput>
-  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
-}
-
-export type FieldResonanceTargetDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldPulseDisconnectInput>
-  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
-}
-
-export type FieldResonanceTargetFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceTargetCreateFieldInput>>
-}
-
-export type FieldResonanceTargetNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<FieldResonanceTargetNodeAggregationWhereInput>>
-  NOT?: InputMaybe<FieldResonanceTargetNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<FieldResonanceTargetNodeAggregationWhereInput>>
-  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type FieldResonanceTargetRelationship = {
-  __typename?: 'FieldResonanceTargetRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldPulse
-}
-
-export type FieldResonanceTargetUpdateConnectionInput = {
-  node?: InputMaybe<FieldPulseUpdateInput>
-  where?: InputMaybe<FieldResonanceTargetConnectionWhere>
-}
-
-export type FieldResonanceTargetUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
-  create?: InputMaybe<Array<FieldResonanceTargetCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldResonanceTargetDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldResonanceTargetDisconnectFieldInput>>
-  update?: InputMaybe<FieldResonanceTargetUpdateConnectionInput>
-}
-
-export type FieldResonanceUpdateInput = {
-  confidence_ADD?: InputMaybe<Scalars['Float']['input']>
-  confidence_DIVIDE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
-  confidence_SET?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
-  description_SET?: InputMaybe<Scalars['String']['input']>
-  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByUpdateFieldInput>>
-  label_SET?: InputMaybe<Scalars['String']['input']>
-  links?: InputMaybe<Array<FieldResonanceLinksUpdateFieldInput>>
-  source?: InputMaybe<Array<FieldResonanceSourceUpdateFieldInput>>
-  target?: InputMaybe<Array<FieldResonanceTargetUpdateFieldInput>>
-}
-
-export type FieldResonanceWhere = {
-  AND?: InputMaybe<Array<FieldResonanceWhere>>
-  NOT?: InputMaybe<FieldResonanceWhere>
-  OR?: InputMaybe<Array<FieldResonanceWhere>>
-  confidence_EQ?: InputMaybe<Scalars['Float']['input']>
-  confidence_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_IN?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>
-  confidence_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_LTE?: InputMaybe<Scalars['Float']['input']>
-  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  description_EQ?: InputMaybe<Scalars['String']['input']>
-  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  detectedByAggregate?: InputMaybe<FieldResonanceDetectedByAggregateInput>
-  /** Return FieldResonances where all of the related FieldResonanceDetectedByConnections match this filter */
-  detectedByConnection_ALL?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-  /** Return FieldResonances where none of the related FieldResonanceDetectedByConnections match this filter */
-  detectedByConnection_NONE?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-  /** Return FieldResonances where one of the related FieldResonanceDetectedByConnections match this filter */
-  detectedByConnection_SINGLE?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-  /** Return FieldResonances where some of the related FieldResonanceDetectedByConnections match this filter */
-  detectedByConnection_SOME?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
-  /** Return FieldResonances where all of the related People match this filter */
-  detectedBy_ALL?: InputMaybe<PersonWhere>
-  /** Return FieldResonances where none of the related People match this filter */
-  detectedBy_NONE?: InputMaybe<PersonWhere>
-  /** Return FieldResonances where one of the related People match this filter */
-  detectedBy_SINGLE?: InputMaybe<PersonWhere>
-  /** Return FieldResonances where some of the related People match this filter */
-  detectedBy_SOME?: InputMaybe<PersonWhere>
-  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
-  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
-  id_EQ?: InputMaybe<Scalars['ID']['input']>
-  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
-  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  label_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  label_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  label_EQ?: InputMaybe<Scalars['String']['input']>
-  label_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  label_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  linksAggregate?: InputMaybe<FieldResonanceLinksAggregateInput>
-  /** Return FieldResonances where all of the related FieldResonanceLinksConnections match this filter */
-  linksConnection_ALL?: InputMaybe<FieldResonanceLinksConnectionWhere>
-  /** Return FieldResonances where none of the related FieldResonanceLinksConnections match this filter */
-  linksConnection_NONE?: InputMaybe<FieldResonanceLinksConnectionWhere>
-  /** Return FieldResonances where one of the related FieldResonanceLinksConnections match this filter */
-  linksConnection_SINGLE?: InputMaybe<FieldResonanceLinksConnectionWhere>
-  /** Return FieldResonances where some of the related FieldResonanceLinksConnections match this filter */
-  linksConnection_SOME?: InputMaybe<FieldResonanceLinksConnectionWhere>
-  /** Return FieldResonances where all of the related ResonanceLinks match this filter */
-  links_ALL?: InputMaybe<ResonanceLinkWhere>
-  /** Return FieldResonances where none of the related ResonanceLinks match this filter */
-  links_NONE?: InputMaybe<ResonanceLinkWhere>
-  /** Return FieldResonances where one of the related ResonanceLinks match this filter */
-  links_SINGLE?: InputMaybe<ResonanceLinkWhere>
-  /** Return FieldResonances where some of the related ResonanceLinks match this filter */
-  links_SOME?: InputMaybe<ResonanceLinkWhere>
-  sourceAggregate?: InputMaybe<FieldResonanceSourceAggregateInput>
-  /** Return FieldResonances where all of the related FieldResonanceSourceConnections match this filter */
-  sourceConnection_ALL?: InputMaybe<FieldResonanceSourceConnectionWhere>
-  /** Return FieldResonances where none of the related FieldResonanceSourceConnections match this filter */
-  sourceConnection_NONE?: InputMaybe<FieldResonanceSourceConnectionWhere>
-  /** Return FieldResonances where one of the related FieldResonanceSourceConnections match this filter */
-  sourceConnection_SINGLE?: InputMaybe<FieldResonanceSourceConnectionWhere>
-  /** Return FieldResonances where some of the related FieldResonanceSourceConnections match this filter */
-  sourceConnection_SOME?: InputMaybe<FieldResonanceSourceConnectionWhere>
-  /** Return FieldResonances where all of the related FieldPulses match this filter */
-  source_ALL?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where none of the related FieldPulses match this filter */
-  source_NONE?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where one of the related FieldPulses match this filter */
-  source_SINGLE?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where some of the related FieldPulses match this filter */
-  source_SOME?: InputMaybe<FieldPulseWhere>
-  targetAggregate?: InputMaybe<FieldResonanceTargetAggregateInput>
-  /** Return FieldResonances where all of the related FieldResonanceTargetConnections match this filter */
-  targetConnection_ALL?: InputMaybe<FieldResonanceTargetConnectionWhere>
-  /** Return FieldResonances where none of the related FieldResonanceTargetConnections match this filter */
-  targetConnection_NONE?: InputMaybe<FieldResonanceTargetConnectionWhere>
-  /** Return FieldResonances where one of the related FieldResonanceTargetConnections match this filter */
-  targetConnection_SINGLE?: InputMaybe<FieldResonanceTargetConnectionWhere>
-  /** Return FieldResonances where some of the related FieldResonanceTargetConnections match this filter */
-  targetConnection_SOME?: InputMaybe<FieldResonanceTargetConnectionWhere>
-  /** Return FieldResonances where all of the related FieldPulses match this filter */
-  target_ALL?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where none of the related FieldPulses match this filter */
-  target_NONE?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where one of the related FieldPulses match this filter */
-  target_SINGLE?: InputMaybe<FieldPulseWhere>
-  /** Return FieldResonances where some of the related FieldPulses match this filter */
-  target_SOME?: InputMaybe<FieldPulseWhere>
-}
-
-export type FieldResonancesConnection = {
-  __typename?: 'FieldResonancesConnection'
-  aggregate: FieldResonanceAggregate
-  edges: Array<FieldResonanceEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
@@ -4151,7 +3427,6 @@ export type Mutation = {
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
-  createFieldResonances: CreateFieldResonancesMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
@@ -4169,7 +3444,6 @@ export type Mutation = {
   deleteChatbotResponses: DeleteInfo
   deleteCommunities: DeleteInfo
   deleteFieldContexts: DeleteInfo
-  deleteFieldResonances: DeleteInfo
   deleteGoalPulses: DeleteInfo
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
@@ -4203,7 +3477,6 @@ export type Mutation = {
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
-  updateFieldResonances: UpdateFieldResonancesMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
@@ -4253,10 +3526,6 @@ export type MutationCreateCommunitiesArgs = {
 
 export type MutationCreateFieldContextsArgs = {
   input: Array<FieldContextCreateInput>
-}
-
-export type MutationCreateFieldResonancesArgs = {
-  input: Array<FieldResonanceCreateInput>
 }
 
 export type MutationCreateGoalPulsesArgs = {
@@ -4327,11 +3596,6 @@ export type MutationDeleteCommunitiesArgs = {
 export type MutationDeleteFieldContextsArgs = {
   delete?: InputMaybe<FieldContextDeleteInput>
   where?: InputMaybe<FieldContextWhere>
-}
-
-export type MutationDeleteFieldResonancesArgs = {
-  delete?: InputMaybe<FieldResonanceDeleteInput>
-  where?: InputMaybe<FieldResonanceWhere>
 }
 
 export type MutationDeleteGoalPulsesArgs = {
@@ -4427,11 +3691,6 @@ export type MutationUpdateCommunitiesArgs = {
 export type MutationUpdateFieldContextsArgs = {
   update?: InputMaybe<FieldContextUpdateInput>
   where?: InputMaybe<FieldContextWhere>
-}
-
-export type MutationUpdateFieldResonancesArgs = {
-  update?: InputMaybe<FieldResonanceUpdateInput>
-  where?: InputMaybe<FieldResonanceWhere>
 }
 
 export type MutationUpdateGoalPulsesArgs = {
@@ -5005,10 +4264,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "fieldPulsesConnection" instead */
   fieldPulsesAggregate: FieldPulseAggregateSelection
   fieldPulsesConnection: FieldPulsesConnection
-  fieldResonances: Array<FieldResonance>
-  /** @deprecated Please use the explicit field "aggregate" inside "fieldResonancesConnection" instead */
-  fieldResonancesAggregate: FieldResonanceAggregateSelection
-  fieldResonancesConnection: FieldResonancesConnection
   goalPulses: Array<GoalPulse>
   /** @deprecated Please use the explicit field "aggregate" inside "goalPulsesConnection" instead */
   goalPulsesAggregate: GoalPulseAggregateSelection
@@ -5175,24 +4430,6 @@ export type QueryFieldPulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseSort>>
   where?: InputMaybe<FieldPulseWhere>
-}
-
-export type QueryFieldResonancesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceSort>>
-  where?: InputMaybe<FieldResonanceWhere>
-}
-
-export type QueryFieldResonancesAggregateArgs = {
-  where?: InputMaybe<FieldResonanceWhere>
-}
-
-export type QueryFieldResonancesConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceSort>>
-  where?: InputMaybe<FieldResonanceWhere>
 }
 
 export type QueryGoalPulsesArgs = {
@@ -5522,21 +4759,24 @@ export type RemoveSpaceMemberResponsesConnection = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLink = {
   __typename?: 'ResonanceLink'
   confidence: Scalars['Float']['output']
+  context: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
+  contextAggregate?: Maybe<ResonanceLinkFieldContextContextAggregationSelection>
+  contextConnection: ResonanceLinkContextConnection
   createdAt: Scalars['DateTime']['output']
+  description?: Maybe<Scalars['String']['output']>
   evidence?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
+  label: Scalars['String']['output']
   mergedFrom?: Maybe<Scalars['String']['output']>
-  pattern: Array<FieldResonance>
-  /** @deprecated Please use field "aggregate" inside "patternConnection" instead */
-  patternAggregate?: Maybe<ResonanceLinkFieldResonancePatternAggregationSelection>
-  patternConnection: ResonanceLinkPatternConnection
   source: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
   sourceAggregate?: Maybe<ResonanceLinkFieldPulseSourceAggregationSelection>
@@ -5548,41 +4788,45 @@ export type ResonanceLink = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
-export type ResonanceLinkPatternArgs = {
+export type ResonanceLinkContextArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldResonanceSort>>
-  where?: InputMaybe<FieldResonanceWhere>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
-export type ResonanceLinkPatternAggregateArgs = {
-  where?: InputMaybe<FieldResonanceWhere>
+export type ResonanceLinkContextAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
-export type ResonanceLinkPatternConnectionArgs = {
+export type ResonanceLinkContextConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
   first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<ResonanceLinkPatternConnectionSort>>
-  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  sort?: InputMaybe<Array<ResonanceLinkContextConnectionSort>>
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkSourceArgs = {
@@ -5593,8 +4837,9 @@ export type ResonanceLinkSourceArgs = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkSourceAggregateArgs = {
@@ -5602,8 +4847,9 @@ export type ResonanceLinkSourceAggregateArgs = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkSourceConnectionArgs = {
@@ -5614,8 +4860,9 @@ export type ResonanceLinkSourceConnectionArgs = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkTargetArgs = {
@@ -5626,8 +4873,9 @@ export type ResonanceLinkTargetArgs = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkTargetAggregateArgs = {
@@ -5635,8 +4883,9 @@ export type ResonanceLinkTargetAggregateArgs = {
 }
 
 /**
- * A discovered semantic resonance link between two pulses.
+ * A discovered semantic resonance link between two pulses within the same FieldContext.
  * Represents an AI-identified connection with confidence scoring.
+ * Scoped to a single FieldContext - only pulses in the same context can resonate.
  * Multi-label: ["ResonanceLink"]
  */
 export type ResonanceLinkTargetConnectionArgs = {
@@ -5656,9 +4905,11 @@ export type ResonanceLinkAggregateNode = {
   __typename?: 'ResonanceLinkAggregateNode'
   confidence: FloatAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   evidence: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  label: StringAggregateSelection
   mergedFrom: StringAggregateSelection
 }
 
@@ -5667,14 +4918,16 @@ export type ResonanceLinkAggregateSelection = {
   confidence: FloatAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   evidence: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  label: StringAggregateSelection
   mergedFrom: StringAggregateSelection
 }
 
 export type ResonanceLinkConnectInput = {
-  pattern?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
+  context?: InputMaybe<Array<ResonanceLinkContextConnectFieldInput>>
   source?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
   target?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
 }
@@ -5683,24 +4936,146 @@ export type ResonanceLinkConnectWhere = {
   node: ResonanceLinkWhere
 }
 
+export type ResonanceLinkContextAggregateInput = {
+  AND?: InputMaybe<Array<ResonanceLinkContextAggregateInput>>
+  NOT?: InputMaybe<ResonanceLinkContextAggregateInput>
+  OR?: InputMaybe<Array<ResonanceLinkContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResonanceLinkContextNodeAggregationWhereInput>
+}
+
+export type ResonanceLinkContextConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type ResonanceLinkContextConnection = {
+  __typename?: 'ResonanceLinkContextConnection'
+  aggregate: ResonanceLinkFieldContextContextAggregateSelection
+  edges: Array<ResonanceLinkContextRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResonanceLinkContextConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type ResonanceLinkContextConnectionWhere = {
+  AND?: InputMaybe<Array<ResonanceLinkContextConnectionWhere>>
+  NOT?: InputMaybe<ResonanceLinkContextConnectionWhere>
+  OR?: InputMaybe<Array<ResonanceLinkContextConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type ResonanceLinkContextCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type ResonanceLinkContextDeleteFieldInput = {
+  delete?: InputMaybe<FieldContextDeleteInput>
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
+}
+
+export type ResonanceLinkContextDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
+}
+
+export type ResonanceLinkContextFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkContextConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkContextCreateFieldInput>>
+}
+
+export type ResonanceLinkContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResonanceLinkContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResonanceLinkContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResonanceLinkContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResonanceLinkContextRelationship = {
+  __typename?: 'ResonanceLinkContextRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type ResonanceLinkContextUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
+}
+
+export type ResonanceLinkContextUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkContextConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkContextCreateFieldInput>>
+  delete?: InputMaybe<Array<ResonanceLinkContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResonanceLinkContextDisconnectFieldInput>>
+  update?: InputMaybe<ResonanceLinkContextUpdateConnectionInput>
+}
+
 export type ResonanceLinkCreateInput = {
   confidence: Scalars['Float']['input']
+  context?: InputMaybe<ResonanceLinkContextFieldInput>
   createdAt: Scalars['DateTime']['input']
+  description?: InputMaybe<Scalars['String']['input']>
   evidence?: InputMaybe<Scalars['String']['input']>
+  label: Scalars['String']['input']
   mergedFrom?: InputMaybe<Scalars['String']['input']>
-  pattern?: InputMaybe<ResonanceLinkPatternFieldInput>
   source?: InputMaybe<ResonanceLinkSourceFieldInput>
   target?: InputMaybe<ResonanceLinkTargetFieldInput>
 }
 
 export type ResonanceLinkDeleteInput = {
-  pattern?: InputMaybe<Array<ResonanceLinkPatternDeleteFieldInput>>
+  context?: InputMaybe<Array<ResonanceLinkContextDeleteFieldInput>>
   source?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
   target?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
 }
 
 export type ResonanceLinkDisconnectInput = {
-  pattern?: InputMaybe<Array<ResonanceLinkPatternDisconnectFieldInput>>
+  context?: InputMaybe<Array<ResonanceLinkContextDisconnectFieldInput>>
   source?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
   target?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
 }
@@ -5709,6 +5084,27 @@ export type ResonanceLinkEdge = {
   __typename?: 'ResonanceLinkEdge'
   cursor: Scalars['String']['output']
   node: ResonanceLink
+}
+
+export type ResonanceLinkFieldContextContextAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldContextContextAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResonanceLinkFieldContextContextNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldContextContextAggregationSelection = {
+  __typename?: 'ResonanceLinkFieldContextContextAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResonanceLinkFieldContextContextNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldContextContextNodeAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldContextContextNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
 }
 
 export type ResonanceLinkFieldPulseSourceAggregateSelection = {
@@ -5755,163 +5151,14 @@ export type ResonanceLinkFieldPulseTargetNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
-export type ResonanceLinkFieldResonancePatternAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldResonancePatternAggregateSelection'
-  count: CountConnection
-  node?: Maybe<ResonanceLinkFieldResonancePatternNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldResonancePatternAggregationSelection = {
-  __typename?: 'ResonanceLinkFieldResonancePatternAggregationSelection'
-  count: Scalars['Int']['output']
-  node?: Maybe<ResonanceLinkFieldResonancePatternNodeAggregateSelection>
-}
-
-export type ResonanceLinkFieldResonancePatternNodeAggregateSelection = {
-  __typename?: 'ResonanceLinkFieldResonancePatternNodeAggregateSelection'
-  confidence: FloatAggregateSelection
-  description: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  label: StringAggregateSelection
-}
-
-export type ResonanceLinkPatternAggregateInput = {
-  AND?: InputMaybe<Array<ResonanceLinkPatternAggregateInput>>
-  NOT?: InputMaybe<ResonanceLinkPatternAggregateInput>
-  OR?: InputMaybe<Array<ResonanceLinkPatternAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  node?: InputMaybe<ResonanceLinkPatternNodeAggregationWhereInput>
-}
-
-export type ResonanceLinkPatternConnectFieldInput = {
-  connect?: InputMaybe<Array<FieldResonanceConnectInput>>
-  where?: InputMaybe<FieldResonanceConnectWhere>
-}
-
-export type ResonanceLinkPatternConnection = {
-  __typename?: 'ResonanceLinkPatternConnection'
-  aggregate: ResonanceLinkFieldResonancePatternAggregateSelection
-  edges: Array<ResonanceLinkPatternRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type ResonanceLinkPatternConnectionSort = {
-  node?: InputMaybe<FieldResonanceSort>
-}
-
-export type ResonanceLinkPatternConnectionWhere = {
-  AND?: InputMaybe<Array<ResonanceLinkPatternConnectionWhere>>
-  NOT?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-  OR?: InputMaybe<Array<ResonanceLinkPatternConnectionWhere>>
-  node?: InputMaybe<FieldResonanceWhere>
-}
-
-export type ResonanceLinkPatternCreateFieldInput = {
-  node: FieldResonanceCreateInput
-}
-
-export type ResonanceLinkPatternDeleteFieldInput = {
-  delete?: InputMaybe<FieldResonanceDeleteInput>
-  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-}
-
-export type ResonanceLinkPatternDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldResonanceDisconnectInput>
-  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-}
-
-export type ResonanceLinkPatternFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkPatternCreateFieldInput>>
-}
-
-export type ResonanceLinkPatternNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<ResonanceLinkPatternNodeAggregationWhereInput>>
-  NOT?: InputMaybe<ResonanceLinkPatternNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<ResonanceLinkPatternNodeAggregationWhereInput>>
-  confidence_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_GT?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_LT?: InputMaybe<Scalars['Float']['input']>
-  confidence_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  label_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  label_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  label_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  label_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type ResonanceLinkPatternRelationship = {
-  __typename?: 'ResonanceLinkPatternRelationship'
-  cursor: Scalars['String']['output']
-  node: FieldResonance
-}
-
-export type ResonanceLinkPatternUpdateConnectionInput = {
-  node?: InputMaybe<FieldResonanceUpdateInput>
-  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-}
-
-export type ResonanceLinkPatternUpdateFieldInput = {
-  connect?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
-  create?: InputMaybe<Array<ResonanceLinkPatternCreateFieldInput>>
-  delete?: InputMaybe<Array<ResonanceLinkPatternDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<ResonanceLinkPatternDisconnectFieldInput>>
-  update?: InputMaybe<ResonanceLinkPatternUpdateConnectionInput>
-}
-
 /** Fields to sort ResonanceLinks by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResonanceLinkSort object. */
 export type ResonanceLinkSort = {
   confidence?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
+  description?: InputMaybe<SortDirection>
   evidence?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  label?: InputMaybe<SortDirection>
   mergedFrom?: InputMaybe<SortDirection>
 }
 
@@ -6201,10 +5448,12 @@ export type ResonanceLinkUpdateInput = {
   confidence_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
   confidence_SET?: InputMaybe<Scalars['Float']['input']>
   confidence_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
+  context?: InputMaybe<Array<ResonanceLinkContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  description_SET?: InputMaybe<Scalars['String']['input']>
   evidence_SET?: InputMaybe<Scalars['String']['input']>
+  label_SET?: InputMaybe<Scalars['String']['input']>
   mergedFrom_SET?: InputMaybe<Scalars['String']['input']>
-  pattern?: InputMaybe<Array<ResonanceLinkPatternUpdateFieldInput>>
   source?: InputMaybe<Array<ResonanceLinkSourceUpdateFieldInput>>
   target?: InputMaybe<Array<ResonanceLinkTargetUpdateFieldInput>>
 }
@@ -6219,12 +5468,34 @@ export type ResonanceLinkWhere = {
   confidence_IN?: InputMaybe<Array<Scalars['Float']['input']>>
   confidence_LT?: InputMaybe<Scalars['Float']['input']>
   confidence_LTE?: InputMaybe<Scalars['Float']['input']>
+  contextAggregate?: InputMaybe<ResonanceLinkContextAggregateInput>
+  /** Return ResonanceLinks where all of the related ResonanceLinkContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<ResonanceLinkContextConnectionWhere>
+  /** Return ResonanceLinks where none of the related ResonanceLinkContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<ResonanceLinkContextConnectionWhere>
+  /** Return ResonanceLinks where one of the related ResonanceLinkContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<ResonanceLinkContextConnectionWhere>
+  /** Return ResonanceLinks where some of the related ResonanceLinkContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<ResonanceLinkContextConnectionWhere>
+  /** Return ResonanceLinks where all of the related FieldContexts match this filter */
+  context_ALL?: InputMaybe<FieldContextWhere>
+  /** Return ResonanceLinks where none of the related FieldContexts match this filter */
+  context_NONE?: InputMaybe<FieldContextWhere>
+  /** Return ResonanceLinks where one of the related FieldContexts match this filter */
+  context_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return ResonanceLinks where some of the related FieldContexts match this filter */
+  context_SOME?: InputMaybe<FieldContextWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  description_EQ?: InputMaybe<Scalars['String']['input']>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   evidence_CONTAINS?: InputMaybe<Scalars['String']['input']>
   evidence_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   evidence_EQ?: InputMaybe<Scalars['String']['input']>
@@ -6235,28 +5506,16 @@ export type ResonanceLinkWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  label_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  label_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  label_EQ?: InputMaybe<Scalars['String']['input']>
+  label_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  label_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   mergedFrom_CONTAINS?: InputMaybe<Scalars['String']['input']>
   mergedFrom_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   mergedFrom_EQ?: InputMaybe<Scalars['String']['input']>
   mergedFrom_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   mergedFrom_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  patternAggregate?: InputMaybe<ResonanceLinkPatternAggregateInput>
-  /** Return ResonanceLinks where all of the related ResonanceLinkPatternConnections match this filter */
-  patternConnection_ALL?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-  /** Return ResonanceLinks where none of the related ResonanceLinkPatternConnections match this filter */
-  patternConnection_NONE?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-  /** Return ResonanceLinks where one of the related ResonanceLinkPatternConnections match this filter */
-  patternConnection_SINGLE?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-  /** Return ResonanceLinks where some of the related ResonanceLinkPatternConnections match this filter */
-  patternConnection_SOME?: InputMaybe<ResonanceLinkPatternConnectionWhere>
-  /** Return ResonanceLinks where all of the related FieldResonances match this filter */
-  pattern_ALL?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where none of the related FieldResonances match this filter */
-  pattern_NONE?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where one of the related FieldResonances match this filter */
-  pattern_SINGLE?: InputMaybe<FieldResonanceWhere>
-  /** Return ResonanceLinks where some of the related FieldResonances match this filter */
-  pattern_SOME?: InputMaybe<FieldResonanceWhere>
   sourceAggregate?: InputMaybe<ResonanceLinkSourceAggregateInput>
   /** Return ResonanceLinks where all of the related ResonanceLinkSourceConnections match this filter */
   sourceConnection_ALL?: InputMaybe<ResonanceLinkSourceConnectionWhere>
@@ -8312,12 +7571,6 @@ export type UpdateFieldContextsMutationResponse = {
   info: UpdateInfo
 }
 
-export type UpdateFieldResonancesMutationResponse = {
-  __typename?: 'UpdateFieldResonancesMutationResponse'
-  fieldResonances: Array<FieldResonance>
-  info: UpdateInfo
-}
-
 export type UpdateGoalPulsesMutationResponse = {
   __typename?: 'UpdateGoalPulsesMutationResponse'
   goalPulses: Array<GoalPulse>
@@ -9409,22 +8662,20 @@ export type CreateFieldContextMutation = {
       title: string
       emergentName?: string | null
       createdAt: any
-      space: Array<
-        | {
-            __typename?: 'MeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-            createdAt: any
-          }
-        | {
-            __typename?: 'WeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-            createdAt: any
-          }
-      >
+      meSpace: Array<{
+        __typename?: 'MeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+        createdAt: any
+      }>
+      weSpace: Array<{
+        __typename?: 'WeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+        createdAt: any
+      }>
     }>
     info: {
       __typename?: 'CreateInfo'
@@ -9449,20 +8700,18 @@ export type UpdateFieldContextMutation = {
       title: string
       emergentName?: string | null
       createdAt: any
-      space: Array<
-        | {
-            __typename?: 'MeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-          }
-        | {
-            __typename?: 'WeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-          }
-      >
+      meSpace: Array<{
+        __typename?: 'MeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
+      weSpace: Array<{
+        __typename?: 'WeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
     }>
     info: {
       __typename?: 'UpdateInfo'
@@ -9658,6 +8907,127 @@ export type CancelInviteMutation = {
     name: string
     email?: string | null
   } | null
+}
+
+export type CreateResonanceLinkMutationVariables = Exact<{
+  input: Array<ResonanceLinkCreateInput> | ResonanceLinkCreateInput
+}>
+
+export type CreateResonanceLinkMutation = {
+  __typename?: 'Mutation'
+  createResonanceLinks: {
+    __typename?: 'CreateResonanceLinksMutationResponse'
+    resonanceLinks: Array<{
+      __typename?: 'ResonanceLink'
+      id: string
+      label: string
+      description?: string | null
+      confidence: number
+      evidence?: string | null
+      createdAt: any
+      source: Array<
+        | {
+            __typename?: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            type: 'GoalPulse'
+          }
+        | {
+            __typename?: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            type: 'ResourcePulse'
+          }
+        | {
+            __typename?: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            type: 'StoryPulse'
+          }
+      >
+      target: Array<
+        | {
+            __typename?: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            type: 'GoalPulse'
+          }
+        | {
+            __typename?: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            type: 'ResourcePulse'
+          }
+        | {
+            __typename?: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            type: 'StoryPulse'
+          }
+      >
+      context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
+export type UpdateResonanceLinkMutationVariables = Exact<{
+  where: ResonanceLinkWhere
+  update: ResonanceLinkUpdateInput
+}>
+
+export type UpdateResonanceLinkMutation = {
+  __typename?: 'Mutation'
+  updateResonanceLinks: {
+    __typename?: 'UpdateResonanceLinksMutationResponse'
+    resonanceLinks: Array<{
+      __typename?: 'ResonanceLink'
+      id: string
+      label: string
+      description?: string | null
+      confidence: number
+      evidence?: string | null
+      createdAt: any
+      source: Array<
+        | { __typename?: 'GoalPulse'; id: string; title: string }
+        | { __typename?: 'ResourcePulse'; id: string; title: string }
+        | { __typename?: 'StoryPulse'; id: string; title: string }
+      >
+      target: Array<
+        | { __typename?: 'GoalPulse'; id: string; title: string }
+        | { __typename?: 'ResourcePulse'; id: string; title: string }
+        | { __typename?: 'StoryPulse'; id: string; title: string }
+      >
+    }>
+    info: {
+      __typename?: 'UpdateInfo'
+      relationshipsCreated: number
+      relationshipsDeleted: number
+    }
+  }
+}
+
+export type DeleteResonanceLinkMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeleteResonanceLinkMutation = {
+  __typename?: 'Mutation'
+  deleteResonanceLinks: {
+    __typename?: 'DeleteInfo'
+    nodesDeleted: number
+    relationshipsDeleted: number
+  }
 }
 
 export type ResolvePersonByEmailQueryVariables = Exact<{
@@ -10068,6 +9438,74 @@ export type GetFieldsForSpacePaginatedQuery = {
   }>
 }
 
+export type GetResonanceLinksByContextQueryVariables = Exact<{
+  contextId: Scalars['ID']['input']
+}>
+
+export type GetResonanceLinksByContextQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    resonances: Array<{
+      __typename?: 'ResonanceLink'
+      id: string
+      label: string
+      description?: string | null
+      confidence: number
+      evidence?: string | null
+      createdAt: any
+      source: Array<
+        | {
+            __typename?: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            type: 'GoalPulse'
+          }
+        | {
+            __typename?: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            type: 'ResourcePulse'
+          }
+        | {
+            __typename?: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            type: 'StoryPulse'
+          }
+      >
+      target: Array<
+        | {
+            __typename?: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            type: 'GoalPulse'
+          }
+        | {
+            __typename?: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            type: 'ResourcePulse'
+          }
+        | {
+            __typename?: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            type: 'StoryPulse'
+          }
+      >
+    }>
+  }>
+}
+
 export type GetGraphStatsQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetGraphStatsQuery = {
@@ -10095,8 +9533,8 @@ export type GetGraphStatsQuery = {
     __typename?: 'StoryPulseAggregateSelection'
     count: number
   }
-  fieldResonancesAggregate: {
-    __typename?: 'FieldResonanceAggregateSelection'
+  resonanceLinksAggregate: {
+    __typename?: 'ResonanceLinkAggregateSelection'
     count: number
   }
 }
@@ -10201,8 +9639,8 @@ export type GetGraphResonancesQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetGraphResonancesQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
@@ -10469,8 +9907,8 @@ export type GetResonanceDetailsQueryVariables = Exact<{
 
 export type GetResonanceDetailsQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
@@ -10575,8 +10013,8 @@ export type GetResonanceWithLinksQueryVariables = Exact<{
 
 export type GetResonanceWithLinksQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
@@ -10679,8 +10117,8 @@ export type GetAllResonancesQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetAllResonancesQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
@@ -10693,12 +10131,12 @@ export type GetLinksForResonanceQueryVariables = Exact<{
 
 export type GetLinksForResonanceQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
-    confidence?: number | null
+    confidence: number
     source: Array<
       | {
           __typename: 'GoalPulse'
@@ -10758,12 +10196,12 @@ export type GetAllResonanceLinksWithResonancesQueryVariables = Exact<{
 
 export type GetAllResonanceLinksWithResonancesQuery = {
   __typename?: 'Query'
-  fieldResonances: Array<{
-    __typename?: 'FieldResonance'
+  resonanceLinks: Array<{
+    __typename?: 'ResonanceLink'
     id: string
     label: string
     description?: string | null
-    confidence?: number | null
+    confidence: number
     source: Array<
       | {
           __typename: 'GoalPulse'
@@ -11395,6 +10833,61 @@ export type GetPulseDetailsWithContextQuery = {
   >
 }
 
+export type GetPulsesByContextQueryVariables = Exact<{
+  contextId: Scalars['ID']['input']
+}>
+
+export type GetPulsesByContextQuery = {
+  __typename?: 'Query'
+  goalPulses: Array<{
+    __typename: 'GoalPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    type: 'GoalPulse'
+  }>
+  resourcePulses: Array<{
+    __typename: 'ResourcePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    type: 'ResourcePulse'
+  }>
+  storyPulses: Array<{
+    __typename: 'StoryPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    type: 'StoryPulse'
+  }>
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    resonances: Array<{
+      __typename?: 'ResonanceLink'
+      id: string
+      label: string
+      description?: string | null
+      confidence: number
+      evidence?: string | null
+      createdAt: any
+      source: Array<
+        | { __typename: 'GoalPulse'; id: string }
+        | { __typename: 'ResourcePulse'; id: string }
+        | { __typename: 'StoryPulse'; id: string }
+      >
+      target: Array<
+        | { __typename: 'GoalPulse'; id: string }
+        | { __typename: 'ResourcePulse'; id: string }
+        | { __typename: 'StoryPulse'; id: string }
+      >
+    }>
+  }>
+}
+
 export type GetPulseDetailsQueryVariables = Exact<{
   pulseId: Scalars['ID']['input']
 }>
@@ -11869,7 +11362,32 @@ export const CreateFieldContextDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'space' },
+                        name: { kind: 'Name', value: 'meSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weSpace' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
@@ -12005,7 +11523,28 @@ export const UpdateFieldContextDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'space' },
+                        name: { kind: 'Name', value: 'meSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weSpace' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
@@ -12918,6 +12457,639 @@ export const CancelInviteDocument = {
 } as unknown as DocumentNode<
   CancelInviteMutation,
   CancelInviteMutationVariables
+>
+export const CreateResonanceLinkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateResonanceLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'ResonanceLinkCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createResonanceLinks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resonanceLinks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'confidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'evidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'target' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'context' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateResonanceLinkMutation,
+  CreateResonanceLinkMutationVariables
+>
+export const UpdateResonanceLinkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateResonanceLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ResonanceLinkWhere' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ResonanceLinkUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateResonanceLinks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resonanceLinks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'confidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'evidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'target' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsDeleted' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateResonanceLinkMutation,
+  UpdateResonanceLinkMutationVariables
+>
+export const DeleteResonanceLinkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteResonanceLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteResonanceLinks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'relationshipsDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteResonanceLinkMutation,
+  DeleteResonanceLinkMutationVariables
 >
 export const ResolvePersonByEmailDocument = {
   kind: 'Document',
@@ -14338,6 +14510,286 @@ export const GetFieldsForSpacePaginatedDocument = {
   GetFieldsForSpacePaginatedQuery,
   GetFieldsForSpacePaginatedQueryVariables
 >
+export const GetResonanceLinksByContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetResonanceLinksByContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'contextId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resonances' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'confidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'evidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'target' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    alias: { kind: 'Name', value: 'type' },
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetResonanceLinksByContextQuery,
+  GetResonanceLinksByContextQueryVariables
+>
 export const GetGraphStatsDocument = {
   kind: 'Document',
   definitions: [
@@ -14430,7 +14882,7 @@ export const GetGraphStatsDocument = {
           },
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonancesAggregate' },
+            name: { kind: 'Name', value: 'resonanceLinksAggregate' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
@@ -14717,7 +15169,7 @@ export const GetGraphResonancesDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
@@ -15981,7 +16433,7 @@ export const GetResonanceDetailsDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             arguments: [
               {
                 kind: 'Argument',
@@ -16395,7 +16847,7 @@ export const GetResonanceWithLinksDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             arguments: [
               {
                 kind: 'Argument',
@@ -16804,7 +17256,7 @@ export const GetAllResonancesDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
@@ -16847,7 +17299,7 @@ export const GetLinksForResonanceDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             arguments: [
               {
                 kind: 'Argument',
@@ -17107,7 +17559,7 @@ export const GetAllResonanceLinksWithResonancesDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldResonances' },
+            name: { kind: 'Name', value: 'resonanceLinks' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
@@ -18588,6 +19040,372 @@ export const GetPulseDetailsWithContextDocument = {
 } as unknown as DocumentNode<
   GetPulseDetailsWithContextQuery,
   GetPulseDetailsWithContextQueryVariables
+>
+export const GetPulsesByContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetPulsesByContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  alias: { kind: 'Name', value: 'type' },
+                  name: { kind: 'Name', value: '__typename' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  alias: { kind: 'Name', value: 'type' },
+                  name: { kind: 'Name', value: '__typename' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  alias: { kind: 'Name', value: 'type' },
+                  name: { kind: 'Name', value: '__typename' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'contextId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resonances' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'confidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'evidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'target' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: '__typename' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPulsesByContextQuery,
+  GetPulsesByContextQueryVariables
 >
 export const GetPulseDetailsDocument = {
   kind: 'Document',

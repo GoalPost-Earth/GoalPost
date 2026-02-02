@@ -14,8 +14,16 @@ import { graphql } from '@/gql'
  *   }
  * })
  *
- * Note: To link to a space, use the CONNECT_FIELD_TO_SPACE_MUTATION or create the relationship
- * through the space's contexts mutation instead.
+ * Note: To link to a space, use meSpace or weSpace fields in the input:
+ * createFieldContexts({
+ *   variables: {
+ *     input: [{
+ *       title: "Deep Work",
+ *       createdAt: new Date().toISOString(),
+ *       meSpace: { connect: [{ where: { node: { id_EQ: "space_id" } } }] }
+ *     }]
+ *   }
+ * })
  */
 export const CREATE_FIELD_CONTEXT_MUTATION = graphql(`
   mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {
@@ -25,7 +33,13 @@ export const CREATE_FIELD_CONTEXT_MUTATION = graphql(`
         title
         emergentName
         createdAt
-        space {
+        meSpace {
+          id
+          name
+          visibility
+          createdAt
+        }
+        weSpace {
           id
           name
           visibility
@@ -54,7 +68,12 @@ export const UPDATE_FIELD_CONTEXT_MUTATION = graphql(`
         title
         emergentName
         createdAt
-        space {
+        meSpace {
+          id
+          name
+          visibility
+        }
+        weSpace {
           id
           name
           visibility
