@@ -21,10 +21,17 @@ export interface ResonanceLink {
 export interface ResonanceLinksVisualizationProps {
   pulsePositions: PulsePosition[]
   resonanceLinks: ResonanceLink[]
+  resonanceNodePositions: Map<string, { x: number; y: number }>
   canvasWidth: number
   canvasHeight: number
   expandedLinks?: Set<string>
   onResonanceNodeClick?: (linkId: string) => void
+  onResonanceNodeDrag?: (
+    linkId: string,
+    newX: number,
+    newY: number,
+    connectedPulseIds: string[]
+  ) => void
 }
 
 /**
@@ -34,10 +41,12 @@ export interface ResonanceLinksVisualizationProps {
 export function ResonanceLinksVisualization({
   pulsePositions,
   resonanceLinks,
+  resonanceNodePositions,
   canvasWidth,
   canvasHeight,
   expandedLinks = new Set(),
   onResonanceNodeClick,
+  onResonanceNodeDrag,
 }: ResonanceLinksVisualizationProps) {
   // Create position map for O(1) lookups
   const positionMap = useMemo(
@@ -59,6 +68,12 @@ export function ResonanceLinksVisualization({
         )
       }),
     [resonanceLinks, positionMap]
+  )
+
+  // Memoize resonance positions for quick lookup
+  const resonancePositionsMap = useMemo(
+    () => resonanceNodePositions,
+    [resonanceNodePositions]
   )
 
   // Get color based on confidence
@@ -133,17 +148,33 @@ export function ResonanceLinksVisualization({
 
             if (!sourcePos || !targetPos) return null
 
-            const midX = (sourcePos.x + targetPos.x) / 2
-            const midY = (sourcePos.y + targetPos.y) / 2
+            // Use stored resonance position or fallback to midpoint
+            const resonancePos = resonancePositionsMap.get(link.id)
+            const midX = resonancePos?.x ?? (sourcePos.x + targetPos.x) / 2
+            const midY = resonancePos?.y ?? (sourcePos.y + targetPos.y) / 2
             const lineColor = getLineColor(link.confidence)
             const strokeDasharray = getLineStrokeDasharray(link.label)
 
             return (
               <g key={`line-${link.id}`}>
-                {/* Connection line */}
+                {/* Connection line from source to resonance node */}
                 <line
                   x1={sourcePos.x}
                   y1={sourcePos.y}
+                  x2={midX}
+                  y2={midY}
+                  stroke={lineColor}
+                  strokeWidth="2.5"
+                  strokeDasharray={strokeDasharray}
+                  filter="url(#glow)"
+                  className="transition-opacity duration-300 hover:opacity-100"
+                  style={{ opacity: 0.7 }}
+                />
+
+                {/* Connection line from resonance node to target */}
+                <line
+                  x1={midX}
+                  y1={midY}
                   x2={targetPos.x}
                   y2={targetPos.y}
                   stroke={lineColor}
@@ -201,7 +232,7 @@ export function ResonanceLinksVisualization({
       </svg>
 
       {/* Render resonance nodes (interactive) */}
-      <div className="absolute inset-0 pointer-events-auto">
+      <div className="absolute inset-0 pointer-events-none">
         {validLinks.map((link) => {
           const sourceId = link.source?.[0]?.id
           const targetId = link.target?.[0]?.id
@@ -213,9 +244,20 @@ export function ResonanceLinksVisualization({
 
           if (!sourcePos || !targetPos) return null
 
-          const midX = (sourcePos.x + targetPos.x) / 2
-          const midY = (sourcePos.y + targetPos.y) / 2
+          // Use stored resonance position or fallback to midpoint
+          const resonancePos = resonancePositionsMap.get(link.id)
+          const midX = resonancePos?.x ?? (sourcePos.x + targetPos.x) / 2
+          const midY = resonancePos?.y ?? (sourcePos.y + targetPos.y) / 2
           const isActive = expandedLinks.has(link.id)
+
+          // Handler for when resonance node is dragged
+          const handleResonanceDrag = (newX: number, newY: number) => {
+            if (!onResonanceNodeDrag) return
+
+            // Never drag connected pulses - resonance node moves independently
+            // Connection lines will still show and update if link is active
+            onResonanceNodeDrag(link.id, newX, newY, [])
+          }
 
           return (
             <DraggableResonanceNode
@@ -227,6 +269,7 @@ export function ResonanceLinksVisualization({
               isActive={isActive}
               canvasPosition={{ x: midX, y: midY }}
               onClick={() => onResonanceNodeClick?.(link.id)}
+              onPositionChange={handleResonanceDrag}
             />
           )
         })}
