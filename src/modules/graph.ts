@@ -1,5 +1,6 @@
 // tag::import[]
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
+import { config } from 'dotenv'
 // end::import[]
 
 // tag::graph[]
@@ -12,6 +13,7 @@ let graph: Neo4jGraph
  * @returns {Promise<Neo4jGraph>}
  */
 export async function initGraph(): Promise<Neo4jGraph> {
+  config({ path: '.env.local' })
   if (!graph) {
     graph = await Neo4jGraph.initialize({
       url: process.env.NEO4J_URI as string,

@@ -702,6 +702,12 @@ export type CreateRemoveSpaceMemberResponsesMutationResponse = {
   removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
 }
 
+export type CreateResonanceLinksMutationResponse = {
+  __typename?: 'CreateResonanceLinksMutationResponse'
+  info: CreateInfo
+  resonanceLinks: Array<ResonanceLink>
+}
+
 export type CreateResourcePulsesMutationResponse = {
   __typename?: 'CreateResourcePulsesMutationResponse'
   info: CreateInfo
@@ -2126,6 +2132,10 @@ export type FieldResonance = {
   detectedByConnection: FieldResonanceDetectedByConnection
   id: Scalars['ID']['output']
   label: Scalars['String']['output']
+  links: Array<ResonanceLink>
+  /** @deprecated Please use field "aggregate" inside "linksConnection" instead */
+  linksAggregate?: Maybe<FieldResonanceResonanceLinkLinksAggregationSelection>
+  linksConnection: FieldResonanceLinksConnection
   source: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
   sourceAggregate?: Maybe<FieldResonanceFieldPulseSourceAggregationSelection>
@@ -2164,6 +2174,36 @@ export type FieldResonanceDetectedByConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldResonanceDetectedByConnectionSort>>
   where?: InputMaybe<FieldResonanceDetectedByConnectionWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceLinksArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkSort>>
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceLinksAggregateArgs = {
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+/**
+ * A discovered pattern of semantic resonance between pulses.
+ * Multi-label: ["FieldResonance"]
+ */
+export type FieldResonanceLinksConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldResonanceLinksConnectionSort>>
+  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
 }
 
 /**
@@ -2251,17 +2291,30 @@ export type FieldResonanceAggregateSelection = {
   label: StringAggregateSelection
 }
 
+export type FieldResonanceConnectInput = {
+  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByConnectFieldInput>>
+  links?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
+  source?: InputMaybe<Array<FieldResonanceSourceConnectFieldInput>>
+  target?: InputMaybe<Array<FieldResonanceTargetConnectFieldInput>>
+}
+
+export type FieldResonanceConnectWhere = {
+  node: FieldResonanceWhere
+}
+
 export type FieldResonanceCreateInput = {
   confidence?: InputMaybe<Scalars['Float']['input']>
   description?: InputMaybe<Scalars['String']['input']>
   detectedBy?: InputMaybe<FieldResonanceDetectedByFieldInput>
   label: Scalars['String']['input']
+  links?: InputMaybe<FieldResonanceLinksFieldInput>
   source?: InputMaybe<FieldResonanceSourceFieldInput>
   target?: InputMaybe<FieldResonanceTargetFieldInput>
 }
 
 export type FieldResonanceDeleteInput = {
   detectedBy?: InputMaybe<Array<FieldResonanceDetectedByDeleteFieldInput>>
+  links?: InputMaybe<Array<FieldResonanceLinksDeleteFieldInput>>
   source?: InputMaybe<Array<FieldResonanceSourceDeleteFieldInput>>
   target?: InputMaybe<Array<FieldResonanceTargetDeleteFieldInput>>
 }
@@ -2391,6 +2444,13 @@ export type FieldResonanceDetectedByUpdateFieldInput = {
   update?: InputMaybe<FieldResonanceDetectedByUpdateConnectionInput>
 }
 
+export type FieldResonanceDisconnectInput = {
+  detectedBy?: InputMaybe<Array<FieldResonanceDetectedByDisconnectFieldInput>>
+  links?: InputMaybe<Array<FieldResonanceLinksDisconnectFieldInput>>
+  source?: InputMaybe<Array<FieldResonanceSourceDisconnectFieldInput>>
+  target?: InputMaybe<Array<FieldResonanceTargetDisconnectFieldInput>>
+}
+
 export type FieldResonanceEdge = {
   __typename?: 'FieldResonanceEdge'
   cursor: Scalars['String']['output']
@@ -2441,6 +2501,146 @@ export type FieldResonanceFieldPulseTargetNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
+export type FieldResonanceLinksAggregateInput = {
+  AND?: InputMaybe<Array<FieldResonanceLinksAggregateInput>>
+  NOT?: InputMaybe<FieldResonanceLinksAggregateInput>
+  OR?: InputMaybe<Array<FieldResonanceLinksAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldResonanceLinksNodeAggregationWhereInput>
+}
+
+export type FieldResonanceLinksConnectFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkConnectInput>>
+  where?: InputMaybe<ResonanceLinkConnectWhere>
+}
+
+export type FieldResonanceLinksConnection = {
+  __typename?: 'FieldResonanceLinksConnection'
+  aggregate: FieldResonanceResonanceLinkLinksAggregateSelection
+  edges: Array<FieldResonanceLinksRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldResonanceLinksConnectionSort = {
+  node?: InputMaybe<ResonanceLinkSort>
+}
+
+export type FieldResonanceLinksConnectionWhere = {
+  AND?: InputMaybe<Array<FieldResonanceLinksConnectionWhere>>
+  NOT?: InputMaybe<FieldResonanceLinksConnectionWhere>
+  OR?: InputMaybe<Array<FieldResonanceLinksConnectionWhere>>
+  node?: InputMaybe<ResonanceLinkWhere>
+}
+
+export type FieldResonanceLinksCreateFieldInput = {
+  node: ResonanceLinkCreateInput
+}
+
+export type FieldResonanceLinksDeleteFieldInput = {
+  delete?: InputMaybe<ResonanceLinkDeleteInput>
+  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
+}
+
+export type FieldResonanceLinksDisconnectFieldInput = {
+  disconnect?: InputMaybe<ResonanceLinkDisconnectInput>
+  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
+}
+
+export type FieldResonanceLinksFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceLinksCreateFieldInput>>
+}
+
+export type FieldResonanceLinksNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldResonanceLinksNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldResonanceLinksNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldResonanceLinksNodeAggregationWhereInput>>
+  confidence_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  evidence_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  evidence_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  evidence_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  evidence_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  evidence_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mergedFrom_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mergedFrom_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldResonanceLinksRelationship = {
+  __typename?: 'FieldResonanceLinksRelationship'
+  cursor: Scalars['String']['output']
+  node: ResonanceLink
+}
+
+export type FieldResonanceLinksUpdateConnectionInput = {
+  node?: InputMaybe<ResonanceLinkUpdateInput>
+  where?: InputMaybe<FieldResonanceLinksConnectionWhere>
+}
+
+export type FieldResonanceLinksUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceLinksConnectFieldInput>>
+  create?: InputMaybe<Array<FieldResonanceLinksCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldResonanceLinksDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldResonanceLinksDisconnectFieldInput>>
+  update?: InputMaybe<FieldResonanceLinksUpdateConnectionInput>
+}
+
 export type FieldResonancePersonDetectedByAggregateSelection = {
   __typename?: 'FieldResonancePersonDetectedByAggregateSelection'
   count: CountConnection
@@ -2460,6 +2660,28 @@ export type FieldResonancePersonDetectedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+}
+
+export type FieldResonanceResonanceLinkLinksAggregateSelection = {
+  __typename?: 'FieldResonanceResonanceLinkLinksAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldResonanceResonanceLinkLinksNodeAggregateSelection>
+}
+
+export type FieldResonanceResonanceLinkLinksAggregationSelection = {
+  __typename?: 'FieldResonanceResonanceLinkLinksAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldResonanceResonanceLinkLinksNodeAggregateSelection>
+}
+
+export type FieldResonanceResonanceLinkLinksNodeAggregateSelection = {
+  __typename?: 'FieldResonanceResonanceLinkLinksNodeAggregateSelection'
+  confidence: FloatAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  evidence: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mergedFrom: StringAggregateSelection
 }
 
 /** Fields to sort FieldResonances by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldResonanceSort object. */
@@ -2759,6 +2981,7 @@ export type FieldResonanceUpdateInput = {
   description_SET?: InputMaybe<Scalars['String']['input']>
   detectedBy?: InputMaybe<Array<FieldResonanceDetectedByUpdateFieldInput>>
   label_SET?: InputMaybe<Scalars['String']['input']>
+  links?: InputMaybe<Array<FieldResonanceLinksUpdateFieldInput>>
   source?: InputMaybe<Array<FieldResonanceSourceUpdateFieldInput>>
   target?: InputMaybe<Array<FieldResonanceTargetUpdateFieldInput>>
 }
@@ -2805,6 +3028,23 @@ export type FieldResonanceWhere = {
   label_EQ?: InputMaybe<Scalars['String']['input']>
   label_IN?: InputMaybe<Array<Scalars['String']['input']>>
   label_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  linksAggregate?: InputMaybe<FieldResonanceLinksAggregateInput>
+  /** Return FieldResonances where all of the related FieldResonanceLinksConnections match this filter */
+  linksConnection_ALL?: InputMaybe<FieldResonanceLinksConnectionWhere>
+  /** Return FieldResonances where none of the related FieldResonanceLinksConnections match this filter */
+  linksConnection_NONE?: InputMaybe<FieldResonanceLinksConnectionWhere>
+  /** Return FieldResonances where one of the related FieldResonanceLinksConnections match this filter */
+  linksConnection_SINGLE?: InputMaybe<FieldResonanceLinksConnectionWhere>
+  /** Return FieldResonances where some of the related FieldResonanceLinksConnections match this filter */
+  linksConnection_SOME?: InputMaybe<FieldResonanceLinksConnectionWhere>
+  /** Return FieldResonances where all of the related ResonanceLinks match this filter */
+  links_ALL?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldResonances where none of the related ResonanceLinks match this filter */
+  links_NONE?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldResonances where one of the related ResonanceLinks match this filter */
+  links_SINGLE?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldResonances where some of the related ResonanceLinks match this filter */
+  links_SOME?: InputMaybe<ResonanceLinkWhere>
   sourceAggregate?: InputMaybe<FieldResonanceSourceAggregateInput>
   /** Return FieldResonances where all of the related FieldResonanceSourceConnections match this filter */
   sourceConnection_ALL?: InputMaybe<FieldResonanceSourceConnectionWhere>
@@ -3916,6 +4156,7 @@ export type Mutation = {
   createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
   createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
+  createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
   createSearchResults: CreateSearchResultsMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
@@ -3933,6 +4174,7 @@ export type Mutation = {
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
   deleteRemoveSpaceMemberResponses: DeleteInfo
+  deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
   deleteSearchResults: DeleteInfo
   deleteSpaceMemberships: DeleteInfo
@@ -3966,6 +4208,7 @@ export type Mutation = {
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
+  updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
   updateSearchResults: UpdateSearchResultsMutationResponse
   /**
@@ -4030,6 +4273,10 @@ export type MutationCreatePeopleArgs = {
 
 export type MutationCreateRemoveSpaceMemberResponsesArgs = {
   input: Array<RemoveSpaceMemberResponseCreateInput>
+}
+
+export type MutationCreateResonanceLinksArgs = {
+  input: Array<ResonanceLinkCreateInput>
 }
 
 export type MutationCreateResourcePulsesArgs = {
@@ -4104,6 +4351,11 @@ export type MutationDeletePeopleArgs = {
 
 export type MutationDeleteRemoveSpaceMemberResponsesArgs = {
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
+export type MutationDeleteResonanceLinksArgs = {
+  delete?: InputMaybe<ResonanceLinkDeleteInput>
+  where?: InputMaybe<ResonanceLinkWhere>
 }
 
 export type MutationDeleteResourcePulsesArgs = {
@@ -4200,6 +4452,11 @@ export type MutationUpdatePeopleArgs = {
 export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
   update?: InputMaybe<RemoveSpaceMemberResponseUpdateInput>
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
+}
+
+export type MutationUpdateResonanceLinksArgs = {
+  update?: InputMaybe<ResonanceLinkUpdateInput>
+  where?: InputMaybe<ResonanceLinkWhere>
 }
 
 export type MutationUpdateResourcePulsesArgs = {
@@ -4769,6 +5026,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "removeSpaceMemberResponsesConnection" instead */
   removeSpaceMemberResponsesAggregate: RemoveSpaceMemberResponseAggregateSelection
   removeSpaceMemberResponsesConnection: RemoveSpaceMemberResponsesConnection
+  resonanceLinks: Array<ResonanceLink>
+  /** @deprecated Please use the explicit field "aggregate" inside "resonanceLinksConnection" instead */
+  resonanceLinksAggregate: ResonanceLinkAggregateSelection
+  resonanceLinksConnection: ResonanceLinksConnection
   resourcePulses: Array<ResourcePulse>
   /** @deprecated Please use the explicit field "aggregate" inside "resourcePulsesConnection" instead */
   resourcePulsesAggregate: ResourcePulseAggregateSelection
@@ -5012,6 +5273,24 @@ export type QueryRemoveSpaceMemberResponsesConnectionArgs = {
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
 }
 
+export type QueryResonanceLinksArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkSort>>
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+export type QueryResonanceLinksAggregateArgs = {
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
+export type QueryResonanceLinksConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkSort>>
+  where?: InputMaybe<ResonanceLinkWhere>
+}
+
 export type QueryResourcePulsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -5238,6 +5517,786 @@ export type RemoveSpaceMemberResponsesConnection = {
   __typename?: 'RemoveSpaceMemberResponsesConnection'
   aggregate: RemoveSpaceMemberResponseAggregate
   edges: Array<RemoveSpaceMemberResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLink = {
+  __typename?: 'ResonanceLink'
+  confidence: Scalars['Float']['output']
+  createdAt: Scalars['DateTime']['output']
+  evidence?: Maybe<Scalars['String']['output']>
+  id: Scalars['ID']['output']
+  mergedFrom?: Maybe<Scalars['String']['output']>
+  pattern: Array<FieldResonance>
+  /** @deprecated Please use field "aggregate" inside "patternConnection" instead */
+  patternAggregate?: Maybe<ResonanceLinkFieldResonancePatternAggregationSelection>
+  patternConnection: ResonanceLinkPatternConnection
+  source: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "sourceConnection" instead */
+  sourceAggregate?: Maybe<ResonanceLinkFieldPulseSourceAggregationSelection>
+  sourceConnection: ResonanceLinkSourceConnection
+  target: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "targetConnection" instead */
+  targetAggregate?: Maybe<ResonanceLinkFieldPulseTargetAggregationSelection>
+  targetConnection: ResonanceLinkTargetConnection
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkPatternArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldResonanceSort>>
+  where?: InputMaybe<FieldResonanceWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkPatternAggregateArgs = {
+  where?: InputMaybe<FieldResonanceWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkPatternConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkPatternConnectionSort>>
+  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkSourceArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkSourceAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkSourceConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkSourceConnectionSort>>
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkTargetArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkTargetAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A discovered semantic resonance link between two pulses.
+ * Represents an AI-identified connection with confidence scoring.
+ * Multi-label: ["ResonanceLink"]
+ */
+export type ResonanceLinkTargetConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<ResonanceLinkTargetConnectionSort>>
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+}
+
+export type ResonanceLinkAggregate = {
+  __typename?: 'ResonanceLinkAggregate'
+  count: Count
+  node: ResonanceLinkAggregateNode
+}
+
+export type ResonanceLinkAggregateNode = {
+  __typename?: 'ResonanceLinkAggregateNode'
+  confidence: FloatAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  evidence: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mergedFrom: StringAggregateSelection
+}
+
+export type ResonanceLinkAggregateSelection = {
+  __typename?: 'ResonanceLinkAggregateSelection'
+  confidence: FloatAggregateSelection
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  evidence: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mergedFrom: StringAggregateSelection
+}
+
+export type ResonanceLinkConnectInput = {
+  pattern?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
+  source?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
+  target?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
+}
+
+export type ResonanceLinkConnectWhere = {
+  node: ResonanceLinkWhere
+}
+
+export type ResonanceLinkCreateInput = {
+  confidence: Scalars['Float']['input']
+  createdAt: Scalars['DateTime']['input']
+  evidence?: InputMaybe<Scalars['String']['input']>
+  mergedFrom?: InputMaybe<Scalars['String']['input']>
+  pattern?: InputMaybe<ResonanceLinkPatternFieldInput>
+  source?: InputMaybe<ResonanceLinkSourceFieldInput>
+  target?: InputMaybe<ResonanceLinkTargetFieldInput>
+}
+
+export type ResonanceLinkDeleteInput = {
+  pattern?: InputMaybe<Array<ResonanceLinkPatternDeleteFieldInput>>
+  source?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
+  target?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
+}
+
+export type ResonanceLinkDisconnectInput = {
+  pattern?: InputMaybe<Array<ResonanceLinkPatternDisconnectFieldInput>>
+  source?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
+  target?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
+}
+
+export type ResonanceLinkEdge = {
+  __typename?: 'ResonanceLinkEdge'
+  cursor: Scalars['String']['output']
+  node: ResonanceLink
+}
+
+export type ResonanceLinkFieldPulseSourceAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldPulseSourceAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResonanceLinkFieldPulseSourceNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldPulseSourceAggregationSelection = {
+  __typename?: 'ResonanceLinkFieldPulseSourceAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResonanceLinkFieldPulseSourceNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldPulseSourceNodeAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldPulseSourceNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type ResonanceLinkFieldPulseTargetAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldPulseTargetAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResonanceLinkFieldPulseTargetNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldPulseTargetAggregationSelection = {
+  __typename?: 'ResonanceLinkFieldPulseTargetAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResonanceLinkFieldPulseTargetNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldPulseTargetNodeAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldPulseTargetNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type ResonanceLinkFieldResonancePatternAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldResonancePatternAggregateSelection'
+  count: CountConnection
+  node?: Maybe<ResonanceLinkFieldResonancePatternNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldResonancePatternAggregationSelection = {
+  __typename?: 'ResonanceLinkFieldResonancePatternAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResonanceLinkFieldResonancePatternNodeAggregateSelection>
+}
+
+export type ResonanceLinkFieldResonancePatternNodeAggregateSelection = {
+  __typename?: 'ResonanceLinkFieldResonancePatternNodeAggregateSelection'
+  confidence: FloatAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  label: StringAggregateSelection
+}
+
+export type ResonanceLinkPatternAggregateInput = {
+  AND?: InputMaybe<Array<ResonanceLinkPatternAggregateInput>>
+  NOT?: InputMaybe<ResonanceLinkPatternAggregateInput>
+  OR?: InputMaybe<Array<ResonanceLinkPatternAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResonanceLinkPatternNodeAggregationWhereInput>
+}
+
+export type ResonanceLinkPatternConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldResonanceConnectInput>>
+  where?: InputMaybe<FieldResonanceConnectWhere>
+}
+
+export type ResonanceLinkPatternConnection = {
+  __typename?: 'ResonanceLinkPatternConnection'
+  aggregate: ResonanceLinkFieldResonancePatternAggregateSelection
+  edges: Array<ResonanceLinkPatternRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResonanceLinkPatternConnectionSort = {
+  node?: InputMaybe<FieldResonanceSort>
+}
+
+export type ResonanceLinkPatternConnectionWhere = {
+  AND?: InputMaybe<Array<ResonanceLinkPatternConnectionWhere>>
+  NOT?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  OR?: InputMaybe<Array<ResonanceLinkPatternConnectionWhere>>
+  node?: InputMaybe<FieldResonanceWhere>
+}
+
+export type ResonanceLinkPatternCreateFieldInput = {
+  node: FieldResonanceCreateInput
+}
+
+export type ResonanceLinkPatternDeleteFieldInput = {
+  delete?: InputMaybe<FieldResonanceDeleteInput>
+  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+}
+
+export type ResonanceLinkPatternDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldResonanceDisconnectInput>
+  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+}
+
+export type ResonanceLinkPatternFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkPatternCreateFieldInput>>
+}
+
+export type ResonanceLinkPatternNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResonanceLinkPatternNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResonanceLinkPatternNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResonanceLinkPatternNodeAggregationWhereInput>>
+  confidence_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  label_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  label_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  label_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  label_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResonanceLinkPatternRelationship = {
+  __typename?: 'ResonanceLinkPatternRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldResonance
+}
+
+export type ResonanceLinkPatternUpdateConnectionInput = {
+  node?: InputMaybe<FieldResonanceUpdateInput>
+  where?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+}
+
+export type ResonanceLinkPatternUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkPatternConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkPatternCreateFieldInput>>
+  delete?: InputMaybe<Array<ResonanceLinkPatternDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResonanceLinkPatternDisconnectFieldInput>>
+  update?: InputMaybe<ResonanceLinkPatternUpdateConnectionInput>
+}
+
+/** Fields to sort ResonanceLinks by. The order in which sorts are applied is not guaranteed when specifying many fields in one ResonanceLinkSort object. */
+export type ResonanceLinkSort = {
+  confidence?: InputMaybe<SortDirection>
+  createdAt?: InputMaybe<SortDirection>
+  evidence?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  mergedFrom?: InputMaybe<SortDirection>
+}
+
+export type ResonanceLinkSourceAggregateInput = {
+  AND?: InputMaybe<Array<ResonanceLinkSourceAggregateInput>>
+  NOT?: InputMaybe<ResonanceLinkSourceAggregateInput>
+  OR?: InputMaybe<Array<ResonanceLinkSourceAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResonanceLinkSourceNodeAggregationWhereInput>
+}
+
+export type ResonanceLinkSourceConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
+  where?: InputMaybe<FieldPulseConnectWhere>
+}
+
+export type ResonanceLinkSourceConnection = {
+  __typename?: 'ResonanceLinkSourceConnection'
+  aggregate: ResonanceLinkFieldPulseSourceAggregateSelection
+  edges: Array<ResonanceLinkSourceRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResonanceLinkSourceConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type ResonanceLinkSourceConnectionWhere = {
+  AND?: InputMaybe<Array<ResonanceLinkSourceConnectionWhere>>
+  NOT?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+  OR?: InputMaybe<Array<ResonanceLinkSourceConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type ResonanceLinkSourceCreateFieldInput = {
+  node: FieldPulseCreateInput
+}
+
+export type ResonanceLinkSourceDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+}
+
+export type ResonanceLinkSourceDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+}
+
+export type ResonanceLinkSourceFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkSourceCreateFieldInput>>
+}
+
+export type ResonanceLinkSourceNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResonanceLinkSourceNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResonanceLinkSourceNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResonanceLinkSourceNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResonanceLinkSourceRelationship = {
+  __typename?: 'ResonanceLinkSourceRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type ResonanceLinkSourceUpdateConnectionInput = {
+  node?: InputMaybe<FieldPulseUpdateInput>
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+}
+
+export type ResonanceLinkSourceUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkSourceConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkSourceCreateFieldInput>>
+  delete?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
+  update?: InputMaybe<ResonanceLinkSourceUpdateConnectionInput>
+}
+
+export type ResonanceLinkTargetAggregateInput = {
+  AND?: InputMaybe<Array<ResonanceLinkTargetAggregateInput>>
+  NOT?: InputMaybe<ResonanceLinkTargetAggregateInput>
+  OR?: InputMaybe<Array<ResonanceLinkTargetAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResonanceLinkTargetNodeAggregationWhereInput>
+}
+
+export type ResonanceLinkTargetConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
+  where?: InputMaybe<FieldPulseConnectWhere>
+}
+
+export type ResonanceLinkTargetConnection = {
+  __typename?: 'ResonanceLinkTargetConnection'
+  aggregate: ResonanceLinkFieldPulseTargetAggregateSelection
+  edges: Array<ResonanceLinkTargetRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type ResonanceLinkTargetConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type ResonanceLinkTargetConnectionWhere = {
+  AND?: InputMaybe<Array<ResonanceLinkTargetConnectionWhere>>
+  NOT?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+  OR?: InputMaybe<Array<ResonanceLinkTargetConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type ResonanceLinkTargetCreateFieldInput = {
+  node: FieldPulseCreateInput
+}
+
+export type ResonanceLinkTargetDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+}
+
+export type ResonanceLinkTargetDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+}
+
+export type ResonanceLinkTargetFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkTargetCreateFieldInput>>
+}
+
+export type ResonanceLinkTargetNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResonanceLinkTargetNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResonanceLinkTargetNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResonanceLinkTargetNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResonanceLinkTargetRelationship = {
+  __typename?: 'ResonanceLinkTargetRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type ResonanceLinkTargetUpdateConnectionInput = {
+  node?: InputMaybe<FieldPulseUpdateInput>
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+}
+
+export type ResonanceLinkTargetUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResonanceLinkTargetConnectFieldInput>>
+  create?: InputMaybe<Array<ResonanceLinkTargetCreateFieldInput>>
+  delete?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
+  update?: InputMaybe<ResonanceLinkTargetUpdateConnectionInput>
+}
+
+export type ResonanceLinkUpdateInput = {
+  confidence_ADD?: InputMaybe<Scalars['Float']['input']>
+  confidence_DIVIDE?: InputMaybe<Scalars['Float']['input']>
+  confidence_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
+  confidence_SET?: InputMaybe<Scalars['Float']['input']>
+  confidence_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
+  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  evidence_SET?: InputMaybe<Scalars['String']['input']>
+  mergedFrom_SET?: InputMaybe<Scalars['String']['input']>
+  pattern?: InputMaybe<Array<ResonanceLinkPatternUpdateFieldInput>>
+  source?: InputMaybe<Array<ResonanceLinkSourceUpdateFieldInput>>
+  target?: InputMaybe<Array<ResonanceLinkTargetUpdateFieldInput>>
+}
+
+export type ResonanceLinkWhere = {
+  AND?: InputMaybe<Array<ResonanceLinkWhere>>
+  NOT?: InputMaybe<ResonanceLinkWhere>
+  OR?: InputMaybe<Array<ResonanceLinkWhere>>
+  confidence_EQ?: InputMaybe<Scalars['Float']['input']>
+  confidence_GT?: InputMaybe<Scalars['Float']['input']>
+  confidence_GTE?: InputMaybe<Scalars['Float']['input']>
+  confidence_IN?: InputMaybe<Array<Scalars['Float']['input']>>
+  confidence_LT?: InputMaybe<Scalars['Float']['input']>
+  confidence_LTE?: InputMaybe<Scalars['Float']['input']>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  evidence_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  evidence_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  evidence_EQ?: InputMaybe<Scalars['String']['input']>
+  evidence_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  evidence_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  mergedFrom_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  mergedFrom_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  mergedFrom_EQ?: InputMaybe<Scalars['String']['input']>
+  mergedFrom_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  mergedFrom_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  patternAggregate?: InputMaybe<ResonanceLinkPatternAggregateInput>
+  /** Return ResonanceLinks where all of the related ResonanceLinkPatternConnections match this filter */
+  patternConnection_ALL?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  /** Return ResonanceLinks where none of the related ResonanceLinkPatternConnections match this filter */
+  patternConnection_NONE?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  /** Return ResonanceLinks where one of the related ResonanceLinkPatternConnections match this filter */
+  patternConnection_SINGLE?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  /** Return ResonanceLinks where some of the related ResonanceLinkPatternConnections match this filter */
+  patternConnection_SOME?: InputMaybe<ResonanceLinkPatternConnectionWhere>
+  /** Return ResonanceLinks where all of the related FieldResonances match this filter */
+  pattern_ALL?: InputMaybe<FieldResonanceWhere>
+  /** Return ResonanceLinks where none of the related FieldResonances match this filter */
+  pattern_NONE?: InputMaybe<FieldResonanceWhere>
+  /** Return ResonanceLinks where one of the related FieldResonances match this filter */
+  pattern_SINGLE?: InputMaybe<FieldResonanceWhere>
+  /** Return ResonanceLinks where some of the related FieldResonances match this filter */
+  pattern_SOME?: InputMaybe<FieldResonanceWhere>
+  sourceAggregate?: InputMaybe<ResonanceLinkSourceAggregateInput>
+  /** Return ResonanceLinks where all of the related ResonanceLinkSourceConnections match this filter */
+  sourceConnection_ALL?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+  /** Return ResonanceLinks where none of the related ResonanceLinkSourceConnections match this filter */
+  sourceConnection_NONE?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+  /** Return ResonanceLinks where one of the related ResonanceLinkSourceConnections match this filter */
+  sourceConnection_SINGLE?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+  /** Return ResonanceLinks where some of the related ResonanceLinkSourceConnections match this filter */
+  sourceConnection_SOME?: InputMaybe<ResonanceLinkSourceConnectionWhere>
+  /** Return ResonanceLinks where all of the related FieldPulses match this filter */
+  source_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where none of the related FieldPulses match this filter */
+  source_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where one of the related FieldPulses match this filter */
+  source_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where some of the related FieldPulses match this filter */
+  source_SOME?: InputMaybe<FieldPulseWhere>
+  targetAggregate?: InputMaybe<ResonanceLinkTargetAggregateInput>
+  /** Return ResonanceLinks where all of the related ResonanceLinkTargetConnections match this filter */
+  targetConnection_ALL?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+  /** Return ResonanceLinks where none of the related ResonanceLinkTargetConnections match this filter */
+  targetConnection_NONE?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+  /** Return ResonanceLinks where one of the related ResonanceLinkTargetConnections match this filter */
+  targetConnection_SINGLE?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+  /** Return ResonanceLinks where some of the related ResonanceLinkTargetConnections match this filter */
+  targetConnection_SOME?: InputMaybe<ResonanceLinkTargetConnectionWhere>
+  /** Return ResonanceLinks where all of the related FieldPulses match this filter */
+  target_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where none of the related FieldPulses match this filter */
+  target_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where one of the related FieldPulses match this filter */
+  target_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return ResonanceLinks where some of the related FieldPulses match this filter */
+  target_SOME?: InputMaybe<FieldPulseWhere>
+}
+
+export type ResonanceLinksConnection = {
+  __typename?: 'ResonanceLinksConnection'
+  aggregate: ResonanceLinkAggregate
+  edges: Array<ResonanceLinkEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
@@ -7290,6 +8349,12 @@ export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
   __typename?: 'UpdateRemoveSpaceMemberResponsesMutationResponse'
   info: UpdateInfo
   removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
+}
+
+export type UpdateResonanceLinksMutationResponse = {
+  __typename?: 'UpdateResonanceLinksMutationResponse'
+  info: UpdateInfo
+  resonanceLinks: Array<ResonanceLink>
 }
 
 export type UpdateResourcePulsesMutationResponse = {

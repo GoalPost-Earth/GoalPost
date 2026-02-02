@@ -213,6 +213,8 @@ type FieldContext
   createdAt: DateTime!
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
+  resonances: [ResonanceLink!]!
+    @relationship(type: "HAS_RESONANCE", direction: OUT)
   meSpace: [MeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   weSpace: [WeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   space: [Space!]!
@@ -396,35 +398,22 @@ type StoryPulse implements FieldPulse
 }
 
 """
-A discovered semantic resonance link between two pulses.
+A discovered semantic resonance link between two pulses within the same FieldContext.
 Represents an AI-identified connection with confidence scoring.
+Scoped to a single FieldContext - only pulses in the same context can resonate.
 Multi-label: ["ResonanceLink"]
 """
 type ResonanceLink @node(labels: ["ResonanceLink"]) {
   id: ID! @id
+  label: String!
+  description: String
   confidence: Float!
   evidence: String
   mergedFrom: String
   createdAt: DateTime!
   source: [FieldPulse!]! @relationship(type: "SOURCE", direction: OUT)
   target: [FieldPulse!]! @relationship(type: "TARGET", direction: OUT)
-  pattern: [FieldResonance!]!
-    @relationship(type: "RESONATES_AS", direction: OUT)
-}
-
-"""
-A discovered pattern of semantic resonance between pulses.
-Multi-label: ["FieldResonance"]
-"""
-type FieldResonance @node(labels: ["FieldResonance"]) {
-  id: ID! @id
-  label: String!
-  description: String
-  confidence: Float
-  source: [FieldPulse!]! @relationship(type: "SOURCE", direction: OUT)
-  target: [FieldPulse!]! @relationship(type: "TARGET", direction: OUT)
-  detectedBy: [Person!]! @relationship(type: "DETECTED_BY", direction: OUT)
-  links: [ResonanceLink!]! @relationship(type: "RESONATES_AS", direction: IN)
+  context: [FieldContext!]! @relationship(type: "HAS_RESONANCE", direction: IN)
 }
 
 # ============================================================================

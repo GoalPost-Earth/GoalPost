@@ -91,15 +91,14 @@ export async function POST(request: NextRequest) {
       success: true,
       resonancesDiscovered: resonances.length,
       resonances: resonances.map((r) => ({
-        resonanceId: r.resonanceId,
+        linkId: r.linkId,
+        contextId: r.contextId,
         label: r.label,
         description: r.description,
-        linksCreated: r.links.length,
-        pulses: r.links.map((link) => ({
-          sourcePulseId: link.sourcePulseId,
-          targetPulseId: link.targetPulseId,
-          confidence: link.confidence,
-        })),
+        sourcePulseId: r.sourcePulseId,
+        targetPulseId: r.targetPulseId,
+        confidence: r.confidence,
+        evidence: r.evidence,
       })),
     })
   } catch (error: unknown) {
