@@ -128,6 +128,9 @@ function FieldDetailPage() {
   const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resonanceLinks, setResonanceLinks] = useState<any[]>([])
+  const [resonanceNodePositions, setResonanceNodePositions] = useState<
+    Map<string, { x: number; y: number }>
+  >(new Map())
   const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
     Set<string>
   >(new Set())
@@ -252,9 +255,16 @@ function FieldDetailPage() {
 
         if (allPulses.length > 0) {
           const positions = computePulsePositions(allPulses)
-          setPulsePositions(
-            resolveCollisions(positions, canvasSize.width, canvasSize.height)
+          const resolvedPositions = resolveCollisions(
+            positions,
+            canvasSize.width,
+            canvasSize.height
           )
+          setPulsePositions(resolvedPositions)
+
+          // Don't initialize resonance positions here - they will be calculated on click
+          setResonanceNodePositions(new Map())
+
           // Set pulse options for resonance link modal
           setPulseOptions(allPulses)
           console.log(
@@ -341,6 +351,113 @@ function FieldDetailPage() {
       })
     },
     [canvasSize]
+  )
+
+  // Handle resonance node click - initialize position at that moment
+  const handleResonanceNodeClick = useCallback(
+    (linkId: string) => {
+      setExpandedResonanceLinks((prev) => {
+        const next = new Set(prev)
+        const isExpanding = !prev.has(linkId)
+
+        if (isExpanding) {
+          // When expanding, preserve dragged position or calculate midpoint if needed
+          setResonanceNodePositions((prevPositions) => {
+            const newPositions = new Map(prevPositions)
+
+            // Only initialize if position doesn't already exist (from dragging)
+            if (!newPositions.has(linkId)) {
+              //eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const link = resonanceLinks.find((l: any) => l.id === linkId)
+              if (link) {
+                const sourceId = link.source?.[0]?.id
+                const targetId = link.target?.[0]?.id
+
+                if (sourceId && targetId) {
+                  const sourcePulse = pulsePositions.find(
+                    (p) => p.pulseId === sourceId
+                  )
+                  const targetPulse = pulsePositions.find(
+                    (p) => p.pulseId === targetId
+                  )
+
+                  if (sourcePulse && targetPulse) {
+                    // Set resonance position at midpoint using current pulse positions
+                    newPositions.set(linkId, {
+                      x: (sourcePulse.x + targetPulse.x) / 2,
+                      y: (sourcePulse.y + targetPulse.y) / 2,
+                    })
+                  }
+                }
+              }
+            }
+
+            return newPositions
+          })
+          next.add(linkId)
+        } else {
+          // When collapsing, remove the position
+          setResonanceNodePositions((prev) => {
+            const newPositions = new Map(prev)
+            newPositions.delete(linkId)
+            return newPositions
+          })
+          next.delete(linkId)
+        }
+
+        return next
+      })
+    },
+    [resonanceLinks, pulsePositions]
+  )
+
+  // Initialize resonance node positions when a link is first expanded
+  useEffect(() => {
+    setResonanceNodePositions((prevPositions) => {
+      const newPositions = new Map(prevPositions)
+
+      // For each resonance link that was just activated
+      resonanceLinks.forEach((link) => {
+        // Only initialize if link is now expanded and doesn't have a position yet
+        if (expandedResonanceLinks.has(link.id) && !newPositions.has(link.id)) {
+          const sourceId = link.source?.[0]?.id
+          const targetId = link.target?.[0]?.id
+
+          if (sourceId && targetId) {
+            const sourcePulse = pulsePositions.find(
+              (p) => p.pulseId === sourceId
+            )
+            const targetPulse = pulsePositions.find(
+              (p) => p.pulseId === targetId
+            )
+
+            if (sourcePulse && targetPulse) {
+              newPositions.set(link.id, {
+                x: (sourcePulse.x + targetPulse.x) / 2,
+                y: (sourcePulse.y + targetPulse.y) / 2,
+              })
+            }
+          }
+        }
+      })
+
+      return newPositions
+    })
+  }, [expandedResonanceLinks, resonanceLinks, pulsePositions])
+
+  // Handle resonance node drag - resonance node moves independently
+  const handleResonanceNodeDrag = useCallback(
+    (linkId: string, newX: number, newY: number) => {
+      // Update the resonance node's position
+      // Pulses are never moved - they stay in place
+      // Connection lines update in real-time as resonance node moves
+      setResonanceNodePositions((prev) => {
+        const newPositions = new Map(prev)
+        newPositions.set(linkId, { x: newX, y: newY })
+        return newPositions
+      })
+    },
+    []
   )
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
@@ -553,20 +670,12 @@ function FieldDetailPage() {
             <ResonanceLinksVisualization
               pulsePositions={pulsePositions}
               resonanceLinks={resonanceLinks}
+              resonanceNodePositions={resonanceNodePositions}
               canvasWidth={canvasSize.width}
               canvasHeight={canvasSize.height}
               expandedLinks={expandedResonanceLinks}
-              onResonanceNodeClick={(linkId: string) => {
-                setExpandedResonanceLinks((prev) => {
-                  const next = new Set(prev)
-                  if (next.has(linkId)) {
-                    next.delete(linkId)
-                  } else {
-                    next.add(linkId)
-                  }
-                  return next
-                })
-              }}
+              onResonanceNodeClick={handleResonanceNodeClick}
+              onResonanceNodeDrag={handleResonanceNodeDrag}
             />
             {pulsePositions.map((pos) => (
               <DraggablePulseNode
