@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
+import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
@@ -127,6 +128,9 @@ function FieldDetailPage() {
   const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resonanceLinks, setResonanceLinks] = useState<any[]>([])
+  const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
+    Set<string>
+  >(new Set())
   const [currentScale, setCurrentScale] = useState(1)
   const [isLoadingPulses, setIsLoadingPulses] = useState(true)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
@@ -142,8 +146,7 @@ function FieldDetailPage() {
     { data: pulseDetailsData, loading: pulseDetailsLoading },
   ] = useLazyQuery(GET_PULSE_DETAILS)
 
-  const [fetchPulsesByContext, { data: pulsesData, loading: pulsesLoading }] =
-    useLazyQuery(GET_PULSES_BY_CONTEXT)
+  const [fetchPulsesByContext] = useLazyQuery(GET_PULSES_BY_CONTEXT)
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
     useMutation(CREATE_RESONANCE_LINK_MUTATION)
@@ -508,7 +511,11 @@ function FieldDetailPage() {
         canvasScale={5}
         onScaleChange={setCurrentScale}
         isLoading={isLoadingPulses}
-        isEmpty={pulsePositions.length === 0}
+        isEmpty={
+          !isLoadingPulses &&
+          pulsePositions.length === 0 &&
+          pulseOptions.length > 0
+        }
         actionButton={
           isMounted && (
             <div className="group flex flex-row items-center gap-3">
@@ -540,26 +547,46 @@ function FieldDetailPage() {
           )
         }
       >
-        {isMounted &&
-          !isLoadingPulses &&
-          pulsePositions.map((pos) => (
-            <DraggablePulseNode
-              key={pos.pulseId}
-              icon={pos.icon}
-              label={pos.label}
-              type={pos.type}
-              animation={pos.animation}
-              canvasPosition={{ x: pos.x, y: pos.y }}
-              scale={currentScale}
-              onPositionChange={(x, y) =>
-                handlePulsePositionChange(pos.pulseId, x, y)
-              }
-              onClick={() => {
-                setIsPulsePanelOpen(true)
-                fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+        {isMounted && !isLoadingPulses && (
+          <>
+            <ResonanceLinksVisualization
+              pulsePositions={pulsePositions}
+              resonanceLinks={resonanceLinks}
+              canvasWidth={canvasSize.width}
+              canvasHeight={canvasSize.height}
+              expandedLinks={expandedResonanceLinks}
+              onResonanceNodeClick={(linkId: string) => {
+                setExpandedResonanceLinks((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(linkId)) {
+                    next.delete(linkId)
+                  } else {
+                    next.add(linkId)
+                  }
+                  return next
+                })
               }}
             />
-          ))}
+            {pulsePositions.map((pos) => (
+              <DraggablePulseNode
+                key={pos.pulseId}
+                icon={pos.icon}
+                label={pos.label}
+                type={pos.type}
+                animation={pos.animation}
+                canvasPosition={{ x: pos.x, y: pos.y }}
+                scale={currentScale}
+                onPositionChange={(x, y) =>
+                  handlePulsePositionChange(pos.pulseId, x, y)
+                }
+                onClick={() => {
+                  setIsPulsePanelOpen(true)
+                  fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
+                }}
+              />
+            ))}
+          </>
+        )}
       </GenericPulseCanvas>
 
       <PulsePanel
