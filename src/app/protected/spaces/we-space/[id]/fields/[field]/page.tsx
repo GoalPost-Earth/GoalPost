@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useLazyQuery, useMutation } from '@apollo/client/react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
@@ -10,12 +10,18 @@ import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import { ResonancePanel } from '@/components/ui/resonance-panel'
 import {
   ResonanceLinkModal,
   type PulseOption,
 } from '@/components/ui/resonance-link-modal'
 import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
-import { CREATE_RESONANCE_LINK_MUTATION } from '@/app/graphql/mutations'
+import {
+  CREATE_RESONANCE_LINK_MUTATION,
+  CREATE_GOAL_PULSE_MUTATION,
+  CREATE_RESOURCE_PULSE_MUTATION,
+  CREATE_STORY_PULSE_MUTATION,
+} from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 
 interface PulsePosition {
@@ -134,10 +140,21 @@ function FieldDetailPage() {
   const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
     Set<string>
   >(new Set())
+  const [activeResonanceNodeId, setActiveResonanceNodeId] = useState<
+    string | null
+  >(null)
   const [currentScale, setCurrentScale] = useState(1)
-  const [isLoadingPulses, setIsLoadingPulses] = useState(true)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedResonance, setSelectedResonance] = useState<any | null>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
+
+  // Refs to track current state for synchronous access
+  const pulsePositionsRef = useRef<PulsePosition[]>([])
+  const resonanceNodePositionsRef = useRef<
+    Map<string, { x: number; y: number }>
+  >(new Map())
 
   const params = useParams()
   const fieldId = params?.field as string
@@ -149,10 +166,28 @@ function FieldDetailPage() {
     { data: pulseDetailsData, loading: pulseDetailsLoading },
   ] = useLazyQuery(GET_PULSE_DETAILS)
 
-  const [fetchPulsesByContext] = useLazyQuery(GET_PULSES_BY_CONTEXT)
+  const { data: pulsesByContextData, loading: isPulsesLoading } = useQuery(
+    GET_PULSES_BY_CONTEXT,
+    {
+      variables: { contextId: fieldId },
+      skip: !fieldId,
+    }
+  )
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
-    useMutation(CREATE_RESONANCE_LINK_MUTATION)
+    useMutation(CREATE_RESONANCE_LINK_MUTATION, {
+      refetchQueries: ['GetPulsesByContext'],
+    })
+
+  const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [createResourcePulse] = useMutation(CREATE_RESOURCE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [createStoryPulse] = useMutation(CREATE_STORY_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
 
   // Redirect if no field ID
   if (!fieldId) {
@@ -215,80 +250,68 @@ function FieldDetailPage() {
     [canvasSize]
   )
 
-  const fetchPulses = useCallback(async () => {
+  // Process pulses data when it changes
+  useEffect(() => {
+    if (!pulsesByContextData) return
+
     try {
-      setIsLoadingPulses(true)
-      const { data } = await fetchPulsesByContext({
-        variables: { contextId: fieldId },
-      })
+      const data = pulsesByContextData
+      // Combine all pulse types
+      const allPulses = [
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(data.goalPulses || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || '',
+          content: p.content || '',
+          type: 'goal' as const,
+        })),
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(data.resourcePulses || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || '',
+          content: p.content || '',
+          type: 'resource' as const,
+        })),
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(data.storyPulses || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || '',
+          content: p.content || '',
+          type: 'story' as const,
+        })),
+      ]
 
-      if (data) {
-        // Combine all pulse types
-        const allPulses = [
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ...(data.goalPulses || []).map((p: any) => ({
-            id: p.id,
-            title: p.title || '',
-            content: p.content || '',
-            type: 'goal' as const,
-          })),
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ...(data.resourcePulses || []).map((p: any) => ({
-            id: p.id,
-            title: p.title || '',
-            content: p.content || '',
-            type: 'resource' as const,
-          })),
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ...(data.storyPulses || []).map((p: any) => ({
-            id: p.id,
-            title: p.title || '',
-            content: p.content || '',
-            type: 'story' as const,
-          })),
-        ]
+      // Extract resonance links from context
+      const contextData = data.fieldContexts?.[0]
+      const resonances = contextData?.resonances || []
+      setResonanceLinks(resonances)
 
-        // Extract resonance links from context
-        const contextData = data.fieldContexts?.[0]
-        const resonances = contextData?.resonances || []
-        setResonanceLinks(resonances)
+      if (allPulses.length > 0) {
+        const positions = computePulsePositions(allPulses)
+        const resolvedPositions = resolveCollisions(
+          positions,
+          canvasSize.width,
+          canvasSize.height
+        )
+        setPulsePositions(resolvedPositions)
 
-        if (allPulses.length > 0) {
-          const positions = computePulsePositions(allPulses)
-          const resolvedPositions = resolveCollisions(
-            positions,
-            canvasSize.width,
-            canvasSize.height
-          )
-          setPulsePositions(resolvedPositions)
+        // Don't initialize resonance positions here - they will be calculated on click
+        setResonanceNodePositions(new Map())
 
-          // Don't initialize resonance positions here - they will be calculated on click
-          setResonanceNodePositions(new Map())
-
-          // Set pulse options for resonance link modal
-          setPulseOptions(allPulses)
-          console.log(
-            `✓ Loaded ${allPulses.length} pulses for field ${fieldId}`
-          )
-          console.log(`🔗 Loaded ${resonances.length} resonance links`)
-        } else {
-          setPulsePositions([])
-          console.log(`ℹ️ No pulses found for field ${fieldId}`)
-        }
+        // Set pulse options for resonance link modal
+        setPulseOptions(allPulses)
+        console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
+        console.log(`🔗 Loaded ${resonances.length} resonance links`)
+      } else {
+        setPulsePositions([])
+        console.log(`ℹ️ No pulses found for field ${fieldId}`)
       }
     } catch (error) {
-      console.error('Error fetching pulses:', error)
+      console.error('Error processing pulses:', error)
       setPulsePositions([])
-    } finally {
-      setIsLoadingPulses(false)
     }
-
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldId, computePulsePositions])
-
-  useEffect(() => {
-    fetchPulses()
-  }, [fetchPulses])
+  }, [pulsesByContextData, computePulsePositions])
 
   // Fetch field name
   useEffect(() => {
@@ -333,6 +356,15 @@ function FieldDetailPage() {
     setIsMounted(true)
   }, [])
 
+  // Sync state with refs
+  useEffect(() => {
+    pulsePositionsRef.current = pulsePositions
+  }, [pulsePositions])
+
+  useEffect(() => {
+    resonanceNodePositionsRef.current = resonanceNodePositions
+  }, [resonanceNodePositions])
+
   // Handle position changes with collision detection
   const handlePulsePositionChange = useCallback(
     (pulseId: string, x: number, y: number) => {
@@ -347,103 +379,91 @@ function FieldDetailPage() {
           p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
         )
         // Apply collision resolution
-        return resolveCollisions(updated, canvasSize.width, canvasSize.height)
+        const resolved = resolveCollisions(
+          updated,
+          canvasSize.width,
+          canvasSize.height
+        )
+        pulsePositionsRef.current = resolved
+        return resolved
       })
     },
     [canvasSize]
   )
 
-  // Handle resonance node click - initialize position at that moment
+  // Handle resonance node click - manage active state and panel
   const handleResonanceNodeClick = useCallback(
     (linkId: string) => {
+      // Check if clicking the already active node (toggle off)
+      if (activeResonanceNodeId === linkId) {
+        setActiveResonanceNodeId(null)
+        setIsResonancePanelOpen(false)
+        setSelectedResonance(null)
+        // Also clear the expanded connection lines
+        setExpandedResonanceLinks((prev) => {
+          const next = new Set(prev)
+          next.delete(linkId)
+          return next
+        })
+        return
+      }
+
+      // Clicking a different node - make it active and open panel
+      const resonance = resonanceLinks.find((link) => link.id === linkId)
+      if (resonance) {
+        setActiveResonanceNodeId(linkId)
+        setSelectedResonance(resonance)
+        setIsResonancePanelOpen(true)
+      }
+
+      // Always expand the node's connection lines when clicked
       setExpandedResonanceLinks((prev) => {
         const next = new Set(prev)
-        const isExpanding = !prev.has(linkId)
-
-        if (isExpanding) {
-          // When expanding, preserve dragged position or calculate midpoint if needed
-          setResonanceNodePositions((prevPositions) => {
-            const newPositions = new Map(prevPositions)
-
-            // Only initialize if position doesn't already exist (from dragging)
-            if (!newPositions.has(linkId)) {
-              //eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const link = resonanceLinks.find((l: any) => l.id === linkId)
-              if (link) {
-                const sourceId = link.source?.[0]?.id
-                const targetId = link.target?.[0]?.id
-
-                if (sourceId && targetId) {
-                  const sourcePulse = pulsePositions.find(
-                    (p) => p.pulseId === sourceId
-                  )
-                  const targetPulse = pulsePositions.find(
-                    (p) => p.pulseId === targetId
-                  )
-
-                  if (sourcePulse && targetPulse) {
-                    // Set resonance position at midpoint using current pulse positions
-                    newPositions.set(linkId, {
-                      x: (sourcePulse.x + targetPulse.x) / 2,
-                      y: (sourcePulse.y + targetPulse.y) / 2,
-                    })
-                  }
-                }
-              }
-            }
-
-            return newPositions
-          })
-          next.add(linkId)
-        } else {
-          // When collapsing, remove the position
-          setResonanceNodePositions((prev) => {
-            const newPositions = new Map(prev)
-            newPositions.delete(linkId)
-            return newPositions
-          })
-          next.delete(linkId)
-        }
-
+        next.add(linkId)
         return next
       })
-    },
-    [resonanceLinks, pulsePositions]
-  )
 
-  // Initialize resonance node positions when a link is first expanded
-  useEffect(() => {
-    setResonanceNodePositions((prevPositions) => {
-      const newPositions = new Map(prevPositions)
-
-      // For each resonance link that was just activated
-      resonanceLinks.forEach((link) => {
-        // Only initialize if link is now expanded and doesn't have a position yet
-        if (expandedResonanceLinks.has(link.id) && !newPositions.has(link.id)) {
+      // Initialize position if not already set
+      const currentResonancePositions = resonanceNodePositionsRef.current
+      if (!currentResonancePositions.has(linkId)) {
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const link = resonanceLinks.find((l: any) => l.id === linkId)
+        if (link) {
           const sourceId = link.source?.[0]?.id
           const targetId = link.target?.[0]?.id
 
           if (sourceId && targetId) {
-            const sourcePulse = pulsePositions.find(
+            const currentPulsePositions = pulsePositionsRef.current
+            const sourcePulse = currentPulsePositions.find(
               (p) => p.pulseId === sourceId
             )
-            const targetPulse = pulsePositions.find(
+            const targetPulse = currentPulsePositions.find(
               (p) => p.pulseId === targetId
             )
 
             if (sourcePulse && targetPulse) {
-              newPositions.set(link.id, {
+              const newPosition = {
                 x: (sourcePulse.x + targetPulse.x) / 2,
                 y: (sourcePulse.y + targetPulse.y) / 2,
+              }
+
+              resonanceNodePositionsRef.current = new Map(
+                currentResonancePositions
+              )
+              resonanceNodePositionsRef.current.set(linkId, newPosition)
+
+              setResonanceNodePositions((prevPositions) => {
+                const newPositions = new Map(prevPositions)
+                newPositions.set(linkId, newPosition)
+                return newPositions
               })
             }
           }
         }
-      })
-
-      return newPositions
-    })
-  }, [expandedResonanceLinks, resonanceLinks, pulsePositions])
+      }
+    },
+    [activeResonanceNodeId, resonanceLinks]
+  )
 
   // Handle resonance node drag - resonance node moves independently
   const handleResonanceNodeDrag = useCallback(
@@ -451,9 +471,18 @@ function FieldDetailPage() {
       // Update the resonance node's position
       // Pulses are never moved - they stay in place
       // Connection lines update in real-time as resonance node moves
+      const newPosition = { x: newX, y: newY }
+
+      // Update ref immediately (synchronous)
+      resonanceNodePositionsRef.current = new Map(
+        resonanceNodePositionsRef.current
+      )
+      resonanceNodePositionsRef.current.set(linkId, newPosition)
+
+      // Update state (asynchronous)
       setResonanceNodePositions((prev) => {
         const newPositions = new Map(prev)
-        newPositions.set(linkId, { x: newX, y: newY })
+        newPositions.set(linkId, newPosition)
         return newPositions
       })
     },
@@ -555,57 +584,72 @@ function FieldDetailPage() {
     setSubmitSuccess(false)
 
     try {
-      // Map pulse type from node type to API pulse type
-      const pulseTypeMap: Record<string, string> = {
-        goal: 'GoalPulse',
-        resource: 'ResourcePulse',
-        story: 'StoryPulse',
-      }
+      // Map pulse type to mutation
+      const pulseTypeMap = {
+        goal: 'goal',
+        resource: 'resource',
+        story: 'story',
+      } as const
 
-      const pulseType = pulseTypeMap[type] || 'GoalPulse'
+      const pulseType =
+        pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
 
-      const requestBody = {
-        contextId: fieldId, // Use field ID as context ID
-        personId: user.id,
-        pulseType,
+      // Build input based on pulse type
+      const baseInput = {
+        title: name,
         content: value,
-        conversation: [
-          {
-            role: 'user',
-            content: value,
-          },
-        ],
+        intensity: 1.0,
+        createdAt: new Date().toISOString(),
+        context: {
+          connect: [{ where: { node: { id_EQ: fieldId } } }],
+        },
+        createdBy: {
+          connect: [{ where: { node: { id_EQ: user.id } } }],
+        },
       }
 
-      console.log(
-        '📤 Sending request to /api/pulse/create-from-conversation:',
-        requestBody
-      )
-
-      const response = await fetch('/api/pulse/create-from-conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
+      console.log('📤 Creating pulse with GraphQL mutation:', {
+        pulseType,
+        baseInput,
       })
 
-      console.log('📨 Response status:', response.status)
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('❌ API error response:', errorData)
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        )
+      // Call appropriate mutation based on type
+      if (pulseType === 'goal') {
+        await createGoalPulse({
+          variables: {
+            input: [
+              {
+                ...baseInput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                status: 'ACTIVE' as any,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                horizon: 'MID' as any,
+              },
+            ],
+          },
+        })
+      } else if (pulseType === 'resource') {
+        await createResourcePulse({
+          variables: {
+            input: [
+              {
+                ...baseInput,
+                resourceType: 'general',
+                availability: 1.0,
+              },
+            ],
+          },
+        })
+      } else {
+        await createStoryPulse({
+          variables: {
+            input: [baseInput],
+          },
+        })
       }
 
-      const data = await response.json()
-      console.log('✅ Pulse created successfully:', data)
+      console.log('✅ Pulse created successfully')
       setSubmitSuccess(true)
-
-      // Refresh pulses after successful creation
-      await fetchPulses()
 
       // Close modal and reset after success
       setTimeout(() => {
@@ -623,13 +667,13 @@ function FieldDetailPage() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       <GenericPulseCanvas
         canvasScale={5}
         onScaleChange={setCurrentScale}
-        isLoading={isLoadingPulses}
+        isLoading={isPulsesLoading}
         isEmpty={
-          !isLoadingPulses &&
+          !isPulsesLoading &&
           pulsePositions.length === 0 &&
           pulseOptions.length > 0
         }
@@ -664,7 +708,7 @@ function FieldDetailPage() {
           )
         }
       >
-        {isMounted && !isLoadingPulses && (
+        {isMounted && !isPulsesLoading && (
           <>
             <ResonanceLinksVisualization
               pulsePositions={pulsePositions}
@@ -705,6 +749,26 @@ function FieldDetailPage() {
         onClose={() => {
           setIsPulsePanelOpen(false)
         }}
+      />
+
+      <ResonancePanel
+        isOpen={isResonancePanelOpen}
+        onClose={() => {
+          setIsResonancePanelOpen(false)
+          // Keep the resonance node expanded even when closing panel
+          // Don't reset the active state or selected resonance unless clicking another node
+        }}
+        resonance={
+          selectedResonance
+            ? {
+                id: selectedResonance.id,
+                label: selectedResonance.label,
+                description: selectedResonance.description,
+                strength: selectedResonance.confidence * 100,
+              }
+            : null
+        }
+        links={selectedResonance ? [selectedResonance] : []}
       />
 
       {

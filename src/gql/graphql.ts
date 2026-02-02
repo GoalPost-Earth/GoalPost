@@ -8909,6 +8909,88 @@ export type CancelInviteMutation = {
   } | null
 }
 
+export type CreateGoalPulseMutationVariables = Exact<{
+  input: Array<GoalPulseCreateInput> | GoalPulseCreateInput
+}>
+
+export type CreateGoalPulseMutation = {
+  __typename?: 'Mutation'
+  createGoalPulses: {
+    __typename?: 'CreateGoalPulsesMutationResponse'
+    goalPulses: Array<{
+      __typename?: 'GoalPulse'
+      id: string
+      title: string
+      content: string
+      status: GoalStatus
+      horizon?: GoalHorizon | null
+      intensity?: number | null
+      createdAt: any
+      createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+      context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
+export type CreateResourcePulseMutationVariables = Exact<{
+  input: Array<ResourcePulseCreateInput> | ResourcePulseCreateInput
+}>
+
+export type CreateResourcePulseMutation = {
+  __typename?: 'Mutation'
+  createResourcePulses: {
+    __typename?: 'CreateResourcePulsesMutationResponse'
+    resourcePulses: Array<{
+      __typename?: 'ResourcePulse'
+      id: string
+      title: string
+      content: string
+      resourceType: string
+      availability?: number | null
+      intensity?: number | null
+      createdAt: any
+      createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+      context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
+export type CreateStoryPulseMutationVariables = Exact<{
+  input: Array<StoryPulseCreateInput> | StoryPulseCreateInput
+}>
+
+export type CreateStoryPulseMutation = {
+  __typename?: 'Mutation'
+  createStoryPulses: {
+    __typename?: 'CreateStoryPulsesMutationResponse'
+    storyPulses: Array<{
+      __typename?: 'StoryPulse'
+      id: string
+      title: string
+      content: string
+      intensity?: number | null
+      createdAt: any
+      createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
+      context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
 export type CreateResonanceLinkMutationVariables = Exact<{
   input: Array<ResonanceLinkCreateInput> | ResonanceLinkCreateInput
 }>
@@ -10875,14 +10957,50 @@ export type GetPulsesByContextQuery = {
       evidence?: string | null
       createdAt: any
       source: Array<
-        | { __typename: 'GoalPulse'; id: string }
-        | { __typename: 'ResourcePulse'; id: string }
-        | { __typename: 'StoryPulse'; id: string }
+        | {
+            __typename: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
       >
       target: Array<
-        | { __typename: 'GoalPulse'; id: string }
-        | { __typename: 'ResourcePulse'; id: string }
-        | { __typename: 'StoryPulse'; id: string }
+        | {
+            __typename: 'GoalPulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'ResourcePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'StoryPulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
       >
     }>
   }>
@@ -12457,6 +12575,421 @@ export const CancelInviteDocument = {
 } as unknown as DocumentNode<
   CancelInviteMutation,
   CancelInviteMutationVariables
+>
+export const CreateGoalPulseDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateGoalPulse' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'GoalPulseCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createGoalPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'goalPulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'horizon' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'intensity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'context' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateGoalPulseMutation,
+  CreateGoalPulseMutationVariables
+>
+export const CreateResourcePulseDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateResourcePulse' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'ResourcePulseCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createResourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resourcePulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'resourceType' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'availability' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'intensity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'context' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateResourcePulseMutation,
+  CreateResourcePulseMutationVariables
+>
+export const CreateStoryPulseDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateStoryPulse' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'StoryPulseCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createStoryPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'storyPulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'intensity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'context' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateStoryPulseMutation,
+  CreateStoryPulseMutationVariables
 >
 export const CreateResonanceLinkDocument = {
   kind: 'Document',
@@ -19278,6 +19811,18 @@ export const GetPulsesByContextDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
                                   },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
                                 ],
                               },
                             },
@@ -19298,6 +19843,18 @@ export const GetPulsesByContextDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
                                   },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
                                 ],
                               },
                             },
@@ -19317,6 +19874,18 @@ export const GetPulsesByContextDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
                                   },
                                 ],
                               },
@@ -19347,6 +19916,18 @@ export const GetPulsesByContextDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
                                   },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
                                 ],
                               },
                             },
@@ -19367,6 +19948,18 @@ export const GetPulsesByContextDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
                                   },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
                                 ],
                               },
                             },
@@ -19386,6 +19979,18 @@ export const GetPulsesByContextDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: '__typename' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'content' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
                                   },
                                 ],
                               },

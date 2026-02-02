@@ -43,28 +43,46 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
           ... on GoalPulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
           ... on ResourcePulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
           ... on StoryPulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
         }
         target {
           ... on GoalPulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
           ... on ResourcePulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
           ... on StoryPulse {
             id
             __typename
+            title
+            content
+            createdAt
           }
         }
       }

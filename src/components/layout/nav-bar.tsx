@@ -165,17 +165,6 @@ export default function NavBar() {
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
-              pathname === '/protected/resonance'
-                ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
-                : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
-            )}
-            href="/protected/resonance"
-          >
-            Resonance
-          </Link>
-          <Link
-            className={cn(
-              'text-sm font-medium transition-colors',
               pathname === '/protected/dashboard'
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
@@ -316,19 +305,6 @@ export default function NavBar() {
             >
               <span className="material-symbols-outlined">group</span>
               We Space
-            </Link>
-            <Link
-              href="/protected/resonance"
-              className={cn(
-                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
-                pathname === '/protected/resonance'
-                  ? 'text-gp-primary bg-gp-primary/10'
-                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
-              )}
-              onClick={() => setShowMobileMenu(false)}
-            >
-              <span className="material-symbols-outlined">auto_awesome</span>
-              Resonance
             </Link>
             <Link
               href="/protected/dashboard"

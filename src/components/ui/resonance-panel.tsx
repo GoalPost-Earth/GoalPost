@@ -20,16 +20,18 @@ export interface ResonanceLink {
   confidence: number
   evidence?: string | null
   createdAt?: string | null
-  source: {
+  source: Array<{
     id: string
+    title?: string
     content: string
     __typename: string
-  }
-  target: {
+  }>
+  target: Array<{
     id: string
+    title?: string
     content: string
     __typename: string
-  }
+  }>
 }
 
 export interface ResonancePanelProps {
@@ -109,6 +111,10 @@ export function ResonancePanel({
     <div
       ref={panelRef}
       className="absolute top-4 right-4 bottom-20 w-96 bg-gp-glass-bg/80 backdrop-blur-xl border border-gp-glass-border rounded-2xl flex flex-col shadow-2xl z-40 overflow-hidden"
+      style={{
+        transform: 'translateX(100%)',
+        opacity: 0,
+      }}
     >
       {/* Header */}
       <div className="p-6 border-b border-gp-glass-border bg-white/5 dark:bg-white/5">
@@ -192,10 +198,14 @@ export function ResonancePanel({
                 </h3>
                 <div className="space-y-3">
                   {links.map((link) => {
-                    const sourceType =
-                      pulseTypeMap[link.source.__typename] || 'goal'
-                    const targetType =
-                      pulseTypeMap[link.target.__typename] || 'goal'
+                    // Access first element of source/target arrays
+                    const source = link.source?.[0]
+                    const target = link.target?.[0]
+
+                    if (!source || !target) return null
+
+                    const sourceType = pulseTypeMap[source.__typename] || 'goal'
+                    const targetType = pulseTypeMap[target.__typename] || 'goal'
                     const config = typeConfig[sourceType]
                     const createdAt = link.createdAt
                       ? new Date(link.createdAt).toLocaleDateString()
@@ -226,16 +236,26 @@ export function ResonancePanel({
                             <span className="text-[10px] font-bold text-gp-ink-muted dark:text-gp-ink-soft uppercase">
                               Source
                             </span>
-                            <p className="text-xs text-gp-ink-strong dark:text-gp-ink-strong line-clamp-2 mt-1">
-                              {link.source.content}
+                            {source.title && (
+                              <p className="text-xs font-semibold text-gp-ink-strong dark:text-gp-ink-strong mt-1">
+                                {source.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-gp-ink-strong dark:text-gp-ink-strong line-clamp-2 mt-0.5">
+                              {source.content}
                             </p>
                           </div>
                           <div>
                             <span className="text-[10px] font-bold text-gp-ink-muted dark:text-gp-ink-soft uppercase">
                               Target
                             </span>
-                            <p className="text-xs text-gp-ink-strong dark:text-gp-ink-strong line-clamp-2 mt-1">
-                              {link.target.content}
+                            {target.title && (
+                              <p className="text-xs font-semibold text-gp-ink-strong dark:text-gp-ink-strong mt-1">
+                                {target.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-gp-ink-strong dark:text-gp-ink-strong line-clamp-2 mt-0.5">
+                              {target.content}
                             </p>
                           </div>
                         </div>

@@ -58,16 +58,21 @@ export function OfferingInput({
     }
   }
 
-  const handleSelectPulseType = (type: NodeType, name: string) => {
+  const handleSelectPulseType = (
+    type: NodeType,
+    name: string,
+    content: string
+  ) => {
     console.log('🎯 handleSelectPulseType called:', {
       type,
       name,
+      content,
       hasOnSubmit: !!onSubmit,
       isLoading,
     })
     if (onSubmit && !isLoading) {
-      console.log('📤 Calling onSubmit with:', { input, type, name })
-      onSubmit(input, type, name)
+      console.log('📤 Calling onSubmit with:', { content, type, name })
+      onSubmit(content, type, name)
       setInput('')
       setShowSuggestion(false)
     } else if (!onSubmit) {
