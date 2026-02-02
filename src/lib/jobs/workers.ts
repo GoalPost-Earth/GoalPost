@@ -95,9 +95,10 @@ const resonanceDiscoveryWorker = new Worker<ResonanceDiscoveryJobData>(
       success: true,
       resonancesDiscovered: resonances.length,
       resonances: resonances.map((r) => ({
-        resonanceId: r.resonanceId,
+        linkId: r.linkId,
+        contextId: r.contextId,
         label: r.label,
-        linksCreated: r.links.length,
+        confidence: r.confidence,
       })),
       nextRunTimestamp: lastResonanceDiscoveryRun,
     }

@@ -1,6 +1,6 @@
 /**
  * Resonance discovery pattern detector
- * Uses LLM and vector similarity to discover semantic patterns across pulses
+ * Discovers semantic connections between pulses WITHIN the same FieldContext
  */
 
 import { getAnalysisProvider } from '@/lib/llm'
@@ -29,39 +29,22 @@ const ResonancePatternSchema = z.object({
 })
 
 export interface DiscoveredResonance {
-  resonanceId: string
+  linkId: string
+  contextId: string
   label: string
   description: string
-  links: Array<{
-    linkId: string
-    sourcePulseId: string
-    targetPulseId: string
-    confidence: number
-    evidence: string
-  }>
+  sourcePulseId: string
+  targetPulseId: string
+  confidence: number
+  evidence: string
 }
 
 /**
- * Sanitize resonance labels for consistent deduplication
- * - Convert to lowercase
- * - Replace spaces with hyphens
- * - Remove special characters
- * - Collapse multiple hyphens
+ * Find semantically similar pulses WITHIN THE SAME CONTEXT using vector search
  */
-function sanitizeResonanceLabel(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/[^a-z0-9-]/g, '') // Remove special characters
-    .replace(/-+/g, '-') // Collapse multiple hyphens
-    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
-}
-
-/**
- * Find semantically similar pulses using vector search
- */
-async function findSimilarPulses(
+async function findSimilarPulsesInContext(
   pulseId: string,
+  contextId: string,
   threshold: number = 0.7,
   limit: number = 10
 ): Promise<Array<{ id: string; content: string; similarity: number }>> {
@@ -88,19 +71,22 @@ async function findSimilarPulses(
 
   const embedding = pulseResult[0].embedding
 
-  // Use vector similarity search
+  // Use vector similarity search, filtered to same context
   const similarResult = await graph.query<{
     pulse: { id: string; content: string }
     similarity: number
   }>(
     `
-    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit, $embedding)
+    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * 3, $embedding)
     YIELD node, score
+    WITH node, score
+    MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(node)
     WHERE node.id <> $pulseId AND score >= $threshold
     RETURN {id: node.id, content: node.content} as pulse, score as similarity
     ORDER BY similarity DESC
+    LIMIT $limit
   `,
-    { pulseId, embedding, limit, threshold }
+    { pulseId, contextId, threshold, limit, embedding }
   )
 
   if (!Array.isArray(similarResult) || similarResult.length === 0) {
@@ -126,19 +112,16 @@ async function analyzeResonancePattern(
 
   const provider = getAnalysisProvider()
 
-  const pulseList = pulses
-    .map((p, i) => `[${i}] ID: ${p.id}\n   Content: "${p.content}"`)
-    .join('\n\n')
-
-  const prompt = `Analyze the following pulses to discover resonance patterns - semantic, emotional, or thematic connections.
+  const prompt = `You are analyzing ${pulses.length} related pulses to discover a meaningful semantic pattern.
 
 Pulses:
-${pulseList}
+${pulses.map((p, i) => `${i + 1}. (ID: ${p.id}) ${p.content}`).join('\n')}
 
-Task:
-1. Identify the strongest resonance pattern connecting these pulses (e.g., "grief", "momentum", "overload", "belonging", "focus")
-2. Provide a clear label and description for the pattern
-3. For each pair of pulses that share this resonance, explain WHY they connect and assign a confidence score (0-1)
+Your task:
+1. Identify the SINGLE most meaningful resonance pattern across these pulses
+2. Give it a short, evocative label (1-3 words)
+3. Write a clear description explaining what the pattern represents
+4. For each pair of pulses that share this resonance, explain WHY they connect and assign a confidence score (0-1)
 
 Focus on:
 - Emotional resonance (shared feelings, energy, mood)
@@ -170,81 +153,53 @@ Be specific and evidence-based. Only create connections where the resonance is c
 }
 
 /**
- * Create FieldResonance and ResonanceLink nodes in the database
- * Uses MERGE to deduplicate resonance patterns by sanitized label
+ * Create ResonanceLink nodes in the database (context-scoped)
+ * Each link represents one semantic connection between two pulses
  */
-async function createResonanceInDatabase(
+async function createResonanceLinksInDatabase(
+  contextId: string,
   pattern: z.infer<typeof ResonancePatternSchema>
-): Promise<DiscoveredResonance> {
+): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Sanitize label for deduplication matching
-  const sanitizedLabel = sanitizeResonanceLabel(pattern.label)
+  const links: DiscoveredResonance[] = []
 
-  // MERGE FieldResonance node - ensures no duplicates by sanitized label
-  const resonanceResult = await graph.query<{ resonanceId: string }>(
-    `
-    MERGE (r:FieldResonance {sanitizedLabel: $sanitizedLabel})
-    ON CREATE SET
-      r.id = 'res_' + randomUUID(),
-      r.label = $label,
-      r.description = $description,
-      r.createdAt = datetime(),
-      r.detectedBy = 'AI'
-    ON MATCH SET
-      r.description = COALESCE($description, r.description),
-      r.modifiedAt = datetime()
-    RETURN r.id as resonanceId
-  `,
-    {
-      sanitizedLabel,
-      label: pattern.label,
-      description: pattern.description,
-    }
-  )
-
-  const resonanceId =
-    Array.isArray(resonanceResult) && resonanceResult.length > 0
-      ? resonanceResult[0].resonanceId
-      : null
-
-  if (!resonanceId) {
-    throw new Error('Failed to merge or create resonance node')
-  }
-
-  // Create ResonanceLink nodes for each pulse connection
-  // Use MERGE to avoid duplicate links for the same resonance + pulse pair
-  const links: DiscoveredResonance['links'] = []
-
+  // Create individual ResonanceLink nodes for each pulse connection
   for (const connection of pattern.pulseConnections) {
+    // Create ResonanceLink and connect it to the context, source, and target
     const linkResult = await graph.query<{ linkId: string }>(
       `
+      MATCH (context:FieldContext {id: $contextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
-      MATCH (resonance:FieldResonance {id: $resonanceId})
-      MERGE (link:ResonanceLink {
-        sourceId: $sourcePulseId,
-        targetId: $targetPulseId,
-        resonanceId: $resonanceId
+      
+      // Ensure source and target are in the same context
+      MATCH (context)-[:HAS_PULSE]->(source)
+      MATCH (context)-[:HAS_PULSE]->(target)
+      
+      // Create ResonanceLink
+      CREATE (link:ResonanceLink {
+        id: 'rl_' + randomUUID(),
+        label: $label,
+        description: $description,
+        confidence: $confidence,
+        evidence: $evidence,
+        createdAt: datetime()
       })
-      ON CREATE SET
-        link.id = 'rl_' + randomUUID(),
-        link.confidence = $confidence,
-        link.evidence = $evidence,
-        link.createdAt = datetime()
-      ON MATCH SET
-        link.confidence = $confidence,
-        link.evidence = $evidence,
-        link.modifiedAt = datetime()
-      MERGE (link)-[:SOURCE]->(source)
-      MERGE (link)-[:TARGET]->(target)
-      MERGE (link)-[:RESONATES_AS]->(resonance)
+      
+      // Connect to context and pulses
+      CREATE (context)-[:HAS_RESONANCE]->(link)
+      CREATE (link)-[:SOURCE]->(source)
+      CREATE (link)-[:TARGET]->(target)
+      
       RETURN link.id as linkId
     `,
       {
+        contextId,
         sourcePulseId: connection.sourcePulseId,
         targetPulseId: connection.targetPulseId,
-        resonanceId,
+        label: pattern.label,
+        description: pattern.description,
         confidence: connection.confidence,
         evidence: connection.evidence,
       }
@@ -255,10 +210,12 @@ async function createResonanceInDatabase(
         ? linkResult[0].linkId
         : null
 
-    // Only add link if it was successfully created
     if (linkId) {
       links.push({
         linkId,
+        contextId,
+        label: pattern.label,
+        description: pattern.description,
         sourcePulseId: connection.sourcePulseId,
         targetPulseId: connection.targetPulseId,
         confidence: connection.confidence,
@@ -267,49 +224,53 @@ async function createResonanceInDatabase(
     }
   }
 
-  return {
-    resonanceId,
-    label: pattern.label,
-    description: pattern.description,
-    links,
-  }
+  return links
 }
 
 /**
- * Discover resonances for a specific pulse
+ * Discover resonances for a specific pulse WITHIN ITS CONTEXT
  */
 export async function discoverResonancesForPulse(
   pulseId: string
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Get the pulse
+  // Get the pulse and its context
   const pulseResult = await graph.query<{
     pulse: { id: string; content: string; createdAt: string }
+    contextId: string
   }>(
     `
-    MATCH (p:FieldPulse {id: $pulseId})
+    MATCH (context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
     RETURN {
       id: p.id,
       content: p.content,
       createdAt: toString(p.createdAt)
-    } as pulse
+    } as pulse,
+    context.id as contextId
   `,
     { pulseId }
   )
 
   if (!Array.isArray(pulseResult) || pulseResult.length === 0) {
-    console.warn(`Pulse not found: ${pulseId}`)
+    console.warn(`Pulse not found or has no context: ${pulseId}`)
     return []
   }
 
-  const pulse = pulseResult[0].pulse
+  const { pulse, contextId } = pulseResult[0]
 
-  // Find similar pulses
-  const similarPulses = await findSimilarPulses(pulseId, 0.7, 10)
+  // Find similar pulses WITHIN THE SAME CONTEXT
+  const similarPulses = await findSimilarPulsesInContext(
+    pulseId,
+    contextId,
+    0.7,
+    10
+  )
 
   if (similarPulses.length === 0) {
-    console.log(`No similar pulses found for ${pulseId}`)
+    console.log(
+      `No similar pulses found for ${pulseId} in context ${contextId}`
+    )
     return []
   }
 
@@ -321,61 +282,98 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  // Create resonance in database
-  const resonance = await createResonanceInDatabase(pattern)
+  // Create resonance links in database
+  const links = await createResonanceLinksInDatabase(contextId, pattern)
 
-  return [resonance]
+  return links
 }
 
 /**
- * Discover resonances globally across all recent pulses
+ * Discover resonances for all contexts (or specific contexts)
+ * Processes each context independently
  */
 export async function discoverGlobalResonances(
   lastRunTimestamp?: string
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Get all pulses created/modified since last run
-  const query = lastRunTimestamp
-    ? `MATCH (p:FieldPulse)
-       WHERE p.modifiedAt > datetime($lastRunTimestamp) 
-          OR p.createdAt > datetime($lastRunTimestamp)
-       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
-       ORDER BY p.createdAt DESC
-       LIMIT 100`
-    : `MATCH (p:FieldPulse)
-       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
-       ORDER BY p.createdAt DESC
-       LIMIT 50`
+  // Get all contexts
+  const contextsResult = await graph.query<{
+    contextId: string
+    contextTitle: string
+  }>(
+    `
+    MATCH (context:FieldContext)
+    RETURN context.id as contextId, context.title as contextTitle
+  `,
+    {}
+  )
 
-  const pulsesResult = await graph.query<{
-    pulse: { id: string; content: string; createdAt: string }
-  }>(query, lastRunTimestamp ? { lastRunTimestamp } : {})
-
-  // Neo4jGraph returns plain array, not {records: []}
-  if (!Array.isArray(pulsesResult) || pulsesResult.length === 0) {
-    console.log('No pulses found for resonance discovery')
+  if (!Array.isArray(contextsResult) || contextsResult.length === 0) {
+    console.log('No contexts found for resonance discovery')
     return []
   }
 
-  const pulses = pulsesResult.map((r) => r.pulse)
+  const contexts = contextsResult
 
-  console.log(`Analyzing ${pulses.length} pulses for resonances...`)
+  console.log(`Analyzing ${contexts.length} contexts for resonances...`)
 
-  const discoveredResonances: DiscoveredResonance[] = []
+  const allDiscoveredResonances: DiscoveredResonance[] = []
 
-  // Discover resonances for each pulse
-  for (const pulse of pulses) {
+  // Process each context independently
+  for (const { contextId, contextTitle } of contexts) {
     try {
-      const resonances = await discoverResonancesForPulse(pulse.id)
-      discoveredResonances.push(...resonances)
-    } catch (error) {
-      console.error(
-        `Failed to discover resonances for pulse ${pulse.id}:`,
-        error
+      console.log(`Processing context: ${contextTitle} (${contextId})`)
+
+      // Get pulses in this context
+      const query = lastRunTimestamp
+        ? `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
+           WHERE p.modifiedAt > datetime($lastRunTimestamp) 
+              OR p.createdAt > datetime($lastRunTimestamp)
+           RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+           ORDER BY p.createdAt DESC
+           LIMIT 50`
+        : `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
+           RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+           ORDER BY p.createdAt DESC
+           LIMIT 30`
+
+      const pulsesResult = await graph.query<{
+        pulse: { id: string; content: string; createdAt: string }
+      }>(
+        query,
+        lastRunTimestamp ? { contextId, lastRunTimestamp } : { contextId }
       )
+
+      if (!Array.isArray(pulsesResult) || pulsesResult.length < 2) {
+        console.log(`Not enough pulses in context ${contextId}, skipping`)
+        continue
+      }
+
+      const pulses = pulsesResult.map((r) => r.pulse)
+
+      console.log(`  Found ${pulses.length} pulses in context ${contextId}`)
+
+      // Discover resonances for each pulse in the context
+      for (const pulse of pulses) {
+        try {
+          const resonances = await discoverResonancesForPulse(pulse.id)
+          allDiscoveredResonances.push(...resonances)
+        } catch (error) {
+          console.error(
+            `Failed to discover resonances for pulse ${pulse.id}:`,
+            error
+          )
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to process context ${contextId}:`, error)
     }
   }
 
-  return discoveredResonances
+  console.log(
+    `Discovered ${allDiscoveredResonances.length} total resonance links across all contexts`
+  )
+
+  return allDiscoveredResonances
 }
