@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 
 interface PulseTypeSuggestionProps {
   input: string
-  onSelect: (type: NodeType, name: string) => void
+  onSelect: (type: NodeType, name: string, content: string) => void
   onClose: () => void
   isOpen: boolean
 }
@@ -166,6 +166,7 @@ export function PulseTypeSuggestion({
     suggestedName: '',
   })
   const [editedName, setEditedName] = useState('')
+  const [editedContent, setEditedContent] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Infer pulse type when input changes
@@ -175,6 +176,7 @@ export function PulseTypeSuggestion({
       setPulseData(inference)
       setSelectedType(inference.type)
       setEditedName(inference.suggestedName)
+      setEditedContent(input)
     }
   }, [input])
 
@@ -210,9 +212,17 @@ export function PulseTypeSuggestion({
   }
 
   const handleConfirm = () => {
-    console.log('🎯 handleConfirm called:', { selectedType, editedName })
-    console.log('📤 Calling onSelect with:', { selectedType, editedName })
-    onSelect(selectedType, editedName)
+    console.log('🎯 handleConfirm called:', {
+      selectedType,
+      editedName,
+      editedContent,
+    })
+    console.log('📤 Calling onSelect with:', {
+      selectedType,
+      editedName,
+      editedContent,
+    })
+    onSelect(selectedType, editedName, editedContent)
     onClose()
   }
 
@@ -275,6 +285,22 @@ export function PulseTypeSuggestion({
 
         {/* Input and Interpretation */}
         <div className="w-full space-y-4 mb-8">
+          {/* Content Field */}
+          <div className="group relative rounded-xl overflow-hidden bg-[#e6edf5] dark:bg-black/40 border border-transparent dark:border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_25px_-18px_rgba(0,0,0,0.45)] dark:shadow-md">
+            <div className="absolute left-4 top-4 text-[#7b8895] dark:text-gp-ink-soft pointer-events-none group-focus-within:text-gp-primary transition-colors">
+              <span className="material-symbols-outlined text-xl">
+                description
+              </span>
+            </div>
+            <textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              rows={4}
+              className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-base text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20 resize-none"
+              placeholder="Describe your pulse in detail..."
+            />
+          </div>
+
           {/* Name Input */}
           <div className="group relative rounded-xl overflow-hidden bg-[#e6edf5] dark:bg-black/40 border border-transparent dark:border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_25px_-18px_rgba(0,0,0,0.45)] dark:shadow-md">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7b8895] dark:text-gp-ink-soft pointer-events-none group-focus-within:text-gp-primary transition-colors">
