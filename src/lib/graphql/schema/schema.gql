@@ -134,7 +134,11 @@ Can be private (only owner) or shared with specific members.
 Multi-label: ["Space", "MeSpace"]
 Authorization: Only the owner can view, create, update, or delete a MeSpace.
 """
-type MeSpace implements Space @node(labels: ["Space", "MeSpace"]) {
+type MeSpace implements Space
+  @node(labels: ["Space", "MeSpace"])
+  @authorization(
+    filter: [{ where: { node: { owner_SOME: { id_EQ: "$jwt.user.id" } } } }]
+  ) {
   id: ID! @id
   name: String!
   visibility: SpaceVisibility!
@@ -150,7 +154,22 @@ Has an owner and members who can all participate.
 Multi-label: ["Space", "WeSpace"]
 Authorization: Owner and members can access. Non-members cannot.
 """
-type WeSpace implements Space @node(labels: ["Space", "WeSpace"]) {
+type WeSpace implements Space
+  @node(labels: ["Space", "WeSpace"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            OR: [
+              { owner_SOME: { id_EQ: "$jwt.user.id" } }
+              { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+            ]
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   name: String!
   visibility: SpaceVisibility!

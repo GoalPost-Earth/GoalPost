@@ -3,7 +3,6 @@ import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
-import { spaceQueryResolvers } from './space-query-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -163,7 +162,6 @@ const resolvers = {
   },
   Query: {
     ...searchResolvers,
-    ...spaceQueryResolvers,
   },
 }
 
