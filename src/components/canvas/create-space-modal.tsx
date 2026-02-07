@@ -48,15 +48,13 @@ export function CreateSpaceModal({
 
   return (
     <OfferingModal isOpen={isOpen} onClose={onClose} position="center">
-      <div className="relative z-10 w-full animate-[float_6s_ease-in-out_infinite]">
+      <div className="relative z-10 w-full">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute -top-16 right-4 md:-right-8 p-2 rounded-full hover:bg-white/50 dark:hover:bg-white/10 text-gp-ink-muted dark:text-white/50 hover:text-gp-ink-strong dark:hover:text-white transition-all group"
+          className="absolute -top-16 right-4 md:-right-8 p-2 rounded-full hover:bg-white/50 dark:hover:bg-white/10 text-gp-ink-muted dark:text-white/50 hover:text-gp-ink-strong dark:hover:text-white group"
         >
-          <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">
-            close
-          </span>
+          <span className="material-symbols-outlined text-3xl">close</span>
         </button>
 
         {/* Modal Content */}
@@ -68,9 +66,9 @@ export function CreateSpaceModal({
           <div className="flex flex-col items-center text-center relative z-10">
             {/* Icon */}
             <div className="mb-8 relative group cursor-pointer">
-              <div className="absolute inset-0 bg-gp-primary/30 rounded-full blur-xl animate-pulse-slow group-hover:bg-gp-primary/50 transition-colors duration-500" />
-              <div className="size-16 rounded-full bg-linear-to-br from-white to-gp-surface-soft dark:from-white/10 dark:to-white/5 border border-white dark:border-white/20 flex items-center justify-center backdrop-blur-xl shadow-md dark:shadow-inner group-hover:scale-105 transition-transform duration-300">
-                <span className="material-symbols-outlined text-3xl text-gp-accent-glow drop-shadow-[0_0_10px_rgba(79,255,203,0.5)] animate-glow">
+              <div className="absolute inset-0 bg-gp-primary/30 rounded-full blur-xl group-hover:bg-gp-primary/50" />
+              <div className="size-16 rounded-full bg-linear-to-br from-white to-gp-surface-soft dark:from-white/10 dark:to-white/5 border border-white dark:border-white/20 flex items-center justify-center backdrop-blur-xl shadow-md dark:shadow-inner">
+                <span className="material-symbols-outlined text-3xl text-gp-accent-glow drop-shadow-[0_0_10px_rgba(79,255,203,0.5)]">
                   hub
                 </span>
               </div>
@@ -88,7 +86,7 @@ export function CreateSpaceModal({
             <form onSubmit={handleSubmit} className="w-full space-y-4">
               {/* Name */}
               <div className="w-full relative group">
-                <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40 transition duration-500" />
+                <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40" />
                 <div className="relative flex items-center">
                   <input
                     autoFocus
@@ -98,7 +96,7 @@ export function CreateSpaceModal({
                     onKeyDown={handleKeyDown}
                     placeholder="Name your space..."
                     className={cn(
-                      'w-full rounded-2xl px-6 py-4 text-lg transition-all font-light',
+                      'w-full rounded-2xl px-6 py-4 text-lg font-light',
                       'bg-white/90 dark:bg-black/40',
                       'border border-gp-glass-border dark:border-white/10',
                       'text-gp-ink-strong dark:text-white',
@@ -112,7 +110,7 @@ export function CreateSpaceModal({
 
               {/* Description */}
               <div className="w-full relative group">
-                <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40 transition duration-500" />
+                <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40" />
                 <div className="relative">
                   <textarea
                     value={description}
@@ -121,7 +119,7 @@ export function CreateSpaceModal({
                     placeholder="Add a short description (optional)"
                     rows={4}
                     className={cn(
-                      'w-full rounded-2xl px-6 py-4 text-base transition-all font-light resize-y',
+                      'w-full rounded-2xl px-6 py-4 text-base font-light resize-y',
                       'bg-white/90 dark:bg-black/40',
                       'border border-gp-glass-border dark:border-white/10',
                       'text-gp-ink-strong dark:text-white',
@@ -136,14 +134,14 @@ export function CreateSpaceModal({
                     disabled={!canSubmit}
                     onClick={handleSubmit}
                     className={cn(
-                      'absolute right-2 bottom-2 p-2 rounded-xl transition-all',
+                      'absolute right-2 bottom-2 p-2 rounded-xl',
                       !canSubmit
                         ? 'bg-gp-primary/5 dark:bg-gp-primary/10 text-gp-primary/40 cursor-not-allowed'
                         : 'bg-gp-primary/10 dark:bg-gp-primary/20 text-gp-primary hover:bg-gp-primary hover:text-white'
                     )}
                   >
                     {isLoading ? (
-                      <span className="material-symbols-outlined animate-spin">
+                      <span className="material-symbols-outlined">
                         progress_activity
                       </span>
                     ) : (
