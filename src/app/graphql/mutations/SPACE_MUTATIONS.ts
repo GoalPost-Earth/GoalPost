@@ -62,3 +62,75 @@ export const REMOVE_SPACE_MEMBER_MUTATION = graphql(`
     }
   }
 `)
+
+/**
+ * Update a MeSpace
+ */
+export const UPDATE_ME_SPACE_MUTATION = graphql(`
+  mutation UpdateMeSpace($where: MeSpaceWhere!, $update: MeSpaceUpdateInput!) {
+    updateMeSpaces(where: $where, update: $update) {
+      meSpaces {
+        id
+        name
+        visibility
+        createdAt
+        owner {
+          id
+          name
+        }
+        contexts {
+          id
+          title
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Update a WeSpace
+ */
+export const UPDATE_WE_SPACE_MUTATION = graphql(`
+  mutation UpdateWeSpace($where: WeSpaceWhere!, $update: WeSpaceUpdateInput!) {
+    updateWeSpaces(where: $where, update: $update) {
+      weSpaces {
+        id
+        name
+        visibility
+        createdAt
+        owner {
+          id
+          name
+        }
+        contexts {
+          id
+          title
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Delete a MeSpace
+ */
+export const DELETE_ME_SPACE_MUTATION = graphql(`
+  mutation DeleteMeSpace($where: MeSpaceWhere!) {
+    deleteMeSpaces(where: $where) {
+      nodesDeleted
+      relationshipsDeleted
+    }
+  }
+`)
+
+/**
+ * Delete a WeSpace
+ */
+export const DELETE_WE_SPACE_MUTATION = graphql(`
+  mutation DeleteWeSpace($where: WeSpaceWhere!) {
+    deleteWeSpaces(where: $where) {
+      nodesDeleted
+      relationshipsDeleted
+    }
+  }
+`)

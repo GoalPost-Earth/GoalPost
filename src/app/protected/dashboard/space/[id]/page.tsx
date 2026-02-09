@@ -1,23 +1,41 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { useState } from 'react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import {
+  UPDATE_ME_SPACE_MUTATION,
+  UPDATE_WE_SPACE_MUTATION,
+  DELETE_ME_SPACE_MUTATION,
+  DELETE_WE_SPACE_MUTATION,
+} from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
 
 export default function SpaceDetailsPage() {
   const params = useParams()
+  const router = useRouter()
   const spaceId = params?.id as string
   const { animationsEnabled } = useAnimations()
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const { data, loading, error } = useQuery(GET_SPACE_DETAILS, {
     variables: { spaceId },
     skip: !spaceId,
   })
+
+  // Setup mutations for different space types
+  const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
+  const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
+  const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
+  const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const space = data?.spaces?.[0] as any
@@ -25,6 +43,67 @@ export default function SpaceDetailsPage() {
   const owner = space?.owner?.[0] as any
   const members = space?.members || []
   const contexts = space?.contexts || []
+
+  const handleEditStart = () => {
+    setEditName(space?.name || '')
+    setIsEditMode(true)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditName('')
+  }
+
+  const handleEditSave = async () => {
+    try {
+      const updateInput: Record<string, string | undefined> = {}
+      if (editName) updateInput.name_SET = editName
+
+      const where = { id_EQ: spaceId }
+
+      switch (space?.__typename) {
+        case 'MeSpace':
+          await updateMeSpace({
+            variables: { where, update: updateInput },
+            refetchQueries: ['GetSpaceDetails'],
+          })
+          break
+        case 'WeSpace':
+          await updateWeSpace({
+            variables: { where, update: updateInput },
+            refetchQueries: ['GetSpaceDetails'],
+          })
+          break
+      }
+
+      setIsEditMode(false)
+      setEditName('')
+    } catch (err) {
+      console.error('Failed to update space:', err)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      if (!space) return
+
+      const where = { id_EQ: spaceId }
+
+      switch (space.__typename) {
+        case 'MeSpace':
+          await deleteMeSpace({ variables: { where } })
+          break
+        case 'WeSpace':
+          await deleteWeSpace({ variables: { where } })
+          break
+      }
+
+      router.push('/protected/dashboard')
+    } catch (err) {
+      console.error('Failed to delete space:', err)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -69,6 +148,85 @@ export default function SpaceDetailsPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
       <ProfileBackground />
+
+      {/* Edit Modal */}
+      {isEditMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 border border-gp-glass-border">
+            <button
+              onClick={handleEditCancel}
+              className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-6">
+              Edit {space.__typename}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                  Space Name
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                  placeholder="Space name"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={handleEditCancel}
+                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+            <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
+              Delete {space.__typename}?
+            </h2>
+
+            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
+              Are you sure you want to delete this space and all its contexts
+              and pulses? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <main className="relative">
@@ -295,15 +453,26 @@ export default function SpaceDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          {/* <div className="flex items-center justify-center gap-6 w-full">
-            <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
-              Settings
+          <div className="flex items-center justify-center gap-6 w-full">
+            <button
+              onClick={handleEditStart}
+              className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                edit
+              </span>
+              Edit Space
             </button>
-            <button className="px-10 py-3 rounded-full bg-gp-primary text-white font-semibold hover:shadow-[0_8px_25px_rgba(var(--gp-primary-rgb),0.4)] hover:scale-[1.02] transition-all text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              New Context
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                delete
+              </span>
+              Delete Space
             </button>
-          </div> */}
+          </div>
         </ProfileLayout>
       </main>
 
