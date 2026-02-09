@@ -10,6 +10,11 @@ interface PulseTypeSuggestionProps {
   onSelect: (type: NodeType, name: string, content: string) => void
   onClose: () => void
   isOpen: boolean
+  isEditing?: boolean
+  initialType?: NodeType
+  initialName?: string
+  initialContent?: string
+  onDelete?: () => void
 }
 
 // Dummy AI inference - simple heuristics based on keywords
@@ -158,27 +163,33 @@ export function PulseTypeSuggestion({
   onSelect,
   onClose,
   isOpen,
+  isEditing = false,
+  initialType = 'goal',
+  initialName = '',
+  initialContent = '',
+  onDelete,
 }: PulseTypeSuggestionProps) {
-  const [selectedType, setSelectedType] = useState<NodeType>('goal')
+  const [selectedType, setSelectedType] = useState<NodeType>(initialType)
   const [pulseData, setPulseData] = useState({
-    type: 'goal' as NodeType,
+    type: initialType,
     interpretation: '',
-    suggestedName: '',
+    suggestedName: initialName,
   })
-  const [editedName, setEditedName] = useState('')
-  const [editedContent, setEditedContent] = useState('')
+  const [editedName, setEditedName] = useState(initialName)
+  const [editedContent, setEditedContent] = useState(initialContent)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Infer pulse type when input changes
+  // Infer pulse type when input changes (only for create mode)
   useEffect(() => {
-    if (input.trim()) {
+    if (!isEditing && input.trim()) {
       const inference = inferPulseType(input)
       setPulseData(inference)
       setSelectedType(inference.type)
       setEditedName(inference.suggestedName)
       setEditedContent(input)
     }
-  }, [input])
+  }, [input, isEditing])
 
   // Animate in
   useEffect(() => {
@@ -226,6 +237,14 @@ export function PulseTypeSuggestion({
     onClose()
   }
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete()
+      setShowDeleteConfirm(false)
+      onClose()
+    }
+  }
+
   if (!isOpen) return null
 
   const config = typeConfig[selectedType]
@@ -271,15 +290,17 @@ export function PulseTypeSuggestion({
             )}
           >
             <span className="material-symbols-outlined text-sm">
-              auto_awesome
+              {isEditing ? 'edit' : 'auto_awesome'}
             </span>
-            AI Classified
+            {isEditing ? 'Edit Mode' : 'AI Classified'}
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            {config.label} Pulse
+            {isEditing ? 'Edit' : 'Create'} {config.label} Pulse
           </h1>
           <p className="text-sm text-slate-500 dark:text-gp-ink-soft font-medium">
-            GoalPost AI has analyzed your input.
+            {isEditing
+              ? 'Update your pulse details below.'
+              : 'GoalPost AI has analyzed your input.'}
           </p>
         </div>
 
@@ -322,41 +343,49 @@ export function PulseTypeSuggestion({
               </button>
             </div>
           </div>
-
-          {/* Interpretation */}
-          <div className="text-left bg-linear-to-r from-[#d7ecff]/90 dark:from-gp-primary/20 to-transparent border-l-2 border-[#1187e8] dark:border-gp-primary rounded-r-xl p-4 flex gap-3">
-            <div className="mt-0.5 shrink-0">
-              <span className="material-symbols-outlined text-gp-primary text-lg">
-                psychology_alt
-              </span>
-            </div>
-            <p className="text-xs text-slate-700 dark:text-gp-ink-soft leading-relaxed">
-              <span className="font-bold text-[#1187e8] dark:text-gp-primary block mb-1">
-                AI Interpretation:
-              </span>
-              {pulseData.interpretation}
-            </p>
-          </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex w-full gap-3">
-          <button
-            onClick={handleRegenerateType}
-            className="cursor-pointer flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-[#2c3a46] bg-white/50 dark:bg-[#101820] text-gp-ink-muted dark:text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-[#1f8bff] hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#162230] active:scale-95"
-          >
-            <span className="material-symbols-outlined text-lg group-hover:-rotate-12 transition-transform">
-              tune
-            </span>
-            Refine Type
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="cursor-pointer flex-1 h-12 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
-          >
-            <span className="material-symbols-outlined text-lg">check</span>
-            Create Pulse
-          </button>
+          {isEditing && onDelete ? (
+            <>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="cursor-pointer flex-1 h-12 rounded-xl border border-red-600/20 dark:border-red-600/30 bg-red-600/10 dark:bg-red-600/20 text-red-600 dark:text-red-400 text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:bg-red-600/20 dark:hover:bg-red-600/30 active:scale-95"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  delete
+                </span>
+                Delete
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="cursor-pointer flex-1 h-12 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
+              >
+                <span className="material-symbols-outlined text-lg">check</span>
+                Save Changes
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleRegenerateType}
+                className="cursor-pointer flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-[#2c3a46] bg-white/50 dark:bg-[#101820] text-gp-ink-muted dark:text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-[#1f8bff] hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#162230] active:scale-95"
+              >
+                <span className="material-symbols-outlined text-lg group-hover:-rotate-12 transition-transform">
+                  tune
+                </span>
+                Refine Type
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="cursor-pointer flex-1 h-12 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
+              >
+                <span className="material-symbols-outlined text-lg">check</span>
+                Create Pulse
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -364,6 +393,35 @@ export function PulseTypeSuggestion({
       <div className="h-1 w-full bg-white/40 dark:bg-white/10">
         <div className="h-full w-full bg-linear-to-r from-transparent via-[#0f8bf6] dark:via-gp-primary to-transparent opacity-60 animate-pulse" />
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 rounded-3xl">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Delete Pulse?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              This action cannot be undone. The pulse will be permanently
+              deleted.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -115,24 +115,69 @@ export default function NavBar() {
                   >
                     {pathname?.includes('/me-space') ? 'Me Space' : 'We Space'}
                   </Link>
+                  {isMounted &&
+                    (() => {
+                      // Extract space ID from pathname
+                      const spaceIdMatch = pathname?.match(
+                        /\/(?:me-space|we-space)\/([^/]+)/
+                      )
+                      const spaceId = spaceIdMatch?.[1]
+                      if (!spaceId) return null
+                      const spaceName = localStorage.getItem(`space_${spaceId}`)
+                      if (!spaceName || spaceName === pageTitle) return null
+
+                      const spaceType = pathname?.includes('/me-space')
+                        ? 'me-space'
+                        : 'we-space'
+                      const spaceUrl = `/protected/spaces/${spaceType}/${spaceId}`
+
+                      return (
+                        <>
+                          <span>•</span>
+                          <Link
+                            href={spaceUrl}
+                            className="text-gp-primary font-semibold hover:text-gp-primary/80 transition-colors"
+                          >
+                            {spaceName}
+                          </Link>
+                        </>
+                      )
+                    })()}
                 </>
               ) : null}
-              {pathname?.includes('/fields/') && (
-                <>
-                  <span>•</span>
-                  <Link
-                    href={(() => {
-                      // Extract space URL from field URL
-                      // e.g., /protected/spaces/we-space/space_id/fields/field_id -> /protected/spaces/we-space/space_id
-                      const parts = pathname.split('/fields/')
-                      return parts[0]
-                    })()}
-                    className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
-                  >
-                    Fields
-                  </Link>
-                </>
-              )}
+              {pathname?.includes('/fields/') &&
+                isMounted &&
+                (() => {
+                  // Extract space ID and field ID from pathname
+                  const spaceMatch = pathname?.match(
+                    /\/(?:me-space|we-space)\/([^/]+)/
+                  )
+                  const spaceId = spaceMatch?.[1]
+                  const fieldIdMatch = pathname?.match(/\/fields\/([^/]+)/)
+                  const fieldId = fieldIdMatch?.[1]
+                  if (!fieldId) return <span>Field</span>
+                  const fieldName = localStorage.getItem(`field_${fieldId}`)
+                  if (!fieldName || fieldName === pageTitle) return null
+
+                  const spaceType = pathname?.includes('/me-space')
+                    ? 'me-space'
+                    : 'we-space'
+                  const fieldUrl = spaceId
+                    ? `/protected/spaces/${spaceType}/${spaceId}/fields/${fieldId}`
+                    : '#'
+
+                  return (
+                    <>
+                      <span>•</span>
+                      <Link
+                        href={fieldUrl}
+                        className="text-gp-accent-glow font-semibold hover:text-gp-accent-glow/80 transition-colors"
+                      >
+                        {fieldName}
+                      </Link>
+                    </>
+                  )
+                })()}
             </div>
           )}
         </div>

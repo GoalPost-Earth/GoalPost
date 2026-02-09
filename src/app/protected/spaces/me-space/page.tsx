@@ -34,6 +34,8 @@ export default function MeSpacePage() {
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
@@ -227,6 +229,12 @@ export default function MeSpacePage() {
     router.push(`/protected/spaces/me-space/${spaceId}`)
   }
 
+  const handleEditSpace = (e: React.MouseEvent, spaceId: string) => {
+    e.stopPropagation()
+    setEditingSpaceId(spaceId)
+    setShowEditModal(true)
+  }
+
   const handleCreateSpace = async ({
     name,
     description,
@@ -324,6 +332,7 @@ export default function MeSpacePage() {
                 })
               }
               onClick={() => handleSpaceClick(space.id)}
+              onEditClick={(e) => handleEditSpace(e, space.id)}
             />
           )
         })}
@@ -338,6 +347,21 @@ export default function MeSpacePage() {
           isLoading={isLoading}
           title="Create New MeSpace"
           subtitle="Name your personal space and add a short description"
+        />
+      )}
+      {showEditModal && editingSpaceId && (
+        <CreateSpaceModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingSpaceId(null)
+          }}
+          isEditing={true}
+          spaceId={editingSpaceId}
+          isWeSpace={false}
+          initialName={
+            userMeSpaces.find((s) => s.id === editingSpaceId)?.name || ''
+          }
         />
       )}
     </main>

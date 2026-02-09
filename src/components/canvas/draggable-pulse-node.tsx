@@ -43,6 +43,12 @@ export function DraggablePulseNode({
   }>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't start drag if clicking on edit/delete buttons
+    const target = e.target as HTMLElement
+    if (target.closest('button')) {
+      return
+    }
+
     e.preventDefault()
     e.stopPropagation()
     // Stop floating animation when dragging starts

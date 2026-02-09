@@ -21,6 +21,12 @@ import {
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
+  UPDATE_GOAL_PULSE_MUTATION,
+  UPDATE_RESOURCE_PULSE_MUTATION,
+  UPDATE_STORY_PULSE_MUTATION,
+  DELETE_GOAL_PULSE_MUTATION,
+  DELETE_RESOURCE_PULSE_MUTATION,
+  DELETE_STORY_PULSE_MUTATION,
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 
@@ -30,6 +36,8 @@ interface PulsePosition {
   y: number
   icon: string
   label: string
+  title: string
+  content: string
   type: NodeType
   animation: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
 }
@@ -130,6 +138,12 @@ function FieldDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [editingPulseId, setEditingPulseId] = useState<string | null>(null)
+  const [editingPulseData, setEditingPulseData] = useState<{
+    type: NodeType
+    name: string
+    content: string
+  } | null>(null)
   const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
   const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,6 +203,26 @@ function FieldDetailPage() {
     refetchQueries: ['GetPulsesByContext'],
   })
 
+  const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+
+  const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+
   // Redirect if no field ID
   if (!fieldId) {
     console.error('❌ No field ID in URL')
@@ -212,6 +246,7 @@ function FieldDetailPage() {
     (
       pulseData: Array<{
         id: string
+        title: string
         content: string
         type: 'goal' | 'resource' | 'story'
       }>
@@ -237,9 +272,9 @@ function FieldDetailPage() {
           x: Math.cos(angle) * radius + centerX + jitterX,
           y: Math.sin(angle) * radius + centerY + jitterY,
           icon: pulseTypeIcons[pulse.type],
-          label:
-            pulse.content.substring(0, 50) +
-            (pulse.content.length > 50 ? '...' : ''),
+          title: pulse.title || '',
+          label: pulse.title || 'Untitled Pulse',
+          content: pulse.content || '',
           type: pulse.type,
           animation,
         }
@@ -584,83 +619,218 @@ function FieldDetailPage() {
     setSubmitSuccess(false)
 
     try {
-      // Map pulse type to mutation
-      const pulseTypeMap = {
-        goal: 'goal',
-        resource: 'resource',
-        story: 'story',
-      } as const
+      // Check if we're editing an existing pulse
+      if (editingPulseId) {
+        console.log('✏️ Updating pulse:', editingPulseId)
 
-      const pulseType =
-        pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
+        // Map pulse type to mutation
+        const pulseTypeMap = {
+          goal: 'goal',
+          resource: 'resource',
+          story: 'story',
+        } as const
 
-      // Build input based on pulse type
-      const baseInput = {
-        title: name,
-        content: value,
-        intensity: 1.0,
-        createdAt: new Date().toISOString(),
-        context: {
-          connect: [{ where: { node: { id_EQ: fieldId } } }],
-        },
-        createdBy: {
-          connect: [{ where: { node: { id_EQ: user.id } } }],
-        },
-      }
+        const pulseType =
+          pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
 
-      console.log('📤 Creating pulse with GraphQL mutation:', {
-        pulseType,
-        baseInput,
-      })
-
-      // Call appropriate mutation based on type
-      if (pulseType === 'goal') {
-        await createGoalPulse({
-          variables: {
-            input: [
-              {
-                ...baseInput,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                status: 'ACTIVE' as any,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                horizon: 'MID' as any,
+        // Call appropriate update mutation based on type
+        if (pulseType === 'goal') {
+          await updateGoalPulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
               },
-            ],
-          },
-        })
-      } else if (pulseType === 'resource') {
-        await createResourcePulse({
-          variables: {
-            input: [
-              {
-                ...baseInput,
-                resourceType: 'general',
-                availability: 1.0,
+            },
+          })
+        } else if (pulseType === 'resource') {
+          await updateResourcePulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
               },
-            ],
-          },
-        })
+            },
+          })
+        } else {
+          await updateStoryPulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
+              },
+            },
+          })
+        }
+
+        console.log('✅ Pulse updated successfully')
+        setSubmitSuccess(true)
+
+        // Close modal and reset after success
+        setTimeout(() => {
+          setIsModalOpen(false)
+          setSubmitSuccess(false)
+          setEditingPulseId(null)
+          setEditingPulseData(null)
+        }, 1500)
       } else {
-        await createStoryPulse({
-          variables: {
-            input: [baseInput],
+        // Creating new pulse
+        // Map pulse type to mutation
+        const pulseTypeMap = {
+          goal: 'goal',
+          resource: 'resource',
+          story: 'story',
+        } as const
+
+        const pulseType =
+          pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
+
+        // Build input based on pulse type
+        const baseInput = {
+          title: name,
+          content: value,
+          intensity: 1.0,
+          createdAt: new Date().toISOString(),
+          context: {
+            connect: [{ where: { node: { id_EQ: fieldId } } }],
           },
+          createdBy: {
+            connect: [{ where: { node: { id_EQ: user.id } } }],
+          },
+        }
+
+        console.log('📤 Creating pulse with GraphQL mutation:', {
+          pulseType,
+          baseInput,
         })
+
+        // Call appropriate mutation based on type
+        if (pulseType === 'goal') {
+          await createGoalPulse({
+            variables: {
+              input: [
+                {
+                  ...baseInput,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  status: 'ACTIVE' as any,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  horizon: 'MID' as any,
+                },
+              ],
+            },
+          })
+        } else if (pulseType === 'resource') {
+          await createResourcePulse({
+            variables: {
+              input: [
+                {
+                  ...baseInput,
+                  resourceType: 'general',
+                  availability: 1.0,
+                },
+              ],
+            },
+          })
+        } else {
+          await createStoryPulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+        }
+
+        console.log('✅ Pulse created successfully')
+        setSubmitSuccess(true)
+
+        // Close modal and reset after success
+        setTimeout(() => {
+          setIsModalOpen(false)
+          setSubmitSuccess(false)
+        }, 1500)
       }
-
-      console.log('✅ Pulse created successfully')
-      setSubmitSuccess(true)
-
-      // Close modal and reset after success
-      setTimeout(() => {
-        setIsModalOpen(false)
-        setSubmitSuccess(false)
-      }, 1500)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error occurred'
       console.error('❌ Error submitting pulse:', error)
       setSubmitError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditPulse = (
+    e: React.MouseEvent,
+    pulseId: string,
+    type: NodeType,
+    label: string,
+    title: string,
+    content: string
+  ) => {
+    e.stopPropagation()
+    console.log('✏️ Edit pulse clicked:', {
+      pulseId,
+      type,
+      label,
+      title,
+      content,
+    })
+
+    setEditingPulseId(pulseId)
+    setEditingPulseData({
+      type,
+      name: title || label,
+      content: content,
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleDeletePulse = async (
+    e: React.MouseEvent,
+    pulseId: string,
+    type: NodeType
+  ) => {
+    e.stopPropagation()
+    console.log('🗑️ Delete pulse clicked:', { pulseId, type })
+
+    if (!user) {
+      console.error('❌ No user authenticated')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      // Call appropriate delete mutation based on type
+      if (type === 'goal') {
+        await deleteGoalPulse({
+          variables: {
+            where: { id_EQ: pulseId },
+          },
+        })
+      } else if (type === 'resource') {
+        await deleteResourcePulse({
+          variables: {
+            where: { id_EQ: pulseId },
+          },
+        })
+      } else {
+        await deleteStoryPulse({
+          variables: {
+            where: { id_EQ: pulseId },
+          },
+        })
+      }
+
+      console.log('✅ Pulse deleted successfully')
+    } catch (error) {
+      console.error('❌ Error deleting pulse:', error)
+      setSubmitError(
+        error instanceof Error ? error.message : 'Failed to delete pulse'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -736,6 +906,16 @@ function FieldDetailPage() {
                   setIsPulsePanelOpen(true)
                   fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
                 }}
+                onEditClick={(e) =>
+                  handleEditPulse(
+                    e,
+                    pos.pulseId,
+                    pos.type,
+                    pos.label,
+                    pos.title,
+                    pos.content
+                  )
+                }
               />
             ))}
           </>
@@ -779,6 +959,8 @@ function FieldDetailPage() {
             setIsModalOpen(false)
             setSubmitError(null)
             setSubmitSuccess(false)
+            setEditingPulseId(null)
+            setEditingPulseData(null)
           }}
           position="bottom"
         >
@@ -798,6 +980,28 @@ function FieldDetailPage() {
                 handleOfferingSubmit(value, type, name)
               }}
               isLoading={isSubmitting}
+              isEditing={!!editingPulseId}
+              initialType={editingPulseData?.type}
+              initialName={editingPulseData?.name}
+              initialContent={editingPulseData?.content}
+              onDelete={
+                editingPulseId
+                  ? async () => {
+                      if (editingPulseData) {
+                        await handleDeletePulse(
+                          new MouseEvent(
+                            'click'
+                          ) as unknown as React.MouseEvent,
+                          editingPulseId,
+                          editingPulseData.type
+                        )
+                        setIsModalOpen(false)
+                        setEditingPulseId(null)
+                        setEditingPulseData(null)
+                      }
+                    }
+                  : undefined
+              }
             />
           </div>
         </OfferingModal>

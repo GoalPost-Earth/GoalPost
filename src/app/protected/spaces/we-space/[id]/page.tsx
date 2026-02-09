@@ -53,13 +53,6 @@ export default function WeSpaceFieldsPage() {
 
   const weSpace = data?.weSpaces?.[0]
   const fields = weSpace?.contexts || []
-  const members = weSpace?.members || []
-  const owner = weSpace?.owner?.[0]
-
-  // Check if current user is the owner by comparing with owner returned from query
-  // In a real app, you'd get the current user ID from auth context
-  // For now, assume current user is owner if they see the space (since query is authenticated)
-  const isOwner = !!owner
 
   // Set page title when space loads
   useEffect(() => {
@@ -107,30 +100,10 @@ export default function WeSpaceFieldsPage() {
       )}
       <FieldsCanvas
         fields={transformedFields}
-        spaceId={weSpaceId}
-        spaceName={weSpace?.name || ''}
         onFieldClick={handleFieldClick}
         onCreateField={handleCreateField}
         isCreating={isCreating}
         isLoading={loading}
-        isWeSpace={true}
-        isOwner={isOwner}
-        spaceMembers={members.map((m) => {
-          const memberData = m.member[0]
-          return {
-            id: m.id,
-            role: m.role as 'ADMIN' | 'MEMBER' | 'GUEST',
-            member: {
-              __typename: memberData.__typename || 'Unknown',
-              id: memberData.id,
-              name: memberData.name,
-              email:
-                memberData.__typename === 'Person'
-                  ? (memberData.email ?? undefined)
-                  : undefined,
-            },
-          }
-        })}
         onRefetch={async () => {
           await refetch()
         }}
