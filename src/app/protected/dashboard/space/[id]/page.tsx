@@ -1,18 +1,25 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { useState } from 'react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import {
+  UPDATE_ME_SPACE_MUTATION,
+  UPDATE_WE_SPACE_MUTATION,
+  DELETE_ME_SPACE_MUTATION,
+  DELETE_WE_SPACE_MUTATION,
+} from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
-import { useState } from 'react'
 
 export default function SpaceDetailsPage() {
   const params = useParams()
+  const router = useRouter()
   const spaceId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -26,6 +33,12 @@ export default function SpaceDetailsPage() {
     skip: !spaceId,
   })
 
+  // Setup mutations for different space types
+  const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
+  const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
+  const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
+  const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const space = data?.spaces?.[0] as any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,10 +46,10 @@ export default function SpaceDetailsPage() {
   const members = space?.members || []
   const contexts = space?.contexts || []
 
-  // const handleEditStart = () => {
-  //   setEditName(space?.name || '')
-  //   setIsEditMode(true)
-  // }
+  const handleEditStart = () => {
+    setEditName(space?.name || '')
+    setIsEditMode(true)
+  }
 
   const handleEditCancel = () => {
     setIsEditMode(false)
@@ -472,15 +485,26 @@ export default function SpaceDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          {/* <div className="flex items-center justify-center gap-6 w-full">
-            <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
-              Settings
+          <div className="flex items-center justify-center gap-6 w-full">
+            <button
+              onClick={handleEditStart}
+              className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                edit
+              </span>
+              Edit Space
             </button>
-            <button className="px-10 py-3 rounded-full bg-gp-primary text-white font-semibold hover:shadow-[0_8px_25px_rgba(var(--gp-primary-rgb),0.4)] hover:scale-[1.02] transition-all text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              New Context
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                delete
+              </span>
+              Delete Space
             </button>
-          </div> */}
+          </div>
         </ProfileLayout>
       </main>
 

@@ -1,18 +1,23 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { useState } from 'react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import {
+  UPDATE_FIELD_CONTEXT_MUTATION,
+  DELETE_FIELD_CONTEXT_MUTATION,
+} from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
-import { useState } from 'react'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
+  const router = useRouter()
   const contextId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -27,15 +32,19 @@ export default function FieldContextDetailsPage() {
     skip: !contextId,
   })
 
+  // Setup mutations
+  const [updateFieldContext] = useMutation(UPDATE_FIELD_CONTEXT_MUTATION)
+  const [deleteFieldContext] = useMutation(DELETE_FIELD_CONTEXT_MUTATION)
+
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
   const pulses = context?.pulses || []
 
-  // const handleEditStart = () => {
-  //   setEditTitle(context?.title || '')
-  //   setEditEmergentName(context?.emergentName || '')
-  //   setIsEditMode(true)
-  // }
+  const handleEditStart = () => {
+    setEditTitle(context?.title || '')
+    setEditEmergentName(context?.emergentName || '')
+    setIsEditMode(true)
+  }
 
   const handleEditCancel = () => {
     setIsEditMode(false)
@@ -358,15 +367,26 @@ export default function FieldContextDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          {/* <div className="flex items-center justify-center gap-6 w-full">
-            <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
+          <div className="flex items-center justify-center gap-6 w-full">
+            <button
+              onClick={handleEditStart}
+              className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                edit
+              </span>
               Edit Context
             </button>
-            <button className="px-10 py-3 rounded-full bg-gp-primary text-white font-semibold hover:shadow-[0_8px_25px_rgba(var(--gp-primary-rgb),0.4)] hover:scale-[1.02] transition-all text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              New Pulse
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                delete
+              </span>
+              Delete Context
             </button>
-          </div> */}
+          </div>
         </ProfileLayout>
       </main>
     </div>

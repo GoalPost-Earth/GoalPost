@@ -1,18 +1,27 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { useState } from 'react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
+import {
+  UPDATE_GOAL_PULSE_MUTATION,
+  UPDATE_RESOURCE_PULSE_MUTATION,
+  UPDATE_STORY_PULSE_MUTATION,
+  DELETE_GOAL_PULSE_MUTATION,
+  DELETE_RESOURCE_PULSE_MUTATION,
+  DELETE_STORY_PULSE_MUTATION,
+} from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
-import { useState } from 'react'
 
 export default function PulseDetailsPage() {
   const params = useParams()
+  const router = useRouter()
   const pulseId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -27,16 +36,24 @@ export default function PulseDetailsPage() {
     skip: !pulseId,
   })
 
+  // Setup mutations for different pulse types
+  const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
+  const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
+  const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
+  const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION)
+  const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION)
+  const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION)
+
   const pulse = data?.fieldPulses?.[0]
   const context = pulse?.context?.[0]
   const space = context?.space?.[0]
   const contextPulses = context?.pulses || []
 
-  // const handleEditStart = () => {
-  //   setEditTitle(pulse?.title || '')
-  //   setEditContent(pulse?.content || '')
-  //   setIsEditMode(true)
-  // }
+  const handleEditStart = () => {
+    setEditTitle(pulse?.title || '')
+    setEditContent(pulse?.content || '')
+    setIsEditMode(true)
+  }
 
   const handleEditCancel = () => {
     setIsEditMode(false)
@@ -417,32 +434,28 @@ export default function PulseDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          {/* <div className="flex items-center justify-center gap-6 w-full">
-            <button className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm">
+          <div className="flex items-center justify-center gap-6 w-full">
+            <button
+              onClick={handleEditStart}
+              className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                edit
+              </span>
               Edit Pulse
             </button>
-            <button className="px-10 py-3 rounded-full bg-gp-primary text-white font-semibold hover:shadow-[0_8px_25px_rgba(var(--gp-primary-rgb),0.4)] hover:scale-[1.02] transition-all text-sm flex items-center gap-2">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
               <span className="material-symbols-outlined text-[18px]">
-                share
+                delete
               </span>
-              Share
+              Delete Pulse
             </button>
-          </div> */}
+          </div>
         </ProfileLayout>
       </main>
-
-      {/* Bottom Action Bar */}
-      {/* <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
-        <div className="flex items-center gap-2 p-1.5 rounded-full bg-gp-glass-bg border border-gp-glass-border backdrop-blur-2xl shadow-xl dark:shadow-2xl">
-          <button className="size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors hover:bg-gp-primary/10 dark:hover:bg-gp-primary/20">
-            <span className="material-symbols-outlined">message</span>
-          </button>
-          <div className="w-px h-4 bg-gp-glass-border" />
-          <button className="size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors hover:bg-gp-primary/10 dark:hover:bg-gp-primary/20">
-            <span className="material-symbols-outlined">bookmark</span>
-          </button>
-        </div>
-      </div> */}
     </div>
   )
 }
