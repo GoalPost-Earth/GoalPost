@@ -9,11 +9,19 @@ import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
+import { useState } from 'react'
 
 export default function PulseDetailsPage() {
   const params = useParams()
   const pulseId = params?.id as string
   const { animationsEnabled } = useAnimations()
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isEditLoading, setIsEditLoading] = useState(false)
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+
   const { data, loading, error } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
     variables: { pulseId },
     skip: !pulseId,
@@ -23,6 +31,86 @@ export default function PulseDetailsPage() {
   const context = pulse?.context?.[0]
   const space = context?.space?.[0]
   const contextPulses = context?.pulses || []
+
+  // const handleEditStart = () => {
+  //   setEditTitle(pulse?.title || '')
+  //   setEditContent(pulse?.content || '')
+  //   setIsEditMode(true)
+  // }
+
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditTitle('')
+    setEditContent('')
+  }
+
+  const handleEditSave = async () => {
+    try {
+      setIsEditLoading(true)
+      const updateInput: Record<string, string | undefined> = {}
+      if (editTitle) updateInput.title_SET = editTitle
+      if (editContent) updateInput.content_SET = editContent
+
+      const where = { id_EQ: pulseId }
+
+      switch (pulse?.__typename) {
+        case 'GoalPulse':
+          await updateGoalPulse({
+            variables: { where, update: updateInput },
+            refetchQueries: ['GetPulseDetailsWithContext'],
+          })
+          break
+        case 'ResourcePulse':
+          await updateResourcePulse({
+            variables: { where, update: updateInput },
+            refetchQueries: ['GetPulseDetailsWithContext'],
+          })
+          break
+        case 'StoryPulse':
+          await updateStoryPulse({
+            variables: { where, update: updateInput },
+            refetchQueries: ['GetPulseDetailsWithContext'],
+          })
+          break
+      }
+
+      setIsEditMode(false)
+      setEditTitle('')
+      setEditContent('')
+    } catch (err) {
+      console.error('Failed to update pulse:', err)
+    } finally {
+      setIsEditLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      if (!pulse) return
+      setIsDeleteLoading(true)
+
+      const where = { id_EQ: pulseId }
+
+      switch (pulse.__typename) {
+        case 'GoalPulse':
+          await deleteGoalPulse({ variables: { where } })
+          break
+        case 'ResourcePulse':
+          await deleteResourcePulse({ variables: { where } })
+          break
+        case 'StoryPulse':
+          await deleteStoryPulse({ variables: { where } })
+          break
+      }
+
+      router.push('/protected/dashboard')
+    } catch (err) {
+      console.error('Failed to delete pulse:', err)
+      setShowDeleteConfirm(false)
+    } finally {
+      setIsDeleteLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -69,6 +157,121 @@ export default function PulseDetailsPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
       <ProfileBackground />
+
+      {/* Edit Modal */}
+      {isEditMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 border border-gp-glass-border">
+            <button
+              onClick={handleEditCancel}
+              className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-6">
+              Edit {pulse.__typename}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                  placeholder="Pulse title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                  Content
+                </label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-32 resize-none"
+                  placeholder="Pulse content"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={handleEditCancel}
+                  disabled={isEditLoading}
+                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={isEditLoading}
+                  className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isEditLoading && (
+                    <span
+                      className={cn(
+                        'material-symbols-outlined text-base',
+                        animationsEnabled && 'animate-spin'
+                      )}
+                    >
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {isEditLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+            <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
+              Delete {pulse.__typename}?
+            </h2>
+
+            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
+              Are you sure you want to delete this pulse? This action cannot be
+              undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleteLoading}
+                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleteLoading}
+                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleteLoading && (
+                  <span
+                    className={cn(
+                      'material-symbols-outlined text-base',
+                      animationsEnabled && 'animate-spin'
+                    )}
+                  >
+                    hourglass_bottom
+                  </span>
+                )}
+                {isDeleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <main className="relative">
