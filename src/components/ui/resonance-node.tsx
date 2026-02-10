@@ -10,6 +10,7 @@ export interface ResonanceNodeProps {
   isActive: boolean
   position?: { top: string; left: string }
   onClick: () => void
+  onEdit?: () => void
   className?: string
 }
 
@@ -21,6 +22,7 @@ export function ResonanceNode({
   isActive,
   position,
   onClick,
+  onEdit,
   className,
 }: ResonanceNodeProps) {
   return (
@@ -113,6 +115,22 @@ export function ResonanceNode({
                 Active
               </span>
             </div>
+          )}
+
+          {/* Edit Button */}
+          {isActive && onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="absolute -right-1 -top-1 p-1 rounded-full bg-gp-primary text-white hover:bg-gp-primary/90 transition-colors shadow-md pointer-events-auto"
+              title="Edit resonance"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                edit
+              </span>
+            </button>
           )}
         </div>
       </div>

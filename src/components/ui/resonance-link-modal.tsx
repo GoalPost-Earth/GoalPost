@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Dialog, DialogContent, DialogPortal } from '@/components/ui/dialog'
 import {
   Select,
@@ -30,8 +30,19 @@ interface ResonanceLinkModalProps {
     targetId: string
     sourceType: 'goal' | 'resource' | 'story'
     targetType: 'goal' | 'resource' | 'story'
+    resonanceId?: string
   }) => Promise<void>
   isLoading?: boolean
+  editingResonance?: {
+    id: string
+    label: string
+    confidence: number
+    description: string
+    sourceId: string
+    targetId: string
+    sourceType: 'goal' | 'resource' | 'story'
+    targetType: 'goal' | 'resource' | 'story'
+  } | null
 }
 
 export function ResonanceLinkModal({
@@ -40,14 +51,39 @@ export function ResonanceLinkModal({
   pulses,
   onSubmit,
   isLoading = false,
+  editingResonance = null,
 }: ResonanceLinkModalProps) {
-  const [sourceId, setSourceId] = useState<string>('')
-  const [targetId, setTargetId] = useState<string>('')
-  const [label, setLabel] = useState<string>('Complements')
-  const [confidence, setConfidence] = useState<number>(0.75)
-  const [description, setDescription] = useState<string>('')
+  const isEditMode = !!editingResonance
+  const [sourceId, setSourceId] = useState<string>(
+    editingResonance?.sourceId || ''
+  )
+  const [targetId, setTargetId] = useState<string>(
+    editingResonance?.targetId || ''
+  )
+  const [label, setLabel] = useState<string>(
+    editingResonance?.label || 'Complements'
+  )
+  const [confidence, setConfidence] = useState<number>(
+    editingResonance?.confidence ?? 0.75
+  )
+  const [description, setDescription] = useState<string>(
+    editingResonance?.description || ''
+  )
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // Reset form when editing resonance changes
+  useEffect(() => {
+    if (editingResonance) {
+      setSourceId(editingResonance.sourceId)
+      setTargetId(editingResonance.targetId)
+      setLabel(editingResonance.label)
+      setConfidence(editingResonance.confidence)
+      setDescription(editingResonance.description)
+      setError(null)
+      setSuccess(false)
+    }
+  }, [editingResonance])
 
   // Filter out selected source from target options and vice versa
   const targetOptions = useMemo(
@@ -90,6 +126,9 @@ export function ResonanceLinkModal({
         targetId,
         sourceType: sourcePulse.type,
         targetType: targetPulse.type,
+        ...(isEditMode && editingResonance
+          ? { resonanceId: editingResonance.id }
+          : {}),
       })
       setSuccess(true)
 
@@ -136,7 +175,7 @@ export function ResonanceLinkModal({
               className="bg-gp-surface dark:bg-gp-surface-dark rounded-2xl border border-gp-glass-border p-6 shadow-lg"
             >
               <h2 className="text-xl font-semibold text-gp-ink-strong dark:text-gp-ink-strong mb-6">
-                Create Resonance Link
+                {isEditMode ? 'Edit Resonance Link' : 'Create Resonance Link'}
               </h2>
 
               {error && (
@@ -147,7 +186,9 @@ export function ResonanceLinkModal({
 
               {success && (
                 <div className="mb-4 p-3 rounded-lg bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
-                  Resonance link created successfully!
+                  {isEditMode
+                    ? 'Resonance link updated successfully!'
+                    : 'Resonance link created successfully!'}
                 </div>
               )}
 
@@ -160,7 +201,7 @@ export function ResonanceLinkModal({
                   <Select
                     value={sourceId}
                     onValueChange={setSourceId}
-                    disabled={isLoading}
+                    disabled={isLoading || isEditMode}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select source pulse..." />
@@ -183,7 +224,7 @@ export function ResonanceLinkModal({
                   <Select
                     value={targetId}
                     onValueChange={setTargetId}
-                    disabled={isLoading}
+                    disabled={isLoading || isEditMode}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select target pulse..." />
@@ -260,7 +301,13 @@ export function ResonanceLinkModal({
                   disabled={!isValid || isLoading}
                   className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:bg-gp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  {isLoading ? 'Creating...' : 'Create Link'}
+                  {isLoading
+                    ? isEditMode
+                      ? 'Updating...'
+                      : 'Creating...'
+                    : isEditMode
+                      ? 'Update Link'
+                      : 'Create Link'}
                 </button>
               </div>
             </form>

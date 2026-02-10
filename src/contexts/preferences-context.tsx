@@ -12,6 +12,8 @@ import type { AssistantMode } from '@/lib/simulation'
 interface PreferencesContextType {
   aiMode: AssistantMode
   setAiMode: (mode: AssistantMode) => void
+  resonanceLinkageEnabled: boolean
+  setResonanceLinkageEnabled: (enabled: boolean) => void
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(
@@ -28,13 +30,20 @@ export const usePreferences = () => {
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [aiMode, setAiModeState] = useState<AssistantMode>('default')
+  const [resonanceLinkageEnabled, setResonanceLinkageEnabledState] =
+    useState(true)
 
   // Load from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('assistantMode')
-      if (stored && ['default', 'aiden', 'braider'].includes(stored)) {
-        setAiModeState(stored as AssistantMode)
+      const storedMode = localStorage.getItem('assistantMode')
+      if (storedMode && ['default', 'aiden', 'braider'].includes(storedMode)) {
+        setAiModeState(storedMode as AssistantMode)
+      }
+
+      const storedResonance = localStorage.getItem('resonanceLinkageEnabled')
+      if (storedResonance !== null) {
+        setResonanceLinkageEnabledState(storedResonance === 'true')
       }
     }
   }, [])
@@ -47,8 +56,22 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const setResonanceLinkageEnabled = (enabled: boolean) => {
+    setResonanceLinkageEnabledState(enabled)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('resonanceLinkageEnabled', String(enabled))
+    }
+  }
+
   return (
-    <PreferencesContext.Provider value={{ aiMode, setAiMode }}>
+    <PreferencesContext.Provider
+      value={{
+        aiMode,
+        setAiMode,
+        resonanceLinkageEnabled,
+        setResonanceLinkageEnabled,
+      }}
+    >
       {children}
     </PreferencesContext.Provider>
   )

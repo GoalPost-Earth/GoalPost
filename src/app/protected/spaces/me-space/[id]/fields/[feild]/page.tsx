@@ -23,6 +23,7 @@ import {
 import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
 import {
   CREATE_RESONANCE_LINK_MUTATION,
+  UPDATE_RESONANCE_LINK_MUTATION,
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
@@ -35,6 +36,7 @@ import {
   DELETE_RESONANCES_BY_PULSE_MUTATION,
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
+import { usePreferences } from '@/contexts/preferences-context'
 
 interface PulsePosition {
   pulseId: string
@@ -168,6 +170,16 @@ function FieldDetailPage() {
   const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedResonance, setSelectedResonance] = useState<any | null>(null)
+  const [editingResonance, setEditingResonance] = useState<{
+    id: string
+    label: string
+    confidence: number
+    description: string
+    sourceId: string
+    targetId: string
+    sourceType: 'goal' | 'resource' | 'story'
+    targetType: 'goal' | 'resource' | 'story'
+  } | null>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
 
   // Refs to track current state for synchronous access
@@ -180,6 +192,7 @@ function FieldDetailPage() {
   const fieldId = params?.feild as string // Note: folder name is [feild] (typo)
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
+  const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
 
   // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
@@ -210,6 +223,9 @@ function FieldDetailPage() {
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
     useMutation(CREATE_RESONANCE_LINK_MUTATION)
+
+  const [updateResonanceLink, { loading: isUpdatingResonanceLink }] =
+    useMutation(UPDATE_RESONANCE_LINK_MUTATION)
 
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -324,8 +340,10 @@ function FieldDetailPage() {
         })),
       ]
 
-      // Extract resonance links from separate query
-      const resonances = data.resonanceLinks || []
+      // Extract resonance links only if enabled
+      const resonances = resonanceLinkageEnabled
+        ? data.resonanceLinks || []
+        : []
       setResonanceLinks(resonances)
 
       if (allPulses.length > 0) {
@@ -343,7 +361,9 @@ function FieldDetailPage() {
         // Set pulse options for resonance link modal
         setPulseOptions(allPulses)
         console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
-        console.log(`🔗 Loaded ${resonances.length} resonance links`)
+        console.log(
+          `🔗 Loaded ${resonances.length} resonance links (${resonanceLinkageEnabled ? 'enabled' : 'disabled'})`
+        )
       } else {
         setPulsePositions([])
         console.log(`ℹ️ No pulses found for field ${fieldId}`)
@@ -353,7 +373,7 @@ function FieldDetailPage() {
       setPulsePositions([])
     }
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pulsesByContextData, computePulsePositions])
+  }, [pulsesByContextData, computePulsePositions, resonanceLinkageEnabled])
 
   // Fetch field name
   useEffect(() => {
@@ -574,33 +594,56 @@ function FieldDetailPage() {
     targetId: string
     sourceType: 'goal' | 'resource' | 'story'
     targetType: 'goal' | 'resource' | 'story'
+    resonanceId?: string
   }) => {
-    console.log('🔗 Creating resonance link:', data)
+    const isEdit = !!data.resonanceId
+
+    console.log(
+      isEdit ? '🔧 Updating resonance link:' : '🔗 Creating resonance link:',
+      data
+    )
 
     try {
-      const { data: response } = await createResonanceLink({
-        variables: {
-          input: [
-            {
-              label: data.label,
-              confidence: data.confidence,
-              description: data.description || undefined,
-              createdAt: new Date().toISOString(),
-              source: {
-                connect: [{ where: { node: { id_EQ: data.sourceId } } }],
-              },
-              target: {
-                connect: [{ where: { node: { id_EQ: data.targetId } } }],
-              },
-              context: {
-                connect: [{ where: { node: { id_EQ: fieldId } } }],
-              },
+      if (isEdit) {
+        // Update existing resonance link
+        const { data: response } = await updateResonanceLink({
+          variables: {
+            where: { id_EQ: data.resonanceId },
+            update: {
+              label_SET: data.label,
+              confidence_SET: data.confidence,
+              description_SET: data.description || '',
             },
-          ],
-        },
-      })
+          },
+        })
 
-      console.log('✅ Resonance link created:', response)
+        console.log('✅ Resonance link updated:', response)
+      } else {
+        // Create new resonance link
+        const { data: response } = await createResonanceLink({
+          variables: {
+            input: [
+              {
+                label: data.label,
+                confidence: data.confidence,
+                description: data.description || undefined,
+                createdAt: new Date().toISOString(),
+                source: {
+                  connect: [{ where: { node: { id_EQ: data.sourceId } } }],
+                },
+                target: {
+                  connect: [{ where: { node: { id_EQ: data.targetId } } }],
+                },
+                context: {
+                  connect: [{ where: { node: { id_EQ: fieldId } } }],
+                },
+              },
+            ],
+          },
+        })
+
+        console.log('✅ Resonance link created:', response)
+      }
 
       // Wait for Neo4j to index relationships, then refetch with error handling
       setTimeout(() => {
@@ -610,12 +653,15 @@ function FieldDetailPage() {
           })
           .catch((err) => {
             console.error(
-              'Failed to refetch GetPulsesByContext after resonance creation:',
+              `Failed to refetch GetPulsesByContext after resonance ${isEdit ? 'update' : 'creation'}:`,
               err
             )
-            // Don't throw - the resonance was created successfully
+            // Don't throw - the resonance was created/updated successfully
           })
       }, 1000)
+
+      // Clear editing state
+      setEditingResonance(null)
 
       return
     } catch (error) {
@@ -624,6 +670,48 @@ function FieldDetailPage() {
         ? error
         : new Error('Failed to create resonance link')
     }
+  }
+
+  const handleResonanceEdit = (linkId: string) => {
+    console.log('✏️ Edit resonance clicked:', linkId)
+
+    // Find the resonance link from the state
+    const resonance = resonanceLinks.find((link) => link.id === linkId)
+
+    if (!resonance) {
+      console.error('Resonance link not found:', linkId)
+      return
+    }
+
+    // Extract source and target IDs
+    const sourceId = resonance.source?.[0]?.id
+    const targetId = resonance.target?.[0]?.id
+    const sourceType = resonance.source?.[0]?.__typename
+      ?.replace('Pulse', '')
+      .toLowerCase()
+    const targetType = resonance.target?.[0]?.__typename
+      ?.replace('Pulse', '')
+      .toLowerCase()
+
+    if (!sourceId || !targetId || !sourceType || !targetType) {
+      console.error('Invalid resonance data:', resonance)
+      return
+    }
+
+    // Set editing state
+    setEditingResonance({
+      id: resonance.id,
+      label: resonance.label || 'Complements',
+      confidence: resonance.confidence ?? 0.75,
+      description: resonance.description || '',
+      sourceId,
+      targetId,
+      sourceType: sourceType as 'goal' | 'resource' | 'story',
+      targetType: targetType as 'goal' | 'resource' | 'story',
+    })
+
+    // Open the modal
+    setIsResonanceLinkModalOpen(true)
   }
 
   const handleOfferingSubmit = async (
@@ -918,6 +1006,7 @@ function FieldDetailPage() {
               expandedLinks={expandedResonanceLinks}
               onResonanceNodeClick={handleResonanceNodeClick}
               onResonanceNodeDrag={handleResonanceNodeDrag}
+              onResonanceNodeEdit={handleResonanceEdit}
             />
             {pulsePositions.map((pos) => (
               <DraggablePulseNode
@@ -1034,10 +1123,14 @@ function FieldDetailPage() {
 
       <ResonanceLinkModal
         isOpen={isResonanceLinkModalOpen}
-        onClose={() => setIsResonanceLinkModalOpen(false)}
+        onClose={() => {
+          setIsResonanceLinkModalOpen(false)
+          setEditingResonance(null)
+        }}
         pulses={pulseOptions}
         onSubmit={handleResonanceLinkSubmit}
-        isLoading={isCreatingResonanceLink}
+        isLoading={isCreatingResonanceLink || isUpdatingResonanceLink}
+        editingResonance={editingResonance}
       />
     </div>
   )
