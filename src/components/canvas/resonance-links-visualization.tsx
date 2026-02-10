@@ -25,6 +25,7 @@ export interface ResonanceLinksVisualizationProps {
   canvasWidth: number
   canvasHeight: number
   expandedLinks?: Set<string>
+  scale?: number
   onResonanceNodeClick?: (linkId: string) => void
   onResonanceNodeDrag?: (
     linkId: string,
@@ -46,6 +47,7 @@ export function ResonanceLinksVisualization({
   canvasWidth,
   canvasHeight,
   expandedLinks = new Set(),
+  scale = 1,
   onResonanceNodeClick,
   onResonanceNodeDrag,
   onResonanceNodeEdit,
@@ -270,6 +272,7 @@ export function ResonanceLinksVisualization({
               description={link.description}
               isActive={isActive}
               canvasPosition={{ x: midX, y: midY }}
+              scale={scale}
               onClick={() => onResonanceNodeClick?.(link.id)}
               onEdit={() => onResonanceNodeEdit?.(link.id)}
               onPositionChange={handleResonanceDrag}

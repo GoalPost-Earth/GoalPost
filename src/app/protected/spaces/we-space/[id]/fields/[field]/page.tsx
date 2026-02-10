@@ -61,7 +61,8 @@ const ANIMATION_ORDER: Array<
   'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
 > = ['float', 'float-delayed', 'float-random', 'pulse-slow']
 
-const PULSE_NODE_RADIUS = 28 // Pixel radius for collision detection
+const PULSE_NODE_RADIUS = 40 // Pixel radius for collision detection (size-20 = 80px)
+const RESONANCE_NODE_RADIUS = 80 // Pixel radius for resonance node collision detection (size-40 = 160px)
 
 // Deterministic pseudo-random number in [0,1) derived from an input string and salt
 function seededUnitValue(input: string, salt: number) {
@@ -98,7 +99,7 @@ function resolveCollisions(
   iterations: number = 6
 ): PulsePosition[] {
   const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
-  const minDistance = PULSE_NODE_RADIUS * 2 // 56px separation
+  const minDistance = PULSE_NODE_RADIUS * 2 + 10 // 90px separation (80px + 10px gap)
   let collisionsFound = false
 
   for (let iter = 0; iter < iterations; iter++) {
@@ -136,6 +137,102 @@ function resolveCollisions(
     )
     return { ...pos, x: clampedX, y: clampedY }
   })
+}
+
+// Helper: Resolve collisions for resonance nodes (with other resonances and pulses)
+function resolveResonanceCollisions(
+  resonancePositions: Map<string, { x: number; y: number }>,
+  pulsePositions: PulsePosition[],
+  canvasWidth: number = 6000,
+  canvasHeight: number = 6000,
+  iterations: number = 8
+): Map<string, { x: number; y: number }> {
+  const result = new Map(resonancePositions)
+  const resonanceArray = Array.from(result.entries())
+  const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 20 // 180px separation between resonances (resonances + 20px gap)
+  const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 20 // 140px separation from pulses (20px gap)
+
+  for (let iter = 0; iter < iterations; iter++) {
+    let collisionsFound = false
+
+    // Check resonance-to-resonance collisions
+    for (let i = 0; i < resonanceArray.length; i++) {
+      for (let j = i + 1; j < resonanceArray.length; j++) {
+        const [idA, posA] = resonanceArray[i]
+        const [idB, posB] = resonanceArray[j]
+
+        const dx = posB.x - posA.x
+        const dy = posB.y - posA.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minResonanceDistance && distance > 0) {
+          collisionsFound = true
+          const overlap = minResonanceDistance - distance
+          const angle = Math.atan2(dy, dx)
+          // Amplify separation for more decisive collision resolution
+          const separationX = (Math.cos(angle) * overlap * 1.2) / 2
+          const separationY = (Math.sin(angle) * overlap * 1.2) / 2
+
+          const newPosA = {
+            x: posA.x - separationX,
+            y: posA.y - separationY,
+          }
+          const newPosB = {
+            x: posB.x + separationX,
+            y: posB.y + separationY,
+          }
+
+          result.set(idA, newPosA)
+          result.set(idB, newPosB)
+          resonanceArray[i][1] = newPosA
+          resonanceArray[j][1] = newPosB
+        }
+      }
+    }
+
+    // Check resonance-to-pulse collisions
+    for (let i = 0; i < resonanceArray.length; i++) {
+      const [id, resPos] = resonanceArray[i]
+
+      for (const pulse of pulsePositions) {
+        const dx = pulse.x - resPos.x
+        const dy = pulse.y - resPos.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minPulseDistance && distance > 0) {
+          collisionsFound = true
+          const overlap = minPulseDistance - distance
+          const angle = Math.atan2(dy, dx)
+          // Push resonance node away from pulse (pulses don't move)
+          // Amplify for more decisive separation
+          const newPos = {
+            x: resPos.x - Math.cos(angle) * overlap * 1.2,
+            y: resPos.y - Math.sin(angle) * overlap * 1.2,
+          }
+
+          result.set(id, newPos)
+          resonanceArray[i][1] = newPos
+        }
+      }
+    }
+
+    if (!collisionsFound && iter > 0) break
+  }
+
+  // Clamp all positions to canvas bounds
+  const clamped = new Map<string, { x: number; y: number }>()
+  result.forEach((pos, id) => {
+    const [clampedX, clampedY] = clampPosition(
+      pos.x,
+      pos.y,
+      canvasWidth,
+      canvasHeight,
+      RESONANCE_NODE_RADIUS
+    )
+    clamped.set(id, { x: clampedX, y: clampedY })
+  })
+
+  return clamped
 }
 
 function FieldDetailPage() {
@@ -355,8 +452,53 @@ function FieldDetailPage() {
         )
         setPulsePositions(resolvedPositions)
 
-        // Don't initialize resonance positions here - they will be calculated on click
-        setResonanceNodePositions(new Map())
+        // Initialize positions for ALL resonance nodes on load
+        // This prevents them from moving when pulses are dragged
+        if (resonances.length > 0) {
+          const newResonancePositions = new Map<
+            string,
+            { x: number; y: number }
+          >()
+          const positionMap = new Map(
+            resolvedPositions.map((p) => [p.pulseId, { x: p.x, y: p.y }])
+          )
+
+          resonances.forEach((link: any) => {
+            const sourceId = link.source?.[0]?.id
+            const targetId = link.target?.[0]?.id
+            if (sourceId && targetId) {
+              const sourcePos = positionMap.get(sourceId)
+              const targetPos = positionMap.get(targetId)
+              if (sourcePos && targetPos) {
+                // Calculate midpoint with seeded offset to prevent overlaps
+                const baseMidX = (sourcePos.x + targetPos.x) / 2
+                const baseMidY = (sourcePos.y + targetPos.y) / 2
+
+                // Add deterministic offset based on link ID to spread out overlapping nodes
+                const offsetX = (seededUnitValue(link.id, 17) - 0.5) * 120
+                const offsetY = (seededUnitValue(link.id, 31) - 0.5) * 120
+
+                newResonancePositions.set(link.id, {
+                  x: baseMidX + offsetX,
+                  y: baseMidY + offsetY,
+                })
+              }
+            }
+          })
+
+          // Apply collision detection to resonance nodes
+          const resolvedResonancePositions = resolveResonanceCollisions(
+            newResonancePositions,
+            resolvedPositions,
+            canvasSize.width,
+            canvasSize.height
+          )
+
+          setResonanceNodePositions(resolvedResonancePositions)
+          resonanceNodePositionsRef.current = resolvedResonancePositions
+        } else {
+          setResonanceNodePositions(new Map())
+        }
 
         // Set pulse options for resonance link modal
         setPulseOptions(allPulses)
@@ -485,7 +627,8 @@ function FieldDetailPage() {
         return next
       })
 
-      // Initialize position if not already set
+      // Position should already be initialized from useEffect
+      // If somehow missing, calculate with offset
       const currentResonancePositions = resonanceNodePositionsRef.current
       if (!currentResonancePositions.has(linkId)) {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -504,9 +647,16 @@ function FieldDetailPage() {
             )
 
             if (sourcePulse && targetPulse) {
+              const baseMidX = (sourcePulse.x + targetPulse.x) / 2
+              const baseMidY = (sourcePulse.y + targetPulse.y) / 2
+
+              // Add deterministic offset to prevent overlaps
+              const offsetX = (seededUnitValue(linkId, 17) - 0.5) * 120
+              const offsetY = (seededUnitValue(linkId, 31) - 0.5) * 120
+
               const newPosition = {
-                x: (sourcePulse.x + targetPulse.x) / 2,
-                y: (sourcePulse.y + targetPulse.y) / 2,
+                x: baseMidX + offsetX,
+                y: baseMidY + offsetY,
               }
 
               resonanceNodePositionsRef.current = new Map(
@@ -533,22 +683,36 @@ function FieldDetailPage() {
       // Update the resonance node's position
       // Pulses are never moved - they stay in place
       // Connection lines update in real-time as resonance node moves
-      const newPosition = { x: newX, y: newY }
+
+      // Clamp position to canvas bounds
+      const [clampedX, clampedY] = clampPosition(
+        newX,
+        newY,
+        canvasSize.width,
+        canvasSize.height,
+        RESONANCE_NODE_RADIUS
+      )
+
+      // Update this resonance node's position
+      const updatedPositions = new Map(resonanceNodePositionsRef.current)
+      updatedPositions.set(linkId, { x: clampedX, y: clampedY })
+
+      // Apply collision detection with other resonances and pulses
+      const resolvedPositions = resolveResonanceCollisions(
+        updatedPositions,
+        pulsePositionsRef.current,
+        canvasSize.width,
+        canvasSize.height,
+        5 // More iterations for responsive drag collision detection
+      )
 
       // Update ref immediately (synchronous)
-      resonanceNodePositionsRef.current = new Map(
-        resonanceNodePositionsRef.current
-      )
-      resonanceNodePositionsRef.current.set(linkId, newPosition)
+      resonanceNodePositionsRef.current = resolvedPositions
 
       // Update state (asynchronous)
-      setResonanceNodePositions((prev) => {
-        const newPositions = new Map(prev)
-        newPositions.set(linkId, newPosition)
-        return newPositions
-      })
+      setResonanceNodePositions(resolvedPositions)
     },
-    []
+    [canvasSize]
   )
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
@@ -1003,6 +1167,7 @@ function FieldDetailPage() {
               canvasWidth={canvasSize.width}
               canvasHeight={canvasSize.height}
               expandedLinks={expandedResonanceLinks}
+              scale={currentScale}
               onResonanceNodeClick={handleResonanceNodeClick}
               onResonanceNodeDrag={handleResonanceNodeDrag}
               onResonanceNodeEdit={handleResonanceEdit}
