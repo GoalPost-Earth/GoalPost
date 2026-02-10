@@ -17,12 +17,16 @@ export function SpacesList({ showAll = false }: SpacesListProps) {
     data: meSpacesData,
     loading: meSpacesLoading,
     error: meSpacesError,
-  } = useQuery(GET_ALL_ME_SPACES)
+  } = useQuery(GET_ALL_ME_SPACES, {
+    fetchPolicy: 'cache-and-network',
+  })
   const {
     data: weSpacesData,
     loading: weSpacesLoading,
     error: weSpacesError,
-  } = useQuery(GET_ALL_WE_SPACES)
+  } = useQuery(GET_ALL_WE_SPACES, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   const loading = meSpacesLoading || weSpacesLoading
   const error = meSpacesError || weSpacesError
