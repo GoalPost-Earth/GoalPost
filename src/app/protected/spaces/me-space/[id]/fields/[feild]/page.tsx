@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react'
+import {
+  useLazyQuery,
+  useMutation,
+  useQuery,
+  useApolloClient,
+} from '@apollo/client/react'
 import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
@@ -27,6 +32,7 @@ import {
   DELETE_GOAL_PULSE_MUTATION,
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
+  DELETE_RESONANCES_BY_PULSE_MUTATION,
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 
@@ -174,6 +180,7 @@ function FieldDetailPage() {
   const fieldId = params?.feild as string // Note: folder name is [feild] (typo)
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
+  const apolloClient = useApolloClient()
 
   // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
   useEffect(() => {
@@ -202,9 +209,7 @@ function FieldDetailPage() {
   )
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
-    useMutation(CREATE_RESONANCE_LINK_MUTATION, {
-      refetchQueries: ['GetPulsesByContext'],
-    })
+    useMutation(CREATE_RESONANCE_LINK_MUTATION)
 
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -235,6 +240,9 @@ function FieldDetailPage() {
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
   })
+  const [deleteResonancesByPulse] = useMutation(
+    DELETE_RESONANCES_BY_PULSE_MUTATION
+  )
 
   // Redirect if no field ID
   if (!fieldId) {
@@ -316,9 +324,8 @@ function FieldDetailPage() {
         })),
       ]
 
-      // Extract resonance links from context
-      const contextData = data.fieldContexts?.[0]
-      const resonances = contextData?.resonances || []
+      // Extract resonance links from separate query
+      const resonances = data.resonanceLinks || []
       setResonanceLinks(resonances)
 
       if (allPulses.length > 0) {
@@ -565,6 +572,8 @@ function FieldDetailPage() {
     description: string
     sourceId: string
     targetId: string
+    sourceType: 'goal' | 'resource' | 'story'
+    targetType: 'goal' | 'resource' | 'story'
   }) => {
     console.log('🔗 Creating resonance link:', data)
 
@@ -592,6 +601,22 @@ function FieldDetailPage() {
       })
 
       console.log('✅ Resonance link created:', response)
+
+      // Wait for Neo4j to index relationships, then refetch with error handling
+      setTimeout(() => {
+        apolloClient
+          .refetchQueries({
+            include: ['GetPulsesByContext'],
+          })
+          .catch((err) => {
+            console.error(
+              'Failed to refetch GetPulsesByContext after resonance creation:',
+              err
+            )
+            // Don't throw - the resonance was created successfully
+          })
+      }, 1000)
+
       return
     } catch (error) {
       console.error('❌ Error creating resonance link:', error)
@@ -805,6 +830,9 @@ function FieldDetailPage() {
     setSubmitError(null)
 
     try {
+      // First, delete any resonances attached to this pulse
+      await deleteResonancesByPulse({ variables: { pulseId } })
+
       // Call appropriate delete mutation based on type
       if (type === 'goal') {
         await deleteGoalPulse({

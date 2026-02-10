@@ -180,7 +180,7 @@ export const UPDATE_STORY_PULSE_MUTATION = graphql(`
 `)
 
 /**
- * Delete a GoalPulse
+ * Delete a GoalPulse (orphaned ResonanceLinks will be cleaned up separately)
  */
 export const DELETE_GOAL_PULSE_MUTATION = graphql(`
   mutation DeleteGoalPulse($where: GoalPulseWhere!) {
@@ -192,7 +192,26 @@ export const DELETE_GOAL_PULSE_MUTATION = graphql(`
 `)
 
 /**
- * Delete a ResourcePulse
+ * Delete ResonanceLinks by pulse ID
+ */
+export const DELETE_RESONANCES_BY_PULSE_MUTATION = graphql(`
+  mutation DeleteResonancesByPulse($pulseId: ID!) {
+    deleteResonanceLinks(
+      where: {
+        OR: [
+          { source_SOME: { id_EQ: $pulseId } }
+          { target_SOME: { id_EQ: $pulseId } }
+        ]
+      }
+    ) {
+      nodesDeleted
+      relationshipsDeleted
+    }
+  }
+`)
+
+/**
+ * Delete a ResourcePulse (orphaned ResonanceLinks will be cleaned up separately)
  */
 export const DELETE_RESOURCE_PULSE_MUTATION = graphql(`
   mutation DeleteResourcePulse($where: ResourcePulseWhere!) {
@@ -204,7 +223,7 @@ export const DELETE_RESOURCE_PULSE_MUTATION = graphql(`
 `)
 
 /**
- * Delete a StoryPulse
+ * Delete a StoryPulse (orphaned ResonanceLinks will be cleaned up separately)
  */
 export const DELETE_STORY_PULSE_MUTATION = graphql(`
   mutation DeleteStoryPulse($where: StoryPulseWhere!) {

@@ -15,6 +15,7 @@ import {
   DELETE_GOAL_PULSE_MUTATION,
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
+  DELETE_RESONANCES_BY_PULSE_MUTATION,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
@@ -43,6 +44,7 @@ export default function PulseDetailsPage() {
   const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION)
   const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION)
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION)
+  const [deleteResonancesByPulse] = useMutation(DELETE_RESONANCES_BY_PULSE_MUTATION)
 
   const pulse = data?.fieldPulses?.[0]
   const context = pulse?.context?.[0]
@@ -105,6 +107,9 @@ export default function PulseDetailsPage() {
     try {
       if (!pulse) return
       setIsDeleteLoading(true)
+
+      // First, delete any resonances attached to this pulse
+      await deleteResonancesByPulse({ variables: { pulseId } })
 
       const where = { id_EQ: pulseId }
 

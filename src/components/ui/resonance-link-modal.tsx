@@ -28,6 +28,8 @@ interface ResonanceLinkModalProps {
     description: string
     sourceId: string
     targetId: string
+    sourceType: 'goal' | 'resource' | 'story'
+    targetType: 'goal' | 'resource' | 'story'
   }) => Promise<void>
   isLoading?: boolean
 }
@@ -72,12 +74,22 @@ export function ResonanceLinkModal({
     }
 
     try {
+      const sourcePulse = pulses.find((p) => p.id === sourceId)
+      const targetPulse = pulses.find((p) => p.id === targetId)
+
+      if (!sourcePulse || !targetPulse) {
+        setError('Could not find source or target pulse')
+        return
+      }
+
       await onSubmit({
         label,
         confidence,
         description,
         sourceId,
         targetId,
+        sourceType: sourcePulse.type,
+        targetType: targetPulse.type,
       })
       setSuccess(true)
 

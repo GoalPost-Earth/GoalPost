@@ -3,6 +3,9 @@ import { graphql } from '@/gql'
 /**
  * Fetch all pulses within a specific FieldContext along with resonance links
  * Returns goal, resource, and story pulses with their details plus all resonance links in the context
+ *
+ * Note: Resonances are queried separately to avoid authorization filter issues when
+ * traversing through nested relationships (fieldContexts -> resonances -> source/target)
  */
 export const GET_PULSES_BY_CONTEXT = graphql(`
   query GetPulsesByContext($contextId: ID!) {
@@ -32,58 +35,58 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
     }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
-      resonances {
-        id
-        label
-        description
-        confidence
-        evidence
-        createdAt
-        source {
-          ... on GoalPulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
-          ... on ResourcePulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
-          ... on StoryPulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
+    }
+    resonanceLinks(where: { context_SOME: { id_EQ: $contextId } }) {
+      id
+      label
+      description
+      confidence
+      evidence
+      createdAt
+      source {
+        ... on GoalPulse {
+          id
+          __typename
+          title
+          content
+          createdAt
         }
-        target {
-          ... on GoalPulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
-          ... on ResourcePulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
-          ... on StoryPulse {
-            id
-            __typename
-            title
-            content
-            createdAt
-          }
+        ... on ResourcePulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on StoryPulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+      }
+      target {
+        ... on GoalPulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on ResourcePulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on StoryPulse {
+          id
+          __typename
+          title
+          content
+          createdAt
         }
       }
     }
