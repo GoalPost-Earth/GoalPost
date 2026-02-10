@@ -135,7 +135,8 @@ function FieldDetailPage() {
   const [updateResonanceLink, { loading: isUpdatingResonanceLink }] =
     useMutation(UPDATE_RESONANCE_LINK_MUTATION)
 
-  const [deleteResonanceLink] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
+  const [deleteResonanceLink, { loading: isDeletingResonanceLink }] =
+    useMutation(DELETE_RESONANCE_LINK_MUTATION)
 
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -706,11 +707,8 @@ function FieldDetailPage() {
 
   const handleResonanceLinkDelete = async () => {
     if (!editingResonance) {
-      console.error('No resonance to delete')
       return
     }
-
-    console.log('🗑️ Deleting resonance link:', editingResonance.id)
 
     try {
       await deleteResonanceLink({
@@ -718,8 +716,6 @@ function FieldDetailPage() {
           id: editingResonance.id,
         },
       })
-
-      console.log('✅ Resonance link deleted')
 
       // Clear editing state
       setEditingResonance(null)
@@ -739,7 +735,7 @@ function FieldDetailPage() {
           })
       }, 1000)
     } catch (error) {
-      console.error('❌ Error deleting resonance link:', error)
+      console.error('Error deleting resonance link:', error)
       throw error instanceof Error
         ? error
         : new Error('Failed to delete resonance link')
@@ -1162,12 +1158,21 @@ function FieldDetailPage() {
         isOpen={isResonanceLinkModalOpen}
         onClose={() => {
           setIsResonanceLinkModalOpen(false)
-          setEditingResonance(null)
+          // Don't clear editingResonance immediately - let the delete handler do it
+          // This prevents race conditions where editingResonance becomes null
+          // before the delete mutation executes
+          setTimeout(() => {
+            setEditingResonance(null)
+          }, 100)
         }}
         pulses={pulseOptions}
         onSubmit={handleResonanceLinkSubmit}
         onDelete={editingResonance ? handleResonanceLinkDelete : undefined}
-        isLoading={isCreatingResonanceLink || isUpdatingResonanceLink}
+        isLoading={
+          isCreatingResonanceLink ||
+          isUpdatingResonanceLink ||
+          isDeletingResonanceLink
+        }
         editingResonance={editingResonance}
       />
     </div>

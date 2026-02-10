@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Dialog, DialogContent, DialogPortal } from '@/components/ui/dialog'
 import {
   Select,
@@ -153,6 +154,11 @@ export function ResonanceLinkModal({
   }
 
   const handleClose = () => {
+    // Don't close if delete confirmation is showing
+    if (showDeleteConfirm) {
+      return
+    }
+
     if (!isLoading) {
       setSourceId('')
       setTargetId('')
@@ -167,188 +173,220 @@ export function ResonanceLinkModal({
   }
 
   const handleDelete = async () => {
-    if (onDelete) {
-      try {
-        await onDelete()
-        setShowDeleteConfirm(false)
-        onClose()
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to delete resonance link'
-        )
-        setShowDeleteConfirm(false)
-      }
+    if (!onDelete) {
+      setError('Delete function not available')
+      return
+    }
+
+    try {
+      // Close confirmation first to prevent re-renders
+      setShowDeleteConfirm(false)
+      await onDelete()
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to delete resonance link'
+      )
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogPortal>
-        <DialogContent
-          showCloseButton={false}
-          className="flex justify-center gap-0 border-0 bg-transparent p-0 shadow-none"
-        >
-          <div className="w-full max-w-160 px-4 animate-fade-in-up">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-gp-surface dark:bg-gp-surface-dark rounded-2xl border border-gp-glass-border p-6 shadow-lg"
-            >
-              <h2 className="text-xl font-semibold text-gp-ink-strong dark:text-gp-ink-strong mb-6">
-                {isEditMode ? 'Edit Resonance Link' : 'Create Resonance Link'}
-              </h2>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogPortal>
+          <DialogContent
+            showCloseButton={false}
+            className="flex justify-center gap-0 border-0 bg-transparent p-0 shadow-none"
+          >
+            <div className="w-full max-w-160 px-4 animate-fade-in-up">
+              <form
+                onSubmit={handleSubmit}
+                className="bg-gp-surface dark:bg-gp-surface-dark rounded-2xl border border-gp-glass-border p-6 shadow-lg"
+              >
+                <h2 className="text-xl font-semibold text-gp-ink-strong dark:text-gp-ink-strong mb-6">
+                  {isEditMode ? 'Edit Resonance Link' : 'Create Resonance Link'}
+                </h2>
 
-              {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
-                  {error}
+                {error && (
+                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                {success && (
+                  <div className="mb-4 p-3 rounded-lg bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
+                    {isEditMode
+                      ? 'Resonance link updated successfully!'
+                      : 'Resonance link created successfully!'}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* Source Pulse */}
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                      Source Pulse
+                    </label>
+                    <Select
+                      value={sourceId}
+                      onValueChange={setSourceId}
+                      disabled={isLoading || isEditMode}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select source pulse..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sourceOptions.map((pulse) => (
+                          <SelectItem key={pulse.id} value={pulse.id}>
+                            {pulse.title || pulse.content.substring(0, 50)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Target Pulse */}
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                      Target Pulse
+                    </label>
+                    <Select
+                      value={targetId}
+                      onValueChange={setTargetId}
+                      disabled={isLoading || isEditMode}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select target pulse..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {targetOptions.map((pulse) => (
+                          <SelectItem key={pulse.id} value={pulse.id}>
+                            {pulse.title || pulse.content.substring(0, 50)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Label */}
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                      Relationship Label
+                    </label>
+                    <input
+                      type="text"
+                      value={label}
+                      onChange={(e) => setLabel(e.target.value)}
+                      placeholder="e.g., Complements, Conflicts, Supports"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-muted dark:placeholder-gp-ink-muted focus:outline-none focus:border-gp-primary/50 disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Confidence */}
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                      Confidence: {(confidence * 100).toFixed(0)}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={confidence}
+                      onChange={(e) =>
+                        setConfidence(parseFloat(e.target.value))
+                      }
+                      disabled={isLoading}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
+                      Description (optional)
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Explain why these pulses resonate together..."
+                      disabled={isLoading}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-muted dark:placeholder-gp-ink-muted focus:outline-none focus:border-gp-primary/50 disabled:opacity-50 resize-none"
+                    />
+                  </div>
                 </div>
-              )}
 
-              {success && (
-                <div className="mb-4 p-3 rounded-lg bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm">
-                  {isEditMode
-                    ? 'Resonance link updated successfully!'
-                    : 'Resonance link created successfully!'}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {/* Source Pulse */}
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                    Source Pulse
-                  </label>
-                  <Select
-                    value={sourceId}
-                    onValueChange={setSourceId}
-                    disabled={isLoading || isEditMode}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select source pulse..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sourceOptions.map((pulse) => (
-                        <SelectItem key={pulse.id} value={pulse.id}>
-                          {pulse.title || pulse.content.substring(0, 50)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Target Pulse */}
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                    Target Pulse
-                  </label>
-                  <Select
-                    value={targetId}
-                    onValueChange={setTargetId}
-                    disabled={isLoading || isEditMode}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select target pulse..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {targetOptions.map((pulse) => (
-                        <SelectItem key={pulse.id} value={pulse.id}>
-                          {pulse.title || pulse.content.substring(0, 50)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Label */}
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                    Relationship Label
-                  </label>
-                  <input
-                    type="text"
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    placeholder="e.g., Complements, Conflicts, Supports"
-                    disabled={isLoading}
-                    className="w-full px-3 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-muted dark:placeholder-gp-ink-muted focus:outline-none focus:border-gp-primary/50 disabled:opacity-50"
-                  />
-                </div>
-
-                {/* Confidence */}
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                    Confidence: {(confidence * 100).toFixed(0)}%
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={confidence}
-                    onChange={(e) => setConfidence(parseFloat(e.target.value))}
-                    disabled={isLoading}
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
-                    Description (optional)
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Explain why these pulses resonate together..."
-                    disabled={isLoading}
-                    rows={3}
-                    className="w-full px-3 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-muted dark:placeholder-gp-ink-muted focus:outline-none focus:border-gp-primary/50 disabled:opacity-50 resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                {isEditMode && onDelete && (
+                <div className="mt-6 flex gap-3">
+                  {isEditMode && onDelete && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeleteConfirm(true)
+                      }}
+                      disabled={isLoading}
+                      className="px-4 py-2 rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-500/20 dark:hover:bg-red-500/30 disabled:opacity-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
+                    onClick={handleClose}
                     disabled={isLoading}
-                    className="px-4 py-2 rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-500/20 dark:hover:bg-red-500/30 disabled:opacity-50 transition-colors"
+                    className="flex-1 px-4 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-alt/80 dark:hover:bg-gp-surface-alt-dark/80 disabled:opacity-50 transition-colors"
                   >
-                    Delete
+                    Cancel
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg bg-gp-surface-alt dark:bg-gp-surface-alt-dark border border-gp-glass-border text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-alt/80 dark:hover:bg-gp-surface-alt-dark/80 disabled:opacity-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!isValid || isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:bg-gp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  {isLoading
-                    ? isEditMode
-                      ? 'Updating...'
-                      : 'Creating...'
-                    : isEditMode
-                      ? 'Update Link'
-                      : 'Create Link'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </DialogContent>
-      </DialogPortal>
+                  <button
+                    type="submit"
+                    disabled={!isValid || isLoading}
+                    className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:bg-gp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {isLoading
+                      ? isEditMode
+                        ? 'Updating...'
+                        : 'Creating...'
+                      : isEditMode
+                        ? 'Update Link'
+                        : 'Create Link'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <DialogPortal>
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+      {/* Delete Confirmation Modal - Rendered via portal at document root */}
+      {showDeleteConfirm &&
+        typeof window !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center pointer-events-auto"
+            style={{
+              zIndex: 9999,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(4px)',
+            }}
+            onMouseDown={(e) => {
+              // Prevent any event from reaching the Dialog below
+              e.stopPropagation()
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              // Close on backdrop click
+              if (e.target === e.currentTarget) {
+                setShowDeleteConfirm(false)
+              }
+            }}
+          >
+            <div
+              className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl pointer-events-auto"
+              style={{ position: 'relative', zIndex: 10000 }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Delete Resonance Link?
               </h3>
@@ -359,25 +397,43 @@ export function ResonanceLinkModal({
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    setShowDeleteConfirm(false)
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
                   disabled={isLoading}
+                  style={{
+                    pointerEvents: 'auto',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                  }}
                   className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    handleDelete()
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
                   disabled={isLoading}
+                  style={{
+                    pointerEvents: 'auto',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                  }}
                   className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
                 >
                   {isLoading ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
-          </div>
-        </DialogPortal>
-      )}
-    </Dialog>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
