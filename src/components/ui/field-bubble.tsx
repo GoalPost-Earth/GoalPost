@@ -38,6 +38,7 @@ export interface FieldBubbleProps {
     animate?: 'bounce' | 'pulse' | 'float' | 'none'
   }>
   onClick?: () => void
+  onEditClick?: (e: React.MouseEvent) => void
   className?: string
   children?: ReactNode
 }
@@ -79,6 +80,7 @@ export function FieldBubble({
   animationType = 'float',
   decorators = [],
   onClick,
+  onEditClick,
   className,
   children,
 }: FieldBubbleProps) {
@@ -176,6 +178,20 @@ export function FieldBubble({
           <div className="absolute inset-4 rounded-full border border-dashed border-white/5 group-hover:border-white/10" />
           <div className="absolute inset-8 rounded-full border border-dotted border-white/5 group-hover:border-white/10" />
         </div>
+
+        {/* Edit Button */}
+        {onEditClick && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onEditClick(e)
+            }}
+            className="absolute top-3 right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+            title="Edit field"
+          >
+            <span className="material-symbols-outlined text-lg">edit</span>
+          </button>
+        )}
 
         {/* Main content */}
         <div className="text-center relative z-10 px-4 py-6 flex flex-col items-center">

@@ -5,7 +5,6 @@ import { DraggableFieldBubble } from '@/components/canvas/draggable-field-bubble
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { useCallback, useEffect, useState } from 'react'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
-import { SpaceSettingsToolbar } from '@/components/spaces'
 import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
@@ -30,22 +29,8 @@ export interface FieldsCanvasProps {
   onFieldClick?: (fieldId: string) => void
   onCreateField?: (description: string, name?: string) => void | Promise<void>
   className?: string
-  spaceId?: string
   isCreating?: boolean
   isLoading?: boolean
-  isWeSpace?: boolean
-  isOwner?: boolean
-  spaceMembers?: Array<{
-    id: string
-    role: 'ADMIN' | 'MEMBER' | 'GUEST'
-    member: {
-      __typename: string
-      id: string
-      name: string
-      email?: string
-    }
-  }>
-  spaceName?: string
   onRefetch?: () => Promise<void>
 }
 
@@ -64,15 +49,12 @@ export function FieldsCanvas({
   className,
   isCreating = false,
   isLoading = false,
-  isWeSpace = false,
-  isOwner = false,
-  spaceMembers = [],
-  spaceName = '',
-  spaceId = '',
   onRefetch,
 }: FieldsCanvasProps) {
   const { animationsEnabled } = useAnimations()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
   const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
@@ -214,6 +196,30 @@ export function FieldsCanvas({
     }
   }
 
+  const handleEditField = (e: React.MouseEvent, fieldId: string) => {
+    e.stopPropagation()
+    setEditingFieldId(fieldId)
+    setShowEditModal(true)
+  }
+
+  const handleEditFieldSuccess = async () => {
+    setShowEditModal(false)
+    setEditingFieldId(null)
+    if (onRefetch) {
+      await onRefetch()
+    }
+  }
+
+  const handleDeleteFieldSuccess = async () => {
+    setShowEditModal(false)
+    setEditingFieldId(null)
+    if (onRefetch) {
+      await onRefetch()
+    }
+  }
+
+  const editingField = fields.find((f) => f.id === editingFieldId)
+
   return (
     <>
       <GenericCanvas
@@ -244,18 +250,6 @@ export function FieldsCanvas({
               Add New Field
             </span>
           </button>
-        }
-        toolbar={
-          isWeSpace &&
-          isOwner && (
-            <SpaceSettingsToolbar
-              spaceId={spaceId}
-              spaceName={spaceName}
-              isOwner={isOwner}
-              members={spaceMembers}
-              onRefetch={onRefetch}
-            />
-          )
         }
       >
         {isLoading ? (
@@ -311,6 +305,9 @@ export function FieldsCanvas({
                     })
                   }
                   onClick={() => onFieldClick?.(field.id || field.title || '')}
+                  onEditClick={(e) =>
+                    handleEditField(e, field.id || field.title || '')
+                  }
                   className="transition-opacity duration-200"
                 />
               )
@@ -324,6 +321,20 @@ export function FieldsCanvas({
         onClose={() => setIsCreateModalOpen(false)}
         onCreateField={handleCreateField}
         isLoading={isCreating}
+      />
+
+      <CreateFieldModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingFieldId(null)
+        }}
+        isEditing={true}
+        fieldId={editingFieldId || undefined}
+        initialName={editingField?.title || ''}
+        initialDescription={editingField?.description || ''}
+        onEditSuccess={handleEditFieldSuccess}
+        onDeleteSuccess={handleDeleteFieldSuccess}
       />
     </>
   )

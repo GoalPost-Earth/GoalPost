@@ -28,6 +28,8 @@ export default function PulseDetailsPage() {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isEditLoading, setIsEditLoading] = useState(false)
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false)
 
   const { data, loading, error } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
     variables: { pulseId },
@@ -61,6 +63,7 @@ export default function PulseDetailsPage() {
 
   const handleEditSave = async () => {
     try {
+      setIsEditLoading(true)
       const updateInput: Record<string, string | undefined> = {}
       if (editTitle) updateInput.title_SET = editTitle
       if (editContent) updateInput.content_SET = editContent
@@ -93,12 +96,15 @@ export default function PulseDetailsPage() {
       setEditContent('')
     } catch (err) {
       console.error('Failed to update pulse:', err)
+    } finally {
+      setIsEditLoading(false)
     }
   }
 
   const handleDelete = async () => {
     try {
       if (!pulse) return
+      setIsDeleteLoading(true)
 
       const where = { id_EQ: pulseId }
 
@@ -118,6 +124,8 @@ export default function PulseDetailsPage() {
     } catch (err) {
       console.error('Failed to delete pulse:', err)
       setShowDeleteConfirm(false)
+    } finally {
+      setIsDeleteLoading(false)
     }
   }
 
@@ -211,15 +219,27 @@ export default function PulseDetailsPage() {
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   onClick={handleEditCancel}
-                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors"
+                  disabled={isEditLoading}
+                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditSave}
-                  className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all"
+                  disabled={isEditLoading}
+                  className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Save Changes
+                  {isEditLoading && (
+                    <span
+                      className={cn(
+                        'material-symbols-outlined text-base',
+                        animationsEnabled && 'animate-spin'
+                      )}
+                    >
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {isEditLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -243,15 +263,27 @@ export default function PulseDetailsPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors"
+                disabled={isDeleteLoading}
+                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                disabled={isDeleteLoading}
+                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Delete
+                {isDeleteLoading && (
+                  <span
+                    className={cn(
+                      'material-symbols-outlined text-base',
+                      animationsEnabled && 'animate-spin'
+                    )}
+                  >
+                    hourglass_bottom
+                  </span>
+                )}
+                {isDeleteLoading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

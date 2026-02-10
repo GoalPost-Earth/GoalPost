@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
+import { useEffect } from 'react'
 import { useCreateField } from '@/hooks'
 import { usePageContext } from '@/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
@@ -53,6 +54,14 @@ export default function MeSpaceFieldsPage() {
   const meSpace = data?.meSpaces?.[0]
   const fields = meSpace?.contexts || []
 
+  // Store space name in localStorage for nav-bar access
+  useEffect(() => {
+    if (meSpace?.name) {
+      setPageTitle(meSpace.name)
+      localStorage.setItem(`space_${meSpaceId}`, meSpace.name)
+    }
+  }, [meSpace?.name, meSpaceId, setPageTitle])
+
   const handleFieldClick = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
     if (field) {
@@ -71,7 +80,7 @@ export default function MeSpaceFieldsPage() {
     try {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
-      await createField(title, meSpaceId, 'meSpace')
+      await createField(title, meSpaceId, 'meSpace', description)
       await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
@@ -91,11 +100,13 @@ export default function MeSpaceFieldsPage() {
       )}
       <FieldsCanvas
         fields={transformedFields}
-        spaceId={meSpaceId}
         onFieldClick={handleFieldClick}
         onCreateField={handleCreateField}
         isCreating={isCreating}
         isLoading={loading}
+        onRefetch={async () => {
+          await refetch()
+        }}
       />
     </div>
   )

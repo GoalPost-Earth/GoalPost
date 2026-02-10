@@ -34,6 +34,8 @@ export default function MeSpacePage() {
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
   const [currentScale, setCurrentScale] = useState(1)
@@ -227,13 +229,13 @@ export default function MeSpacePage() {
     router.push(`/protected/spaces/me-space/${spaceId}`)
   }
 
-  const handleCreateSpace = async ({
-    name,
-    description,
-  }: {
-    name: string
-    description?: string
-  }) => {
+  const handleEditSpace = (e: React.MouseEvent, spaceId: string) => {
+    e.stopPropagation()
+    setEditingSpaceId(spaceId)
+    setShowEditModal(true)
+  }
+
+  const handleCreateSpace = async ({ name }: { name: string }) => {
     if (!name?.trim()) {
       console.error('Space name is required')
       return
@@ -252,7 +254,6 @@ export default function MeSpacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          description,
           userId: user.id,
         }),
       })
@@ -324,6 +325,7 @@ export default function MeSpacePage() {
                 })
               }
               onClick={() => handleSpaceClick(space.id)}
+              onEditClick={(e) => handleEditSpace(e, space.id)}
             />
           )
         })}
@@ -337,7 +339,23 @@ export default function MeSpacePage() {
           onCreate={handleCreateSpace}
           isLoading={isLoading}
           title="Create New MeSpace"
-          subtitle="Name your personal space and add a short description"
+          subtitle="Name your personal space"
+        />
+      )}
+      {showEditModal && editingSpaceId && (
+        <CreateSpaceModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingSpaceId(null)
+            refetchMeSpaces()
+          }}
+          isEditing={true}
+          spaceId={editingSpaceId}
+          isWeSpace={false}
+          initialName={
+            userMeSpaces.find((s) => s.id === editingSpaceId)?.name || ''
+          }
         />
       )}
     </main>

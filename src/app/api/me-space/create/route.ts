@@ -6,7 +6,6 @@ import { z } from 'zod'
 
 const createMeSpaceSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
   userId: z.string().min(1, 'User ID is required'),
 })
 
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, description, userId } = parseResult.data
+    const { name, userId } = parseResult.data
 
     initializeDB()
     const session = getSession()
@@ -56,7 +55,6 @@ export async function POST(req: NextRequest) {
         CREATE (meSpace:Space:MeSpace {
           id: apoc.create.uuid(),
           name: $name,
-          description: $description,
           visibility: 'PRIVATE',
           createdAt: datetime()
         })
@@ -65,7 +63,6 @@ export async function POST(req: NextRequest) {
         {
           userId,
           name,
-          description: description || '',
         }
       )
 

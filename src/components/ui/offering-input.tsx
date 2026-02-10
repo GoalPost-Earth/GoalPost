@@ -10,14 +10,24 @@ import { cn } from '@/lib/utils'
 interface OfferingInputProps {
   onSubmit?: (value: string, type: NodeType, name: string) => void
   isLoading?: boolean
+  isEditing?: boolean
+  initialType?: NodeType
+  initialName?: string
+  initialContent?: string
+  onDelete?: () => void
 }
 
 export function OfferingInput({
   onSubmit,
   isLoading = false,
+  isEditing = false,
+  initialType,
+  initialName,
+  initialContent,
+  onDelete,
 }: OfferingInputProps) {
-  const [input, setInput] = useState('')
-  const [showSuggestion, setShowSuggestion] = useState(false)
+  const [input, setInput] = useState(initialContent || '')
+  const [showSuggestion, setShowSuggestion] = useState(isEditing)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -99,6 +109,11 @@ export function OfferingInput({
           isOpen={true}
           onSelect={handleSelectPulseType}
           onClose={handleCloseSuggestion}
+          isEditing={isEditing}
+          initialType={initialType}
+          initialName={initialName}
+          initialContent={initialContent}
+          onDelete={onDelete}
         />
       </OfferingModal>
     )

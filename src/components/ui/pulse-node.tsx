@@ -21,6 +21,7 @@ export interface PulseNodeProps {
     | { top: string; left: string }
   animation?: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
   onClick?: () => void
+  onEditClick?: (e: React.MouseEvent) => void
   className?: string
 }
 
@@ -80,6 +81,7 @@ export function PulseNode({
   position = 'center',
   animation = 'float',
   onClick,
+  onEditClick,
   className,
 }: PulseNodeProps) {
   const { animationsEnabled } = useAnimations()
@@ -107,6 +109,20 @@ export function PulseNode({
           : undefined
       }
     >
+      {/* Edit Button */}
+      {onEditClick && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onEditClick(e)
+          }}
+          className="absolute -top-2 -right-2 p-1.5 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+          title="Edit pulse"
+        >
+          <span className="material-symbols-outlined text-sm">edit</span>
+        </button>
+      )}
+
       {/* Node Container */}
       <div
         className={cn(

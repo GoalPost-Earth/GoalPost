@@ -30,6 +30,7 @@ export interface EntityBubbleProps {
   animationDelay?: number
   className?: string
   onClick?: () => void
+  onEditClick?: (e: React.MouseEvent) => void
   children?: ReactNode
 }
 
@@ -78,6 +79,7 @@ export function EntityBubble({
   animationDelay = 0,
   className,
   onClick,
+  onEditClick,
   children,
 }: EntityBubbleProps) {
   const { animationsEnabled } = useAnimations()
@@ -262,7 +264,7 @@ export function EntityBubble({
     <div
       ref={bubbleRef}
       className={cn(
-        'relative flex items-center justify-center',
+        'group relative flex items-center justify-center overflow-visible',
         sizeClasses[size],
         shapeClasses[shape],
         'gp-glass',
@@ -289,6 +291,20 @@ export function EntityBubble({
             className="absolute inset-8 rounded-full border border-dotted border-gp-glass-border pointer-events-none"
           />
         </>
+      )}
+
+      {/* Edit Button */}
+      {onEditClick && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onEditClick(e)
+          }}
+          className="absolute top-3 right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+          title="Edit space"
+        >
+          <span className="material-symbols-outlined text-lg">edit</span>
+        </button>
       )}
 
       {/* Decorators */}

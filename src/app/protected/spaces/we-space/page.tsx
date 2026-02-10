@@ -47,6 +47,8 @@ export default function WeSpacePage() {
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [spacePositions, setSpacePositions] = useState<SpacePosition[]>([])
@@ -65,9 +67,11 @@ export default function WeSpacePage() {
   >([])
 
   // Fetch WeSpaces using GraphQL
-  const { data: weSpacesData, loading: weSpacesLoading } = useQuery(
-    GET_USER_WE_SPACES_QUERY
-  )
+  const {
+    data: weSpacesData,
+    loading: weSpacesLoading,
+    refetch: refetchWeSpaces,
+  } = useQuery(GET_USER_WE_SPACES_QUERY)
 
   // Track canvas size (aligned with GenericSpaceCanvas canvasScale=5)
   useEffect(() => {
@@ -243,13 +247,13 @@ export default function WeSpacePage() {
     router.push(`/protected/spaces/we-space/${spaceId}`)
   }
 
-  const handleCreateSpace = async ({
-    name,
-    description,
-  }: {
-    name: string
-    description?: string
-  }) => {
+  const handleEditSpace = (e: React.MouseEvent, spaceId: string) => {
+    e.stopPropagation()
+    setEditingSpaceId(spaceId)
+    setShowEditModal(true)
+  }
+
+  const handleCreateSpace = async ({ name }: { name: string }) => {
     if (!name?.trim()) {
       setError('Space name is required')
       return
@@ -269,7 +273,6 @@ export default function WeSpacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          description,
           userId: user.id,
         }),
       })
@@ -283,7 +286,7 @@ export default function WeSpacePage() {
 
       setShowCreateModal(false)
       // Refresh the spaces list after creating a new one
-      await fetchWeSpaces()
+      await refetchWeSpaces()
     } catch (err) {
       setError(
         'An error occurred while creating the space' +
@@ -356,6 +359,7 @@ export default function WeSpacePage() {
                 })
               }
               onClick={() => handleSpaceClick(space.id)}
+              onEditClick={(e) => handleEditSpace(e, space.id)}
             />
           )
         })}
@@ -373,6 +377,23 @@ export default function WeSpacePage() {
           isLoading={isLoading}
           title="Create New WeSpace"
           subtitle="Start a collaborative space with your community"
+        />
+      )}
+      {/* Edit Space Modal */}
+      {showEditModal && editingSpaceId && (
+        <CreateSpaceModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingSpaceId(null)
+            refetchWeSpaces()
+          }}
+          isEditing={true}
+          spaceId={editingSpaceId}
+          isWeSpace={true}
+          initialName={
+            weSpaces.find((s) => s.id === editingSpaceId)?.title || ''
+          }
         />
       )}
     </main>

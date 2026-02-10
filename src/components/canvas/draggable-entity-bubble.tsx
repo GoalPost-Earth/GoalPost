@@ -24,6 +24,7 @@ export function DraggableEntityBubble({
   scale = 1,
   isDragging = false,
   onClick,
+  onEditClick,
   ...bubbleProps
 }: DraggableEntityBubbleProps) {
   const { animationsEnabled } = useAnimations()
@@ -141,7 +142,7 @@ export function DraggableEntityBubble({
     <div
       ref={bubbleRef}
       className={cn(
-        'absolute',
+        'absolute overflow-visible',
         isLocalDragging
           ? 'z-50 cursor-grabbing transition-none'
           : 'cursor-grab transition-transform duration-150 ease-out'
@@ -156,7 +157,11 @@ export function DraggableEntityBubble({
       }}
       onMouseDown={handleMouseDown}
     >
-      <EntityBubble {...bubbleProps} onClick={handleClick} />
+      <EntityBubble
+        {...bubbleProps}
+        onClick={handleClick}
+        onEditClick={onEditClick}
+      />
     </div>
   )
 }

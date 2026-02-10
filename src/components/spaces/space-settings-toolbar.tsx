@@ -5,6 +5,7 @@ import { SpaceDetails } from './space-details'
 interface SpaceSettingsToolbarProps {
   spaceId: string
   spaceName: string
+  isWeSpace?: boolean
   isOwner?: boolean
   members?: Array<{
     id: string
@@ -22,6 +23,7 @@ interface SpaceSettingsToolbarProps {
 export function SpaceSettingsToolbar({
   spaceId,
   spaceName,
+  isWeSpace = false,
   isOwner = false,
   members = [],
   onRefetch,
@@ -30,6 +32,7 @@ export function SpaceSettingsToolbar({
     <SpaceDetails
       spaceId={spaceId}
       spaceName={spaceName}
+      isWeSpace={isWeSpace}
       members={members}
       isOwner={isOwner}
       onRefetch={onRefetch}
