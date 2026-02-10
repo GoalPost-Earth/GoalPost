@@ -235,13 +235,7 @@ export default function MeSpacePage() {
     setShowEditModal(true)
   }
 
-  const handleCreateSpace = async ({
-    name,
-    description,
-  }: {
-    name: string
-    description?: string
-  }) => {
+  const handleCreateSpace = async ({ name }: { name: string }) => {
     if (!name?.trim()) {
       console.error('Space name is required')
       return
@@ -260,7 +254,6 @@ export default function MeSpacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          description,
           userId: user.id,
         }),
       })
@@ -346,7 +339,7 @@ export default function MeSpacePage() {
           onCreate={handleCreateSpace}
           isLoading={isLoading}
           title="Create New MeSpace"
-          subtitle="Name your personal space and add a short description"
+          subtitle="Name your personal space"
         />
       )}
       {showEditModal && editingSpaceId && (
@@ -355,6 +348,7 @@ export default function MeSpacePage() {
           onClose={() => {
             setShowEditModal(false)
             setEditingSpaceId(null)
+            refetchMeSpaces()
           }}
           isEditing={true}
           spaceId={editingSpaceId}

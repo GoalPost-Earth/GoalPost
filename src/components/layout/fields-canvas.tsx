@@ -210,6 +210,14 @@ export function FieldsCanvas({
     }
   }
 
+  const handleDeleteFieldSuccess = async () => {
+    setShowEditModal(false)
+    setEditingFieldId(null)
+    if (onRefetch) {
+      await onRefetch()
+    }
+  }
+
   const editingField = fields.find((f) => f.id === editingFieldId)
 
   return (
@@ -324,7 +332,9 @@ export function FieldsCanvas({
         isEditing={true}
         fieldId={editingFieldId || undefined}
         initialName={editingField?.title || ''}
+        initialDescription={editingField?.description || ''}
         onEditSuccess={handleEditFieldSuccess}
+        onDeleteSuccess={handleDeleteFieldSuccess}
       />
     </>
   )

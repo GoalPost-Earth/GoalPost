@@ -11,17 +11,24 @@ export function useCreateField() {
    * @param title - The field title/description
    * @param spaceId - Optional space ID to link the field to
    * @param spaceType - The type of space ('meSpace' or 'weSpace'). Required if spaceId is provided.
+   * @param description - Optional emergent name/description for the field
    */
   const createField = async (
     title: string,
     spaceId?: string,
-    spaceType?: 'meSpace' | 'weSpace'
+    spaceType?: 'meSpace' | 'weSpace',
+    description?: string
   ) => {
     try {
       //eslint-disable-next-line @typescript-eslint/no-explicit-any
       const input: any = {
         title,
         createdAt: new Date().toISOString(),
+      }
+
+      // Add emergentName if description is provided
+      if (description?.trim()) {
+        input.emergentName = description.trim()
       }
 
       // If spaceId is provided, connect the field to that space using the appropriate relationship

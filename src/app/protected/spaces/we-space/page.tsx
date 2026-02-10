@@ -67,9 +67,11 @@ export default function WeSpacePage() {
   >([])
 
   // Fetch WeSpaces using GraphQL
-  const { data: weSpacesData, loading: weSpacesLoading } = useQuery(
-    GET_USER_WE_SPACES_QUERY
-  )
+  const {
+    data: weSpacesData,
+    loading: weSpacesLoading,
+    refetch: refetchWeSpaces,
+  } = useQuery(GET_USER_WE_SPACES_QUERY)
 
   // Track canvas size (aligned with GenericSpaceCanvas canvasScale=5)
   useEffect(() => {
@@ -251,13 +253,7 @@ export default function WeSpacePage() {
     setShowEditModal(true)
   }
 
-  const handleCreateSpace = async ({
-    name,
-    description,
-  }: {
-    name: string
-    description?: string
-  }) => {
+  const handleCreateSpace = async ({ name }: { name: string }) => {
     if (!name?.trim()) {
       setError('Space name is required')
       return
@@ -277,7 +273,6 @@ export default function WeSpacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          description,
           userId: user.id,
         }),
       })
@@ -291,7 +286,7 @@ export default function WeSpacePage() {
 
       setShowCreateModal(false)
       // Refresh the spaces list after creating a new one
-      await fetchWeSpaces()
+      await refetchWeSpaces()
     } catch (err) {
       setError(
         'An error occurred while creating the space' +
@@ -391,6 +386,7 @@ export default function WeSpacePage() {
           onClose={() => {
             setShowEditModal(false)
             setEditingSpaceId(null)
+            refetchWeSpaces()
           }}
           isEditing={true}
           spaceId={editingSpaceId}

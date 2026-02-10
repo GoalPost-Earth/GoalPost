@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'
-import { useRouter } from 'next/navigation'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
 import {
@@ -15,15 +14,11 @@ import {
 export interface CreateSpaceModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreate?: (payload: {
-    name: string
-    description?: string
-  }) => void | Promise<void>
+  onCreate?: (payload: { name: string }) => void | Promise<void>
   isLoading?: boolean
   title?: string
   subtitle?: string
   initialName?: string
-  initialDescription?: string
   isEditing?: boolean
   spaceId?: string
   isWeSpace?: boolean
@@ -35,16 +30,13 @@ export function CreateSpaceModal({
   onCreate,
   isLoading = false,
   title = 'Create New Space',
-  subtitle = 'Name your space and add a short description',
+  subtitle = 'Name your space',
   initialName = '',
-  initialDescription = '',
   isEditing = false,
   spaceId,
   isWeSpace,
 }: CreateSpaceModalProps) {
-  const router = useRouter()
   const [name, setName] = useState(initialName)
-  const [description, setDescription] = useState(initialDescription)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
@@ -66,7 +58,6 @@ export function CreateSpaceModal({
         },
       })
       onClose()
-      router.push('/protected/spaces')
     } catch (error) {
       console.error('Error deleting space:', error)
       alert('Failed to delete space')
@@ -89,9 +80,6 @@ export function CreateSpaceModal({
             where: { id_EQ: spaceId },
             update: {
               name_SET: name.trim(),
-              ...(description.trim() && {
-                description_SET: description.trim(),
-              }),
             },
           },
         })
@@ -106,7 +94,6 @@ export function CreateSpaceModal({
       // Create mode: use the provided onCreate handler
       await onCreate?.({
         name: name.trim(),
-        description: description.trim() || undefined,
       })
     }
   }
@@ -180,53 +167,8 @@ export function CreateSpaceModal({
                   </div>
                 </div>
 
-                {/* Description - for both create and edit modes */}
-                <div className="w-full relative group">
-                  <div className="absolute -inset-0.5 bg-linear-to-r from-gp-primary/30 to-gp-accent-glow/30 dark:from-gp-primary/50 dark:to-gp-accent-glow/50 rounded-2xl blur opacity-30 dark:opacity-20 group-hover:opacity-60 dark:group-hover:opacity-40" />
-                  <div className="relative">
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Add a short description (optional)"
-                      rows={4}
-                      className={cn(
-                        'w-full rounded-2xl px-6 py-4 text-base font-light resize-y',
-                        'bg-white/90 dark:bg-black/40',
-                        'border border-gp-glass-border dark:border-white/10',
-                        'text-gp-ink-strong dark:text-white',
-                        'placeholder-gp-ink-soft dark:placeholder-white/20',
-                        'focus:outline-none focus:border-gp-primary/50 focus:bg-white dark:focus:bg-black/60',
-                        'focus:shadow-[0_0_0_4px_rgba(14,165,233,0.1)]'
-                      )}
-                    />
-                    {/* Submit button overlays bottom-right of textarea on desktop */}
-                    <button
-                      type="submit"
-                      disabled={!canSubmit}
-                      onClick={handleSubmit}
-                      className={cn(
-                        'absolute right-2 bottom-2 p-2 rounded-xl',
-                        !canSubmit
-                          ? 'bg-gp-primary/5 dark:bg-gp-primary/10 text-gp-primary/40 cursor-not-allowed'
-                          : 'bg-gp-primary/10 dark:bg-gp-primary/20 text-gp-primary hover:bg-gp-primary hover:text-white'
-                      )}
-                    >
-                      {isLoading ? (
-                        <span className="material-symbols-outlined">
-                          progress_activity
-                        </span>
-                      ) : (
-                        <span className="material-symbols-outlined">
-                          arrow_upward
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Action Buttons - for create mode */}
-                {!isEditing && (
+                {/* Action Buttons */}
+                {isEditing ? (
                   <div className="w-full flex gap-3 mt-6">
                     <button
                       type="button"
@@ -255,6 +197,31 @@ export function CreateSpaceModal({
                       )}
                     >
                       {isMutationLoading ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full flex gap-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      disabled={isLoading || isMutationLoading}
+                      className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!canSubmit}
+                      className={cn(
+                        'flex-1 px-6 py-3 rounded-xl font-medium transition-colors',
+                        !canSubmit
+                          ? 'bg-gp-primary/40 text-white/60 cursor-not-allowed'
+                          : 'bg-gp-primary text-white hover:bg-gp-primary/90'
+                      )}
+                    >
+                      {isLoading || isMutationLoading
+                        ? 'Creating...'
+                        : 'Create'}
                     </button>
                   </div>
                 )}

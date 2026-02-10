@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation } from '@apollo/client/react'
-import { useRouter } from 'next/navigation'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
 import {
@@ -18,7 +17,9 @@ interface CreateFieldModalProps {
   isEditing?: boolean
   fieldId?: string
   initialName?: string
+  initialDescription?: string
   onEditSuccess?: () => void
+  onDeleteSuccess?: () => void
 }
 
 export function CreateFieldModal({
@@ -29,17 +30,26 @@ export function CreateFieldModal({
   isEditing = false,
   fieldId,
   initialName = '',
+  initialDescription = '',
   onEditSuccess,
+  onDeleteSuccess,
 }: CreateFieldModalProps) {
-  const router = useRouter()
   const [name, setName] = useState(initialName)
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState(initialDescription)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const [updateFieldContext] = useMutation(UPDATE_FIELD_CONTEXT_MUTATION)
   const [deleteFieldContext] = useMutation(DELETE_FIELD_CONTEXT_MUTATION)
 
   const [isMutationLoading, setIsMutationLoading] = useState(false)
+
+  // Sync state with props when editing a different field
+  useEffect(() => {
+    if (isEditing) {
+      setName(initialName)
+      setDescription(initialDescription)
+    }
+  }, [isEditing, initialName, initialDescription])
 
   const canSubmit = name.trim().length > 0 && !isLoading && !isMutationLoading
 
@@ -55,8 +65,9 @@ export function CreateFieldModal({
           id: fieldId,
         },
       })
+      setShowDeleteConfirm(false)
+      await onDeleteSuccess?.()
       onClose()
-      router.push('/protected/spaces')
     } catch (error) {
       console.error('Error deleting field:', error)
       alert('Failed to delete field')
