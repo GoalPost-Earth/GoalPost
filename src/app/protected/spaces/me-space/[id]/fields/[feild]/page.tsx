@@ -24,6 +24,7 @@ import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
 import {
   CREATE_RESONANCE_LINK_MUTATION,
   UPDATE_RESONANCE_LINK_MUTATION,
+  DELETE_RESONANCE_LINK_MUTATION,
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
@@ -37,18 +38,15 @@ import {
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
-
-interface PulsePosition {
-  pulseId: string
-  x: number
-  y: number
-  icon: string
-  label: string
-  title: string
-  content: string
-  type: NodeType
-  animation: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
-}
+import {
+  type PulsePosition,
+  PULSE_NODE_RADIUS,
+  RESONANCE_NODE_RADIUS,
+  seededUnitValue,
+  clampPosition,
+  resolveCollisions,
+  resolveResonanceCollisions,
+} from '@/lib/utils'
 
 // Icon mappings for pulse types
 const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
@@ -60,180 +58,6 @@ const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
 const ANIMATION_ORDER: Array<
   'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
 > = ['float', 'float-delayed', 'float-random', 'pulse-slow']
-
-const PULSE_NODE_RADIUS = 40 // Pixel radius for collision detection (size-20 = 80px)
-const RESONANCE_NODE_RADIUS = 80 // Pixel radius for resonance node collision detection (size-40 = 160px)
-
-// Deterministic pseudo-random number in [0,1) derived from an input string and salt
-function seededUnitValue(input: string, salt: number) {
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash << 5) - hash + input.charCodeAt(i) + salt
-    hash |= 0
-  }
-  const value = Math.abs(Math.sin(hash + salt) * 10000)
-  return value - Math.floor(value)
-}
-
-// Helper: Clamp position within canvas bounds
-function clampPosition(
-  x: number,
-  y: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  nodeRadius: number = PULSE_NODE_RADIUS
-): [number, number] {
-  const minX = nodeRadius
-  const maxX = canvasWidth - nodeRadius
-  const minY = nodeRadius
-  const maxY = canvasHeight - nodeRadius
-
-  return [Math.max(minX, Math.min(maxX, x)), Math.max(minY, Math.min(maxY, y))]
-}
-
-// Helper: Resolve collisions between pulse nodes with iterative separation
-function resolveCollisions(
-  positions: PulsePosition[],
-  canvasWidth: number = 6000,
-  canvasHeight: number = 6000,
-  iterations: number = 6
-): PulsePosition[] {
-  const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
-  const minDistance = PULSE_NODE_RADIUS * 2 + 10 // 90px separation (80px + 10px gap)
-  let collisionsFound = false
-
-  for (let iter = 0; iter < iterations; iter++) {
-    collisionsFound = false
-    for (let i = 0; i < result.length; i++) {
-      for (let j = i + 1; j < result.length; j++) {
-        const dx = result[j].x - result[i].x
-        const dy = result[j].y - result[i].y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-
-        if (distance < minDistance && distance > 0.1) {
-          collisionsFound = true
-          const angle = Math.atan2(dy, dx)
-          const overlap = minDistance - distance
-          const pushDistance = overlap / 2 + 1 // Increased buffer for better separation
-
-          result[i].x -= Math.cos(angle) * pushDistance
-          result[i].y -= Math.sin(angle) * pushDistance
-          result[j].x += Math.cos(angle) * pushDistance
-          result[j].y += Math.sin(angle) * pushDistance
-        }
-      }
-    }
-    // If no collisions found, we can exit early
-    if (!collisionsFound && iter > 0) break
-  }
-
-  // Clamp all positions to canvas bounds
-  return result.map((pos) => {
-    const [clampedX, clampedY] = clampPosition(
-      pos.x,
-      pos.y,
-      canvasWidth,
-      canvasHeight
-    )
-    return { ...pos, x: clampedX, y: clampedY }
-  })
-}
-
-// Helper: Resolve collisions for resonance nodes (with other resonances and pulses)
-function resolveResonanceCollisions(
-  resonancePositions: Map<string, { x: number; y: number }>,
-  pulsePositions: PulsePosition[],
-  canvasWidth: number = 6000,
-  canvasHeight: number = 6000,
-  iterations: number = 8
-): Map<string, { x: number; y: number }> {
-  const result = new Map(resonancePositions)
-  const resonanceArray = Array.from(result.entries())
-  const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 20 // 180px separation between resonances (resonances + 20px gap)
-  const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 20 // 140px separation from pulses (20px gap)
-
-  for (let iter = 0; iter < iterations; iter++) {
-    let collisionsFound = false
-
-    // Check resonance-to-resonance collisions
-    for (let i = 0; i < resonanceArray.length; i++) {
-      for (let j = i + 1; j < resonanceArray.length; j++) {
-        const [idA, posA] = resonanceArray[i]
-        const [idB, posB] = resonanceArray[j]
-
-        const dx = posB.x - posA.x
-        const dy = posB.y - posA.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-
-        if (distance < minResonanceDistance && distance > 0) {
-          collisionsFound = true
-          const overlap = minResonanceDistance - distance
-          const angle = Math.atan2(dy, dx)
-          // Amplify separation for more decisive collision resolution
-          const separationX = (Math.cos(angle) * overlap * 1.2) / 2
-          const separationY = (Math.sin(angle) * overlap * 1.2) / 2
-
-          const newPosA = {
-            x: posA.x - separationX,
-            y: posA.y - separationY,
-          }
-          const newPosB = {
-            x: posB.x + separationX,
-            y: posB.y + separationY,
-          }
-
-          result.set(idA, newPosA)
-          result.set(idB, newPosB)
-          resonanceArray[i][1] = newPosA
-          resonanceArray[j][1] = newPosB
-        }
-      }
-    }
-
-    // Check resonance-to-pulse collisions
-    for (let i = 0; i < resonanceArray.length; i++) {
-      const [id, resPos] = resonanceArray[i]
-
-      for (const pulse of pulsePositions) {
-        const dx = pulse.x - resPos.x
-        const dy = pulse.y - resPos.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-
-        if (distance < minPulseDistance && distance > 0) {
-          collisionsFound = true
-          const overlap = minPulseDistance - distance
-          const angle = Math.atan2(dy, dx)
-          // Push resonance node away from pulse (pulses don't move)
-          // Amplify for more decisive separation
-          const newPos = {
-            x: resPos.x - Math.cos(angle) * overlap * 1.2,
-            y: resPos.y - Math.sin(angle) * overlap * 1.2,
-          }
-
-          result.set(id, newPos)
-          resonanceArray[i][1] = newPos
-        }
-      }
-    }
-
-    if (!collisionsFound && iter > 0) break
-  }
-
-  // Clamp all positions to canvas bounds
-  const clamped = new Map<string, { x: number; y: number }>()
-  result.forEach((pos, id) => {
-    const [clampedX, clampedY] = clampPosition(
-      pos.x,
-      pos.y,
-      canvasWidth,
-      canvasHeight,
-      RESONANCE_NODE_RADIUS
-    )
-    clamped.set(id, { x: clampedX, y: clampedY })
-  })
-
-  return clamped
-}
 
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -323,6 +147,8 @@ function FieldDetailPage() {
 
   const [updateResonanceLink, { loading: isUpdatingResonanceLink }] =
     useMutation(UPDATE_RESONANCE_LINK_MUTATION)
+
+  const [deleteResonanceLink] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
 
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -463,6 +289,7 @@ function FieldDetailPage() {
             resolvedPositions.map((p) => [p.pulseId, { x: p.x, y: p.y }])
           )
 
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
           resonances.forEach((link: any) => {
             const sourceId = link.source?.[0]?.id
             const targetId = link.target?.[0]?.id
@@ -876,6 +703,48 @@ function FieldDetailPage() {
 
     // Open the modal
     setIsResonanceLinkModalOpen(true)
+  }
+
+  const handleResonanceLinkDelete = async () => {
+    if (!editingResonance) {
+      console.error('No resonance to delete')
+      return
+    }
+
+    console.log('🗑️ Deleting resonance link:', editingResonance.id)
+
+    try {
+      await deleteResonanceLink({
+        variables: {
+          id: editingResonance.id,
+        },
+      })
+
+      console.log('✅ Resonance link deleted')
+
+      // Clear editing state
+      setEditingResonance(null)
+      setIsResonanceLinkModalOpen(false)
+
+      // Refetch data
+      setTimeout(() => {
+        apolloClient
+          .refetchQueries({
+            include: ['GetPulsesByContext'],
+          })
+          .catch((err) => {
+            console.error(
+              'Failed to refetch GetPulsesByContext after resonance deletion:',
+              err
+            )
+          })
+      }, 1000)
+    } catch (error) {
+      console.error('❌ Error deleting resonance link:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to delete resonance link')
+    }
   }
 
   const handleOfferingSubmit = async (
@@ -1294,6 +1163,7 @@ function FieldDetailPage() {
         }}
         pulses={pulseOptions}
         onSubmit={handleResonanceLinkSubmit}
+        onDelete={editingResonance ? handleResonanceLinkDelete : undefined}
         isLoading={isCreatingResonanceLink || isUpdatingResonanceLink}
         editingResonance={editingResonance}
       />
