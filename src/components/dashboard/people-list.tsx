@@ -11,7 +11,9 @@ interface PeopleListProps {
 
 export function PeopleList({ showAll = false }: PeopleListProps) {
   const router = useRouter()
-  const { data, loading, error } = useQuery(GET_ALL_PEOPLE)
+  const { data, loading, error } = useQuery(GET_ALL_PEOPLE, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   if (error) {
     return (

@@ -44,9 +44,13 @@ export default function PulseDetailsPage() {
   const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION)
   const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION)
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION)
-  const [deleteResonancesByPulse] = useMutation(DELETE_RESONANCES_BY_PULSE_MUTATION)
+  const [deleteResonancesByPulse] = useMutation(
+    DELETE_RESONANCES_BY_PULSE_MUTATION
+  )
 
-  const pulse = data?.fieldPulses?.[0]
+  // Get the pulse from whichever concrete type array returns data
+  const pulse =
+    data?.goalPulses?.[0] || data?.resourcePulses?.[0] || data?.storyPulses?.[0]
   const context = pulse?.context?.[0]
   const space = context?.space?.[0]
   const contextPulses = context?.pulses || []
@@ -115,13 +119,25 @@ export default function PulseDetailsPage() {
 
       switch (pulse.__typename) {
         case 'GoalPulse':
-          await deleteGoalPulse({ variables: { where } })
+          await deleteGoalPulse({
+            variables: { where },
+            refetchQueries: ['GetAllPulses', 'GetPulsesByContext'],
+            awaitRefetchQueries: true,
+          })
           break
         case 'ResourcePulse':
-          await deleteResourcePulse({ variables: { where } })
+          await deleteResourcePulse({
+            variables: { where },
+            refetchQueries: ['GetAllPulses', 'GetPulsesByContext'],
+            awaitRefetchQueries: true,
+          })
           break
         case 'StoryPulse':
-          await deleteStoryPulse({ variables: { where } })
+          await deleteStoryPulse({
+            variables: { where },
+            refetchQueries: ['GetAllPulses', 'GetPulsesByContext'],
+            awaitRefetchQueries: true,
+          })
           break
       }
 

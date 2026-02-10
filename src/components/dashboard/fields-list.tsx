@@ -12,7 +12,9 @@ interface FieldsListProps {
 
 export function FieldsList({ showAll = false }: FieldsListProps) {
   const router = useRouter()
-  const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS)
+  const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   if (error) {
     return (

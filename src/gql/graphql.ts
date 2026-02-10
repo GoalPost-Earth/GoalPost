@@ -10920,197 +10920,223 @@ export type GetPulseDetailsWithContextQueryVariables = Exact<{
 
 export type GetPulseDetailsWithContextQuery = {
   __typename?: 'Query'
-  fieldPulses: Array<
-    | {
-        __typename: 'GoalPulse'
-        id: string
-        title: string
-        content: string
-        createdAt: any
-        context: Array<{
-          __typename?: 'FieldContext'
-          id: string
-          title: string
-          emergentName?: string | null
-          createdAt: any
-          pulses: Array<
-            | {
-                __typename: 'GoalPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'ResourcePulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'StoryPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-          >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
-          meSpace: Array<{
+  goalPulses: Array<{
+    __typename: 'GoalPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    status: GoalStatus
+    horizon?: GoalHorizon | null
+    intensity?: number | null
+    context: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      pulses: Array<
+        | {
+            __typename: 'GoalPulse'
+            status: GoalStatus
+            horizon?: GoalHorizon | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'ResourcePulse'
+            resourceType: string
+            availability?: number | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'StoryPulse'
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+      >
+      space: Array<
+        | {
             __typename: 'MeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-          weSpace: Array<{
+          }
+        | {
             __typename: 'WeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-        }>
-      }
-    | {
-        __typename: 'ResourcePulse'
+          }
+      >
+      meSpace: Array<{
+        __typename: 'MeSpace'
         id: string
-        title: string
-        content: string
-        createdAt: any
-        context: Array<{
-          __typename?: 'FieldContext'
-          id: string
-          title: string
-          emergentName?: string | null
-          createdAt: any
-          pulses: Array<
-            | {
-                __typename: 'GoalPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'ResourcePulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'StoryPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-          >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
-          meSpace: Array<{
+        name: string
+        visibility: SpaceVisibility
+      }>
+      weSpace: Array<{
+        __typename: 'WeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
+    }>
+  }>
+  resourcePulses: Array<{
+    __typename: 'ResourcePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    resourceType: string
+    availability?: number | null
+    intensity?: number | null
+    context: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      pulses: Array<
+        | {
+            __typename: 'GoalPulse'
+            status: GoalStatus
+            horizon?: GoalHorizon | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'ResourcePulse'
+            resourceType: string
+            availability?: number | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'StoryPulse'
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+      >
+      space: Array<
+        | {
             __typename: 'MeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-          weSpace: Array<{
+          }
+        | {
             __typename: 'WeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-        }>
-      }
-    | {
-        __typename: 'StoryPulse'
+          }
+      >
+      meSpace: Array<{
+        __typename: 'MeSpace'
         id: string
-        title: string
-        content: string
-        createdAt: any
-        context: Array<{
-          __typename?: 'FieldContext'
-          id: string
-          title: string
-          emergentName?: string | null
-          createdAt: any
-          pulses: Array<
-            | {
-                __typename: 'GoalPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'ResourcePulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-            | {
-                __typename: 'StoryPulse'
-                id: string
-                title: string
-                content: string
-                createdAt: any
-              }
-          >
-          space: Array<
-            | {
-                __typename: 'MeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-            | {
-                __typename: 'WeSpace'
-                id: string
-                name: string
-                visibility: SpaceVisibility
-              }
-          >
-          meSpace: Array<{
+        name: string
+        visibility: SpaceVisibility
+      }>
+      weSpace: Array<{
+        __typename: 'WeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
+    }>
+  }>
+  storyPulses: Array<{
+    __typename: 'StoryPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      pulses: Array<
+        | {
+            __typename: 'GoalPulse'
+            status: GoalStatus
+            horizon?: GoalHorizon | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'ResourcePulse'
+            resourceType: string
+            availability?: number | null
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'StoryPulse'
+            intensity?: number | null
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+      >
+      space: Array<
+        | {
             __typename: 'MeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-          weSpace: Array<{
+          }
+        | {
             __typename: 'WeSpace'
             id: string
             name: string
             visibility: SpaceVisibility
-          }>
-        }>
-      }
-  >
+          }
+      >
+      meSpace: Array<{
+        __typename: 'MeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
+      weSpace: Array<{
+        __typename: 'WeSpace'
+        id: string
+        name: string
+        visibility: SpaceVisibility
+      }>
+    }>
+  }>
 }
 
 export type GetPulsesByContextQueryVariables = Exact<{
@@ -20698,7 +20724,7 @@ export const GetPulseDetailsWithContextDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'fieldPulses' },
+            name: { kind: 'Name', value: 'goalPulses' },
             arguments: [
               {
                 kind: 'Argument',
@@ -20726,6 +20752,9 @@ export const GetPulseDetailsWithContextDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'horizon' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'context' },
@@ -20767,6 +20796,538 @@ export const GetPulseDetailsWithContextDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'status' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'horizon' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'resourceType',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'availability',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'meSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'pulseId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resourceType' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'availability' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pulses' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'status' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'horizon' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'resourceType',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'availability',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'meSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weSpace' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'visibility' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'pulseId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pulses' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'GoalPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'status' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'horizon' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'ResourcePulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'resourceType',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'availability',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'StoryPulse' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'intensity' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },

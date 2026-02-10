@@ -42,7 +42,9 @@ interface ActivePulsesProps {
 
 export function ActivePulses({ showAll = false }: ActivePulsesProps) {
   const router = useRouter()
-  const { data, loading, error } = useQuery(GET_ALL_PULSES)
+  const { data, loading, error } = useQuery(GET_ALL_PULSES, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   // Combine all pulse types into a single array
   const allPulses = React.useMemo(() => {
