@@ -25,6 +25,7 @@ export interface ResonanceLinksVisualizationProps {
   canvasWidth: number
   canvasHeight: number
   expandedLinks?: Set<string>
+  scale?: number
   onResonanceNodeClick?: (linkId: string) => void
   onResonanceNodeDrag?: (
     linkId: string,
@@ -32,6 +33,7 @@ export interface ResonanceLinksVisualizationProps {
     newY: number,
     connectedPulseIds: string[]
   ) => void
+  onResonanceNodeEdit?: (linkId: string) => void
 }
 
 /**
@@ -45,8 +47,10 @@ export function ResonanceLinksVisualization({
   canvasWidth,
   canvasHeight,
   expandedLinks = new Set(),
+  scale = 1,
   onResonanceNodeClick,
   onResonanceNodeDrag,
+  onResonanceNodeEdit,
 }: ResonanceLinksVisualizationProps) {
   // Create position map for O(1) lookups
   const positionMap = useMemo(
@@ -268,7 +272,9 @@ export function ResonanceLinksVisualization({
               description={link.description}
               isActive={isActive}
               canvasPosition={{ x: midX, y: midY }}
+              scale={scale}
               onClick={() => onResonanceNodeClick?.(link.id)}
+              onEdit={() => onResonanceNodeEdit?.(link.id)}
               onPositionChange={handleResonanceDrag}
             />
           )

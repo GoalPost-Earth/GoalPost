@@ -109,7 +109,12 @@ function SettingSwatch({
 export default function SettingsPage() {
   const { themeColor, setThemeColor } = useTheme()
   const { animationsEnabled, setAnimationsEnabled } = useAnimations()
-  const { aiMode, setAiMode } = usePreferences()
+  const {
+    aiMode,
+    setAiMode,
+    resonanceLinkageEnabled,
+    setResonanceLinkageEnabled,
+  } = usePreferences()
 
   const themeColors: Array<{ color: string; themeColor: ThemeColor }> = [
     { color: '#0A84FF', themeColor: 'default' },
@@ -204,9 +209,10 @@ export default function SettingsPage() {
 
               <SettingSection icon="hub" title="Coherence">
                 <SettingToggle
-                  label="Semantic Linkage"
-                  description="Auto-discover patterns between fields"
-                  active
+                  label="Resonance Linkage"
+                  description="Show patterns within fields"
+                  active={resonanceLinkageEnabled}
+                  onToggle={setResonanceLinkageEnabled}
                 />
               </SettingSection>
             </div>
