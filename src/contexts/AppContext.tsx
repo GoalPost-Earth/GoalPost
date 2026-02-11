@@ -9,14 +9,14 @@ import {
   useState,
 } from 'react'
 import { GET_LOGGED_IN_USER } from '@/app/graphql'
-import { Person } from '@/gql/graphql'
+import { GetLoggedInUserQuery } from '@/gql/graphql'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
 
 export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
-type ContextUser = UserProfile & Person
+type ContextUser = UserProfile & GetLoggedInUserQuery['people'][0]
 
 interface AppContextType {
   user?: ContextUser
@@ -82,6 +82,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const updatedUser = { ...user, ...data.people[0] } as ContextUser
       setUser(updatedUser)
       sessionStorage.setItem('user', JSON.stringify(updatedUser))
+
+      // Save me-space ID to localStorage for direct navigation
+      const meSpace = data.people[0].ownsSpaces?.find(
+        (space) => space.__typename === 'MeSpace'
+      )
+      if (meSpace?.id) {
+        localStorage.setItem('meSpaceId', meSpace.id)
+      }
     }
 
     //eslint-disable-next-line react-hooks/exhaustive-deps
