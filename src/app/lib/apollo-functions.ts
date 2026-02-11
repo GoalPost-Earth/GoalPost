@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode'
 export const ERROR_POLICY = 'all'
 
 export const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/graphql',
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_URI || '/api/graphql',
 })
 
 export const retryLink = new RetryLink({
@@ -52,7 +52,7 @@ export const authLink = setContext(async (_, { headers }) => {
   try {
     const response = await fetch('/api/auth/access-token')
     let resJson = await response.json()
-    console.log('🚀 ~ apollo-functions.ts:45 ~ resJson:', resJson)
+    console.log('🚀 ~ apollo-functions.ts:55 ~ resJson:', resJson)
 
     if (!response.ok) {
       const error = {
