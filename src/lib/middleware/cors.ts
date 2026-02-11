@@ -9,7 +9,9 @@ export const applyCorsMiddleware = (
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   const corsOptions = {
-    origin: isDevelopment ? true : process.env.CORS_ORIGIN || '*',
+    origin: isDevelopment
+      ? true
+      : process.env.CORS_ORIGIN || 'http://localhost:3000',
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: [
       'Content-Type',

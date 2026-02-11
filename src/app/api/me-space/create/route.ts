@@ -49,6 +49,26 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
 
+      // Check if user already has a MeSpace (one per person constraint)
+      const existingMeSpace = await session.run(
+        `MATCH (person:Person {id: $userId})-[:OWNS]->(ms:MeSpace)
+         RETURN ms.id as meSpaceId, ms.name as name
+         LIMIT 1`,
+        { userId }
+      )
+
+      if (existingMeSpace.records.length > 0) {
+        const existingId = existingMeSpace.records[0].get('meSpaceId')
+        const existingName = existingMeSpace.records[0].get('name')
+        return NextResponse.json(
+          {
+            error: 'User already has a MeSpace',
+            existingMeSpace: { id: existingId, name: existingName },
+          },
+          { status: 400 }
+        )
+      }
+
       // Create new MeSpace
       const result = await session.run(
         `MATCH (person:Person {id: $userId})
