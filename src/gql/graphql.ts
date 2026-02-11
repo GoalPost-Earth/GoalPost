@@ -9507,14 +9507,14 @@ export type GetLoggedInUserQuery = {
     email?: string | null
     ownsSpaces: Array<
       | {
-          __typename?: 'MeSpace'
+          __typename: 'MeSpace'
           id: string
           name: string
           visibility: SpaceVisibility
           createdAt: any
         }
       | {
-          __typename?: 'WeSpace'
+          __typename: 'WeSpace'
           id: string
           name: string
           visibility: SpaceVisibility
@@ -15668,6 +15668,54 @@ export const GetLoggedInUserDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'MeSpace' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'WeSpace' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },

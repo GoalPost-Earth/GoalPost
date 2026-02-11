@@ -11,6 +11,16 @@ export const GET_LOGGED_IN_USER = graphql(`
         name
         visibility
         createdAt
+        ... on MeSpace {
+          __typename
+          id
+          name
+        }
+        ... on WeSpace {
+          __typename
+          id
+          name
+        }
       }
     }
   }

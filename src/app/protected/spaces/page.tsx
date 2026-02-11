@@ -61,7 +61,12 @@ export default function SpacesPage() {
             variant="mespace"
             onClick={() => {
               setPageTitle('Me Space')
-              router.push('/protected/spaces/me-space')
+              const meSpaceId = localStorage.getItem('meSpaceId')
+              router.push(
+                meSpaceId
+                  ? `/protected/spaces/me-space/${meSpaceId}`
+                  : '/protected/spaces/me-space'
+              )
             }}
           />
 

@@ -54,10 +54,11 @@ export default function MeSpaceFieldsPage() {
   const meSpace = data?.meSpaces?.[0]
   const fields = meSpace?.contexts || []
 
-  // Store space name in localStorage for nav-bar access
+  // Set page title to "Me Space" since user only has one
   useEffect(() => {
+    setPageTitle('Me Space')
+    // Still store the actual space name in localStorage for other purposes
     if (meSpace?.name) {
-      setPageTitle(meSpace.name)
       localStorage.setItem(`space_${meSpaceId}`, meSpace.name)
     }
   }, [meSpace?.name, meSpaceId, setPageTitle])
