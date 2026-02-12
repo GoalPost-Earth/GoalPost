@@ -41,7 +41,10 @@ export default function SpacesPage() {
 
       {/* Dot grid pattern - fixed so it doesn't scroll */}
       <div className="fixed inset-0 gp-dot-grid opacity-30 dark:opacity-20 pointer-events-none" />
-      <div className="relative z-10 container mx-auto px-6 py-12 max-w-7xl">
+      <div
+        className="relative z-10 container mx-auto px-6 py-12 max-w-7xl"
+        data-tour="spaces-container"
+      >
         <div className="text-center mb-16 z-20">
           <h2 className="text-4xl md:text-5xl font-extralight text-gp-ink-strong dark:text-gp-ink-strong tracking-tight transition-colors">
             Where shall we begin?
@@ -54,21 +57,23 @@ export default function SpacesPage() {
         {/* Main Space Bubbles */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-24 w-full max-w-7xl">
           {/* MeSpace - Personal Space */}
-          <SpaceWrapper
-            title="MeSpace"
-            subtitle="Inner Sanctuary"
-            description="Self-reflection, personal growth, and individual purpose."
-            variant="mespace"
-            onClick={() => {
-              setPageTitle('Me Space')
-              const meSpaceId = localStorage.getItem('meSpaceId')
-              router.push(
-                meSpaceId
-                  ? `/protected/spaces/me-space/${meSpaceId}`
-                  : '/protected/spaces/me-space'
-              )
-            }}
-          />
+          <div data-tour="me-space-button">
+            <SpaceWrapper
+              title="MeSpace"
+              subtitle="Inner Sanctuary"
+              description="Self-reflection, personal growth, and individual purpose."
+              variant="mespace"
+              onClick={() => {
+                setPageTitle('Me Space')
+                const meSpaceId = localStorage.getItem('meSpaceId')
+                router.push(
+                  meSpaceId
+                    ? `/protected/spaces/me-space/${meSpaceId}`
+                    : '/protected/spaces/me-space'
+                )
+              }}
+            />
+          </div>
 
           {/* WeSpace - Community Space */}
           <SpaceWrapper

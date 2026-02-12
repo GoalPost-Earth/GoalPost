@@ -8,7 +8,8 @@ import { useApp } from './AppContext'
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const { user, setUser } = useApp()
 
-  const { data, error } = useQuery(GET_LOGGED_IN_USER, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = useQuery<any>(GET_LOGGED_IN_USER as any, {
     variables: { email: user?.email ?? '' },
     skip: !user?.email,
     fetchPolicy: 'cache-and-network',
