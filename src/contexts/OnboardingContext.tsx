@@ -100,27 +100,32 @@ export function OnboardingProvider({
       return
     }
 
-    // If no selector, it's a centered step - always ready
+    // If no selector, it's a centered step - add small delay for page stability
     if (!currentStepObj.selector) {
-      setIsElementReady(true)
-      return
-    }
-
-    // Check if element exists immediately
-    const checkElement = () => {
-      const element = document.querySelector(currentStepObj.selector!)
-      if (element) {
+      const timer = setTimeout(() => {
         setIsElementReady(true)
-        return
-      }
-      // If not found, retry in 100ms
-      const timer = setTimeout(checkElement, 100)
+      }, 500)
       return () => clearTimeout(timer)
     }
 
-    const cleanup = checkElement()
+    // Check if element exists and wait for page to stabilize
+    let timeoutId: NodeJS.Timeout
+    const checkElement = () => {
+      const element = document.querySelector(currentStepObj.selector!)
+      if (element) {
+        // Element found - wait additional 500ms for page layout to stabilize
+        timeoutId = setTimeout(() => {
+          setIsElementReady(true)
+        }, 500)
+        return
+      }
+      // If not found, retry in 100ms
+      timeoutId = setTimeout(checkElement, 100)
+    }
+
+    checkElement()
     return () => {
-      if (typeof cleanup === 'function') cleanup()
+      if (timeoutId) clearTimeout(timeoutId)
     }
   }, [isOnboarding, currentStepIndex, steps])
 
@@ -145,6 +150,9 @@ export function OnboardingProvider({
   const currentStep = steps[currentStepIndex] || null
 
   const nextStep = useCallback(() => {
+    // Reset element readiness for the next step
+    setIsElementReady(false)
+
     if (currentStepIndex < steps.length - 1) {
       // Mark current step as completed
       const completedStep = steps[currentStepIndex]?.id
@@ -229,18 +237,21 @@ export function OnboardingProvider({
   }, [currentStepIndex, steps, completedSteps, markComplete, pathname, router])
 
   const previousStep = useCallback(() => {
+    // Reset element readiness for the previous step
+    setIsElementReady(false)
+
     if (currentStepIndex > 0) {
       const previousStepObj = steps[currentStepIndex - 1]
 
       if (previousStepObj) {
         const previousPageBase = previousStepObj.page
-        
+
         // More precise route matching: check if we're exactly on the previous page
         // or on a direct child route of it (but not nested deeper)
         const isCurrentlyOnPrevPage =
           pathname === previousPageBase ||
-          (pathname?.startsWith(previousPageBase) && 
-           !pathname?.replace(previousPageBase, '').slice(1).includes('/'))
+          (pathname?.startsWith(previousPageBase) &&
+            !pathname?.replace(previousPageBase, '').slice(1).includes('/'))
 
         if (!isCurrentlyOnPrevPage) {
           // Need to navigate to previous page

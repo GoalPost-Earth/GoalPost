@@ -32,8 +32,26 @@ export function useTourOverlay(
   const observerRef = useRef<ResizeObserver | MutationObserver | null>(null)
 
   useEffect(() => {
+    // Reset positions immediately when selector changes
+    setElementPosition(null)
+    setTooltipPosition({
+      top: 0,
+      left: 0,
+      position: preferredPosition,
+    })
+
+    // For centered tooltips (no selector), calculate center position immediately
     if (!selector) {
-      setElementPosition(null)
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const centeredTop = (viewportHeight - TOOLTIP_HEIGHT) / 2
+      const centeredLeft = (viewportWidth - TOOLTIP_WIDTH) / 2
+
+      setTooltipPosition({
+        top: Math.max(0, centeredTop),
+        left: Math.max(0, centeredLeft),
+        position: 'center',
+      })
       return
     }
 
