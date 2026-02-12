@@ -31,6 +31,12 @@ export function TourOverlay() {
     return null
   }
 
+  // For steps with selectors, wait until element position is calculated
+  // For centered steps (no selector), we can render immediately
+  if (currentStep.selector && !elementPosition) {
+    return null
+  }
+
   // Get step count
   const totalSteps = 7 // Adjust based on your steps count
   const stepNumber = currentStepIndex + 1
