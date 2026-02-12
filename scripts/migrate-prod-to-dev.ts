@@ -445,10 +445,9 @@ async function transformNodeType(
   // Get nodes from production with creator relationship
   const prodNodes = await prodSession.run(
     `MATCH (n:${sourceLabel})
-     OPTIONAL MATCH (n)<-[:CREATED_BY]-(creator:Person)
+     OPTIONAL MATCH (n)-[:CREATED_BY]->(creator:Person)
      RETURN n.id as id, n.title as title, n.description as description, 
             n.createdAt as createdAt, n.modifiedAt as modifiedAt,
-            n as properties,
             creator.email as creatorEmail`,
     {}
   )
