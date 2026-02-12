@@ -1079,25 +1079,27 @@ function FieldDetailPage() {
         }}
       />
 
-      <ResonancePanel
-        isOpen={isResonancePanelOpen}
-        onClose={() => {
-          setIsResonancePanelOpen(false)
-          // Keep the resonance node expanded even when closing panel
-          // Don't reset the active state or selected resonance unless clicking another node
-        }}
-        resonance={
-          selectedResonance
-            ? {
-                id: selectedResonance.id,
-                label: selectedResonance.label,
-                description: selectedResonance.description,
-                strength: selectedResonance.confidence * 100,
-              }
-            : null
-        }
-        links={selectedResonance ? [selectedResonance] : []}
-      />
+      <div data-tour="resonance-panel">
+        <ResonancePanel
+          isOpen={isResonancePanelOpen}
+          onClose={() => {
+            setIsResonancePanelOpen(false)
+            // Keep the resonance node expanded even when closing panel
+            // Don't reset the active state or selected resonance unless clicking another node
+          }}
+          resonance={
+            selectedResonance
+              ? {
+                  id: selectedResonance.id,
+                  label: selectedResonance.label,
+                  description: selectedResonance.description,
+                  strength: selectedResonance.confidence * 100,
+                }
+              : null
+          }
+          links={selectedResonance ? [selectedResonance] : []}
+        />
+      </div>
 
       {/* Offering Modal */}
       <OfferingModal

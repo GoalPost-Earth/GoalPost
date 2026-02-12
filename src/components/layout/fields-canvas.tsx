@@ -227,9 +227,11 @@ export function FieldsCanvas({
         className={className}
         isLoading={isLoading}
         onScaleChange={setCurrentScale}
+        data-tour="fields-canvas"
         actionButton={
           <button
             onClick={() => setIsCreateModalOpen(true)}
+            data-tour="create-field-button"
             className="cursor-pointer flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 transition-all duration-300 group"
             style={{
               boxShadow: 'none',

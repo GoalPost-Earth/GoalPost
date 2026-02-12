@@ -78,7 +78,10 @@ export default function DashboardPage() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-8">
+      <main
+        className="flex-1 relative z-10 overflow-y-auto scroller p-8"
+        data-tour="dashboard-overview"
+      >
         <div className="max-w-6xl mx-auto space-y-10">
           {activeView === 'overview' && (
             <>
