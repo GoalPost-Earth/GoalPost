@@ -11,9 +11,9 @@ import OpenAI from 'openai'
 // Load environment variables
 dotenv.config({ path: path.join(process.cwd(), '.env.local') })
 
-const DEV_URI = process.env.NEO4J_URI
-const DEV_USERNAME = process.env.NEO4J_USERNAME
-const DEV_PASSWORD = process.env.NEO4J_PASSWORD
+const DEV_URI = process.env.NEO4J_URI || ''
+const DEV_USERNAME = process.env.NEO4J_USERNAME || ''
+const DEV_PASSWORD = process.env.NEO4J_PASSWORD || ''
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 if (!DEV_URI || !DEV_USERNAME || !DEV_PASSWORD) {
