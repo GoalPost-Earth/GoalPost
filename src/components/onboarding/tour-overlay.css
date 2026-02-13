@@ -25,6 +25,10 @@
     0 0 20px rgba(59, 130, 246, 0.4),
     inset 0 0 20px rgba(59, 130, 246, 0.1);
   animation: tour-glow-pulse 2s ease-in-out infinite;
+  opacity: 0;
+  animation:
+    tour-glow-pulse 2s ease-in-out infinite,
+    tour-fade-in 0.4s ease-out forwards;
 }
 
 @keyframes tour-glow-pulse {
@@ -54,6 +58,7 @@
   width: 320px;
   animation: tour-tooltip-in 0.3s ease-out;
   will-change: transform;
+  pointer-events: none;
 }
 
 @keyframes tour-tooltip-in {
@@ -83,6 +88,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  pointer-events: auto;
 }
 
 .tour-tooltip-header {
@@ -113,6 +119,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  pointer-events: auto;
 }
 
 .tour-close-button:hover {
@@ -166,6 +173,7 @@
   gap: 8px;
   align-items: center;
   margin-top: 8px;
+  pointer-events: auto;
 }
 
 .tour-button {
