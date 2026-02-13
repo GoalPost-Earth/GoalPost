@@ -86,14 +86,13 @@ export function TourOverlay() {
             <defs>
               <mask id="tour-mask">
                 <rect width="100%" height="100%" fill="white" />
-                <circle
-                  cx={elementPosition.left + elementPosition.width / 2}
-                  cy={elementPosition.top + elementPosition.height / 2}
-                  r={
-                    Math.max(elementPosition.width, elementPosition.height) /
-                      2 +
-                    12
-                  }
+                <rect
+                  x={elementPosition.left - 12}
+                  y={elementPosition.top - 12}
+                  width={elementPosition.width + 24}
+                  height={elementPosition.height + 24}
+                  rx={12}
+                  ry={12}
                   fill="black"
                 />
               </mask>

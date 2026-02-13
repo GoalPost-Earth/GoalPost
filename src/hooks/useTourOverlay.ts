@@ -14,9 +14,9 @@ export interface TooltipPosition {
   position: 'top' | 'bottom' | 'left' | 'right' | 'center'
 }
 
-const TOOLTIP_OFFSET = 16
+const TOOLTIP_OFFSET = 24
 const TOOLTIP_WIDTH = 320
-const TOOLTIP_HEIGHT = 200
+const TOOLTIP_HEIGHT = 280
 
 export function useTourOverlay(
   selector?: string,
@@ -224,8 +224,30 @@ function calculatePosition(
   }
 
   // Clamp to viewport
-  top = Math.max(0, Math.min(top, viewportHeight - TOOLTIP_HEIGHT))
-  left = Math.max(0, Math.min(left, viewportWidth - TOOLTIP_WIDTH))
+  const clampedTop = Math.max(0, Math.min(top, viewportHeight - TOOLTIP_HEIGHT))
+  const clampedLeft = Math.max(0, Math.min(left, viewportWidth - TOOLTIP_WIDTH))
 
-  return { top, left, fits }
+  // Check if clamping caused overlap with the element
+  if (position !== 'center' && (clampedTop !== top || clampedLeft !== left)) {
+    // Check for overlap
+    const tooltipRect = {
+      top: clampedTop,
+      left: clampedLeft,
+      right: clampedLeft + TOOLTIP_WIDTH,
+      bottom: clampedTop + TOOLTIP_HEIGHT,
+    }
+
+    const hasOverlap =
+      tooltipRect.left < elementRect.right &&
+      tooltipRect.right > elementRect.left &&
+      tooltipRect.top < elementRect.bottom &&
+      tooltipRect.bottom > elementRect.top
+
+    if (hasOverlap) {
+      // If there's overlap after clamping, mark as not fitting
+      fits = false
+    }
+  }
+
+  return { top: clampedTop, left: clampedLeft, fits }
 }
