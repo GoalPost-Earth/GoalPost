@@ -45,6 +45,31 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     position: 'center',
   },
   {
+    id: 'we-spaces-intro',
+    title: 'Understanding WeSpaces',
+    description:
+      'WeSpaces are collaborative spaces where you can work with your community. Explore existing WeSpaces where you are a member, owner, or admin.',
+    page: '/protected/spaces/we-space',
+    position: 'center',
+  },
+  {
+    id: 'we-space-fields',
+    title: 'WeSpace Fields',
+    description:
+      'Just like MeSpace, WeSpaces have fields for organizing collaborative content and contexts. Create and share fields with your community.',
+    page: '/protected/spaces/we-space',
+    position: 'center',
+  },
+  {
+    id: 'create-wespace',
+    title: 'Create Your Own WeSpace',
+    description:
+      'Ready to collaborate? Click here to create your own WeSpace and invite your community to join.',
+    page: '/protected/spaces/we-space',
+    position: 'top',
+    selector: '[data-tour="create-wespace-button"]',
+  },
+  {
     id: 'dashboard-intro',
     title: 'Your Dashboard',
     description:

@@ -90,6 +90,8 @@ export default function WeSpaceFieldsPage() {
       // Store the created field ID for onboarding navigation
       if (createdField?.id) {
         localStorage.setItem('lastCreatedFieldId', createdField.id)
+        // Store weSpaceId for onboarding
+        localStorage.setItem('weSpaceId', weSpaceId)
       }
 
       await refetch()

@@ -16,6 +16,7 @@ export function TourOverlay() {
     skipTour,
     currentStepIndex,
     isElementReady,
+    steps,
   } = useOnboarding()
   const { elementPosition, tooltipPosition } = useTourOverlay(
     currentStep?.selector,
@@ -26,6 +27,29 @@ export function TourOverlay() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Force recalculation when element becomes ready on page navigation
+  useEffect(() => {
+    if (
+      isOnboarding &&
+      currentStep?.selector &&
+      isElementReady &&
+      typeof window !== 'undefined'
+    ) {
+      // Add a small delay to ensure DOM is fully updated and listeners are attached
+      const timer = setTimeout(() => {
+        const el = document.querySelector(
+          currentStep.selector!
+        ) as HTMLElement | null
+        if (el) {
+          void el.offsetHeight
+          void el.getBoundingClientRect()
+          window.dispatchEvent(new Event('resize'))
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isOnboarding, isElementReady, currentStep?.selector])
 
   if (!isOnboarding || !currentStep || !mounted || !isElementReady) {
     return null
@@ -38,7 +62,7 @@ export function TourOverlay() {
   }
 
   // Get step count
-  const totalSteps = 7 // Adjust based on your steps count
+  const totalSteps = steps.length
   const stepNumber = currentStepIndex + 1
 
   return (

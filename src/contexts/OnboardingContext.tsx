@@ -26,6 +26,7 @@ interface OnboardingContextType {
   completedSteps: string[]
   isCompleted: boolean
   isElementReady: boolean
+  steps: OnboardingStep[]
   nextStep: () => void
   previousStep: () => void
   skipTour: () => void
@@ -100,34 +101,69 @@ export function OnboardingProvider({
       return
     }
 
-    // If no selector, it's a centered step - add small delay for page stability
+    // If no selector, it's a centered step - add delay for page stability and hydration
     if (!currentStepObj.selector) {
       const timer = setTimeout(() => {
-        setIsElementReady(true)
-      }, 500)
+        // Use requestAnimationFrame to ensure DOM is fully painted
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setIsElementReady(true)
+          })
+        })
+      }, 400)
       return () => clearTimeout(timer)
     }
 
     // Check if element exists and wait for page to stabilize
     let timeoutId: NodeJS.Timeout
+    let pollCount = 0
+    const maxPolls = 50 // ~5 seconds at 100ms intervals
+
     const checkElement = () => {
-      const element = document.querySelector(currentStepObj.selector!)
+      const element = document.querySelector(
+        currentStepObj.selector!
+      ) as HTMLElement | null
+
+      // Check if element exists in DOM
       if (element) {
-        // Element found - wait additional 500ms for page layout to stabilize
-        timeoutId = setTimeout(() => {
-          setIsElementReady(true)
-        }, 500)
+        // Force layout flush by reading layout properties
+        // This ensures the browser has calculated positions
+        void element.offsetHeight
+        void element.getBoundingClientRect()
+
+        // Wait for next paint cycle to ensure layout is complete
+        // Then add additional delay for useTourOverlay to calculate positions
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // Extra delay to ensure useTourOverlay hook runs and calculates positions
+            timeoutId = setTimeout(() => {
+              setIsElementReady(true)
+            }, 300)
+          })
+        })
         return
       }
+
+      pollCount++
+
+      // Give up after max polls and show anyway (fallback)
+      if (pollCount >= maxPolls) {
+        requestAnimationFrame(() => {
+          setIsElementReady(true)
+        })
+        return
+      }
+
       // If not found, retry in 100ms
       timeoutId = setTimeout(checkElement, 100)
     }
 
-    checkElement()
+    // Start polling after brief delay for navigation
+    timeoutId = setTimeout(checkElement, 300)
     return () => {
       if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [isOnboarding, currentStepIndex, steps])
+  }, [isOnboarding, currentStepIndex, steps, pathname])
 
   const markComplete = useCallback(() => {
     setIsOnboarding(false)
@@ -145,7 +181,10 @@ export function OnboardingProvider({
     } catch (error) {
       console.error('Failed to save onboarding progress:', error)
     }
-  }, [steps])
+
+    // Navigate to spaces page after completion
+    router.push('/protected/spaces')
+  }, [steps, router])
 
   const currentStep = steps[currentStepIndex] || null
 
@@ -199,8 +238,22 @@ export function OnboardingProvider({
             }
           }
 
-          // Handle field detail pages that need the fieldId
-          if (nextPageBase.includes('field-details')) {
+          // Handle we-space pages that need the weSpaceId
+          if (
+            nextPageBase.includes('/we-space') &&
+            !nextPageBase.includes('[id]')
+          ) {
+            const weSpaceId =
+              typeof window !== 'undefined'
+                ? localStorage.getItem('weSpaceId')
+                : null
+            if (weSpaceId) {
+              navigationUrl = `/protected/spaces/we-space/${weSpaceId}`
+            }
+          }
+
+          // Handle field detail pages that need the meSpaceId and fieldId
+          if (nextPageBase.includes('/fields')) {
             const meSpaceId =
               typeof window !== 'undefined'
                 ? localStorage.getItem('meSpaceId')
@@ -213,8 +266,7 @@ export function OnboardingProvider({
             if (meSpaceId && fieldId) {
               navigationUrl = `/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`
             } else if (meSpaceId) {
-              // If no field created yet, stay on me-space page
-              // This allows user to create a field first
+              // If no field created yet, go back to me-space to create one
               setCurrentStepIndex(currentStepIndex + 1)
               return
             }
@@ -268,6 +320,36 @@ export function OnboardingProvider({
                 : null
             if (meSpaceId) {
               navigationUrl = `/protected/spaces/me-space/${meSpaceId}`
+            }
+          }
+
+          // Handle we-space pages that need the weSpaceId
+          if (
+            previousPageBase.includes('/we-space') &&
+            !previousPageBase.includes('[id]')
+          ) {
+            const weSpaceId =
+              typeof window !== 'undefined'
+                ? localStorage.getItem('weSpaceId')
+                : null
+            if (weSpaceId) {
+              navigationUrl = `/protected/spaces/we-space/${weSpaceId}`
+            }
+          }
+
+          // Handle field detail pages that need the meSpaceId and fieldId
+          if (previousPageBase.includes('/fields')) {
+            const meSpaceId =
+              typeof window !== 'undefined'
+                ? localStorage.getItem('meSpaceId')
+                : null
+            const fieldId =
+              typeof window !== 'undefined'
+                ? localStorage.getItem('lastCreatedFieldId')
+                : null
+
+            if (meSpaceId && fieldId) {
+              navigationUrl = `/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`
             }
           }
 
@@ -337,6 +419,7 @@ export function OnboardingProvider({
         completedSteps,
         isCompleted,
         isElementReady,
+        steps,
         nextStep,
         previousStep,
         skipTour,
