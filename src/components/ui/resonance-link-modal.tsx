@@ -3,13 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Dialog, DialogContent, DialogPortal } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import ReactSelect from 'react-select'
 import { cn } from '@/lib/utils'
 
 export interface PulseOption {
@@ -75,6 +69,17 @@ export function ResonanceLinkModal({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+
+  // Detect dark mode on mount
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'))
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true })
+    return () => observer.disconnect()
+  }, [])
 
   // Reset form when editing resonance changes
   useEffect(() => {
@@ -88,6 +93,85 @@ export function ResonanceLinkModal({
       setSuccess(false)
     }
   }, [editingResonance])
+
+  // React-select styles
+  const selectStyles = {
+    control: (base: any) => ({
+      ...base,
+      backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+      borderColor: isDark ? '#444444' : '#e0e0e0',
+      color: isDark ? '#ffffff' : '#000000',
+      minHeight: '40px',
+      borderRadius: '8px',
+      boxShadow: 'none',
+      cursor: isLoading ? 'not-allowed' : 'pointer',
+      opacity: isLoading ? 0.5 : 1,
+      '&:hover': {
+        borderColor: isDark ? '#666666' : '#d0d0d0',
+      },
+      '&:focus-within': {
+        borderColor: '#3b82f6',
+        boxShadow: '0 0 0 1px #3b82f6',
+      },
+    }),
+    menu: (base: any) => ({
+      ...base,
+      backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+      border: `1px solid ${isDark ? '#444444' : '#e0e0e0'}`,
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      zIndex: 50,
+    }),
+    menuList: (base: any) => ({
+      ...base,
+      padding: '4px 0',
+    }),
+    option: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? '#3b82f6'
+        : state.isFocused
+          ? isDark
+            ? '#333333'
+            : '#f5f5f5'
+          : isDark
+            ? '#1a1a1a'
+            : '#ffffff',
+      color: state.isSelected ? '#ffffff' : isDark ? '#ffffff' : '#000000',
+      padding: '8px 12px',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: '#3b82f6',
+      },
+    }),
+    input: (base: any) => ({
+      ...base,
+      color: isDark ? '#ffffff' : '#000000',
+    }),
+    placeholder: (base: any) => ({
+      ...base,
+      color: isDark ? '#888888' : '#999999',
+    }),
+    singleValue: (base: any) => ({
+      ...base,
+      color: isDark ? '#ffffff' : '#000000',
+    }),
+    clearIndicator: (base: any) => ({
+      ...base,
+      color: isDark ? '#888888' : '#999999',
+      cursor: 'pointer',
+      '&:hover': {
+        color: isDark ? '#ffffff' : '#000000',
+      },
+    }),
+    dropdownIndicator: (base: any) => ({
+      ...base,
+      color: isDark ? '#888888' : '#999999',
+      '&:hover': {
+        color: isDark ? '#ffffff' : '#000000',
+      },
+    }),
+  }
 
   // Filter out selected source from target options and vice versa
   const targetOptions = useMemo(
@@ -226,22 +310,32 @@ export function ResonanceLinkModal({
                     <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
                       Source Pulse
                     </label>
-                    <Select
-                      value={sourceId}
-                      onValueChange={setSourceId}
-                      disabled={isLoading || isEditMode}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select source pulse..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sourceOptions.map((pulse) => (
-                          <SelectItem key={pulse.id} value={pulse.id}>
-                            {pulse.title || pulse.content.substring(0, 50)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      options={sourceOptions.map((pulse) => ({
+                        value: pulse.id,
+                        label: pulse.title || pulse.content.substring(0, 50),
+                      }))}
+                      value={
+                        sourceId
+                          ? {
+                              value: sourceId,
+                              label:
+                                sourceOptions.find((p) => p.id === sourceId)
+                                  ?.title ||
+                                sourceOptions
+                                  .find((p) => p.id === sourceId)
+                                  ?.content.substring(0, 50) ||
+                                '',
+                            }
+                          : null
+                      }
+                      onChange={(option) => setSourceId(option?.value || '')}
+                      isDisabled={isLoading || isEditMode}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Select source pulse..."
+                      styles={selectStyles}
+                    />
                   </div>
 
                   {/* Target Pulse */}
@@ -249,22 +343,32 @@ export function ResonanceLinkModal({
                     <label className="block text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft mb-2">
                       Target Pulse
                     </label>
-                    <Select
-                      value={targetId}
-                      onValueChange={setTargetId}
-                      disabled={isLoading || isEditMode}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select target pulse..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {targetOptions.map((pulse) => (
-                          <SelectItem key={pulse.id} value={pulse.id}>
-                            {pulse.title || pulse.content.substring(0, 50)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      options={targetOptions.map((pulse) => ({
+                        value: pulse.id,
+                        label: pulse.title || pulse.content.substring(0, 50),
+                      }))}
+                      value={
+                        targetId
+                          ? {
+                              value: targetId,
+                              label:
+                                targetOptions.find((p) => p.id === targetId)
+                                  ?.title ||
+                                targetOptions
+                                  .find((p) => p.id === targetId)
+                                  ?.content.substring(0, 50) ||
+                                '',
+                            }
+                          : null
+                      }
+                      onChange={(option) => setTargetId(option?.value || '')}
+                      isDisabled={isLoading || isEditMode}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Select target pulse..."
+                      styles={selectStyles}
+                    />
                   </div>
 
                   {/* Label */}
