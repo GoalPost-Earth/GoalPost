@@ -29,8 +29,9 @@ function LoginPage() {
       })
       const data = await res.json()
       if (data.user) {
+        // setUser handles both state update and localStorage persistence
+        // including meSpaceId extraction from ownsSpaces
         setUser(data.user)
-        localStorage.setItem('user', JSON.stringify(data.user))
       }
       if (data.token) {
         localStorage.setItem('token', data.token)

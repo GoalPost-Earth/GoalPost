@@ -122,6 +122,8 @@ export function useTourOverlay(
         observerRef.current.disconnect()
       }
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selector, preferredPosition])
 
   return { elementPosition, tooltipPosition }
