@@ -6,53 +6,35 @@ import { GET_LOGGED_IN_USER } from '@/app/graphql'
 import { useApp } from './AppContext'
 
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
-  const { user, setUser } = useApp()
+  const { user } = useApp()
 
+  // Fetch complete user data on app initialization to ensure ownsSpaces is populated
+  // This allows us to extract and store meSpaceId for direct navigation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = useQuery<any>(GET_LOGGED_IN_USER as any, {
+  const { refetch } = useQuery<any>(GET_LOGGED_IN_USER as any, {
     variables: { email: user?.email ?? '' },
-    skip: !user?.email,
-    fetchPolicy: 'cache-and-network',
-    errorPolicy: 'all', // Allow partial data even if query has errors
+    skip: !user?.email || !!localStorage.getItem('meSpaceId'),
+    fetchPolicy: 'network-only', // Fetch fresh data to ensure we have ownsSpaces
   })
 
-  // Log query errors but don't throw
+  // On app init, fetch user data if we don't have meSpaceId yet
   useEffect(() => {
-    if (error) {
-      console.error('UserDataProvider query error:', error.message)
+    if (user?.email && !localStorage.getItem('meSpaceId')) {
+      refetch().then((result) => {
+        if (result.data?.people?.[0]) {
+          const personData = result.data.people[0]
+          // Extract meSpaceId from ownsSpaces
+          const meSpace = (personData.ownsSpaces || []).find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (space: any) => space.__typename === 'MeSpace'
+          )
+          if (meSpace?.id) {
+            localStorage.setItem('meSpaceId', meSpace.id)
+          }
+        }
+      })
     }
-  }, [error])
-
-  useEffect(() => {
-    if (!user || !data?.people?.[0]) {
-      return
-    }
-
-    try {
-      const personData = data.people[0]
-
-      // Ensure email is non-null (it should always exist for logged-in users)
-      if (!personData.email) {
-        console.error('Person data missing email')
-        return
-      }
-
-      // Only merge specific fields to avoid type conflicts with partial Space objects
-      const mergedUser = {
-        ...user,
-        id: personData.id,
-        name: personData.name,
-        email: personData.email,
-      }
-
-      // Only update if the user data actually changed to prevent infinite loops
-      if (JSON.stringify(user) !== JSON.stringify(mergedUser)) {
-        setUser(mergedUser)
-      }
-    } catch (err) {
-      console.error('Error updating user data:', err)
-    }
-  }, [data?.people, user, setUser])
+  }, [user?.email, refetch])
 
   return <>{children}</>
 }

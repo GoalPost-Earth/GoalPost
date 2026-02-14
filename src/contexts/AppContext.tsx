@@ -1,20 +1,10 @@
 'use client'
 
-import { useQuery } from '@apollo/client/react'
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
-import { GET_LOGGED_IN_USER } from '@/app/graphql'
+import { ReactNode, createContext, useContext, useState } from 'react'
 import { GetLoggedInUserQuery } from '@/gql/graphql'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
-
-export type ChurchOptions = 'council' | 'governorship' | 'stream' | 'campus'
 
 type ContextUser = UserProfile & GetLoggedInUserQuery['people'][0]
 
@@ -61,7 +51,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = localStorage.getItem('user')
       if (storedUser) {
         try {
-          return JSON.parse(storedUser)
+          const parsedUser = JSON.parse(storedUser)
+          // Extract and cache meSpaceId from user object for direct navigation
+          const meSpace = (parsedUser.ownsSpaces || []).find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (space: any) => space.__typename === 'MeSpace'
+          )
+          if (meSpace?.id) {
+            localStorage.setItem('meSpaceId', meSpace.id)
+          }
+          return parsedUser
         } catch {
           return undefined
         }
@@ -70,49 +69,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return undefined
   })
 
-  // Maintenance mode state
-
-  const { data, loading } = useQuery(GET_LOGGED_IN_USER, {
-    variables: { email: user?.email ?? '' },
-    skip: !user?.email,
-  })
-
-  useEffect(() => {
-    if (data?.people[0] && user) {
-      const updatedUser = { ...user, ...data.people[0] } as ContextUser
-      setUser(updatedUser)
-      sessionStorage.setItem('user', JSON.stringify(updatedUser))
-
-      // Save me-space ID to localStorage for direct navigation
-      const meSpace = data.people[0].ownsSpaces?.find(
-        (space) => space.__typename === 'MeSpace'
-      )
-      if (meSpace?.id) {
-        localStorage.setItem('meSpaceId', meSpace.id)
-      }
-    }
-
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
-
-  useEffect(() => {
-    const sessionUser = JSON.parse(sessionStorage.getItem('user') ?? '{}')
-    if (sessionUser.id && sessionUser.level) {
-      setUser(sessionUser)
-    }
-  }, [])
-
   const setUserAndPersist = (user: ContextUser) => {
     setUser(user)
-    sessionStorage.setItem('user', JSON.stringify(user))
+    // Save to localStorage - this is our session source of truth
+    localStorage.setItem('user', JSON.stringify(user))
+    // Extract and cache meSpaceId from user object for direct navigation
+    const meSpace = (user.ownsSpaces || []).find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (space: any) => space.__typename === 'MeSpace'
+    )
+    if (meSpace?.id) {
+      localStorage.setItem('meSpaceId', meSpace.id)
+    }
   }
 
   const handleLogout = () => {
     setUser(undefined)
+    // Clear all session data
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
-    sessionStorage.removeItem('user')
+    localStorage.removeItem('meSpaceId')
     document.cookie = 'accessToken=; path=/; max-age=0'
   }
 
@@ -120,7 +97,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user,
     setUser: setUserAndPersist,
     isAuthenticated: !!user,
-    isLoading: loading,
+    isLoading: false,
     logout: handleLogout,
   }
 
