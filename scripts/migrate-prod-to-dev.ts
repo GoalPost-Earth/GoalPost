@@ -37,12 +37,18 @@ const DEV_PASSWORD = process.env.NEO4J_PASSWORD
 const PRESERVE_USER_IDS = ['person_jd', 'person_jesse']
 const PRESERVE_EMAILS = ['jd@thecodefoundry.dev', 'jesse@thecodefoundry.dev']
 
-// Users to migrate from production
+// Users to migrate from production (all 10 people)
 const MIGRATE_USER_EMAILS = [
   'robert.damashek@gmail.com',
   'jenniferdamashek@protonmail.com',
   'antonela.ambiente@gmail.com',
   'mastress@wrc.life',
+  'arfstewart@wrc.life',
+  'jaedagy@gmail.com',
+  'ruth.damashek@gmail.com',
+  'vanilee@hotmail.de',
+  'vasilije@topoteretes.com',
+  // 'null' for Will Ruddick (no email - will skip)
 ]
 
 // Seed COC WeSpace ID
@@ -482,7 +488,7 @@ async function transformNodeType(
          intensity: 5,
          sourceType: $sourceType
        })
-       CREATE (creator)-[:CREATED]->(pulse)
+       CREATE (pulse)-[:CREATED_BY]->(creator)
        CREATE (pulse)-[:IN_SPACE]->(ws)
        RETURN pulse`,
       {
@@ -662,19 +668,31 @@ async function phase8_validate(stats: MigrationStats): Promise<void> {
     const meSpaceCheck = await session.run(
       `MATCH (p:Person)-[:OWNS]->(ms:MeSpace)
        WITH p, count(ms) as meSpaceCount
-       WHERE meSpaceCount > 1
-       RETURN p.email as email, meSpaceCount`
+       WHERE p.email IN $emails
+       RETURN p.email as email, meSpaceCount, 
+              CASE WHEN meSpaceCount > 1 THEN 'FAIL' WHEN meSpaceCount = 1 THEN 'OK' ELSE 'MISSING' END as status`,
+      { emails: MIGRATE_USER_EMAILS }
     )
 
-    if (meSpaceCheck.records.length > 0) {
-      console.log('\n⚠️  WARNING: Found users with multiple MeSpaces:')
-      meSpaceCheck.records.forEach((record) => {
-        console.log(
-          `  - ${record.get('email')}: ${record.get('meSpaceCount')} MeSpaces`
-        )
-      })
-    } else {
-      console.log('✓ All users have exactly 1 MeSpace')
+    console.log('✓ MeSpace validation:')
+    let meSpaceIssues = 0
+    meSpaceCheck.records.forEach((record) => {
+      const email = record.get('email')
+      const count = record.get('meSpaceCount')
+      const status = record.get('status')
+
+      if (status === 'OK') {
+        console.log(`  - ${email}: 1 MeSpace ✓`)
+      } else {
+        console.log(`  - ${email}: ${count} MeSpaces ❌`)
+        meSpaceIssues++
+      }
+    })
+
+    if (meSpaceIssues > 0) {
+      console.log(
+        `\n⚠️  CRITICAL: ${meSpaceIssues} users have incorrect MeSpace count!`
+      )
     }
 
     // Check WeSpace membership
@@ -712,6 +730,42 @@ async function phase8_validate(stats: MigrationStats): Promise<void> {
       console.log(
         `  - ${record.get('email')}: ${record.get('pulseCount').toNumber()} pulses`
       )
+    })
+
+    // NEW: Validate that all migrated users have content properly organized
+    console.log('\n✓ Migrated users content distribution:')
+    const migratedContent = await session.run(
+      `MATCH (p:Person)-[:OWNS]->(me:MeSpace)-[:HAS_CONTEXT]->(fc:FieldContext)-[:HAS_PULSE]->(pulse)
+       WHERE p.email IN $emails
+       WITH p.email, COUNT(pulse) as pulseCount
+       RETURN p.email as email, pulseCount
+       ORDER BY pulseCount DESC`,
+      { emails: MIGRATE_USER_EMAILS }
+    )
+
+    let totalPulsesOrganized = 0
+    migratedContent.records.forEach((record) => {
+      const email = record.get('email')
+      const count = record.get('pulseCount')
+      totalPulsesOrganized += count
+      console.log(`  - ${email}: ${count} pulses`)
+    })
+    console.log(`  Total organized: ${totalPulsesOrganized} pulses`)
+
+    // Verify creator attribution
+    console.log('\n✓ Creator attribution check:')
+    const creatorCheck = await session.run(
+      `MATCH (pulse:FieldPulse)-[:CREATED_BY]->(creator:Person)
+       WHERE creator.email IN $emails
+       RETURN creator.email, COUNT(pulse) as createdCount
+       ORDER BY createdCount DESC`,
+      { emails: MIGRATE_USER_EMAILS }
+    )
+
+    creatorCheck.records.forEach((record) => {
+      const email = record.get('creator.email')
+      const count = record.get('createdCount')
+      console.log(`  - ${email}: ${count} pulses created`)
     })
 
     console.log('\n✅ Validation complete\n')
