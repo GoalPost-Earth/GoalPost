@@ -50,10 +50,15 @@ import {
 } from '@/lib/utils'
 
 // Icon mappings for pulse types
-const pulseTypeIcons: Record<'goal' | 'resource' | 'story', string> = {
+const pulseTypeIcons: Record<
+  'goal' | 'resource' | 'story' | 'care' | 'coreValue',
+  string
+> = {
   goal: 'flag',
   resource: 'diamond',
   story: 'auto_stories',
+  care: 'favorite',
+  coreValue: 'auto_awesome',
 }
 
 const ANIMATION_ORDER: Array<

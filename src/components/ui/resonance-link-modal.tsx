@@ -10,7 +10,7 @@ export interface PulseOption {
   id: string
   title: string
   content: string
-  type: 'goal' | 'resource' | 'story'
+  type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
 }
 
 interface ResonanceLinkModalProps {
