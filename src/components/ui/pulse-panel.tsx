@@ -31,6 +31,7 @@ export interface PulsePanelProps {
   isLoading: boolean
   pulse: PulseDetails | null
   onClose: () => void
+  onEdit?: () => void
 }
 
 const typeConfig: Record<
@@ -71,6 +72,7 @@ export function PulsePanel({
   isLoading,
   pulse,
   onClose,
+  onEdit,
 }: PulsePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -132,13 +134,25 @@ export function PulsePanel({
               </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
-            aria-label="Close"
-          >
-            <span className="material-symbols-outlined text-lg">close</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+                aria-label="Edit"
+                title="Edit pulse"
+              >
+                <span className="material-symbols-outlined text-lg">edit</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+              aria-label="Close"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
         </div>
         <h2 className="text-xl font-semibold text-gp-ink-strong leading-tight line-clamp-3">
           {pulse?.title || pulse?.content || 'No title available'}
@@ -169,7 +183,7 @@ export function PulsePanel({
                 <div className="relative">
                   <p
                     className={cn(
-                      'text-sm text-gp-ink-strong leading-relaxed',
+                      'text-sm text-gp-ink-strong leading-relaxed whitespace-pre-wrap',
                       !isContentExpanded && 'line-clamp-3'
                     )}
                   >
