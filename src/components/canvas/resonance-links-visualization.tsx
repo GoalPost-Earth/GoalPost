@@ -62,8 +62,8 @@ export function ResonanceLinksVisualization({
   const validLinks = useMemo(
     () =>
       resonanceLinks.filter((link) => {
-        const sourceId = link.source?.id
-        const targetId = link.target?.id
+        const sourceId = link.source?.[0]?.id
+        const targetId = link.target?.[0]?.id
         return (
           sourceId &&
           targetId &&
@@ -142,8 +142,8 @@ export function ResonanceLinksVisualization({
             // Only render if link is expanded
             if (!expandedLinks.has(link.id)) return null
 
-            const sourceId = link.source?.id
-            const targetId = link.target?.id
+            const sourceId = link.source?.[0]?.id
+            const targetId = link.target?.[0]?.id
 
             if (!sourceId || !targetId) return null
 
@@ -238,8 +238,8 @@ export function ResonanceLinksVisualization({
       {/* Render resonance nodes (interactive) */}
       <div className="absolute inset-0 pointer-events-none">
         {validLinks.map((link) => {
-          const sourceId = link.source?.id
-          const targetId = link.target?.id
+          const sourceId = link.source?.[0]?.id
+          const targetId = link.target?.[0]?.id
 
           if (!sourceId || !targetId) return null
 

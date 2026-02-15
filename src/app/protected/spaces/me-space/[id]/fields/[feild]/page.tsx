@@ -312,8 +312,8 @@ function FieldDetailPage() {
 
           //eslint-disable-next-line @typescript-eslint/no-explicit-any
           resonances.forEach((link: any) => {
-            const sourceId = link.source?.id
-            const targetId = link.target?.id
+            const sourceId = link.source?.[0]?.id
+            const targetId = link.target?.[0]?.id
             if (sourceId && targetId) {
               const sourcePos = positionMap.get(sourceId)
               const targetPos = positionMap.get(targetId)
