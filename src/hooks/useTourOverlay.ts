@@ -100,8 +100,8 @@ export function useTourOverlay(
     window.addEventListener('scroll', handleScroll, true)
     window.addEventListener('resize', handleResize)
 
-    // Retry finding element periodically for the first second
-    // This helps handle cases where element appears after initial load
+    // Retry finding element periodically for up to 10 seconds
+    // This helps handle cases where element appears after initial load or data fetching
     let retryCount = 0
     const retryInterval = setInterval(() => {
       retryCount++
@@ -109,7 +109,7 @@ export function useTourOverlay(
       if (el && !elementPosition) {
         findAndHighlightElement()
       }
-      if (retryCount >= 5) {
+      if (retryCount >= 50) {
         clearInterval(retryInterval)
       }
     }, 200)

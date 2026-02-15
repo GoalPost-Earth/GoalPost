@@ -55,6 +55,10 @@ type Person
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   email: String
+  onboardingCurrentStepIndex: Int!
+  onboardingCompletedSteps: [String!]!
+  onboardingIsCompleted: Boolean!
+  onboardingSkipped: Boolean!
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
@@ -71,6 +75,10 @@ type User @node(labels: ["Person", "User"]) {
   name: String! @customResolver(requires: "firstName lastName")
   email: String
   aiEnabled: Boolean!
+  onboardingCurrentStepIndex: Int!
+  onboardingCompletedSteps: [String!]!
+  onboardingIsCompleted: Boolean!
+  onboardingSkipped: Boolean!
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
 
