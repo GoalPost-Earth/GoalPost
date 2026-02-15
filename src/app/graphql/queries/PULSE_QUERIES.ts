@@ -33,6 +33,22 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       type: __typename
       createdAt
     }
+    carePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      type: __typename
+      createdAt
+    }
+    coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      type: __typename
+      createdAt
+    }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
     }
@@ -65,6 +81,20 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
           content
           createdAt
         }
+        ... on CarePulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on CoreValuePulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
       }
       target {
         ... on GoalPulse {
@@ -82,6 +112,20 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
           createdAt
         }
         ... on StoryPulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on CarePulse {
+          id
+          __typename
+          title
+          content
+          createdAt
+        }
+        ... on CoreValuePulse {
           id
           __typename
           title

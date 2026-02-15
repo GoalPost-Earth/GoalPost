@@ -99,6 +99,16 @@ export const GET_ALL_FIELD_CONTEXTS = graphql(`
           id
           createdAt
         }
+        ... on CarePulse {
+          __typename
+          id
+          createdAt
+        }
+        ... on CoreValuePulse {
+          __typename
+          id
+          createdAt
+        }
       }
     }
   }

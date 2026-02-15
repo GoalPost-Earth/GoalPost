@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts/animation-context'
 
-export type NodeType = 'goal' | 'resource' | 'story'
+export type NodeType = 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
 
 export interface PulseNodeProps {
   icon: string
@@ -47,6 +47,17 @@ const typeConfig: Record<
       'color-mix(in srgb, var(--gp-story, var(--gp-primary)) 55%, transparent)',
     bgClass: 'bg-white/70 dark:bg-[#262626]/60',
   },
+  care: {
+    color: 'text-gp-care',
+    shadowColor: 'color-mix(in srgb, var(--gp-care, #10b981) 55%, transparent)',
+    bgClass: 'bg-white/70 dark:bg-[#1a3a2e]/60',
+  },
+  coreValue: {
+    color: 'text-gp-coreValue',
+    shadowColor:
+      'color-mix(in srgb, var(--gp-coreValue, #8b5cf6) 55%, transparent)',
+    bgClass: 'bg-white/70 dark:bg-[#2d1f3a]/60',
+  },
 }
 
 const positionClasses: Record<string, string> = {
@@ -72,6 +83,8 @@ const typeLabels: Record<NodeType, string> = {
   goal: 'Goal',
   resource: 'Resource',
   story: 'Story',
+  care: 'Care',
+  coreValue: 'Core Value',
 }
 
 export function PulseNode({

@@ -181,9 +181,38 @@ export default function PersonProfilePage() {
             <div className="flex flex-col gap-4">
               <SectionHeader icon="group" title="Member Spaces" />
               <ProfileCard>
-                <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                  Not a member of any spaces yet
-                </p>
+                <div className="space-y-4">
+                  {person.memberOf && person.memberOf.length > 0 ? (
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    person.memberOf.map((membership: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className={
+                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
+                        }
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <div>
+                            <span className="text-[9px] uppercase font-semibold text-gp-primary mb-0.5 block">
+                              {membership.space.__typename || 'Space'} •{' '}
+                              {membership.role}
+                            </span>
+                            <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                              {membership.space.name}
+                            </h4>
+                          </div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            {membership.space.visibility}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                      Not a member of any spaces yet
+                    </p>
+                  )}
+                </div>
               </ProfileCard>
             </div>
 

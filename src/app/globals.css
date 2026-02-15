@@ -50,6 +50,8 @@
   --color-gp-goal: var(--gp-goal);
   --color-gp-resource: var(--gp-resource);
   --color-gp-story: var(--gp-story);
+  --color-gp-care: var(--gp-care);
+  --color-gp-coreValue: var(--gp-coreValue);
   --color-gp-glass-border: var(--gp-glass-border);
   --color-gp-glass-bg: var(--gp-glass-bg);
 }
@@ -100,6 +102,8 @@
   --gp-goal: #38bdf8;
   --gp-resource: #4ade80;
   --gp-story: #c084fc;
+  --gp-care: #10b981;
+  --gp-coreValue: #8b5cf6;
 }
 
 .dark {

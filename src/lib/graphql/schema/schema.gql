@@ -415,6 +415,89 @@ type StoryPulse implements FieldPulse
 }
 
 """
+Care or wellness-focused pulse.
+Multi-label: ["FieldPulse", "CarePulse"]
+"""
+type CarePulse implements FieldPulse
+  @node(labels: ["FieldPulse", "CarePulse"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  title: String!
+  content: String!
+  createdAt: DateTime!
+  intensity: Float
+  sourceType: String
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+}
+
+"""
+Core value or principle-focused pulse.
+Multi-label: ["FieldPulse", "CoreValuePulse"]
+"""
+type CoreValuePulse implements FieldPulse
+  @node(labels: ["FieldPulse", "CoreValuePulse"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  title: String!
+  content: String!
+  createdAt: DateTime!
+  intensity: Float
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+}
+
+"""
 A discovered semantic resonance link between two pulses within the same FieldContext.
 Represents an AI-identified connection with confidence scoring.
 Scoped to a single FieldContext - only pulses in the same context can resonate.

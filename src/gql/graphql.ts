@@ -98,6 +98,495 @@ export type AddSpaceMemberResponsesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulse = FieldPulse & {
+  __typename?: 'CarePulse'
+  content: Scalars['String']['output']
+  context: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
+  contextAggregate?: Maybe<CarePulseFieldContextContextAggregationSelection>
+  contextConnection: FieldPulseContextConnection
+  createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<CarePulsePersonCreatedByAggregationSelection>
+  createdByConnection: FieldPulseCreatedByConnection
+  id: Scalars['ID']['output']
+  intensity?: Maybe<Scalars['Float']['output']>
+  sourceType?: Maybe<Scalars['String']['output']>
+  title: Scalars['String']['output']
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseContextArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseContextAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseContextConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseCreatedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseCreatedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type CarePulseAggregate = {
+  __typename?: 'CarePulseAggregate'
+  count: Count
+  node: CarePulseAggregateNode
+}
+
+export type CarePulseAggregateNode = {
+  __typename?: 'CarePulseAggregateNode'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  sourceType: StringAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CarePulseAggregateSelection = {
+  __typename?: 'CarePulseAggregateSelection'
+  content: StringAggregateSelection
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  sourceType: StringAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CarePulseContextAggregateInput = {
+  AND?: InputMaybe<Array<CarePulseContextAggregateInput>>
+  NOT?: InputMaybe<CarePulseContextAggregateInput>
+  OR?: InputMaybe<Array<CarePulseContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CarePulseContextNodeAggregationWhereInput>
+}
+
+export type CarePulseContextConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type CarePulseContextCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type CarePulseContextFieldInput = {
+  connect?: InputMaybe<Array<CarePulseContextConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseContextCreateFieldInput>>
+}
+
+export type CarePulseContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CarePulseContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CarePulseContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CarePulseContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CarePulseContextUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type CarePulseContextUpdateFieldInput = {
+  connect?: InputMaybe<Array<CarePulseContextConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseContextCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
+  update?: InputMaybe<CarePulseContextUpdateConnectionInput>
+}
+
+export type CarePulseCreateInput = {
+  content: Scalars['String']['input']
+  context?: InputMaybe<CarePulseContextFieldInput>
+  createdAt: Scalars['DateTime']['input']
+  createdBy?: InputMaybe<CarePulseCreatedByFieldInput>
+  intensity?: InputMaybe<Scalars['Float']['input']>
+  sourceType?: InputMaybe<Scalars['String']['input']>
+  title: Scalars['String']['input']
+}
+
+export type CarePulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<CarePulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<CarePulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<CarePulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CarePulseCreatedByNodeAggregationWhereInput>
+}
+
+export type CarePulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type CarePulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type CarePulseCreatedByFieldInput = {
+  connect?: InputMaybe<Array<CarePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseCreatedByCreateFieldInput>>
+}
+
+export type CarePulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CarePulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CarePulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CarePulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CarePulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type CarePulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<CarePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<CarePulseCreatedByUpdateConnectionInput>
+}
+
+export type CarePulseDeleteInput = {
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+}
+
+export type CarePulseEdge = {
+  __typename?: 'CarePulseEdge'
+  cursor: Scalars['String']['output']
+  node: CarePulse
+}
+
+export type CarePulseFieldContextContextAggregationSelection = {
+  __typename?: 'CarePulseFieldContextContextAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CarePulseFieldContextContextNodeAggregateSelection>
+}
+
+export type CarePulseFieldContextContextNodeAggregateSelection = {
+  __typename?: 'CarePulseFieldContextContextNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CarePulsePersonCreatedByAggregationSelection = {
+  __typename?: 'CarePulsePersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CarePulsePersonCreatedByNodeAggregateSelection>
+}
+
+export type CarePulsePersonCreatedByNodeAggregateSelection = {
+  __typename?: 'CarePulsePersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+  passions: StringAggregateSelection
+  traits: StringAggregateSelection
+}
+
+/** Fields to sort CarePulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one CarePulseSort object. */
+export type CarePulseSort = {
+  content?: InputMaybe<SortDirection>
+  createdAt?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  intensity?: InputMaybe<SortDirection>
+  sourceType?: InputMaybe<SortDirection>
+  title?: InputMaybe<SortDirection>
+}
+
+export type CarePulseUpdateInput = {
+  content_SET?: InputMaybe<Scalars['String']['input']>
+  context?: InputMaybe<Array<CarePulseContextUpdateFieldInput>>
+  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  createdBy?: InputMaybe<Array<CarePulseCreatedByUpdateFieldInput>>
+  intensity_ADD?: InputMaybe<Scalars['Float']['input']>
+  intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
+  intensity_SET?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
+  sourceType_SET?: InputMaybe<Scalars['String']['input']>
+  title_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type CarePulseWhere = {
+  AND?: InputMaybe<Array<CarePulseWhere>>
+  NOT?: InputMaybe<CarePulseWhere>
+  OR?: InputMaybe<Array<CarePulseWhere>>
+  content_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  content_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  content_EQ?: InputMaybe<Scalars['String']['input']>
+  content_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  contextAggregate?: InputMaybe<CarePulseContextAggregateInput>
+  /** Return CarePulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CarePulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CarePulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CarePulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CarePulses where all of the related FieldContexts match this filter */
+  context_ALL?: InputMaybe<FieldContextWhere>
+  /** Return CarePulses where none of the related FieldContexts match this filter */
+  context_NONE?: InputMaybe<FieldContextWhere>
+  /** Return CarePulses where one of the related FieldContexts match this filter */
+  context_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return CarePulses where some of the related FieldContexts match this filter */
+  context_SOME?: InputMaybe<FieldContextWhere>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<CarePulseCreatedByAggregateInput>
+  /** Return CarePulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CarePulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CarePulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CarePulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CarePulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return CarePulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return CarePulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return CarePulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  intensity_EQ?: InputMaybe<Scalars['Float']['input']>
+  intensity_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_IN?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>
+  intensity_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_LTE?: InputMaybe<Scalars['Float']['input']>
+  sourceType_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  sourceType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceType_EQ?: InputMaybe<Scalars['String']['input']>
+  sourceType_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  sourceType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  title_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  title_EQ?: InputMaybe<Scalars['String']['input']>
+  title_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type CarePulsesConnection = {
+  __typename?: 'CarePulsesConnection'
+  aggregate: CarePulseAggregate
+  edges: Array<CarePulseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** Response from the chatbot containing the message and session ID. */
 export type ChatbotResponse = {
   __typename?: 'ChatbotResponse'
@@ -630,6 +1119,484 @@ export type CommunityWhere = {
   type_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
 }
 
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulse = FieldPulse & {
+  __typename?: 'CoreValuePulse'
+  content: Scalars['String']['output']
+  context: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
+  contextAggregate?: Maybe<CoreValuePulseFieldContextContextAggregationSelection>
+  contextConnection: FieldPulseContextConnection
+  createdAt: Scalars['DateTime']['output']
+  createdBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
+  createdByAggregate?: Maybe<CoreValuePulsePersonCreatedByAggregationSelection>
+  createdByConnection: FieldPulseCreatedByConnection
+  id: Scalars['ID']['output']
+  intensity?: Maybe<Scalars['Float']['output']>
+  title: Scalars['String']['output']
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseContextArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseContextAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseContextConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseContextConnectionSort>>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseCreatedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseCreatedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseCreatedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type CoreValuePulseAggregate = {
+  __typename?: 'CoreValuePulseAggregate'
+  count: Count
+  node: CoreValuePulseAggregateNode
+}
+
+export type CoreValuePulseAggregateNode = {
+  __typename?: 'CoreValuePulseAggregateNode'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CoreValuePulseAggregateSelection = {
+  __typename?: 'CoreValuePulseAggregateSelection'
+  content: StringAggregateSelection
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CoreValuePulseContextAggregateInput = {
+  AND?: InputMaybe<Array<CoreValuePulseContextAggregateInput>>
+  NOT?: InputMaybe<CoreValuePulseContextAggregateInput>
+  OR?: InputMaybe<Array<CoreValuePulseContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CoreValuePulseContextNodeAggregationWhereInput>
+}
+
+export type CoreValuePulseContextConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type CoreValuePulseContextCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type CoreValuePulseContextFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseContextConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseContextCreateFieldInput>>
+}
+
+export type CoreValuePulseContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CoreValuePulseContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CoreValuePulseContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CoreValuePulseContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CoreValuePulseContextUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
+}
+
+export type CoreValuePulseContextUpdateFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseContextConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseContextCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
+  update?: InputMaybe<CoreValuePulseContextUpdateConnectionInput>
+}
+
+export type CoreValuePulseCreateInput = {
+  content: Scalars['String']['input']
+  context?: InputMaybe<CoreValuePulseContextFieldInput>
+  createdAt: Scalars['DateTime']['input']
+  createdBy?: InputMaybe<CoreValuePulseCreatedByFieldInput>
+  intensity?: InputMaybe<Scalars['Float']['input']>
+  title: Scalars['String']['input']
+}
+
+export type CoreValuePulseCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<CoreValuePulseCreatedByAggregateInput>>
+  NOT?: InputMaybe<CoreValuePulseCreatedByAggregateInput>
+  OR?: InputMaybe<Array<CoreValuePulseCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CoreValuePulseCreatedByNodeAggregationWhereInput>
+}
+
+export type CoreValuePulseCreatedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type CoreValuePulseCreatedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type CoreValuePulseCreatedByFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseCreatedByCreateFieldInput>>
+}
+
+export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CoreValuePulseCreatedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CoreValuePulseCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CoreValuePulseCreatedByNodeAggregationWhereInput>>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CoreValuePulseCreatedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+export type CoreValuePulseCreatedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseCreatedByConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseCreatedByCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  update?: InputMaybe<CoreValuePulseCreatedByUpdateConnectionInput>
+}
+
+export type CoreValuePulseDeleteInput = {
+  context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
+  createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+}
+
+export type CoreValuePulseEdge = {
+  __typename?: 'CoreValuePulseEdge'
+  cursor: Scalars['String']['output']
+  node: CoreValuePulse
+}
+
+export type CoreValuePulseFieldContextContextAggregationSelection = {
+  __typename?: 'CoreValuePulseFieldContextContextAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CoreValuePulseFieldContextContextNodeAggregateSelection>
+}
+
+export type CoreValuePulseFieldContextContextNodeAggregateSelection = {
+  __typename?: 'CoreValuePulseFieldContextContextNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type CoreValuePulsePersonCreatedByAggregationSelection = {
+  __typename?: 'CoreValuePulsePersonCreatedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CoreValuePulsePersonCreatedByNodeAggregateSelection>
+}
+
+export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
+  __typename?: 'CoreValuePulsePersonCreatedByNodeAggregateSelection'
+  email: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  lastName: StringAggregateSelection
+  passions: StringAggregateSelection
+  traits: StringAggregateSelection
+}
+
+/** Fields to sort CoreValuePulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one CoreValuePulseSort object. */
+export type CoreValuePulseSort = {
+  content?: InputMaybe<SortDirection>
+  createdAt?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  intensity?: InputMaybe<SortDirection>
+  title?: InputMaybe<SortDirection>
+}
+
+export type CoreValuePulseUpdateInput = {
+  content_SET?: InputMaybe<Scalars['String']['input']>
+  context?: InputMaybe<Array<CoreValuePulseContextUpdateFieldInput>>
+  createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  createdBy?: InputMaybe<Array<CoreValuePulseCreatedByUpdateFieldInput>>
+  intensity_ADD?: InputMaybe<Scalars['Float']['input']>
+  intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
+  intensity_SET?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUBTRACT?: InputMaybe<Scalars['Float']['input']>
+  title_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type CoreValuePulseWhere = {
+  AND?: InputMaybe<Array<CoreValuePulseWhere>>
+  NOT?: InputMaybe<CoreValuePulseWhere>
+  OR?: InputMaybe<Array<CoreValuePulseWhere>>
+  content_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  content_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  content_EQ?: InputMaybe<Scalars['String']['input']>
+  content_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  content_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  contextAggregate?: InputMaybe<CoreValuePulseContextAggregateInput>
+  /** Return CoreValuePulses where all of the related FieldPulseContextConnections match this filter */
+  contextConnection_ALL?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CoreValuePulses where none of the related FieldPulseContextConnections match this filter */
+  contextConnection_NONE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CoreValuePulses where one of the related FieldPulseContextConnections match this filter */
+  contextConnection_SINGLE?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CoreValuePulses where some of the related FieldPulseContextConnections match this filter */
+  contextConnection_SOME?: InputMaybe<FieldPulseContextConnectionWhere>
+  /** Return CoreValuePulses where all of the related FieldContexts match this filter */
+  context_ALL?: InputMaybe<FieldContextWhere>
+  /** Return CoreValuePulses where none of the related FieldContexts match this filter */
+  context_NONE?: InputMaybe<FieldContextWhere>
+  /** Return CoreValuePulses where one of the related FieldContexts match this filter */
+  context_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return CoreValuePulses where some of the related FieldContexts match this filter */
+  context_SOME?: InputMaybe<FieldContextWhere>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdByAggregate?: InputMaybe<CoreValuePulseCreatedByAggregateInput>
+  /** Return CoreValuePulses where all of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CoreValuePulses where none of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CoreValuePulses where one of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CoreValuePulses where some of the related FieldPulseCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+  /** Return CoreValuePulses where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return CoreValuePulses where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return CoreValuePulses where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return CoreValuePulses where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  intensity_EQ?: InputMaybe<Scalars['Float']['input']>
+  intensity_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_IN?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>
+  intensity_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  title_EQ?: InputMaybe<Scalars['String']['input']>
+  title_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type CoreValuePulsesConnection = {
+  __typename?: 'CoreValuePulsesConnection'
+  aggregate: CoreValuePulseAggregate
+  edges: Array<CoreValuePulseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 export type Count = {
   __typename?: 'Count'
   nodes: Scalars['Int']['output']
@@ -647,6 +1614,12 @@ export type CreateAddSpaceMemberResponsesMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateCarePulsesMutationResponse = {
+  __typename?: 'CreateCarePulsesMutationResponse'
+  carePulses: Array<CarePulse>
+  info: CreateInfo
+}
+
 export type CreateChatbotResponsesMutationResponse = {
   __typename?: 'CreateChatbotResponsesMutationResponse'
   chatbotResponses: Array<ChatbotResponse>
@@ -656,6 +1629,12 @@ export type CreateChatbotResponsesMutationResponse = {
 export type CreateCommunitiesMutationResponse = {
   __typename?: 'CreateCommunitiesMutationResponse'
   communities: Array<Community>
+  info: CreateInfo
+}
+
+export type CreateCoreValuePulsesMutationResponse = {
+  __typename?: 'CreateCoreValuePulsesMutationResponse'
+  coreValuePulses: Array<CoreValuePulse>
   info: CreateInfo
 }
 
@@ -2168,6 +3147,8 @@ export type FieldPulseContextUpdateFieldInput = {
 }
 
 export type FieldPulseCreateInput = {
+  CarePulse?: InputMaybe<CarePulseCreateInput>
+  CoreValuePulse?: InputMaybe<CoreValuePulseCreateInput>
   GoalPulse?: InputMaybe<GoalPulseCreateInput>
   ResourcePulse?: InputMaybe<ResourcePulseCreateInput>
   StoryPulse?: InputMaybe<StoryPulseCreateInput>
@@ -2354,6 +3335,8 @@ export type FieldPulseEdge = {
 }
 
 export enum FieldPulseImplementation {
+  CarePulse = 'CarePulse',
+  CoreValuePulse = 'CoreValuePulse',
   GoalPulse = 'GoalPulse',
   ResourcePulse = 'ResourcePulse',
   StoryPulse = 'StoryPulse',
@@ -3613,8 +4596,10 @@ export type Mutation = {
    */
   cancelInvite?: Maybe<Person>
   createAddSpaceMemberResponses: CreateAddSpaceMemberResponsesMutationResponse
+  createCarePulses: CreateCarePulsesMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCommunities: CreateCommunitiesMutationResponse
+  createCoreValuePulses: CreateCoreValuePulsesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createMeSpaces: CreateMeSpacesMutationResponse
@@ -3630,8 +4615,10 @@ export type Mutation = {
   createUsers: CreateUsersMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
   deleteAddSpaceMemberResponses: DeleteInfo
+  deleteCarePulses: DeleteInfo
   deleteChatbotResponses: DeleteInfo
   deleteCommunities: DeleteInfo
+  deleteCoreValuePulses: DeleteInfo
   deleteFieldContexts: DeleteInfo
   deleteGoalPulses: DeleteInfo
   deleteMeSpaces: DeleteInfo
@@ -3663,8 +4650,10 @@ export type Mutation = {
    */
   sendMessageToChatbot?: Maybe<ChatbotResponse>
   updateAddSpaceMemberResponses: UpdateAddSpaceMemberResponsesMutationResponse
+  updateCarePulses: UpdateCarePulsesMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCommunities: UpdateCommunitiesMutationResponse
+  updateCoreValuePulses: UpdateCoreValuePulsesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateMeSpaces: UpdateMeSpacesMutationResponse
@@ -3705,12 +4694,20 @@ export type MutationCreateAddSpaceMemberResponsesArgs = {
   input: Array<AddSpaceMemberResponseCreateInput>
 }
 
+export type MutationCreateCarePulsesArgs = {
+  input: Array<CarePulseCreateInput>
+}
+
 export type MutationCreateChatbotResponsesArgs = {
   input: Array<ChatbotResponseCreateInput>
 }
 
 export type MutationCreateCommunitiesArgs = {
   input: Array<CommunityCreateInput>
+}
+
+export type MutationCreateCoreValuePulsesArgs = {
+  input: Array<CoreValuePulseCreateInput>
 }
 
 export type MutationCreateFieldContextsArgs = {
@@ -3773,6 +4770,11 @@ export type MutationDeleteAddSpaceMemberResponsesArgs = {
   where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
+export type MutationDeleteCarePulsesArgs = {
+  delete?: InputMaybe<CarePulseDeleteInput>
+  where?: InputMaybe<CarePulseWhere>
+}
+
 export type MutationDeleteChatbotResponsesArgs = {
   where?: InputMaybe<ChatbotResponseWhere>
 }
@@ -3780,6 +4782,11 @@ export type MutationDeleteChatbotResponsesArgs = {
 export type MutationDeleteCommunitiesArgs = {
   delete?: InputMaybe<CommunityDeleteInput>
   where?: InputMaybe<CommunityWhere>
+}
+
+export type MutationDeleteCoreValuePulsesArgs = {
+  delete?: InputMaybe<CoreValuePulseDeleteInput>
+  where?: InputMaybe<CoreValuePulseWhere>
 }
 
 export type MutationDeleteFieldContextsArgs = {
@@ -3867,6 +4874,11 @@ export type MutationUpdateAddSpaceMemberResponsesArgs = {
   where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
+export type MutationUpdateCarePulsesArgs = {
+  update?: InputMaybe<CarePulseUpdateInput>
+  where?: InputMaybe<CarePulseWhere>
+}
+
 export type MutationUpdateChatbotResponsesArgs = {
   update?: InputMaybe<ChatbotResponseUpdateInput>
   where?: InputMaybe<ChatbotResponseWhere>
@@ -3875,6 +4887,11 @@ export type MutationUpdateChatbotResponsesArgs = {
 export type MutationUpdateCommunitiesArgs = {
   update?: InputMaybe<CommunityUpdateInput>
   where?: InputMaybe<CommunityWhere>
+}
+
+export type MutationUpdateCoreValuePulsesArgs = {
+  update?: InputMaybe<CoreValuePulseUpdateInput>
+  where?: InputMaybe<CoreValuePulseWhere>
 }
 
 export type MutationUpdateFieldContextsArgs = {
@@ -4470,6 +5487,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "addSpaceMemberResponsesConnection" instead */
   addSpaceMemberResponsesAggregate: AddSpaceMemberResponseAggregateSelection
   addSpaceMemberResponsesConnection: AddSpaceMemberResponsesConnection
+  carePulses: Array<CarePulse>
+  /** @deprecated Please use the explicit field "aggregate" inside "carePulsesConnection" instead */
+  carePulsesAggregate: CarePulseAggregateSelection
+  carePulsesConnection: CarePulsesConnection
   chatbotResponses: Array<ChatbotResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "chatbotResponsesConnection" instead */
   chatbotResponsesAggregate: ChatbotResponseAggregateSelection
@@ -4478,6 +5499,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "communitiesConnection" instead */
   communitiesAggregate: CommunityAggregateSelection
   communitiesConnection: CommunitiesConnection
+  coreValuePulses: Array<CoreValuePulse>
+  /** @deprecated Please use the explicit field "aggregate" inside "coreValuePulsesConnection" instead */
+  coreValuePulsesAggregate: CoreValuePulseAggregateSelection
+  coreValuePulsesConnection: CoreValuePulsesConnection
   fieldContexts: Array<FieldContext>
   /** @deprecated Please use the explicit field "aggregate" inside "fieldContextsConnection" instead */
   fieldContextsAggregate: FieldContextAggregateSelection
@@ -4582,6 +5607,24 @@ export type QueryAddSpaceMemberResponsesConnectionArgs = {
   where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
+export type QueryCarePulsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CarePulseSort>>
+  where?: InputMaybe<CarePulseWhere>
+}
+
+export type QueryCarePulsesAggregateArgs = {
+  where?: InputMaybe<CarePulseWhere>
+}
+
+export type QueryCarePulsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CarePulseSort>>
+  where?: InputMaybe<CarePulseWhere>
+}
+
 export type QueryChatbotResponsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -4616,6 +5659,24 @@ export type QueryCommunitiesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CommunitySort>>
   where?: InputMaybe<CommunityWhere>
+}
+
+export type QueryCoreValuePulsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CoreValuePulseSort>>
+  where?: InputMaybe<CoreValuePulseWhere>
+}
+
+export type QueryCoreValuePulsesAggregateArgs = {
+  where?: InputMaybe<CoreValuePulseWhere>
+}
+
+export type QueryCoreValuePulsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CoreValuePulseSort>>
+  where?: InputMaybe<CoreValuePulseWhere>
 }
 
 export type QueryFieldContextsArgs = {
@@ -7964,6 +9025,12 @@ export type UpdateAddSpaceMemberResponsesMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateCarePulsesMutationResponse = {
+  __typename?: 'UpdateCarePulsesMutationResponse'
+  carePulses: Array<CarePulse>
+  info: UpdateInfo
+}
+
 export type UpdateChatbotResponsesMutationResponse = {
   __typename?: 'UpdateChatbotResponsesMutationResponse'
   chatbotResponses: Array<ChatbotResponse>
@@ -7973,6 +9040,12 @@ export type UpdateChatbotResponsesMutationResponse = {
 export type UpdateCommunitiesMutationResponse = {
   __typename?: 'UpdateCommunitiesMutationResponse'
   communities: Array<Community>
+  info: UpdateInfo
+}
+
+export type UpdateCoreValuePulsesMutationResponse = {
+  __typename?: 'UpdateCoreValuePulsesMutationResponse'
+  coreValuePulses: Array<CoreValuePulse>
   info: UpdateInfo
 }
 
@@ -9622,6 +10695,8 @@ export type CreateResonanceLinkMutation = {
       evidence?: string | null
       createdAt: any
       source: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -9645,6 +10720,8 @@ export type CreateResonanceLinkMutation = {
           }
       >
       target: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -9695,11 +10772,15 @@ export type UpdateResonanceLinkMutation = {
       evidence?: string | null
       createdAt: any
       source: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | { __typename?: 'GoalPulse'; id: string; title: string }
         | { __typename?: 'ResourcePulse'; id: string; title: string }
         | { __typename?: 'StoryPulse'; id: string; title: string }
       >
       target: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | { __typename?: 'GoalPulse'; id: string; title: string }
         | { __typename?: 'ResourcePulse'; id: string; title: string }
         | { __typename?: 'StoryPulse'; id: string; title: string }
@@ -10030,6 +11111,20 @@ export type GetFieldContextDetailsQuery = {
     createdAt: any
     pulses: Array<
       | {
+          __typename: 'CarePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
+      | {
           __typename: 'GoalPulse'
           id: string
           title: string
@@ -10229,6 +11324,8 @@ export type GetResonanceLinksByContextQuery = {
       evidence?: string | null
       createdAt: any
       source: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -10252,6 +11349,8 @@ export type GetResonanceLinksByContextQuery = {
           }
       >
       target: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -10328,6 +11427,8 @@ export type GetGraphPeopleQuery = {
             __typename?: 'FieldContext'
             id: string
             pulses: Array<
+              | { __typename?: 'CarePulse'; id: string }
+              | { __typename?: 'CoreValuePulse'; id: string }
               | { __typename?: 'GoalPulse'; id: string }
               | { __typename?: 'ResourcePulse'; id: string }
               | { __typename?: 'StoryPulse'; id: string }
@@ -10341,6 +11442,8 @@ export type GetGraphPeopleQuery = {
             __typename?: 'FieldContext'
             id: string
             pulses: Array<
+              | { __typename?: 'CarePulse'; id: string }
+              | { __typename?: 'CoreValuePulse'; id: string }
               | { __typename?: 'GoalPulse'; id: string }
               | { __typename?: 'ResourcePulse'; id: string }
               | { __typename?: 'StoryPulse'; id: string }
@@ -10440,6 +11543,8 @@ export type GetPersonDetailsQuery = {
             id: string
             title: string
             pulses: Array<
+              | { __typename?: 'CarePulse' }
+              | { __typename?: 'CoreValuePulse' }
               | {
                   __typename?: 'GoalPulse'
                   id: string
@@ -10496,6 +11601,8 @@ export type GetPersonDetailsQuery = {
             id: string
             title: string
             pulses: Array<
+              | { __typename?: 'CarePulse' }
+              | { __typename?: 'CoreValuePulse' }
               | {
                   __typename?: 'GoalPulse'
                   id: string
@@ -10565,6 +11672,8 @@ export type GetSpaceDetailsQuery = {
       emergentName?: string | null
       createdAt: any
       pulses: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -10624,6 +11733,8 @@ export type GetSpaceDetailsQuery = {
       emergentName?: string | null
       createdAt: any
       pulses: Array<
+        | { __typename?: 'CarePulse' }
+        | { __typename?: 'CoreValuePulse' }
         | {
             __typename?: 'GoalPulse'
             id: string
@@ -10685,6 +11796,8 @@ export type GetResonanceDetailsQuery = {
     label: string
     description?: string | null
     source: Array<
+      | { __typename?: 'CarePulse' }
+      | { __typename?: 'CoreValuePulse' }
       | {
           __typename?: 'GoalPulse'
           id: string
@@ -10731,6 +11844,8 @@ export type GetResonanceDetailsQuery = {
         }
     >
     target: Array<
+      | { __typename?: 'CarePulse' }
+      | { __typename?: 'CoreValuePulse' }
       | {
           __typename?: 'GoalPulse'
           id: string
@@ -10791,6 +11906,8 @@ export type GetResonanceWithLinksQuery = {
     label: string
     description?: string | null
     source: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -10837,6 +11954,8 @@ export type GetResonanceWithLinksQuery = {
         }
     >
     target: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -10910,6 +12029,8 @@ export type GetLinksForResonanceQuery = {
     description?: string | null
     confidence: number
     source: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -10935,6 +12056,8 @@ export type GetLinksForResonanceQuery = {
         }
     >
     target: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -10975,6 +12098,8 @@ export type GetAllResonanceLinksWithResonancesQuery = {
     description?: string | null
     confidence: number
     source: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -11000,6 +12125,8 @@ export type GetAllResonanceLinksWithResonancesQuery = {
         }
     >
     target: Array<
+      | { __typename: 'CarePulse' }
+      | { __typename: 'CoreValuePulse' }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -11112,6 +12239,8 @@ export type GetAllFieldContextsQuery = {
       visibility: SpaceVisibility
     }>
     pulses: Array<
+      | { __typename?: 'CarePulse' }
+      | { __typename?: 'CoreValuePulse' }
       | { __typename: 'GoalPulse'; id: string; createdAt: any }
       | { __typename: 'ResourcePulse'; id: string; createdAt: any }
       | { __typename: 'StoryPulse'; id: string; createdAt: any }
@@ -11262,6 +12391,18 @@ export type GetPersonProfileQuery = {
             title: string
             pulses: Array<
               | {
+                  __typename?: 'CarePulse'
+                  id: string
+                  title: string
+                  intensity?: number | null
+                }
+              | {
+                  __typename?: 'CoreValuePulse'
+                  id: string
+                  title: string
+                  intensity?: number | null
+                }
+              | {
                   __typename?: 'GoalPulse'
                   id: string
                   title: string
@@ -11294,6 +12435,18 @@ export type GetPersonProfileQuery = {
             title: string
             pulses: Array<
               | {
+                  __typename?: 'CarePulse'
+                  id: string
+                  title: string
+                  intensity?: number | null
+                }
+              | {
+                  __typename?: 'CoreValuePulse'
+                  id: string
+                  title: string
+                  intensity?: number | null
+                }
+              | {
                   __typename?: 'GoalPulse'
                   id: string
                   title: string
@@ -11315,6 +12468,27 @@ export type GetPersonProfileQuery = {
           }>
         }
     >
+    memberOf: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      space: Array<
+        | {
+            __typename?: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+        | {
+            __typename?: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+      >
+    }>
   }>
 }
 
@@ -11449,6 +12623,20 @@ export type GetPulseDetailsWithContextQuery = {
       createdAt: any
       pulses: Array<
         | {
+            __typename: 'CarePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'CoreValuePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
             __typename: 'GoalPulse'
             status: GoalStatus
             horizon?: GoalHorizon | null
@@ -11522,6 +12710,20 @@ export type GetPulseDetailsWithContextQuery = {
       createdAt: any
       pulses: Array<
         | {
+            __typename: 'CarePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'CoreValuePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
             __typename: 'GoalPulse'
             status: GoalStatus
             horizon?: GoalHorizon | null
@@ -11592,6 +12794,20 @@ export type GetPulseDetailsWithContextQuery = {
       emergentName?: string | null
       createdAt: any
       pulses: Array<
+        | {
+            __typename: 'CarePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
+        | {
+            __typename: 'CoreValuePulse'
+            id: string
+            title: string
+            content: string
+            createdAt: any
+          }
         | {
             __typename: 'GoalPulse'
             status: GoalStatus
@@ -11681,6 +12897,22 @@ export type GetPulsesByContextQuery = {
     createdAt: any
     type: 'StoryPulse'
   }>
+  carePulses: Array<{
+    __typename: 'CarePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    type: 'CarePulse'
+  }>
+  coreValuePulses: Array<{
+    __typename: 'CoreValuePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    type: 'CoreValuePulse'
+  }>
   fieldContexts: Array<{ __typename?: 'FieldContext'; id: string }>
   resonanceLinks: Array<{
     __typename?: 'ResonanceLink'
@@ -11691,6 +12923,20 @@ export type GetPulsesByContextQuery = {
     evidence?: string | null
     createdAt: any
     source: Array<
+      | {
+          __typename: 'CarePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -11714,6 +12960,20 @@ export type GetPulsesByContextQuery = {
         }
     >
     target: Array<
+      | {
+          __typename: 'CarePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+          createdAt: any
+        }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -11904,6 +13164,18 @@ export type GetSpaceDetailsCompleteQuery = {
           createdAt: any
           pulses: Array<
             | {
+                __typename: 'CarePulse'
+                id: string
+                title: string
+                intensity?: number | null
+              }
+            | {
+                __typename: 'CoreValuePulse'
+                id: string
+                title: string
+                intensity?: number | null
+              }
+            | {
                 __typename: 'GoalPulse'
                 id: string
                 title: string
@@ -11959,6 +13231,18 @@ export type GetSpaceDetailsCompleteQuery = {
           emergentName?: string | null
           createdAt: any
           pulses: Array<
+            | {
+                __typename: 'CarePulse'
+                id: string
+                title: string
+                intensity?: number | null
+              }
+            | {
+                __typename: 'CoreValuePulse'
+                id: string
+                title: string
+                intensity?: number | null
+              }
             | {
                 __typename: 'GoalPulse'
                 id: string
@@ -20991,6 +22275,82 @@ export const GetPersonProfileDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'memberOf' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'space' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'MeSpace' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'visibility' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'InlineFragment',
+                              typeCondition: {
+                                kind: 'NamedType',
+                                name: { kind: 'Name', value: 'WeSpace' },
+                              },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'visibility' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'createdAt' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -22188,6 +23548,100 @@ export const GetPulsesByContextDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'carePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  alias: { kind: 'Name', value: 'type' },
+                  name: { kind: 'Name', value: '__typename' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValuePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  alias: { kind: 'Name', value: 'type' },
+                  name: { kind: 'Name', value: '__typename' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'fieldContexts' },
             arguments: [
               {
@@ -22357,6 +23811,70 @@ export const GetPulsesByContextDocument = {
                           ],
                         },
                       },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CarePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -22435,6 +23953,70 @@ export const GetPulsesByContextDocument = {
                         typeCondition: {
                           kind: 'NamedType',
                           name: { kind: 'Name', value: 'StoryPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CarePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
                         },
                         selectionSet: {
                           kind: 'SelectionSet',

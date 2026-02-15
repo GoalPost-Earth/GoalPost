@@ -225,7 +225,7 @@ function FieldDetailPage() {
         id: string
         title: string
         content: string
-        type: 'goal' | 'resource' | 'story'
+        type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
       }>
     ) => {
       // Matches GenericPulseCanvas with canvasScale=5
@@ -290,6 +290,20 @@ function FieldDetailPage() {
           title: p.title || '',
           content: p.content || '',
           type: 'story' as const,
+        })),
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(data.carePulses || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || '',
+          content: p.content || '',
+          type: 'care' as const,
+        })),
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(data.coreValuePulses || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || '',
+          content: p.content || '',
+          type: 'coreValue' as const,
         })),
       ]
 

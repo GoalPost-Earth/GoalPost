@@ -64,6 +64,24 @@ export const GET_PERSON_PROFILE = graphql(`
           }
         }
       }
+      memberOf {
+        id
+        role
+        space {
+          ... on MeSpace {
+            id
+            name
+            visibility
+            createdAt
+          }
+          ... on WeSpace {
+            id
+            name
+            visibility
+            createdAt
+          }
+        }
+      }
     }
   }
 `)
