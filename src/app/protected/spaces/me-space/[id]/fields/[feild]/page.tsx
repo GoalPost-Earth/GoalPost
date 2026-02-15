@@ -1097,6 +1097,18 @@ function FieldDetailPage() {
         onClose={() => {
           setIsPulsePanelOpen(false)
         }}
+        onEdit={() => {
+          if (pulseDetails) {
+            handleEditPulse(
+              new MouseEvent('click') as unknown as React.MouseEvent,
+              pulseDetails.id,
+              pulseDetails.type,
+              pulseDetails.title || '',
+              pulseDetails.title || '',
+              pulseDetails.content
+            )
+          }
+        }}
       />
 
       <div data-tour="resonance-panel">
