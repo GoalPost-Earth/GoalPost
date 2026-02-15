@@ -28,8 +28,9 @@ export interface PulsePosition {
 }
 
 // Node radii for collision detection
-export const PULSE_NODE_RADIUS = 40 // Pixel radius for collision detection (size-20 = 80px)
-export const RESONANCE_NODE_RADIUS = 80 // Pixel radius for resonance node collision detection (size-40 = 160px)
+// These represent the actual visual bounding box of nodes including title and content
+export const PULSE_NODE_RADIUS = 80 // Pixel radius for pulse nodes (~128px width + title/content area)
+export const RESONANCE_NODE_RADIUS = 100 // Pixel radius for resonance nodes (visual indicator circles)
 
 /**
  * Generates a deterministic pseudo-random number in [0,1) derived from an input string and salt.
@@ -66,7 +67,7 @@ export function clampPosition(
 
 /**
  * Resolves collisions between pulse nodes using iterative separation.
- * Nodes push each other apart when they overlap.
+ * Nodes push each other apart when they get close, before significant overlap occurs.
  */
 export function resolveCollisions(
   positions: PulsePosition[],
@@ -75,7 +76,9 @@ export function resolveCollisions(
   iterations: number = 6
 ): PulsePosition[] {
   const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
-  const minDistance = PULSE_NODE_RADIUS * 2 + 10 // 90px separation (80px + 10px gap)
+  // Minimum distance includes both node radii plus a gap for early detection
+  // Trigger collision when nodes approach each other, not after they overlap
+  const minDistance = PULSE_NODE_RADIUS * 2 + 40 // Early detection gap (40px buffer)
   let collisionsFound = false
 
   for (let iter = 0; iter < iterations; iter++) {
@@ -90,7 +93,7 @@ export function resolveCollisions(
           collisionsFound = true
           const angle = Math.atan2(dy, dx)
           const overlap = minDistance - distance
-          const pushDistance = overlap / 2 + 1 // Increased buffer for better separation
+          const pushDistance = overlap / 2 + 2 // Increased buffer for better separation
 
           result[i].x -= Math.cos(angle) * pushDistance
           result[i].y -= Math.sin(angle) * pushDistance
@@ -119,6 +122,7 @@ export function resolveCollisions(
  * Resolves collisions for resonance nodes with other resonances and pulses.
  * Two-phase collision detection: resonance-to-resonance, then resonance-to-pulse.
  * Resonance nodes move to avoid collisions, pulse nodes remain stationary.
+ * Collision detection is proactive - detects when nodes approach each other.
  */
 export function resolveResonanceCollisions(
   resonancePositions: Map<string, { x: number; y: number }>,
@@ -129,8 +133,9 @@ export function resolveResonanceCollisions(
 ): Map<string, { x: number; y: number }> {
   const result = new Map(resonancePositions)
   const resonanceArray = Array.from(result.entries())
-  const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 20 // 180px separation between resonances (resonances + 20px gap)
-  const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 20 // 140px separation from pulses (20px gap)
+  // Minimum distances account for actual visual sizes and trigger early
+  const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 60 // Early detection gap between resonance nodes (60px buffer)
+  const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 50 // Early detection gap from pulse nodes (50px buffer)
 
   for (let iter = 0; iter < iterations; iter++) {
     let collisionsFound = false
@@ -213,4 +218,99 @@ export function resolveResonanceCollisions(
   })
 
   return clamped
+}
+
+/**
+ * Resolves bidirectional collisions between resonance nodes and pulses.
+ * Both resonance and pulse nodes move apart when they collide.
+ * Returns updated positions for both pulse and resonance nodes.
+ */
+export function resolveBidirectionalResonancePulseCollisions(
+  resonancePositions: Map<string, { x: number; y: number }>,
+  pulsePositions: PulsePosition[],
+  canvasWidth: number = 6000,
+  canvasHeight: number = 6000,
+  iterations: number = 8
+): {
+  pulsePositions: PulsePosition[]
+  resonancePositions: Map<string, { x: number; y: number }>
+} {
+  const pulsesResult = JSON.parse(
+    JSON.stringify(pulsePositions)
+  ) as PulsePosition[]
+  const resonanceResult = new Map(resonancePositions)
+  const resonanceArray = Array.from(resonanceResult.entries())
+
+  const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 50 // Early detection gap from pulse nodes (50px buffer)
+
+  for (let iter = 0; iter < iterations; iter++) {
+    let collisionsFound = false
+
+    // Check resonance-to-pulse collisions (bidirectional)
+    for (let i = 0; i < resonanceArray.length; i++) {
+      const [resId, resPos] = resonanceArray[i]
+
+      for (let j = 0; j < pulsesResult.length; j++) {
+        const pulse = pulsesResult[j]
+        const dx = pulse.x - resPos.x
+        const dy = pulse.y - resPos.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minPulseDistance && distance > 0) {
+          collisionsFound = true
+          const overlap = minPulseDistance - distance
+          const angle = Math.atan2(dy, dx)
+          const pushDistance = overlap / 2 + 1
+
+          // Push resonance node away from pulse
+          const newResPos = {
+            x: resPos.x - Math.cos(angle) * pushDistance * 1.2,
+            y: resPos.y - Math.sin(angle) * pushDistance * 1.2,
+          }
+
+          // Push pulse node away from resonance
+          const newPulsePos = {
+            ...pulse,
+            x: pulse.x + Math.cos(angle) * pushDistance,
+            y: pulse.y + Math.sin(angle) * pushDistance,
+          }
+
+          resonanceResult.set(resId, newResPos)
+          resonanceArray[i][1] = newResPos
+          pulsesResult[j] = newPulsePos
+        }
+      }
+    }
+
+    if (!collisionsFound && iter > 0) break
+  }
+
+  // Clamp all positions to canvas bounds
+  const clampedPulses = pulsesResult.map((pos) => {
+    const [clampedX, clampedY] = clampPosition(
+      pos.x,
+      pos.y,
+      canvasWidth,
+      canvasHeight,
+      PULSE_NODE_RADIUS
+    )
+    return { ...pos, x: clampedX, y: clampedY }
+  })
+
+  const clampedResonance = new Map<string, { x: number; y: number }>()
+  resonanceResult.forEach((pos, id) => {
+    const [clampedX, clampedY] = clampPosition(
+      pos.x,
+      pos.y,
+      canvasWidth,
+      canvasHeight,
+      RESONANCE_NODE_RADIUS
+    )
+    clampedResonance.set(id, { x: clampedX, y: clampedY })
+  })
+
+  return {
+    pulsePositions: clampedPulses,
+    resonancePositions: clampedResonance,
+  }
 }

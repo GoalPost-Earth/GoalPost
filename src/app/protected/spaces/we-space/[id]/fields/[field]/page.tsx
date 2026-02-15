@@ -46,6 +46,7 @@ import {
   clampPosition,
   resolveCollisions,
   resolveResonanceCollisions,
+  resolveBidirectionalResonancePulseCollisions,
 } from '@/lib/utils'
 
 // Icon mappings for pulse types
@@ -410,13 +411,26 @@ function FieldDetailPage() {
         const updated = prev.map((p) =>
           p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
         )
-        // Apply collision resolution
+        // Apply collision resolution between pulses
         const resolved = resolveCollisions(
           updated,
           canvasSize.width,
           canvasSize.height
         )
         pulsePositionsRef.current = resolved
+
+        // Also resolve collisions between pulses and resonance nodes
+        if (resonanceNodePositionsRef.current.size > 0) {
+          const resolvedResonancePositions = resolveResonanceCollisions(
+            resonanceNodePositionsRef.current,
+            resolved,
+            canvasSize.width,
+            canvasSize.height
+          )
+          resonanceNodePositionsRef.current = resolvedResonancePositions
+          setResonanceNodePositions(resolvedResonancePositions)
+        }
+
         return resolved
       })
     },
@@ -505,13 +519,9 @@ function FieldDetailPage() {
     [activeResonanceNodeId, resonanceLinks]
   )
 
-  // Handle resonance node drag - resonance node moves independently
+  // Handle resonance node drag - both resonance and pulse nodes move when colliding
   const handleResonanceNodeDrag = useCallback(
     (linkId: string, newX: number, newY: number) => {
-      // Update the resonance node's position
-      // Pulses are never moved - they stay in place
-      // Connection lines update in real-time as resonance node moves
-
       // Clamp position to canvas bounds
       const [clampedX, clampedY] = clampPosition(
         newX,
@@ -522,23 +532,31 @@ function FieldDetailPage() {
       )
 
       // Update this resonance node's position
-      const updatedPositions = new Map(resonanceNodePositionsRef.current)
-      updatedPositions.set(linkId, { x: clampedX, y: clampedY })
+      const updatedResonancePositions = new Map(
+        resonanceNodePositionsRef.current
+      )
+      updatedResonancePositions.set(linkId, { x: clampedX, y: clampedY })
 
-      // Apply collision detection with other resonances and pulses
-      const resolvedPositions = resolveResonanceCollisions(
-        updatedPositions,
+      // Apply bidirectional collision detection with pulses
+      // Both resonance and pulse nodes move apart when they collide
+      const {
+        pulsePositions: resolvedPulses,
+        resonancePositions: resolvedResonances,
+      } = resolveBidirectionalResonancePulseCollisions(
+        updatedResonancePositions,
         pulsePositionsRef.current,
         canvasSize.width,
         canvasSize.height,
         5 // More iterations for responsive drag collision detection
       )
 
-      // Update ref immediately (synchronous)
-      resonanceNodePositionsRef.current = resolvedPositions
+      // Update refs immediately (synchronous)
+      pulsePositionsRef.current = resolvedPulses
+      resonanceNodePositionsRef.current = resolvedResonances
 
-      // Update state (asynchronous)
-      setResonanceNodePositions(resolvedPositions)
+      // Update state (asynchronous for both pulse and resonance positions)
+      setPulsePositions(resolvedPulses)
+      setResonanceNodePositions(resolvedResonances)
     },
     [canvasSize]
   )

@@ -133,12 +133,17 @@ export function DraggableResonanceNode({
 
   // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
   useEffect(() => {
-    if (isLocalDragging) return
-
     const { x, y } = canvasPosition
     const current = displayPositionRef.current
 
     if (Math.abs(current.x - x) < 0.1 && Math.abs(current.y - y) < 0.1) {
+      return
+    }
+
+    // During dragging, update display position immediately to reflect collision resolution
+    if (isLocalDragging) {
+      displayPositionRef.current = { x, y }
+      setDisplayPosition({ x, y })
       return
     }
 
