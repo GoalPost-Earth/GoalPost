@@ -622,8 +622,8 @@ function FieldDetailPage() {
     description: string
     sourceId: string
     targetId: string
-    sourceType: 'goal' | 'resource' | 'story'
-    targetType: 'goal' | 'resource' | 'story'
+    sourceType: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
+    targetType: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
     resonanceId?: string
   }) => {
     const isEdit = !!data.resonanceId

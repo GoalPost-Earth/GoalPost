@@ -156,6 +156,16 @@ const typeConfig: Record<
     label: 'Story',
     color: 'text-gp-story',
   },
+  care: {
+    icon: 'favorite',
+    label: 'Care',
+    color: 'text-gp-care',
+  },
+  coreValue: {
+    icon: 'auto_awesome',
+    label: 'Core Value',
+    color: 'text-gp-coreValue',
+  },
 }
 
 export function PulseTypeSuggestion({

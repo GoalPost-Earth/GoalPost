@@ -14,8 +14,8 @@ export interface ResonanceLink {
   label: string
   confidence: number
   description?: string
-  source: { id: string }
-  target: { id: string }
+  source: Array<{ id: string; __typename?: string }>
+  target: Array<{ id: string; __typename?: string }>
 }
 
 export interface ResonanceLinksVisualizationProps {
