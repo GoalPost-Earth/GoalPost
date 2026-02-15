@@ -36,6 +36,14 @@ type Person
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
                 }
               }
+              # Person is a member of a space where current user is also a member
+              {
+                memberOf_SOME: {
+                  space_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              }
             ]
           }
         }
@@ -193,7 +201,7 @@ type SpaceMembership @node(labels: ["SpaceMembership"]) {
   id: ID! @id
   role: SpaceRole!
   addedAt: DateTime!
-  member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  member: [Person!]! @relationship(type: "IS_MEMBER", direction: IN)
   space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 
