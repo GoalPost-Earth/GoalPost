@@ -4,8 +4,13 @@ export const GET_PERSON = graphql(`
   query getPerson($id: ID!) {
     people(where: { id_EQ: $id }) {
       id
+      firstName
+      lastName
       name
       email
+      traits
+      passions
+      fieldsOfCare
       ownsSpaces {
         id
         name
@@ -24,6 +29,9 @@ export const GET_PERSON_PROFILE = graphql(`
       lastName
       name
       email
+      traits
+      passions
+      fieldsOfCare
       ownsSpaces {
         ... on MeSpace {
           id
@@ -66,6 +74,9 @@ export const GET_ALL_PEOPLE = graphql(`
       id
       name
       email
+      traits
+      passions
+      fieldsOfCare
       ownsSpaces {
         id
         name
@@ -94,6 +105,9 @@ export const GET_PEOPLE_AND_THEIR_RESOURCES = graphql(`
       name
       id
       email
+      traits
+      passions
+      fieldsOfCare
       ownsSpaces {
         name
         id
@@ -108,6 +122,9 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
       id
       name
       email
+      traits
+      passions
+      fieldsOfCare
       ownsSpaces {
         id
         name
@@ -122,6 +139,9 @@ export const GET_USER_BY_ID = graphql(`
       id
       name
       email
+      traits
+      passions
+      fieldsOfCare
     }
   }
 `)

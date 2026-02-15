@@ -2,16 +2,21 @@
  * Manual resonance discovery API
  * POST /api/resonance/discover
  *
- * Manually triggers resonance discovery across pulses
- * Can be run without the background workers
+ * Manually triggers resonance discovery
+ * Can be space-scoped or global
+ * Creates SUGGESTIONS (ResonanceSuggestion nodes) instead of direct links
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { discoverGlobalResonances } from '@/lib/resonance/discovery/pattern-detector'
+import {
+  discoverGlobalResonances,
+  discoverResonancesForSpace,
+} from '@/lib/resonance/discovery/pattern-detector'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import { initGraph } from '@/modules/graph'
 
 interface DiscoverRequest {
+  spaceId?: string // Optional: if provided, discovery is scoped to this space only
   lastRunTimestamp?: string // Optional: only discover for pulses created after this timestamp
 }
 
@@ -31,9 +36,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { lastRunTimestamp } = body
+    const { spaceId, lastRunTimestamp } = body
 
     console.log('[Resonance Discovery API] Starting discovery workflow...', {
+      scope: spaceId ? `space: ${spaceId}` : 'global',
       lastRunTimestamp: lastRunTimestamp || 'all pulses',
     })
 
@@ -80,18 +86,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Run resonance discovery
-    console.log('[Resonance Discovery API] Discovering resonance patterns...')
-    const resonances = await discoverGlobalResonances(lastRunTimestamp)
+    console.log(
+      '[Resonance Discovery API] Discovering resonance suggestions...'
+    )
+
+    const resonances = spaceId
+      ? await discoverResonancesForSpace(spaceId, lastRunTimestamp)
+      : await discoverGlobalResonances(lastRunTimestamp)
 
     console.log(
-      `[Resonance Discovery API] Discovered ${resonances.length} resonance patterns`
+      `[Resonance Discovery API] Discovered ${resonances.length} resonance suggestions`
     )
 
     return NextResponse.json({
       success: true,
-      resonancesDiscovered: resonances.length,
-      resonances: resonances.map((r) => ({
-        linkId: r.linkId,
+      message: 'Resonance discovery completed (suggestions created)',
+      scope: spaceId || 'global',
+      suggestionsCreated: resonances.length,
+      suggestions: resonances.map((r) => ({
+        id: r.linkId,
         contextId: r.contextId,
         label: r.label,
         description: r.description,
@@ -100,6 +113,7 @@ export async function POST(request: NextRequest) {
         confidence: r.confidence,
         evidence: r.evidence,
       })),
+      timestamp: new Date().toISOString(),
     })
   } catch (error: unknown) {
     console.error('[Resonance Discovery API] Error:', error)
@@ -108,6 +122,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error:
           error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     )

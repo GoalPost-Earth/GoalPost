@@ -1,4 +1,10 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm ci --include=optional --legacy-peer-deps"
+  "installCommand": "npm ci --include=optional --legacy-peer-deps",
+  "crons": [
+    {
+      "path": "/api/cron/discover-resonances",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }

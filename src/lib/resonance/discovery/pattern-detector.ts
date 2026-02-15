@@ -153,22 +153,25 @@ Be specific and evidence-based. Only create connections where the resonance is c
 }
 
 /**
- * Create ResonanceLink nodes in the database (context-scoped)
- * Each link represents one semantic connection between two pulses
+ * Create ResonanceSuggestion nodes in the database (not direct links)
+ * Each suggestion represents one proposed semantic connection between two pulses
+ * Users must accept/decline these suggestions before they become ResonanceLink nodes
  */
-async function createResonanceLinksInDatabase(
+async function createResonanceSuggestionsInDatabase(
   contextId: string,
+  spaceId: string,
   pattern: z.infer<typeof ResonancePatternSchema>
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  const links: DiscoveredResonance[] = []
+  const suggestions: DiscoveredResonance[] = []
 
-  // Create individual ResonanceLink nodes for each pulse connection
+  // Create individual ResonanceSuggestion nodes for each pulse connection
   for (const connection of pattern.pulseConnections) {
-    // Create ResonanceLink and connect it to the context, source, and target
-    const linkResult = await graph.query<{ linkId: string }>(
+    // Create ResonanceSuggestion and connect it to the space, context, source, and target
+    const suggestionResult = await graph.query<{ suggestionId: string }>(
       `
+      MATCH (space:WeSpace {id: $spaceId})
       MATCH (context:FieldContext {id: $contextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
@@ -176,25 +179,29 @@ async function createResonanceLinksInDatabase(
       // Ensure source and target are in the same context
       MATCH (context)-[:HAS_PULSE]->(source)
       MATCH (context)-[:HAS_PULSE]->(target)
+      MATCH (space)-[:HAS_CONTEXT]->(context)
       
-      // Create ResonanceLink
-      CREATE (link:ResonanceLink {
-        id: 'rl_' + randomUUID(),
+      // Create ResonanceSuggestion
+      CREATE (suggestion:ResonanceSuggestion {
+        id: 'rs_' + randomUUID(),
         label: $label,
         description: $description,
         confidence: $confidence,
         evidence: $evidence,
+        status: 'pending',
         createdAt: datetime()
       })
       
-      // Connect to context and pulses
-      CREATE (context)-[:HAS_RESONANCE]->(link)
-      CREATE (link)-[:SOURCE]->(source)
-      CREATE (link)-[:TARGET]->(target)
+      // Connect to space, context and pulses
+      CREATE (space)-[:HAS_SUGGESTION]->(suggestion)
+      CREATE (context)-[:HAS_SUGGESTION]->(suggestion)
+      CREATE (suggestion)-[:SOURCE]->(source)
+      CREATE (suggestion)-[:TARGET]->(target)
       
-      RETURN link.id as linkId
+      RETURN suggestion.id as suggestionId
     `,
       {
+        spaceId,
         contextId,
         sourcePulseId: connection.sourcePulseId,
         targetPulseId: connection.targetPulseId,
@@ -205,14 +212,14 @@ async function createResonanceLinksInDatabase(
       }
     )
 
-    const linkId =
-      Array.isArray(linkResult) && linkResult.length > 0
-        ? linkResult[0].linkId
+    const suggestionId =
+      Array.isArray(suggestionResult) && suggestionResult.length > 0
+        ? suggestionResult[0].suggestionId
         : null
 
-    if (linkId) {
-      links.push({
-        linkId,
+    if (suggestionId) {
+      suggestions.push({
+        linkId: suggestionId, // Using linkId field for backwards compatibility
         contextId,
         label: pattern.label,
         description: pattern.description,
@@ -224,14 +231,16 @@ async function createResonanceLinksInDatabase(
     }
   }
 
-  return links
+  return suggestions
 }
 
 /**
  * Discover resonances for a specific pulse WITHIN ITS CONTEXT
+ * Creates ResonanceSuggestion nodes (pending approval) instead of direct links
  */
 export async function discoverResonancesForPulse(
-  pulseId: string
+  pulseId: string,
+  spaceId?: string
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -239,17 +248,30 @@ export async function discoverResonancesForPulse(
   const pulseResult = await graph.query<{
     pulse: { id: string; content: string; createdAt: string }
     contextId: string
+    spaceId: string
   }>(
-    `
-    MATCH (context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
-    RETURN {
-      id: p.id,
-      content: p.content,
-      createdAt: toString(p.createdAt)
-    } as pulse,
-    context.id as contextId
-  `,
-    { pulseId }
+    spaceId
+      ? `
+        MATCH (space:WeSpace {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
+        RETURN {
+          id: p.id,
+          content: p.content,
+          createdAt: toString(p.createdAt)
+        } as pulse,
+        context.id as contextId,
+        space.id as spaceId
+      `
+      : `
+        MATCH (context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
+        RETURN {
+          id: p.id,
+          content: p.content,
+          createdAt: toString(p.createdAt)
+        } as pulse,
+        context.id as contextId,
+        null as spaceId
+      `,
+    spaceId ? { pulseId, spaceId } : { pulseId }
   )
 
   if (!Array.isArray(pulseResult) || pulseResult.length === 0) {
@@ -257,7 +279,7 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  const { pulse, contextId } = pulseResult[0]
+  const { pulse, contextId, spaceId: foundSpaceId } = pulseResult[0]
 
   // Find similar pulses WITHIN THE SAME CONTEXT
   const similarPulses = await findSimilarPulsesInContext(
@@ -282,48 +304,77 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  // Create resonance links in database
-  const links = await createResonanceLinksInDatabase(contextId, pattern)
+  // If spaceId not provided, use the one found from the query
+  const effectiveSpaceId = spaceId || foundSpaceId
+  if (!effectiveSpaceId) {
+    console.warn(
+      `Cannot create suggestions: no space associated with pulse ${pulseId}`
+    )
+    return []
+  }
 
-  return links
+  // Create resonance suggestions in database
+  const suggestions = await createResonanceSuggestionsInDatabase(
+    contextId,
+    effectiveSpaceId,
+    pattern
+  )
+
+  return suggestions
 }
 
 /**
- * Discover resonances for all contexts (or specific contexts)
- * Processes each context independently
+ * Discover resonances for a specific space
+ * Processes all contexts within the space independently
  */
-export async function discoverGlobalResonances(
+export async function discoverResonancesForSpace(
+  spaceId: string,
   lastRunTimestamp?: string
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Get all contexts
+  // Verify space exists
+  const spaceResult = await graph.query<{ spaceId: string }>(
+    `MATCH (space:WeSpace {id: $spaceId}) RETURN space.id as spaceId`,
+    { spaceId }
+  )
+
+  if (!Array.isArray(spaceResult) || spaceResult.length === 0) {
+    console.error(`Space not found: ${spaceId}`)
+    return []
+  }
+
+  // Get all contexts for this space
   const contextsResult = await graph.query<{
     contextId: string
     contextTitle: string
   }>(
     `
-    MATCH (context:FieldContext)
+    MATCH (space:WeSpace {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)
     RETURN context.id as contextId, context.title as contextTitle
   `,
-    {}
+    { spaceId }
   )
 
   if (!Array.isArray(contextsResult) || contextsResult.length === 0) {
-    console.log('No contexts found for resonance discovery')
+    console.log(`No contexts found in space ${spaceId}`)
     return []
   }
 
   const contexts = contextsResult
 
-  console.log(`Analyzing ${contexts.length} contexts for resonances...`)
+  console.log(
+    `[Space Discovery] Analyzing ${contexts.length} contexts in space ${spaceId} for resonances...`
+  )
 
   const allDiscoveredResonances: DiscoveredResonance[] = []
 
   // Process each context independently
   for (const { contextId, contextTitle } of contexts) {
     try {
-      console.log(`Processing context: ${contextTitle} (${contextId})`)
+      console.log(
+        `[Space Discovery] Processing context: ${contextTitle} (${contextId})`
+      )
 
       // Get pulses in this context
       const query = lastRunTimestamp
@@ -346,33 +397,100 @@ export async function discoverGlobalResonances(
       )
 
       if (!Array.isArray(pulsesResult) || pulsesResult.length < 2) {
-        console.log(`Not enough pulses in context ${contextId}, skipping`)
+        console.log(
+          `[Space Discovery] Not enough pulses in context ${contextId}, skipping`
+        )
         continue
       }
 
       const pulses = pulsesResult.map((r) => r.pulse)
 
-      console.log(`  Found ${pulses.length} pulses in context ${contextId}`)
+      console.log(
+        `[Space Discovery] Found ${pulses.length} pulses in context ${contextId}`
+      )
 
       // Discover resonances for each pulse in the context
       for (const pulse of pulses) {
         try {
-          const resonances = await discoverResonancesForPulse(pulse.id)
+          const resonances = await discoverResonancesForPulse(pulse.id, spaceId)
           allDiscoveredResonances.push(...resonances)
         } catch (error) {
           console.error(
-            `Failed to discover resonances for pulse ${pulse.id}:`,
+            `[Space Discovery] Failed to discover resonances for pulse ${pulse.id}:`,
             error
           )
         }
       }
     } catch (error) {
-      console.error(`Failed to process context ${contextId}:`, error)
+      console.error(
+        `[Space Discovery] Failed to process context ${contextId}:`,
+        error
+      )
     }
   }
 
   console.log(
-    `Discovered ${allDiscoveredResonances.length} total resonance links across all contexts`
+    `[Space Discovery] Discovered ${allDiscoveredResonances.length} resonance suggestions in space ${spaceId}`
+  )
+
+  return allDiscoveredResonances
+}
+
+/**
+ * Discover resonances for all spaces (global discovery)
+ * Processes each space independently
+ */
+export async function discoverGlobalResonances(
+  lastRunTimestamp?: string
+): Promise<DiscoveredResonance[]> {
+  const graph = await initGraph()
+
+  // Get all spaces
+  const spacesResult = await graph.query<{
+    spaceId: string
+    spaceName: string
+  }>(
+    `
+    MATCH (space:WeSpace)
+    RETURN space.id as spaceId, space.name as spaceName
+  `,
+    {}
+  )
+
+  if (!Array.isArray(spacesResult) || spacesResult.length === 0) {
+    console.log('[Global Discovery] No spaces found')
+    return []
+  }
+
+  const spaces = spacesResult
+
+  console.log(
+    `[Global Discovery] Discovering resonances for ${spaces.length} spaces...`
+  )
+
+  const allDiscoveredResonances: DiscoveredResonance[] = []
+
+  // Process each space independently
+  for (const { spaceId, spaceName } of spaces) {
+    try {
+      console.log(
+        `[Global Discovery] Processing space: ${spaceName} (${spaceId})`
+      )
+      const resonances = await discoverResonancesForSpace(
+        spaceId,
+        lastRunTimestamp
+      )
+      allDiscoveredResonances.push(...resonances)
+    } catch (error) {
+      console.error(
+        `[Global Discovery] Failed to process space ${spaceId}:`,
+        error
+      )
+    }
+  }
+
+  console.log(
+    `[Global Discovery] Discovered ${allDiscoveredResonances.length} total resonance suggestions across all spaces`
   )
 
   return allDiscoveredResonances

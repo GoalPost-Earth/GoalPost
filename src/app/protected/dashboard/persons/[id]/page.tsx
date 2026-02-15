@@ -93,6 +93,47 @@ export default function PersonProfilePage() {
             </p>
           </div>
 
+          {/* Profile Attributes Section */}
+          {(person.traits || person.passions || person.fieldsOfCare) && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              {person.traits && (
+                <div className="flex flex-col gap-4">
+                  <SectionHeader icon="psychology" title="Traits" />
+                  <ProfileCard>
+                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                      {person.traits}
+                    </p>
+                  </ProfileCard>
+                </div>
+              )}
+
+              {person.passions && (
+                <div className="flex flex-col gap-4">
+                  <SectionHeader icon="favorite" title="Passions" />
+                  <ProfileCard>
+                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                      {person.passions}
+                    </p>
+                  </ProfileCard>
+                </div>
+              )}
+
+              {person.fieldsOfCare && (
+                <div className="flex flex-col gap-4">
+                  <SectionHeader
+                    icon="volunteer_activism"
+                    title="Fields of Care"
+                  />
+                  <ProfileCard>
+                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                      {person.fieldsOfCare}
+                    </p>
+                  </ProfileCard>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Grid Layout - Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {/* Owned Spaces Section */}

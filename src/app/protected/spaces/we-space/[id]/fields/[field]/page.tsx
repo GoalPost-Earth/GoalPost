@@ -38,6 +38,9 @@ import {
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
+import { useResonanceDiscovery } from '@/hooks/useResonanceDiscovery'
+import { useResonanceSuggestions } from '@/hooks/useResonanceSuggestions'
+import { ResonanceSuggestionsModal } from '@/components/ui/resonance-suggestions-modal'
 import {
   type PulsePosition,
   PULSE_NODE_RADIUS,
@@ -63,6 +66,8 @@ const ANIMATION_ORDER: Array<
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
+    useState(false)
+  const [isDiscoverSuggestionsModalOpen, setIsDiscoverSuggestionsModalOpen] =
     useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -112,10 +117,33 @@ function FieldDetailPage() {
 
   const params = useParams()
   const fieldId = params?.field as string
+  const spaceId = params?.id as string
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
+
+  // Resonance discovery hooks
+  const { triggerDiscovery, isLoading: isDiscoveringResonances } =
+    useResonanceDiscovery({
+      spaceId,
+      onSuccess: () => {
+        setIsDiscoverSuggestionsModalOpen(true)
+        refetchSuggestions()
+      },
+    })
+
+  const {
+    suggestions,
+    loading: suggestionsLoading,
+    refetch: refetchSuggestions,
+    acceptSuggestion,
+    declineSuggestion,
+  } = useResonanceSuggestions({
+    spaceId,
+    filter: 'all',
+    enabled: false, // Don't auto-fetch until modal is opened
+  })
 
   const [
     fetchPulseDetails,
@@ -293,8 +321,8 @@ function FieldDetailPage() {
 
           //eslint-disable-next-line @typescript-eslint/no-explicit-any
           resonances.forEach((link: any) => {
-            const sourceId = link.source?.[0]?.id
-            const targetId = link.target?.[0]?.id
+            const sourceId = link.source?.id
+            const targetId = link.target?.id
             if (sourceId && targetId) {
               const sourcePos = positionMap.get(sourceId)
               const targetPos = positionMap.get(targetId)
@@ -1015,6 +1043,17 @@ function FieldDetailPage() {
           isMounted && (
             <div className="group flex flex-row items-center gap-3">
               <button
+                onClick={() => triggerDiscovery()}
+                disabled={isDiscoveringResonances}
+                title="Discover Resonances"
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+              >
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                  auto_awesome
+                </span>
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
+              <button
                 onClick={() => setIsResonanceLinkModalOpen(true)}
                 disabled={pulseOptions.length < 2}
                 title={
@@ -1205,6 +1244,19 @@ function FieldDetailPage() {
           isDeletingResonanceLink
         }
         editingResonance={editingResonance}
+      />
+
+      <ResonanceSuggestionsModal
+        isOpen={isDiscoverSuggestionsModalOpen}
+        onClose={() => {
+          setIsDiscoverSuggestionsModalOpen(false)
+        }}
+        spaceId={spaceId}
+        suggestions={suggestions}
+        loading={suggestionsLoading}
+        onAccept={acceptSuggestion}
+        onDecline={declineSuggestion}
+        onRefresh={refetchSuggestions}
       />
     </div>
   )

@@ -26,24 +26,16 @@ type Person
         where: {
           node: {
             OR: [
+              # Current user is the person themselves
+              { id_EQ: "$jwt.user.id" }
               # Person owns a space where current user is owner
               { ownsSpaces_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-              # Person owns a space where current user is member
+              # Person owns a space where current user is a member
               {
                 ownsSpaces_SOME: {
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
                 }
               }
-              # Person is a member of a space where current user is also a member
-              {
-                memberOf_SOME: {
-                  space_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              }
-              # Current user is the person themselves
-              { id_EQ: "$jwt.user.id" }
             ]
           }
         }
@@ -55,6 +47,9 @@ type Person
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   email: String
+  traits: String
+  passions: String
+  fieldsOfCare: String
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
@@ -70,6 +65,9 @@ type User @node(labels: ["Person", "User"]) {
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
   email: String
+  traits: String
+  passions: String
+  fieldsOfCare: String
   aiEnabled: Boolean!
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
