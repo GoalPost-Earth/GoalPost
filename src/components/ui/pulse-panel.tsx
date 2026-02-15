@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 export type PulseKind = 'goal' | 'resource' | 'story'
@@ -9,6 +10,7 @@ export type PulseKind = 'goal' | 'resource' | 'story'
 export interface PulseDetails {
   id: string
   type: PulseKind
+  title?: string | null
   content: string
   createdAt?: string | null
   intensity?: number | null
@@ -71,6 +73,8 @@ export function PulsePanel({
   onClose,
 }: PulsePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const [isContentExpanded, setIsContentExpanded] = useState(false)
 
   useEffect(() => {
     if (!panelRef.current) return
@@ -137,7 +141,7 @@ export function PulsePanel({
           </button>
         </div>
         <h2 className="text-xl font-semibold text-gp-ink-strong leading-tight line-clamp-3">
-          {pulse?.content || 'No content available'}
+          {pulse?.title || pulse?.content || 'No title available'}
         </h2>
       </div>
 
@@ -152,6 +156,36 @@ export function PulsePanel({
 
         {!isLoading && pulse && (
           <>
+            {pulse.content && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base text-gp-ink-muted">
+                    description
+                  </span>
+                  <span className="text-xs font-semibold uppercase text-gp-ink-muted">
+                    Description
+                  </span>
+                </div>
+                <div className="relative">
+                  <p
+                    className={cn(
+                      'text-sm text-gp-ink-strong leading-relaxed',
+                      !isContentExpanded && 'line-clamp-3'
+                    )}
+                  >
+                    {pulse.content}
+                  </p>
+                  {pulse.content.length > 150 && (
+                    <button
+                      onClick={() => setIsContentExpanded(!isContentExpanded)}
+                      className="text-xs font-semibold text-gp-primary hover:text-gp-primary/80 mt-1 transition-colors"
+                    >
+                      {isContentExpanded ? 'Read less' : 'Read more'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border">
                 <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
@@ -235,16 +269,18 @@ export function PulsePanel({
                   </span>
                 )}
                 {pulse.createdBy.map((creator) => (
-                  <span
+                  <button
                     key={creator.id}
+                    onClick={() =>
+                      router.push(`/protected/dashboard/persons/${creator.id}`)
+                    }
                     className={cn(
-                      'text-xs px-3 py-1 rounded-full border backdrop-blur-md',
+                      'text-xs px-3 py-1 rounded-full border backdrop-blur-md cursor-pointer hover:opacity-80 transition-opacity',
                       config.chip
                     )}
                   >
                     {creator.name}
-                    {creator.email ? ` • ${creator.email}` : ''}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>

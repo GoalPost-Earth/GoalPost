@@ -574,6 +574,7 @@ function FieldDetailPage() {
     return {
       id: entry.id,
       type,
+      title: entry.title ?? null,
       content: entry.content ?? '',
       createdAt: entry.createdAt ?? null,
       intensity: entry.intensity ?? null,

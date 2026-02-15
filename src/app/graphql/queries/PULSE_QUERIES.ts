@@ -98,6 +98,7 @@ export const GET_PULSE_DETAILS = graphql(`
     goalPulses(where: { id_EQ: $pulseId }) {
       __typename
       id
+      title
       content
       createdAt
       intensity
@@ -118,6 +119,7 @@ export const GET_PULSE_DETAILS = graphql(`
     resourcePulses(where: { id_EQ: $pulseId }) {
       __typename
       id
+      title
       content
       createdAt
       intensity
@@ -137,6 +139,7 @@ export const GET_PULSE_DETAILS = graphql(`
     storyPulses(where: { id_EQ: $pulseId }) {
       __typename
       id
+      title
       content
       createdAt
       intensity
