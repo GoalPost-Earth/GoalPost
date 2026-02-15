@@ -6,6 +6,10 @@ export const GET_LOGGED_IN_USER = graphql(`
       id
       name
       email
+      onboardingCurrentStepIndex
+      onboardingCompletedSteps
+      onboardingIsCompleted
+      onboardingSkipped
       ownsSpaces {
         id
         name

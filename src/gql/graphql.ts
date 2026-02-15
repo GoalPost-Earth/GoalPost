@@ -394,6 +394,28 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -479,6 +501,7 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -1411,6 +1434,28 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1496,6 +1541,7 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -2109,6 +2155,28 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2349,6 +2417,7 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -3267,6 +3336,28 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3751,6 +3842,28 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3836,6 +3949,7 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -3955,6 +4069,14 @@ export type IdAggregateSelection = {
   __typename?: 'IDAggregateSelection'
   longest?: Maybe<Scalars['ID']['output']>
   shortest?: Maybe<Scalars['ID']['output']>
+}
+
+export type IntAggregateSelection = {
+  __typename?: 'IntAggregateSelection'
+  average?: Maybe<Scalars['Float']['output']>
+  max?: Maybe<Scalars['Int']['output']>
+  min?: Maybe<Scalars['Int']['output']>
+  sum?: Maybe<Scalars['Int']['output']>
 }
 
 /**
@@ -4407,6 +4529,28 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4466,6 +4610,7 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -5009,6 +5154,10 @@ export type Person = {
   memberOfAggregate?: Maybe<PersonSpaceMembershipMemberOfAggregationSelection>
   memberOfConnection: PersonMemberOfConnection
   name: Scalars['String']['output']
+  onboardingCompletedSteps: Array<Scalars['String']['output']>
+  onboardingCurrentStepIndex: Scalars['Int']['output']
+  onboardingIsCompleted: Scalars['Boolean']['output']
+  onboardingSkipped: Scalars['Boolean']['output']
   ownsSpaces: Array<Space>
   /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
   ownsSpacesAggregate?: Maybe<PersonSpaceOwnsSpacesAggregationSelection>
@@ -5097,6 +5246,7 @@ export type PersonAggregateNode = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -5110,6 +5260,7 @@ export type PersonAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -5129,6 +5280,10 @@ export type PersonCreateInput = {
   firstName: Scalars['String']['input']
   lastName: Scalars['String']['input']
   memberOf?: InputMaybe<PersonMemberOfFieldInput>
+  onboardingCompletedSteps: Array<Scalars['String']['input']>
+  onboardingCurrentStepIndex: Scalars['Int']['input']
+  onboardingIsCompleted: Scalars['Boolean']['input']
+  onboardingSkipped: Scalars['Boolean']['input']
   ownsSpaces?: InputMaybe<PersonOwnsSpacesFieldInput>
   passions?: InputMaybe<Scalars['String']['input']>
   traits?: InputMaybe<Scalars['String']['input']>
@@ -5352,6 +5507,9 @@ export type PersonSort = {
   firstName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
+  onboardingCurrentStepIndex?: InputMaybe<SortDirection>
+  onboardingIsCompleted?: InputMaybe<SortDirection>
+  onboardingSkipped?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
   traits?: InputMaybe<SortDirection>
 }
@@ -5401,6 +5559,14 @@ export type PersonUpdateInput = {
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   memberOf?: InputMaybe<Array<PersonMemberOfUpdateFieldInput>>
+  onboardingCompletedSteps_POP?: InputMaybe<Scalars['Int']['input']>
+  onboardingCompletedSteps_PUSH?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCompletedSteps_SET?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCurrentStepIndex_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SET?: InputMaybe<Scalars['Int']['input']>
+  onboardingIsCompleted_SET?: InputMaybe<Scalars['Boolean']['input']>
+  onboardingSkipped_SET?: InputMaybe<Scalars['Boolean']['input']>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesUpdateFieldInput>>
   passions_SET?: InputMaybe<Scalars['String']['input']>
   traits_SET?: InputMaybe<Scalars['String']['input']>
@@ -5452,6 +5618,16 @@ export type PersonWhere = {
   memberOf_SINGLE?: InputMaybe<SpaceMembershipWhere>
   /** Return People where some of the related SpaceMemberships match this filter */
   memberOf_SOME?: InputMaybe<SpaceMembershipWhere>
+  onboardingCompletedSteps_EQ?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCompletedSteps_INCLUDES?: InputMaybe<Scalars['String']['input']>
+  onboardingCurrentStepIndex_EQ?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  onboardingCurrentStepIndex_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingIsCompleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  onboardingSkipped_EQ?: InputMaybe<Scalars['Boolean']['input']>
   ownsSpacesAggregate?: InputMaybe<PersonOwnsSpacesAggregateInput>
   /** Return People where all of the related PersonOwnsSpacesConnections match this filter */
   ownsSpacesConnection_ALL?: InputMaybe<PersonOwnsSpacesConnectionWhere>
@@ -7143,6 +7319,28 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7228,6 +7426,7 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -7977,6 +8176,28 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8048,6 +8269,7 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -8365,6 +8587,28 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8827,6 +9071,28 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8912,6 +9178,7 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -9290,6 +9557,10 @@ export type User = {
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
   name: Scalars['String']['output']
+  onboardingCompletedSteps: Array<Scalars['String']['output']>
+  onboardingCurrentStepIndex: Scalars['Int']['output']
+  onboardingIsCompleted: Scalars['Boolean']['output']
+  onboardingSkipped: Scalars['Boolean']['output']
   ownsSpaces: Array<Space>
   /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
   ownsSpacesAggregate?: Maybe<UserSpaceOwnsSpacesAggregationSelection>
@@ -9345,6 +9616,7 @@ export type UserAggregateNode = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -9358,6 +9630,7 @@ export type UserAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -9368,6 +9641,10 @@ export type UserCreateInput = {
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
   lastName: Scalars['String']['input']
+  onboardingCompletedSteps: Array<Scalars['String']['input']>
+  onboardingCurrentStepIndex: Scalars['Int']['input']
+  onboardingIsCompleted: Scalars['Boolean']['input']
+  onboardingSkipped: Scalars['Boolean']['input']
   ownsSpaces?: InputMaybe<UserOwnsSpacesFieldInput>
   passions?: InputMaybe<Scalars['String']['input']>
   traits?: InputMaybe<Scalars['String']['input']>
@@ -9496,6 +9773,9 @@ export type UserSort = {
   firstName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
+  onboardingCurrentStepIndex?: InputMaybe<SortDirection>
+  onboardingIsCompleted?: InputMaybe<SortDirection>
+  onboardingSkipped?: InputMaybe<SortDirection>
   passions?: InputMaybe<SortDirection>
   traits?: InputMaybe<SortDirection>
 }
@@ -9526,6 +9806,14 @@ export type UserUpdateInput = {
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
+  onboardingCompletedSteps_POP?: InputMaybe<Scalars['Int']['input']>
+  onboardingCompletedSteps_PUSH?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCompletedSteps_SET?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCurrentStepIndex_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SET?: InputMaybe<Scalars['Int']['input']>
+  onboardingIsCompleted_SET?: InputMaybe<Scalars['Boolean']['input']>
+  onboardingSkipped_SET?: InputMaybe<Scalars['Boolean']['input']>
   ownsSpaces?: InputMaybe<Array<UserOwnsSpacesUpdateFieldInput>>
   passions_SET?: InputMaybe<Scalars['String']['input']>
   traits_SET?: InputMaybe<Scalars['String']['input']>
@@ -9561,6 +9849,16 @@ export type UserWhere = {
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
   lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
   lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  onboardingCompletedSteps_EQ?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCompletedSteps_INCLUDES?: InputMaybe<Scalars['String']['input']>
+  onboardingCurrentStepIndex_EQ?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  onboardingCurrentStepIndex_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingIsCompleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  onboardingSkipped_EQ?: InputMaybe<Scalars['Boolean']['input']>
   ownsSpacesAggregate?: InputMaybe<UserOwnsSpacesAggregateInput>
   /** Return Users where all of the related UserOwnsSpacesConnections match this filter */
   ownsSpacesConnection_ALL?: InputMaybe<UserOwnsSpacesConnectionWhere>
@@ -10037,6 +10335,28 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10096,6 +10416,7 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   lastName: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
   passions: StringAggregateSelection
   traits: StringAggregateSelection
 }
@@ -11078,6 +11399,10 @@ export type GetLoggedInUserQuery = {
     id: string
     name: string
     email?: string | null
+    onboardingCurrentStepIndex: number
+    onboardingCompletedSteps: Array<string>
+    onboardingIsCompleted: boolean
+    onboardingSkipped: boolean
     ownsSpaces: Array<
       | {
           __typename: 'MeSpace'
@@ -12239,8 +12564,8 @@ export type GetAllFieldContextsQuery = {
       visibility: SpaceVisibility
     }>
     pulses: Array<
-      | { __typename?: 'CarePulse' }
-      | { __typename?: 'CoreValuePulse' }
+      | { __typename: 'CarePulse'; id: string; createdAt: any }
+      | { __typename: 'CoreValuePulse'; id: string; createdAt: any }
       | { __typename: 'GoalPulse'; id: string; createdAt: any }
       | { __typename: 'ResourcePulse'; id: string; createdAt: any }
       | { __typename: 'StoryPulse'; id: string; createdAt: any }
@@ -17454,6 +17779,22 @@ export const GetLoggedInUserDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'onboardingCurrentStepIndex' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'onboardingCompletedSteps' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'onboardingIsCompleted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'onboardingSkipped' },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'ownsSpaces' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -21742,6 +22083,54 @@ export const GetAllFieldContextsDocument = {
                         typeCondition: {
                           kind: 'NamedType',
                           name: { kind: 'Name', value: 'StoryPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CarePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
                         },
                         selectionSet: {
                           kind: 'SelectionSet',

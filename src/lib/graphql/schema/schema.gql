@@ -50,6 +50,10 @@ type Person
   traits: String
   passions: String
   fieldsOfCare: String
+  onboardingCurrentStepIndex: Int!
+  onboardingCompletedSteps: [String!]!
+  onboardingIsCompleted: Boolean!
+  onboardingSkipped: Boolean!
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
 }
@@ -69,6 +73,10 @@ type User @node(labels: ["Person", "User"]) {
   passions: String
   fieldsOfCare: String
   aiEnabled: Boolean!
+  onboardingCurrentStepIndex: Int!
+  onboardingCompletedSteps: [String!]!
+  onboardingIsCompleted: Boolean!
+  onboardingSkipped: Boolean!
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
 }
 
