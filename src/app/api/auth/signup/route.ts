@@ -62,7 +62,11 @@ export async function POST(req: NextRequest) {
                     person.firstName = $firstName,
                     person.lastName = $lastName,
                     person.createdAt = datetime(),
-                    person.updatedAt = datetime()
+                    person.updatedAt = datetime(),
+                    person.onboardingCurrentStepIndex = 0,
+                    person.onboardingCompletedSteps = [],
+                    person.onboardingIsCompleted = false,
+                    person.onboardingSkipped = false
                 
                 RETURN person`,
         {

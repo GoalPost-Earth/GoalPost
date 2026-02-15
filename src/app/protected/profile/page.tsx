@@ -42,7 +42,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8">
+      <div className="flex flex-col h-full w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8 pt-28">
         <div className="max-w-4xl mx-auto w-full space-y-8 animate-pulse">
           {/* Header skeleton */}
           <div className="chat-card rounded-2xl p-8">
@@ -114,7 +114,7 @@ export default function ProfilePage() {
     : 'U'
 
   return (
-    <div className="flex flex-col h-full w-full overflow-auto bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8 pt-20">
+    <div className="flex flex-col h-full w-full overflow-auto bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8 pt-28">
       <div className="max-w-4xl mx-auto w-full space-y-8">
         {/* Profile Header Card */}
         <div className="chat-card rounded-2xl p-8 relative overflow-hidden">
@@ -148,7 +148,7 @@ export default function ProfilePage() {
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <button
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all shadow-lg"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all shadow-lg cursor-pointer"
                 style={{
                   background:
                     'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
@@ -222,7 +222,7 @@ export default function ProfilePage() {
               </h2>
               <button
                 onClick={() => router.push('/protected/dashboard')}
-                className="text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors"
+                className="text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors cursor-pointer"
               >
                 View All →
               </button>
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                 <>
                   <button
                     onClick={resumeTour}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 cursor-pointer"
                     style={{
                       background:
                         'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 85%, white 15%), color-mix(in srgb, var(--gp-primary) 65%, black 35%))',
@@ -341,7 +341,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={restartTour}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:text-gp-primary dark:border-gp-primary/40 dark:hover:bg-gp-primary/10"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:text-gp-primary dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[16px]">
                       refresh
@@ -353,7 +353,7 @@ export default function ProfilePage() {
               {!isCompleted && (
                 <button
                   onClick={resumeTour}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 cursor-pointer"
                   style={{
                     background:
                       'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 85%, white 15%), color-mix(in srgb, var(--gp-primary) 65%, black 35%))',

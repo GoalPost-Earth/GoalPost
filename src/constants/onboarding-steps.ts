@@ -24,7 +24,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'What are Fields?',
     description:
       'Fields organize your ideas and contributions. Think of them as buckets that hold related pulses (messages) on specific topics.',
-    page: '/protected/spaces/me-space',
+    page: '/protected/spaces/me-space/[id]',
     position: 'center',
   },
   {
@@ -32,7 +32,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Create Your First Field',
     description:
       'Click the button to create a field. You can organize your thoughts around any topic or area of interest.',
-    page: '/protected/spaces/me-space',
+    page: '/protected/spaces/me-space/[id]',
     position: 'top',
     selector: '[data-tour="create-field-button"]',
   },
@@ -41,7 +41,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Three Types of Pulses',
     description:
       'Create Goal Pulses (aspirations), Resource Pulses (supportive elements), or Story Pulses (narratives) within the field context. Each contributes to discovering patterns.',
-    page: '/protected/spaces/me-space',
+    page: '/protected/spaces/me-space/[id]',
     position: 'center',
   },
   {
