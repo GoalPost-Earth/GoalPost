@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { cn } from '@/lib/utils'
 
 export interface PulseInResonance {
   id: string

@@ -14,6 +14,7 @@ import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
 import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
+import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import {
@@ -1152,15 +1153,13 @@ function FieldDetailPage() {
         />
       </div>
 
-      {/* Offering Modal */}
+      {/* Offering Modal for creating new pulses */}
       <OfferingModal
-        isOpen={isModalOpen}
+        isOpen={isModalOpen && !editingPulseId}
         onClose={() => {
           setIsModalOpen(false)
           setSubmitError(null)
           setSubmitSuccess(false)
-          setEditingPulseId(null)
-          setEditingPulseData(null)
         }}
         position="bottom"
       >
@@ -1180,29 +1179,40 @@ function FieldDetailPage() {
               handleOfferingSubmit(value, type, name)
             }}
             isLoading={isSubmitting}
-            isEditing={!!editingPulseId}
-            initialType={editingPulseData?.type}
-            initialName={editingPulseData?.name}
-            initialContent={editingPulseData?.content}
-            onDelete={
-              editingPulseId
-                ? async () => {
-                    if (editingPulseData) {
-                      await handleDeletePulse(
-                        new MouseEvent('click') as unknown as React.MouseEvent,
-                        editingPulseId,
-                        editingPulseData.type
-                      )
-                      setIsModalOpen(false)
-                      setEditingPulseId(null)
-                      setEditingPulseData(null)
-                    }
-                  }
-                : undefined
-            }
           />
         </div>
       </OfferingModal>
+
+      {/* Pulse Edit Modal for editing existing pulses */}
+      {editingPulseId && editingPulseData && (
+        <PulseEditModal
+          isOpen={isModalOpen && !!editingPulseId}
+          onClose={() => {
+            setIsModalOpen(false)
+            setSubmitError(null)
+            setEditingPulseId(null)
+            setEditingPulseData(null)
+          }}
+          onSubmit={(type: NodeType, name: string, content: string) => {
+            handleOfferingSubmit(content, type, name)
+          }}
+          isLoading={isSubmitting}
+          initialType={editingPulseData.type}
+          initialName={editingPulseData.name}
+          initialContent={editingPulseData.content}
+          error={submitError}
+          onDelete={async () => {
+            await handleDeletePulse(
+              new MouseEvent('click') as unknown as React.MouseEvent,
+              editingPulseId,
+              editingPulseData.type
+            )
+            setIsModalOpen(false)
+            setEditingPulseId(null)
+            setEditingPulseData(null)
+          }}
+        />
+      )}
 
       <ResonanceLinkModal
         isOpen={isResonanceLinkModalOpen}

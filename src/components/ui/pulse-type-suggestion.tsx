@@ -15,6 +15,7 @@ interface PulseTypeSuggestionProps {
   initialName?: string
   initialContent?: string
   onDelete?: () => void
+  isLoading?: boolean
 }
 
 // Dummy AI inference - simple heuristics based on keywords
@@ -178,6 +179,7 @@ export function PulseTypeSuggestion({
   initialName = '',
   initialContent = '',
   onDelete,
+  isLoading = false,
 }: PulseTypeSuggestionProps) {
   const [selectedType, setSelectedType] = useState<NodeType>(initialType)
   const [pulseData, setPulseData] = useState({
@@ -223,6 +225,7 @@ export function PulseTypeSuggestion({
   }, [isOpen])
 
   const handleRegenerateType = () => {
+    if (isLoading) return // Don't allow changes while saving
     const newType =
       selectedType === 'goal'
         ? 'resource'
@@ -233,6 +236,7 @@ export function PulseTypeSuggestion({
   }
 
   const handleConfirm = () => {
+    if (isLoading) return // Prevent multiple submissions
     console.log('🎯 handleConfirm called:', {
       selectedType,
       editedName,
@@ -244,7 +248,7 @@ export function PulseTypeSuggestion({
       editedContent,
     })
     onSelect(selectedType, editedName, editedContent)
-    onClose()
+    // Don't close immediately - let parent handle closing after async operation
   }
 
   const handleDelete = () => {
@@ -271,7 +275,10 @@ export function PulseTypeSuggestion({
       <div className="relative w-full p-8 flex flex-col items-center">
         {/* Icon Section */}
         <div
-          className="relative mb-8 group cursor-pointer"
+          className={cn(
+            'relative mb-8 group',
+            isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+          )}
           onClick={handleRegenerateType}
         >
           <div className="absolute inset-0 bg-gp-primary/20 dark:bg-gp-primary/20 rounded-full blur-xl scale-150 animate-pulse-slow" />
@@ -326,8 +333,12 @@ export function PulseTypeSuggestion({
             <textarea
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
+              disabled={isLoading}
               rows={4}
-              className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-base text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20 resize-none"
+              className={cn(
+                'w-full bg-transparent border-none py-4 pl-12 pr-4 text-base text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20 resize-none',
+                isLoading && 'opacity-60 cursor-not-allowed'
+              )}
               placeholder="Describe your pulse in detail..."
             />
           </div>
@@ -341,12 +352,20 @@ export function PulseTypeSuggestion({
               type="text"
               value={editedName}
               onChange={(e) => setEditedName(e.target.value)}
-              className="w-full bg-transparent border-none py-4 pl-12 pr-12 text-center text-lg font-semibold text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20"
+              disabled={isLoading}
+              className={cn(
+                'w-full bg-transparent border-none py-4 pl-12 pr-12 text-center text-lg font-semibold text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20',
+                isLoading && 'opacity-60 cursor-not-allowed'
+              )}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <button
                 onClick={() => setEditedName('')}
-                className="cursor-pointer p-1.5 rounded-full hover:bg-white/80 dark:hover:bg-white/10 text-[#9aa6b2] dark:text-gp-ink-soft hover:text-[#1f2a36] dark:hover:text-white transition-colors"
+                disabled={isLoading}
+                className={cn(
+                  'p-1.5 rounded-full hover:bg-white/80 dark:hover:bg-white/10 text-[#9aa6b2] dark:text-gp-ink-soft hover:text-[#1f2a36] dark:hover:text-white transition-colors',
+                  isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                )}
                 title="Clear"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
@@ -361,7 +380,11 @@ export function PulseTypeSuggestion({
             <>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="cursor-pointer flex-1 h-12 rounded-xl border border-red-600/20 dark:border-red-600/30 bg-red-600/10 dark:bg-red-600/20 text-red-600 dark:text-red-400 text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:bg-red-600/20 dark:hover:bg-red-600/30 active:scale-95"
+                disabled={isLoading}
+                className={cn(
+                  'flex-1 h-12 rounded-xl border border-red-600/20 dark:border-red-600/30 bg-red-600/10 dark:bg-red-600/20 text-red-600 dark:text-red-400 text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:bg-red-600/20 dark:hover:bg-red-600/30 active:scale-95',
+                  isLoading && 'opacity-50 cursor-not-allowed'
+                )}
               >
                 <span className="material-symbols-outlined text-lg">
                   delete
@@ -370,17 +393,34 @@ export function PulseTypeSuggestion({
               </button>
               <button
                 onClick={handleConfirm}
-                className="cursor-pointer flex-1 h-12 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                disabled={isLoading}
+                className={cn(
+                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform',
+                  isLoading
+                    ? 'bg-gp-primary/70 cursor-not-allowed'
+                    : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
+                )}
               >
-                <span className="material-symbols-outlined text-lg">check</span>
-                Save Changes
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-lg',
+                    isLoading && 'animate-spin'
+                  )}
+                >
+                  {isLoading ? 'hourglass_bottom' : 'check'}
+                </span>
+                {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={handleRegenerateType}
-                className="cursor-pointer flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-[#2c3a46] bg-white/50 dark:bg-[#101820] text-gp-ink-muted dark:text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-[#1f8bff] hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#162230] active:scale-95"
+                disabled={isLoading}
+                className={cn(
+                  'flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-[#2c3a46] bg-white/50 dark:bg-[#101820] text-gp-ink-muted dark:text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-[#1f8bff] hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#162230] active:scale-95',
+                  isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                )}
               >
                 <span className="material-symbols-outlined text-lg group-hover:-rotate-12 transition-transform">
                   tune
@@ -389,10 +429,23 @@ export function PulseTypeSuggestion({
               </button>
               <button
                 onClick={handleConfirm}
-                className="cursor-pointer flex-1 h-12 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                disabled={isLoading}
+                className={cn(
+                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform',
+                  isLoading
+                    ? 'bg-gp-primary/70 cursor-not-allowed'
+                    : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
+                )}
               >
-                <span className="material-symbols-outlined text-lg">check</span>
-                Create Pulse
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-lg',
+                    isLoading && 'animate-spin'
+                  )}
+                >
+                  {isLoading ? 'hourglass_bottom' : 'check'}
+                </span>
+                {isLoading ? 'Creating...' : 'Create Pulse'}
               </button>
             </>
           )}
