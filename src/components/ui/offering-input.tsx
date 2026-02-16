@@ -10,25 +10,16 @@ import { cn } from '@/lib/utils'
 interface OfferingInputProps {
   onSubmit?: (value: string, type: NodeType, name: string) => void
   isLoading?: boolean
-  isEditing?: boolean
-  initialType?: NodeType
-  initialName?: string
-  initialContent?: string
-  onDelete?: () => void
 }
 
 export function OfferingInput({
   onSubmit,
   isLoading = false,
-  isEditing = false,
-  initialType,
-  initialName,
-  initialContent,
-  onDelete,
 }: OfferingInputProps) {
-  const [input, setInput] = useState(initialContent || '')
-  const [showSuggestion, setShowSuggestion] = useState(isEditing)
+  const [input, setInput] = useState('')
+  const [showSuggestion, setShowSuggestion] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const prevIsLoadingRef = useRef(isLoading)
 
   useEffect(() => {
     if (containerRef.current) {
@@ -55,6 +46,17 @@ export function OfferingInput({
     }
   }, [])
 
+  // Close suggestion modal when loading completes (success or error)
+  // Parent component will handle showing success message and closing main modal
+  useEffect(() => {
+    if (prevIsLoadingRef.current && !isLoading) {
+      // Loading just finished
+      setShowSuggestion(false)
+      setInput('')
+    }
+    prevIsLoadingRef.current = isLoading
+  }, [isLoading])
+
   const handleSubmit = () => {
     if (input.trim() && !isLoading) {
       setShowSuggestion(true)
@@ -73,30 +75,18 @@ export function OfferingInput({
     name: string,
     content: string
   ) => {
-    console.log('🎯 handleSelectPulseType called:', {
-      type,
-      name,
-      content,
-      hasOnSubmit: !!onSubmit,
-      isLoading,
-    })
     if (onSubmit && !isLoading) {
-      console.log('📤 Calling onSubmit with:', { content, type, name })
       onSubmit(content, type, name)
-      setInput('')
-      setShowSuggestion(false)
-    } else if (!onSubmit) {
-      console.error('❌ onSubmit callback not provided')
-    } else if (isLoading) {
-      console.warn('⏳ Still loading, ignoring submit')
+      // Don't close immediately - let parent handle closing after async operation completes
     }
   }
 
   const handleCloseSuggestion = () => {
     setShowSuggestion(false)
+    setInput('') // Clear input when canceling
   }
 
-  // If suggestion is open, show it inside the modal
+  // If suggestion is open, show it inside the modal for creation
   if (showSuggestion) {
     return (
       <OfferingModal
@@ -109,11 +99,8 @@ export function OfferingInput({
           isOpen={true}
           onSelect={handleSelectPulseType}
           onClose={handleCloseSuggestion}
-          isEditing={isEditing}
-          initialType={initialType}
-          initialName={initialName}
-          initialContent={initialContent}
-          onDelete={onDelete}
+          isEditing={false}
+          isLoading={isLoading}
         />
       </OfferingModal>
     )
