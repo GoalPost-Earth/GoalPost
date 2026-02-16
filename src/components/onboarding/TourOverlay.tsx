@@ -184,7 +184,7 @@ export function TourOverlay() {
               onClick={skipTour}
               className="tour-button"
             >
-              Skip
+              Skip Tour
             </Button>
             <Button
               size="sm"
