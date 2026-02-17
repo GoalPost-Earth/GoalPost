@@ -234,8 +234,10 @@ export default function WeSpacePage() {
   }, [fetchWeSpaces])
 
   useEffect(() => {
-    setPageTitle('We Space')
-  }, [setPageTitle])
+    setPageTitle(
+      `We Space - ${weSpaces.length} Space${weSpaces.length !== 1 ? 's' : ''}`
+    )
+  }, [setPageTitle, weSpaces.length])
 
   const handleSpaceClick = (spaceId: string) => {
     const space = weSpaces.find((s) => s.id === spaceId)

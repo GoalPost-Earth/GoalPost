@@ -54,13 +54,16 @@ export default function WeSpaceFieldsPage() {
   const weSpace = data?.weSpaces?.[0]
   const fields = weSpace?.contexts || []
 
-  // Set page title when space loads
+  // Set page title when space loads with field count
   useEffect(() => {
     if (weSpace?.name) {
-      setPageTitle(weSpace.name)
+      const fieldCount = fields.length
+      setPageTitle(
+        `${weSpace.name} - ${fieldCount} Field${fieldCount !== 1 ? 's' : ''}`
+      )
       localStorage.setItem(`space_${weSpaceId}`, weSpace.name)
     }
-  }, [weSpace?.name, weSpaceId, setPageTitle])
+  }, [weSpace?.name, fields.length, weSpaceId, setPageTitle])
 
   const handleFieldClick = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)

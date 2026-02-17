@@ -54,13 +54,16 @@ export default function MeSpaceFieldsPage() {
   const meSpace = data?.meSpaces?.[0]
   const fields = meSpace?.contexts || []
 
-  // Set page title to the actual space name
+  // Set page title to the actual space name with field count
   useEffect(() => {
     if (meSpace?.name) {
-      setPageTitle(meSpace.name)
+      const fieldCount = fields.length
+      setPageTitle(
+        `${meSpace.name} - ${fieldCount} Field${fieldCount !== 1 ? 's' : ''}`
+      )
       localStorage.setItem(`space_${meSpaceId}`, meSpace.name)
     }
-  }, [meSpace?.name, meSpaceId, setPageTitle])
+  }, [meSpace?.name, fields.length, meSpaceId, setPageTitle])
 
   const handleFieldClick = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
