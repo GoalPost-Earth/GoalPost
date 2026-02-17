@@ -110,6 +110,31 @@ export default function NavBar() {
                   >
                     Me Space
                   </Link>
+                  {/* Show specific MeSpace name */}
+                  {isMounted &&
+                    (() => {
+                      // Extract space ID from pathname
+                      const spaceIdMatch =
+                        pathname?.match(/\/me-space\/([^/]+)/)
+                      const spaceId = spaceIdMatch?.[1]
+                      if (!spaceId) return null
+                      const spaceName = localStorage.getItem(`space_${spaceId}`)
+                      if (!spaceName || spaceName === pageTitle) return null
+
+                      const spaceUrl = `/protected/spaces/me-space/${spaceId}`
+
+                      return (
+                        <>
+                          <span>•</span>
+                          <Link
+                            href={spaceUrl}
+                            className="text-gp-primary font-semibold hover:text-gp-primary/80 transition-colors"
+                          >
+                            {spaceName}
+                          </Link>
+                        </>
+                      )
+                    })()}
                 </>
               ) : null}
               {/* Only show breadcrumb for WeSpace, not MeSpace (since user has only one) */}

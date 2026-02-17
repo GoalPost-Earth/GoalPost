@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { usePulseSharing } from '@/hooks/usePulseSharing'
+import { useQuery } from '@apollo/client/react'
+import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERIES'
+import Select, { StylesConfig } from 'react-select'
 import { getConfigForType } from '@/lib/pulse-type-config'
 
 export type PulseKind = 'goal' | 'resource' | 'story'
@@ -78,6 +82,8 @@ export function PulsePanel({
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const [isContentExpanded, setIsContentExpanded] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const { sharePulseWithContext, loading: sharingLoading } = usePulseSharing()
 
   useEffect(() => {
     if (!panelRef.current) return
@@ -344,10 +350,258 @@ export function PulsePanel({
           </span>
           <span className="truncate">View Pulse Thread</span>
         </button>
-        <button className="flex w-full mt-3 cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-transparent border border-gp-glass-border hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-gp-ink-strong gap-2 text-sm font-medium leading-normal">
+        <button
+          className="flex w-full mt-3 cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-transparent border border-gp-glass-border hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-gp-ink-strong gap-2 text-sm font-medium leading-normal"
+          onClick={() => setShowShareModal(true)}
+        >
           <span className="material-symbols-outlined text-[20px]">share</span>
           <span className="truncate">Share Pulse</span>
         </button>
+      </div>
+
+      {/* Share Modal */}
+      {showShareModal && pulse && (
+        <SharePulseModal
+          pulse={pulse}
+          onClose={() => setShowShareModal(false)}
+          onShare={sharePulseWithContext}
+          isLoading={sharingLoading}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Modal component for sharing a pulse to other contexts
+ */
+interface SharePulseModalProps {
+  pulse: PulseDetails
+  onClose: () => void
+  onShare: (
+    pulseId: string,
+    contextId: string
+  ) => Promise<{ success: boolean; error?: string }>
+  isLoading: boolean
+}
+
+interface ContextOption {
+  value: string
+  label: string
+  spaceName: string
+}
+
+function SharePulseModal({
+  pulse,
+  onClose,
+  onShare,
+  isLoading,
+}: SharePulseModalProps) {
+  const [selectedContextId, setSelectedContextId] = useState('')
+  const [shareMessage, setShareMessage] = useState('')
+
+  // Fetch all contexts available to the user
+  const { data: contextsData, loading: contextsLoading } = useQuery(
+    GET_ALL_USER_CONTEXTS
+  )
+
+  // Filter out contexts where the pulse already exists and transform to options
+  const contextOptions: ContextOption[] =
+    contextsData?.fieldContexts
+      .filter((context) => !pulse.contexts.some((pc) => pc.id === context.id))
+      .map((context) => ({
+        value: context.id,
+        label: context.title,
+        spaceName: context.space?.[0]?.name || 'Unknown Space',
+      })) || []
+
+  // Custom styles for react-select to match design system
+  const customStyles: StylesConfig<ContextOption, false> = {
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor:
+        'color-mix(in srgb, var(--gp-glass-bg) 80%, transparent)',
+      borderColor: state.isFocused
+        ? 'var(--gp-primary)'
+        : 'var(--gp-glass-border)',
+      borderRadius: '0.5rem',
+      padding: '0.125rem',
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: 'var(--gp-primary)',
+      },
+      cursor: 'pointer',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: 'var(--gp-surface)',
+      border: '1px solid var(--gp-glass-border)',
+      borderRadius: '0.5rem',
+      boxShadow:
+        '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      overflow: 'hidden',
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: 0,
+      maxHeight: '12rem',
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? 'color-mix(in srgb, var(--gp-primary) 10%, transparent)'
+        : state.isFocused
+          ? 'var(--gp-glass-bg)'
+          : 'transparent',
+      color: state.isSelected ? 'var(--gp-primary)' : 'var(--gp-ink-strong)',
+      padding: '0.75rem',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor:
+          'color-mix(in srgb, var(--gp-primary) 20%, transparent)',
+      },
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-strong)',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-muted)',
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-strong)',
+    }),
+    noOptionsMessage: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-muted)',
+      padding: '0.75rem',
+    }),
+    loadingMessage: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-muted)',
+      padding: '0.75rem',
+    }),
+  }
+
+  const handleShare = async () => {
+    if (!selectedContextId) return
+
+    const result = await onShare(pulse.id, selectedContextId)
+    if (result.success) {
+      setShareMessage('Pulse shared successfully!')
+      setTimeout(() => {
+        onClose()
+        setShareMessage('')
+      }, 2000)
+    } else {
+      setShareMessage(result.error || 'Failed to share pulse')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gp-ink-strong">
+            Share Pulse
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div>
+          <p className="text-sm text-gp-ink-muted mb-3">
+            Select a context to share this pulse with. When shared, any
+            resonances with pulses in that context will be discoverable.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase text-gp-ink-muted">
+            Target Context
+          </label>
+
+          <Select<ContextOption>
+            options={contextOptions}
+            value={contextOptions.find(
+              (opt) => opt.value === selectedContextId
+            )}
+            onChange={(option) => setSelectedContextId(option?.value || '')}
+            isLoading={contextsLoading}
+            isSearchable
+            placeholder="Choose a context..."
+            noOptionsMessage={() =>
+              contextOptions.length === 0
+                ? 'No additional contexts available'
+                : 'No matching contexts found'
+            }
+            styles={customStyles}
+            formatOptionLabel={(option) => (
+              <div className="flex flex-col">
+                <div className="font-medium text-gp-ink-strong">
+                  {option.label}
+                </div>
+                <div className="text-xs text-gp-ink-muted">
+                  {option.spaceName}
+                </div>
+              </div>
+            )}
+          />
+
+          {contextOptions.length === 0 && !contextsLoading && (
+            <p className="text-xs text-gp-ink-muted mt-2">
+              No additional contexts available. Create more contexts to share
+              this pulse.
+            </p>
+          )}
+        </div>
+
+        {shareMessage && (
+          <div
+            className={cn(
+              'text-sm p-3 rounded-lg',
+              shareMessage.includes('success')
+                ? 'bg-green-500/20 text-green-700 dark:text-green-400'
+                : 'bg-red-500/20 text-red-700 dark:text-red-400'
+            )}
+          >
+            {shareMessage}
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={!selectedContextId || isLoading}
+            className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity text-sm font-medium flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <span className="material-symbols-outlined animate-spin">
+                  sync
+                </span>
+                Sharing...
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined">check</span>
+                Share
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

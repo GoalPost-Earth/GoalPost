@@ -316,7 +316,7 @@ function FieldDetailPage() {
 
       // Extract resonance links only if enabled
       const resonances = resonanceLinkageEnabled
-        ? data.resonanceLinks || []
+        ? data.fieldContexts?.[0]?.resonancesInContext || []
         : []
       setResonanceLinks(resonances)
 
@@ -678,7 +678,7 @@ function FieldDetailPage() {
 
         console.log('✅ Resonance link updated:', response)
       } else {
-        // Create new resonance link
+        // Create new resonance link (context-independent)
         const { data: response } = await createResonanceLink({
           variables: {
             input: [
@@ -692,9 +692,6 @@ function FieldDetailPage() {
                 },
                 target: {
                   connect: [{ where: { node: { id_EQ: data.targetId } } }],
-                },
-                context: {
-                  connect: [{ where: { node: { id_EQ: fieldId } } }],
                 },
               },
             ],

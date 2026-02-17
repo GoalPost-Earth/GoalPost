@@ -248,6 +248,17 @@ type FieldContext
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)
+  resonancesInContext: [ResonanceLink!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:HAS_PULSE]->(pulse:FieldPulse)
+      WITH this, collect(pulse) as contextPulses
+      MATCH (source:FieldPulse)<-[:SOURCE]-(resonance:ResonanceLink)-[:TARGET]->(target:FieldPulse)
+      WHERE source IN contextPulses AND target IN contextPulses
+      RETURN DISTINCT resonance
+      """
+      columnName: "resonance"
+    )
   meSpace: [MeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   weSpace: [WeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   space: [Space!]!

@@ -190,3 +190,29 @@ export const GET_RESONANCE_LINKS_BY_CONTEXT_QUERY = graphql(`
     }
   }
 `)
+
+/**
+ * Query to fetch all contexts available to the current user
+ * Returns contexts from both MeSpaces and WeSpaces the user has access to
+ * Useful for sharing pulses across contexts
+ */
+export const GET_ALL_USER_CONTEXTS = graphql(`
+  query GetAllUserContexts {
+    fieldContexts {
+      id
+      title
+      emergentName
+      createdAt
+      space {
+        id
+        name
+        ... on MeSpace {
+          visibility
+        }
+        ... on WeSpace {
+          visibility
+        }
+      }
+    }
+  }
+`)

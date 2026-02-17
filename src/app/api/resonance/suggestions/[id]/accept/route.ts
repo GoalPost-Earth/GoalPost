@@ -56,13 +56,11 @@ export async function POST(
       )
     }
 
-    const { suggestion, contextId, sourcePulseId, targetPulseId } =
-      suggestionResult[0]
+    const { suggestion, sourcePulseId, targetPulseId } = suggestionResult[0]
 
     // Create the ResonanceLink from the suggestion
     const linkResult = await graph.query<{ linkId: string }>(
       `
-      MATCH (context:FieldContext {id: $contextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
       MATCH (suggestion:ResonanceSuggestion {id: $suggestionId})
@@ -78,8 +76,7 @@ export async function POST(
         approvedFromSuggestion: $suggestionId
       })
       
-      // Connect to context and pulses
-      CREATE (context)-[:HAS_RESONANCE]->(link)
+      // Connect to pulses (no context connection - resonances are pulse-level)
       CREATE (link)-[:SOURCE]->(source)
       CREATE (link)-[:TARGET]->(target)
       
@@ -91,7 +88,6 @@ export async function POST(
     `,
       {
         suggestionId,
-        contextId,
         sourcePulseId,
         targetPulseId,
         label: suggestion.label,
