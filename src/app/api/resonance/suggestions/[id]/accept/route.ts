@@ -56,8 +56,7 @@ export async function POST(
       )
     }
 
-    const { suggestion, contextId, sourcePulseId, targetPulseId } =
-      suggestionResult[0]
+    const { suggestion, sourcePulseId, targetPulseId } = suggestionResult[0]
 
     // Create the ResonanceLink from the suggestion
     const linkResult = await graph.query<{ linkId: string }>(
