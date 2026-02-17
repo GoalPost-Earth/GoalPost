@@ -367,14 +367,17 @@ function FieldDetailPage() {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulsesByContextData, computePulsePositions, resonanceLinkageEnabled])
 
-  // Fetch field name
+  // Fetch field name with pulse count
   useEffect(() => {
     if (!fieldId) return
 
     // Try to get field name from localStorage first (persisted from navigation)
     const cachedFieldName = localStorage.getItem(`field_${fieldId}`)
     if (cachedFieldName) {
-      setPageTitle(cachedFieldName)
+      const pulseCount = pulseOptions.length
+      setPageTitle(
+        `${cachedFieldName} - ${pulseCount} Pulse${pulseCount !== 1 ? 's' : ''}`
+      )
       return
     }
 
@@ -393,7 +396,10 @@ function FieldDetailPage() {
           //eslint-disable-next-line @typescript-eslint/no-explicit-any
           const field = data.fields?.find((f: any) => f.id === fieldId)
           if (field) {
-            setPageTitle(field.title)
+            const pulseCount = pulseOptions.length
+            setPageTitle(
+              `${field.title} - ${pulseCount} Pulse${pulseCount !== 1 ? 's' : ''}`
+            )
             // Cache the field name for future reloads
             localStorage.setItem(`field_${fieldId}`, field.title)
           }
@@ -404,7 +410,7 @@ function FieldDetailPage() {
     }
 
     fetchFieldName()
-  }, [fieldId, params?.id, setPageTitle])
+  }, [fieldId, params?.id, setPageTitle, pulseOptions.length])
 
   useEffect(() => {
     setIsMounted(true)

@@ -118,7 +118,7 @@ export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-lg font-bold text-slate-800 group-hover:text-primary-content transition-colors dark:text-white dark:group-hover:text-primary">
-                        {field.emergentName || field.title}
+                        {field.title}
                       </h4>
                       <span className="px-2 py-0.5 rounded-full bg-green-100/50 border border-green-200 text-[10px] text-green-700 font-semibold dark:bg-green-500/20 dark:border-green-500/30 dark:text-green-300">
                         Active

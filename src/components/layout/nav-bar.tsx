@@ -87,9 +87,24 @@ export default function NavBar() {
         </Link>
         <div className="flex flex-col gap-1">
           <h2 className="text-gp-ink-strong dark:text-gp-ink-strong text-lg font-bold leading-tight tracking-[-0.015em] transition-colors whitespace-normal wrap-break-word md:whitespace-nowrap">
-            {pageTitle === 'Spaces' && user?.firstName
-              ? `${user.firstName}'s Spaces`
-              : pageTitle}
+            {(() => {
+              const displayTitle =
+                pageTitle === 'Spaces' && user?.firstName
+                  ? `${user.firstName}'s Spaces`
+                  : pageTitle
+              const parts = displayTitle.split(' - ')
+              if (parts.length === 2) {
+                return (
+                  <>
+                    {parts[0]}
+                    <span className="text-xs font-normal text-gp-ink-muted dark:text-gp-ink-soft ml-2 italic">
+                      {parts[1]}
+                    </span>
+                  </>
+                )
+              }
+              return displayTitle
+            })()}
           </h2>
           {pathname?.includes('/spaces/') && pageTitle !== 'Spaces' && (
             <div className="text-xs text-gp-ink-muted dark:text-gp-ink-soft flex flex-wrap items-center gap-2">
@@ -119,7 +134,9 @@ export default function NavBar() {
                       const spaceId = spaceIdMatch?.[1]
                       if (!spaceId) return null
                       const spaceName = localStorage.getItem(`space_${spaceId}`)
-                      if (!spaceName || spaceName === pageTitle) return null
+                      // Extract entity name from pageTitle (before the count)
+                      const pageTitleName = pageTitle.split(' - ')[0]
+                      if (!spaceName || spaceName === pageTitleName) return null
 
                       const spaceUrl = `/protected/spaces/me-space/${spaceId}`
 
@@ -157,7 +174,9 @@ export default function NavBar() {
                       const spaceId = spaceIdMatch?.[1]
                       if (!spaceId) return null
                       const spaceName = localStorage.getItem(`space_${spaceId}`)
-                      if (!spaceName || spaceName === pageTitle) return null
+                      // Extract entity name from pageTitle (before the count)
+                      const pageTitleName = pageTitle.split(' - ')[0]
+                      if (!spaceName || spaceName === pageTitleName) return null
 
                       const spaceUrl = `/protected/spaces/we-space/${spaceId}`
 
@@ -187,7 +206,9 @@ export default function NavBar() {
                   const fieldId = fieldIdMatch?.[1]
                   if (!fieldId) return <span>Field</span>
                   const fieldName = localStorage.getItem(`field_${fieldId}`)
-                  if (!fieldName || fieldName === pageTitle) return null
+                  // Extract entity name from pageTitle (before the count)
+                  const pageTitleName = pageTitle.split(' - ')[0]
+                  if (!fieldName || fieldName === pageTitleName) return null
 
                   const spaceType = pathname?.includes('/me-space')
                     ? 'me-space'
