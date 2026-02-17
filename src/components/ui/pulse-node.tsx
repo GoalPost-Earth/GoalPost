@@ -2,11 +2,12 @@
 
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts/animation-context'
+import { PULSE_TYPE_CONFIG, type NodeType, getIconForType } from '@/lib/pulse-type-config'
 
-export type NodeType = 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
+export type { NodeType }
 
 export interface PulseNodeProps {
-  icon: string
+  icon?: string
   label: string
   type: NodeType
   position?:
@@ -23,41 +24,6 @@ export interface PulseNodeProps {
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
   className?: string
-}
-
-const typeConfig: Record<
-  NodeType,
-  { color: string; shadowColor: string; bgClass: string }
-> = {
-  goal: {
-    color: 'text-gp-goal',
-    shadowColor:
-      'color-mix(in srgb, var(--gp-goal, var(--gp-primary)) 55%, transparent)',
-    bgClass: 'bg-white/70 dark:bg-black/60',
-  },
-  resource: {
-    color: 'text-gp-resource',
-    shadowColor:
-      'color-mix(in srgb, var(--gp-resource, var(--gp-primary)) 55%, transparent)',
-    bgClass: 'bg-white/70 dark:bg-[#1a1a1a]/60',
-  },
-  story: {
-    color: 'text-gp-story',
-    shadowColor:
-      'color-mix(in srgb, var(--gp-story, var(--gp-primary)) 55%, transparent)',
-    bgClass: 'bg-white/70 dark:bg-[#262626]/60',
-  },
-  care: {
-    color: 'text-gp-care',
-    shadowColor: 'color-mix(in srgb, var(--gp-care, #10b981) 55%, transparent)',
-    bgClass: 'bg-white/70 dark:bg-[#1a3a2e]/60',
-  },
-  coreValue: {
-    color: 'text-gp-coreValue',
-    shadowColor:
-      'color-mix(in srgb, var(--gp-coreValue, #8b5cf6) 55%, transparent)',
-    bgClass: 'bg-white/70 dark:bg-[#2d1f3a]/60',
-  },
 }
 
 const positionClasses: Record<string, string> = {
@@ -79,14 +45,6 @@ const animationClasses: Record<string, string> = {
   none: '',
 }
 
-const typeLabels: Record<NodeType, string> = {
-  goal: 'Goal',
-  resource: 'Resource',
-  story: 'Story',
-  care: 'Care',
-  coreValue: 'Core Value',
-}
-
 export function PulseNode({
   icon,
   label,
@@ -98,7 +56,8 @@ export function PulseNode({
   className,
 }: PulseNodeProps) {
   const { animationsEnabled } = useAnimations()
-  const config = typeConfig[type]
+  const config = PULSE_TYPE_CONFIG[type]
+  const resolvedIcon = icon ?? getIconForType(type)
   const posClass = typeof position === 'string' ? positionClasses[position] : ''
   const animClass = animationClasses[animation]
   const customPosition = typeof position === 'object' ? position : undefined
@@ -163,7 +122,7 @@ export function PulseNode({
             config.color
           )}
         >
-          {icon}
+          {resolvedIcon}
         </span>
       </div>
 
@@ -178,7 +137,7 @@ export function PulseNode({
             config.color
           )}
         >
-          {typeLabels[type]}
+          {config.label}
         </span>
       </div>
     </div>
