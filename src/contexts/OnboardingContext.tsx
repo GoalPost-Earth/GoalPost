@@ -124,9 +124,19 @@ export function OnboardingProvider({
           throw new Error('API unavailable')
         }
 
+        // If tour was completed, don't show onboarding
         if (progress.onboardingIsCompleted) {
           setIsCompleted(true)
           setIsOnboarding(false)
+          return
+        }
+
+        // If tour was skipped, don't show onboarding (but allow resume/restart from profile)
+        if (progress.onboardingSkipped) {
+          setIsCompleted(false)
+          setIsOnboarding(false)
+          setCurrentStepIndex(progress.onboardingCurrentStepIndex ?? 0)
+          setCompletedSteps(progress.onboardingCompletedSteps ?? [])
           return
         }
 
@@ -154,6 +164,12 @@ export function OnboardingProvider({
           const savedProgress = localStorage.getItem('onboardingProgress')
           if (savedProgress) {
             const progress = JSON.parse(savedProgress)
+            // Check skipped flag in localStorage too
+            if (progress.skipped) {
+              setIsCompleted(false)
+              setIsOnboarding(false)
+              return
+            }
             if (progress.isCompleted) {
               setIsCompleted(true)
               setIsOnboarding(false)
@@ -348,8 +364,7 @@ export function OnboardingProvider({
       if (nextStepObj) {
         // Handle dynamic routes like /protected/spaces/me-space/[id]
         const nextPageBase = nextStepObj.page
-        const isCurrentlyOnNextPage =
-          pathname === nextPageBase || pathname?.startsWith(nextPageBase)
+        const isCurrentlyOnNextPage = pathname === nextPageBase
 
         if (!isCurrentlyOnNextPage) {
           // Need to navigate
@@ -369,6 +384,7 @@ export function OnboardingProvider({
           // Handle we-space pages that need the weSpaceId
           if (
             nextPageBase.includes('/we-space') &&
+            nextPageBase !== '/protected/spaces/we-space' &&
             !nextPageBase.includes('[id]')
           ) {
             const weSpaceId =
@@ -434,12 +450,8 @@ export function OnboardingProvider({
       if (previousStepObj) {
         const previousPageBase = previousStepObj.page
 
-        // More precise route matching: check if we're exactly on the previous page
-        // or on a direct child route of it (but not nested deeper)
-        const isCurrentlyOnPrevPage =
-          pathname === previousPageBase ||
-          (pathname?.startsWith(previousPageBase) &&
-            !pathname?.replace(previousPageBase, '').slice(1).includes('/'))
+        // Require exact pathname match for onboarding step navigation
+        const isCurrentlyOnPrevPage = pathname === previousPageBase
 
         if (!isCurrentlyOnPrevPage) {
           // Need to navigate to previous page

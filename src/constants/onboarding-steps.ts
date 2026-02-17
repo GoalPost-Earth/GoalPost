@@ -20,28 +20,28 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     selector: '[data-tour="me-space-button"]',
   },
   {
+    id: 'create-mespace',
+    title: 'Create Your First MeSpace',
+    description:
+      'Click the button to create your first MeSpace. This is your personal sanctuary for self-reflection and organizing your ideas.',
+    page: '/protected/spaces/me-space',
+    position: 'bottom',
+    selector: '[data-tour="create-mespace-button"]',
+  },
+  {
     id: 'fields-intro',
     title: 'What are Fields?',
     description:
       'Fields organize your ideas and contributions. Think of them as buckets that hold related pulses (messages) on specific topics.',
-    page: '/protected/spaces/me-space/[id]',
+    page: '/protected/spaces/me-space',
     position: 'center',
-  },
-  {
-    id: 'create-field',
-    title: 'Create Your First Field',
-    description:
-      'Click the button to create a field. You can organize your thoughts around any topic or area of interest.',
-    page: '/protected/spaces/me-space/[id]',
-    position: 'top',
-    selector: '[data-tour="create-field-button"]',
   },
   {
     id: 'pulses-intro',
     title: 'Three Types of Pulses',
     description:
       'Create Goal Pulses (aspirations), Resource Pulses (supportive elements), or Story Pulses (narratives) within the field context. Each contributes to discovering patterns.',
-    page: '/protected/spaces/me-space/[id]',
+    page: '/protected/spaces/me-space',
     position: 'center',
   },
   {

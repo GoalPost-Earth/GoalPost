@@ -99,20 +99,19 @@ export default function NavBar() {
               >
                 {user?.firstName + "'s Spaces" || 'My Spaces'}
               </Link>
-              {/* Show Me Space breadcrumb when viewing fields */}
+              {/* Show Me Space breadcrumb when viewing nested pages */}
               {pathname?.includes('/me-space') &&
-                pathname?.includes('/fields/') &&
-                isMounted && (
-                  <>
-                    <span>•</span>
-                    <Link
-                      href={`/protected/spaces/me-space/${localStorage.getItem('meSpaceId') || ''}`}
-                      className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
-                    >
-                      Me Space
-                    </Link>
-                  </>
-                )}
+              pathname !== '/protected/spaces/me-space' ? (
+                <>
+                  <span>•</span>
+                  <Link
+                    href="/protected/spaces/me-space"
+                    className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
+                  >
+                    Me Space
+                  </Link>
+                </>
+              ) : null}
               {/* Only show breadcrumb for WeSpace, not MeSpace (since user has only one) */}
               {pathname?.includes('/we-space') &&
               pathname !== '/protected/spaces/we-space' ? (
@@ -194,11 +193,11 @@ export default function NavBar() {
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
-              pathname?.includes('/protected/spaces/me-space')
+              pathname === '/protected/spaces/me-space'
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
             )}
-            href={`/protected/spaces/me-space/${typeof window !== 'undefined' ? localStorage.getItem('meSpaceId') || '' : ''}`}
+            href="/protected/spaces/me-space"
           >
             Me Space
           </Link>
@@ -332,10 +331,10 @@ export default function NavBar() {
             className="absolute top-20 left-4 right-4 md:hidden rounded-2xl bg-white dark:bg-black/90 border border-gp-glass-border shadow-xl py-2 z-50"
           >
             <Link
-              href={`/protected/spaces/me-space/${typeof window !== 'undefined' ? localStorage.getItem('meSpaceId') || '' : ''}`}
+              href="/protected/spaces/me-space"
               className={cn(
                 'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
-                pathname?.includes('/protected/spaces/me-space')
+                pathname === '/protected/spaces/me-space'
                   ? 'text-gp-primary bg-gp-primary/10'
                   : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
               )}
