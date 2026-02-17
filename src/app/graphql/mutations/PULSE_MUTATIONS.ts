@@ -233,3 +233,111 @@ export const DELETE_STORY_PULSE_MUTATION = graphql(`
     }
   }
 `)
+
+/**
+ * Share a pulse with another FieldContext
+ * Creates an additional HAS_PULSE relationship, making the pulse visible in multiple contexts.
+ * Any existing resonances with other pulses in the target context will be discoverable.
+ * Supports sharing any pulse type (Goal, Resource, Story, Care, CoreValue)
+ */
+export const SHARE_PULSE_WITH_CONTEXT_MUTATION = graphql(`
+  mutation SharePulseWithContext($pulseId: ID!, $contextId: ID!) {
+    updateFieldContexts(
+      where: { id_EQ: $contextId }
+      update: {
+        pulses: { connect: [{ where: { node: { id_EQ: $pulseId } } }] }
+      }
+    ) {
+      fieldContexts {
+        id
+        title
+        pulses {
+          id
+          title
+          content
+          createdAt
+          ... on GoalPulse {
+            status
+            horizon
+          }
+          ... on ResourcePulse {
+            resourceType
+          }
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Remove a pulse from a FieldContext (unshare from a field)
+ * Only removes the relationship to this specific context.
+ * If the pulse is in other contexts, it remains there.
+ */
+export const REMOVE_PULSE_FROM_CONTEXT_MUTATION = graphql(`
+  mutation RemovePulseFromContext($pulseId: ID!, $contextId: ID!) {
+    updateFieldContexts(
+      where: { id_EQ: $contextId }
+      update: {
+        pulses: { disconnect: [{ where: { node: { id_EQ: $pulseId } } }] }
+      }
+    ) {
+      fieldContexts {
+        id
+        title
+        pulses {
+          id
+          title
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Get all resonances for a context, including cross-context resonances
+ * Returns resonances where BOTH source and target pulses are present in the context.
+ * This allows resonances created in the original context to be visible when pulses are shared.
+ */
+export const GET_CONTEXT_RESONANCES_QUERY = graphql(`
+  query GetContextResonances($contextId: ID!) {
+    fieldContexts(where: { id_EQ: $contextId }) {
+      id
+      title
+      pulses {
+        id
+        title
+      }
+      resonances {
+        id
+        label
+        description
+        confidence
+        evidence
+        createdAt
+        source {
+          id
+          title
+          content
+          ... on GoalPulse {
+            status
+          }
+          ... on ResourcePulse {
+            resourceType
+          }
+        }
+        target {
+          id
+          title
+          content
+          ... on GoalPulse {
+            status
+          }
+          ... on ResourcePulse {
+            resourceType
+          }
+        }
+      }
+    }
+  }
+`)

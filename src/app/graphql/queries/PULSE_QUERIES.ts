@@ -51,86 +51,86 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
     }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
-    }
-    resonanceLinks(where: { context_SOME: { id_EQ: $contextId } }) {
-      id
-      label
-      description
-      confidence
-      evidence
-      createdAt
-      source {
-        ... on GoalPulse {
-          id
-          __typename
-          title
-          content
-          createdAt
+      resonancesInContext {
+        id
+        label
+        description
+        confidence
+        evidence
+        createdAt
+        source {
+          ... on GoalPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on ResourcePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on StoryPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CarePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CoreValuePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
         }
-        ... on ResourcePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on StoryPulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on CarePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on CoreValuePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-      }
-      target {
-        ... on GoalPulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on ResourcePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on StoryPulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on CarePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
-        }
-        ... on CoreValuePulse {
-          id
-          __typename
-          title
-          content
-          createdAt
+        target {
+          ... on GoalPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on ResourcePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on StoryPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CarePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CoreValuePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
         }
       }
     }
