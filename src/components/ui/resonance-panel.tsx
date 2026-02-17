@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
+import { getConfigForType } from '@/lib/pulse-type-config'
 
 export interface PulseInResonance {
   id: string
@@ -50,19 +51,19 @@ export interface ResonancePanelProps {
 
 const typeConfig = {
   goal: {
-    icon: 'track_changes',
+    icon: getConfigForType('goal').icon,
     color: 'text-gp-goal',
     bgColor: 'bg-gp-goal/10',
     label: 'Goal Pulse',
   },
   resource: {
-    icon: 'inventory_2',
+    icon: getConfigForType('resource').icon,
     color: 'text-gp-resource',
     bgColor: 'bg-gp-resource/10',
     label: 'Resource Pulse',
   },
   story: {
-    icon: 'auto_stories',
+    icon: getConfigForType('story').icon,
     color: 'text-gp-story',
     bgColor: 'bg-gp-story/10',
     label: 'Story Pulse',

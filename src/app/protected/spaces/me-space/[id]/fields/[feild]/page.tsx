@@ -49,17 +49,18 @@ import {
   resolveResonanceCollisions,
   resolveBidirectionalResonancePulseCollisions,
 } from '@/lib/utils'
+import { PULSE_TYPE_CONFIG } from '@/lib/pulse-type-config'
 
 // Icon mappings for pulse types
 const pulseTypeIcons: Record<
   'goal' | 'resource' | 'story' | 'care' | 'coreValue',
   string
 > = {
-  goal: 'flag',
-  resource: 'diamond',
-  story: 'auto_stories',
-  care: 'favorite',
-  coreValue: 'auto_awesome',
+  goal: PULSE_TYPE_CONFIG.goal.icon,
+  resource: PULSE_TYPE_CONFIG.resource.icon,
+  story: PULSE_TYPE_CONFIG.story.icon,
+  care: PULSE_TYPE_CONFIG.care.icon,
+  coreValue: PULSE_TYPE_CONFIG.coreValue.icon,
 }
 
 const ANIMATION_ORDER: Array<

@@ -8,6 +8,7 @@ import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { useQuery } from '@apollo/client/react'
 import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERIES'
 import Select, { StylesConfig } from 'react-select'
+import { getConfigForType } from '@/lib/pulse-type-config'
 
 export type PulseKind = 'goal' | 'resource' | 'story'
 
@@ -50,21 +51,21 @@ const typeConfig: Record<
 > = {
   goal: {
     label: 'Goal Pulse',
-    icon: 'flag',
+    icon: getConfigForType('goal').icon,
     accent: 'text-gp-goal',
     badge: 'bg-gp-goal/15 text-gp-goal',
     chip: 'bg-gp-goal/10 text-gp-goal border border-gp-goal/30',
   },
   resource: {
     label: 'Resource Pulse',
-    icon: 'diamond',
+    icon: getConfigForType('resource').icon,
     accent: 'text-gp-resource',
     badge: 'bg-gp-resource/15 text-gp-resource',
     chip: 'bg-gp-resource/10 text-gp-resource border border-gp-resource/30',
   },
   story: {
     label: 'Story Pulse',
-    icon: 'auto_stories',
+    icon: getConfigForType('story').icon,
     accent: 'text-gp-story',
     badge: 'bg-gp-story/15 text-gp-story',
     chip: 'bg-gp-story/10 text-gp-story border border-gp-story/30',

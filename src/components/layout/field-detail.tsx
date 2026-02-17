@@ -1,6 +1,7 @@
 'use client'
 
 import { PulseNode, type NodeType } from '@/components/ui/pulse-node'
+import { getIconForType } from '@/lib/pulse-type-config'
 import { cn } from '@/lib/utils'
 import { useRef } from 'react'
 
@@ -29,7 +30,7 @@ export interface FieldDetailProps {
 const defaultNodes: NodeData[] = [
   {
     id: 'expand-api',
-    icon: 'flag',
+    icon: getIconForType('goal'),
     label: 'Expand API Coverage',
     type: 'goal',
     position: 'top-left',
@@ -37,7 +38,7 @@ const defaultNodes: NodeData[] = [
   },
   {
     id: 'design-tokens',
-    icon: 'diamond',
+    icon: getIconForType('resource'),
     label: 'Design Tokens',
     type: 'resource',
     position: 'bottom-left',
@@ -45,7 +46,7 @@ const defaultNodes: NodeData[] = [
   },
   {
     id: 'origin-narrative',
-    icon: 'auto_stories',
+    icon: getIconForType('story'),
     label: 'Origin Narrative',
     type: 'story',
     position: 'top-right',
@@ -53,7 +54,7 @@ const defaultNodes: NodeData[] = [
   },
   {
     id: 'q3-revenue',
-    icon: 'flag',
+    icon: getIconForType('goal'),
     label: 'Q3 Revenue',
     type: 'goal',
     position: 'bottom-right',
@@ -61,7 +62,7 @@ const defaultNodes: NodeData[] = [
   },
   {
     id: 'raw-dataset',
-    icon: 'diamond',
+    icon: getIconForType('resource'),
     label: 'Raw Dataset B',
     type: 'resource',
     position: 'top-center',
@@ -69,7 +70,7 @@ const defaultNodes: NodeData[] = [
   },
   {
     id: 'user-journey',
-    icon: 'auto_stories',
+    icon: getIconForType('story'),
     label: 'User Journey Map',
     type: 'story',
     position: 'right-center',

@@ -6,6 +6,7 @@ import { GET_ALL_PULSES } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@apollo/client/react'
+import { getConfigForType } from '@/lib/pulse-type-config'
 
 type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
 
@@ -17,19 +18,19 @@ interface PulseConfig {
 
 const pulseConfig: Record<PulseType, PulseConfig> = {
   GoalPulse: {
-    icon: 'track_changes',
+    icon: getConfigForType('goal').icon,
     color: 'text-gp-goal',
     bgClass:
       'bg-sky-50 border-sky-100 text-gp-goal dark:bg-sky-500/20 dark:border-sky-500/30',
   },
   ResourcePulse: {
-    icon: 'category',
+    icon: getConfigForType('resource').icon,
     color: 'text-gp-resource',
     bgClass:
       'bg-green-50 border-green-100 text-gp-resource dark:bg-green-500/20 dark:border-green-500/30',
   },
   StoryPulse: {
-    icon: 'auto_stories',
+    icon: getConfigForType('story').icon,
     color: 'text-gp-story',
     bgClass:
       'bg-purple-50 border-purple-100 text-gp-story dark:bg-purple-500/20 dark:border-purple-500/30',
