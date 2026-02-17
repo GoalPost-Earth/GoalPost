@@ -7,9 +7,10 @@ import { GET_ALL_PEOPLE } from '@/app/graphql/queries'
 
 interface PeopleListProps {
   showAll?: boolean
+  onViewAll?: () => void
 }
 
-export function PeopleList({ showAll = false }: PeopleListProps) {
+export function PeopleList({ showAll = false, onViewAll }: PeopleListProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PEOPLE, {
     fetchPolicy: 'cache-and-network',
@@ -36,9 +37,14 @@ export function PeopleList({ showAll = false }: PeopleListProps) {
         <h3 className="section-title text-primary-content text-sm font-bold uppercase tracking-widest dark:text-primary">
           People
         </h3>
-        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
-          Manage People
-        </button>
+        {!showAll && (
+          <button 
+            onClick={onViewAll}
+            className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
+          >
+            View People
+          </button>
+        )}
       </div>
 
       {loading ? (

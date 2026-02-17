@@ -9,9 +9,10 @@ import { useQuery } from '@apollo/client/react'
 
 interface SpacesListProps {
   showAll?: boolean
+  onViewAll?: () => void
 }
 
-export function SpacesList({ showAll = false }: SpacesListProps) {
+export function SpacesList({ showAll = false, onViewAll }: SpacesListProps) {
   const router = useRouter()
   const {
     data: meSpacesData,
@@ -79,9 +80,14 @@ export function SpacesList({ showAll = false }: SpacesListProps) {
         <h3 className="section-title text-gp-accent-glow text-sm font-bold uppercase tracking-widest">
           Spaces
         </h3>
-        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
-          Manage Spaces
-        </button>
+        {!showAll && (
+          <button 
+            onClick={onViewAll}
+            className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
+          >
+            View Spaces
+          </button>
+        )}
       </div>
 
       {loading ? (

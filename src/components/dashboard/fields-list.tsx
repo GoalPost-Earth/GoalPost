@@ -8,9 +8,10 @@ import { formatDistanceToNow } from 'date-fns'
 
 interface FieldsListProps {
   showAll?: boolean
+  onViewAll?: () => void
 }
 
-export function FieldsList({ showAll = false }: FieldsListProps) {
+export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS, {
     fetchPolicy: 'cache-and-network',
@@ -37,9 +38,14 @@ export function FieldsList({ showAll = false }: FieldsListProps) {
         <h3 className="section-title text-primary-content text-sm font-bold uppercase tracking-widest dark:text-primary">
           Fields
         </h3>
-        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
-          Manage Fields
-        </button>
+        {!showAll && (
+          <button 
+            onClick={onViewAll}
+            className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
+          >
+            View Fields
+          </button>
+        )}
       </div>
 
       {loading ? (
