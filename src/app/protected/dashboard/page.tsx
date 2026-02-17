@@ -85,10 +85,10 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto space-y-10">
           {activeView === 'overview' && (
             <>
-              <ActivePulses />
-              <FieldsList />
-              <SpacesList />
-              <PeopleList />
+              <ActivePulses onViewAll={() => setActiveView('pulses')} />
+              <FieldsList onViewAll={() => setActiveView('fields')} />
+              <SpacesList onViewAll={() => setActiveView('spaces')} />
+              <PeopleList onViewAll={() => setActiveView('people')} />
             </>
           )}
           {activeView === 'pulses' && <ActivePulses showAll />}

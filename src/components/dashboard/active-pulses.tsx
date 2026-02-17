@@ -39,9 +39,10 @@ const pulseConfig: Record<PulseType, PulseConfig> = {
 
 interface ActivePulsesProps {
   showAll?: boolean
+  onViewAll?: () => void
 }
 
-export function ActivePulses({ showAll = false }: ActivePulsesProps) {
+export function ActivePulses({ showAll = false, onViewAll }: ActivePulsesProps) {
   const router = useRouter()
   const { data, loading, error } = useQuery(GET_ALL_PULSES, {
     fetchPolicy: 'cache-and-network',
@@ -85,9 +86,14 @@ export function ActivePulses({ showAll = false }: ActivePulsesProps) {
         <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
           Active Pulses
         </h3>
-        <button className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white">
-          View All
-        </button>
+        {!showAll && (
+          <button 
+            onClick={onViewAll}
+            className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
+          >
+            View Pulses
+          </button>
+        )}
       </div>
 
       {loading ? (
