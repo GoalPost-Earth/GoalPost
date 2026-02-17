@@ -315,10 +315,25 @@ export function OnboardingProvider({
   }, [isOnboarding, currentStepIndex, steps, pathname])
 
   const markComplete = useCallback(() => {
+    // Immediately persist to localStorage to prevent re-entrance of onboarding
+    try {
+      localStorage.setItem(
+        'onboardingProgress',
+        JSON.stringify({
+          currentStepIndex,
+          completedSteps: steps.map((s) => s.id),
+          isCompleted: true,
+          skipped: false,
+        })
+      )
+    } catch (e) {
+      console.warn('Failed to save completion state to localStorage:', e)
+    }
+
     setIsOnboarding(false)
     setIsCompleted(true)
 
-    // Save completion to database
+    // Save completion to database (async)
     saveProgress(
       currentStepIndex,
       steps.map((s) => s.id),
@@ -514,8 +529,23 @@ export function OnboardingProvider({
   }, [currentStepIndex, steps, pathname, router])
 
   const skipTour = useCallback(() => {
+    // Immediately persist to localStorage to prevent re-entrance of onboarding
+    try {
+      localStorage.setItem(
+        'onboardingProgress',
+        JSON.stringify({
+          currentStepIndex,
+          completedSteps,
+          isCompleted: false,
+          skipped: true,
+        })
+      )
+    } catch (e) {
+      console.warn('Failed to save skip state to localStorage:', e)
+    }
+
     setIsOnboarding(false)
-    // Save that the tour was skipped but not completed
+    // Save that the tour was skipped but not completed (async)
     saveProgress(currentStepIndex, completedSteps, false, true)
   }, [completedSteps, currentStepIndex, saveProgress])
 
@@ -549,11 +579,26 @@ export function OnboardingProvider({
   ])
 
   const restartTour = useCallback(() => {
+    // Immediately persist reset state to localStorage
+    try {
+      localStorage.setItem(
+        'onboardingProgress',
+        JSON.stringify({
+          currentStepIndex: 0,
+          completedSteps: [],
+          isCompleted: false,
+          skipped: false,
+        })
+      )
+    } catch (e) {
+      console.warn('Failed to save restart state to localStorage:', e)
+    }
+
     setCurrentStepIndex(0)
     setCompletedSteps([])
     setIsOnboarding(true)
     setIsCompleted(false)
-    // Clear from database
+    // Clear from database (async)
     saveProgress(0, [], false, false)
 
     // Navigate to spaces page
