@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { NodeType } from './pulse-node'
+import { PULSE_TYPE_CONFIG, type NodeType } from '@/lib/pulse-type-config'
 import { cn } from '@/lib/utils'
 
 interface PulseTypeSuggestionProps {
@@ -138,37 +138,6 @@ function inferPulseType(input: string): {
   }
 }
 
-const typeConfig: Record<
-  NodeType,
-  { icon: string; label: string; color: string }
-> = {
-  goal: {
-    icon: 'flag',
-    label: 'Goal',
-    color: 'text-gp-goal',
-  },
-  resource: {
-    icon: 'diamond',
-    label: 'Resource',
-    color: 'text-gp-resource',
-  },
-  story: {
-    icon: 'auto_stories',
-    label: 'Story',
-    color: 'text-gp-story',
-  },
-  care: {
-    icon: 'favorite',
-    label: 'Care',
-    color: 'text-gp-care',
-  },
-  coreValue: {
-    icon: 'auto_awesome',
-    label: 'Core Value',
-    color: 'text-gp-coreValue',
-  },
-}
-
 export function PulseTypeSuggestion({
   input,
   onSelect,
@@ -261,7 +230,7 @@ export function PulseTypeSuggestion({
 
   if (!isOpen) return null
 
-  const config = typeConfig[selectedType]
+  const config = PULSE_TYPE_CONFIG[selectedType]
 
   return (
     <div

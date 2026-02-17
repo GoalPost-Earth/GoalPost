@@ -9,6 +9,7 @@ import {
   ResonanceLinkNode,
   PulseNode,
 } from './resonance-types'
+import { getIconForType } from '@/lib/pulse-type-config'
 
 const FIELD_NODE_RADIUS = 90
 const LINK_NODE_RADIUS = 50
@@ -30,9 +31,7 @@ export function getPulseType(typename: string): 'goal' | 'resource' | 'story' {
  * Gets the appropriate Material UI icon for a pulse type
  */
 export function getPulseIcon(type: 'goal' | 'resource' | 'story'): string {
-  if (type === 'goal') return 'flag'
-  if (type === 'resource') return 'diamond'
-  return 'auto_stories'
+  return getIconForType(type)
 }
 
 // ============================================================================
