@@ -23,10 +23,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const userId = decoded.sub as string | undefined
+    // Try to get user ID from standard JWT claims (sub, user_id, id, or user.id)
+    let userId: string | undefined
+
+    // Check standard claims first
+    if (decoded.sub) {
+      userId = decoded.sub as string
+    } else if (decoded.user_id) {
+      userId = decoded.user_id as string
+    } else if (decoded.id) {
+      userId = decoded.id as string
+    } else if (decoded.user && typeof decoded.user === 'object') {
+      // Handle nested user object (e.g., {user: {id: '....'}}
+      const user = decoded.user as Record<string, unknown>
+      userId = (user.id || user.userId || user.sub) as string | undefined
+    }
+
     if (!userId) {
+      console.error(
+        'Token decoded but missing user ID. Available claims:',
+        Object.keys(decoded)
+      )
+      if (decoded.user && typeof decoded.user === 'object') {
+        console.error(
+          'User object keys:',
+          Object.keys(decoded.user as Record<string, unknown>)
+        )
+      }
       return NextResponse.json(
-        { error: 'Token missing user ID' },
+        { error: 'Token missing user ID claim' },
         { status: 401 }
       )
     }
@@ -96,10 +121,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const userId = decoded.sub as string | undefined
+    // Try to get user ID from standard JWT claims (sub, user_id, id, or user.id)
+    let userId: string | undefined
+
+    // Check standard claims first
+    if (decoded.sub) {
+      userId = decoded.sub as string
+    } else if (decoded.user_id) {
+      userId = decoded.user_id as string
+    } else if (decoded.id) {
+      userId = decoded.id as string
+    } else if (decoded.user && typeof decoded.user === 'object') {
+      // Handle nested user object (e.g., {user: {id: '....'}})
+      const user = decoded.user as Record<string, unknown>
+      userId = (user.id || user.userId || user.sub) as string | undefined
+    }
+
     if (!userId) {
+      console.error(
+        'Token decoded but missing user ID. Available claims:',
+        Object.keys(decoded)
+      )
+      if (decoded.user && typeof decoded.user === 'object') {
+        console.error(
+          'User object keys:',
+          Object.keys(decoded.user as Record<string, unknown>)
+        )
+      }
       return NextResponse.json(
-        { error: 'Token missing user ID' },
+        { error: 'Token missing user ID claim' },
         { status: 401 }
       )
     }

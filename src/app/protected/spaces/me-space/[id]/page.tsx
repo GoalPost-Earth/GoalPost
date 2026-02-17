@@ -54,11 +54,10 @@ export default function MeSpaceFieldsPage() {
   const meSpace = data?.meSpaces?.[0]
   const fields = meSpace?.contexts || []
 
-  // Set page title to "Me Space" since user only has one
+  // Set page title to the actual space name
   useEffect(() => {
-    setPageTitle('Me Space')
-    // Still store the actual space name in localStorage for other purposes
     if (meSpace?.name) {
+      setPageTitle(meSpace.name)
       localStorage.setItem(`space_${meSpaceId}`, meSpace.name)
     }
   }, [meSpace?.name, meSpaceId, setPageTitle])
