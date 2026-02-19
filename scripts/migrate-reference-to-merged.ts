@@ -388,30 +388,44 @@ class MigrationEngine {
               ? creatorResult.records[0].get('creatorId')
               : null
 
-          // Find who motivated by this goal
+          // Find ALL entities motivated by this goal (Person and Community)
           const motivatedByResult = await prodSession.run(
-            `MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN p.id as personId`,
+            `MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN "person" as type, p.id as id
+             UNION
+             MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN "community" as type, c.id as id`,
             { id: goal.id }
           )
 
-          let contextId = null
-          if (motivatedByResult.records.length > 0) {
-            const personId = motivatedByResult.records[0].get('personId')
-            contextId = `context_${personId}_goals`
-          } else {
-            // Check if community motivated by this goal
-            const communityMotivatedResult = await prodSession.run(
-              `MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN c.id as communityId`,
-              { id: goal.id }
-            )
-            if (communityMotivatedResult.records.length > 0) {
-              const communityId =
-                communityMotivatedResult.records[0].get('communityId')
-              contextId = `context_${communityId}_field`
+          const personIds: string[] = []
+          const communityIds: string[] = []
+
+          for (const r of motivatedByResult.records) {
+            const type = r.get('type')
+            const id = r.get('id')
+            if (type === 'person') {
+              personIds.push(id)
+            } else if (type === 'community') {
+              communityIds.push(id)
             }
           }
 
-          if (!contextId) {
+          // Determine primary and secondary contexts
+          let primaryContextId: string | null = null
+          let secondaryContextId: string | null = null
+
+          if (personIds.length > 0 && communityIds.length > 0) {
+            // Both person and community: create in person's context, share with community
+            primaryContextId = `context_${personIds[0]}_goals`
+            secondaryContextId = `context_${communityIds[0]}_field`
+          } else if (communityIds.length > 0) {
+            // Only community: create in community context
+            primaryContextId = `context_${communityIds[0]}_field`
+          } else if (personIds.length > 0) {
+            // Only person: create in person context
+            primaryContextId = `context_${personIds[0]}_goals`
+          }
+
+          if (!primaryContextId) {
             this.stats.errors.push(`Goal ${goal.id} has no owning context`)
             continue
           }
@@ -449,7 +463,7 @@ class MigrationEngine {
             RETURN pulse
             `,
             {
-              contextId,
+              contextId: primaryContextId,
               pulseId,
               title: goal.name,
               content: goal.description || '',
@@ -464,8 +478,25 @@ class MigrationEngine {
             }
           )
 
+          // Share with secondary context if both person and community are related
+          if (secondaryContextId) {
+            await devSession.run(
+              `
+              MATCH (context:FieldContext { id: $contextId })
+              MATCH (pulse:FieldPulse { id: $pulseId })
+              CREATE (context)-[:HAS_PULSE]->(pulse)
+              `,
+              {
+                contextId: secondaryContextId,
+                pulseId,
+              }
+            )
+            console.log(`  ✓ ${goal.name} (shared with secondary context)`)
+          } else {
+            console.log(`  ✓ ${goal.name}`)
+          }
+
           this.stats.goalPulsesCreated++
-          console.log(`  ✓ ${goal.name}`)
         } catch (error) {
           this.stats.errors.push(`Failed to migrate goal ${goal.id}: ${error}`)
           console.error(`  ✗ Failed to migrate goal ${goal.id}`)
@@ -514,26 +545,44 @@ class MigrationEngine {
               ? creatorResult.records[0].get('creatorId')
               : null
 
-          // Find provider (Person or Community)
+          // Find ALL providers (Person and Community)
           const providerResult = await prodSession.run(
-            `MATCH (p:Person)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "person" as type, p.id as providerId
+            `MATCH (p:Person)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "person" as type, p.id as id
              UNION
-             MATCH (c:Community)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "community" as type, c.id as providerId`,
+             MATCH (c:Community)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "community" as type, c.id as id`,
             { id: resource.id }
           )
 
-          let contextId = null
-          if (providerResult.records.length > 0) {
-            const result = providerResult.records[0]
-            const type = result.get('type')
-            const providerId = result.get('providerId')
-            contextId =
-              type === 'person'
-                ? `context_${providerId}_goals`
-                : `context_${providerId}_field`
+          const personIds: string[] = []
+          const communityIds: string[] = []
+
+          for (const r of providerResult.records) {
+            const type = r.get('type')
+            const id = r.get('id')
+            if (type === 'person') {
+              personIds.push(id)
+            } else if (type === 'community') {
+              communityIds.push(id)
+            }
           }
 
-          if (!contextId) {
+          // Determine primary and secondary contexts
+          let primaryContextId: string | null = null
+          let secondaryContextId: string | null = null
+
+          if (personIds.length > 0 && communityIds.length > 0) {
+            // Both person and community: create in person's context, share with community
+            primaryContextId = `context_${personIds[0]}_goals`
+            secondaryContextId = `context_${communityIds[0]}_field`
+          } else if (communityIds.length > 0) {
+            // Only community: create in community context
+            primaryContextId = `context_${communityIds[0]}_field`
+          } else if (personIds.length > 0) {
+            // Only person: create in person context
+            primaryContextId = `context_${personIds[0]}_goals`
+          }
+
+          if (!primaryContextId) {
             this.stats.errors.push(`Resource ${resource.id} has no provider`)
             continue
           }
@@ -561,7 +610,7 @@ class MigrationEngine {
             RETURN pulse
             `,
             {
-              contextId,
+              contextId: primaryContextId,
               pulseId,
               title: resource.name,
               content: resource.description || '',
@@ -573,8 +622,25 @@ class MigrationEngine {
             }
           )
 
+          // Share with secondary context if both person and community are related
+          if (secondaryContextId) {
+            await devSession.run(
+              `
+              MATCH (context:FieldContext { id: $contextId })
+              MATCH (pulse:FieldPulse { id: $pulseId })
+              CREATE (context)-[:HAS_PULSE]->(pulse)
+              `,
+              {
+                contextId: secondaryContextId,
+                pulseId,
+              }
+            )
+            console.log(`  ✓ ${resource.name} (shared with secondary context)`)
+          } else {
+            console.log(`  ✓ ${resource.name}`)
+          }
+
           this.stats.resourcePulsesCreated++
-          console.log(`  ✓ ${resource.name}`)
         } catch (error) {
           this.stats.errors.push(
             `Failed to migrate resource ${resource.id}: ${error}`
@@ -633,32 +699,49 @@ class MigrationEngine {
               ? creatorResult.records[0].get('creatorId')
               : null
 
-          // Find context through enabledByGoals or dependencies
-          const contextResult = await prodSession.run(
-            `MATCH (cp:CarePoint { id: $id })-[:ENABLED_BY|CARES_FOR]->(g:Goal) 
-             MATCH (p:Person)-[:MOTIVATED_BY]->(g) RETURN p.id as personId LIMIT 1`,
+          // Find ALL entities that care for this (Person or Community)
+          // Check both direct CARES_FOR and indirect through Goals
+          const caresForResult = await prodSession.run(
+            `MATCH (p:Person)-[:CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "person" as type, p.id as id
+             UNION
+             MATCH (c:Community)-[:CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "community" as type, c.id as id
+             UNION
+             MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal)-[:ENABLES|CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "person" as type, p.id as id
+             UNION
+             MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal)-[:ENABLES|CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "community" as type, c.id as id`,
             { id: cp.id }
           )
 
-          let contextId = null
-          if (contextResult.records.length > 0) {
-            const personId = contextResult.records[0].get('personId')
-            contextId = `context_${personId}_goals`
-          } else {
-            // Try to find through community
-            const communityContextResult = await prodSession.run(
-              `MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal)-[:ENABLES|CARES_FOR]->(cp:CarePoint { id: $id })
-               RETURN c.id as communityId LIMIT 1`,
-              { id: cp.id }
-            )
-            if (communityContextResult.records.length > 0) {
-              const communityId =
-                communityContextResult.records[0].get('communityId')
-              contextId = `context_${communityId}_field`
+          const personIds: string[] = []
+          const communityIds: string[] = []
+
+          for (const r of caresForResult.records) {
+            const type = r.get('type')
+            const id = r.get('id')
+            if (type === 'person' && !personIds.includes(id)) {
+              personIds.push(id)
+            } else if (type === 'community' && !communityIds.includes(id)) {
+              communityIds.push(id)
             }
           }
 
-          if (!contextId) {
+          // Determine primary and secondary contexts
+          let primaryContextId: string | null = null
+          let secondaryContextId: string | null = null
+
+          if (personIds.length > 0 && communityIds.length > 0) {
+            // Both person and community: create in person's context, share with community
+            primaryContextId = `context_${personIds[0]}_goals`
+            secondaryContextId = `context_${communityIds[0]}_field`
+          } else if (communityIds.length > 0) {
+            // Only community: create in community context
+            primaryContextId = `context_${communityIds[0]}_field`
+          } else if (personIds.length > 0) {
+            // Only person: create in person context
+            primaryContextId = `context_${personIds[0]}_goals`
+          }
+
+          if (!primaryContextId) {
             this.stats.errors.push(`CarePoint ${cp.id} cannot find context`)
             continue
           }
@@ -688,7 +771,7 @@ class MigrationEngine {
             RETURN pulse
             `,
             {
-              contextId,
+              contextId: primaryContextId,
               pulseId,
               title: cp.name,
               content: cp.description || '',
@@ -705,8 +788,25 @@ class MigrationEngine {
             }
           )
 
+          // Share with secondary context if both person and community are related
+          if (secondaryContextId) {
+            await devSession.run(
+              `
+              MATCH (context:FieldContext { id: $contextId })
+              MATCH (pulse:FieldPulse { id: $pulseId })
+              CREATE (context)-[:HAS_PULSE]->(pulse)
+              `,
+              {
+                contextId: secondaryContextId,
+                pulseId,
+              }
+            )
+            console.log(`  ✓ ${cp.name} (shared with secondary context)`)
+          } else {
+            console.log(`  ✓ ${cp.name}`)
+          }
+
           this.stats.storyPulsesCreated++
-          console.log(`  ✓ ${cp.name}`)
         } catch (error) {
           this.stats.errors.push(
             `Failed to migrate carepoint ${cp.id}: ${error}`
@@ -761,30 +861,44 @@ class MigrationEngine {
               ? creatorResult.records[0].get('creatorId')
               : null
 
-          // Find context through embracers
-          const contextResult = await prodSession.run(
-            `MATCH (p:Person)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN p.id as personId LIMIT 1`,
+          // Find ALL entities that embrace this (Person and Community)
+          const embracersResult = await prodSession.run(
+            `MATCH (p:Person)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN "person" as type, p.id as id
+             UNION
+             MATCH (c:Community)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN "community" as type, c.id as id`,
             { id: cv.id }
           )
 
-          let contextId = null
-          if (contextResult.records.length > 0) {
-            const personId = contextResult.records[0].get('personId')
-            contextId = `context_${personId}_goals`
-          } else {
-            // Try community
-            const communityContextResult = await prodSession.run(
-              `MATCH (c:Community)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN c.id as communityId LIMIT 1`,
-              { id: cv.id }
-            )
-            if (communityContextResult.records.length > 0) {
-              const communityId =
-                communityContextResult.records[0].get('communityId')
-              contextId = `context_${communityId}_field`
+          const personIds: string[] = []
+          const communityIds: string[] = []
+
+          for (const r of embracersResult.records) {
+            const type = r.get('type')
+            const id = r.get('id')
+            if (type === 'person') {
+              personIds.push(id)
+            } else if (type === 'community') {
+              communityIds.push(id)
             }
           }
 
-          if (!contextId) {
+          // Determine primary and secondary contexts
+          let primaryContextId: string | null = null
+          let secondaryContextId: string | null = null
+
+          if (personIds.length > 0 && communityIds.length > 0) {
+            // Both person and community: create in person's context, share with community
+            primaryContextId = `context_${personIds[0]}_goals`
+            secondaryContextId = `context_${communityIds[0]}_field`
+          } else if (communityIds.length > 0) {
+            // Only community: create in community context
+            primaryContextId = `context_${communityIds[0]}_field`
+          } else if (personIds.length > 0) {
+            // Only person: create in person context
+            primaryContextId = `context_${personIds[0]}_goals`
+          }
+
+          if (!primaryContextId) {
             this.stats.errors.push(`CoreValue ${cv.id} cannot find context`)
             continue
           }
@@ -808,7 +922,7 @@ class MigrationEngine {
             RETURN pulse
             `,
             {
-              contextId,
+              contextId: primaryContextId,
               pulseId,
               title: cv.name,
               content: cv.description || '',
@@ -819,8 +933,25 @@ class MigrationEngine {
             }
           )
 
+          // Share with secondary context if both person and community embrace this
+          if (secondaryContextId) {
+            await devSession.run(
+              `
+              MATCH (context:FieldContext { id: $contextId })
+              MATCH (pulse:FieldPulse { id: $pulseId })
+              CREATE (context)-[:HAS_PULSE]->(pulse)
+              `,
+              {
+                contextId: secondaryContextId,
+                pulseId,
+              }
+            )
+            console.log(`  ✓ ${cv.name} (shared with secondary context)`)
+          } else {
+            console.log(`  ✓ ${cv.name}`)
+          }
+
           this.stats.storyPulsesCreated++
-          console.log(`  ✓ ${cv.name}`)
         } catch (error) {
           this.stats.errors.push(
             `Failed to migrate corevalue ${cv.id}: ${error}`

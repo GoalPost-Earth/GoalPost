@@ -19101,6 +19101,7 @@ export type SearchAllQuery = {
     goalPulses: Array<{
       __typename?: 'GoalPulse'
       id: string
+      title: string
       content: string
       createdAt: any
       intensity?: number | null
@@ -19108,6 +19109,7 @@ export type SearchAllQuery = {
     resourcePulses: Array<{
       __typename?: 'ResourcePulse'
       id: string
+      title: string
       content: string
       createdAt: any
       intensity?: number | null
@@ -19115,6 +19117,7 @@ export type SearchAllQuery = {
     storyPulses: Array<{
       __typename?: 'StoryPulse'
       id: string
+      title: string
       content: string
       createdAt: any
       intensity?: number | null
@@ -30770,6 +30773,7 @@ export const SearchAllDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
@@ -30792,6 +30796,7 @@ export const SearchAllDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
@@ -30814,6 +30819,7 @@ export const SearchAllDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },

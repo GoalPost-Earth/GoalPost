@@ -73,12 +73,28 @@ export function resolveCollisions(
   positions: PulsePosition[],
   canvasWidth: number = 6000,
   canvasHeight: number = 6000,
-  iterations: number = 6
+  iterations: number = 4 // Reduced from 6 for better performance
 ): PulsePosition[] {
-  const result = JSON.parse(JSON.stringify(positions)) as PulsePosition[]
+  // Shallow copy is much faster than JSON.parse/stringify
+  const result = positions.map((p) => ({ ...p }))
+
+  // Early exit if no positions to check
+  if (result.length < 2) {
+    return result.map((pos) => {
+      const [clampedX, clampedY] = clampPosition(
+        pos.x,
+        pos.y,
+        canvasWidth,
+        canvasHeight
+      )
+      return { ...pos, x: clampedX, y: clampedY }
+    })
+  }
+
   // Minimum distance includes both node radii plus a gap for early detection
   // Trigger collision when nodes approach each other, not after they overlap
   const minDistance = PULSE_NODE_RADIUS * 2 + 40 // Early detection gap (40px buffer)
+  const minDistanceSquared = minDistance * minDistance // Avoid sqrt in hot loop
   let collisionsFound = false
 
   for (let iter = 0; iter < iterations; iter++) {
@@ -87,9 +103,11 @@ export function resolveCollisions(
       for (let j = i + 1; j < result.length; j++) {
         const dx = result[j].x - result[i].x
         const dy = result[j].y - result[i].y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+        const distanceSquared = dx * dx + dy * dy
 
-        if (distance < minDistance && distance > 0.1) {
+        // Use squared distance to avoid expensive sqrt
+        if (distanceSquared < minDistanceSquared && distanceSquared > 0.01) {
+          const distance = Math.sqrt(distanceSquared)
           collisionsFound = true
           const angle = Math.atan2(dy, dx)
           const overlap = minDistance - distance
@@ -102,7 +120,7 @@ export function resolveCollisions(
         }
       }
     }
-    // If no collisions found, we can exit early
+    // If no collisions found after first iteration, exit early
     if (!collisionsFound && iter > 0) break
   }
 
@@ -123,19 +141,29 @@ export function resolveCollisions(
  * Two-phase collision detection: resonance-to-resonance, then resonance-to-pulse.
  * Resonance nodes move to avoid collisions, pulse nodes remain stationary.
  * Collision detection is proactive - detects when nodes approach each other.
+ * Optimized for performance with many entities.
  */
 export function resolveResonanceCollisions(
   resonancePositions: Map<string, { x: number; y: number }>,
   pulsePositions: PulsePosition[],
   canvasWidth: number = 6000,
   canvasHeight: number = 6000,
-  iterations: number = 8
+  iterations: number = 5 // Reduced from 8 for better performance
 ): Map<string, { x: number; y: number }> {
   const result = new Map(resonancePositions)
   const resonanceArray = Array.from(result.entries())
+
+  // Early exit if no entities
+  if (resonanceArray.length === 0) {
+    return result
+  }
+
   // Minimum distances account for actual visual sizes and trigger early
   const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 60 // Early detection gap between resonance nodes (60px buffer)
   const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 50 // Early detection gap from pulse nodes (50px buffer)
+  const minResonanceDistanceSquared =
+    minResonanceDistance * minResonanceDistance // Avoid sqrt in hot loop
+  const minPulseDistanceSquared = minPulseDistance * minPulseDistance // Avoid sqrt in hot loop
 
   for (let iter = 0; iter < iterations; iter++) {
     let collisionsFound = false
@@ -148,9 +176,14 @@ export function resolveResonanceCollisions(
 
         const dx = posB.x - posA.x
         const dy = posB.y - posA.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+        const distanceSquared = dx * dx + dy * dy
 
-        if (distance < minResonanceDistance && distance > 0) {
+        // Use squared distance to avoid expensive sqrt
+        if (
+          distanceSquared < minResonanceDistanceSquared &&
+          distanceSquared > 0.01
+        ) {
+          const distance = Math.sqrt(distanceSquared)
           collisionsFound = true
           const overlap = minResonanceDistance - distance
           const angle = Math.atan2(dy, dx)
@@ -182,9 +215,14 @@ export function resolveResonanceCollisions(
       for (const pulse of pulsePositions) {
         const dx = pulse.x - resPos.x
         const dy = pulse.y - resPos.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+        const distanceSquared = dx * dx + dy * dy
 
-        if (distance < minPulseDistance && distance > 0) {
+        // Use squared distance to avoid expensive sqrt
+        if (
+          distanceSquared < minPulseDistanceSquared &&
+          distanceSquared > 0.01
+        ) {
+          const distance = Math.sqrt(distanceSquared)
           collisionsFound = true
           const overlap = minPulseDistance - distance
           const angle = Math.atan2(dy, dx)
@@ -201,6 +239,7 @@ export function resolveResonanceCollisions(
       }
     }
 
+    // Early exit if no collisions found after first iteration
     if (!collisionsFound && iter > 0) break
   }
 
@@ -224,24 +263,33 @@ export function resolveResonanceCollisions(
  * Resolves bidirectional collisions between resonance nodes and pulses.
  * Both resonance and pulse nodes move apart when they collide.
  * Returns updated positions for both pulse and resonance nodes.
+ * Optimized for performance with many entities.
  */
 export function resolveBidirectionalResonancePulseCollisions(
   resonancePositions: Map<string, { x: number; y: number }>,
   pulsePositions: PulsePosition[],
   canvasWidth: number = 6000,
   canvasHeight: number = 6000,
-  iterations: number = 8
+  iterations: number = 5 // Reduced from 8 for better performance
 ): {
   pulsePositions: PulsePosition[]
   resonancePositions: Map<string, { x: number; y: number }>
 } {
-  const pulsesResult = JSON.parse(
-    JSON.stringify(pulsePositions)
-  ) as PulsePosition[]
+  // Shallow copy is much faster than JSON.parse/stringify
+  const pulsesResult = pulsePositions.map((p) => ({ ...p }))
   const resonanceResult = new Map(resonancePositions)
   const resonanceArray = Array.from(resonanceResult.entries())
 
   const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 50 // Early detection gap from pulse nodes (50px buffer)
+  const minDistanceSquared = minPulseDistance * minPulseDistance // Avoid sqrt in hot loop
+
+  // Early exit if no entities to check
+  if (resonanceArray.length === 0 || pulsesResult.length === 0) {
+    return {
+      pulsePositions: pulsesResult,
+      resonancePositions: resonanceResult,
+    }
+  }
 
   for (let iter = 0; iter < iterations; iter++) {
     let collisionsFound = false
@@ -254,9 +302,11 @@ export function resolveBidirectionalResonancePulseCollisions(
         const pulse = pulsesResult[j]
         const dx = pulse.x - resPos.x
         const dy = pulse.y - resPos.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+        const distanceSquared = dx * dx + dy * dy
 
-        if (distance < minPulseDistance && distance > 0) {
+        // Use squared distance to avoid expensive sqrt
+        if (distanceSquared < minDistanceSquared && distanceSquared > 0.01) {
+          const distance = Math.sqrt(distanceSquared)
           collisionsFound = true
           const overlap = minPulseDistance - distance
           const angle = Math.atan2(dy, dx)
@@ -282,6 +332,7 @@ export function resolveBidirectionalResonancePulseCollisions(
       }
     }
 
+    // Early exit if no collisions found after first iteration
     if (!collisionsFound && iter > 0) break
   }
 

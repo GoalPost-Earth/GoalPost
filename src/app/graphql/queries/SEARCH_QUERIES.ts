@@ -22,18 +22,21 @@ export const SEARCH_ALL = gql`
       }
       goalPulses {
         id
+        title
         content
         createdAt
         intensity
       }
       resourcePulses {
         id
+        title
         content
         createdAt
         intensity
       }
       storyPulses {
         id
+        title
         content
         createdAt
         intensity
