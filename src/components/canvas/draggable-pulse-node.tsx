@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { PulseNode, type PulseNodeProps } from '@/components/ui/pulse-node'
 import { useAnimations } from '@/contexts/animation-context'
-import { useThrottleCallback } from '@/hooks/use-throttle-callback'
 import { cn } from '@/lib/utils'
 
 export interface DraggablePulseNodeProps extends Omit<
@@ -42,14 +41,6 @@ export function DraggablePulseNode({
     startX: number
     startY: number
   }>(null)
-
-  // Throttle collision detection to run at most every 32ms (~30fps) for better performance
-  const throttledPositionChange = useThrottleCallback(
-    (x: number, y: number) => {
-      onPositionChange?.(x, y)
-    },
-    32
-  )
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Don't start drag if clicking on edit/delete buttons
@@ -93,8 +84,8 @@ export function DraggablePulseNode({
       displayPositionRef.current = { x: nextX, y: nextY }
       setDisplayPosition(displayPositionRef.current)
 
-      // Throttle expensive collision detection/state updates
-      throttledPositionChange(nextX, nextY)
+      // Update position for collision detection
+      onPositionChange?.(nextX, nextY)
     }
 
     const handleMouseUp = () => {

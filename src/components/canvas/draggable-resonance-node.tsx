@@ -7,7 +7,6 @@ import {
   type ResonanceNodeProps,
 } from '@/components/ui/resonance-node'
 import { useAnimations } from '@/contexts/animation-context'
-import { useThrottleCallback } from '@/hooks/use-throttle-callback'
 import { cn } from '@/lib/utils'
 
 export interface DraggableResonanceNodeProps extends Omit<
@@ -47,14 +46,6 @@ export function DraggableResonanceNode({
     startX: number
     startY: number
   }>(null)
-
-  // Throttle collision detection to run at most every 32ms (~30fps) for better performance
-  const throttledPositionChange = useThrottleCallback(
-    (x: number, y: number) => {
-      onPositionChange?.(x, y)
-    },
-    32
-  )
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -109,8 +100,8 @@ export function DraggableResonanceNode({
       displayPositionRef.current = { x: newX, y: newY }
       setDisplayPosition(displayPositionRef.current)
 
-      // Throttle expensive collision detection/state updates
-      throttledPositionChange(newX, newY)
+      // Update position for collision detection
+      onPositionChange?.(newX, newY)
     }
 
     const handleMouseUp = () => {
