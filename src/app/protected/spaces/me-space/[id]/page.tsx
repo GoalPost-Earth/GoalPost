@@ -9,6 +9,9 @@ import { FieldsCanvas } from '@/components/layout/fields-canvas'
 import { GET_ME_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
+// Enable dynamic rendering for paths not pre-generated at build time
+export const dynamicParams = true
+
 // Icon mapping for fields - can be customized per field
 const fieldIcons: Record<string, string> = {
   default: 'psychology',

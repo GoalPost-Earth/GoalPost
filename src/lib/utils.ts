@@ -281,7 +281,22 @@ export function resolveBidirectionalResonancePulseCollisions(
   const resonanceArray = Array.from(resonanceResult.entries())
 
   const minPulseDistance = RESONANCE_NODE_RADIUS + PULSE_NODE_RADIUS + 50 // Early detection gap from pulse nodes (50px buffer)
-  const minDistanceSquared = minPulseDistance * minPulseDistance // Avoid sqrt in hot loop
+  const minPulseDistanceSquared = minPulseDistance * minPulseDistance // Avoid sqrt in hot loop
+
+  const minResonanceDistance = RESONANCE_NODE_RADIUS * 2 + 80 // Minimum distance between resonance nodes (increased for better spacing)
+  const minResonanceDistanceSquared =
+    minResonanceDistance * minResonanceDistance
+
+  // Debug logging
+  const isInitialLoad = iterations === 5 // Full iterations on initial load
+  if (isInitialLoad && resonanceArray.length > 1) {
+    console.log(
+      `🔍 Collision Detection: ${resonanceArray.length} resonance nodes, ${pulsesResult.length} pulses, ${iterations} iterations`
+    )
+    console.log(
+      `📏 Min distances: pulse=${minPulseDistance}px, resonance=${minResonanceDistance}px`
+    )
+  }
 
   // Early exit if no entities to check
   if (resonanceArray.length === 0 || pulsesResult.length === 0) {
@@ -291,8 +306,10 @@ export function resolveBidirectionalResonancePulseCollisions(
     }
   }
 
+  let totalCollisionsResolved = 0
   for (let iter = 0; iter < iterations; iter++) {
     let collisionsFound = false
+    let iterationCollisions = 0
 
     // Check resonance-to-pulse collisions (bidirectional)
     for (let i = 0; i < resonanceArray.length; i++) {
@@ -305,9 +322,13 @@ export function resolveBidirectionalResonancePulseCollisions(
         const distanceSquared = dx * dx + dy * dy
 
         // Use squared distance to avoid expensive sqrt
-        if (distanceSquared < minDistanceSquared && distanceSquared > 0.01) {
+        if (
+          distanceSquared < minPulseDistanceSquared &&
+          distanceSquared > 0.01
+        ) {
           const distance = Math.sqrt(distanceSquared)
           collisionsFound = true
+          iterationCollisions++
           const overlap = minPulseDistance - distance
           const angle = Math.atan2(dy, dx)
           const pushDistance = overlap / 2 + 1
@@ -332,8 +353,74 @@ export function resolveBidirectionalResonancePulseCollisions(
       }
     }
 
+    // Check resonance-to-resonance collisions
+    for (let i = 0; i < resonanceArray.length; i++) {
+      const [resId1, resPos1] = resonanceArray[i]
+
+      for (let j = i + 1; j < resonanceArray.length; j++) {
+        const [resId2, resPos2] = resonanceArray[j]
+
+        const dx = resPos2.x - resPos1.x
+        const dy = resPos2.y - resPos1.y
+        const distanceSquared = dx * dx + dy * dy
+
+        // Check if resonance nodes are too close
+        if (
+          distanceSquared < minResonanceDistanceSquared &&
+          distanceSquared > 0.01
+        ) {
+          const distance = Math.sqrt(distanceSquared)
+          collisionsFound = true
+          iterationCollisions++
+          const overlap = minResonanceDistance - distance
+          const angle = Math.atan2(dy, dx)
+          const pushDistance = (overlap / 2 + 1) * 1.5 // Increased multiplier for stronger separation
+
+          // Push both resonance nodes apart equally (with extra force)
+          const newResPos1 = {
+            x: resPos1.x - Math.cos(angle) * pushDistance * 1.2,
+            y: resPos1.y - Math.sin(angle) * pushDistance * 1.2,
+          }
+
+          const newResPos2 = {
+            x: resPos2.x + Math.cos(angle) * pushDistance * 1.2,
+            y: resPos2.y + Math.sin(angle) * pushDistance * 1.2,
+          }
+
+          resonanceResult.set(resId1, newResPos1)
+          resonanceResult.set(resId2, newResPos2)
+          resonanceArray[i][1] = newResPos1
+          resonanceArray[j][1] = newResPos2
+        }
+      }
+    }
+
     // Early exit if no collisions found after first iteration
-    if (!collisionsFound && iter > 0) break
+    if (!collisionsFound && iter > 0) {
+      if (isInitialLoad && resonanceArray.length > 1) {
+        console.log(
+          `✅ Collision resolution complete after ${iter} iteration${iter !== 1 ? 's' : ''} (${totalCollisionsResolved} total collisions resolved)`
+        )
+      }
+      break
+    }
+
+    if (isInitialLoad && resonanceArray.length > 1 && iterationCollisions > 0) {
+      console.log(
+        `  Iteration ${iter}: ${iterationCollisions} collision${iterationCollisions !== 1 ? 's' : ''} resolved`
+      )
+      totalCollisionsResolved += iterationCollisions
+    }
+  }
+
+  if (
+    isInitialLoad &&
+    resonanceArray.length > 1 &&
+    totalCollisionsResolved === 0
+  ) {
+    console.warn(
+      `⚠️  Collision Detection: No collisions detected during ${iterations} iterations`
+    )
   }
 
   // Clamp all positions to canvas bounds
