@@ -124,19 +124,19 @@ function FieldDetailPage() {
 
   const params = useParams()
   const fieldId = params?.field as string
-  const spaceId = params?.id as string
+  const spaceId = (params?.id as string) || ''
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
 
-  // Resonance discovery hooks
+  // Resonance discovery hooks - only use when spaceId is available
   const { triggerDiscovery, isLoading: isDiscoveringResonances } =
     useResonanceDiscovery({
-      spaceId,
+      spaceId: spaceId || undefined,
       onSuccess: () => {
         setIsDiscoverSuggestionsModalOpen(true)
-        refetchSuggestions()
+        refetchSuggestions?.()
       },
     })
 
@@ -147,7 +147,7 @@ function FieldDetailPage() {
     acceptSuggestion,
     declineSuggestion,
   } = useResonanceSuggestions({
-    spaceId,
+    spaceId: spaceId || '',
     filter: 'all',
     enabled: false, // Don't auto-fetch until modal is opened
   })
@@ -1068,8 +1068,8 @@ function FieldDetailPage() {
             <div className="group flex flex-row items-center gap-3">
               <button
                 onClick={() => triggerDiscovery()}
-                disabled={isDiscoveringResonances}
-                title="Discover Resonances"
+                disabled={isDiscoveringResonances || !spaceId}
+                title={!spaceId ? 'Space ID required' : 'Discover Resonances'}
                 className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
               >
                 <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
@@ -1275,18 +1275,20 @@ function FieldDetailPage() {
         editingResonance={editingResonance}
       />
 
-      <ResonanceSuggestionsModal
-        isOpen={isDiscoverSuggestionsModalOpen}
-        onClose={() => {
-          setIsDiscoverSuggestionsModalOpen(false)
-        }}
-        spaceId={spaceId}
-        suggestions={suggestions}
-        loading={suggestionsLoading}
-        onAccept={acceptSuggestion}
-        onDecline={declineSuggestion}
-        onRefresh={refetchSuggestions}
-      />
+      {spaceId && (
+        <ResonanceSuggestionsModal
+          isOpen={isDiscoverSuggestionsModalOpen}
+          onClose={() => {
+            setIsDiscoverSuggestionsModalOpen(false)
+          }}
+          spaceId={spaceId}
+          suggestions={suggestions}
+          loading={suggestionsLoading}
+          onAccept={acceptSuggestion}
+          onDecline={declineSuggestion}
+          onRefresh={refetchSuggestions}
+        />
+      )}
     </div>
   )
 }
