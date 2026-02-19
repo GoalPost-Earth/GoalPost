@@ -1012,19 +1012,36 @@ class MigrationEngine {
             `
             MATCH (source:FieldPulse { id: $sourcePulseId })
             MATCH (target:FieldPulse { id: $targetPulseId })
-            MATCH (source)<-[:HAS_PULSE]-(context:FieldContext)
-            CREATE (link:ResonanceLink {
-              id: $linkId,
-              label: $label,
-              description: $label + " relationship",
-              confidence: 1.0,
-              evidence: "Migrated from " + $label,
-              createdAt: datetime()
-            })
-            CREATE (link)-[:SOURCE]->(source)
-            CREATE (link)-[:TARGET]->(target)
-            CREATE (context)-[:HAS_RESONANCE]->(link)
-            RETURN link
+            
+            // Find all contexts that have BOTH source and target pulses
+            MATCH (source)<-[:HAS_PULSE]-(contextWithSource:FieldContext)
+            MATCH (target)<-[:HAS_PULSE]-(contextWithTarget:FieldContext)
+            WHERE contextWithSource = contextWithTarget
+            WITH source, target, collect(DISTINCT contextWithSource) as sharedContexts
+            
+            // Create or update the ResonanceLink
+            MERGE (link:ResonanceLink { id: $linkId })
+            ON CREATE SET
+              link.label = $label,
+              link.description = $label + " relationship",
+              link.confidence = 1.0,
+              link.evidence = "Migrated from " + $label,
+              link.createdAt = datetime()
+            ON MATCH SET
+              link.label = $label,
+              link.description = $label + " relationship",
+              link.evidence = "Migrated from " + $label
+            
+            // Create relationships
+            MERGE (link)-[:SOURCE]->(source)
+            MERGE (link)-[:TARGET]->(target)
+            
+            // Connect to ALL shared contexts
+            WITH link, sharedContexts
+            UNWIND sharedContexts as context
+            MERGE (context)-[:HAS_RESONANCE]->(link)
+            
+            RETURN count(context) as contextsConnected
             `,
             {
               sourcePulseId,
@@ -1224,10 +1241,10 @@ async function main() {
     password: 'micro-pierre-update-ambient-bank-8581',
   }
 
-  const devUri = 'neo4j+s://cfc3e862.databases.neo4j.io'
+  const devUri = 'neo4j+s://ee93871d.databases.neo4j.io'
   const devAuth = {
-    username: 'cfc3e862',
-    password: '4OJwS3lAtKsPGj5Z7ZFRSRAGHp2A36vx_ImR41MxEIU',
+    username: 'neo4j',
+    password: 'XSKVpR_9FFYsbaeMswPY8QD0txhSIvEWm0Q7dUfOnkI',
   }
 
   const engine = new MigrationEngine(prodUri, prodAuth, devUri, devAuth)
