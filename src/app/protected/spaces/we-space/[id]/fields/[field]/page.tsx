@@ -8,6 +8,9 @@ import {
   useApolloClient,
 } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
+
+// Enable dynamic rendering for paths not pre-generated at build time
+export const dynamicParams = true
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
@@ -49,7 +52,6 @@ import {
   seededUnitValue,
   clampPosition,
   resolveCollisions,
-  resolveResonanceCollisions,
   resolveBidirectionalResonancePulseCollisions,
 } from '@/lib/utils'
 import { PULSE_TYPE_CONFIG } from '@/lib/pulse-type-config'
@@ -342,8 +344,9 @@ function FieldDetailPage() {
 
           //eslint-disable-next-line @typescript-eslint/no-explicit-any
           resonances.forEach((link: any) => {
-            const sourceId = link.source?.id
-            const targetId = link.target?.id
+            // GraphQL returns source/target as arrays with single element
+            const sourceId = link.source?.[0]?.id
+            const targetId = link.target?.[0]?.id
             if (sourceId && targetId) {
               const sourcePos = positionMap.get(sourceId)
               const targetPos = positionMap.get(targetId)
@@ -364,14 +367,23 @@ function FieldDetailPage() {
             }
           })
 
-          // Apply collision detection to resonance nodes
-          const resolvedResonancePositions = resolveResonanceCollisions(
-            newResonancePositions,
-            resolvedPositions,
-            canvasSize.width,
-            canvasSize.height
+          // Apply bidirectional collision detection to resonance nodes
+          // This handles both pulse-resonance AND resonance-resonance collisions from the start
+          console.log(
+            `🧲 Applying collision detection to ${newResonancePositions.size} resonance nodes`
           )
+          const { resonancePositions: resolvedResonancePositions } =
+            resolveBidirectionalResonancePulseCollisions(
+              newResonancePositions,
+              resolvedPositions,
+              canvasSize.width,
+              canvasSize.height,
+              5 // Full collision resolution on initial load
+            )
 
+          console.log(
+            `✨ Collision detection resulted in ${resolvedResonancePositions.size} resonance nodes`
+          )
           setResonanceNodePositions(resolvedResonancePositions)
           resonanceNodePositionsRef.current = resolvedResonancePositions
         } else {
@@ -474,17 +486,7 @@ function FieldDetailPage() {
         )
         pulsePositionsRef.current = resolved
 
-        // Also resolve collisions between pulses and resonance nodes
-        if (resonanceNodePositionsRef.current.size > 0) {
-          const resolvedResonancePositions = resolveResonanceCollisions(
-            resonanceNodePositionsRef.current,
-            resolved,
-            canvasSize.width,
-            canvasSize.height
-          )
-          resonanceNodePositionsRef.current = resolvedResonancePositions
-          setResonanceNodePositions(resolvedResonancePositions)
-        }
+        // Pulse drag does NOT move resonance nodes (they stay in place)
 
         return resolved
       })
@@ -574,9 +576,16 @@ function FieldDetailPage() {
     [activeResonanceNodeId, resonanceLinks]
   )
 
-  // Handle resonance node drag - both resonance and pulse nodes move when colliding
+  // Handle resonance node drag - drags connected pulse nodes along
   const handleResonanceNodeDrag = useCallback(
     (linkId: string, newX: number, newY: number) => {
+      // Get previous position to calculate delta
+      const prevPos = resonanceNodePositionsRef.current.get(linkId)
+      if (!prevPos) return
+
+      const deltaX = newX - prevPos.x
+      const deltaY = newY - prevPos.y
+
       // Clamp position to canvas bounds
       const [clampedX, clampedY] = clampPosition(
         newX,
@@ -592,6 +601,32 @@ function FieldDetailPage() {
       )
       updatedResonancePositions.set(linkId, { x: clampedX, y: clampedY })
 
+      // Find the resonance link to get source and target pulse IDs
+      //eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const link = resonanceLinks.find((l: any) => l.id === linkId)
+
+      let updatedPulses = pulsePositionsRef.current
+
+      if (link) {
+        const sourceId = link.source?.[0]?.id
+        const targetId = link.target?.[0]?.id
+
+        // Move both source and target pulses by the same delta
+        if (sourceId || targetId) {
+          updatedPulses = pulsePositionsRef.current.map((p) => {
+            if (p.pulseId === sourceId || p.pulseId === targetId) {
+              // Apply the same delta to the pulses
+              return {
+                ...p,
+                x: p.x + deltaX,
+                y: p.y + deltaY,
+              }
+            }
+            return p
+          })
+        }
+      }
+
       // Apply bidirectional collision detection with pulses
       // Both resonance and pulse nodes move apart when they collide
       const {
@@ -599,7 +634,7 @@ function FieldDetailPage() {
         resonancePositions: resolvedResonances,
       } = resolveBidirectionalResonancePulseCollisions(
         updatedResonancePositions,
-        pulsePositionsRef.current,
+        updatedPulses,
         canvasSize.width,
         canvasSize.height,
         5 // More iterations for responsive drag collision detection
@@ -613,7 +648,7 @@ function FieldDetailPage() {
       setPulsePositions(resolvedPulses)
       setResonanceNodePositions(resolvedResonances)
     },
-    [canvasSize]
+    [canvasSize, resonanceLinks]
   )
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
