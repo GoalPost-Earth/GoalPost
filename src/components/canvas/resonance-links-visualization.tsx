@@ -138,7 +138,7 @@ export function ResonanceLinksVisualization({
 
         {/* Render connection lines only for expanded links */}
         <g className="resonance-lines">
-          {validLinks.map((link) => {
+          {validLinks.map((link, linkIndex) => {
             // Only render if link is expanded
             if (!expandedLinks.has(link.id)) return null
 
@@ -160,7 +160,7 @@ export function ResonanceLinksVisualization({
             const strokeDasharray = getLineStrokeDasharray(link.label)
 
             return (
-              <g key={`line-${link.id}`}>
+              <g key={`line-${link.id}-${sourceId}-${targetId}-${linkIndex}`}>
                 {/* Connection line from source to resonance node */}
                 <line
                   x1={sourcePos.x}
@@ -237,7 +237,7 @@ export function ResonanceLinksVisualization({
 
       {/* Render resonance nodes (interactive) */}
       <div className="absolute inset-0 pointer-events-none">
-        {validLinks.map((link) => {
+        {validLinks.map((link, linkIndex) => {
           const sourceId = link.source?.[0]?.id
           const targetId = link.target?.[0]?.id
 
@@ -265,7 +265,7 @@ export function ResonanceLinksVisualization({
 
           return (
             <DraggableResonanceNode
-              key={`node-${link.id}`}
+              key={`node-${link.id}-${sourceId}-${targetId}-${linkIndex}`}
               id={link.id}
               icon={getResonanceIcon(link.label)}
               label={link.label}

@@ -53,12 +53,14 @@ interface GraphQLSearchResult {
     contexts: Array<{ id: string; title: string }>
     goalPulses: Array<{
       id: string
+      title: string
       content: string
       createdAt: string
       intensity: number
     }>
     resourcePulses: Array<{
       id: string
+      title: string
       content: string
       createdAt: string
       intensity: number
@@ -66,6 +68,7 @@ interface GraphQLSearchResult {
     }>
     storyPulses: Array<{
       id: string
+      title: string
       content: string
       createdAt: string
       intensity: number
@@ -80,7 +83,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   const entities: SearchEntity[] = []
 
   // Transform people
-  data.searchAll.people.forEach((person) => {
+  data.searchAll.people?.forEach((person) => {
     entities.push({
       id: person.id,
       type: 'person',
@@ -92,7 +95,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform communities
-  data.searchAll.communities.forEach((community) => {
+  data.searchAll.communities?.forEach((community) => {
     entities.push({
       id: community.id,
       type: 'community',
@@ -104,7 +107,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform me spaces
-  data.searchAll.meSpaces.forEach((space) => {
+  data.searchAll.meSpaces?.forEach((space) => {
     entities.push({
       id: space.id,
       type: 'meSpace',
@@ -116,7 +119,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform we spaces
-  data.searchAll.weSpaces.forEach((space) => {
+  data.searchAll.weSpaces?.forEach((space) => {
     entities.push({
       id: space.id,
       type: 'weSpace',
@@ -128,7 +131,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform contexts
-  data.searchAll.contexts.forEach((context) => {
+  data.searchAll.contexts?.forEach((context) => {
     entities.push({
       id: context.id,
       type: 'context',
@@ -140,13 +143,14 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform goal pulses
-  data.searchAll.goalPulses.forEach((pulse) => {
+  data.searchAll.goalPulses?.forEach((pulse) => {
     entities.push({
       id: pulse.id,
       type: 'goalPulse',
       title:
+        pulse.title ||
         pulse.content.substring(0, 50) +
-        (pulse.content.length > 50 ? '...' : ''),
+          (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Goal',
       description: pulse.content,
       href: `/protected/dashboard/pulses/${pulse.id}`,
@@ -154,13 +158,14 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform resource pulses
-  data.searchAll.resourcePulses.forEach((pulse) => {
+  data.searchAll.resourcePulses?.forEach((pulse) => {
     entities.push({
       id: pulse.id,
       type: 'resourcePulse',
       title:
+        pulse.title ||
         pulse.content.substring(0, 50) +
-        (pulse.content.length > 50 ? '...' : ''),
+          (pulse.content.length > 50 ? '...' : ''),
       subtitle: pulse.resourceType,
       description: pulse.content,
       tags: [pulse.resourceType],
@@ -169,13 +174,14 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
   })
 
   // Transform story pulses
-  data.searchAll.storyPulses.forEach((pulse) => {
+  data.searchAll.storyPulses?.forEach((pulse) => {
     entities.push({
       id: pulse.id,
       type: 'storyPulse',
       title:
+        pulse.title ||
         pulse.content.substring(0, 50) +
-        (pulse.content.length > 50 ? '...' : ''),
+          (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Story',
       description: pulse.content,
       href: `/protected/dashboard/pulses/${pulse.id}`,

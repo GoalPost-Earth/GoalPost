@@ -5,9 +5,6 @@ export const GET_GRAPH_STATS = graphql(`
     peopleAggregate {
       count
     }
-    communitiesAggregate {
-      count
-    }
     meSpacesAggregate {
       count
     }

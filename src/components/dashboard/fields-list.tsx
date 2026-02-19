@@ -39,7 +39,7 @@ export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
           Fields
         </h3>
         {!showAll && (
-          <button 
+          <button
             onClick={onViewAll}
             className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
           >

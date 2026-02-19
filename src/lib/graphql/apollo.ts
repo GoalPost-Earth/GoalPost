@@ -8,6 +8,11 @@ import logger from '@/lib/logger'
 
 export default async function initializeApolloServer() {
   logger.info('🚀 Initializing Apollo Server...')
+  logger.info('📊 Neo4j Configuration:', {
+    uri: process.env.NEO4J_URI,
+    username: process.env.NEO4J_USERNAME,
+    database: process.env.NEO4J_DATABASE,
+  })
 
   const driver = neoDriver(
     process.env.NEO4J_URI ?? 'bolt://localhost:7687',
@@ -64,7 +69,16 @@ export default async function initializeApolloServer() {
         }
       }
 
-      return { token, jwt }
+      // Return context with database configuration for Neo4jGraphQL
+      return {
+        token,
+        jwt,
+        ...(process.env.NEO4J_DATABASE && {
+          sessionConfig: {
+            database: process.env.NEO4J_DATABASE,
+          },
+        }),
+      }
     },
     graphqlEndpoint: '/api/graphql',
     cors: isDevelopment

@@ -61,6 +61,7 @@ interface MigrationStats {
   pulsesCreated: number
   logsPreserved: number
   relationshipsMigrated: number
+  personConnectionsMigrated: number
   errors: string[]
 }
 
@@ -643,11 +644,86 @@ async function phase7_migrateRelationships(
 }
 
 /**
- * Phase 8: Validate Migration
+ * Phase 8: Migrate Person-to-Person CONNECTED_TO relationships
  */
-async function phase8_validate(stats: MigrationStats): Promise<void> {
+async function phase8_migratePersonConnections(
+  stats: MigrationStats
+): Promise<void> {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 8: Validate Migration')
+  console.log('Phase 8: Migrate Person-to-Person Connections')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+
+  const prodSession = prodDriver.session()
+  const devSession = devDriver.session()
+
+  try {
+    console.log('  Migrating CONNECTED_TO relationships between people...')
+
+    // Get Person-to-Person CONNECTED_TO relationships from production
+    const prodRels = await prodSession.run(
+      `MATCH (source:Person)-[r:CONNECTED_TO]->(target:Person)
+       WHERE source.email IN $migrateEmails 
+         AND target.email IN $migrateEmails
+       RETURN source.email as sourceEmail, target.email as targetEmail, 
+              r.why as why, r.interests as interests`,
+      { migrateEmails: MIGRATE_USER_EMAILS }
+    )
+
+    let count = 0
+    for (const record of prodRels.records) {
+      const sourceEmail = record.get('sourceEmail')
+      const targetEmail = record.get('targetEmail')
+      const why = record.get('why')
+      const interests = record.get('interests')
+
+      if (!sourceEmail || !targetEmail) {
+        continue
+      }
+
+      try {
+        // Create CONNECTED_TO relationship in dev DB if both people exist
+        const result = await devSession.run(
+          `MATCH (source:Person {email: $sourceEmail})
+           MATCH (target:Person {email: $targetEmail})
+           MERGE (source)-[r:CONNECTED_TO]->(target)
+           SET r.why = $why, r.interests = $interests
+           RETURN r`,
+          { sourceEmail, targetEmail, why, interests }
+        )
+
+        if (result.records.length > 0) {
+          count++
+          stats.personConnectionsMigrated++
+        }
+      } catch (error) {
+        console.error(
+          `    ⚠️  Failed to migrate connection ${sourceEmail} -> ${targetEmail}: ${error}`
+        )
+        continue
+      }
+    }
+
+    console.log(`    ✓ Migrated ${count} person connections`)
+    console.log(
+      `\n✅ Migrated ${stats.personConnectionsMigrated} person connections\n`
+    )
+  } catch (error) {
+    const errorMsg = `Phase 8 error: ${error}`
+    console.error(`❌ ${errorMsg}\n`)
+    stats.errors.push(errorMsg)
+    throw error
+  } finally {
+    await prodSession.close()
+    await devSession.close()
+  }
+}
+
+/**
+ * Phase 9: Validate Migration
+ */
+async function phase9_validate(stats: MigrationStats): Promise<void> {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('Phase 9: Validate Migration')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
   const session = devDriver.session()
@@ -768,6 +844,42 @@ async function phase8_validate(stats: MigrationStats): Promise<void> {
       console.log(`  - ${email}: ${count} pulses created`)
     })
 
+    // Verify person-to-person connections
+    console.log('\n✓ Person-to-person connections:')
+    const connectionCheck = await session.run(
+      `MATCH (p1:Person)-[r:CONNECTED_TO]-(p2:Person)
+       WHERE p1.email IN $emails AND p2.email IN $emails
+       RETURN COUNT(DISTINCT r) as connectionCount`,
+      { emails: MIGRATE_USER_EMAILS }
+    )
+
+    const connectionCount = connectionCheck.records[0]
+      .get('connectionCount')
+      .toNumber()
+    console.log(`  - Total CONNECTED_TO relationships: ${connectionCount}`)
+
+    if (connectionCount > 0) {
+      // Show sample connections
+      const sampleConnections = await session.run(
+        `MATCH (p1:Person)-[r:CONNECTED_TO]->(p2:Person)
+         WHERE p1.email IN $emails AND p2.email IN $emails
+         RETURN p1.email as source, p2.email as target, r.why as why, r.interests as interests
+         LIMIT 5`,
+        { emails: MIGRATE_USER_EMAILS }
+      )
+
+      console.log('  Sample connections:')
+      sampleConnections.records.forEach((record) => {
+        const source = record.get('source')
+        const target = record.get('target')
+        const why = record.get('why')
+        const interests = record.get('interests')
+        console.log(`    • ${source} → ${target}`)
+        if (why) console.log(`      Why: ${why}`)
+        if (interests) console.log(`      Interests: ${interests}`)
+      })
+    }
+
     console.log('\n✅ Validation complete\n')
   } catch (error) {
     const errorMsg = `Phase 8 error: ${error}`
@@ -789,6 +901,7 @@ async function main() {
     pulsesCreated: 0,
     logsPreserved: 0,
     relationshipsMigrated: 0,
+    personConnectionsMigrated: 0,
     errors: [],
   }
 
@@ -808,7 +921,8 @@ async function main() {
     await phase5_transformData(stats)
     await phase6_migrateLogs(stats)
     await phase7_migrateRelationships(stats)
-    await phase8_validate(stats)
+    await phase8_migratePersonConnections(stats)
+    await phase9_validate(stats)
 
     // Print summary
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
@@ -820,6 +934,7 @@ async function main() {
     console.log(`Pulses created:       ${stats.pulsesCreated}`)
     console.log(`Logs preserved:       ${stats.logsPreserved}`)
     console.log(`Relationships:        ${stats.relationshipsMigrated}`)
+    console.log(`Person connections:   ${stats.personConnectionsMigrated}`)
 
     if (stats.errors.length > 0) {
       console.log(`\n⚠️  Errors: ${stats.errors.length}`)

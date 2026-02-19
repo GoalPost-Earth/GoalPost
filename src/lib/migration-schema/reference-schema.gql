@@ -1,0 +1,316 @@
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+interface PersonInterface {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  name: String!
+  photo: String
+  phone: String
+  email: String
+  pronouns: String
+  location: String
+  createdAt: DateTime!
+  updatedAt: DateTime
+}
+extend schema @authentication
+
+type Person implements PersonInterface @node {
+  id: ID! @id
+  isUser: Boolean
+    @cypher(
+      statement: """
+      MATCH (this) WHERE this:User
+      RETURN true AS isUser
+      """
+      columnName: "isUser"
+    )
+  firstName: String!
+  lastName: String!
+  name: String! @customResolver(requires: "firstName lastName")
+  photo: String
+  phone: String
+  email: String
+  pronouns: String
+  location: String
+  inviteSent: Boolean 
+
+  # Relationships
+  connections: [Person!]!
+    @relationship(
+      type: "CONNECTED_TO"
+      direction: OUT
+      queryDirection: UNDIRECTED
+      properties: "ConnectedTo"
+    )
+
+  status: String!
+  careManual: String
+  avatar: String
+  favorites: String
+  passions: String
+  traits: String
+  fieldsOfCare: String
+  interests: String
+
+  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
+  carePoints: [CarePoint!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:MOTIVATED_BY]->(:Goal)-[:ENABLED_BY|CARES_FOR]-(goalCarePoints:CarePoint)
+      WITH goalCarePoints AS carePoint
+      RETURN DISTINCT carePoint
+      UNION
+      MATCH (this)-[:PROVIDES]->(resource:Resource)-[:APPLIED_IN]->(resourceCarePoint:CarePoint)
+      WITH resourceCarePoint AS carePoint
+      RETURN DISTINCT carePoint
+      """
+      columnName: "carePoint"
+    )
+  goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
+  providesResources: [Resource!]!
+    @relationship(type: "PROVIDES", direction: OUT)
+  communities: [Community!]!
+    @relationship(type: "BELONGS_TO", direction: OUT, properties: "BelongsTo")
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type ConnectedTo @relationshipProperties {
+  why: String
+  interests: String
+}
+
+type BelongsTo @relationshipProperties {
+  totem: String
+  signupDate: Date
+}
+
+type CarePoint @node {
+  id: ID! @id
+  name: String!
+  description: String
+  status: String!
+  why: String
+  location: String
+  time: String
+  levelFulfilled: String
+  fulfillmentDate: String
+  successMeasures: String
+  issuesIdentified: String
+  issuesResolved: String
+
+  resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: OUT)
+  enabledByGoals: [Goal!]! @relationship(type: "ENABLES", direction: IN)
+  caresForGoals: [Goal!]! @relationship(type: "CARES_FOR", direction: OUT)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Community @node {
+  id: ID! @id
+  name: String!
+  description: String
+  why: String
+  location: String
+  time: String
+  activities: String
+  resultsAchieved: String
+  status: String!
+
+  members: [Person!]! @relationship(type: "BELONGS_TO", direction: IN)
+  relatedCommunities: [Community!]!
+    @relationship(
+      type: "RELATES_TO"
+      direction: OUT
+      queryDirection: UNDIRECTED
+    )
+  resources: [Resource!]! @relationship(type: "HAS_ACCESS_TO", direction: OUT)
+  goals: [Goal!]! @relationship(type: "MOTIVATED_BY", direction: OUT)
+  coreValues: [CoreValue!]! @relationship(type: "EMBRACES", direction: OUT)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type CoreValue @node {
+  id: ID! @id
+  name: String!
+  alignmentChallenges: String
+  alignmentExamples: String
+  description: String
+  why: String
+  people: [Person!]! @relationship(type: "EMBRACES", direction: IN)
+  goals: [Goal!]! @relationship(type: "ALIGNED_TO", direction: IN)
+  communities: [Community!]! @relationship(type: "EMBRACES", direction: IN)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Goal @node {
+  id: ID! @id
+  name: String!
+  description: String
+  successMeasures: String
+  photo: String
+  activities: String
+  status: String!
+  why: String
+  location: String
+  time: String
+
+  resources: [Resource!]! @relationship(type: "APPLIED_TO", direction: IN)
+  motivatesPeople: [Person!]! @relationship(type: "MOTIVATED_BY", direction: IN)
+  motivatesCommunities: [Community!]!
+    @relationship(type: "MOTIVATED_BY", direction: IN)
+  coreValues: [CoreValue!]! @relationship(type: "ALIGNED_TO", direction: OUT)
+  enablesCarePoints: [CarePoint!]!
+    @relationship(type: "ENABLES", direction: OUT)
+  caredForByCarePoints: [CarePoint!]!
+    @relationship(type: "CARES_FOR", direction: IN)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Resource @node {
+  id: ID! @id
+  name: String!
+  description: String
+  status: String!
+  why: String
+  location: String
+  time: String
+
+  carePoints: [CarePoint!]! @relationship(type: "DEPENDS_ON", direction: IN)
+  goals: [Goal!]! @relationship(type: "APPLIED_TO", direction: OUT)
+  resources: [Resource!]! @relationship(type: "DEPENDS_ON", direction: IN)
+  providedByPerson: [Person!]! @relationship(type: "PROVIDES", direction: IN)
+  providedByCommunity: [Community!]!
+    @relationship(type: "PROVIDES", direction: IN)
+
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  updatedAt: DateTime
+    @timestamp(operations: [UPDATE])
+    @settable(onCreate: false, onUpdate: true)
+}
+
+type Log {
+  id: ID! @id
+  description: String!
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  goals: [Goal!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+  carePoints: [CarePoint!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+  resources: [Resource!]! @relationship(type: "LOGGED_FOR", direction: OUT)
+}
+
+type ChatbotResponse {
+  message: String!
+  sessionId: String!
+}
+
+type Mutation {
+  generatePersonEmbeddings(personId: ID!): Boolean!
+  sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse!
+  invitePerson(personId: ID!): Person!
+  cancelInvite(personId: ID!): Person!
+}
+
+type Query {
+  peopleSubstringSearch(key: String!): [Person!]!
+    @cypher(
+      statement: """
+      MATCH (person:Person)
+      WHERE toLower(person.firstName) CONTAINS toLower($key) OR toLower(person.lastName) CONTAINS toLower($key)
+      RETURN person
+      """
+      columnName: "person"
+    )
+  communitySubstringSearch(key: String!): [Community!]!
+    @cypher(
+      statement: """
+      MATCH (community:Community)
+      WHERE toLower(community.name) CONTAINS toLower($key)
+      OR toLower(community.description) CONTAINS toLower($key)
+      RETURN community
+      """
+      columnName: "community"
+    )
+  coreValueSubstringSearch(key: String!): [CoreValue!]!
+    @cypher(
+      statement: """
+      MATCH (coreValue:CoreValue)
+      WHERE toLower(coreValue.name) CONTAINS toLower($key)
+      OR toLower(coreValue.description) CONTAINS toLower($key)
+      RETURN coreValue
+      """
+      columnName: "coreValue"
+    )
+  goalSubstringSearch(key: String!): [Goal!]!
+    @cypher(
+      statement: """
+      MATCH (goal:Goal)
+      WHERE toLower(goal.name) CONTAINS toLower($key)
+      OR toLower(goal.description) CONTAINS toLower($key)
+      RETURN goal
+      """
+      columnName: "goal"
+    )
+  resourceSubstringSearch(key: String!): [Resource!]!
+    @cypher(
+      statement: """
+      MATCH (resource:Resource)
+      WHERE toLower(resource.name) CONTAINS toLower($key)
+      OR toLower(resource.description) CONTAINS toLower($key)
+      RETURN resource
+      """
+      columnName: "resource"
+    )
+  carePointSubstringSearch(key: String!): [CarePoint!]!
+    @cypher(
+      statement: """
+      MATCH (carePoint:CarePoint)
+      WHERE toLower(carePoint.description) CONTAINS toLower($key)
+      RETURN carePoint
+      """
+      columnName: "carePoint"
+    )
+}
