@@ -354,7 +354,8 @@ export default function SpaceDetailsPage() {
                   {members.length > 0 ? (
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     members.map((membership: any, idx: number) => {
-                      const memberData = membership.member
+                      const memberData = membership.member?.[0]
+                      if (!memberData) return null
                       return (
                         <div
                           key={membership.id}
