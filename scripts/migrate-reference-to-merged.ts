@@ -378,6 +378,16 @@ class MigrationEngine {
         const goal = record.get('goal')
 
         try {
+          // Find who created this goal
+          const creatorResult = await prodSession.run(
+            `MATCH (g:Goal { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+            { id: goal.id }
+          )
+          const creatorId =
+            creatorResult.records.length > 0
+              ? creatorResult.records[0].get('creatorId')
+              : null
+
           // Find who motivated by this goal
           const motivatedByResult = await prodSession.run(
             `MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN p.id as personId`,
@@ -408,9 +418,19 @@ class MigrationEngine {
 
           // Create GoalPulse in dev
           const pulseId = `pulse_${goal.id}`
+
+          // Map legacy status values to GoalStatus enum
+          const statusMap: Record<string, string> = {
+            Active: 'ACTIVE',
+            Inactive: 'PAUSED',
+            Completed: 'COMPLETED',
+          }
+          const mappedStatus = statusMap[goal.status] || 'ACTIVE'
+
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
+            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:GoalPulse {
               id: $pulseId,
               title: $title,
@@ -425,20 +445,22 @@ class MigrationEngine {
               createdAt: datetime()
             })
             CREATE (context)-[:HAS_PULSE]->(pulse)
+            ${creatorId ? 'CREATE (pulse)-[:CREATED_BY]->(creator)' : ''}
             RETURN pulse
             `,
             {
               contextId,
               pulseId,
               title: goal.name,
-              content: goal.description,
+              content: goal.description || '',
               successMeasures: goal.successMeasures,
               photo: goal.photo,
               activities: goal.activities,
-              status: goal.status,
+              status: mappedStatus,
               why: goal.why,
               location: goal.location,
               time: goal.time,
+              creatorId,
             }
           )
 
@@ -482,6 +504,16 @@ class MigrationEngine {
         const resource = record.get('resource')
 
         try {
+          // Find who created this resource
+          const creatorResult = await prodSession.run(
+            `MATCH (r:Resource { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+            { id: resource.id }
+          )
+          const creatorId =
+            creatorResult.records.length > 0
+              ? creatorResult.records[0].get('creatorId')
+              : null
+
           // Find provider (Person or Community)
           const providerResult = await prodSession.run(
             `MATCH (p:Person)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "person" as type, p.id as providerId
@@ -511,6 +543,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
+            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:ResourcePulse {
               id: $pulseId,
               title: $title,
@@ -524,17 +557,19 @@ class MigrationEngine {
               createdAt: datetime()
             })
             CREATE (context)-[:HAS_PULSE]->(pulse)
+            ${creatorId ? 'CREATE (pulse)-[:CREATED_BY]->(creator)' : ''}
             RETURN pulse
             `,
             {
               contextId,
               pulseId,
               title: resource.name,
-              content: resource.description,
+              content: resource.description || '',
               status: resource.status,
               why: resource.why,
               location: resource.location,
               time: resource.time,
+              creatorId,
             }
           )
 
@@ -588,6 +623,16 @@ class MigrationEngine {
         const cp = record.get('carePoint')
 
         try {
+          // Find who created this care point
+          const creatorResult = await prodSession.run(
+            `MATCH (cp:CarePoint { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+            { id: cp.id }
+          )
+          const creatorId =
+            creatorResult.records.length > 0
+              ? creatorResult.records[0].get('creatorId')
+              : null
+
           // Find context through enabledByGoals or dependencies
           const contextResult = await prodSession.run(
             `MATCH (cp:CarePoint { id: $id })-[:ENABLED_BY|CARES_FOR]->(g:Goal) 
@@ -622,6 +667,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
+            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:StoryPulse {
               id: $pulseId,
               title: $title,
@@ -638,13 +684,14 @@ class MigrationEngine {
               createdAt: datetime()
             })
             CREATE (context)-[:HAS_PULSE]->(pulse)
+            ${creatorId ? 'CREATE (pulse)-[:CREATED_BY]->(creator)' : ''}
             RETURN pulse
             `,
             {
               contextId,
               pulseId,
               title: cp.name,
-              content: cp.description,
+              content: cp.description || '',
               status: cp.status,
               why: cp.why,
               location: cp.location,
@@ -654,6 +701,7 @@ class MigrationEngine {
               successMeasures: cp.successMeasures,
               issuesIdentified: cp.issuesIdentified,
               issuesResolved: cp.issuesResolved,
+              creatorId,
             }
           )
 
@@ -703,6 +751,16 @@ class MigrationEngine {
         const cv = record.get('coreValue')
 
         try {
+          // Find who created this core value
+          const creatorResult = await prodSession.run(
+            `MATCH (cv:CoreValue { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+            { id: cv.id }
+          )
+          const creatorId =
+            creatorResult.records.length > 0
+              ? creatorResult.records[0].get('creatorId')
+              : null
+
           // Find context through embracers
           const contextResult = await prodSession.run(
             `MATCH (p:Person)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN p.id as personId LIMIT 1`,
@@ -735,6 +793,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
+            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:StoryPulse {
               id: $pulseId,
               title: $title,
@@ -745,16 +804,18 @@ class MigrationEngine {
               createdAt: datetime()
             })
             CREATE (context)-[:HAS_PULSE]->(pulse)
+            ${creatorId ? 'CREATE (pulse)-[:CREATED_BY]->(creator)' : ''}
             RETURN pulse
             `,
             {
               contextId,
               pulseId,
               title: cv.name,
-              content: cv.description,
+              content: cv.description || '',
               alignmentChallenges: cv.alignmentChallenges,
               alignmentExamples: cv.alignmentExamples,
               why: cv.why,
+              creatorId,
             }
           )
 
@@ -905,7 +966,7 @@ class MigrationEngine {
               addedAt: datetime()
             })
             CREATE (p)-[:IS_MEMBER]->(membership)
-            CREATE (membership)-[:HAS_MEMBER]->(space)
+            CREATE (space)-[:HAS_MEMBER]->(membership)
             RETURN membership
             `,
             { personId: membership.personId, weSpaceId, membershipId }

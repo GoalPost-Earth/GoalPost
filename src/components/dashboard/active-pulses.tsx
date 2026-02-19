@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { GET_ALL_PULSES } from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useApolloClient } from '@apollo/client/react'
 import { getConfigForType } from '@/lib/pulse-type-config'
 
 type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
@@ -42,11 +42,28 @@ interface ActivePulsesProps {
   onViewAll?: () => void
 }
 
-export function ActivePulses({ showAll = false, onViewAll }: ActivePulsesProps) {
+export function ActivePulses({
+  showAll = false,
+  onViewAll,
+}: ActivePulsesProps) {
   const router = useRouter()
+  const client = useApolloClient()
   const { data, loading, error } = useQuery(GET_ALL_PULSES, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'network-only', // Force fresh data from server
   })
+
+  // Clear cache on mount to ensure fresh data
+  React.useEffect(() => {
+    // Evict all cached pulse data
+    client.cache.evict({ fieldName: 'goalPulses' })
+    client.cache.evict({ fieldName: 'resourcePulses' })
+    client.cache.evict({ fieldName: 'storyPulses' })
+    client.cache.gc() // Garbage collect orphaned references
+
+    void client.refetchQueries({
+      include: [GET_ALL_PULSES],
+    })
+  }, [client])
 
   // Combine all pulse types into a single array
   const allPulses = React.useMemo(() => {
@@ -64,6 +81,8 @@ export function ActivePulses({ showAll = false, onViewAll }: ActivePulsesProps) 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
   }, [data])
+
+  console.log('Fetched pulses:', allPulses)
 
   if (error) {
     return (
@@ -87,7 +106,7 @@ export function ActivePulses({ showAll = false, onViewAll }: ActivePulsesProps) 
           Active Pulses
         </h3>
         {!showAll && (
-          <button 
+          <button
             onClick={onViewAll}
             className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
           >
@@ -128,9 +147,10 @@ export function ActivePulses({ showAll = false, onViewAll }: ActivePulsesProps) 
           {(showAll ? allPulses : allPulses.slice(0, 5)).map((pulse) => {
             const config = pulseConfig[pulse.__typename as PulseType]
             const author =
-              pulse.createdBy[0]?.__typename === 'Person'
+              pulse.createdBy && pulse.createdBy.length > 0
                 ? pulse.createdBy[0].name
-                : pulse.createdBy[0]?.name || 'Unknown'
+                : 'Unknown'
+            console.log('Pulses:', pulse)
             const timeAgo = formatDistanceToNow(new Date(pulse.createdAt), {
               addSuffix: true,
             })

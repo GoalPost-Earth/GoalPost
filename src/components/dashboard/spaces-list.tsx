@@ -81,7 +81,7 @@ export function SpacesList({ showAll = false, onViewAll }: SpacesListProps) {
           Spaces
         </h3>
         {!showAll && (
-          <button 
+          <button
             onClick={onViewAll}
             className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
           >
@@ -179,14 +179,16 @@ export function SpacesList({ showAll = false, onViewAll }: SpacesListProps) {
                       {contextCount} {contextCount === 1 ? 'field' : 'fields'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      {isMeSpace ? 'person' : 'group'}
-                    </span>
-                    <span>
-                      {memberCount} {memberCount === 1 ? 'member' : 'members'}
-                    </span>
-                  </div>
+                  {!isMeSpace && (
+                    <div className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">
+                        group
+                      </span>
+                      <span>
+                        {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Owner */}

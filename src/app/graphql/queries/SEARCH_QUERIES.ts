@@ -50,11 +50,6 @@ export const SEARCH_ALL = gql`
         visibility
         createdAt
       }
-      communities {
-        id
-        name
-        type
-      }
     }
   }
 `
