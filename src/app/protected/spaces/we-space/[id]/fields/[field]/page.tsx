@@ -8,9 +8,6 @@ import {
   useApolloClient,
 } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
-
-// Enable dynamic rendering for paths not pre-generated at build time
-export const dynamicParams = true
 import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
