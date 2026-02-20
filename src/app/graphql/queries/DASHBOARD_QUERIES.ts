@@ -5,7 +5,16 @@ export const GET_LOGGED_IN_USER = graphql(`
     people(where: { email_EQ: $email }) {
       id
       name
+      firstName
+      lastName
       email
+      phone
+      pronouns
+      location
+      passions
+      traits
+      photo
+      fieldsOfCare
       onboardingCurrentStepIndex
       onboardingCompletedSteps
       onboardingIsCompleted

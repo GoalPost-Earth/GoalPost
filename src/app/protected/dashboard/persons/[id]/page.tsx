@@ -97,7 +97,7 @@ export default function PersonProfilePage() {
           {(person.traits || person.passions || person.fieldsOfCare) && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               {person.traits && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="psychology" title="Traits" />
                   <ProfileCard>
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
@@ -108,7 +108,7 @@ export default function PersonProfilePage() {
               )}
 
               {person.passions && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="favorite" title="Passions" />
                   <ProfileCard>
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
@@ -119,7 +119,7 @@ export default function PersonProfilePage() {
               )}
 
               {person.fieldsOfCare && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 h-full">
                   <SectionHeader
                     icon="volunteer_activism"
                     title="Fields of Care"
@@ -137,10 +137,11 @@ export default function PersonProfilePage() {
           {/* Grid Layout - Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {/* Owned Spaces Section */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 h-full">
               <SectionHeader icon="auto_awesome" title="Owned Spaces" />
-              <ProfileCard>
-                <div className="space-y-4">
+              <div className="flex-1 h-full">
+                <ProfileCard>
+                  <div className="space-y-4">
                   {person.ownsSpaces && person.ownsSpaces.length > 0 ? (
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     person.ownsSpaces.map((space: any, idx: number) => (
@@ -175,13 +176,15 @@ export default function PersonProfilePage() {
                   )}
                 </div>
               </ProfileCard>
+              </div>
             </div>
 
             {/* Member Spaces Section */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 h-full">
               <SectionHeader icon="group" title="Member Spaces" />
-              <ProfileCard>
-                <div className="space-y-4">
+              <div className="flex-1 h-full">
+                <ProfileCard>
+                  <div className="space-y-4">
                   {person.memberOf && person.memberOf.length > 0 ? (
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     person.memberOf.map((membership: any, idx: number) => {
@@ -221,13 +224,15 @@ export default function PersonProfilePage() {
                   )}
                 </div>
               </ProfileCard>
+              </div>
             </div>
 
             {/* Pulses Section */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 h-full">
               <SectionHeader icon="waves" title="Pulses" />
-              <ProfileCard>
-                <div className="space-y-3">
+              <div className="flex-1 h-full">
+                <ProfileCard>
+                  <div className="space-y-3">
                   {allPulses.length > 0 ? (
                     allPulses.slice(0, 5).map((pulse, idx) => (
                       <div
@@ -252,13 +257,15 @@ export default function PersonProfilePage() {
                   )}
                 </div>
               </ProfileCard>
+              </div>
             </div>
 
             {/* Activity Summary Section */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 h-full">
               <SectionHeader icon="flare" title="Activity" />
-              <ProfileCard>
-                <div className="space-y-2">
+              <div className="flex-1 h-full">
+                <ProfileCard>
+                  <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
                       Total Pulses
@@ -277,6 +284,7 @@ export default function PersonProfilePage() {
                   </div>
                 </div>
               </ProfileCard>
+              </div>
             </div>
           </div>
 

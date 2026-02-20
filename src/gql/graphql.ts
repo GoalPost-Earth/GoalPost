@@ -16344,6 +16344,15 @@ export type UpdatePersonMutation = {
       id: string
       name: string
       email?: string | null
+      firstName: string
+      lastName: string
+      phone?: string | null
+      pronouns?: string | null
+      traits?: string | null
+      photo?: string | null
+      location?: string | null
+      passions?: string | null
+      fieldsOfCare?: string | null
       ownsSpaces: Array<
         | {
             __typename?: 'MeSpace'
@@ -17068,7 +17077,16 @@ export type GetLoggedInUserQuery = {
     __typename?: 'Person'
     id: string
     name: string
+    firstName: string
+    lastName: string
     email?: string | null
+    phone?: string | null
+    pronouns?: string | null
+    location?: string | null
+    passions?: string | null
+    traits?: string | null
+    photo?: string | null
+    fieldsOfCare?: string | null
     onboardingCurrentStepIndex: number
     onboardingCompletedSteps: Array<string>
     onboardingIsCompleted: boolean
@@ -20426,6 +20444,36 @@ export const UpdatePersonDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pronouns' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'traits' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'passions' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'fieldsOfCare' },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'ownsSpaces' },
                         selectionSet: {
                           kind: 'SelectionSet',
@@ -23761,7 +23809,19 @@ export const GetLoggedInUserDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldsOfCare' },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'onboardingCurrentStepIndex' },

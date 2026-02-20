@@ -26,6 +26,15 @@ export const UPDATE_PERSON_MUTATION = graphql(`
         id
         name
         email
+        firstName
+        lastName
+        phone
+        pronouns
+        traits
+        photo
+        location
+        passions
+        fieldsOfCare
         ownsSpaces {
           id
           name

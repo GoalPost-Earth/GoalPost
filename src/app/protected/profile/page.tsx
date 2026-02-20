@@ -141,7 +141,7 @@ export default function ProfilePage() {
 
           <div className="relative flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
-            <div className="size-24 rounded-full border-4 border-gp-primary/20 flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br from-gp-primary/20 to-gp-accent-glow/20 text-gp-primary font-bold text-3xl dark:from-gp-primary/10 dark:to-gp-accent-glow/10">
+            <div className="size-24 rounded-full border-4 border-gp-primary/20 flex items-center justify-center shrink-0 shadow-lg bg-linear-to-br from-gp-primary/20 to-gp-accent-glow/20 text-gp-primary font-bold text-3xl dark:from-gp-primary/10 dark:to-gp-accent-glow/10">
               {initials}
             </div>
 
@@ -166,6 +166,7 @@ export default function ProfilePage() {
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <button
+                onClick={() => router.push('/protected/profile/edit')}
                 className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all shadow-lg cursor-pointer"
                 style={{
                   background:
