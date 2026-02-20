@@ -8,14 +8,6 @@ import { useApp, usePageContext } from '@/contexts'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { formatDistanceToNow } from 'date-fns'
 
-interface SpaceData {
-  __typename: string
-  id: string
-  name: string
-  visibility?: string
-  createdAt?: string
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated } = useApp()
@@ -95,15 +87,41 @@ export default function ProfilePage() {
     )
   }
 
-  const spaceCount = personData.ownsSpaces?.length || 0
-  const meSpaces =
-    personData.ownsSpaces?.filter(
-      (space: SpaceData) => space.__typename === 'MeSpace'
-    ) || []
-  const weSpaces =
-    personData.ownsSpaces?.filter(
-      (space: SpaceData) => space.__typename === 'WeSpace'
-    ) || []
+  // Combine owned spaces and spaces where user is a member
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ownedSpaces: any[] = personData.ownsSpaces || []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const memberSpaces: any[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    personData.memberOf?.map((membership: any) => membership.space) || []
+
+  // Merge and deduplicate spaces
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const spaceMap = new Map<string, any>()
+
+  // Add member spaces first
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  memberSpaces.forEach((space: any) => {
+    spaceMap.set(space.id, { ...space, isOwner: false })
+  })
+
+  // Then add/override with owned spaces (owned takes priority)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ownedSpaces.forEach((space: any) => {
+    spaceMap.set(space.id, { ...space, isOwner: true })
+  })
+
+  const allSpaces = Array.from(spaceMap.values())
+
+  const spaceCount = allSpaces.length
+  const meSpaces = allSpaces.filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (space: any) => space.__typename === 'MeSpace'
+  )
+  const weSpaces = allSpaces.filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (space: any) => space.__typename === 'WeSpace'
+  )
 
   const initials = personData.name
     ? personData.name
@@ -229,62 +247,64 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-3">
-              {personData.ownsSpaces?.slice(0, 5).map(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (space: any) => {
-                  const isMeSpace = space.__typename === 'MeSpace'
-                  const icon = isMeSpace ? 'person' : 'groups'
-                  const iconBg = isMeSpace
-                    ? 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-300'
-                    : 'bg-teal-50 border-teal-100 text-teal-600 dark:bg-teal-500/20 dark:border-teal-500/30 dark:text-teal-300'
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any
+               */}
+              {allSpaces.slice(0, 5).map((space: any) => {
+                const isMeSpace = space.__typename === 'MeSpace'
+                const icon = isMeSpace ? 'person' : 'groups'
+                const iconBg = isMeSpace
+                  ? 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-300'
+                  : 'bg-teal-50 border-teal-100 text-teal-600 dark:bg-teal-500/20 dark:border-teal-500/30 dark:text-teal-300'
 
-                  const timeAgo = formatDistanceToNow(
-                    new Date(space.createdAt),
-                    {
+                const timeAgo = space.createdAt
+                  ? formatDistanceToNow(new Date(space.createdAt), {
                       addSuffix: true,
-                    }
-                  )
+                    })
+                  : 'Unknown'
 
-                  return (
+                return (
+                  <div
+                    key={space.id}
+                    onClick={() => {
+                      const spaceType = isMeSpace ? 'me-space' : 'we-space'
+                      router.push(`/protected/spaces/${spaceType}/${space.id}`)
+                    }}
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group border border-transparent hover:border-gp-primary/20"
+                  >
                     <div
-                      key={space.id}
-                      onClick={() => {
-                        const spaceType = isMeSpace ? 'me-space' : 'we-space'
-                        router.push(
-                          `/protected/spaces/${spaceType}/${space.id}`
-                        )
-                      }}
-                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group border border-transparent hover:border-gp-primary/20"
+                      className={`size-10 rounded-xl border flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${iconBg}`}
                     >
-                      <div
-                        className={`size-10 rounded-xl border flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${iconBg}`}
-                      >
-                        <span className="material-symbols-outlined text-base">
-                          {icon}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gp-ink-strong dark:text-white group-hover:text-gp-primary transition-colors truncate">
-                          {space.name}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
-                            {isMeSpace ? 'MeSpace' : 'WeSpace'}
-                          </span>
-                          <span className="text-[10px] text-gp-ink-muted dark:text-white/40">
-                            {timeAgo}
-                          </span>
-                        </div>
-                      </div>
-
-                      <span className="material-symbols-outlined text-gp-ink-muted dark:text-white/40 group-hover:text-gp-primary transition-colors">
-                        arrow_forward
+                      <span className="material-symbols-outlined text-base">
+                        {icon}
                       </span>
                     </div>
-                  )
-                }
-              )}
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gp-ink-strong dark:text-white group-hover:text-gp-primary transition-colors truncate">
+                        {space.name}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
+                          {isMeSpace ? 'MeSpace' : 'WeSpace'}
+                        </span>
+                        {!space.isOwner && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-200 text-[10px] text-amber-700 font-semibold dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-300">
+                            Member
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gp-ink-muted dark:text-white/40">
+                          {timeAgo}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="material-symbols-outlined text-gp-ink-muted dark:text-white/40 group-hover:text-gp-primary transition-colors">
+                      arrow_forward
+                    </span>
+                  </div>
+                )
+              })}
+              {/* eslint-enable @typescript-eslint/no-explicit-any */}
             </div>
           </div>
         )}
