@@ -8,14 +8,6 @@ import { useApp, usePageContext } from '@/contexts'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { formatDistanceToNow } from 'date-fns'
 
-interface SpaceData {
-  __typename: string
-  id: string
-  name: string
-  visibility?: string
-  createdAt?: string
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated } = useApp()
@@ -95,15 +87,38 @@ export default function ProfilePage() {
     )
   }
 
-  const spaceCount = personData.ownsSpaces?.length || 0
-  const meSpaces =
-    personData.ownsSpaces?.filter(
-      (space: SpaceData) => space.__typename === 'MeSpace'
+  // Combine owned spaces and spaces where user is a member
+  // eslint-disable @typescript-eslint/no-explicit-any
+  const ownedSpaces: any[] = personData.ownsSpaces || []
+  // eslint-disable @typescript-eslint/no-explicit-any
+  const memberSpaces: any[] =
+    personData.memberOf?.map(
+      (membership: any) => membership.space
     ) || []
-  const weSpaces =
-    personData.ownsSpaces?.filter(
-      (space: SpaceData) => space.__typename === 'WeSpace'
-    ) || []
+
+  // Merge and deduplicate spaces
+  const spaceMap = new Map<string, any>()
+  
+  // Add member spaces first
+  memberSpaces.forEach((space: any) => {
+    spaceMap.set(space.id, { ...space, isOwner: false })
+  })
+  
+  // Then add/override with owned spaces (owned takes priority)
+  ownedSpaces.forEach((space: any) => {
+    spaceMap.set(space.id, { ...space, isOwner: true })
+  })
+  
+  const allSpaces = Array.from(spaceMap.values())
+
+  const spaceCount = allSpaces.length
+  const meSpaces = allSpaces.filter(
+    (space: any) => space.__typename === 'MeSpace'
+  )
+  const weSpaces = allSpaces.filter(
+    (space: any) => space.__typename === 'WeSpace'
+  )
+  // eslint-enable @typescript-eslint/no-explicit-any
 
   const initials = personData.name
     ? personData.name
@@ -229,21 +244,22 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-3">
-              {personData.ownsSpaces?.slice(0, 5).map(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (space: any) => {
-                  const isMeSpace = space.__typename === 'MeSpace'
-                  const icon = isMeSpace ? 'person' : 'groups'
-                  const iconBg = isMeSpace
-                    ? 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-300'
-                    : 'bg-teal-50 border-teal-100 text-teal-600 dark:bg-teal-500/20 dark:border-teal-500/30 dark:text-teal-300'
+              {/* eslint-disable @typescript-eslint/no-explicit-any */}
+              {allSpaces.slice(0, 5).map((space: any) => {
+                const isMeSpace = space.__typename === 'MeSpace'
+                const icon = isMeSpace ? 'person' : 'groups'
+                const iconBg = isMeSpace
+                  ? 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-300'
+                  : 'bg-teal-50 border-teal-100 text-teal-600 dark:bg-teal-500/20 dark:border-teal-500/30 dark:text-teal-300'
 
-                  const timeAgo = formatDistanceToNow(
-                    new Date(space.createdAt),
-                    {
-                      addSuffix: true,
-                    }
-                  )
+                const timeAgo = space.createdAt
+                  ? formatDistanceToNow(
+                      new Date(space.createdAt),
+                      {
+                        addSuffix: true,
+                      }
+                    )
+                  : 'Unknown'
 
                   return (
                     <div
@@ -272,6 +288,11 @@ export default function ProfilePage() {
                           <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
                             {isMeSpace ? 'MeSpace' : 'WeSpace'}
                           </span>
+                          {!space.isOwner && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-200 text-[10px] text-amber-700 font-semibold dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-300">
+                              Member
+                            </span>
+                          )}
                           <span className="text-[10px] text-gp-ink-muted dark:text-white/40">
                             {timeAgo}
                           </span>
@@ -283,8 +304,8 @@ export default function ProfilePage() {
                       </span>
                     </div>
                   )
-                }
-              )}
+                })}
+              {/* eslint-enable @typescript-eslint/no-explicit-any */}
             </div>
           </div>
         )}

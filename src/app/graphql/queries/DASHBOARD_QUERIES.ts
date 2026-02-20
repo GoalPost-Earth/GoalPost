@@ -26,6 +26,26 @@ export const GET_LOGGED_IN_USER = graphql(`
           name
         }
       }
+      memberOf {
+        id
+        role
+        space {
+          id
+          name
+          visibility
+          createdAt
+          ... on MeSpace {
+            __typename
+            id
+            name
+          }
+          ... on WeSpace {
+            __typename
+            id
+            name
+          }
+        }
+      }
     }
   }
 `)
