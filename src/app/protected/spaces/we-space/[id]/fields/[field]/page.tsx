@@ -644,14 +644,15 @@ function FieldDetailPage() {
       if (space.members) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         space.members.forEach((membership: any) => {
-          if (membership.member) {
+          const memberData = membership.member?.[0] // Extract first element from array
+          if (memberData) {
             allPersons.push({
-              id: membership.member.id,
-              firstName: membership.member.firstName,
-              lastName: membership.member.lastName,
-              name: membership.member.name,
-              email: membership.member.email ?? null,
-              photo: membership.member.photo ?? null,
+              id: memberData.id,
+              firstName: memberData.firstName,
+              lastName: memberData.lastName,
+              name: memberData.name,
+              email: memberData.email ?? null,
+              photo: memberData.photo ?? null,
               role: membership.role || 'MEMBER',
             })
           }
@@ -694,8 +695,9 @@ function FieldDetailPage() {
     if (space.members) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       space.members.forEach((membership: any) => {
-        if (membership.member?.id) {
-          personIds.push(membership.member.id)
+        const memberData = membership.member?.[0] // Extract first element from array
+        if (memberData?.id) {
+          personIds.push(memberData.id)
         }
       })
     }
@@ -1448,14 +1450,15 @@ function FieldDetailPage() {
         // Find in members
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         space.members?.forEach((membership: any) => {
-          if (membership.member?.id === connectedPersonId) {
+          const memberData = membership.member?.[0] // Extract first element from array
+          if (memberData?.id === connectedPersonId) {
             connectedPerson = {
-              id: membership.member.id,
-              firstName: membership.member.firstName,
-              lastName: membership.member.lastName,
-              name: membership.member.name ?? null,
-              email: membership.member.email ?? null,
-              photo: membership.member.photo ?? null,
+              id: memberData.id,
+              firstName: memberData.firstName,
+              lastName: memberData.lastName,
+              name: memberData.name ?? null,
+              email: memberData.email ?? null,
+              photo: memberData.photo ?? null,
             }
             connectedRole =
               (membership.role as 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST') ||
