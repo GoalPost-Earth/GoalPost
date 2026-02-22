@@ -9,6 +9,7 @@ import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
+import Image from 'next/image'
 
 export default function PersonProfilePage() {
   const params = useParams()
@@ -134,6 +135,43 @@ export default function PersonProfilePage() {
             </div>
           )}
 
+          {/* Connections Section */}
+          {person.connections && person.connections.length > 0 && (
+            <div className="mb-12">
+              <SectionHeader icon="group_work" title="Connections" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {person.connections.map((connection: any, idx: number) => (
+                  <ProfileCard key={idx} hover={true}>
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
+                        {connection.photo ? (
+                          <Image
+                            src={connection.photo}
+                            alt={connection.name}
+                            className="size-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="material-symbols-outlined text-gp-primary text-xl">
+                            person
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-gp-ink-strong dark:text-white truncate">
+                          {connection.name}
+                        </h4>
+                        <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
+                          {connection.email}
+                        </p>
+                      </div>
+                    </div>
+                  </ProfileCard>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Grid Layout - Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {/* Owned Spaces Section */}
@@ -142,56 +180,9 @@ export default function PersonProfilePage() {
               <div className="flex-1 h-full">
                 <ProfileCard>
                   <div className="space-y-4">
-                  {person.ownsSpaces && person.ownsSpaces.length > 0 ? (
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    person.ownsSpaces.map((space: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={
-                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
-                        }
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <div>
-                            <span className="text-[9px] uppercase font-semibold text-gp-primary mb-0.5 block">
-                              {space.__typename || 'Space'}
-                            </span>
-                            <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                              {space.name}
-                            </h4>
-                          </div>
-                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                            {space.contexts?.length || 0} contexts
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
-                          {space.visibility}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      No spaces owned yet
-                    </p>
-                  )}
-                </div>
-              </ProfileCard>
-              </div>
-            </div>
-
-            {/* Member Spaces Section */}
-            <div className="flex flex-col gap-4 h-full">
-              <SectionHeader icon="group" title="Member Spaces" />
-              <div className="flex-1 h-full">
-                <ProfileCard>
-                  <div className="space-y-4">
-                  {person.memberOf && person.memberOf.length > 0 ? (
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    person.memberOf.map((membership: any, idx: number) => {
-                      const space = membership.space[0] // space is an array
-                      if (!space) return null
-
-                      return (
+                    {person.ownsSpaces && person.ownsSpaces.length > 0 ? (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      person.ownsSpaces.map((space: any, idx: number) => (
                         <div
                           key={idx}
                           className={
@@ -203,27 +194,76 @@ export default function PersonProfilePage() {
                           <div className="flex justify-between items-start mb-1">
                             <div>
                               <span className="text-[9px] uppercase font-semibold text-gp-primary mb-0.5 block">
-                                {space.__typename || 'Space'} •{' '}
-                                {membership.role}
+                                {space.__typename || 'Space'}
                               </span>
                               <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
                                 {space.name}
                               </h4>
                             </div>
                             <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                              {space.visibility}
+                              {space.contexts?.length || 0} contexts
                             </span>
                           </div>
+                          <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                            {space.visibility}
+                          </p>
                         </div>
-                      )
-                    })
-                  ) : (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      Not a member of any spaces yet
-                    </p>
-                  )}
-                </div>
-              </ProfileCard>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        No spaces owned yet
+                      </p>
+                    )}
+                  </div>
+                </ProfileCard>
+              </div>
+            </div>
+
+            {/* Member Spaces Section */}
+            <div className="flex flex-col gap-4 h-full">
+              <SectionHeader icon="group" title="Member Spaces" />
+              <div className="flex-1 h-full">
+                <ProfileCard>
+                  <div className="space-y-4">
+                    {person.memberOf && person.memberOf.length > 0 ? (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      person.memberOf.map((membership: any, idx: number) => {
+                        const space = membership.space[0] // space is an array
+                        if (!space) return null
+
+                        return (
+                          <div
+                            key={idx}
+                            className={
+                              idx > 0
+                                ? 'border-t border-gp-glass-border pt-3'
+                                : ''
+                            }
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <div>
+                                <span className="text-[9px] uppercase font-semibold text-gp-primary mb-0.5 block">
+                                  {space.__typename || 'Space'} •{' '}
+                                  {membership.role}
+                                </span>
+                                <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                                  {space.name}
+                                </h4>
+                              </div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                {space.visibility}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        Not a member of any spaces yet
+                      </p>
+                    )}
+                  </div>
+                </ProfileCard>
               </div>
             </div>
 
@@ -233,30 +273,32 @@ export default function PersonProfilePage() {
               <div className="flex-1 h-full">
                 <ProfileCard>
                   <div className="space-y-3">
-                  {allPulses.length > 0 ? (
-                    allPulses.slice(0, 5).map((pulse, idx) => (
-                      <div
-                        key={pulse.id}
-                        className={
-                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
-                        }
-                      >
-                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
-                          {pulse.title}
-                        </h4>
-                        <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                          {pulse.spaceType} • {pulse.spaceName} •{' '}
-                          {pulse.contextName}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      No pulses yet
-                    </p>
-                  )}
-                </div>
-              </ProfileCard>
+                    {allPulses.length > 0 ? (
+                      allPulses.slice(0, 5).map((pulse, idx) => (
+                        <div
+                          key={pulse.id}
+                          className={
+                            idx > 0
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
+                          }
+                        >
+                          <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
+                            {pulse.title}
+                          </h4>
+                          <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            {pulse.spaceType} • {pulse.spaceName} •{' '}
+                            {pulse.contextName}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        No pulses yet
+                      </p>
+                    )}
+                  </div>
+                </ProfileCard>
               </div>
             </div>
 
@@ -266,24 +308,24 @@ export default function PersonProfilePage() {
               <div className="flex-1 h-full">
                 <ProfileCard>
                   <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                      Total Pulses
-                    </span>
-                    <span className="text-lg font-bold text-gp-primary">
-                      {allPulses.length}
-                    </span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                        Total Pulses
+                      </span>
+                      <span className="text-lg font-bold text-gp-primary">
+                        {allPulses.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                        Active Spaces
+                      </span>
+                      <span className="text-lg font-bold text-gp-primary">
+                        {person.ownsSpaces?.length || 0}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                      Active Spaces
-                    </span>
-                    <span className="text-lg font-bold text-gp-primary">
-                      {person.ownsSpaces?.length || 0}
-                    </span>
-                  </div>
-                </div>
-              </ProfileCard>
+                </ProfileCard>
               </div>
             </div>
           </div>

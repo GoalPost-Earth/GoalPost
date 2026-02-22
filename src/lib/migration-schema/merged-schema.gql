@@ -123,6 +123,14 @@ type Person implements PersonInterface
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
                 }
               }
+              # Person is a member of a space where current user is the owner
+              {
+                memberOf_SOME: {
+                  space_SOME: {
+                    owner_SOME: { id_EQ: "$jwt.user.id" }
+                  }
+                }
+              }
               # Person is a member of a space where current user is also a member
               {
                 memberOf_SOME: {
@@ -186,7 +194,7 @@ type Person implements PersonInterface
   
   # Modern relationships (pulse-first architecture)
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
-  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
   
   # Legacy relationships (preserved for migration)
   # NOTE: Person-to-person connections should migrate to ResonanceLinks
@@ -391,12 +399,39 @@ type WeSpace implements Space
 """
 Represents a person as a member of a space with a specific role.
 Label: ["SpaceMembership"]
+Authorization: Only accessible if current user is an owner or member of the associated space.
 """
-type SpaceMembership @node(labels: ["SpaceMembership"]) {
+type SpaceMembership
+  @node(labels: ["SpaceMembership"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            space_SOME: {
+              OR: [
+                # Current user is the owner of the space
+                { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                # Current user is a member of the space
+                { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   role: SpaceRole!
   addedAt: DateTime!
-  member: [Person!]! @relationship(type: "IS_MEMBER", direction: IN)
+  member: [Person!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:IS_MEMBER]->(p:Person)
+      RETURN p
+      """
+      columnName: "p"
+    )
   space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 

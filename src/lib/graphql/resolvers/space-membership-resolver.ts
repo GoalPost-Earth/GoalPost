@@ -136,24 +136,18 @@ export const spaceMembershipResolvers = {
         )
       }
 
-      const result = await session.executeWrite((tx) =>
+      // Create the SpaceMembership and relationships
+      const createResult = await session.executeWrite((tx) =>
         tx.run(
           `
-          MATCH (space:Space {id: $spaceId}), (member:LifeSensor {id: $memberId})
+          MATCH (space:Space {id: $spaceId}), (member:Person {id: $memberId})
           CREATE (sm:SpaceMembership {
             id: $membershipId,
             role: $role,
             addedAt: datetime($addedAt)
           })
           CREATE (space)-[:HAS_MEMBER]->(sm)-[:IS_MEMBER]->(member)
-          RETURN 
-            sm.id as id, 
-            sm.role as role, 
-            sm.addedAt as addedAt,
-            member.id as memberId,
-            member.name as memberName,
-            member.email as memberEmail,
-            labels(member) as memberLabels
+          RETURN sm.id as id
           `,
           {
             spaceId,
@@ -165,7 +159,7 @@ export const spaceMembershipResolvers = {
         )
       )
 
-      if (result.records.length === 0) {
+      if (createResult.records.length === 0) {
         return {
           success: false,
           message:
@@ -173,9 +167,37 @@ export const spaceMembershipResolvers = {
         }
       }
 
-      const record = result.records[0]
-      const memberLabels = record.get('memberLabels')
-      const isPersonType = memberLabels.includes('Person')
+      // Now query the database to get the created SpaceMembership with member data
+      const queryResult = await session.executeRead((tx) =>
+        tx.run(
+          `
+          MATCH (sm:SpaceMembership {id: $membershipId})
+          MATCH (sm)-[:IS_MEMBER]->(person:Person)
+          RETURN 
+            sm.id as id, 
+            sm.role as role, 
+            sm.addedAt as addedAt,
+            person.id as personId,
+            person.firstName,
+            person.lastName,
+            person.name,
+            person.email,
+            labels(person) as personLabels
+          `,
+          { membershipId }
+        )
+      )
+
+      if (queryResult.records.length === 0) {
+        return {
+          success: false,
+          message: 'Failed to retrieve created space membership.',
+        }
+      }
+
+      const record = queryResult.records[0]
+      const personLabels = record.get('personLabels')
+      const isPersonType = personLabels.includes('Person')
 
       return {
         success: true,
@@ -189,9 +211,9 @@ export const spaceMembershipResolvers = {
           member: [
             {
               __typename: isPersonType ? 'Person' : 'Community',
-              id: record.get('memberId'),
-              name: record.get('memberName'),
-              email: record.get('memberEmail'),
+              id: record.get('personId'),
+              name: record.get('name'),
+              email: record.get('email'),
             },
           ],
         },
@@ -266,7 +288,7 @@ export const spaceMembershipResolvers = {
       const result = await session.executeWrite((tx) =>
         tx.run(
           `
-          MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:LifeSensor {id: $memberId})
+          MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $memberId})
           SET sm.role = $role
           RETURN 
             sm.id as id, 
@@ -380,7 +402,7 @@ export const spaceMembershipResolvers = {
       const result = await session.executeWrite((tx) =>
         tx.run(
           `
-          MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:LifeSensor {id: $memberId})
+          MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $memberId})
           DETACH DELETE sm
           RETURN COUNT(*) as deleted
           `,

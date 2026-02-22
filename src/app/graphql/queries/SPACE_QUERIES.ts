@@ -160,3 +160,56 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
     }
   }
 `)
+
+/**
+ * Get WeSpace members with their connections for canvas visualization
+ * Returns owner and members with their person-to-person connections
+ */
+export const GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY = graphql(`
+  query GetWeSpaceMembersWithConnections($spaceId: ID!) {
+    weSpaces(where: { id_EQ: $spaceId }) {
+      id
+      name
+      owner {
+        id
+        firstName
+        lastName
+        name
+        email
+        photo
+      }
+      members {
+        id
+        role
+        member {
+          id
+          firstName
+          lastName
+          name
+          email
+          photo
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Get person connections by person IDs
+ * Fetches separately to avoid nested query issues
+ */
+export const GET_PERSON_CONNECTIONS = graphql(`
+  query GetPersonConnections($personIds: [ID!]!) {
+    people(where: { id_IN: $personIds }) {
+      id
+      connections {
+        id
+        firstName
+        lastName
+        name
+        email
+        photo
+      }
+    }
+  }
+`)

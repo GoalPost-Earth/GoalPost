@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { useCreateField } from '@/hooks'
-import { usePageContext } from '@/contexts'
+import { useApp, usePageContext } from '@/contexts'
 import { FieldsCanvas } from '@/components/layout/fields-canvas'
+import { SpacePermissionsModal } from '@/components/spaces'
 import { GET_WE_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 
@@ -39,6 +40,7 @@ export default function WeSpaceFieldsPage() {
   const params = useParams()
   const weSpaceId = params?.id as string
   const { setPageTitle } = usePageContext()
+  const { user } = useApp()
 
   const { createField, loading: isCreating } = useCreateField()
 
@@ -53,6 +55,30 @@ export default function WeSpaceFieldsPage() {
 
   const weSpace = data?.weSpaces?.[0]
   const fields = weSpace?.contexts || []
+
+  // Check if user is the owner of this WeSpace
+  const isOwner = weSpace?.owner?.[0]?.id === user?.id
+
+  // Transform members data for toolbar
+  const members =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    weSpace?.members?.map((membership: any) => {
+      const memberData = membership.member?.[0] // Extract first element from array
+      return {
+        id: membership.id,
+        role: membership.role,
+        member: {
+          __typename: memberData?.__typename || 'Person',
+          id: memberData?.id || '',
+          name:
+            memberData?.name ||
+            `${memberData?.firstName || ''} ${memberData?.lastName || ''}`.trim(),
+          email: memberData?.email ?? null,
+        },
+      }
+    }) || []
+
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false)
 
   // Set page title when space loads with field count
   useEffect(() => {
@@ -123,7 +149,47 @@ export default function WeSpaceFieldsPage() {
         onRefetch={async () => {
           await refetch()
         }}
+        memberButton={
+          isOwner ? (
+            <button
+              onClick={() => setShowPermissionsModal(true)}
+              className="cursor-pointer flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 transition-all duration-300 group"
+              style={{
+                boxShadow: 'none',
+              }}
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  `0 0 50px color-mix(in srgb, var(--gp-primary) 50%, transparent)`
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+              }}
+            >
+              <div className="absolute inset-0 rounded-full bg-linear-to-tr from-gp-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-primary dark:group-hover:text-gp-primary text-[20px] md:text-[24px] transition-colors relative z-10">
+                person_add
+              </span>
+              <span className="hidden lg:inline text-sm md:text-base font-semibold text-gp-ink-strong dark:text-gp-ink-strong group-hover:text-gp-primary dark:group-hover:text-gp-primary transition-colors relative z-10">
+                Add Member
+              </span>
+            </button>
+          ) : null
+        }
       />
+
+      {/* Permissions Modal */}
+      {isOwner && weSpace && (
+        <SpacePermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => setShowPermissionsModal(false)}
+          spaceId={weSpaceId}
+          spaceName={weSpace.name}
+          members={members}
+          onRefetch={async () => {
+            await refetch()
+          }}
+        />
+      )}
     </div>
   )
 }

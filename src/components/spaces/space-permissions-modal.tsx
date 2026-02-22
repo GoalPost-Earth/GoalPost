@@ -134,7 +134,7 @@ export function SpacePermissionsModal({
         variables: { email: addMemberEmail },
       })
 
-      const person = result.data?.people[0]
+      const person = result.data?.findUserByEmail
       if (!person) {
         setError(`No user found with email: ${addMemberEmail}`)
         setLoading(false)

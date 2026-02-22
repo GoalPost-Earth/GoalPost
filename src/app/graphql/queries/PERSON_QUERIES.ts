@@ -32,6 +32,14 @@ export const GET_PERSON_PROFILE = graphql(`
       traits
       passions
       fieldsOfCare
+      connections {
+        id
+        firstName
+        lastName
+        name
+        email
+        photo
+      }
       ownsSpaces {
         ... on MeSpace {
           id

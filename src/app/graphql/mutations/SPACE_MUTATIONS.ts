@@ -2,13 +2,15 @@ import { graphql } from '@/gql'
 
 /**
  * Resolve a person by email to get their ID
+ * Uses custom resolver that bypasses authorization restrictions
  */
 export const RESOLVE_PERSON_BY_EMAIL_QUERY = graphql(`
   query ResolvePersonByEmail($email: String!) {
-    people(where: { email_EQ: $email }) {
+    findUserByEmail(email: $email) {
       id
       name
       email
+      __typename
     }
   }
 `)
@@ -25,6 +27,13 @@ export const ADD_SPACE_MEMBER_MUTATION = graphql(`
         id
         role
         addedAt
+        member {
+          id
+          firstName
+          lastName
+          name
+          email
+        }
       }
     }
   }
