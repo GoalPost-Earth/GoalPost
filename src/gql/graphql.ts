@@ -17961,6 +17961,7 @@ export type GetPersonProfileQuery = {
     lastName: string
     name: string
     email?: string | null
+    photo?: string | null
     traits?: string | null
     passions?: string | null
     fieldsOfCare?: string | null
@@ -28350,6 +28351,7 @@ export const GetPersonProfileDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
                 {
