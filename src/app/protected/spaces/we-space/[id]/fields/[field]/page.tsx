@@ -1537,11 +1537,7 @@ function FieldDetailPage() {
         canvasScale={5}
         onScaleChange={setCurrentScale}
         isLoading={isPulsesLoading}
-        isEmpty={
-          !isPulsesLoading &&
-          pulsePositions.length === 0 &&
-          pulseOptions.length > 0
-        }
+        isEmpty={!isPulsesLoading && pulseOptions.length === 0}
         actionButton={
           isMounted && (
             <div className="group flex flex-row items-center gap-3">
