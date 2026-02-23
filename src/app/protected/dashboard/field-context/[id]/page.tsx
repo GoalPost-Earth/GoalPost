@@ -274,7 +274,13 @@ export default function FieldContextDetailsPage() {
             {/* Space Info Section */}
             <div className="flex flex-col gap-4">
               <SectionHeader icon="location_on" title="Space" />
-              <ProfileCard>
+              <ProfileCard
+                hover={true}
+                onClick={() =>
+                  space?.id &&
+                  router.push(`/protected/dashboard/space/${space.id}`)
+                }
+              >
                 <div className="space-y-2">
                   <div>
                     <span className="text-[9px] uppercase font-semibold text-gp-primary block mb-1">
@@ -317,8 +323,14 @@ export default function FieldContextDetailsPage() {
                     pulses.map((pulse, idx) => (
                       <div
                         key={pulse.id}
+                        onClick={() =>
+                          pulse.id &&
+                          router.push(`/protected/dashboard/pulses/${pulse.id}`)
+                        }
                         className={
-                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
+                          idx > 0
+                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
                         }
                       >
                         <div className="flex justify-between items-start mb-1">
