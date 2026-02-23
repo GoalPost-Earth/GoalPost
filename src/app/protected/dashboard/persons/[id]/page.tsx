@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
@@ -13,7 +13,6 @@ import Image from 'next/image'
 
 export default function PersonProfilePage() {
   const params = useParams()
-  const router = useRouter()
   const personId = params?.id as string
   const { animationsEnabled } = useAnimations()
 
@@ -159,16 +158,7 @@ export default function PersonProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {person.connections.map((connection: any, idx: number) => (
-                  <ProfileCard
-                    key={idx}
-                    hover={true}
-                    onClick={() =>
-                      connection.id &&
-                      router.push(
-                        `/protected/dashboard/persons/${connection.id}`
-                      )
-                    }
-                  >
+                  <ProfileCard key={idx}>
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
                         {connection.photo ? (
@@ -213,16 +203,10 @@ export default function PersonProfilePage() {
                       person.ownsSpaces.map((space: any, idx: number) => (
                         <div
                           key={idx}
-                          onClick={() =>
-                            space.id &&
-                            router.push(
-                              `/protected/dashboard/space/${space.id}`
-                            )
-                          }
                           className={
                             idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
                           }
                         >
                           <div className="flex justify-between items-start mb-1">
@@ -268,16 +252,10 @@ export default function PersonProfilePage() {
                         return (
                           <div
                             key={idx}
-                            onClick={() =>
-                              space.id &&
-                              router.push(
-                                `/protected/dashboard/space/${space.id}`
-                              )
-                            }
                             className={
                               idx > 0
-                                ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                                : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                                ? 'border-t border-gp-glass-border pt-3'
+                                : ''
                             }
                           >
                             <div className="flex justify-between items-start mb-1">
@@ -317,16 +295,10 @@ export default function PersonProfilePage() {
                       allPulses.slice(0, 5).map((pulse, idx) => (
                         <div
                           key={pulse.id}
-                          onClick={() =>
-                            pulse.id &&
-                            router.push(
-                              `/protected/dashboard/pulses/${pulse.id}`
-                            )
-                          }
                           className={
                             idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
                           }
                         >
                           <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">

@@ -274,13 +274,7 @@ export default function FieldContextDetailsPage() {
             {/* Space Info Section */}
             <div className="flex flex-col gap-4">
               <SectionHeader icon="location_on" title="Space" />
-              <ProfileCard
-                hover={true}
-                onClick={() =>
-                  space?.id &&
-                  router.push(`/protected/dashboard/space/${space.id}`)
-                }
-              >
+              <ProfileCard>
                 <div className="space-y-2">
                   <div>
                     <span className="text-[9px] uppercase font-semibold text-gp-primary block mb-1">

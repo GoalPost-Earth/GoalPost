@@ -344,15 +344,7 @@ export default function PulseDetailsPage() {
             {/* Context Info Section */}
             <div className="flex flex-col gap-4">
               <SectionHeader icon="category" title="Context" />
-              <ProfileCard
-                hover={true}
-                onClick={() =>
-                  context?.id &&
-                  router.push(
-                    `/protected/dashboard/field-context/${context.id}`
-                  )
-                }
-              >
+              <ProfileCard>
                 <div className="space-y-3">
                   <div>
                     <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
@@ -387,13 +379,7 @@ export default function PulseDetailsPage() {
             {/* Space Info Section */}
             <div className="flex flex-col gap-4">
               <SectionHeader icon="location_on" title="Space" />
-              <ProfileCard
-                hover={true}
-                onClick={() =>
-                  space?.id &&
-                  router.push(`/protected/dashboard/space/${space.id}`)
-                }
-              >
+              <ProfileCard>
                 <div className="space-y-2">
                   <div>
                     <span className="text-[9px] uppercase font-semibold text-gp-primary block mb-1">
