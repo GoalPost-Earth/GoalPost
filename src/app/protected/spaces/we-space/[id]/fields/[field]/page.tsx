@@ -19,6 +19,7 @@ import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { ConnectionPanel } from '@/components/ui/connection-panel'
+import { PersonPanel } from '@/components/ui/person-panel'
 import { DraggablePersonNode } from '@/components/canvas/draggable-person-node'
 import {
   ResonanceLinkModal,
@@ -137,6 +138,16 @@ function FieldDetailPage() {
   }
   const [personPositions, setPersonPositions] = useState<PersonPosition[]>([])
   const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
+  const [selectedPerson, setSelectedPerson] = useState<{
+    id: string
+    firstName: string
+    lastName: string
+    name: string | null
+    email: string | null
+    photo: string | null
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+  } | null>(null)
   const [selectedConnection, setSelectedConnection] = useState<{
     person1: {
       id: string
@@ -1407,86 +1418,62 @@ function FieldDetailPage() {
       const clickedPerson = personPositions.find((p) => p.personId === personId)
       if (!clickedPerson) return
 
-      // Find their connections from personConnections
-      const personConnectionInfo = personConnections.find(
-        (pc) => pc.personId === personId
+      // Open person panel with person info
+      setSelectedPerson({
+        id: clickedPerson.personId,
+        firstName: clickedPerson.firstName,
+        lastName: clickedPerson.lastName,
+        name: clickedPerson.name,
+        email: clickedPerson.email,
+        photo: clickedPerson.photo,
+        role: clickedPerson.role,
+      })
+      setIsPersonPanelOpen(true)
+    },
+    [personPositions]
+  )
+
+  // Handle connection midpoint click - opens connection panel
+  const handleConnectionClick = useCallback(
+    (person1Id: string, person2Id: string) => {
+      // Find both persons
+      const person1Data = personPositions.find((p) => p.personId === person1Id)
+      const person2Data = personPositions.find((p) => p.personId === person2Id)
+
+      if (!person1Data || !person2Data) return
+
+      // Find their connection info from personConnections
+      const connectionInfo = personConnections.find(
+        (pc) => pc.personId === person1Id
       )
       if (
-        !personConnectionInfo ||
-        personConnectionInfo.connectedPersonIds.length === 0
+        !connectionInfo ||
+        !connectionInfo.connectedPersonIds.includes(person2Id)
       )
         return
 
-      // Find the first connected person in the space
+      // Get connection details from GraphQL data if available
       const space = membersData?.weSpaces?.[0]
       if (!space) return
 
-      const owner = space.owner?.[0]
-      const connectedPersonId = personConnectionInfo.connectedPersonIds[0]
-
-      // Build person data for the connected person
-      let connectedPerson: {
-        id: string
-        firstName: string
-        lastName: string
-        name: string | null
-        email: string | null
-        photo: string | null
-      } | null = null
-      let connectedRole: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' = 'GUEST'
-
-      // Check if connected person is the owner
-      if (owner?.id === connectedPersonId) {
-        connectedPerson = {
-          id: owner.id,
-          firstName: owner.firstName,
-          lastName: owner.lastName,
-          name: owner.name ?? null,
-          email: owner.email ?? null,
-          photo: owner.photo ?? null,
-        }
-        connectedRole = 'OWNER'
-      } else {
-        // Find in members
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        space.members?.forEach((membership: any) => {
-          const memberData = membership.member?.[0] // Extract first element from array
-          if (memberData?.id === connectedPersonId) {
-            connectedPerson = {
-              id: memberData.id,
-              firstName: memberData.firstName,
-              lastName: memberData.lastName,
-              name: memberData.name ?? null,
-              email: memberData.email ?? null,
-              photo: memberData.photo ?? null,
-            }
-            connectedRole =
-              (membership.role as 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST') ||
-              'GUEST'
-          }
-        })
-      }
-
-      if (!connectedPerson) return
-
       setSelectedConnection({
         person1: {
-          id: clickedPerson.personId,
-          firstName: clickedPerson.firstName,
-          lastName: clickedPerson.lastName,
-          name: clickedPerson.name,
-          email: clickedPerson.email,
-          photo: clickedPerson.photo,
-          role: clickedPerson.role,
+          id: person1Data.personId,
+          firstName: person1Data.firstName,
+          lastName: person1Data.lastName,
+          name: person1Data.name,
+          email: person1Data.email,
+          photo: person1Data.photo,
+          role: person1Data.role,
         },
         person2: {
-          id: connectedPerson.id,
-          firstName: connectedPerson.firstName,
-          lastName: connectedPerson.lastName,
-          name: connectedPerson.name,
-          email: connectedPerson.email,
-          photo: connectedPerson.photo,
-          role: connectedRole,
+          id: person2Data.personId,
+          firstName: person2Data.firstName,
+          lastName: person2Data.lastName,
+          name: person2Data.name,
+          email: person2Data.email,
+          photo: person2Data.photo,
+          role: person2Data.role,
         },
       })
       setIsConnectionPanelOpen(true)
@@ -1555,6 +1542,7 @@ function FieldDetailPage() {
               canvasWidth={canvasSize.width}
               canvasHeight={canvasSize.height}
               scale={currentScale}
+              onConnectionClick={handleConnectionClick}
             />
             <ResonanceLinksVisualization
               pulsePositions={pulsePositions}
@@ -1667,6 +1655,15 @@ function FieldDetailPage() {
           setSelectedConnection(null)
         }}
         connection={selectedConnection}
+      />
+
+      <PersonPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => {
+          setIsPersonPanelOpen(false)
+          setSelectedPerson(null)
+        }}
+        person={selectedPerson}
       />
 
       {/* Offering Modal for creating new pulses */}

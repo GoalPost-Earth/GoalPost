@@ -178,10 +178,10 @@ export const spaceMembershipResolvers = {
             sm.role as role, 
             sm.addedAt as addedAt,
             person.id as personId,
-            person.firstName,
-            person.lastName,
-            person.name,
-            person.email,
+            person.firstName as firstName,
+            person.lastName as lastName,
+            person.name as name,
+            person.email as email,
             labels(person) as personLabels
           `,
           { membershipId }

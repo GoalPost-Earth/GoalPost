@@ -59,6 +59,15 @@ export function DraggablePersonNode({
     setIsLocalDragging(true)
   }
 
+  const handleClick = () => {
+    if (hasDraggedRef.current) {
+      // Skip click that follows a drag
+      hasDraggedRef.current = false
+      return
+    }
+    onClick?.()
+  }
+
   useEffect(() => {
     if (!isLocalDragging || !dragContext) return
 
@@ -85,10 +94,6 @@ export function DraggablePersonNode({
       if (animationsEnabled && !isDragging) {
         startFloatingAnimation()
       }
-      if (!hasDraggedRef.current && onClick) {
-        onClick()
-      }
-      hasDraggedRef.current = false
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -164,16 +169,18 @@ export function DraggablePersonNode({
       ref={nodeRef}
       onMouseDown={handleMouseDown}
       className={cn(
-        'absolute -translate-x-1/2 -translate-y-1/2 select-none touch-none',
+        'absolute select-none touch-none',
         (isLocalDragging || isDragging) && 'cursor-grabbing z-50',
-        !isLocalDragging && !isDragging && 'cursor-grab'
+        !isLocalDragging && !isDragging && 'cursor-grab z-30'
       )}
       style={{
-        left: `${displayPosition.x}px`,
-        top: `${displayPosition.y}px`,
+        top: 0,
+        left: 0,
+        transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
+        pointerEvents: 'auto',
       }}
     >
-      <PersonNode {...nodeProps} position="center" onClick={() => {}} />
+      <PersonNode {...nodeProps} position="center" onClick={handleClick} />
     </div>
   )
 }
