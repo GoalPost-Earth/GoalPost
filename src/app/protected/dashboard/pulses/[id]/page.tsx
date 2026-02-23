@@ -449,6 +449,16 @@ export default function PulseDetailsPage() {
                       {pulse.__typename}
                     </p>
                   </div>
+                  {pulse.__typename === 'GoalPulse' && pulse.why && (
+                    <div>
+                      <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        Why
+                      </span>
+                      <p className="text-xs text-gp-ink-strong dark:text-white">
+                        {pulse.why}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </ProfileCard>
             </div>
