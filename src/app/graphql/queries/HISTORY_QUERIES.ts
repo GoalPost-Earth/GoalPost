@@ -9,6 +9,7 @@ export const GET_ALL_PULSES = graphql(`
     goalPulses {
       __typename
       id
+      title
       content
       createdAt
       intensity
@@ -27,6 +28,7 @@ export const GET_ALL_PULSES = graphql(`
     resourcePulses {
       __typename
       id
+      title
       content
       createdAt
       intensity
@@ -45,6 +47,7 @@ export const GET_ALL_PULSES = graphql(`
     storyPulses {
       __typename
       id
+      title
       content
       createdAt
       intensity
