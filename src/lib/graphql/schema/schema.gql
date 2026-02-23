@@ -102,49 +102,12 @@ interface PersonInterface {
 """
 A human user of the system.
 Multi-label: ["Person", "User"]
-Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+Dashboard filtering is handled in queries, not authorization.
 Merged properties from reference schema for backward compatibility.
 """
 type Person implements PersonInterface
-  @node(labels: ["Person"])
-  @authorization(
-    filter: [
-      {
-        where: {
-          node: {
-            OR: [
-              # Current user is the person themselves
-              { id_EQ: "$jwt.user.id" }
-              # Person owns a space where current user is owner
-              { ownsSpaces_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-              # Person owns a space where current user is a member
-              {
-                ownsSpaces_SOME: {
-                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                }
-              }
-              # Person is a member of a space where current user is the owner
-              {
-                memberOf_SOME: {
-                  space_SOME: {
-                    owner_SOME: { id_EQ: "$jwt.user.id" }
-                  }
-                }
-              }
-              # Person is a member of a space where current user is also a member
-              {
-                memberOf_SOME: {
-                  space_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      }
-    ]
-  ) {
+  @node(labels: ["Person"]) {
   id: ID! @id
   isUser: Boolean
     @cypher(
@@ -226,18 +189,7 @@ Multi-label: ["Person", "User"]
 Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
 """
 type User implements PersonInterface
-  @node(labels: ["Person", "User"])
-  @authorization(
-    filter: [
-      {
-        where: {
-          node: {
-            id_EQ: "$jwt.user.id"
-          }
-        }
-      }
-    ]
-  ) {
+  @node(labels: ["Person", "User"]) {
   id: ID! @id
   firstName: String!
   lastName: String!
@@ -1017,6 +969,20 @@ type Query {
   Returns: User object or null
   """
   findUserByEmail(email: String!): User
+  
+  """
+  Returns people related to the current user.
+  For use in dashboard - shows only people connected through spaces or direct connections.
+  
+  Includes:
+    - The current user themselves
+    - People who own spaces where current user is owner or member
+    - People who are members of spaces where current user is owner or member
+    - Direct connections to the current user
+    
+  Returns: Array of Person objects
+  """
+  relatedPeople: [Person!]!
   
   # ============================================================================
   # LEGACY SUBSTRING QUERIES (Preserved for backward compatibility)

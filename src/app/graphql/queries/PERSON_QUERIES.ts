@@ -112,6 +112,24 @@ export const GET_ALL_PEOPLE = graphql(`
   }
 `)
 
+export const GET_RELATED_PEOPLE = graphql(`
+  query getRelatedPeople {
+    relatedPeople {
+      id
+      name
+      email
+      traits
+      passions
+      fieldsOfCare
+      ownsSpaces {
+        id
+        name
+        visibility
+      }
+    }
+  }
+`)
+
 export const GET_PEOPLE_AND_THEIR_GOALS = graphql(`
   query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {
     people(where: $personWhere) {

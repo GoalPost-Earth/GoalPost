@@ -77,6 +77,7 @@ type Documents = {
   '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n': typeof types.GetPersonDocument
   '\n  query getPersonProfile($personId: ID!) {\n    people(where: { id_EQ: $personId }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      connections {\n        id\n        firstName\n        lastName\n        name\n        email\n        photo\n      }\n      ownsSpaces {\n        ... on MeSpace {\n          id\n          name\n          visibility\n          createdAt\n          contexts {\n            id\n            title\n            pulses {\n              id\n              title\n              intensity\n            }\n          }\n        }\n        ... on WeSpace {\n          id\n          name\n          visibility\n          createdAt\n          contexts {\n            id\n            title\n            pulses {\n              id\n              title\n              intensity\n            }\n          }\n        }\n      }\n      memberOf {\n        id\n        role\n        space {\n          ... on MeSpace {\n            id\n            name\n            visibility\n            createdAt\n          }\n          ... on WeSpace {\n            id\n            name\n            visibility\n            createdAt\n          }\n        }\n      }\n    }\n  }\n': typeof types.GetPersonProfileDocument
   '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetAllPeopleDocument
+  '\n  query getRelatedPeople {\n    relatedPeople {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetRelatedPeopleDocument
   '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      ownsSpaces {\n        id\n        name\n      }\n    }\n  }\n': typeof types.GetPeopleAndTheirGoalsDocument
   '\n  query getPeopleAndTheirResources {\n    people {\n      name\n      id\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        name\n        id\n      }\n    }\n  }\n': typeof types.GetPeopleAndTheirResourcesDocument
   '\n  query getPeopleAndTheirCoreValues {\n    people {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n      }\n    }\n  }\n': typeof types.GetPeopleAndTheirCoreValuesDocument
@@ -221,6 +222,8 @@ const documents: Documents = {
     types.GetPersonProfileDocument,
   '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
     types.GetAllPeopleDocument,
+  '\n  query getRelatedPeople {\n    relatedPeople {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n':
+    types.GetRelatedPeopleDocument,
   '\n  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {\n    people(where: $personWhere) {\n      id\n      name\n      ownsSpaces {\n        id\n        name\n      }\n    }\n  }\n':
     types.GetPeopleAndTheirGoalsDocument,
   '\n  query getPeopleAndTheirResources {\n    people {\n      name\n      id\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        name\n        id\n      }\n    }\n  }\n':
@@ -647,6 +650,12 @@ export function graphql(
 export function graphql(
   source: '\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  query getAllPeople($where: PersonWhere) {\n    people(where: $where) {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query getRelatedPeople {\n    relatedPeople {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query getRelatedPeople {\n    relatedPeople {\n      id\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
