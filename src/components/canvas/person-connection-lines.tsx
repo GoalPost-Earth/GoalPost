@@ -25,6 +25,7 @@ type PersonConnectionLinesProps = {
   canvasWidth: number
   canvasHeight: number
   scale: number
+  activePersonIds?: Set<string>
   onConnectionClick?: (person1Id: string, person2Id: string) => void
 }
 
@@ -40,6 +41,7 @@ export function PersonConnectionLines({
   canvasWidth,
   canvasHeight,
   scale,
+  activePersonIds,
   onConnectionClick,
 }: PersonConnectionLinesProps) {
   // Build position lookup map
@@ -51,7 +53,7 @@ export function PersonConnectionLines({
     return map
   }, [personPositions])
 
-  // Generate line paths with midpoints
+  // Generate line paths with midpoints - bidirectional handling for active persons
   const lines = useMemo(() => {
     const result: Array<{
       id: string
@@ -65,7 +67,25 @@ export function PersonConnectionLines({
       person2Id: string
     }> = []
 
+    // If no active persons, show no connections
+    if (!activePersonIds || activePersonIds.size === 0) return result
+
+    // Track which connections we've already added (by sorted pair ID) to avoid duplicates
+    const addedConnections = new Set<string>()
+
     connections.forEach((connection) => {
+      // Show connection if SOURCE is active OR any TARGETS are active
+      // This makes connections bidirectional - they appear when either endpoint is clicked
+      const isSourceActive = activePersonIds.has(connection.personId)
+
+      if (!isSourceActive) {
+        // Check if any target is active (means this person is a target of that connection)
+        const hasActiveTarget = connection.connectedPersonIds.some((targetId) =>
+          activePersonIds.has(targetId)
+        )
+        if (!hasActiveTarget) return // Skip this connection entirely
+      }
+
       const sourcePos = positionMap.get(connection.personId)
       if (!sourcePos) return
 
@@ -78,7 +98,9 @@ export function PersonConnectionLines({
         const lineId = `connection-${ids[0]}-${ids[1]}`
 
         // Check if we've already added this line (to avoid duplicates)
-        if (result.some((line) => line.id === lineId)) return
+        if (addedConnections.has(lineId)) return
+
+        addedConnections.add(lineId)
 
         // Calculate midpoint
         const midX = (sourcePos.x + targetPos.x) / 2
@@ -99,7 +121,7 @@ export function PersonConnectionLines({
     })
 
     return result
-  }, [connections, positionMap])
+  }, [connections, positionMap, activePersonIds])
 
   return (
     <svg
@@ -161,15 +183,7 @@ export function PersonConnectionLines({
             strokeDasharray="5,5"
             opacity={0.8}
             className="pointer-events-none"
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from="0"
-              to="10"
-              dur="1s"
-              repeatCount="indefinite"
-            />
-          </line>
+          />
 
           {/* Clickable midpoint indicator */}
           {onConnectionClick && (
@@ -202,15 +216,7 @@ export function PersonConnectionLines({
                 r={6 / scale}
                 fill="rgb(139, 92, 246)"
                 opacity={0.9}
-                className="transition-all"
-              >
-                <animate
-                  attributeName="r"
-                  values={`${6 / scale};${8 / scale};${6 / scale}`}
-                  dur="2s"
-                  repeatCount="indefinite"
-                />
-              </circle>
+              />
               {/* Inner highlight */}
               <circle
                 cx={line.midX}

@@ -80,16 +80,11 @@ export function PersonPanel({ isOpen, onClose, person }: PersonPanelProps) {
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
-
       {/* Panel */}
       <div
         ref={panelRef}
         className="fixed right-0 top-0 h-full w-96 bg-gp-glass-bg border-l border-gp-glass-border backdrop-blur-2xl z-50 shadow-2xl"
+        style={{ pointerEvents: 'auto' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}

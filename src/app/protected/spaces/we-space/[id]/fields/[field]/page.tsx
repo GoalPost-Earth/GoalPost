@@ -139,6 +139,7 @@ function FieldDetailPage() {
   const [personPositions, setPersonPositions] = useState<PersonPosition[]>([])
   const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
+  const [activePersonIds, setActivePersonIds] = useState<Set<string>>(new Set())
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
     firstName: string
@@ -828,6 +829,11 @@ function FieldDetailPage() {
       // Clicking a different node - make it active and open panel
       const resonance = resonanceLinks.find((link) => link.id === linkId)
       if (resonance) {
+        // Close all other panels
+        setIsPulsePanelOpen(false)
+        setIsPersonPanelOpen(false)
+        setIsConnectionPanelOpen(false)
+
         setActiveResonanceNodeId(linkId)
         setSelectedResonance(resonance)
         setIsResonancePanelOpen(true)
@@ -1418,6 +1424,14 @@ function FieldDetailPage() {
       const clickedPerson = personPositions.find((p) => p.personId === personId)
       if (!clickedPerson) return
 
+      // Close all other panels
+      setIsPulsePanelOpen(false)
+      setIsResonancePanelOpen(false)
+      setIsConnectionPanelOpen(false)
+
+      // Add person to active set to show their connections
+      setActivePersonIds((prev) => new Set([...prev, personId]))
+
       // Open person panel with person info
       setSelectedPerson({
         id: clickedPerson.personId,
@@ -1433,9 +1447,31 @@ function FieldDetailPage() {
     [personPositions]
   )
 
-  // Handle connection midpoint click - opens connection panel
+  // Handle connection midpoint click - toggle panel open/close
   const handleConnectionClick = useCallback(
     (person1Id: string, person2Id: string) => {
+      // If a connection panel is already open
+      if (isConnectionPanelOpen && selectedConnection) {
+        // Check if it's the same connection being clicked
+        if (
+          (selectedConnection.person1.id === person1Id &&
+            selectedConnection.person2.id === person2Id) ||
+          (selectedConnection.person1.id === person2Id &&
+            selectedConnection.person2.id === person1Id)
+        ) {
+          // Same connection clicked again - close panel and hide lines
+          setIsConnectionPanelOpen(false)
+          setSelectedConnection(null)
+          setActivePersonIds((prev) => {
+            const newIds = new Set(prev)
+            newIds.delete(person1Id)
+            newIds.delete(person2Id)
+            return newIds
+          })
+          return
+        }
+      }
+
       // Find both persons
       const person1Data = personPositions.find((p) => p.personId === person1Id)
       const person2Data = personPositions.find((p) => p.personId === person2Id)
@@ -1455,6 +1491,11 @@ function FieldDetailPage() {
       // Get connection details from GraphQL data if available
       const space = membersData?.weSpaces?.[0]
       if (!space) return
+
+      // Close all other panels
+      setIsPulsePanelOpen(false)
+      setIsResonancePanelOpen(false)
+      setIsPersonPanelOpen(false)
 
       setSelectedConnection({
         person1: {
@@ -1477,8 +1518,17 @@ function FieldDetailPage() {
         },
       })
       setIsConnectionPanelOpen(true)
+
+      // Ensure both persons are in active set to show their connections
+      setActivePersonIds((prev) => new Set([...prev, person1Id, person2Id]))
     },
-    [personPositions, personConnections, membersData]
+    [
+      personPositions,
+      personConnections,
+      membersData,
+      isConnectionPanelOpen,
+      selectedConnection,
+    ]
   )
 
   return (
@@ -1542,6 +1592,7 @@ function FieldDetailPage() {
               canvasWidth={canvasSize.width}
               canvasHeight={canvasSize.height}
               scale={currentScale}
+              activePersonIds={activePersonIds}
               onConnectionClick={handleConnectionClick}
             />
             <ResonanceLinksVisualization
@@ -1569,6 +1620,11 @@ function FieldDetailPage() {
                   handlePulsePositionChange(pos.pulseId, x, y)
                 }
                 onClick={() => {
+                  // Close all other panels
+                  setIsResonancePanelOpen(false)
+                  setIsPersonPanelOpen(false)
+                  setIsConnectionPanelOpen(false)
+
                   setIsPulsePanelOpen(true)
                   fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
                 }}
@@ -1651,6 +1707,15 @@ function FieldDetailPage() {
       <ConnectionPanel
         isOpen={isConnectionPanelOpen}
         onClose={() => {
+          // Remove both persons from active set to hide their connections
+          if (selectedConnection) {
+            setActivePersonIds((prev) => {
+              const newIds = new Set(prev)
+              newIds.delete(selectedConnection.person1.id)
+              newIds.delete(selectedConnection.person2.id)
+              return newIds
+            })
+          }
           setIsConnectionPanelOpen(false)
           setSelectedConnection(null)
         }}
@@ -1661,7 +1726,16 @@ function FieldDetailPage() {
         isOpen={isPersonPanelOpen}
         onClose={() => {
           setIsPersonPanelOpen(false)
-          setSelectedPerson(null)
+          setSelectedPerson((prev) => {
+            if (prev) {
+              setActivePersonIds((ids) => {
+                const newIds = new Set(ids)
+                newIds.delete(prev.id)
+                return newIds
+              })
+            }
+            return null
+          })
         }}
         person={selectedPerson}
       />
