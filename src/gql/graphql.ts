@@ -849,83 +849,6 @@ export type ChatbotResponsesConnection = {
 }
 
 /**
- * The edge properties for the following fields:
- * * Person.connections
- */
-export type ConnectedTo = {
-  __typename?: 'ConnectedTo'
-  interests?: Maybe<Scalars['String']['output']>
-  why?: Maybe<Scalars['String']['output']>
-}
-
-export type ConnectedToAggregationWhereInput = {
-  AND?: InputMaybe<Array<ConnectedToAggregationWhereInput>>
-  NOT?: InputMaybe<ConnectedToAggregationWhereInput>
-  OR?: InputMaybe<Array<ConnectedToAggregationWhereInput>>
-  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-}
-
-export type ConnectedToCreateInput = {
-  interests?: InputMaybe<Scalars['String']['input']>
-  why?: InputMaybe<Scalars['String']['input']>
-}
-
-export type ConnectedToSort = {
-  interests?: InputMaybe<SortDirection>
-  why?: InputMaybe<SortDirection>
-}
-
-export type ConnectedToUpdateInput = {
-  interests_SET?: InputMaybe<Scalars['String']['input']>
-  why_SET?: InputMaybe<Scalars['String']['input']>
-}
-
-export type ConnectedToWhere = {
-  AND?: InputMaybe<Array<ConnectedToWhere>>
-  NOT?: InputMaybe<ConnectedToWhere>
-  OR?: InputMaybe<Array<ConnectedToWhere>>
-  interests_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  interests_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  interests_EQ?: InputMaybe<Scalars['String']['input']>
-  interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  why_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  why_EQ?: InputMaybe<Scalars['String']['input']>
-  why_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-}
-
-/**
  * Core value or principle-focused pulse.
  * Multi-label: ["FieldPulse", "CoreValuePulse"]
  */
@@ -7701,7 +7624,7 @@ export type PeopleConnection = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type Person = PersonInterface & {
@@ -7709,9 +7632,6 @@ export type Person = PersonInterface & {
   avatar?: Maybe<Scalars['String']['output']>
   careManual?: Maybe<Scalars['String']['output']>
   connections: Array<Person>
-  /** @deprecated Please use field "aggregate" inside "connectionsConnection" instead */
-  connectionsAggregate?: Maybe<PersonPersonConnectionsAggregationSelection>
-  connectionsConnection: PersonConnectionsConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
@@ -7752,43 +7672,7 @@ export type Person = PersonInterface & {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
- * Merged properties from reference schema for backward compatibility.
- */
-export type PersonConnectionsArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonSort>>
-  where?: InputMaybe<PersonWhere>
-}
-
-/**
- * A human user of the system.
- * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
- * Merged properties from reference schema for backward compatibility.
- */
-export type PersonConnectionsAggregateArgs = {
-  where?: InputMaybe<PersonWhere>
-}
-
-/**
- * A human user of the system.
- * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
- * Merged properties from reference schema for backward compatibility.
- */
-export type PersonConnectionsConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonConnectionsConnectionSort>>
-  where?: InputMaybe<PersonConnectionsConnectionWhere>
-}
-
-/**
- * A human user of the system.
- * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByArgs = {
@@ -7801,7 +7685,7 @@ export type PersonCreatedByArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByAggregateArgs = {
@@ -7811,7 +7695,7 @@ export type PersonCreatedByAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByConnectionArgs = {
@@ -7824,7 +7708,7 @@ export type PersonCreatedByConnectionArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfArgs = {
@@ -7837,7 +7721,7 @@ export type PersonMemberOfArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfAggregateArgs = {
@@ -7847,7 +7731,7 @@ export type PersonMemberOfAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfConnectionArgs = {
@@ -7860,7 +7744,7 @@ export type PersonMemberOfConnectionArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesArgs = {
@@ -7873,7 +7757,7 @@ export type PersonOwnsSpacesArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesAggregateArgs = {
@@ -7883,7 +7767,7 @@ export type PersonOwnsSpacesAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces.
+ * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesConnectionArgs = {
@@ -7949,7 +7833,6 @@ export type PersonAggregateSelection = {
 }
 
 export type PersonConnectInput = {
-  connections?: InputMaybe<Array<PersonConnectionsConnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByConnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfConnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesConnectFieldInput>>
@@ -7959,364 +7842,9 @@ export type PersonConnectWhere = {
   node: PersonWhere
 }
 
-export type PersonConnectionsAggregateInput = {
-  AND?: InputMaybe<Array<PersonConnectionsAggregateInput>>
-  NOT?: InputMaybe<PersonConnectionsAggregateInput>
-  OR?: InputMaybe<Array<PersonConnectionsAggregateInput>>
-  count_EQ?: InputMaybe<Scalars['Int']['input']>
-  count_GT?: InputMaybe<Scalars['Int']['input']>
-  count_GTE?: InputMaybe<Scalars['Int']['input']>
-  count_LT?: InputMaybe<Scalars['Int']['input']>
-  count_LTE?: InputMaybe<Scalars['Int']['input']>
-  edge?: InputMaybe<ConnectedToAggregationWhereInput>
-  node?: InputMaybe<PersonConnectionsNodeAggregationWhereInput>
-}
-
-export type PersonConnectionsConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  edge?: InputMaybe<ConnectedToCreateInput>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
-export type PersonConnectionsConnection = {
-  __typename?: 'PersonConnectionsConnection'
-  aggregate: PersonPersonConnectionsAggregateSelection
-  edges: Array<PersonConnectionsRelationship>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type PersonConnectionsConnectionSort = {
-  edge?: InputMaybe<ConnectedToSort>
-  node?: InputMaybe<PersonSort>
-}
-
-export type PersonConnectionsConnectionWhere = {
-  AND?: InputMaybe<Array<PersonConnectionsConnectionWhere>>
-  NOT?: InputMaybe<PersonConnectionsConnectionWhere>
-  OR?: InputMaybe<Array<PersonConnectionsConnectionWhere>>
-  edge?: InputMaybe<ConnectedToWhere>
-  node?: InputMaybe<PersonWhere>
-}
-
-export type PersonConnectionsCreateFieldInput = {
-  edge?: InputMaybe<ConnectedToCreateInput>
-  node: PersonCreateInput
-}
-
-export type PersonConnectionsDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<PersonConnectionsConnectionWhere>
-}
-
-export type PersonConnectionsDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<PersonConnectionsConnectionWhere>
-}
-
-export type PersonConnectionsFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectionsConnectFieldInput>>
-  create?: InputMaybe<Array<PersonConnectionsCreateFieldInput>>
-}
-
-export type PersonConnectionsNodeAggregationWhereInput = {
-  AND?: InputMaybe<Array<PersonConnectionsNodeAggregationWhereInput>>
-  NOT?: InputMaybe<PersonConnectionsNodeAggregationWhereInput>
-  OR?: InputMaybe<Array<PersonConnectionsNodeAggregationWhereInput>>
-  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
-    Scalars['Float']['input']
-  >
-  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
-  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
-  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
-  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
-  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
-  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  phone_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  phone_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  phone_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  phone_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  phone_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  phone_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  phone_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  phone_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  phone_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  phone_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  phone_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  phone_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  pronouns_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  pronouns_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  pronouns_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  pronouns_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  pronouns_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  pronouns_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  pronouns_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  pronouns_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  pronouns_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-}
-
-export type PersonConnectionsRelationship = {
-  __typename?: 'PersonConnectionsRelationship'
-  cursor: Scalars['String']['output']
-  node: Person
-  properties: ConnectedTo
-}
-
-export type PersonConnectionsUpdateConnectionInput = {
-  edge?: InputMaybe<ConnectedToUpdateInput>
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<PersonConnectionsConnectionWhere>
-}
-
-export type PersonConnectionsUpdateFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectionsConnectFieldInput>>
-  create?: InputMaybe<Array<PersonConnectionsCreateFieldInput>>
-  delete?: InputMaybe<Array<PersonConnectionsDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<PersonConnectionsDisconnectFieldInput>>
-  update?: InputMaybe<PersonConnectionsUpdateConnectionInput>
-}
-
 export type PersonCreateInput = {
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
-  connections?: InputMaybe<PersonConnectionsFieldInput>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   email?: InputMaybe<Scalars['String']['input']>
   favorites?: InputMaybe<Scalars['String']['input']>
@@ -8688,14 +8216,12 @@ export type PersonCreatedByUpdateFieldInput = {
 }
 
 export type PersonDeleteInput = {
-  connections?: InputMaybe<Array<PersonConnectionsDeleteFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
 }
 
 export type PersonDisconnectInput = {
-  connections?: InputMaybe<Array<PersonConnectionsDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
@@ -9158,50 +8684,6 @@ export type PersonOwnsSpacesUpdateFieldInput = {
   update?: InputMaybe<PersonOwnsSpacesUpdateConnectionInput>
 }
 
-export type PersonPersonConnectionsAggregateSelection = {
-  __typename?: 'PersonPersonConnectionsAggregateSelection'
-  count: CountConnection
-  edge?: Maybe<PersonPersonConnectionsEdgeAggregateSelection>
-  node?: Maybe<PersonPersonConnectionsNodeAggregateSelection>
-}
-
-export type PersonPersonConnectionsAggregationSelection = {
-  __typename?: 'PersonPersonConnectionsAggregationSelection'
-  count: Scalars['Int']['output']
-  edge?: Maybe<PersonPersonConnectionsEdgeAggregateSelection>
-  node?: Maybe<PersonPersonConnectionsNodeAggregateSelection>
-}
-
-export type PersonPersonConnectionsEdgeAggregateSelection = {
-  __typename?: 'PersonPersonConnectionsEdgeAggregateSelection'
-  interests: StringAggregateSelection
-  why: StringAggregateSelection
-}
-
-export type PersonPersonConnectionsNodeAggregateSelection = {
-  __typename?: 'PersonPersonConnectionsNodeAggregateSelection'
-  avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
-  createdAt: DateTimeAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
-  firstName: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  interests: StringAggregateSelection
-  lastName: StringAggregateSelection
-  location: StringAggregateSelection
-  onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
-  photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
-  status: StringAggregateSelection
-  traits: StringAggregateSelection
-  updatedAt: DateTimeAggregateSelection
-}
-
 export type PersonPersonCreatedByAggregateSelection = {
   __typename?: 'PersonPersonCreatedByAggregateSelection'
   count: CountConnection
@@ -9314,7 +8796,6 @@ export type PersonSpaceOwnsSpacesNodeAggregateSelection = {
 export type PersonUpdateInput = {
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   careManual_SET?: InputMaybe<Scalars['String']['input']>
-  connections?: InputMaybe<Array<PersonConnectionsUpdateFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
   email_SET?: InputMaybe<Scalars['String']['input']>
   favorites_SET?: InputMaybe<Scalars['String']['input']>
@@ -9356,22 +8837,10 @@ export type PersonWhere = {
   careManual_EQ?: InputMaybe<Scalars['String']['input']>
   careManual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   careManual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  connectionsAggregate?: InputMaybe<PersonConnectionsAggregateInput>
-  /** Return People where all of the related PersonConnectionsConnections match this filter */
-  connectionsConnection_ALL?: InputMaybe<PersonConnectionsConnectionWhere>
-  /** Return People where none of the related PersonConnectionsConnections match this filter */
-  connectionsConnection_NONE?: InputMaybe<PersonConnectionsConnectionWhere>
-  /** Return People where one of the related PersonConnectionsConnections match this filter */
-  connectionsConnection_SINGLE?: InputMaybe<PersonConnectionsConnectionWhere>
-  /** Return People where some of the related PersonConnectionsConnections match this filter */
-  connectionsConnection_SOME?: InputMaybe<PersonConnectionsConnectionWhere>
-  /** Return People where all of the related People match this filter */
+  connections?: InputMaybe<PersonWhere>
   connections_ALL?: InputMaybe<PersonWhere>
-  /** Return People where none of the related People match this filter */
   connections_NONE?: InputMaybe<PersonWhere>
-  /** Return People where one of the related People match this filter */
   connections_SINGLE?: InputMaybe<PersonWhere>
-  /** Return People where some of the related People match this filter */
   connections_SOME?: InputMaybe<PersonWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -9556,6 +9025,17 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "fieldPulsesConnection" instead */
   fieldPulsesAggregate: FieldPulseAggregateSelection
   fieldPulsesConnection: FieldPulsesConnection
+  /**
+   * Find a user by email address for member addition.
+   * Bypasses authorization restrictions to allow space owners to add any registered user.
+   * Returns null if no user found with the given email.
+   *
+   * Args:
+   *   - email: Email address to search for (case-sensitive exact match)
+   *
+   * Returns: User object or null
+   */
+  findUserByEmail?: Maybe<User>
   goalPulses: Array<GoalPulse>
   /** @deprecated Please use the explicit field "aggregate" inside "goalPulsesConnection" instead */
   goalPulsesAggregate: GoalPulseAggregateSelection
@@ -9775,6 +9255,10 @@ export type QueryFieldPulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseSort>>
   where?: InputMaybe<FieldPulseWhere>
+}
+
+export type QueryFindUserByEmailArgs = {
+  email: Scalars['String']['input']
 }
 
 export type QueryGoalPulsesArgs = {
@@ -12299,6 +11783,7 @@ export type SpaceMembersUpdateFieldInput = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembership = {
   __typename?: 'SpaceMembership'
@@ -12318,6 +11803,7 @@ export type SpaceMembership = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipMemberArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -12329,6 +11815,7 @@ export type SpaceMembershipMemberArgs = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipMemberAggregateArgs = {
   where?: InputMaybe<PersonWhere>
@@ -12337,6 +11824,7 @@ export type SpaceMembershipMemberAggregateArgs = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipMemberConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -12348,6 +11836,7 @@ export type SpaceMembershipMemberConnectionArgs = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipSpaceArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -12359,6 +11848,7 @@ export type SpaceMembershipSpaceArgs = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipSpaceAggregateArgs = {
   where?: InputMaybe<SpaceWhere>
@@ -12367,6 +11857,7 @@ export type SpaceMembershipSpaceAggregateArgs = {
 /**
  * Represents a person as a member of a space with a specific role.
  * Label: ["SpaceMembership"]
+ * Authorization: Only accessible if current user is an owner or member of the associated space.
  */
 export type SpaceMembershipSpaceConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -14701,6 +14192,7 @@ export type UpdateWeSpacesMutationResponse = {
  * User authentication and preferences.
  * Extends Person with login and feature flags.
  * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
  */
 export type User = PersonInterface & {
   __typename?: 'User'
@@ -14736,6 +14228,7 @@ export type User = PersonInterface & {
  * User authentication and preferences.
  * Extends Person with login and feature flags.
  * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
  */
 export type UserOwnsSpacesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
@@ -14748,6 +14241,7 @@ export type UserOwnsSpacesArgs = {
  * User authentication and preferences.
  * Extends Person with login and feature flags.
  * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
  */
 export type UserOwnsSpacesAggregateArgs = {
   where?: InputMaybe<SpaceWhere>
@@ -14757,6 +14251,7 @@ export type UserOwnsSpacesAggregateArgs = {
  * User authentication and preferences.
  * Extends Person with login and feature flags.
  * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
  */
 export type UserOwnsSpacesConnectionArgs = {
   after?: InputMaybe<Scalars['String']['input']>
@@ -16927,12 +16422,12 @@ export type ResolvePersonByEmailQueryVariables = Exact<{
 
 export type ResolvePersonByEmailQuery = {
   __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
+  findUserByEmail?: {
+    __typename: 'User'
     id: string
     name: string
     email?: string | null
-  }>
+  } | null
 }
 
 export type AddSpaceMemberMutationVariables = Exact<{
@@ -16952,6 +16447,14 @@ export type AddSpaceMemberMutation = {
       id: string
       role: SpaceRole
       addedAt: any
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        email?: string | null
+      }>
     } | null
   }
 }
@@ -18435,6 +17938,15 @@ export type GetPersonProfileQuery = {
     traits?: string | null
     passions?: string | null
     fieldsOfCare?: string | null
+    connections: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+      photo?: string | null
+    }>
     ownsSpaces: Array<
       | {
           __typename?: 'MeSpace'
@@ -19487,6 +18999,63 @@ export type GetMeSpaceDetailsQuery = {
       title: string
       emergentName?: string | null
       createdAt: any
+    }>
+  }>
+}
+
+export type GetWeSpaceMembersWithConnectionsQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetWeSpaceMembersWithConnectionsQuery = {
+  __typename?: 'Query'
+  weSpaces: Array<{
+    __typename?: 'WeSpace'
+    id: string
+    name: string
+    owner: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+      photo?: string | null
+    }>
+    members: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        email?: string | null
+        photo?: string | null
+      }>
+    }>
+  }>
+}
+
+export type GetPersonConnectionsQueryVariables = Exact<{
+  personIds: Array<Scalars['ID']['input']> | Scalars['ID']['input']
+}>
+
+export type GetPersonConnectionsQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    connections: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+      photo?: string | null
     }>
   }>
 }
@@ -23060,23 +22629,14 @@ export const ResolvePersonByEmailDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
+            name: { kind: 'Name', value: 'findUserByEmail' },
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
+                name: { kind: 'Name', value: 'email' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'email_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'email' },
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'email' },
                 },
               },
             ],
@@ -23086,6 +22646,7 @@ export const ResolvePersonByEmailDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
               ],
             },
           },
@@ -23187,6 +22748,35 @@ export const AddSpaceMemberDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },
@@ -28709,6 +28299,27 @@ export const GetPersonProfileDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'connections' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'ownsSpaces' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -31992,4 +31603,220 @@ export const GetMeSpaceDetailsDocument = {
 } as unknown as DocumentNode<
   GetMeSpaceDetailsQuery,
   GetMeSpaceDetailsQueryVariables
+>
+export const GetWeSpaceMembersWithConnectionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetWeSpaceMembersWithConnections' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weSpaces' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'spaceId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'owner' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetWeSpaceMembersWithConnectionsQuery,
+  GetWeSpaceMembersWithConnectionsQueryVariables
+>
+export const GetPersonConnectionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetPersonConnections' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personIds' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'ID' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_IN' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'personIds' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connections' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPersonConnectionsQuery,
+  GetPersonConnectionsQueryVariables
 >

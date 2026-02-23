@@ -102,7 +102,7 @@ interface PersonInterface {
 """
 A human user of the system.
 Multi-label: ["Person", "User"]
-Authorization: Can only view people who are owners or members of shared spaces.
+Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
 Merged properties from reference schema for backward compatibility.
 """
 type Person implements PersonInterface
@@ -121,6 +121,14 @@ type Person implements PersonInterface
               {
                 ownsSpaces_SOME: {
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                }
+              }
+              # Person is a member of a space where current user is the owner
+              {
+                memberOf_SOME: {
+                  space_SOME: {
+                    owner_SOME: { id_EQ: "$jwt.user.id" }
+                  }
                 }
               }
               # Person is a member of a space where current user is also a member
@@ -186,16 +194,17 @@ type Person implements PersonInterface
   
   # Modern relationships (pulse-first architecture)
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
-  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
   
   # Legacy relationships (preserved for migration)
   # NOTE: Person-to-person connections should migrate to ResonanceLinks
   connections: [Person!]!
-    @relationship(
-      type: "CONNECTED_TO"
-      direction: OUT
-      queryDirection: UNDIRECTED
-      properties: "ConnectedTo"
+    @cypher(
+      statement: """
+      MATCH (this)-[:CONNECTED_TO]-(other:Person)
+      RETURN other
+      """
+      columnName: "other"
     )
   
   # PULSE ACCESS: Pulses are accessed through FieldContexts in owned/member Spaces
@@ -214,8 +223,21 @@ type Person implements PersonInterface
 User authentication and preferences.
 Extends Person with login and feature flags.
 Multi-label: ["Person", "User"]
+Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
 """
-type User implements PersonInterface @node(labels: ["Person", "User"]) {
+type User implements PersonInterface
+  @node(labels: ["Person", "User"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            id_EQ: "$jwt.user.id"
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   firstName: String!
   lastName: String!
@@ -391,12 +413,32 @@ type WeSpace implements Space
 """
 Represents a person as a member of a space with a specific role.
 Label: ["SpaceMembership"]
+Authorization: Only accessible if current user is an owner or member of the associated space.
 """
-type SpaceMembership @node(labels: ["SpaceMembership"]) {
+type SpaceMembership
+  @node(labels: ["SpaceMembership"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            space_SOME: {
+              OR: [
+                # Current user is the owner of the space
+                { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                # Current user is a member of the space
+                { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   role: SpaceRole!
   addedAt: DateTime!
-  member: [Person!]! @relationship(type: "IS_MEMBER", direction: IN)
+  member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
   space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 
@@ -963,6 +1005,18 @@ type Query {
   Returns: SearchResults with up to 10 results of each entity type
   """
   searchAll(query: String!): SearchResults
+  
+  """
+  Find a user by email address for member addition.
+  Bypasses authorization restrictions to allow space owners to add any registered user.
+  Returns null if no user found with the given email.
+  
+  Args:
+    - email: Email address to search for (case-sensitive exact match)
+    
+  Returns: User object or null
+  """
+  findUserByEmail(email: String!): User
   
   # ============================================================================
   # LEGACY SUBSTRING QUERIES (Preserved for backward compatibility)

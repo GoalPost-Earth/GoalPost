@@ -3,6 +3,7 @@ import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
+import { userLookupResolvers } from './user-lookup-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -142,7 +143,7 @@ const resolvers = {
         const result = await session.executeRead(async (tx) => {
           return await tx.run(
             `
-            MATCH (membership:SpaceMembership {id: $membershipId})<-[:IS_MEMBER]-(person:Person)
+            MATCH (membership:SpaceMembership {id: $membershipId})-[:IS_MEMBER]->(person:Person)
             RETURN person
             `,
             { membershipId: source.id }
@@ -215,6 +216,7 @@ const resolvers = {
   },
   Query: {
     ...searchResolvers,
+    ...userLookupResolvers,
   },
 }
 

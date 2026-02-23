@@ -14,7 +14,7 @@ export async function canManageMembers(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (user:LifeSensor {id: $userId}), (space:Space {id: $spaceId})
+      MATCH (user:Person {id: $userId}), (space:Space {id: $spaceId})
       RETURN 
         EXISTS {
           MATCH (user)-[:OWNS]->(space)
@@ -50,7 +50,7 @@ export async function canEditContent(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (user:LifeSensor {id: $userId}), (space:Space {id: $spaceId})
+      MATCH (user:Person {id: $userId}), (space:Space {id: $spaceId})
       RETURN 
         EXISTS {
           MATCH (user)-[:OWNS]->(space)
@@ -87,7 +87,7 @@ export async function canViewContent(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (user:LifeSensor {id: $userId}), (space:Space {id: $spaceId})
+      MATCH (user:Person {id: $userId}), (space:Space {id: $spaceId})
       RETURN 
         EXISTS {
           MATCH (user)-[:OWNS]->(space)
@@ -124,7 +124,7 @@ export async function getUserSpaceRole(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (user:LifeSensor {id: $userId}), (space:Space {id: $spaceId})
+      MATCH (user:Person {id: $userId}), (space:Space {id: $spaceId})
       RETURN 
         CASE 
           WHEN EXISTS {
@@ -160,7 +160,7 @@ export async function memberExistsInSpace(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (member:LifeSensor {id: $memberId}), (space:Space {id: $spaceId})
+      MATCH (member:Person {id: $memberId}), (space:Space {id: $spaceId})
       RETURN EXISTS {
         MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
       } as exists
@@ -187,7 +187,7 @@ export async function isSpaceOwner(
   const result = await session.executeRead((tx) =>
     tx.run(
       `
-      MATCH (owner:LifeSensor {id: $userId}), (space:Space {id: $spaceId})
+      MATCH (owner:Person {id: $userId}), (space:Space {id: $spaceId})
       RETURN EXISTS {
         MATCH (owner)-[:OWNS]->(space)
       } as isOwner
