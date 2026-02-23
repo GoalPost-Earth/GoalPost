@@ -314,13 +314,7 @@ export default function SpaceDetailsPage() {
             {/* Owner Info Section */}
             <div className="flex flex-col gap-4">
               <SectionHeader icon="person" title="Owner" />
-              <ProfileCard
-                hover={true}
-                onClick={() =>
-                  owner?.id &&
-                  router.push(`/protected/dashboard/persons/${owner.id}`)
-                }
-              >
+              <ProfileCard>
                 <div className="space-y-2">
                   <div>
                     <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
@@ -365,16 +359,10 @@ export default function SpaceDetailsPage() {
                       return (
                         <div
                           key={membership.id}
-                          onClick={() =>
-                            memberData.id &&
-                            router.push(
-                              `/protected/dashboard/persons/${memberData.id}`
-                            )
-                          }
                           className={
                             idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
                           }
                         >
                           <div className="flex justify-between items-start mb-1">
@@ -420,16 +408,10 @@ export default function SpaceDetailsPage() {
                     contexts.map((context: any, idx: number) => (
                       <div
                         key={context.id}
-                        onClick={() =>
-                          context.id &&
-                          router.push(
-                            `/protected/dashboard/field-context/${context.id}`
-                          )
-                        }
                         className={
                           idx > 0
-                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                            ? 'border-t border-gp-glass-border pt-3'
+                            : ''
                         }
                       >
                         <div className="flex justify-between items-start mb-1">

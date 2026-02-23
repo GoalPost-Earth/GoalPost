@@ -161,13 +161,6 @@ export default function PersonProfilePage() {
                 {person.connections.map((connection: any, idx: number) => (
                   <ProfileCard
                     key={idx}
-                    hover={true}
-                    onClick={() =>
-                      connection.id &&
-                      router.push(
-                        `/protected/dashboard/persons/${connection.id}`
-                      )
-                    }
                   >
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
@@ -213,16 +206,10 @@ export default function PersonProfilePage() {
                       person.ownsSpaces.map((space: any, idx: number) => (
                         <div
                           key={idx}
-                          onClick={() =>
-                            space.id &&
-                            router.push(
-                              `/protected/dashboard/space/${space.id}`
-                            )
-                          }
                           className={
                             idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
                           }
                         >
                           <div className="flex justify-between items-start mb-1">
@@ -268,16 +255,10 @@ export default function PersonProfilePage() {
                         return (
                           <div
                             key={idx}
-                            onClick={() =>
-                              space.id &&
-                              router.push(
-                                `/protected/dashboard/space/${space.id}`
-                              )
-                            }
                             className={
                               idx > 0
-                                ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                                : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                                ? 'border-t border-gp-glass-border pt-3'
+                                : ''
                             }
                           >
                             <div className="flex justify-between items-start mb-1">
@@ -317,16 +298,10 @@ export default function PersonProfilePage() {
                       allPulses.slice(0, 5).map((pulse, idx) => (
                         <div
                           key={pulse.id}
-                          onClick={() =>
-                            pulse.id &&
-                            router.push(
-                              `/protected/dashboard/pulses/${pulse.id}`
-                            )
-                          }
                           className={
                             idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              ? 'border-t border-gp-glass-border pt-3'
+                              : ''
                           }
                         >
                           <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
