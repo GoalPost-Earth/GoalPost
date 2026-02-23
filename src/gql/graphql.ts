@@ -7624,7 +7624,8 @@ export type PeopleConnection = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type Person = PersonInterface & {
@@ -7672,7 +7673,8 @@ export type Person = PersonInterface & {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByArgs = {
@@ -7685,7 +7687,8 @@ export type PersonCreatedByArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByAggregateArgs = {
@@ -7695,7 +7698,8 @@ export type PersonCreatedByAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonCreatedByConnectionArgs = {
@@ -7708,7 +7712,8 @@ export type PersonCreatedByConnectionArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfArgs = {
@@ -7721,7 +7726,8 @@ export type PersonMemberOfArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfAggregateArgs = {
@@ -7731,7 +7737,8 @@ export type PersonMemberOfAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonMemberOfConnectionArgs = {
@@ -7744,7 +7751,8 @@ export type PersonMemberOfConnectionArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesArgs = {
@@ -7757,7 +7765,8 @@ export type PersonOwnsSpacesArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesAggregateArgs = {
@@ -7767,7 +7776,8 @@ export type PersonOwnsSpacesAggregateArgs = {
 /**
  * A human user of the system.
  * Multi-label: ["Person", "User"]
- * Authorization: Can only view people who are owners or members of shared spaces, or have a direct connection.
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
 export type PersonOwnsSpacesConnectionArgs = {
@@ -9067,6 +9077,19 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "personInterfacesConnection" instead */
   personInterfacesAggregate: PersonInterfaceAggregateSelection
   personInterfacesConnection: PersonInterfacesConnection
+  /**
+   * Returns people related to the current user.
+   * For use in dashboard - shows only people connected through spaces or direct connections.
+   *
+   * Includes:
+   *   - The current user themselves
+   *   - People who own spaces where current user is owner or member
+   *   - People who are members of spaces where current user is owner or member
+   *   - Direct connections to the current user
+   *
+   * Returns: Array of Person objects
+   */
+  relatedPeople: Array<Person>
   removeSpaceMemberResponses: Array<RemoveSpaceMemberResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "removeSpaceMemberResponsesConnection" instead */
   removeSpaceMemberResponsesAggregate: RemoveSpaceMemberResponseAggregateSelection
@@ -18071,6 +18094,35 @@ export type GetAllPeopleQueryVariables = Exact<{
 export type GetAllPeopleQuery = {
   __typename?: 'Query'
   people: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    email?: string | null
+    traits?: string | null
+    passions?: string | null
+    fieldsOfCare?: string | null
+    ownsSpaces: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+  }>
+}
+
+export type GetRelatedPeopleQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetRelatedPeopleQuery = {
+  __typename?: 'Query'
+  relatedPeople: Array<{
     __typename?: 'Person'
     id: string
     name: string
@@ -28636,6 +28688,57 @@ export const GetAllPeopleDocument = {
     },
   ],
 } as unknown as DocumentNode<GetAllPeopleQuery, GetAllPeopleQueryVariables>
+export const GetRelatedPeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getRelatedPeople' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'relatedPeople' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldsOfCare' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ownsSpaces' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetRelatedPeopleQuery,
+  GetRelatedPeopleQueryVariables
+>
 export const GetPeopleAndTheirGoalsDocument = {
   kind: 'Document',
   definitions: [

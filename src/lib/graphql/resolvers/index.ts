@@ -1,6 +1,7 @@
 import { Person } from '@/gql/graphql'
 import { chatbotResolvers } from './chatbot-resolvers'
 import { inviteMutations } from './invite-resolver'
+import { relatedPeopleResolvers } from './related-people-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
 import { userLookupResolvers } from './user-lookup-resolver'
@@ -200,6 +201,16 @@ const resolvers = {
     },
   },
 
+  Space: {
+    __resolveType: (obj: Record<string, unknown>) => {
+      // Use __typename from the data if available
+      if (obj.__typename === 'MeSpace') return 'MeSpace'
+      if (obj.__typename === 'WeSpace') return 'WeSpace'
+      // Fallback to MeSpace if unable to determine
+      return 'MeSpace'
+    },
+  },
+
   FieldPulse: {
     __resolveType: (obj: Record<string, unknown>) => {
       // Check discriminator properties to determine concrete type
@@ -215,6 +226,7 @@ const resolvers = {
     ...spaceMembershipResolvers,
   },
   Query: {
+    ...relatedPeopleResolvers,
     ...searchResolvers,
     ...userLookupResolvers,
   },
