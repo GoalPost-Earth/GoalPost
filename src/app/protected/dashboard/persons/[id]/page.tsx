@@ -149,6 +149,8 @@ export default function PersonProfilePage() {
                           <Image
                             src={connection.photo}
                             alt={connection.name}
+                            width={40}
+                            height={40}
                             className="size-10 rounded-full object-cover"
                           />
                         ) : (

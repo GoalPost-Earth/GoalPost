@@ -365,7 +365,7 @@ type MeSpace implements Space
   
   createdAt: DateTime!
   owner: [Person!]! @relationship(type: "OWNS", direction: IN)
-  members: [SpaceMembership!]! @relationship(type: "MEMBER_OF", direction: IN)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
@@ -406,7 +406,7 @@ type WeSpace implements Space
   
   createdAt: DateTime!
   owner: [Person!]! @relationship(type: "OWNS", direction: IN)
-  members: [SpaceMembership!]! @relationship(type: "MEMBER_OF", direction: IN)
+  members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
   contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
 }
 
@@ -438,14 +438,7 @@ type SpaceMembership
   id: ID! @id
   role: SpaceRole!
   addedAt: DateTime!
-  member: [Person!]!
-    @cypher(
-      statement: """
-      MATCH (this)-[:IS_MEMBER]->(p:Person)
-      RETURN p
-      """
-      columnName: "p"
-    )
+  member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
   space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 
