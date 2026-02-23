@@ -48,7 +48,7 @@ const resolvers = {
         const result = await session.executeRead(async (tx) => {
           return await tx.run(
             `
-            MATCH (person:Person {id: $personId})-[:IS_MEMBER]->(membership:SpaceMembership)
+            MATCH (membership:SpaceMembership)-[:IS_MEMBER]->(person:Person {id: $personId})
             RETURN membership
             `,
             { personId: source.id }
