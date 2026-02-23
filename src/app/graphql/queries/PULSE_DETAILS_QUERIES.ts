@@ -11,6 +11,7 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
       status
       horizon
       intensity
+      why
       context {
         id
         title

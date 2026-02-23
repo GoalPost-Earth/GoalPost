@@ -18187,6 +18187,7 @@ export type GetPulseDetailsWithContextQuery = {
     status: GoalStatus
     horizon?: GoalHorizon | null
     intensity?: number | null
+    why?: string | null
     context: Array<{
       __typename?: 'FieldContext'
       id: string
@@ -28918,6 +28919,7 @@ export const GetPulseDetailsWithContextDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'horizon' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'context' },
