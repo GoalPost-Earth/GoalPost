@@ -409,9 +409,7 @@ export default function SpaceDetailsPage() {
                       <div
                         key={context.id}
                         className={
-                          idx > 0
-                            ? 'border-t border-gp-glass-border pt-3'
-                            : ''
+                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
                         }
                       >
                         <div className="flex justify-between items-start mb-1">

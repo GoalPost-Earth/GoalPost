@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
@@ -13,7 +13,6 @@ import Image from 'next/image'
 
 export default function PersonProfilePage() {
   const params = useParams()
-  const router = useRouter()
   const personId = params?.id as string
   const { animationsEnabled } = useAnimations()
 
@@ -159,9 +158,7 @@ export default function PersonProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {person.connections.map((connection: any, idx: number) => (
-                  <ProfileCard
-                    key={idx}
-                  >
+                  <ProfileCard key={idx}>
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
                         {connection.photo ? (
