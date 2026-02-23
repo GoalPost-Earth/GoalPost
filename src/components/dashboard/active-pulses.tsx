@@ -146,10 +146,10 @@ export function ActivePulses({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {(showAll ? allPulses : allPulses.slice(0, 5)).map((pulse) => {
             const config = pulseConfig[pulse.__typename as PulseType]
-            const author =
-              pulse.createdBy && pulse.createdBy.length > 0
-                ? pulse.createdBy[0].name
-                : 'Unknown'
+            const pulseTypeLabel = pulse.__typename
+              .replace('Pulse', '')
+              .replace(/([A-Z])/g, ' $1')
+              .trim()
             console.log('Pulses:', pulse)
             const timeAgo = formatDistanceToNow(new Date(pulse.createdAt), {
               addSuffix: true,
@@ -163,11 +163,11 @@ export function ActivePulses({
                 }
                 className="chat-card rounded-xl p-4 cursor-pointer group"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        'size-8 rounded-full border flex items-center justify-center shadow-sm',
+                        'size-8 rounded-full border flex items-center justify-center shadow-sm flex-shrink-0',
                         config.bgClass
                       )}
                     >
@@ -175,14 +175,22 @@ export function ActivePulses({
                         {config.icon}
                       </span>
                     </div>
-                    <span className="font-bold text-slate-700 text-sm dark:text-white/90">
-                      {author}
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold px-2 py-1 rounded-full',
+                        config.bgClass
+                      )}
+                    >
+                      {pulseTypeLabel}
                     </span>
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium dark:text-white/40">
                     {timeAgo}
                   </span>
                 </div>
+                <h4 className="font-bold text-slate-700 text-sm dark:text-white/90 mb-2 line-clamp-1">
+                  {pulse.title}
+                </h4>
                 <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed group-hover:text-slate-700 transition-colors dark:text-white/60 dark:group-hover:text-white/80">
                   {pulse.content}
                 </p>

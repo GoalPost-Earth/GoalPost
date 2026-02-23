@@ -17721,6 +17721,7 @@ export type GetAllPulsesQuery = {
   goalPulses: Array<{
     __typename: 'GoalPulse'
     id: string
+    title: string
     content: string
     createdAt: any
     intensity?: number | null
@@ -17737,6 +17738,7 @@ export type GetAllPulsesQuery = {
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
     id: string
+    title: string
     content: string
     createdAt: any
     intensity?: number | null
@@ -17753,6 +17755,7 @@ export type GetAllPulsesQuery = {
   storyPulses: Array<{
     __typename: 'StoryPulse'
     id: string
+    title: string
     content: string
     createdAt: any
     intensity?: number | null
@@ -27625,6 +27628,7 @@ export const GetAllPulsesDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
@@ -27670,6 +27674,7 @@ export const GetAllPulsesDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
@@ -27715,6 +27720,7 @@ export const GetAllPulsesDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
