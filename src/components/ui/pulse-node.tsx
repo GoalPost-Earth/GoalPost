@@ -2,7 +2,11 @@
 
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts/animation-context'
-import { PULSE_TYPE_CONFIG, type NodeType, getIconForType } from '@/lib/pulse-type-config'
+import {
+  PULSE_TYPE_CONFIG,
+  type NodeType,
+  getIconForType,
+} from '@/lib/pulse-type-config'
 
 export type { NodeType }
 

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation } from '@apollo/client/react'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery } from '@apollo/client/react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import {
   UPDATE_ME_SPACE_MUTATION,
   UPDATE_WE_SPACE_MUTATION,
@@ -27,6 +29,7 @@ interface EditSpaceModalProps {
   spaceName: string
   isWeSpace: boolean
   onRefetch?: () => Promise<void>
+  contextCount?: number
 }
 
 export function EditSpaceModal({
@@ -36,10 +39,12 @@ export function EditSpaceModal({
   spaceName,
   isWeSpace,
   onRefetch,
+  contextCount = 0,
 }: EditSpaceModalProps) {
   const router = useRouter()
   const [name, setName] = useState(spaceName)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [fieldContextCount, setFieldContextCount] = useState(contextCount)
 
   const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
@@ -47,6 +52,23 @@ export function EditSpaceModal({
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
 
   const [isLoading, setIsLoading] = useState(false)
+
+  // Fetch space details to get context count
+  const { data: spaceData, loading: isLoadingContexts } = useQuery(
+    GET_SPACE_DETAILS,
+    {
+      variables: { spaceId },
+      skip: !spaceId,
+    }
+  )
+
+  // Update context count when data is loaded
+  useEffect(() => {
+    const space = spaceData?.spaces?.[0]
+    if (space?.contexts) {
+      setFieldContextCount(space.contexts.length)
+    }
+  }, [spaceData])
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -74,6 +96,15 @@ export function EditSpaceModal({
   }
 
   const handleDelete = async () => {
+    // Check if space has any contexts (field contexts)
+    if (fieldContextCount > 0) {
+      toast.error(
+        `Cannot delete a space with ${fieldContextCount} field context${fieldContextCount !== 1 ? 's' : ''}. Please delete all field contexts first.`
+      )
+      setShowDeleteConfirm(false)
+      return
+    }
+
     setIsLoading(true)
     try {
       const mutation = isWeSpace ? deleteWeSpace : deleteMeSpace
@@ -82,11 +113,12 @@ export function EditSpaceModal({
           where: { id_EQ: spaceId },
         },
       })
+      toast.success('Space deleted successfully')
       onClose()
       router.push('/protected/spaces')
     } catch (error) {
       console.error('Error deleting space:', error)
-      alert('Failed to delete space')
+      toast.error('Failed to delete space')
     } finally {
       setIsLoading(false)
     }
@@ -132,10 +164,10 @@ export function EditSpaceModal({
             <Button
               variant="destructive"
               onClick={() => setShowDeleteConfirm(true)}
-              disabled={isLoading}
+              disabled={isLoading || isLoadingContexts}
               className="flex-1"
             >
-              Delete
+              {isLoadingContexts ? 'Checking...' : 'Delete'}
             </Button>
             <Button
               onClick={handleSave}
@@ -159,9 +191,28 @@ export function EditSpaceModal({
               Delete Space
             </DialogTitle>
             <DialogDescription className="text-slate-800 dark:text-slate-50">
-              Are you sure you want to delete &quot;{spaceName}&quot;? This
-              action cannot be undone. All fields and data within this space
-              will be permanently deleted.
+              {fieldContextCount > 0 ? (
+                <>
+                  <span className="font-medium text-orange-600 dark:text-orange-400">
+                    This space cannot be deleted
+                  </span>
+                  <br />
+                  <span>
+                    because it has {fieldContextCount} field context
+                    {fieldContextCount !== 1 ? 's' : ''}.
+                  </span>
+                  <br />
+                  <span className="text-xs block mt-2">
+                    Please delete all field contexts within this space first.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete &quot;{spaceName}&quot;? This
+                  action cannot be undone. All fields and data within this space
+                  will be permanently deleted.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -172,16 +223,18 @@ export function EditSpaceModal({
               disabled={isLoading}
               className="flex-1"
             >
-              Cancel
+              {fieldContextCount > 0 ? 'Close' : 'Cancel'}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              {isLoading ? 'Deleting...' : 'Delete Space'}
-            </Button>
+            {fieldContextCount === 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                {isLoading ? 'Deleting...' : 'Delete Space'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

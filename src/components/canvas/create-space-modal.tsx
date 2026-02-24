@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation } from '@apollo/client/react'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
+import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import {
   UPDATE_ME_SPACE_MUTATION,
   UPDATE_WE_SPACE_MUTATION,
@@ -22,6 +24,7 @@ export interface CreateSpaceModalProps {
   isEditing?: boolean
   spaceId?: string
   isWeSpace?: boolean
+  spaceContextCount?: number
 }
 
 export function CreateSpaceModal({
@@ -35,9 +38,11 @@ export function CreateSpaceModal({
   isEditing = false,
   spaceId,
   isWeSpace,
+  spaceContextCount = 0,
 }: CreateSpaceModalProps) {
   const [name, setName] = useState(initialName)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [fieldContextCount, setFieldContextCount] = useState(spaceContextCount)
 
   const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
@@ -46,9 +51,35 @@ export function CreateSpaceModal({
 
   const [isMutationLoading, setIsMutationLoading] = useState(false)
 
+  // Fetch space details to get context count
+  const { data: spaceData, loading: isLoadingContexts } = useQuery(
+    GET_SPACE_DETAILS,
+    {
+      variables: { spaceId: spaceId || '' },
+      skip: !spaceId || !isEditing,
+    }
+  )
+
+  // Update context count when data is loaded
+  useEffect(() => {
+    const space = spaceData?.spaces?.[0]
+    if (space?.contexts) {
+      setFieldContextCount(space.contexts.length)
+    }
+  }, [spaceData])
+
   const canSubmit = name.trim().length > 0 && !isLoading && !isMutationLoading
 
   const handleDelete = async () => {
+    // Check if space has any contexts (field contexts)
+    if (fieldContextCount > 0) {
+      toast.error(
+        `Cannot delete a space with ${fieldContextCount} field context${fieldContextCount !== 1 ? 's' : ''}. Please delete all field contexts first.`
+      )
+      setShowDeleteConfirm(false)
+      return
+    }
+
     setIsMutationLoading(true)
     try {
       const mutation = isWeSpace ? deleteWeSpace : deleteMeSpace
@@ -57,10 +88,11 @@ export function CreateSpaceModal({
           where: { id_EQ: spaceId },
         },
       })
+      toast.success('Space deleted successfully')
       onClose()
     } catch (error) {
       console.error('Error deleting space:', error)
-      alert('Failed to delete space')
+      toast.error('Failed to delete space')
     } finally {
       setIsMutationLoading(false)
     }
@@ -173,10 +205,10 @@ export function CreateSpaceModal({
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(true)}
-                      disabled={isMutationLoading}
+                      disabled={isMutationLoading || isLoadingContexts}
                       className="flex-1 px-6 py-3 rounded-xl bg-red-600/20 dark:bg-red-600/30 text-red-600 dark:text-red-400 hover:bg-red-600/30 dark:hover:bg-red-600/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
-                      Delete
+                      {isLoadingContexts ? 'Checking...' : 'Delete'}
                     </button>
                     <button
                       type="button"
@@ -266,27 +298,53 @@ export function CreateSpaceModal({
                 <h2 className="text-3xl md:text-4xl font-light dark:font-extralight text-gp-ink-strong dark:text-white mb-2 tracking-tight leading-tight">
                   Delete Space
                 </h2>
-                <p className="text-sm text-red-700 dark:text-red-400 mb-8">
-                  Are you sure? This action cannot be undone. All fields and
-                  data within this space will be permanently deleted.
+                <p className="text-sm mb-8">
+                  {fieldContextCount > 0 ? (
+                    <>
+                      <span className="font-medium text-orange-600 dark:text-orange-400">
+                        This space cannot be deleted
+                      </span>
+                      <br />
+                      <span className="text-red-700 dark:text-red-400">
+                        because it has {fieldContextCount} field context
+                        {fieldContextCount !== 1 ? 's' : ''}.
+                      </span>
+                      <br />
+                      <span className="text-xs block mt-2">
+                        Please delete all field contexts within this space
+                        first.
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-red-700 dark:text-red-400">
+                      Are you sure? This action cannot be undone. All fields and
+                      data within this space will be permanently deleted.
+                    </span>
+                  )}
                 </p>
 
                 {/* Buttons */}
                 <div className="flex gap-4 w-full">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    disabled={isMutationLoading}
+                    disabled={isMutationLoading || isLoadingContexts}
                     className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Cancel
+                    {fieldContextCount > 0 ? 'Close' : 'Cancel'}
                   </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={isMutationLoading}
-                    className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isMutationLoading ? 'Deleting...' : 'Delete'}
-                  </button>
+                  {fieldContextCount === 0 && (
+                    <button
+                      onClick={handleDelete}
+                      disabled={isMutationLoading || isLoadingContexts}
+                      className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isMutationLoading
+                        ? 'Deleting...'
+                        : isLoadingContexts
+                          ? 'Checking...'
+                          : 'Delete'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -207,7 +207,9 @@ export function GenericPulseCanvas({
 
                   {/* Children (pulse nodes) */}
                   {children && !isLoading && (
-                    <div className="relative w-full h-full">{children}</div>
+                    <div className="relative w-full h-full z-20">
+                      {children}
+                    </div>
                   )}
                 </div>
               </TransformComponent>

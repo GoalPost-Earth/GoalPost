@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
@@ -91,6 +92,16 @@ export default function SpaceDetailsPage() {
   const handleDelete = async () => {
     try {
       if (!space) return
+
+      // Check if space has any contexts (field contexts)
+      if (contexts && contexts.length > 0) {
+        toast.error(
+          `Cannot delete a space with ${contexts.length} field context${contexts.length !== 1 ? 's' : ''}. Please delete all field contexts first.`
+        )
+        setShowDeleteConfirm(false)
+        return
+      }
+
       setIsDeleteLoading(true)
 
       const where = { id_EQ: spaceId }
@@ -104,9 +115,11 @@ export default function SpaceDetailsPage() {
           break
       }
 
+      toast.success('Space deleted successfully')
       router.push('/protected/dashboard')
     } catch (err) {
       console.error('Failed to delete space:', err)
+      toast.error('Failed to delete space. Please try again.')
       setShowDeleteConfirm(false)
     } finally {
       setIsDeleteLoading(false)
@@ -225,36 +238,54 @@ export default function SpaceDetailsPage() {
               Delete {space.__typename}?
             </h2>
 
-            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
-              Are you sure you want to delete this space and all its contexts
-              and pulses? This action cannot be undone.
+            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-3">
+              {contexts && contexts.length > 0 ? (
+                <>
+                  <span className="font-medium text-orange-500 dark:text-orange-400">
+                    This space cannot be deleted
+                  </span>
+                  <span>
+                    {' '}
+                    because it has {contexts.length} field context
+                    {contexts.length !== 1 ? 's' : ''}.
+                  </span>
+                  <br />
+                  <span className="text-xs mt-2 block">
+                    Please delete all field contexts within this space first.
+                  </span>
+                </>
+              ) : (
+                'Are you sure you want to delete this space? This action cannot be undone.'
+              )}
             </p>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleteLoading}
+                disabled={isDeleteLoading || loading}
                 className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                {contexts && contexts.length > 0 ? 'Close' : 'Cancel'}
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleteLoading}
-                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isDeleteLoading && (
-                  <span
-                    className={cn(
-                      'material-symbols-outlined text-base',
-                      animationsEnabled && 'animate-spin'
-                    )}
-                  >
-                    hourglass_bottom
-                  </span>
-                )}
-                {isDeleteLoading ? 'Deleting...' : 'Delete'}
-              </button>
+              {(!contexts || contexts.length === 0) && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleteLoading || loading}
+                  className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isDeleteLoading && (
+                    <span
+                      className={cn(
+                        'material-symbols-outlined text-base',
+                        animationsEnabled && 'animate-spin'
+                      )}
+                    >
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {isDeleteLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -346,57 +377,59 @@ export default function SpaceDetailsPage() {
               </ProfileCard>
             </div>
 
-            {/* Members Section */}
-            <div className="flex flex-col gap-4 md:col-span-2">
-              <SectionHeader icon="group" title="Members" />
-              <ProfileCard>
-                <div className="space-y-3">
-                  {members.length > 0 ? (
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    members.map((membership: any, idx: number) => {
-                      const memberData = membership.member?.[0]
-                      if (!memberData) return null
-                      return (
-                        <div
-                          key={membership.id}
-                          className={
-                            idx > 0
-                              ? 'border-t border-gp-glass-border pt-3'
-                              : ''
-                          }
-                        >
-                          <div className="flex justify-between items-start mb-1">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[9px] uppercase font-semibold text-gp-accent-glow">
-                                  {memberData.__typename}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
-                                  {membership.role}
-                                </span>
+            {/* Members Section - Only show for WeSpace */}
+            {space.__typename === 'WeSpace' && (
+              <div className="flex flex-col gap-4 md:col-span-2">
+                <SectionHeader icon="group" title="Members" />
+                <ProfileCard>
+                  <div className="space-y-3">
+                    {members.length > 0 ? (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      members.map((membership: any, idx: number) => {
+                        const memberData = membership.member?.[0]
+                        if (!memberData) return null
+                        return (
+                          <div
+                            key={membership.id}
+                            className={
+                              idx > 0
+                                ? 'border-t border-gp-glass-border pt-3'
+                                : ''
+                            }
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[9px] uppercase font-semibold text-gp-accent-glow">
+                                    {memberData.__typename}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
+                                    {membership.role}
+                                  </span>
+                                </div>
+                                <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                                  {memberData.name}
+                                </h4>
                               </div>
-                              <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                                {memberData.name}
-                              </h4>
                             </div>
+                            {memberData.__typename === 'Person' &&
+                              memberData.email && (
+                                <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                  {memberData.email}
+                                </p>
+                              )}
                           </div>
-                          {memberData.__typename === 'Person' &&
-                            memberData.email && (
-                              <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                                {memberData.email}
-                              </p>
-                            )}
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      No members yet
-                    </p>
-                  )}
-                </div>
-              </ProfileCard>
-            </div>
+                        )
+                      })
+                    ) : (
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        No members yet
+                      </p>
+                    )}
+                  </div>
+                </ProfileCard>
+              </div>
+            )}
 
             {/* Contexts Section */}
             <div className="flex flex-col gap-4 md:col-span-2">
@@ -496,15 +529,18 @@ export default function SpaceDetailsPage() {
               </span>
               Edit Space
             </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                delete
-              </span>
-              Delete Space
-            </button>
+            {space.__typename === 'WeSpace' && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={loading}
+                className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  delete
+                </span>
+                {loading ? 'Checking...' : 'Delete Space'}
+              </button>
+            )}
           </div>
         </ProfileLayout>
       </main>

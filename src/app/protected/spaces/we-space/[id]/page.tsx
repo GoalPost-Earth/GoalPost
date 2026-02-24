@@ -24,7 +24,10 @@ const fieldIcons: Record<string, string> = {
 function transformFieldsToProps(
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   fields: any[]
-): Omit<FieldBubbleProps, 'position' | 'size' | 'shape' | 'animationType'>[] {
+): (Omit<FieldBubbleProps, 'position' | 'size' | 'shape' | 'animationType'> & {
+  id?: string
+  pulseCount?: number
+})[] {
   return fields.map((field) => ({
     id: field.id,
     icon:
@@ -32,6 +35,7 @@ function transformFieldsToProps(
       fieldIcons.default,
     title: field.title,
     description: field.emergentName || '',
+    pulseCount: field.pulses?.length || 0,
   }))
 }
 

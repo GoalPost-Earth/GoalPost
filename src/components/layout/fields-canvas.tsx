@@ -25,7 +25,7 @@ export interface FieldsCanvasProps {
   fields?: (Omit<
     FieldBubbleProps,
     'position' | 'size' | 'shape' | 'animationType'
-  > & { id?: string })[]
+  > & { id?: string; pulseCount?: number })[]
   onFieldClick?: (fieldId: string) => void
   onCreateField?: (description: string, name?: string) => void | Promise<void>
   className?: string
@@ -342,6 +342,7 @@ export function FieldsCanvas({
         initialDescription={editingField?.description || ''}
         onEditSuccess={handleEditFieldSuccess}
         onDeleteSuccess={handleDeleteFieldSuccess}
+        pulseCount={editingField?.pulseCount || 0}
       />
     </>
   )

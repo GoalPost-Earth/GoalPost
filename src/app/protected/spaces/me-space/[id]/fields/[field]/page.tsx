@@ -180,15 +180,22 @@ function FieldDetailPage() {
 
   const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
+    awaitRefetchQueries: true,
   })
   const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
+    awaitRefetchQueries: true,
   })
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
+    awaitRefetchQueries: true,
   })
   const [deleteResonancesByPulse] = useMutation(
-    DELETE_RESONANCES_BY_PULSE_MUTATION
+    DELETE_RESONANCES_BY_PULSE_MUTATION,
+    {
+      refetchQueries: ['GetPulsesByContext'],
+      awaitRefetchQueries: true,
+    }
   )
 
   // Redirect if no field ID
