@@ -49,6 +49,7 @@ export function DraggablePulseNode({
       return
     }
 
+    // Prevent the canvas panning from starting
     e.preventDefault()
     e.stopPropagation()
     // Stop floating animation when dragging starts
@@ -184,7 +185,7 @@ export function DraggablePulseNode({
     <div
       ref={nodeRef}
       className={cn(
-        'absolute',
+        'absolute z-30',
         isLocalDragging
           ? 'z-50 cursor-grabbing transition-none'
           : 'cursor-grab transition-transform duration-150 ease-out'

@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
@@ -79,15 +80,27 @@ export default function FieldContextDetailsPage() {
   const handleDelete = async () => {
     try {
       if (!context) return
+
+      // Check if field context has any pulses
+      if (pulses && pulses.length > 0) {
+        toast.error(
+          `Cannot delete a field with ${pulses.length} pulse${pulses.length !== 1 ? 's' : ''}. Please delete all pulses first.`
+        )
+        setShowDeleteConfirm(false)
+        return
+      }
+
       setIsDeleteLoading(true)
 
       await deleteFieldContext({
         variables: { id: contextId },
       })
 
+      toast.success('Field context deleted successfully')
       router.push('/protected/dashboard')
     } catch (err) {
       console.error('Failed to delete context:', err)
+      toast.error('Failed to delete field context. Please try again.')
       setShowDeleteConfirm(false)
     } finally {
       setIsDeleteLoading(false)
@@ -213,36 +226,54 @@ export default function FieldContextDetailsPage() {
               Delete Field Context?
             </h2>
 
-            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
-              Are you sure you want to delete this context and all its pulses?
-              This action cannot be undone.
+            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-3">
+              {pulses && pulses.length > 0 ? (
+                <>
+                  <span className="font-medium text-orange-500 dark:text-orange-400">
+                    This field cannot be deleted
+                  </span>
+                  <span>
+                    {' '}
+                    because it has {pulses.length} pulse
+                    {pulses.length !== 1 ? 's' : ''}.
+                  </span>
+                  <br />
+                  <span className="text-xs mt-2 block">
+                    Please delete all pulses within this field first.
+                  </span>
+                </>
+              ) : (
+                'Are you sure you want to delete this context? This action cannot be undone.'
+              )}
             </p>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleteLoading}
+                disabled={isDeleteLoading || loading}
                 className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                {pulses && pulses.length > 0 ? 'Close' : 'Cancel'}
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleteLoading}
-                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isDeleteLoading && (
-                  <span
-                    className={cn(
-                      'material-symbols-outlined text-base',
-                      animationsEnabled && 'animate-spin'
-                    )}
-                  >
-                    hourglass_bottom
-                  </span>
-                )}
-                {isDeleteLoading ? 'Deleting...' : 'Delete'}
-              </button>
+              {(!pulses || pulses.length === 0) && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleteLoading || loading}
+                  className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isDeleteLoading && (
+                    <span
+                      className={cn(
+                        'material-symbols-outlined text-base',
+                        animationsEnabled && 'animate-spin'
+                      )}
+                    >
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {isDeleteLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -385,12 +416,13 @@ export default function FieldContextDetailsPage() {
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+              disabled={loading}
+              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">
                 delete
               </span>
-              Delete Context
+              {loading ? 'Checking...' : 'Delete Context'}
             </button>
           </div>
         </ProfileLayout>

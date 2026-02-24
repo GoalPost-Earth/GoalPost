@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { PULSE_TYPE_CONFIG, type NodeType } from '@/lib/pulse-type-config'
 import { cn } from '@/lib/utils'
+import { OfferingModal } from './offering-modal'
 
 interface PulseTypeSuggestionProps {
   input: string
@@ -427,33 +428,61 @@ export function PulseTypeSuggestion({
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 rounded-3xl">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Delete Pulse?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              This action cannot be undone. The pulse will be permanently
-              deleted.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
+      <OfferingModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        position="center"
+      >
+        <div className="relative z-10 w-full">
+          {/* Modal Content */}
+          <div className="glass-panel rounded-3xl p-8 md:p-12 border border-gp-glass-border dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            {/* Background Glow Effects */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+            <div className="flex flex-col items-center text-center relative z-10">
+              {/* Icon */}
+              <div className="mb-8 relative group">
+                <div className="absolute inset-0 bg-red-500/30 rounded-full blur-xl" />
+                <div className="size-16 rounded-full bg-linear-to-br from-red-100 to-red-50 dark:from-red-500/20 dark:to-red-500/10 border border-red-200 dark:border-red-500/30 flex items-center justify-center backdrop-blur-xl shadow-md dark:shadow-inner">
+                  <span className="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">
+                    delete
+                  </span>
+                </div>
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-3xl md:text-4xl font-light dark:font-extralight text-gp-ink-strong dark:text-white mb-2 tracking-tight leading-tight">
+                Delete Pulse
+              </h2>
+              <p className="text-sm mb-8">
+                <span className="text-red-700 dark:text-red-400">
+                  Are you sure? This action cannot be undone. The pulse will be
+                  permanently deleted.
+                </span>
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isLoading}
+                  className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </OfferingModal>
     </div>
   )
 }

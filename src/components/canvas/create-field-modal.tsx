@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useMutation } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
+import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import {
   UPDATE_FIELD_CONTEXT_MUTATION,
   DELETE_FIELD_CONTEXT_MUTATION,
@@ -20,6 +22,7 @@ interface CreateFieldModalProps {
   initialDescription?: string
   onEditSuccess?: () => void
   onDeleteSuccess?: () => void
+  pulseCount?: number
 }
 
 export function CreateFieldModal({
@@ -33,6 +36,7 @@ export function CreateFieldModal({
   initialDescription = '',
   onEditSuccess,
   onDeleteSuccess,
+  pulseCount = 0,
 }: CreateFieldModalProps) {
   const [name, setName] = useState(initialName)
   const [description, setDescription] = useState(initialDescription)
@@ -42,6 +46,19 @@ export function CreateFieldModal({
   const [deleteFieldContext] = useMutation(DELETE_FIELD_CONTEXT_MUTATION)
 
   const [isMutationLoading, setIsMutationLoading] = useState(false)
+
+  // Fetch fresh field context data to get accurate pulse count
+  const { data: fieldContextData, loading: isLoadingFieldData } = useQuery(
+    GET_FIELD_CONTEXT_DETAILS,
+    {
+      variables: { contextId: fieldId || '' },
+      skip: !fieldId || !isEditing,
+    }
+  )
+
+  // Get fresh pulse count from query, fallback to prop while loading
+  const freshPulseCount =
+    fieldContextData?.fieldContexts?.[0]?.pulses?.length ?? pulseCount
 
   // Sync state with props when editing a different field
   useEffect(() => {
@@ -57,9 +74,20 @@ export function CreateFieldModal({
     setIsMutationLoading(true)
     try {
       if (!fieldId) {
-        alert('Field ID is missing. Cannot delete field.')
+        toast.error('Field ID is missing. Cannot delete field.')
         return
       }
+
+      // Check if field has any pulses (use fresh data from query)
+      if (freshPulseCount > 0) {
+        toast.error(
+          `Cannot delete a field with ${freshPulseCount} pulse${freshPulseCount !== 1 ? 's' : ''}. Please delete all pulses first.`
+        )
+        setShowDeleteConfirm(false)
+        setIsMutationLoading(false)
+        return
+      }
+
       await deleteFieldContext({
         variables: {
           id: fieldId,
@@ -67,10 +95,11 @@ export function CreateFieldModal({
       })
       setShowDeleteConfirm(false)
       await onDeleteSuccess?.()
+      toast.success('Field deleted successfully')
       onClose()
     } catch (error) {
       console.error('Error deleting field:', error)
-      alert('Failed to delete field')
+      toast.error('Failed to delete field')
     } finally {
       setIsMutationLoading(false)
     }
@@ -249,10 +278,10 @@ export function CreateFieldModal({
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(true)}
-                      disabled={isMutationLoading}
+                      disabled={isMutationLoading || isLoadingFieldData}
                       className="flex-1 px-6 py-3 rounded-xl bg-red-600/20 dark:bg-red-600/30 text-red-600 dark:text-red-400 hover:bg-red-600/30 dark:hover:bg-red-600/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
-                      Delete
+                      {isLoadingFieldData ? 'Checking...' : 'Delete'}
                     </button>
                     <button
                       type="button"
@@ -318,27 +347,49 @@ export function CreateFieldModal({
                 <h2 className="text-3xl md:text-4xl font-light dark:font-extralight text-gp-ink-strong dark:text-white mb-2 tracking-tight leading-tight">
                   Delete Field
                 </h2>
-                <p className="text-sm text-red-700 dark:text-red-400 mb-8">
-                  Are you sure? This action cannot be undone. All pulses within
-                  this field will be permanently deleted.
+                <p className="text-sm mb-8">
+                  {freshPulseCount > 0 ? (
+                    <>
+                      <span className="text-orange-600 dark:text-orange-400 font-medium">
+                        This field cannot be deleted
+                      </span>
+                      <br />
+                      <span className="text-gp-ink-muted dark:text-gp-ink-soft text-xs block mt-2">
+                        This field has {freshPulseCount} pulse
+                        {freshPulseCount !== 1 ? 's' : ''}. Please delete all
+                        pulses to remove this field.
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-red-700 dark:text-red-400">
+                      Are you sure? This action cannot be undone. All content
+                      will be permanently deleted.
+                    </span>
+                  )}
                 </p>
 
                 {/* Buttons */}
                 <div className="flex gap-4 w-full">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    disabled={isMutationLoading}
+                    disabled={isMutationLoading || isLoadingFieldData}
                     className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Cancel
+                    {freshPulseCount > 0 ? 'Close' : 'Cancel'}
                   </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={isMutationLoading}
-                    className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isMutationLoading ? 'Deleting...' : 'Delete'}
-                  </button>
+                  {freshPulseCount === 0 && (
+                    <button
+                      onClick={handleDelete}
+                      disabled={isMutationLoading || isLoadingFieldData}
+                      className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isMutationLoading
+                        ? 'Deleting...'
+                        : isLoadingFieldData
+                          ? 'Checking...'
+                          : 'Delete'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
