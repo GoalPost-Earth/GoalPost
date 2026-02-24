@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   GoalPostLogo,
@@ -28,10 +28,17 @@ export default function NavBar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useApp()
   const { pageTitle } = usePageContext()
   const menuRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+
+  // Get user's MeSpace
+  const userMeSpace = user?.ownsSpaces?.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (space: any) => space.__typename === 'MeSpace'
+  )
 
   useEffect(() => {
     // Check initial theme from localStorage or system preference
@@ -116,15 +123,17 @@ export default function NavBar() {
               </Link>
               {/* Show Me Space breadcrumb when viewing nested pages */}
               {pathname?.includes('/me-space') &&
-              pathname !== '/protected/spaces/me-space' ? (
+              pathname !== `/protected/spaces/me-space/${userMeSpace?.id}` ? (
                 <>
                   <span>•</span>
-                  <Link
-                    href="/protected/spaces/me-space"
-                    className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
-                  >
-                    Me Space
-                  </Link>
+                  {userMeSpace?.id && (
+                    <Link
+                      href={`/protected/spaces/me-space/${userMeSpace.id}`}
+                      className="hover:text-gp-ink-strong dark:hover:text-gp-ink-strong transition-colors"
+                    >
+                      Me Space
+                    </Link>
+                  )}
                   {/* Show specific MeSpace name */}
                   {isMounted &&
                     (() => {
@@ -236,17 +245,22 @@ export default function NavBar() {
 
       <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
         <nav className="hidden md:flex items-center gap-2 md:gap-4 lg:gap-6">
-          <Link
+          <button
+            onClick={() => {
+              if (userMeSpace?.id) {
+                router.push(`/protected/spaces/me-space/${userMeSpace.id}`)
+              }
+            }}
             className={cn(
-              'text-sm font-medium transition-colors',
-              pathname === '/protected/spaces/me-space'
+              'text-sm font-medium transition-colors cursor-pointer',
+              userMeSpace?.id &&
+                pathname?.includes(`/me-space/${userMeSpace.id}`)
                 ? 'text-gp-primary font-semibold px-4 py-1.5 bg-gp-primary/10 rounded-full'
                 : 'text-gp-ink-muted hover:text-gp-ink-strong dark:text-gp-ink-soft dark:hover:text-gp-ink-strong'
             )}
-            href="/protected/spaces/me-space"
           >
             Me Space
-          </Link>
+          </button>
           <Link
             className={cn(
               'text-sm font-medium transition-colors',
@@ -376,19 +390,24 @@ export default function NavBar() {
             ref={mobileMenuRef}
             className="absolute top-20 left-4 right-4 md:hidden rounded-2xl bg-white dark:bg-black/90 border border-gp-glass-border shadow-xl py-2 z-50"
           >
-            <Link
-              href="/protected/spaces/me-space"
+            <button
+              onClick={() => {
+                if (userMeSpace?.id) {
+                  router.push(`/protected/spaces/me-space/${userMeSpace.id}`)
+                  setShowMobileMenu(false)
+                }
+              }}
               className={cn(
-                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors',
-                pathname === '/protected/spaces/me-space'
+                'flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors w-full cursor-pointer',
+                userMeSpace?.id &&
+                  pathname?.includes(`/me-space/${userMeSpace.id}`)
                   ? 'text-gp-primary bg-gp-primary/10'
                   : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong'
               )}
-              onClick={() => setShowMobileMenu(false)}
             >
               <span className="material-symbols-outlined">person</span>
               Me Space
-            </Link>
+            </button>
             <Link
               href="/protected/spaces/we-space"
               className={cn(
