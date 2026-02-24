@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { SpaceWrapper } from '@/components/ui/space-wrapper'
 import { useRouter } from 'next/navigation'
-import { usePageContext } from '@/contexts'
+import { useApp, usePageContext } from '@/contexts'
 import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ export default function SpacesPage() {
   const router = useRouter()
   const { setPageTitle } = usePageContext()
   const { animationsEnabled } = useAnimations()
+  const { user } = useApp()
 
   useEffect(() => {
     setPageTitle('Spaces')
@@ -64,8 +65,14 @@ export default function SpacesPage() {
               description="Self-reflection, personal growth, and individual purpose."
               variant="mespace"
               onClick={() => {
-                setPageTitle('Me Space')
-                router.push('/protected/spaces/me-space')
+                const meSpace = user?.ownsSpaces?.find(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (space: any) => space.__typename === 'MeSpace'
+                )
+                if (meSpace?.id) {
+                  setPageTitle(meSpace.name)
+                  router.push(`/protected/spaces/me-space/${meSpace.id}`)
+                }
               }}
             />
           </div>

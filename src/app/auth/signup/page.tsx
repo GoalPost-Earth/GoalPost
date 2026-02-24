@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useApp } from '@/contexts'
 
 function SignupPage() {
   const {
@@ -21,6 +22,7 @@ function SignupPage() {
     },
   })
   const router = useRouter()
+  const { setUser } = useApp()
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -55,7 +57,13 @@ function SignupPage() {
         setError(data.error || 'Sign up failed')
         setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        router.push('/')
+        // Log user in with returned user data
+        if (data.user) {
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+        // Redirect to spaces page
+        router.push('/protected/spaces')
       }
     } catch {
       setError('An unexpected error occurred')

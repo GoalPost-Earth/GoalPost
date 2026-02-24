@@ -48,14 +48,27 @@ export async function POST(req: NextRequest) {
   try {
     const result = await session.run(
       `MATCH (user:Person {email: $email})
-        RETURN user {
+        OPTIONAL MATCH (user)-[:OWNS]->(space:Space)
+        WITH user, collect(DISTINCT {
+          id: space.id,
+          name: space.name,
+          visibility: space.visibility,
+          createdAt: space.createdAt,
+          __typename: CASE 
+            WHEN space:MeSpace THEN 'MeSpace'
+            WHEN space:WeSpace THEN 'WeSpace'
+            ELSE NULL
+          END
+        }) as ownsSpaces
+        RETURN {
           id: user.id,
           hash: user.password,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          roles: user.roles
-        }`,
+          roles: user.roles,
+          ownsSpaces: ownsSpaces
+        } as user`,
       { email }
     )
 

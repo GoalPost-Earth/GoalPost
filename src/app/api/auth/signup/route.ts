@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, initializeDB } from '../neo4j'
 import { hashPassword, parseRequestBody } from '../utils'
 import { parseError } from '@/utils'
+import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { z } from 'zod'
 
 const signupSchema = z.object({
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
                     person.onboardingIsCompleted = false,
                     person.onboardingSkipped = false
                 
-                RETURN person`,
+                RETURN person.id as personId`,
         {
           email,
           password: hashed,
@@ -84,7 +85,56 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      return NextResponse.json({ message: 'User created' }, { status: 201 })
+      const personId = result.records[0].get('personId')
+
+      // Create MeSpace for the new user with firstName
+      const meSpaceName = firstName
+        ? `${firstName}'s MeSpace`
+        : `${email}'s MeSpace`
+      await getOrCreateMeSpace(session, personId, meSpaceName)
+
+      // Fetch the complete user with spaces for response
+      const userDataResult = await session.run(
+        `MATCH (user:Person {id: $personId})
+         OPTIONAL MATCH (user)-[:OWNS]->(space:Space)
+         WITH user, collect(DISTINCT {
+           id: space.id,
+           name: space.name,
+           visibility: space.visibility,
+           createdAt: space.createdAt,
+           __typename: CASE 
+             WHEN space:MeSpace THEN 'MeSpace'
+             WHEN space:WeSpace THEN 'WeSpace'
+             ELSE NULL
+           END
+         }) as ownsSpaces
+         RETURN {
+           id: user.id,
+           email: user.email,
+           firstName: user.firstName,
+           lastName: user.lastName,
+           roles: user.roles,
+           ownsSpaces: ownsSpaces
+         } as user`,
+        { personId }
+      )
+
+      if (userDataResult.records.length === 0) {
+        return NextResponse.json(
+          { error: 'Failed to fetch user data' },
+          { status: 400 }
+        )
+      }
+
+      const user = userDataResult.records[0].get('user')
+
+      return NextResponse.json(
+        {
+          message: 'User created',
+          user,
+        },
+        { status: 201 }
+      )
     } catch (err) {
       return NextResponse.json(
         { error: 'Failed to create user: ' + parseError(err) },
