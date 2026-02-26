@@ -30,6 +30,7 @@ export function useTourOverlay(
     position: preferredPosition,
   })
   const observerRef = useRef<ResizeObserver | MutationObserver | null>(null)
+  const hasScrolledRef = useRef<string | null>(null)
 
   useEffect(() => {
     // Reset positions immediately when selector changes
@@ -39,6 +40,8 @@ export function useTourOverlay(
       left: 0,
       position: preferredPosition,
     })
+    // Reset scroll tracking when selector changes
+    hasScrolledRef.current = null
 
     // For centered tooltips (no selector), calculate center position immediately
     if (!selector) {
@@ -55,7 +58,7 @@ export function useTourOverlay(
       return
     }
 
-    const findAndHighlightElement = () => {
+    const findAndHighlightElement = (shouldScroll: boolean = false) => {
       const element = document.querySelector(selector) as HTMLElement
 
       if (!element) {
@@ -63,39 +66,54 @@ export function useTourOverlay(
         return
       }
 
-      const rect = element.getBoundingClientRect()
-      const isVisible = rect.width > 0 && rect.height > 0
-
-      const position: ElementPosition = {
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        height: rect.height,
-        isVisible,
+      // Only scroll into view once per selector, not on every resize/re-render
+      if (shouldScroll && hasScrolledRef.current !== selector) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        hasScrolledRef.current = selector
       }
 
-      setElementPosition(position)
+      // Wait for scroll animation to complete and DOM to settle (or proceed immediately if no scroll)
+      setTimeout(
+        () => {
+          requestAnimationFrame(() => {
+            const rect = element.getBoundingClientRect()
+            const isVisible = rect.width > 0 && rect.height > 0
 
-      // Calculate tooltip position
-      const tooltipPos = calculateTooltipPosition(rect, preferredPosition)
-      setTooltipPosition(tooltipPos)
+            const position: ElementPosition = {
+              top: rect.top + window.scrollY,
+              left: rect.left + window.scrollX,
+              width: rect.width,
+              height: rect.height,
+              isVisible,
+            }
+
+            setElementPosition(position)
+
+            // Calculate tooltip position
+            const tooltipPos = calculateTooltipPosition(rect, preferredPosition)
+            setTooltipPosition(tooltipPos)
+          })
+        },
+        shouldScroll ? 100 : 0
+      )
     }
 
-    // Initial find
-    findAndHighlightElement()
+    // Initial find - only scroll on first load of this selector
+    findAndHighlightElement(true)
 
     // Watch for changes using ResizeObserver
     const element = document.querySelector(selector) as HTMLElement
     if (element) {
       observerRef.current = new ResizeObserver(() => {
-        findAndHighlightElement()
+        // Don't scroll on resize, just recalculate position
+        findAndHighlightElement(false)
       })
       observerRef.current.observe(element)
     }
 
     // Also observe scroll and window resize
-    const handleScroll = () => findAndHighlightElement()
-    const handleResize = () => findAndHighlightElement()
+    const handleScroll = () => findAndHighlightElement(false)
+    const handleResize = () => findAndHighlightElement(false)
 
     window.addEventListener('scroll', handleScroll, true)
     window.addEventListener('resize', handleResize)
@@ -106,8 +124,8 @@ export function useTourOverlay(
     const retryInterval = setInterval(() => {
       retryCount++
       const el = document.querySelector(selector) as HTMLElement | null
-      if (el && !elementPosition) {
-        findAndHighlightElement()
+      if (el) {
+        findAndHighlightElement(false)
       }
       if (retryCount >= 50) {
         clearInterval(retryInterval)

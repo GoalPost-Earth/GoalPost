@@ -43,9 +43,18 @@ function SettingSection({ icon, title, children }: SettingSectionProps) {
   )
 }
 
-function SettingCard({ children }: { children: ReactNode }) {
+function SettingCard({
+  children,
+  ...props
+}: {
+  children: ReactNode
+  [key: string]: unknown
+}) {
   return (
-    <div className="rounded-2xl p-4 transition-all duration-300 border bg-gp-glass-bg border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]">
+    <div
+      className="rounded-2xl p-4 transition-all duration-300 border bg-gp-glass-bg border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]"
+      {...props}
+    >
       {children}
     </div>
   )
@@ -56,7 +65,8 @@ function SettingToggle({
   description,
   active = true,
   onToggle,
-}: SettingToggleProps) {
+  ...props
+}: SettingToggleProps & { [key: string]: unknown }) {
   const [isActive, setIsActive] = useState(active)
 
   // Sync local state with prop when it changes (e.g., after context rehydration)
@@ -70,7 +80,7 @@ function SettingToggle({
   }
 
   return (
-    <SettingCard>
+    <SettingCard {...props}>
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-sm font-medium text-slate-800 dark:text-white">
@@ -155,7 +165,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <SettingSection icon="palette" title="Appearance">
-                <SettingCard>
+                <SettingCard data-tour="settings-appearance">
                   <label className="text-[10px] font-bold text-gp-ink-muted dark:text-gp-ink-soft block mb-4 uppercase tracking-[0.18em]">
                     Theme Color Selector
                   </label>
@@ -182,6 +192,7 @@ export default function SettingsPage() {
                   description="Fluid UI transitions and field drifts"
                   active={animationsEnabled}
                   onToggle={setAnimationsEnabled}
+                  data-tour="settings-animations"
                 />
                 <SettingToggle
                   label="Haptic Echo"
@@ -199,7 +210,7 @@ export default function SettingsPage() {
               </SettingSection>
 
               <SettingSection icon="smart_toy" title="AI Assistant">
-                <SettingCard>
+                <SettingCard data-tour="settings-ai-mode">
                   <AssistantModeSelector
                     currentMode={aiMode}
                     onModeChange={setAiMode}
@@ -208,12 +219,14 @@ export default function SettingsPage() {
               </SettingSection>
 
               <SettingSection icon="hub" title="Coherence">
-                <SettingToggle
-                  label="Resonance Linkage"
-                  description="Show patterns within fields"
-                  active={resonanceLinkageEnabled}
-                  onToggle={setResonanceLinkageEnabled}
-                />
+                <SettingCard data-tour="settings-resonance">
+                  <SettingToggle
+                    label="Resonance Linkage"
+                    description="Show patterns within fields"
+                    active={resonanceLinkageEnabled}
+                    onToggle={setResonanceLinkageEnabled}
+                  />
+                </SettingCard>
               </SettingSection>
             </div>
           </div>

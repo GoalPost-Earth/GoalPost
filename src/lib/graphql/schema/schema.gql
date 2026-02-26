@@ -152,10 +152,10 @@ type Person implements PersonInterface
   signupDate: DateTime
   
   # Onboarding (modern schema)
-  onboardingCurrentStepIndex: Int!
-  onboardingCompletedSteps: [String!]!
-  onboardingIsCompleted: Boolean!
-  onboardingSkipped: Boolean!
+  onboardingCurrentStepIndex: Int
+  onboardingCompletedSteps: [String!]
+  onboardingIsCompleted: Boolean
+  onboardingSkipped: Boolean
   
   # Timestamps
   createdAt: DateTime!

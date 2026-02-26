@@ -179,10 +179,10 @@ type Person implements PersonInterface
   interests: String
   
   # Onboarding (modern schema)
-  onboardingCurrentStepIndex: Int!
-  onboardingCompletedSteps: [String!]!
-  onboardingIsCompleted: Boolean!
-  onboardingSkipped: Boolean!
+  onboardingCurrentStepIndex: Int
+  onboardingCompletedSteps: [String!]
+  onboardingIsCompleted: Boolean
+  onboardingSkipped: Boolean
   
   # Timestamps
   createdAt: DateTime!
@@ -248,10 +248,10 @@ type User implements PersonInterface @node(labels: ["Person", "User"]) {
   aiEnabled: Boolean!
   
   # Onboarding
-  onboardingCurrentStepIndex: Int!
-  onboardingCompletedSteps: [String!]!
-  onboardingIsCompleted: Boolean!
-  onboardingSkipped: Boolean!
+  onboardingCurrentStepIndex: Int
+  onboardingCompletedSteps: [String!]
+  onboardingIsCompleted: Boolean
+  onboardingSkipped: Boolean
   
   # Timestamps
   createdAt: DateTime!
