@@ -761,16 +761,18 @@ export default function PulseDetailsPage() {
           </div>
 
           {/* Content Section */}
-          <div className="mb-12">
-            <div className="flex flex-col gap-4">
-              <SectionHeader icon="description" title="Content" />
-              <ProfileCard>
-                <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
-                  {pulse.content}
-                </p>
-              </ProfileCard>
+          {pulse.content && (
+            <div className="mb-12">
+              <div className="flex flex-col gap-4">
+                <SectionHeader icon="description" title="Content" />
+                <ProfileCard>
+                  <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
+                    {pulse.content}
+                  </p>
+                </ProfileCard>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Grid Layout - Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -834,40 +836,43 @@ export default function PulseDetailsPage() {
               <SectionHeader icon="waves" title="Related Pulses in Context" />
               <ProfileCard>
                 <div className="space-y-3">
-                  {contextPulses.length > 0 ? (
-                    contextPulses.map((relatedPulse, idx) => (
-                      <div
-                        key={relatedPulse.id}
-                        onClick={() =>
-                          relatedPulse.id &&
-                          router.push(
-                            `/protected/dashboard/pulses/${relatedPulse.id}`
-                          )
-                        }
-                        className={
-                          idx > 0
-                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                        }
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <div className="flex-1">
-                            <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
-                              {relatedPulse.__typename}
-                            </span>
-                            <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                              {relatedPulse.title}
-                            </h4>
+                  {contextPulses.filter((p) => p.id !== pulse?.id).length >
+                  0 ? (
+                    contextPulses
+                      .filter((p) => p.id !== pulse?.id)
+                      .map((relatedPulse, idx) => (
+                        <div
+                          key={relatedPulse.id}
+                          onClick={() =>
+                            relatedPulse.id &&
+                            router.push(
+                              `/protected/dashboard/pulses/${relatedPulse.id}`
+                            )
+                          }
+                          className={
+                            idx > 0
+                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                          }
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                              <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
+                                {relatedPulse.__typename}
+                              </span>
+                              <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                                {relatedPulse.title}
+                              </h4>
+                            </div>
                           </div>
+                          {relatedPulse.content && (
+                            <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
+                              {relatedPulse.content.substring(0, 100)}
+                              {relatedPulse.content.length > 100 ? '...' : ''}
+                            </p>
+                          )}
                         </div>
-                        {relatedPulse.content && (
-                          <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
-                            {relatedPulse.content.substring(0, 100)}
-                            {relatedPulse.content.length > 100 ? '...' : ''}
-                          </p>
-                        )}
-                      </div>
-                    ))
+                      ))
                   ) : (
                     <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
                       No other pulses in this context
