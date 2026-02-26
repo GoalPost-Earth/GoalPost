@@ -63,22 +63,30 @@ export function useTourOverlay(
         return
       }
 
-      const rect = element.getBoundingClientRect()
-      const isVisible = rect.width > 0 && rect.height > 0
+      // Scroll element into view before calculating position
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
-      const position: ElementPosition = {
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        height: rect.height,
-        isVisible,
-      }
+      // Wait for scroll animation to complete and DOM to settle
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          const rect = element.getBoundingClientRect()
+          const isVisible = rect.width > 0 && rect.height > 0
 
-      setElementPosition(position)
+          const position: ElementPosition = {
+            top: rect.top + window.scrollY,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+            height: rect.height,
+            isVisible,
+          }
 
-      // Calculate tooltip position
-      const tooltipPos = calculateTooltipPosition(rect, preferredPosition)
-      setTooltipPosition(tooltipPos)
+          setElementPosition(position)
+
+          // Calculate tooltip position
+          const tooltipPos = calculateTooltipPosition(rect, preferredPosition)
+          setTooltipPosition(tooltipPos)
+        })
+      }, 100)
     }
 
     // Initial find
@@ -106,7 +114,7 @@ export function useTourOverlay(
     const retryInterval = setInterval(() => {
       retryCount++
       const el = document.querySelector(selector) as HTMLElement | null
-      if (el && !elementPosition) {
+      if (el) {
         findAndHighlightElement()
       }
       if (retryCount >= 50) {

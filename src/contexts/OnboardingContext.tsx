@@ -34,6 +34,7 @@ interface OnboardingContextType {
   setCurrentStep: (index: number) => void
   resumeTour: () => void
   restartTour: () => void
+  setElementReady: (value: boolean) => void
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(
@@ -357,6 +358,11 @@ export function OnboardingProvider({
     return pagePath
   }, [])
 
+  // Simple setter for element readiness
+  const setElementReady = useCallback((value: boolean) => {
+    setIsElementReady(value)
+  }, [])
+
   const currentStep = steps[currentStepIndex] || null
 
   const nextStep = useCallback(() => {
@@ -622,6 +628,7 @@ export function OnboardingProvider({
         setCurrentStep,
         resumeTour,
         restartTour,
+        setElementReady,
       }}
     >
       {children}

@@ -17,6 +17,7 @@ export function TourOverlay() {
     currentStepIndex,
     isElementReady,
     steps,
+    setElementReady,
   } = useOnboarding()
   const { elementPosition, tooltipPosition } = useTourOverlay(
     currentStep?.selector,
@@ -27,6 +28,14 @@ export function TourOverlay() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Sync element readiness with elementPosition from useTourOverlay
+  useEffect(() => {
+    if (currentStep?.selector && elementPosition) {
+      // Element was found and positioned by useTourOverlay
+      setElementReady(true)
+    }
+  }, [elementPosition, currentStep?.selector, setElementReady])
 
   // Force recalculation when element becomes ready on page navigation
   useEffect(() => {

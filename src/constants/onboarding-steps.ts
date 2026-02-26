@@ -20,20 +20,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     selector: '[data-tour="me-space-button"]',
   },
   {
-    id: 'create-mespace',
-    title: 'Create Your First MeSpace',
-    description:
-      'Click the button to create your first MeSpace. This is your personal sanctuary for self-reflection and organizing your ideas.',
-    page: '/protected/spaces/me-space',
-    position: 'bottom',
-    selector: '[data-tour="create-mespace-button"]',
-  },
-  {
     id: 'fields-intro',
     title: 'What are Fields?',
     description:
       'Fields organize your ideas and contributions. Think of them as buckets that hold related pulses (messages) on specific topics.',
-    page: '/protected/spaces/me-space',
+    page: '/protected/spaces/me-space/[id]',
     position: 'center',
   },
   {
@@ -41,7 +32,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Three Types of Pulses',
     description:
       'Create Goal Pulses (aspirations), Resource Pulses (supportive elements), or Story Pulses (narratives) within the field context. Each contributes to discovering patterns.',
-    page: '/protected/spaces/me-space',
+    page: '/protected/spaces/me-space/[id]',
     position: 'center',
   },
   {
@@ -79,11 +70,56 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     selector: '[data-tour="dashboard-overview"]',
   },
   {
+    id: 'settings-access',
+    title: 'Access Your Settings',
+    description:
+      'Click on your avatar in the top right corner to access your user menu, where you can adjust your preferences and personalize your experience.',
+    page: '/protected/dashboard',
+    position: 'top',
+    selector: 'button[aria-label="User menu"]',
+  },
+  {
+    id: 'settings-appearance',
+    title: 'Appearance Settings',
+    description:
+      'Customize your theme color to match your essence. Choose from default, warm, forest, purple, or emerald colors to personalize your atmosphere.',
+    page: '/protected/settings',
+    position: 'bottom',
+    selector: '[data-tour="settings-appearance"]',
+  },
+  {
+    id: 'settings-animations',
+    title: 'Enable Animations',
+    description:
+      'Toggle fluid UI transitions and field drifts on or off. Animations add fluidity to your interactions while you can disable them for a more static experience.',
+    page: '/protected/settings',
+    position: 'bottom',
+    selector: '[data-tour="settings-animations"]',
+  },
+  {
+    id: 'settings-ai-mode',
+    title: 'Choose Your AI Assistant Mode',
+    description:
+      'Select how you want to interact with the AI: Aiden (conversational), ReAct (structured thinking), or Disabled (no AI assistance). Each mode offers different interaction styles.',
+    page: '/protected/settings',
+    position: 'bottom',
+    selector: '[data-tour="settings-ai-mode"]',
+  },
+  {
+    id: 'settings-resonance',
+    title: 'Resonance Linkage',
+    description:
+      'Enable this to see patterns and connections within your fields. This AI-powered feature discovers semantic relationships across your pulses and shows you related insights.',
+    page: '/protected/settings',
+    position: 'bottom',
+    selector: '[data-tour="settings-resonance"]',
+  },
+  {
     id: 'complete',
     title: "You're All Set!",
     description:
       'You now understand the basics. Feel free to explore, create fields and pulses, and discover resonances with others. Welcome to GoalPost!',
-    page: '/protected/dashboard',
+    page: '/protected/spaces',
     position: 'center',
     actionLabel: 'Start Exploring',
   },
