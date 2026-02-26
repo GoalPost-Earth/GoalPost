@@ -153,7 +153,7 @@ FieldContext (community): "{communityName} Field"
 ```
 Legacy: Goal -[:MOTIVATED_BY]-> Person
 New: Person -[:OWNS]-> MeSpace -[:HAS_CONTEXT]-> FieldContext -[:HAS_PULSE]-> GoalPulse
-Plus: ResonanceLink { label: "MOTIVATED_BY", confidence: 1.0 }
+Plus: ResonanceLink { label: "MOTIVATED_BY", confidence: null }
 ```
 
 ---

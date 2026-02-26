@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { getConfigForType } from '@/lib/pulse-type-config'
+import { formatResonanceLabel } from '@/utils/graph-utils'
 
 export interface PulseInResonance {
   id: string
@@ -130,7 +131,7 @@ export function ResonancePanel({
           </button>
         </div>
         <h2 className="text-xl font-bold text-gp-ink-strong dark:text-gp-ink-strong leading-tight">
-          {resonance.label}
+          {formatResonanceLabel(resonance.label)}
         </h2>
         <div className="flex items-center gap-2 mt-3">
           <span className="flex h-2 w-2 rounded-full bg-gp-primary animate-pulse" />

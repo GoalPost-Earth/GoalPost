@@ -647,6 +647,7 @@ function FieldDetailPage() {
 
       // Add owner (GraphQL returns array, take first element)
       const owner = space.owner?.[0]
+      const ownerId = owner?.id
       if (owner) {
         allPersons.push({
           id: owner.id,
@@ -659,12 +660,12 @@ function FieldDetailPage() {
         })
       }
 
-      // Add members
+      // Add members (skip if they're also the owner)
       if (space.members) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         space.members.forEach((membership: any) => {
           const memberData = membership.member?.[0] // Extract first element from array
-          if (memberData) {
+          if (memberData && memberData.id !== ownerId) {
             allPersons.push({
               id: memberData.id,
               firstName: memberData.firstName,
@@ -1431,13 +1432,22 @@ function FieldDetailPage() {
       const clickedPerson = personPositions.find((p) => p.personId === personId)
       if (!clickedPerson) return
 
+      // Check if clicking the same person that's already selected
+      if (isPersonPanelOpen && selectedPerson?.id === personId) {
+        // Close the panel and hide connections
+        setIsPersonPanelOpen(false)
+        setSelectedPerson(null)
+        setActivePersonIds(new Set()) // Clear all active persons
+        return
+      }
+
       // Close all other panels
       setIsPulsePanelOpen(false)
       setIsResonancePanelOpen(false)
       setIsConnectionPanelOpen(false)
 
       // Add person to active set to show their connections
-      setActivePersonIds((prev) => new Set([...prev, personId]))
+      setActivePersonIds(new Set([personId])) // Only show this person's connections
 
       // Open person panel with person info
       setSelectedPerson({
@@ -1451,7 +1461,7 @@ function FieldDetailPage() {
       })
       setIsPersonPanelOpen(true)
     },
-    [personPositions]
+    [personPositions, isPersonPanelOpen, selectedPerson]
   )
 
   // Handle connection midpoint click - toggle panel open/close
@@ -1485,24 +1495,31 @@ function FieldDetailPage() {
 
       if (!person1Data || !person2Data) return
 
-      // Find their connection info from personConnections
-      const connectionInfo = personConnections.find(
-        (pc) => pc.personId === person1Id
-      )
-      if (
-        !connectionInfo ||
-        !connectionInfo.connectedPersonIds.includes(person2Id)
-      )
-        return
+      // Find their connection info from personConnections (check both directions)
+      const connectionExists =
+        personConnections.some(
+          (pc) =>
+            pc.personId === person1Id &&
+            pc.connectedPersonIds.includes(person2Id)
+        ) ||
+        personConnections.some(
+          (pc) =>
+            pc.personId === person2Id &&
+            pc.connectedPersonIds.includes(person1Id)
+        )
+
+      if (!connectionExists) return
 
       // Get connection details from GraphQL data if available
       const space = membersData?.weSpaces?.[0]
       if (!space) return
 
-      // Close all other panels
+      // Close all other panels except person panel (if currently viewing a person)
       setIsPulsePanelOpen(false)
       setIsResonancePanelOpen(false)
-      setIsPersonPanelOpen(false)
+      if (isPersonPanelOpen) {
+        setIsPersonPanelOpen(false)
+      }
 
       setSelectedConnection({
         person1: {
@@ -1535,7 +1552,22 @@ function FieldDetailPage() {
       membersData,
       isConnectionPanelOpen,
       selectedConnection,
+      isPersonPanelOpen,
     ]
+  )
+
+  // Handle viewing a specific connection from the person panel
+  const handleViewConnectionFromPanel = useCallback(
+    (connectedPersonId: string) => {
+      if (!selectedPerson) return
+
+      // Close person panel
+      setIsPersonPanelOpen(false)
+
+      // Open connection panel between selected person and the clicked connection
+      handleConnectionClick(selectedPerson.id, connectedPersonId)
+    },
+    [selectedPerson, handleConnectionClick]
   )
 
   return (
@@ -1741,6 +1773,50 @@ function FieldDetailPage() {
           })
         }}
         person={selectedPerson}
+        connectedPersons={
+          selectedPerson
+            ? (() => {
+                const connectedIds = new Set<string>()
+
+                // Find direct connections (where selectedPerson is the source)
+                const directConnection = personConnections.find(
+                  (pc) => pc.personId === selectedPerson.id
+                )
+                if (directConnection) {
+                  directConnection.connectedPersonIds.forEach((id) =>
+                    connectedIds.add(id)
+                  )
+                }
+
+                // Find reverse connections (where selectedPerson is the target)
+                personConnections.forEach((pc) => {
+                  if (pc.connectedPersonIds.includes(selectedPerson.id)) {
+                    connectedIds.add(pc.personId)
+                  }
+                })
+
+                // Map to full person objects
+                return Array.from(connectedIds)
+                  .map((connectedId) => {
+                    const connectedPerson = personPositions.find(
+                      (p) => p.personId === connectedId
+                    )
+                    return connectedPerson
+                      ? {
+                          id: connectedPerson.personId,
+                          firstName: connectedPerson.firstName,
+                          lastName: connectedPerson.lastName,
+                          name: connectedPerson.name,
+                          photo: connectedPerson.photo,
+                          role: connectedPerson.role,
+                        }
+                      : null
+                  })
+                  .filter((p): p is NonNullable<typeof p> => p !== null)
+              })()
+            : []
+        }
+        onConnectionClick={handleViewConnectionFromPanel}
       />
 
       {/* Offering Modal for creating new pulses */}

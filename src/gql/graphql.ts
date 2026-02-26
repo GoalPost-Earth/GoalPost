@@ -334,6 +334,21 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CarePulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<CarePulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CarePulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -434,6 +449,21 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -561,6 +591,26 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -650,6 +700,7 @@ export type CarePulsePersonCreatedByAggregationSelection = {
 
 export type CarePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'CarePulsePersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -657,6 +708,7 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -667,6 +719,8 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -1080,6 +1134,21 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CoreValuePulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<CoreValuePulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CoreValuePulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1180,6 +1249,21 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1307,6 +1391,26 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1396,6 +1500,7 @@ export type CoreValuePulsePersonCreatedByAggregationSelection = {
 
 export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'CoreValuePulsePersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -1403,6 +1508,7 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -1413,6 +1519,8 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -2080,6 +2188,21 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<FieldContextCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<FieldContextCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<FieldContextCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2180,6 +2303,21 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2307,6 +2445,26 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2663,6 +2821,7 @@ export type FieldContextPersonCreatedByAggregationSelection = {
 
 export type FieldContextPersonCreatedByNodeAggregateSelection = {
   __typename?: 'FieldContextPersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -2670,6 +2829,7 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -2680,6 +2840,8 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -3656,6 +3818,21 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<FieldPulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<FieldPulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<FieldPulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3756,6 +3933,21 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3883,6 +4075,26 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4108,6 +4320,7 @@ export type GoalPulse = FieldPulse & {
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   title: Scalars['String']['output']
+  type?: Maybe<Scalars['String']['output']>
   why?: Maybe<Scalars['String']['output']>
 }
 
@@ -4196,6 +4409,7 @@ export type GoalPulseAggregateNode = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   title: StringAggregateSelection
+  type: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -4213,6 +4427,7 @@ export type GoalPulseAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   title: StringAggregateSelection
+  type: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -4324,6 +4539,7 @@ export type GoalPulseCreateInput = {
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   title: Scalars['String']['input']
+  type?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -4357,6 +4573,21 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<GoalPulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<GoalPulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<GoalPulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4457,6 +4688,21 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4584,6 +4830,26 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4678,6 +4944,7 @@ export type GoalPulsePersonCreatedByAggregationSelection = {
 
 export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'GoalPulsePersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -4685,6 +4952,7 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -4695,6 +4963,8 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -4714,6 +4984,7 @@ export type GoalPulseSort = {
   successMeasures?: InputMaybe<SortDirection>
   time?: InputMaybe<SortDirection>
   title?: InputMaybe<SortDirection>
+  type?: InputMaybe<SortDirection>
   why?: InputMaybe<SortDirection>
 }
 
@@ -4735,6 +5006,7 @@ export type GoalPulseUpdateInput = {
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
   title_SET?: InputMaybe<Scalars['String']['input']>
+  type_SET?: InputMaybe<Scalars['String']['input']>
   why_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -4832,6 +5104,11 @@ export type GoalPulseWhere = {
   title_EQ?: InputMaybe<Scalars['String']['input']>
   title_IN?: InputMaybe<Array<Scalars['String']['input']>>
   title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  type_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  type_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  type_EQ?: InputMaybe<Scalars['String']['input']>
+  type_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  type_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   why_CONTAINS?: InputMaybe<Scalars['String']['input']>
   why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   why_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5192,6 +5469,21 @@ export type LogCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<LogCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<LogCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<LogCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5292,6 +5584,21 @@ export type LogCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5419,6 +5726,26 @@ export type LogCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5540,6 +5867,7 @@ export type LogGoalPulseGoalsNodeAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   title: StringAggregateSelection
+  type: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -5737,6 +6065,21 @@ export type LogGoalsNodeAggregationWhereInput = {
   title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  type_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  type_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  type_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  type_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  type_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  type_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  type_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  type_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  type_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  type_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  type_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  type_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  type_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  type_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  type_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5787,6 +6130,7 @@ export type LogPersonCreatedByAggregationSelection = {
 
 export type LogPersonCreatedByNodeAggregateSelection = {
   __typename?: 'LogPersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -5794,6 +6138,7 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -5804,6 +6149,8 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -6732,6 +7079,21 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<MeSpaceOwnerNodeAggregationWhereInput>>
   NOT?: InputMaybe<MeSpaceOwnerNodeAggregationWhereInput>
   OR?: InputMaybe<Array<MeSpaceOwnerNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6832,6 +7194,21 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6959,6 +7336,26 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7022,6 +7419,7 @@ export type MeSpacePersonOwnerAggregationSelection = {
 
 export type MeSpacePersonOwnerNodeAggregateSelection = {
   __typename?: 'MeSpacePersonOwnerNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -7029,6 +7427,7 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -7039,6 +7438,8 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -7630,6 +8031,7 @@ export type PeopleConnection = {
  */
 export type Person = PersonInterface & {
   __typename?: 'Person'
+  authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
   careManual?: Maybe<Scalars['String']['output']>
   connections: Array<Person>
@@ -7639,9 +8041,11 @@ export type Person = PersonInterface & {
   createdByAggregate?: Maybe<PersonPersonCreatedByAggregationSelection>
   createdByConnection: PersonCreatedByConnection
   email?: Maybe<Scalars['String']['output']>
+  embedding?: Maybe<Array<Scalars['Float']['output']>>
   favorites?: Maybe<Scalars['String']['output']>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
+  gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
   inviteSent?: Maybe<Scalars['Boolean']['output']>
@@ -7665,6 +8069,9 @@ export type Person = PersonInterface & {
   phone?: Maybe<Scalars['String']['output']>
   photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
+  refreshTokenExp?: Maybe<Scalars['DateTime']['output']>
+  refreshTokenRevoked?: Maybe<Scalars['Boolean']['output']>
+  signupDate?: Maybe<Scalars['DateTime']['output']>
   status?: Maybe<Scalars['String']['output']>
   traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -7795,6 +8202,7 @@ export type PersonAggregate = {
 
 export type PersonAggregateNode = {
   __typename?: 'PersonAggregateNode'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -7802,6 +8210,7 @@ export type PersonAggregateNode = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -7812,6 +8221,8 @@ export type PersonAggregateNode = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -7819,6 +8230,7 @@ export type PersonAggregateNode = {
 
 export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   count: Scalars['Int']['output']
@@ -7827,6 +8239,7 @@ export type PersonAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -7837,6 +8250,8 @@ export type PersonAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -7853,13 +8268,16 @@ export type PersonConnectWhere = {
 }
 
 export type PersonCreateInput = {
+  authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   email?: InputMaybe<Scalars['String']['input']>
+  embedding?: InputMaybe<Array<Scalars['Float']['input']>>
   favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
+  gender?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   inviteSent?: InputMaybe<Scalars['Boolean']['input']>
   lastName: Scalars['String']['input']
@@ -7874,6 +8292,9 @@ export type PersonCreateInput = {
   phone?: InputMaybe<Scalars['String']['input']>
   photo?: InputMaybe<Scalars['String']['input']>
   pronouns?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate?: InputMaybe<Scalars['DateTime']['input']>
   status?: InputMaybe<Scalars['String']['input']>
   traits?: InputMaybe<Scalars['String']['input']>
 }
@@ -7937,6 +8358,21 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<PersonCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<PersonCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<PersonCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8037,6 +8473,21 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8164,6 +8615,26 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8708,6 +9179,7 @@ export type PersonPersonCreatedByAggregationSelection = {
 
 export type PersonPersonCreatedByNodeAggregateSelection = {
   __typename?: 'PersonPersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -8715,6 +9187,7 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -8725,6 +9198,8 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -8732,6 +9207,7 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
 
 /** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
 export type PersonSort = {
+  authId?: InputMaybe<SortDirection>
   avatar?: InputMaybe<SortDirection>
   careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
@@ -8739,6 +9215,7 @@ export type PersonSort = {
   favorites?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
+  gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
   inviteSent?: InputMaybe<SortDirection>
@@ -8752,6 +9229,9 @@ export type PersonSort = {
   phone?: InputMaybe<SortDirection>
   photo?: InputMaybe<SortDirection>
   pronouns?: InputMaybe<SortDirection>
+  refreshTokenExp?: InputMaybe<SortDirection>
+  refreshTokenRevoked?: InputMaybe<SortDirection>
+  signupDate?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
   traits?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
@@ -8804,13 +9284,18 @@ export type PersonSpaceOwnsSpacesNodeAggregateSelection = {
 }
 
 export type PersonUpdateInput = {
+  authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   careManual_SET?: InputMaybe<Scalars['String']['input']>
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
   email_SET?: InputMaybe<Scalars['String']['input']>
+  embedding_POP?: InputMaybe<Scalars['Int']['input']>
+  embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
+  embedding_SET?: InputMaybe<Array<Scalars['Float']['input']>>
   favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
+  gender_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   inviteSent_SET?: InputMaybe<Scalars['Boolean']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
@@ -8829,6 +9314,9 @@ export type PersonUpdateInput = {
   phone_SET?: InputMaybe<Scalars['String']['input']>
   photo_SET?: InputMaybe<Scalars['String']['input']>
   pronouns_SET?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp_SET?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked_SET?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate_SET?: InputMaybe<Scalars['DateTime']['input']>
   status_SET?: InputMaybe<Scalars['String']['input']>
   traits_SET?: InputMaybe<Scalars['String']['input']>
 }
@@ -8837,6 +9325,11 @@ export type PersonWhere = {
   AND?: InputMaybe<Array<PersonWhere>>
   NOT?: InputMaybe<PersonWhere>
   OR?: InputMaybe<Array<PersonWhere>>
+  authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  authId_EQ?: InputMaybe<Scalars['String']['input']>
+  authId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_CONTAINS?: InputMaybe<Scalars['String']['input']>
   avatar_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
@@ -8880,6 +9373,8 @@ export type PersonWhere = {
   email_EQ?: InputMaybe<Scalars['String']['input']>
   email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  embedding_EQ?: InputMaybe<Array<Scalars['Float']['input']>>
+  embedding_INCLUDES?: InputMaybe<Scalars['Float']['input']>
   favorites_CONTAINS?: InputMaybe<Scalars['String']['input']>
   favorites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   favorites_EQ?: InputMaybe<Scalars['String']['input']>
@@ -8895,6 +9390,11 @@ export type PersonWhere = {
   firstName_EQ?: InputMaybe<Scalars['String']['input']>
   firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
   firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  gender_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_EQ?: InputMaybe<Scalars['String']['input']>
+  gender_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  gender_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -8981,6 +9481,21 @@ export type PersonWhere = {
   pronouns_EQ?: InputMaybe<Scalars['String']['input']>
   pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['DateTime']['input']>>
+  >
+  refreshTokenExp_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  signupDate_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
@@ -10916,6 +11431,21 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<ResourcePulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<ResourcePulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<ResourcePulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11016,6 +11546,21 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11143,6 +11688,26 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11237,6 +11802,7 @@ export type ResourcePulsePersonCreatedByAggregationSelection = {
 
 export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'ResourcePulsePersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -11244,6 +11810,7 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -11254,6 +11821,8 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -12001,6 +12570,21 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<SpaceMembershipMemberNodeAggregationWhereInput>>
   NOT?: InputMaybe<SpaceMembershipMemberNodeAggregationWhereInput>
   OR?: InputMaybe<Array<SpaceMembershipMemberNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12101,6 +12685,21 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12228,6 +12827,26 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12303,6 +12922,7 @@ export type SpaceMembershipPersonMemberAggregationSelection = {
 
 export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   __typename?: 'SpaceMembershipPersonMemberNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -12310,6 +12930,7 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -12320,6 +12941,8 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -12690,6 +13313,21 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<SpaceOwnerNodeAggregationWhereInput>>
   NOT?: InputMaybe<SpaceOwnerNodeAggregationWhereInput>
   OR?: InputMaybe<Array<SpaceOwnerNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12790,6 +13428,21 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12917,6 +13570,26 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13171,6 +13844,7 @@ export type StoryPulse = FieldPulse & {
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
   title: Scalars['String']['output']
+  whoSupports?: Maybe<Scalars['String']['output']>
   why?: Maybe<Scalars['String']['output']>
 }
 
@@ -13270,6 +13944,7 @@ export type StoryPulseAggregateNode = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   title: StringAggregateSelection
+  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -13292,6 +13967,7 @@ export type StoryPulseAggregateSelection = {
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
   title: StringAggregateSelection
+  whoSupports: StringAggregateSelection
   why: StringAggregateSelection
 }
 
@@ -13397,6 +14073,7 @@ export type StoryPulseCreateInput = {
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
   title: Scalars['String']['input']
+  whoSupports?: InputMaybe<Scalars['String']['input']>
   why?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -13430,6 +14107,21 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<StoryPulseCreatedByNodeAggregationWhereInput>>
   NOT?: InputMaybe<StoryPulseCreatedByNodeAggregationWhereInput>
   OR?: InputMaybe<Array<StoryPulseCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13530,6 +14222,21 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13657,6 +14364,26 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13746,6 +14473,7 @@ export type StoryPulsePersonCreatedByAggregationSelection = {
 
 export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'StoryPulsePersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -13753,6 +14481,7 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -13763,6 +14492,8 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -13785,6 +14516,7 @@ export type StoryPulseSort = {
   successMeasures?: InputMaybe<SortDirection>
   time?: InputMaybe<SortDirection>
   title?: InputMaybe<SortDirection>
+  whoSupports?: InputMaybe<SortDirection>
   why?: InputMaybe<SortDirection>
 }
 
@@ -13809,6 +14541,7 @@ export type StoryPulseUpdateInput = {
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
   title_SET?: InputMaybe<Scalars['String']['input']>
+  whoSupports_SET?: InputMaybe<Scalars['String']['input']>
   why_SET?: InputMaybe<Scalars['String']['input']>
 }
 
@@ -13933,6 +14666,11 @@ export type StoryPulseWhere = {
   title_EQ?: InputMaybe<Scalars['String']['input']>
   title_IN?: InputMaybe<Array<Scalars['String']['input']>>
   title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  whoSupports_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  whoSupports_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  whoSupports_EQ?: InputMaybe<Scalars['String']['input']>
+  whoSupports_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  whoSupports_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   why_CONTAINS?: InputMaybe<Scalars['String']['input']>
   why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   why_EQ?: InputMaybe<Scalars['String']['input']>
@@ -14220,11 +14958,14 @@ export type UpdateWeSpacesMutationResponse = {
 export type User = PersonInterface & {
   __typename?: 'User'
   aiEnabled: Scalars['Boolean']['output']
+  authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
+  embedding?: Maybe<Array<Scalars['Float']['output']>>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
+  gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
   lastName: Scalars['String']['output']
@@ -14242,6 +14983,9 @@ export type User = PersonInterface & {
   phone?: Maybe<Scalars['String']['output']>
   photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
+  refreshTokenExp?: Maybe<Scalars['DateTime']['output']>
+  refreshTokenRevoked?: Maybe<Scalars['Boolean']['output']>
+  signupDate?: Maybe<Scalars['DateTime']['output']>
   status?: Maybe<Scalars['String']['output']>
   traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
@@ -14291,11 +15035,13 @@ export type UserAggregate = {
 
 export type UserAggregateNode = {
   __typename?: 'UserAggregateNode'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -14306,6 +15052,8 @@ export type UserAggregateNode = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -14313,12 +15061,14 @@ export type UserAggregateNode = {
 
 export type UserAggregateSelection = {
   __typename?: 'UserAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   email: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -14329,6 +15079,8 @@ export type UserAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -14336,10 +15088,13 @@ export type UserAggregateSelection = {
 
 export type UserCreateInput = {
   aiEnabled: Scalars['Boolean']['input']
+  authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
+  embedding?: InputMaybe<Array<Scalars['Float']['input']>>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
+  gender?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
@@ -14352,6 +15107,9 @@ export type UserCreateInput = {
   phone?: InputMaybe<Scalars['String']['input']>
   photo?: InputMaybe<Scalars['String']['input']>
   pronouns?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate?: InputMaybe<Scalars['DateTime']['input']>
   status?: InputMaybe<Scalars['String']['input']>
   traits?: InputMaybe<Scalars['String']['input']>
 }
@@ -14579,11 +15337,13 @@ export type UserOwnsSpacesUpdateFieldInput = {
 /** Fields to sort Users by. The order in which sorts are applied is not guaranteed when specifying many fields in one UserSort object. */
 export type UserSort = {
   aiEnabled?: InputMaybe<SortDirection>
+  authId?: InputMaybe<SortDirection>
   avatar?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
+  gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
@@ -14595,6 +15355,9 @@ export type UserSort = {
   phone?: InputMaybe<SortDirection>
   photo?: InputMaybe<SortDirection>
   pronouns?: InputMaybe<SortDirection>
+  refreshTokenExp?: InputMaybe<SortDirection>
+  refreshTokenRevoked?: InputMaybe<SortDirection>
+  signupDate?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
   traits?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
@@ -14629,10 +15392,15 @@ export type UserSpaceOwnsSpacesNodeAggregateSelection = {
 
 export type UserUpdateInput = {
   aiEnabled_SET?: InputMaybe<Scalars['Boolean']['input']>
+  authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
+  embedding_POP?: InputMaybe<Scalars['Int']['input']>
+  embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
+  embedding_SET?: InputMaybe<Array<Scalars['Float']['input']>>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
+  gender_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
@@ -14649,6 +15417,9 @@ export type UserUpdateInput = {
   phone_SET?: InputMaybe<Scalars['String']['input']>
   photo_SET?: InputMaybe<Scalars['String']['input']>
   pronouns_SET?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp_SET?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked_SET?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate_SET?: InputMaybe<Scalars['DateTime']['input']>
   status_SET?: InputMaybe<Scalars['String']['input']>
   traits_SET?: InputMaybe<Scalars['String']['input']>
 }
@@ -14658,6 +15429,11 @@ export type UserWhere = {
   NOT?: InputMaybe<UserWhere>
   OR?: InputMaybe<Array<UserWhere>>
   aiEnabled_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  authId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  authId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  authId_EQ?: InputMaybe<Scalars['String']['input']>
+  authId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  authId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_CONTAINS?: InputMaybe<Scalars['String']['input']>
   avatar_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
@@ -14674,6 +15450,8 @@ export type UserWhere = {
   email_EQ?: InputMaybe<Scalars['String']['input']>
   email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  embedding_EQ?: InputMaybe<Array<Scalars['Float']['input']>>
+  embedding_INCLUDES?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -14684,6 +15462,11 @@ export type UserWhere = {
   firstName_EQ?: InputMaybe<Scalars['String']['input']>
   firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
   firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  gender_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  gender_EQ?: InputMaybe<Scalars['String']['input']>
+  gender_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  gender_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -14751,6 +15534,21 @@ export type UserWhere = {
   pronouns_EQ?: InputMaybe<Scalars['String']['input']>
   pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  refreshTokenExp_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['DateTime']['input']>>
+  >
+  refreshTokenExp_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenRevoked_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  signupDate_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  signupDate_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
@@ -15184,6 +15982,21 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<WeSpaceOwnerNodeAggregationWhereInput>>
   NOT?: InputMaybe<WeSpaceOwnerNodeAggregationWhereInput>
   OR?: InputMaybe<Array<WeSpaceOwnerNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15284,6 +16097,21 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15411,6 +16239,26 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15474,6 +16322,7 @@ export type WeSpacePersonOwnerAggregationSelection = {
 
 export type WeSpacePersonOwnerNodeAggregateSelection = {
   __typename?: 'WeSpacePersonOwnerNodeAggregateSelection'
+  authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
@@ -15481,6 +16330,7 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
+  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
@@ -15491,6 +16341,8 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   phone: StringAggregateSelection
   photo: StringAggregateSelection
   pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
@@ -18699,15 +19551,15 @@ export type SearchAllQuery = {
   searchAll?: {
     __typename?: 'SearchResults'
     people: Array<{
-      __typename?: 'Person'
+      __typename: 'Person'
       id: string
       firstName: string
       lastName: string
       email?: string | null
     }>
-    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    contexts: Array<{ __typename: 'FieldContext'; id: string; title: string }>
     goalPulses: Array<{
-      __typename?: 'GoalPulse'
+      __typename: 'GoalPulse'
       id: string
       title: string
       content: string
@@ -18715,7 +19567,7 @@ export type SearchAllQuery = {
       intensity?: number | null
     }>
     resourcePulses: Array<{
-      __typename?: 'ResourcePulse'
+      __typename: 'ResourcePulse'
       id: string
       title: string
       content: string
@@ -18723,7 +19575,7 @@ export type SearchAllQuery = {
       intensity?: number | null
     }>
     storyPulses: Array<{
-      __typename?: 'StoryPulse'
+      __typename: 'StoryPulse'
       id: string
       title: string
       content: string
@@ -18731,14 +19583,14 @@ export type SearchAllQuery = {
       intensity?: number | null
     }>
     meSpaces: Array<{
-      __typename?: 'MeSpace'
+      __typename: 'MeSpace'
       id: string
       name: string
       visibility: SpaceVisibility
       createdAt: any
     }>
     weSpaces: Array<{
-      __typename?: 'WeSpace'
+      __typename: 'WeSpace'
       id: string
       name: string
       visibility: SpaceVisibility
@@ -30631,6 +31483,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
@@ -30650,6 +31506,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                     ],
@@ -30661,6 +31521,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
@@ -30684,6 +31548,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
@@ -30707,6 +31575,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
@@ -30730,6 +31602,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
@@ -30749,6 +31625,10 @@ export const SearchAllDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {

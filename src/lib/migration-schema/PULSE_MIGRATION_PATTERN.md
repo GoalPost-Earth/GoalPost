@@ -142,7 +142,7 @@ Person "Alice" (id: person_1)
         -[:TARGET]-> pulse_2
         label: "APPLIED_TO"  # Legacy relationship name
         description: "This goal requires this resource"
-        confidence: 1.0  # High confidence for migrated relationships
+        confidence: null  # Explicit user-defined relationship (not AI-discovered)
 ```
 
 ### Example 2: Community with Shared Goals
@@ -169,7 +169,7 @@ WeSpace "Tech Team" (id: space_2)
       -[:TARGET]-> pulse_4
       label: "ALIGNED_TO"  # Legacy relationship name from Goal -[:ALIGNED_TO]-> CoreValue
       description: "This goal aligns with this core value"
-      confidence: 1.0
+      confidence: null
 ```
 
 ### Example 3: Person-to-Person Connections
@@ -217,7 +217,7 @@ When migrating, preserve the legacy relationship type as the ResonanceLink label
 | HAS_ACCESS_TO | Community | Resource | HAS_ACCESS_TO |
 | CONNECTED_TO | Person | Person | CONNECTED_TO |
 
-**Note**: All migrated relationships should have `confidence: 1.0` since they represent explicit user-defined connections, not AI-discovered patterns.
+**Note**: All migrated relationships should have `confidence: null` since they represent explicit user-defined connections, not AI-discovered patterns.
 
 ## Key Benefits of This Architecture
 
@@ -234,7 +234,7 @@ When migrating, preserve the legacy relationship type as the ResonanceLink label
 - [ ] Create default FieldContext(s) in each MeSpace
 - [ ] Transform legacy entities to appropriate Pulse types
 - [ ] Create ResonanceLinks with legacy relationship names as labels (MOTIVATED_BY, APPLIED_TO, ALIGNED_TO, etc.)
-- [ ] Set confidence: 1.0 for all migrated ResonanceLinks (explicit user relationships)
+- [ ] Set confidence: null for all migrated ResonanceLinks (explicit user relationships, not AI-discovered)
 - [ ] Transform Community nodes to WeSpace nodes
 - [ ] Migrate BELONGS_TO to SpaceMembership patterns
 - [ ] Migrate Person-to-Person CONNECTED_TO relationships (preserving why and interests properties)

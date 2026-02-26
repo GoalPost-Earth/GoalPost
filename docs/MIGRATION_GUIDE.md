@@ -67,14 +67,14 @@ All legacy relationship types are preserved as ResonanceLink labels:
 | APPLIED_TO | ResonanceLink.label = "APPLIED_TO" | 1.0 |
 | ALIGNED_TO | ResonanceLink.label = "ALIGNED_TO" | 1.0 |
 | ENABLES | ResonanceLink.label = "ENABLES" | 1.0 |
-| CARES_FOR | ResonanceLink.label = "CARES_FOR" | 1.0 |
-| DEPENDS_ON | ResonanceLink.label = "DEPENDS_ON" | 1.0 |
-| EMBRACES | ResonanceLink.label = "EMBRACES" | 1.0 |
-| PROVIDES | ResonanceLink.label = "PROVIDES" | 1.0 |
-| HAS_ACCESS_TO | ResonanceLink.label = "HAS_ACCESS_TO" | 1.0 |
-| CONNECTED_TO | ResonanceLink.label = "CONNECTED_TO" | 1.0 |
+| CARES_FOR | ResonanceLink.label = "CARES_FOR" | null |
+| DEPENDS_ON | ResonanceLink.label = "DEPENDS_ON" | null |
+| EMBRACES | ResonanceLink.label = "EMBRACES" | null |
+| PROVIDES | ResonanceLink.label = "PROVIDES" | null |
+| HAS_ACCESS_TO | ResonanceLink.label = "HAS_ACCESS_TO" | null |
+| CONNECTED_TO | ResonanceLink.label = "CONNECTED_TO" | null |
 
-All migrated relationships have `confidence: 1.0` because they represent explicit user-defined connections, not AI-discovered patterns.
+All migrated relationships have `confidence: null` because they represent explicit user-defined connections, not AI-discovered patterns.
 
 ### 8. **Community Memberships** → SpaceMemberships
 - Transforms: `Person -[:BELONGS_TO]-> Community`

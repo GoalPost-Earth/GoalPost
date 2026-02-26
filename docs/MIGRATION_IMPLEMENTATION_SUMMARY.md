@@ -127,7 +127,7 @@ MeSpace
        ├─ HAS_PULSE → StoryPulse (title, content, + optional CarePoint/CoreValue properties)
        └─ HAS_RESONANCE → ResonanceLink
             ├─ label: "MOTIVATED_BY" | "APPLIED_TO" | "ALIGNED_TO" | etc.
-            ├─ confidence: 1.0
+            ├─ confidence: null
             ├─ SOURCE → FieldPulse
             └─ TARGET → FieldPulse
 
@@ -190,7 +190,7 @@ Properties: alignmentChallenges, alignmentExamples, why
 
 ### Relationships: Many → ResonanceLink
 ```
-Legacy Relationship → ResonanceLink { label: LegacyRelationshipName, confidence: 1.0 }
+Legacy Relationship → ResonanceLink { label: LegacyRelationshipName, confidence: null }
 All 10 legacy relationship types preserved as labels
 ```
 

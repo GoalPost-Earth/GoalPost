@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, initializeDB } from '../neo4j'
-import { hashPassword, parseRequestBody } from '../utils'
+import { hashPassword, parseRequestBody, signJWT } from '../utils'
 import { parseError } from '@/utils'
 import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { z } from 'zod'
@@ -128,13 +128,65 @@ export async function POST(req: NextRequest) {
 
       const user = userDataResult.records[0].get('user')
 
-      return NextResponse.json(
+      // Generate authentication tokens (same as login)
+      const token = signJWT({
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: user.roles,
+          ownsSpaces: user.ownsSpaces,
+        },
+        expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
+      })
+
+      // Generate refresh token
+      const refreshToken = crypto.randomUUID()
+      const hashedRefreshToken = await hashPassword(refreshToken)
+
+      // Store refresh token in database
+      await session.run(
+        `MATCH (user:Person {id: $personId})
+         SET user.refreshToken = $refreshToken,
+             user.refreshTokenExp = $refreshTokenExp,
+             user.refreshTokenRevoked = false
+         RETURN user`,
+        {
+          personId,
+          refreshToken: hashedRefreshToken,
+          refreshTokenExp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 days
+        }
+      )
+
+      const response = NextResponse.json(
         {
           message: 'User created',
           user,
+          token,
+          refreshToken,
         },
         { status: 201 }
       )
+
+      // Set secure cookies for authentication
+      response.cookies.set('accessToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 30, // 30 minutes
+        path: '/',
+      })
+
+      response.cookies.set('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+      })
+
+      return response
     } catch (err) {
       return NextResponse.json(
         { error: 'Failed to create user: ' + parseError(err) },

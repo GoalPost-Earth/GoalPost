@@ -38,3 +38,16 @@ export function formatDate(inputDate: string) {
 
   return `${day}.${month}.${year}`
 }
+
+/**
+ * Format resonance link labels from snake_case/UPPER_CASE to Title Case
+ * Example: "APPLIED_TO" -> "Applied To", "CONNECTED_TO" -> "Connected To"
+ */
+export function formatResonanceLabel(label: string): string {
+  if (!label) return ''
+
+  return label
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}

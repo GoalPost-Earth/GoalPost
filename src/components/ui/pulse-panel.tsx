@@ -161,9 +161,16 @@ export function PulsePanel({
             </button>
           </div>
         </div>
-        <h2 className="text-xl font-semibold text-gp-ink-strong leading-tight line-clamp-3">
-          {pulse?.title || pulse?.content || 'No title available'}
-        </h2>
+        {isLoading ? (
+          <div className="space-y-2">
+            <div className="h-6 bg-slate-200/70 dark:bg-white/10 rounded w-3/4" />
+            <div className="h-4 bg-slate-200/70 dark:bg-white/10 rounded w-full" />
+          </div>
+        ) : (
+          <h2 className="text-xl font-semibold text-gp-ink-strong leading-tight line-clamp-3">
+            {pulse?.title || pulse?.content || 'No title available'}
+          </h2>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-hide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

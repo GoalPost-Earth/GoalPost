@@ -141,8 +141,8 @@ async function migrateResonances() {
       `
       MATCH (link:ResonanceLink)
       WHERE link.label IS NULL
-      SET link.label = 'migrated',
-          link.description = 'Migrated from old resonance system'
+      SET link.label = 'legacy',
+          link.description = 'Legacy resonance link'
       RETURN count(*) as updatedCount
     `,
       {}
