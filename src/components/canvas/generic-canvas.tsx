@@ -162,7 +162,10 @@ export function GenericCanvas({
                   {enableZoomControls && (
                     <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass shadow-xl">
                       <button
-                        onClick={() => zoomOut()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          zoomOut()
+                        }}
                         className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-white/10 dark:hover:bg-white/20 transition-all"
                         title="Zoom Out"
                       >
@@ -172,7 +175,10 @@ export function GenericCanvas({
                       </button>
                       <div className="w-px h-4 bg-gp-ink-soft/20 dark:bg-white/10" />
                       <button
-                        onClick={() => zoomIn()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          zoomIn()
+                        }}
                         className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-white/10 dark:hover:bg-white/20 transition-all"
                         title="Zoom In"
                       >
@@ -180,6 +186,7 @@ export function GenericCanvas({
                       </button>
                       <div className="w-px h-4 bg-gp-ink-soft/20 dark:bg-white/10" />
                       <button
+                        onClick={(e) => e.stopPropagation()}
                         className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-white/10 dark:hover:bg-white/20 transition-all"
                         title="Filter Fields"
                       >
