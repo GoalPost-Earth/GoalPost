@@ -11,7 +11,6 @@ import { capitalizeString } from '@/lib/utils'
 
 type EntityType =
   | 'person'
-  | 'community'
   | 'meSpace'
   | 'weSpace'
   | 'context'
@@ -37,7 +36,6 @@ interface GraphQLSearchResult {
       lastName: string
       email: string
     }>
-    communities: Array<{ id: string; name: string; type?: string }>
     meSpaces: Array<{
       id: string
       name: string
@@ -91,18 +89,6 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       subtitle: person.email,
       description: `A person in the network`,
       href: `/protected/dashboard/persons/${person.id}`,
-    })
-  })
-
-  // Transform communities
-  data.searchAll.communities?.forEach((community) => {
-    entities.push({
-      id: community.id,
-      type: 'community',
-      title: community.name,
-      subtitle: community.type ? `${community.type} Community` : 'Community',
-      description: `A collective community`,
-      href: `/protected/dashboard/community/${community.id}`,
     })
   })
 
@@ -193,7 +179,6 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
 
 const typeLabel: Record<EntityType, string> = {
   person: 'Person',
-  community: 'Community',
   meSpace: 'Me Space',
   weSpace: 'We Space',
   context: 'Context',
@@ -204,7 +189,6 @@ const typeLabel: Record<EntityType, string> = {
 
 const typeAccentClass: Record<EntityType, string> = {
   person: 'text-gp-primary',
-  community: 'text-gp-primary',
   meSpace: 'text-gp-goal',
   weSpace: 'text-gp-goal',
   context: 'text-gp-story',
@@ -215,7 +199,6 @@ const typeAccentClass: Record<EntityType, string> = {
 
 const typePillClass: Record<EntityType, string> = {
   person: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
-  community: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
   meSpace: 'bg-gp-goal/10 text-gp-goal border-gp-goal/20',
   weSpace: 'bg-gp-goal/10 text-gp-goal border-gp-goal/20',
   context: 'bg-gp-story/10 text-gp-story border-gp-story/20',
@@ -329,7 +312,6 @@ export default function SearchPage() {
               {[
                 { key: 'all', label: 'All' },
                 { key: 'person', label: 'People' },
-                { key: 'community', label: 'Communities' },
                 { key: 'meSpace', label: 'Me Spaces' },
                 { key: 'weSpace', label: 'We Spaces' },
                 { key: 'context', label: 'Contexts' },
