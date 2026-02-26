@@ -8057,10 +8057,10 @@ export type Person = PersonInterface & {
   memberOfAggregate?: Maybe<PersonSpaceMembershipMemberOfAggregationSelection>
   memberOfConnection: PersonMemberOfConnection
   name: Scalars['String']['output']
-  onboardingCompletedSteps: Array<Scalars['String']['output']>
-  onboardingCurrentStepIndex: Scalars['Int']['output']
-  onboardingIsCompleted: Scalars['Boolean']['output']
-  onboardingSkipped: Scalars['Boolean']['output']
+  onboardingCompletedSteps?: Maybe<Array<Scalars['String']['output']>>
+  onboardingCurrentStepIndex?: Maybe<Scalars['Int']['output']>
+  onboardingIsCompleted?: Maybe<Scalars['Boolean']['output']>
+  onboardingSkipped?: Maybe<Scalars['Boolean']['output']>
   ownsSpaces: Array<Space>
   /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
   ownsSpacesAggregate?: Maybe<PersonSpaceOwnsSpacesAggregationSelection>
@@ -8283,10 +8283,10 @@ export type PersonCreateInput = {
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
   memberOf?: InputMaybe<PersonMemberOfFieldInput>
-  onboardingCompletedSteps: Array<Scalars['String']['input']>
-  onboardingCurrentStepIndex: Scalars['Int']['input']
-  onboardingIsCompleted: Scalars['Boolean']['input']
-  onboardingSkipped: Scalars['Boolean']['input']
+  onboardingCompletedSteps?: InputMaybe<Array<Scalars['String']['input']>>
+  onboardingCurrentStepIndex?: InputMaybe<Scalars['Int']['input']>
+  onboardingIsCompleted?: InputMaybe<Scalars['Boolean']['input']>
+  onboardingSkipped?: InputMaybe<Scalars['Boolean']['input']>
   ownsSpaces?: InputMaybe<PersonOwnsSpacesFieldInput>
   passions?: InputMaybe<Scalars['String']['input']>
   phone?: InputMaybe<Scalars['String']['input']>
@@ -9439,7 +9439,9 @@ export type PersonWhere = {
   onboardingCurrentStepIndex_EQ?: InputMaybe<Scalars['Int']['input']>
   onboardingCurrentStepIndex_GT?: InputMaybe<Scalars['Int']['input']>
   onboardingCurrentStepIndex_GTE?: InputMaybe<Scalars['Int']['input']>
-  onboardingCurrentStepIndex_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  onboardingCurrentStepIndex_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['Int']['input']>>
+  >
   onboardingCurrentStepIndex_LT?: InputMaybe<Scalars['Int']['input']>
   onboardingCurrentStepIndex_LTE?: InputMaybe<Scalars['Int']['input']>
   onboardingIsCompleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
@@ -10203,7 +10205,7 @@ export type RemoveSpaceMemberResponsesConnection = {
  */
 export type ResonanceLink = {
   __typename?: 'ResonanceLink'
-  confidence: Scalars['Float']['output']
+  confidence?: Maybe<Scalars['Float']['output']>
   context: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
   contextAggregate?: Maybe<ResonanceLinkFieldContextContextAggregationSelection>
@@ -10656,7 +10658,7 @@ export type ResonanceLinkContextUpdateFieldInput = {
 }
 
 export type ResonanceLinkCreateInput = {
-  confidence: Scalars['Float']['input']
+  confidence?: InputMaybe<Scalars['Float']['input']>
   context?: InputMaybe<ResonanceLinkContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   description?: InputMaybe<Scalars['String']['input']>
@@ -11064,7 +11066,7 @@ export type ResonanceLinkWhere = {
   confidence_EQ?: InputMaybe<Scalars['Float']['input']>
   confidence_GT?: InputMaybe<Scalars['Float']['input']>
   confidence_GTE?: InputMaybe<Scalars['Float']['input']>
-  confidence_IN?: InputMaybe<Array<Scalars['Float']['input']>>
+  confidence_IN?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>
   confidence_LT?: InputMaybe<Scalars['Float']['input']>
   confidence_LTE?: InputMaybe<Scalars['Float']['input']>
   contextAggregate?: InputMaybe<ResonanceLinkContextAggregateInput>
@@ -16879,6 +16881,12 @@ export type UpdateGoalPulseMutation = {
       status: GoalStatus
       horizon?: GoalHorizon | null
       intensity?: number | null
+      successMeasures?: string | null
+      activities?: string | null
+      type?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
       createdAt: any
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
       context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
@@ -16903,6 +16911,10 @@ export type UpdateResourcePulseMutation = {
       resourceType: string
       availability?: number | null
       intensity?: number | null
+      status?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
       createdAt: any
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
       context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
@@ -16925,6 +16937,18 @@ export type UpdateStoryPulseMutation = {
       title: string
       content: string
       intensity?: number | null
+      status?: string | null
+      why?: string | null
+      location?: string | null
+      time?: string | null
+      levelFulfilled?: string | null
+      fulfillmentDate?: string | null
+      successMeasures?: string | null
+      issuesIdentified?: string | null
+      issuesResolved?: string | null
+      alignmentChallenges?: string | null
+      alignmentExamples?: string | null
+      whoSupports?: string | null
       createdAt: any
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
       context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
@@ -17087,7 +17111,7 @@ export type GetContextResonancesQuery = {
       id: string
       label: string
       description?: string | null
-      confidence: number
+      confidence?: number | null
       evidence?: string | null
       createdAt: any
       source: Array<
@@ -17175,7 +17199,7 @@ export type CreateResonanceLinkMutation = {
       id: string
       label: string
       description?: string | null
-      confidence: number
+      confidence?: number | null
       evidence?: string | null
       createdAt: any
       source: Array<
@@ -17252,7 +17276,7 @@ export type UpdateResonanceLinkMutation = {
       id: string
       label: string
       description?: string | null
-      confidence: number
+      confidence?: number | null
       evidence?: string | null
       createdAt: any
       source: Array<
@@ -17465,10 +17489,10 @@ export type GetLoggedInUserQuery = {
     traits?: string | null
     photo?: string | null
     fieldsOfCare?: string | null
-    onboardingCurrentStepIndex: number
-    onboardingCompletedSteps: Array<string>
-    onboardingIsCompleted: boolean
-    onboardingSkipped: boolean
+    onboardingCurrentStepIndex?: number | null
+    onboardingCompletedSteps?: Array<string> | null
+    onboardingIsCompleted?: boolean | null
+    onboardingSkipped?: boolean | null
     ownsSpaces: Array<
       | {
           __typename: 'MeSpace'
@@ -17732,7 +17756,7 @@ export type GetResonanceLinksByContextQuery = {
       id: string
       label: string
       description?: string | null
-      confidence: number
+      confidence?: number | null
       evidence?: string | null
       createdAt: any
       source: Array<
@@ -18462,7 +18486,7 @@ export type GetLinksForResonanceQuery = {
     id: string
     label: string
     description?: string | null
-    confidence: number
+    confidence?: number | null
     source: Array<
       | { __typename: 'CarePulse' }
       | { __typename: 'CoreValuePulse' }
@@ -18531,7 +18555,7 @@ export type GetAllResonanceLinksWithResonancesQuery = {
     id: string
     label: string
     description?: string | null
-    confidence: number
+    confidence?: number | null
     source: Array<
       | { __typename: 'CarePulse' }
       | { __typename: 'CoreValuePulse' }
@@ -19093,6 +19117,11 @@ export type GetPulseDetailsWithContextQuery = {
     horizon?: GoalHorizon | null
     intensity?: number | null
     why?: string | null
+    location?: string | null
+    time?: string | null
+    successMeasures?: string | null
+    activities?: string | null
+    type?: string | null
     context: Array<{
       __typename?: 'FieldContext'
       id: string
@@ -19180,6 +19209,10 @@ export type GetPulseDetailsWithContextQuery = {
     resourceType: string
     availability?: number | null
     intensity?: number | null
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    status?: string | null
     context: Array<{
       __typename?: 'FieldContext'
       id: string
@@ -19262,6 +19295,18 @@ export type GetPulseDetailsWithContextQuery = {
     __typename: 'StoryPulse'
     id: string
     title: string
+    why?: string | null
+    location?: string | null
+    time?: string | null
+    status?: string | null
+    levelFulfilled?: string | null
+    fulfillmentDate?: string | null
+    successMeasures?: string | null
+    issuesIdentified?: string | null
+    issuesResolved?: string | null
+    alignmentChallenges?: string | null
+    alignmentExamples?: string | null
+    whoSupports?: string | null
     content: string
     createdAt: any
     intensity?: number | null
@@ -19399,7 +19444,7 @@ export type GetPulsesByContextQuery = {
       id: string
       label: string
       description?: string | null
-      confidence: number
+      confidence?: number | null
       evidence?: string | null
       createdAt: any
       source: Array<
@@ -21666,6 +21711,21 @@ export const UpdateGoalPulseDocument = {
                       },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'successMeasures' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activities' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
                       },
                       {
@@ -21806,6 +21866,16 @@ export const UpdateResourcePulseDocument = {
                       },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
                       },
                       {
@@ -21935,6 +22005,48 @@ export const UpdateStoryPulseDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'intensity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'levelFulfilled' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'fulfillmentDate' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'successMeasures' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'issuesIdentified' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'issuesResolved' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'alignmentChallenges' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'alignmentExamples' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'whoSupports' },
                       },
                       {
                         kind: 'Field',
@@ -29877,6 +29989,14 @@ export const GetPulseDetailsWithContextDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'horizon' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'successMeasures' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'activities' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'context' },
@@ -30112,6 +30232,10 @@ export const GetPulseDetailsWithContextDocument = {
                   name: { kind: 'Name', value: 'availability' },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'context' },
@@ -30335,6 +30459,39 @@ export const GetPulseDetailsWithContextDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'time' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'levelFulfilled' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fulfillmentDate' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'successMeasures' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'issuesIdentified' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'issuesResolved' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'alignmentChallenges' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'alignmentExamples' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'whoSupports' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: '__typename' } },

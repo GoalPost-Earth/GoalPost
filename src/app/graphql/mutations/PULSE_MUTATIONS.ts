@@ -107,6 +107,12 @@ export const UPDATE_GOAL_PULSE_MUTATION = graphql(`
         status
         horizon
         intensity
+        successMeasures
+        activities
+        type
+        why
+        location
+        time
         createdAt
         createdBy {
           id
@@ -137,6 +143,10 @@ export const UPDATE_RESOURCE_PULSE_MUTATION = graphql(`
         resourceType
         availability
         intensity
+        status
+        why
+        location
+        time
         createdAt
         createdBy {
           id
@@ -165,6 +175,18 @@ export const UPDATE_STORY_PULSE_MUTATION = graphql(`
         title
         content
         intensity
+        status
+        why
+        location
+        time
+        levelFulfilled
+        fulfillmentDate
+        successMeasures
+        issuesIdentified
+        issuesResolved
+        alignmentChallenges
+        alignmentExamples
+        whoSupports
         createdAt
         createdBy {
           id

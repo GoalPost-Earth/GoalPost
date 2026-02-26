@@ -344,6 +344,9 @@ export function PulsePanel({
 
       <div className="p-6 border-t border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <button
+          onClick={() =>
+            pulse?.id && router.push(`/protected/dashboard/pulses/${pulse.id}`)
+          }
           className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg transition-all"
           style={{
             background:

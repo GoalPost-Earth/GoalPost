@@ -12,6 +12,11 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
       horizon
       intensity
       why
+      location
+      time
+      successMeasures
+      activities
+      type
       context {
         id
         title
@@ -66,6 +71,10 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
       resourceType
       availability
       intensity
+      why
+      location
+      time
+      status
       context {
         id
         title
@@ -114,6 +123,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
     storyPulses(where: { id_EQ: $pulseId }) {
       id
       title
+      why
+      location
+      time
+      status
+      levelFulfilled
+      fulfillmentDate
+      successMeasures
+      issuesIdentified
+      issuesResolved
+      alignmentChallenges
+      alignmentExamples
+      whoSupports
       content
       createdAt
       __typename

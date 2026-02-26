@@ -19,6 +19,13 @@ import {
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function PulseDetailsPage() {
   const params = useParams()
@@ -28,9 +35,44 @@ export default function PulseDetailsPage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
+  const [editIntensity, setEditIntensity] = useState('')
+  const [editWhy, setEditWhy] = useState('')
+  const [editLocation, setEditLocation] = useState('')
+  const [editTime, setEditTime] = useState('')
+
+  // GoalPulse specific
+  const [editStatus, setEditStatus] = useState('')
+  const [editHorizon, setEditHorizon] = useState('')
+  const [editSuccessMeasures, setEditSuccessMeasures] = useState('')
+  const [editActivities, setEditActivities] = useState('')
+  const [editType, setEditType] = useState('')
+
+  // ResourcePulse specific
+  const [editResourceType, setEditResourceType] = useState('')
+  const [editAvailability, setEditAvailability] = useState('')
+
+  // StoryPulse specific
+  const [editLevelFulfilled, setEditLevelFulfilled] = useState('')
+  const [editFulfillmentDate, setEditFulfillmentDate] = useState('')
+  const [editIssuesIdentified, setEditIssuesIdentified] = useState('')
+  const [editIssuesResolved, setEditIssuesResolved] = useState('')
+  const [editAlignmentChallenges, setEditAlignmentChallenges] = useState('')
+  const [editAlignmentExamples, setEditAlignmentExamples] = useState('')
+  const [editWhoSupports, setEditWhoSupports] = useState('')
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>(
+    {}
+  )
+
+  const toggleExpanded = (fieldName: string) => {
+    setExpandedFields((prev) => ({
+      ...prev,
+      [fieldName]: !prev[fieldName],
+    }))
+  }
 
   const { data, loading, error } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
     variables: { pulseId },
@@ -58,6 +100,38 @@ export default function PulseDetailsPage() {
   const handleEditStart = () => {
     setEditTitle(pulse?.title || '')
     setEditContent(pulse?.content || '')
+    setEditIntensity(pulse?.intensity?.toString() || '')
+    setEditWhy(pulse?.why || '')
+    setEditLocation(pulse?.location || '')
+    setEditTime(pulse?.time || '')
+    setEditStatus(pulse?.status || '')
+
+    // GoalPulse specific
+    if (pulse?.__typename === 'GoalPulse') {
+      setEditHorizon(pulse?.horizon || '')
+      setEditSuccessMeasures(pulse?.successMeasures || '')
+      setEditActivities(pulse?.activities || '')
+      setEditType(pulse?.type || '')
+    }
+
+    // ResourcePulse specific
+    if (pulse?.__typename === 'ResourcePulse') {
+      setEditResourceType(pulse?.resourceType || '')
+      setEditAvailability(pulse?.availability?.toString() || '')
+    }
+
+    // StoryPulse specific
+    if (pulse?.__typename === 'StoryPulse') {
+      setEditSuccessMeasures(pulse?.successMeasures || '')
+      setEditLevelFulfilled(pulse?.levelFulfilled || '')
+      setEditFulfillmentDate(pulse?.fulfillmentDate || '')
+      setEditIssuesIdentified(pulse?.issuesIdentified || '')
+      setEditIssuesResolved(pulse?.issuesResolved || '')
+      setEditAlignmentChallenges(pulse?.alignmentChallenges || '')
+      setEditAlignmentExamples(pulse?.alignmentExamples || '')
+      setEditWhoSupports(pulse?.whoSupports || '')
+    }
+
     setIsEditMode(true)
   }
 
@@ -65,31 +139,90 @@ export default function PulseDetailsPage() {
     setIsEditMode(false)
     setEditTitle('')
     setEditContent('')
+    setEditIntensity('')
+    setEditWhy('')
+    setEditLocation('')
+    setEditTime('')
+    setEditStatus('')
+    setEditHorizon('')
+    setEditSuccessMeasures('')
+    setEditActivities('')
+    setEditType('')
+    setEditResourceType('')
+    setEditAvailability('')
+    setEditLevelFulfilled('')
+    setEditFulfillmentDate('')
+    setEditIssuesIdentified('')
+    setEditIssuesResolved('')
+    setEditAlignmentChallenges('')
+    setEditAlignmentExamples('')
+    setEditWhoSupports('')
   }
 
   const handleEditSave = async () => {
     try {
       setIsEditLoading(true)
-      const updateInput: Record<string, string | undefined> = {}
-      if (editTitle) updateInput.title_SET = editTitle
-      if (editContent) updateInput.content_SET = editContent
+      const updateInput: Record<string, string | number | undefined> = {}
+
+      // Common fields - allow empty strings for text fields, but skip enum fields if empty
+      if (editTitle !== undefined) updateInput.title_SET = editTitle
+      if (editContent !== undefined) updateInput.content_SET = editContent
+      if (editIntensity) updateInput.intensity_SET = parseFloat(editIntensity)
+      if (editWhy !== undefined) updateInput.why_SET = editWhy
+      if (editLocation !== undefined) updateInput.location_SET = editLocation
+      if (editTime !== undefined) updateInput.time_SET = editTime
+      // Status is an enum - only include if it has a value
+      if (editStatus) updateInput.status_SET = editStatus
 
       const where = { id_EQ: pulseId }
 
       switch (pulse?.__typename) {
         case 'GoalPulse':
+          // Enums can't be empty - only include if they have a value
+          if (editHorizon) updateInput.horizon_SET = editHorizon
+          if (editSuccessMeasures !== undefined)
+            updateInput.successMeasures_SET = editSuccessMeasures
+          if (editActivities !== undefined)
+            updateInput.activities_SET = editActivities
+          if (editType !== undefined) updateInput.type_SET = editType
+
           await updateGoalPulse({
             variables: { where, update: updateInput },
             refetchQueries: ['GetPulseDetailsWithContext'],
           })
           break
+
         case 'ResourcePulse':
+          // Status is a string field in ResourcePulse, so allow empty strings
+          if (editResourceType !== undefined)
+            updateInput.resourceType_SET = editResourceType
+          if (editAvailability)
+            updateInput.availability_SET = parseFloat(editAvailability)
+
           await updateResourcePulse({
             variables: { where, update: updateInput },
             refetchQueries: ['GetPulseDetailsWithContext'],
           })
           break
+
         case 'StoryPulse':
+          if (editSuccessMeasures !== undefined)
+            updateInput.successMeasures_SET = editSuccessMeasures
+          if (editLevelFulfilled !== undefined)
+            updateInput.levelFulfilled_SET = editLevelFulfilled
+          if (editFulfillmentDate !== undefined)
+            updateInput.fulfillmentDate_SET = editFulfillmentDate
+          if (editIssuesIdentified !== undefined)
+            updateInput.issuesIdentified_SET = editIssuesIdentified
+          if (editIssuesResolved !== undefined)
+            updateInput.issuesResolved_SET = editIssuesResolved
+          if (editAlignmentChallenges !== undefined)
+            updateInput.alignmentChallenges_SET = editAlignmentChallenges
+          if (editAlignmentExamples !== undefined)
+            updateInput.alignmentExamples_SET = editAlignmentExamples
+          if (editWhoSupports !== undefined)
+            updateInput.whoSupports_SET = editWhoSupports
+
           await updateStoryPulse({
             variables: { where, update: updateInput },
             refetchQueries: ['GetPulseDetailsWithContext'],
@@ -97,9 +230,7 @@ export default function PulseDetailsPage() {
           break
       }
 
-      setIsEditMode(false)
-      setEditTitle('')
-      setEditContent('')
+      handleEditCancel()
     } catch (err) {
       console.error('Failed to update pulse:', err)
     } finally {
@@ -211,7 +342,8 @@ export default function PulseDetailsPage() {
               Edit {pulse.__typename}
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
                   Title
@@ -225,6 +357,7 @@ export default function PulseDetailsPage() {
                 />
               </div>
 
+              {/* Content */}
               <div>
                 <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
                   Content
@@ -237,32 +370,332 @@ export default function PulseDetailsPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  onClick={handleEditCancel}
-                  disabled={isEditLoading}
-                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditSave}
-                  disabled={isEditLoading}
-                  className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isEditLoading && (
-                    <span
-                      className={cn(
-                        'material-symbols-outlined text-base',
-                        animationsEnabled && 'animate-spin'
-                      )}
-                    >
-                      hourglass_bottom
-                    </span>
-                  )}
-                  {isEditLoading ? 'Saving...' : 'Save Changes'}
-                </button>
+              {/* Common Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                    Intensity
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editIntensity}
+                    onChange={(e) => setEditIntensity(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                    placeholder="0.0 - 1.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                    placeholder="Location"
+                  />
+                </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                  Time
+                </label>
+                <input
+                  type="text"
+                  value={editTime}
+                  onChange={(e) => setEditTime(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                  placeholder="Time"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                  Why
+                </label>
+                <textarea
+                  value={editWhy}
+                  onChange={(e) => setEditWhy(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                  placeholder="Why is this important?"
+                />
+              </div>
+
+              {/* GoalPulse Specific Fields */}
+              {pulse?.__typename === 'GoalPulse' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Status
+                      </label>
+                      <Select value={editStatus} onValueChange={setEditStatus}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ACTIVE">Active</SelectItem>
+                          <SelectItem value="PAUSED">Paused</SelectItem>
+                          <SelectItem value="COMPLETED">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Horizon
+                      </label>
+                      <select
+                        value={editHorizon}
+                        onChange={(e) => setEditHorizon(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                      >
+                        <option value="">Select Horizon</option>
+                        <option value="SHORT">Short</option>
+                        <option value="MID">Mid</option>
+                        <option value="LONG">Long</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Type
+                    </label>
+                    <input
+                      type="text"
+                      value={editType}
+                      onChange={(e) => setEditType(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                      placeholder="Goal type"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Success Measures
+                    </label>
+                    <textarea
+                      value={editSuccessMeasures}
+                      onChange={(e) => setEditSuccessMeasures(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="How will you measure success?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Activities
+                    </label>
+                    <textarea
+                      value={editActivities}
+                      onChange={(e) => setEditActivities(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Activities to achieve this goal"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* ResourcePulse Specific Fields */}
+              {pulse?.__typename === 'ResourcePulse' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Resource Type
+                      </label>
+                      <input
+                        type="text"
+                        value={editResourceType}
+                        onChange={(e) => setEditResourceType(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                        placeholder="Type of resource"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Availability
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editAvailability}
+                        onChange={(e) => setEditAvailability(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                        placeholder="0.0 - 1.0"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Status
+                    </label>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="PAUSED">Paused</SelectItem>
+                        <SelectItem value="COMPLETED">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {/* StoryPulse Specific Fields */}
+              {pulse?.__typename === 'StoryPulse' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Status
+                    </label>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="PAUSED">Paused</SelectItem>
+                        <SelectItem value="COMPLETED">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Level Fulfilled
+                      </label>
+                      <input
+                        type="text"
+                        value={editLevelFulfilled}
+                        onChange={(e) => setEditLevelFulfilled(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                        placeholder="Fulfillment level"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                        Fulfillment Date
+                      </label>
+                      <input
+                        type="text"
+                        value={editFulfillmentDate}
+                        onChange={(e) => setEditFulfillmentDate(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                        placeholder="Date fulfilled"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Success Measures
+                    </label>
+                    <textarea
+                      value={editSuccessMeasures}
+                      onChange={(e) => setEditSuccessMeasures(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="How will you measure success?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Issues Identified
+                    </label>
+                    <textarea
+                      value={editIssuesIdentified}
+                      onChange={(e) => setEditIssuesIdentified(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Issues identified"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Issues Resolved
+                    </label>
+                    <textarea
+                      value={editIssuesResolved}
+                      onChange={(e) => setEditIssuesResolved(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Issues resolved"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Alignment Challenges
+                    </label>
+                    <textarea
+                      value={editAlignmentChallenges}
+                      onChange={(e) =>
+                        setEditAlignmentChallenges(e.target.value)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Challenges in alignment"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Alignment Examples
+                    </label>
+                    <textarea
+                      value={editAlignmentExamples}
+                      onChange={(e) => setEditAlignmentExamples(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Examples of alignment"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Who Supports
+                    </label>
+                    <textarea
+                      value={editWhoSupports}
+                      onChange={(e) => setEditWhoSupports(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary min-h-20 resize-none"
+                      placeholder="Who supports this?"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-gp-glass-border">
+              <button
+                onClick={handleEditCancel}
+                disabled={isEditLoading}
+                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={isEditLoading}
+                className="px-6 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isEditLoading && (
+                  <span
+                    className={cn(
+                      'material-symbols-outlined text-base',
+                      animationsEnabled && 'animate-spin'
+                    )}
+                  >
+                    hourglass_bottom
+                  </span>
+                )}
+                {isEditLoading ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>
@@ -448,25 +881,432 @@ export default function PulseDetailsPage() {
             <div className="flex flex-col gap-4 md:col-span-2">
               <SectionHeader icon="info" title="Metadata" />
               <ProfileCard>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      Type
-                    </span>
-                    <p className="text-xs text-gp-ink-strong dark:text-white">
-                      {pulse.__typename}
-                    </p>
-                  </div>
-                  {pulse.__typename === 'GoalPulse' && pulse.why && (
-                    <div>
-                      <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                        Why
-                      </span>
-                      <p className="text-xs text-gp-ink-strong dark:text-white">
-                        {pulse.why}
-                      </p>
+                <div className="space-y-4">
+                  {/* Common Fields */}
+                  <div className="space-y-2">
+                    <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
+                      Common
+                    </h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                          Type
+                        </span>
+                        <p className="text-xs text-gp-ink-strong dark:text-white">
+                          {pulse.__typename}
+                        </p>
+                      </div>
+                      {pulse?.intensity !== undefined &&
+                        pulse?.intensity !== null && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Intensity
+                            </span>
+                            <p className="text-xs text-gp-ink-strong dark:text-white">
+                              {pulse.intensity}
+                            </p>
+                          </div>
+                        )}
+                      {pulse?.why && (
+                        <div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            Why
+                          </span>
+                          <div className="mt-1">
+                            <p className="text-xs text-gp-ink-strong dark:text-white">
+                              {expandedFields['common-why']
+                                ? pulse.why
+                                : pulse.why.substring(0, 100)}
+                              {pulse.why.length > 100 &&
+                                !expandedFields['common-why'] &&
+                                '...'}
+                            </p>
+                            {pulse.why.length > 100 && (
+                              <button
+                                onClick={() => toggleExpanded('common-why')}
+                                className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                              >
+                                {expandedFields['common-why']
+                                  ? 'Read less'
+                                  : 'Read more'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {pulse?.location && (
+                        <div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            Location
+                          </span>
+                          <p className="text-xs text-gp-ink-strong dark:text-white">
+                            {pulse.location}
+                          </p>
+                        </div>
+                      )}
+                      {pulse?.time && (
+                        <div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            Time
+                          </span>
+                          <p className="text-xs text-gp-ink-strong dark:text-white">
+                            {pulse.time}
+                          </p>
+                        </div>
+                      )}
+                      {pulse?.status && (
+                        <div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                            Status
+                          </span>
+                          <p className="text-xs text-gp-ink-strong dark:text-white">
+                            {pulse.status}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+
+                  {/* GoalPulse Specific */}
+                  {pulse.__typename === 'GoalPulse' &&
+                    (pulse?.horizon ||
+                      pulse?.type ||
+                      pulse?.successMeasures ||
+                      pulse?.activities) && (
+                      <div className="space-y-2 border-t border-gp-glass-border pt-4">
+                        <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
+                          Goal Details
+                        </h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          {pulse?.horizon && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Horizon
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.horizon}
+                              </p>
+                            </div>
+                          )}
+                          {pulse?.type && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Type
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.type}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {pulse?.successMeasures && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Success Measures
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['goal-success-measures']
+                                  ? pulse.successMeasures
+                                  : pulse.successMeasures.substring(0, 100)}
+                                {pulse.successMeasures.length > 100 &&
+                                  !expandedFields['goal-success-measures'] &&
+                                  '...'}
+                              </p>
+                              {pulse.successMeasures.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('goal-success-measures')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['goal-success-measures']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.activities && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Activities
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['goal-activities']
+                                  ? pulse.activities
+                                  : pulse.activities.substring(0, 100)}
+                                {pulse.activities.length > 100 &&
+                                  !expandedFields['goal-activities'] &&
+                                  '...'}
+                              </p>
+                              {pulse.activities.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('goal-activities')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['goal-activities']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  {/* ResourcePulse Specific */}
+                  {pulse.__typename === 'ResourcePulse' &&
+                    (pulse?.resourceType ||
+                      pulse?.availability !== undefined) && (
+                      <div className="space-y-2 border-t border-gp-glass-border pt-4">
+                        <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
+                          Resource Details
+                        </h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          {pulse?.resourceType && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Resource Type
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.resourceType}
+                              </p>
+                            </div>
+                          )}
+                          {pulse?.availability !== undefined && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Availability
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.availability}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* StoryPulse Specific */}
+                  {pulse.__typename === 'StoryPulse' &&
+                    (pulse?.levelFulfilled ||
+                      pulse?.fulfillmentDate ||
+                      pulse?.successMeasures ||
+                      pulse?.issuesIdentified ||
+                      pulse?.issuesResolved ||
+                      pulse?.alignmentChallenges ||
+                      pulse?.alignmentExamples ||
+                      pulse?.whoSupports) && (
+                      <div className="space-y-2 border-t border-gp-glass-border pt-4">
+                        <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
+                          Story Details
+                        </h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          {pulse?.levelFulfilled && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Level Fulfilled
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.levelFulfilled}
+                              </p>
+                            </div>
+                          )}
+                          {pulse?.fulfillmentDate && (
+                            <div>
+                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                Fulfillment Date
+                              </span>
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {pulse.fulfillmentDate}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {pulse?.successMeasures && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Success Measures
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-success-measures']
+                                  ? pulse.successMeasures
+                                  : pulse.successMeasures.substring(0, 100)}
+                                {pulse.successMeasures.length > 100 &&
+                                  !expandedFields['story-success-measures'] &&
+                                  '...'}
+                              </p>
+                              {pulse.successMeasures.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-success-measures')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-success-measures']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.issuesIdentified && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Issues Identified
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-issues-identified']
+                                  ? pulse.issuesIdentified
+                                  : pulse.issuesIdentified.substring(0, 100)}
+                                {pulse.issuesIdentified.length > 100 &&
+                                  !expandedFields['story-issues-identified'] &&
+                                  '...'}
+                              </p>
+                              {pulse.issuesIdentified.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-issues-identified')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-issues-identified']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.issuesResolved && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Issues Resolved
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-issues-resolved']
+                                  ? pulse.issuesResolved
+                                  : pulse.issuesResolved.substring(0, 100)}
+                                {pulse.issuesResolved.length > 100 &&
+                                  !expandedFields['story-issues-resolved'] &&
+                                  '...'}
+                              </p>
+                              {pulse.issuesResolved.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-issues-resolved')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-issues-resolved']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.alignmentChallenges && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Alignment Challenges
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-alignment-challenges']
+                                  ? pulse.alignmentChallenges
+                                  : pulse.alignmentChallenges.substring(0, 100)}
+                                {pulse.alignmentChallenges.length > 100 &&
+                                  !expandedFields[
+                                    'story-alignment-challenges'
+                                  ] &&
+                                  '...'}
+                              </p>
+                              {pulse.alignmentChallenges.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-alignment-challenges')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-alignment-challenges']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.alignmentExamples && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Alignment Examples
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-alignment-examples']
+                                  ? pulse.alignmentExamples
+                                  : pulse.alignmentExamples.substring(0, 100)}
+                                {pulse.alignmentExamples.length > 100 &&
+                                  !expandedFields['story-alignment-examples'] &&
+                                  '...'}
+                              </p>
+                              {pulse.alignmentExamples.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-alignment-examples')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-alignment-examples']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {pulse?.whoSupports && (
+                          <div>
+                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              Who Supports
+                            </span>
+                            <div className="mt-1">
+                              <p className="text-xs text-gp-ink-strong dark:text-white">
+                                {expandedFields['story-who-supports']
+                                  ? pulse.whoSupports
+                                  : pulse.whoSupports.substring(0, 100)}
+                                {pulse.whoSupports.length > 100 &&
+                                  !expandedFields['story-who-supports'] &&
+                                  '...'}
+                              </p>
+                              {pulse.whoSupports.length > 100 && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpanded('story-who-supports')
+                                  }
+                                  className="text-[10px] text-gp-primary hover:text-gp-primary/80 transition-colors mt-1 font-medium"
+                                >
+                                  {expandedFields['story-who-supports']
+                                    ? 'Read less'
+                                    : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               </ProfileCard>
             </div>
