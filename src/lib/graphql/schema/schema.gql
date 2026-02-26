@@ -793,7 +793,7 @@ type ResonanceLink @node(labels: ["ResonanceLink"]) {
   id: ID! @id
   label: String!
   description: String
-  confidence: Float!
+  confidence: Float
   evidence: String
   mergedFrom: String
   createdAt: DateTime!
