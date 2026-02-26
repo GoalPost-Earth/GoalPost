@@ -251,16 +251,19 @@ export const searchResolvers = {
 
       // Extract pulse properties with related contexts (aggregated)
       const extractPulsesWithContexts = (
-        records: Array<{ get: (key: string) => { properties: EntityRecord } }>,
+        records: Array<{ get: (key: string) => unknown }>,
         pulseKey: string,
         contextsKey: string
       ): EntityRecord[] =>
         records.map((record) => {
-          const pulse = record.get(pulseKey).properties
-          const contexts =
-            record
-              .get(contextsKey)
-              ?.map((ctx: { properties: EntityRecord }) => ctx.properties) || []
+          const pulse = (record.get(pulseKey) as { properties: EntityRecord })
+            .properties
+          const contextsArray = record.get(contextsKey) as Array<{
+            properties: EntityRecord
+          }>
+          const contexts = Array.isArray(contextsArray)
+            ? contextsArray.map((ctx) => ctx.properties)
+            : []
           return {
             ...pulse,
             context: contexts,
