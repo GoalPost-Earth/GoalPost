@@ -15,10 +15,21 @@ export interface PersonInPanel {
   role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
 }
 
+export interface ConnectedPerson {
+  id: string
+  firstName: string
+  lastName: string
+  name: string | null
+  photo?: string | null
+  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
+}
+
 export interface PersonPanelProps {
   isOpen: boolean
   onClose: () => void
   person: PersonInPanel | null
+  connectedPersons?: ConnectedPerson[]
+  onConnectionClick?: (connectedPersonId: string) => void
 }
 
 const roleColors: Record<string, { bg: string; text: string; border: string }> =
@@ -45,7 +56,13 @@ const roleColors: Record<string, { bg: string; text: string; border: string }> =
     },
   }
 
-export function PersonPanel({ isOpen, onClose, person }: PersonPanelProps) {
+export function PersonPanel({
+  isOpen,
+  onClose,
+  person,
+  connectedPersons = [],
+  onConnectionClick,
+}: PersonPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -187,6 +204,67 @@ export function PersonPanel({ isOpen, onClose, person }: PersonPanelProps) {
                   )}
                 </div>
               </div>
+
+              {/* Connected Persons Section */}
+              {connectedPersons.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wide flex items-center gap-2">
+                    <span className="material-symbols-outlined text-lg">
+                      group_work
+                    </span>
+                    Connected People ({connectedPersons.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {connectedPersons.map((connectedPerson) => {
+                      const connectedColors =
+                        roleColors[connectedPerson.role || 'MEMBER'] ||
+                        roleColors.MEMBER
+                      const connectedInitials =
+                        `${connectedPerson.firstName?.[0] || ''}${connectedPerson.lastName?.[0] || ''}`.toUpperCase()
+
+                      return (
+                        <button
+                          key={connectedPerson.id}
+                          onClick={() =>
+                            onConnectionClick?.(connectedPerson.id)
+                          }
+                          className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-all group w-20"
+                          title={`View connection with ${connectedPerson.name || `${connectedPerson.firstName} ${connectedPerson.lastName}`}`}
+                        >
+                          <div
+                            className={cn(
+                              'relative size-12 rounded-full flex items-center justify-center',
+                              'border-2 group-hover:border-gp-primary/60 transition-all',
+                              connectedColors.border,
+                              connectedColors.bg
+                            )}
+                          >
+                            {connectedPerson.photo ? (
+                              <img
+                                src={connectedPerson.photo}
+                                alt={connectedPerson.name ?? 'Person'}
+                                className="size-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span
+                                className={cn(
+                                  'text-xs font-bold',
+                                  connectedColors.text
+                                )}
+                              >
+                                {connectedInitials}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate w-full text-center leading-tight">
+                            {connectedPerson.firstName}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* View Profile Button */}
               <button

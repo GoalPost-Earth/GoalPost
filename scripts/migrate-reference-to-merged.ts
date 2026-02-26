@@ -132,7 +132,15 @@ class MigrationEngine {
           fieldsOfCare: p.fieldsOfCare,
           interests: p.interests,
           createdAt: p.createdAt,
-          updatedAt: p.updatedAt
+          updatedAt: p.updatedAt,
+          password: p.password,
+          refreshToken: p.refreshToken,
+          refreshTokenExp: p.refreshTokenExp,
+          refreshTokenRevoked: p.refreshTokenRevoked,
+          authId: p.authId,
+          embedding: p.embedding,
+          gender: p.gender,
+          signupDate: p.signupDate
         } as person
       `)
 
@@ -162,7 +170,15 @@ class MigrationEngine {
               fieldsOfCare: $fieldsOfCare,
               interests: $interests,
               createdAt: $createdAt,
-              updatedAt: $updatedAt
+              updatedAt: $updatedAt,
+              password: $password,
+              refreshToken: $refreshToken,
+              refreshTokenExp: $refreshTokenExp,
+              refreshTokenRevoked: $refreshTokenRevoked,
+              authId: $authId,
+              embedding: $embedding,
+              gender: $gender,
+              signupDate: $signupDate
             })
             RETURN p
             `,
@@ -170,7 +186,7 @@ class MigrationEngine {
           )
 
           // Create auto-generated MeSpace
-          const meSpaceName = `${person.firstName} ${person.lastName} MeSpace`
+          const meSpaceName = `${person.firstName}'s MeSpace`
           const meSpaceId = `mespace_${person.id}`
 
           await devSession.run(
@@ -191,7 +207,7 @@ class MigrationEngine {
 
           // Create default FieldContext for user's pulses
           const contextId = `context_${person.id}_goals`
-          const contextName = `${person.firstName}'s Goals`
+          const contextName = `${person.firstName}'s Field Context`
 
           await devSession.run(
             `
@@ -366,6 +382,7 @@ class MigrationEngine {
           photo: g.photo,
           activities: g.activities,
           status: g.status,
+          type: g.type,
           why: g.why,
           location: g.location,
           time: g.time,
@@ -378,62 +395,92 @@ class MigrationEngine {
         const goal = record.get('goal')
 
         try {
-          // Find who created this goal
-          const creatorResult = await prodSession.run(
-            `MATCH (g:Goal { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+          // Find who created this goal and who is motivated by it
+          const ownershipResult = await prodSession.run(
+            `MATCH (g:Goal { id: $id })
+             OPTIONAL MATCH (g)-[:CREATED_BY]->(creator:Person|Community) 
+             OPTIONAL MATCH (p:Person|Community)-[:MOTIVATED_BY]->(g)
+             RETURN creator.id as creatorId, labels(creator)[0] as creatorType,
+                    collect(DISTINCT {id: p.id, type: labels(p)[0]}) as motivatedEntities`,
             { id: goal.id }
           )
+
           const creatorId =
-            creatorResult.records.length > 0
-              ? creatorResult.records[0].get('creatorId')
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorId')
               : null
+          const creatorType =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorType')
+              : null
+          const motivatedEntities =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('motivatedEntities')
+              : []
 
-          // Find ALL entities motivated by this goal (Person and Community)
-          const motivatedByResult = await prodSession.run(
-            `MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN "person" as type, p.id as id
-             UNION
-             MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal { id: $id }) RETURN "community" as type, c.id as id`,
-            { id: goal.id }
-          )
+          // Determine primary context (based on creator)
+          let primaryContextId: string | null = null
+          let secondaryContextIds: string[] = []
 
-          const personIds: string[] = []
-          const communityIds: string[] = []
+          if (creatorId) {
+            // Creator determines primary context
+            if (creatorType === 'Person') {
+              primaryContextId = `context_${creatorId}_goals`
+            } else if (creatorType === 'Community') {
+              primaryContextId = `context_${creatorId}_field`
+            }
 
-          for (const r of motivatedByResult.records) {
-            const type = r.get('type')
-            const id = r.get('id')
-            if (type === 'person') {
-              personIds.push(id)
-            } else if (type === 'community') {
-              communityIds.push(id)
+            // Add secondary contexts for other entities motivated by this
+            for (const entity of motivatedEntities) {
+              if (entity.id === creatorId) continue // Skip the creator
+
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
+            }
+          } else if (motivatedEntities.length > 0) {
+            // No creator, use first motivated entity as primary
+            const firstEntity = motivatedEntities[0]
+            if (firstEntity.type === 'Person') {
+              primaryContextId = `context_${firstEntity.id}_goals`
+            } else if (firstEntity.type === 'Community') {
+              primaryContextId = `context_${firstEntity.id}_field`
+            }
+
+            // Remaining motivated entities as secondary
+            for (let i = 1; i < motivatedEntities.length; i++) {
+              const entity = motivatedEntities[i]
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
             }
           }
 
-          // Determine primary and secondary contexts
-          let primaryContextId: string | null = null
-          let secondaryContextId: string | null = null
-
-          if (personIds.length > 0 && communityIds.length > 0) {
-            // Both person and community: create in person's context, share with community
-            primaryContextId = `context_${personIds[0]}_goals`
-            secondaryContextId = `context_${communityIds[0]}_field`
-          } else if (communityIds.length > 0) {
-            // Only community: create in community context
-            primaryContextId = `context_${communityIds[0]}_field`
-          } else if (personIds.length > 0) {
-            // Only person: create in person context
-            primaryContextId = `context_${personIds[0]}_goals`
-          }
-
           if (!primaryContextId) {
-            this.stats.errors.push(`Goal ${goal.id} has no owning context`)
+            this.stats.errors.push(
+              `Goal ${goal.id} (${goal.name}) has no creator or motivated entity - skipping`
+            )
             continue
           }
 
           // Create GoalPulse in dev
           const pulseId = `pulse_${goal.id}`
-
-          // Map legacy status values to GoalStatus enum
           const statusMap: Record<string, string> = {
             Active: 'ACTIVE',
             Inactive: 'PAUSED',
@@ -444,7 +491,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
-            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
+            ${creatorId ? 'OPTIONAL MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:GoalPulse {
               id: $pulseId,
               title: $title,
@@ -453,6 +500,7 @@ class MigrationEngine {
               photo: $photo,
               activities: $activities,
               status: $status,
+              type: $type,
               why: $why,
               location: $location,
               time: $time,
@@ -471,6 +519,7 @@ class MigrationEngine {
               photo: goal.photo,
               activities: goal.activities,
               status: mappedStatus,
+              type: goal.type,
               why: goal.why,
               location: goal.location,
               time: goal.time,
@@ -478,8 +527,8 @@ class MigrationEngine {
             }
           )
 
-          // Share with secondary context if both person and community are related
-          if (secondaryContextId) {
+          // Add to secondary contexts
+          for (const secondaryContextId of secondaryContextIds) {
             await devSession.run(
               `
               MATCH (context:FieldContext { id: $contextId })
@@ -491,10 +540,11 @@ class MigrationEngine {
                 pulseId,
               }
             )
-            console.log(`  ✓ ${goal.name} (shared with secondary context)`)
-          } else {
-            console.log(`  ✓ ${goal.name}`)
           }
+
+          console.log(
+            `  ✓ ${goal.name}${secondaryContextIds.length > 0 ? ` (shared with ${secondaryContextIds.length} context(s))` : ''}`
+          )
 
           this.stats.goalPulsesCreated++
         } catch (error) {
@@ -508,6 +558,20 @@ class MigrationEngine {
       await prodSession.close()
       await devSession.close()
     }
+  }
+
+  private normalizeStatus(status: string | null): string | undefined {
+    if (!status) return undefined
+    // Map common status values to GraphQL enum values
+    const statusMap: Record<string, string> = {
+      Active: 'ACTIVE',
+      ACTIVE: 'ACTIVE',
+      Inactive: 'PAUSED',
+      PAUSED: 'PAUSED',
+      Completed: 'COMPLETED',
+      COMPLETED: 'COMPLETED',
+    }
+    return statusMap[status] || status
   }
 
   private async migrateResources(): Promise<void> {
@@ -535,55 +599,87 @@ class MigrationEngine {
         const resource = record.get('resource')
 
         try {
-          // Find who created this resource
-          const creatorResult = await prodSession.run(
-            `MATCH (r:Resource { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+          // Find creator and providers for this resource
+          const ownershipResult = await prodSession.run(
+            `MATCH (r:Resource { id: $id })
+             OPTIONAL MATCH (r)-[:CREATED_BY]->(creator:Person|Community)
+             OPTIONAL MATCH (p:Person|Community)-[:PROVIDES]->(r)
+             RETURN creator.id as creatorId, labels(creator)[0] as creatorType,
+                    collect(DISTINCT {id: p.id, type: labels(p)[0]}) as providers`,
             { id: resource.id }
           )
+
           const creatorId =
-            creatorResult.records.length > 0
-              ? creatorResult.records[0].get('creatorId')
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorId')
               : null
+          const creatorType =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorType')
+              : null
+          const providers =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('providers')
+              : []
 
-          // Find ALL providers (Person and Community)
-          const providerResult = await prodSession.run(
-            `MATCH (p:Person)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "person" as type, p.id as id
-             UNION
-             MATCH (c:Community)-[:PROVIDES]->(r:Resource { id: $id }) RETURN "community" as type, c.id as id`,
-            { id: resource.id }
-          )
+          // Determine primary context (based on creator)
+          let primaryContextId: string | null = null
+          let secondaryContextIds: string[] = []
 
-          const personIds: string[] = []
-          const communityIds: string[] = []
+          if (creatorId) {
+            // Creator determines primary context
+            if (creatorType === 'Person') {
+              primaryContextId = `context_${creatorId}_goals`
+            } else if (creatorType === 'Community') {
+              primaryContextId = `context_${creatorId}_field`
+            }
 
-          for (const r of providerResult.records) {
-            const type = r.get('type')
-            const id = r.get('id')
-            if (type === 'person') {
-              personIds.push(id)
-            } else if (type === 'community') {
-              communityIds.push(id)
+            // Add secondary contexts for providers
+            for (const provider of providers) {
+              if (provider.id === creatorId) continue // Skip the creator
+
+              if (provider.type === 'Person') {
+                const contextId = `context_${provider.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (provider.type === 'Community') {
+                const contextId = `context_${provider.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
+            }
+          } else if (providers.length > 0) {
+            // No creator, use first provider as primary
+            const firstProvider = providers[0]
+            if (firstProvider.type === 'Person') {
+              primaryContextId = `context_${firstProvider.id}_goals`
+            } else if (firstProvider.type === 'Community') {
+              primaryContextId = `context_${firstProvider.id}_field`
+            }
+
+            // Remaining providers as secondary
+            for (let i = 1; i < providers.length; i++) {
+              const provider = providers[i]
+              if (provider.type === 'Person') {
+                const contextId = `context_${provider.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (provider.type === 'Community') {
+                const contextId = `context_${provider.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
             }
           }
 
-          // Determine primary and secondary contexts
-          let primaryContextId: string | null = null
-          let secondaryContextId: string | null = null
-
-          if (personIds.length > 0 && communityIds.length > 0) {
-            // Both person and community: create in person's context, share with community
-            primaryContextId = `context_${personIds[0]}_goals`
-            secondaryContextId = `context_${communityIds[0]}_field`
-          } else if (communityIds.length > 0) {
-            // Only community: create in community context
-            primaryContextId = `context_${communityIds[0]}_field`
-          } else if (personIds.length > 0) {
-            // Only person: create in person context
-            primaryContextId = `context_${personIds[0]}_goals`
-          }
-
           if (!primaryContextId) {
-            this.stats.errors.push(`Resource ${resource.id} has no provider`)
+            this.stats.errors.push(
+              `Resource ${resource.id} (${resource.name}) has no creator or provider - skipping`
+            )
             continue
           }
 
@@ -592,7 +688,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
-            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
+            ${creatorId ? 'OPTIONAL MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:ResourcePulse {
               id: $pulseId,
               title: $title,
@@ -614,7 +710,7 @@ class MigrationEngine {
               pulseId,
               title: resource.name,
               content: resource.description || '',
-              status: resource.status,
+              status: this.normalizeStatus(resource.status),
               why: resource.why,
               location: resource.location,
               time: resource.time,
@@ -622,8 +718,8 @@ class MigrationEngine {
             }
           )
 
-          // Share with secondary context if both person and community are related
-          if (secondaryContextId) {
+          // Add to secondary contexts
+          for (const secondaryContextId of secondaryContextIds) {
             await devSession.run(
               `
               MATCH (context:FieldContext { id: $contextId })
@@ -635,10 +731,11 @@ class MigrationEngine {
                 pulseId,
               }
             )
-            console.log(`  ✓ ${resource.name} (shared with secondary context)`)
-          } else {
-            console.log(`  ✓ ${resource.name}`)
           }
+
+          console.log(
+            `  ✓ ${resource.name}${secondaryContextIds.length > 0 ? ` (shared with ${secondaryContextIds.length} context(s))` : ''}`
+          )
 
           this.stats.resourcePulsesCreated++
         } catch (error) {
@@ -689,60 +786,87 @@ class MigrationEngine {
         const cp = record.get('carePoint')
 
         try {
-          // Find who created this care point
-          const creatorResult = await prodSession.run(
-            `MATCH (cp:CarePoint { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+          // Find creator and caring entities for this care point
+          const ownershipResult = await prodSession.run(
+            `MATCH (cp:CarePoint { id: $id })
+             OPTIONAL MATCH (cp)-[:CREATED_BY]->(creator:Person|Community)
+             OPTIONAL MATCH (p:Person|Community)-[:CARES_FOR]->(cp)
+             RETURN creator.id as creatorId, labels(creator)[0] as creatorType,
+                    collect(DISTINCT {id: p.id, type: labels(p)[0]}) as caringEntities`,
             { id: cp.id }
           )
+
           const creatorId =
-            creatorResult.records.length > 0
-              ? creatorResult.records[0].get('creatorId')
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorId')
               : null
+          const creatorType =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorType')
+              : null
+          const caringEntities =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('caringEntities')
+              : []
 
-          // Find ALL entities that care for this (Person or Community)
-          // Check both direct CARES_FOR and indirect through Goals
-          const caresForResult = await prodSession.run(
-            `MATCH (p:Person)-[:CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "person" as type, p.id as id
-             UNION
-             MATCH (c:Community)-[:CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "community" as type, c.id as id
-             UNION
-             MATCH (p:Person)-[:MOTIVATED_BY]->(g:Goal)-[:ENABLES|CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "person" as type, p.id as id
-             UNION
-             MATCH (c:Community)-[:MOTIVATED_BY]->(g:Goal)-[:ENABLES|CARES_FOR]->(cp:CarePoint { id: $id }) RETURN "community" as type, c.id as id`,
-            { id: cp.id }
-          )
+          // Determine primary context (based on creator)
+          let primaryContextId: string | null = null
+          let secondaryContextIds: string[] = []
 
-          const personIds: string[] = []
-          const communityIds: string[] = []
+          if (creatorId) {
+            // Creator determines primary context
+            if (creatorType === 'Person') {
+              primaryContextId = `context_${creatorId}_goals`
+            } else if (creatorType === 'Community') {
+              primaryContextId = `context_${creatorId}_field`
+            }
 
-          for (const r of caresForResult.records) {
-            const type = r.get('type')
-            const id = r.get('id')
-            if (type === 'person' && !personIds.includes(id)) {
-              personIds.push(id)
-            } else if (type === 'community' && !communityIds.includes(id)) {
-              communityIds.push(id)
+            // Add secondary contexts for caring entities
+            for (const entity of caringEntities) {
+              if (entity.id === creatorId) continue // Skip the creator
+
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
+            }
+          } else if (caringEntities.length > 0) {
+            // No creator, use first caring entity as primary
+            const firstEntity = caringEntities[0]
+            if (firstEntity.type === 'Person') {
+              primaryContextId = `context_${firstEntity.id}_goals`
+            } else if (firstEntity.type === 'Community') {
+              primaryContextId = `context_${firstEntity.id}_field`
+            }
+
+            // Remaining caring entities as secondary
+            for (let i = 1; i < caringEntities.length; i++) {
+              const entity = caringEntities[i]
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
             }
           }
 
-          // Determine primary and secondary contexts
-          let primaryContextId: string | null = null
-          let secondaryContextId: string | null = null
-
-          if (personIds.length > 0 && communityIds.length > 0) {
-            // Both person and community: create in person's context, share with community
-            primaryContextId = `context_${personIds[0]}_goals`
-            secondaryContextId = `context_${communityIds[0]}_field`
-          } else if (communityIds.length > 0) {
-            // Only community: create in community context
-            primaryContextId = `context_${communityIds[0]}_field`
-          } else if (personIds.length > 0) {
-            // Only person: create in person context
-            primaryContextId = `context_${personIds[0]}_goals`
-          }
-
           if (!primaryContextId) {
-            this.stats.errors.push(`CarePoint ${cp.id} cannot find context`)
+            this.stats.errors.push(
+              `CarePoint ${cp.id} (${cp.name}) has no creator or caring entity - skipping`
+            )
             continue
           }
 
@@ -750,7 +874,7 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
-            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
+            ${creatorId ? 'OPTIONAL MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:StoryPulse {
               id: $pulseId,
               title: $title,
@@ -775,7 +899,7 @@ class MigrationEngine {
               pulseId,
               title: cp.name,
               content: cp.description || '',
-              status: cp.status,
+              status: this.normalizeStatus(cp.status),
               why: cp.why,
               location: cp.location,
               time: cp.time,
@@ -788,8 +912,8 @@ class MigrationEngine {
             }
           )
 
-          // Share with secondary context if both person and community are related
-          if (secondaryContextId) {
+          // Add to secondary contexts
+          for (const secondaryContextId of secondaryContextIds) {
             await devSession.run(
               `
               MATCH (context:FieldContext { id: $contextId })
@@ -801,10 +925,11 @@ class MigrationEngine {
                 pulseId,
               }
             )
-            console.log(`  ✓ ${cp.name} (shared with secondary context)`)
-          } else {
-            console.log(`  ✓ ${cp.name}`)
           }
+
+          console.log(
+            `  ✓ ${cp.name}${secondaryContextIds.length > 0 ? ` (shared with ${secondaryContextIds.length} context(s))` : ''}`
+          )
 
           this.stats.storyPulsesCreated++
         } catch (error) {
@@ -841,6 +966,7 @@ class MigrationEngine {
           description: cv.description,
           alignmentChallenges: cv.alignmentChallenges,
           alignmentExamples: cv.alignmentExamples,
+          whoSupports: cv.whoSupports,
           why: cv.why,
           createdAt: cv.createdAt,
           updatedAt: cv.updatedAt
@@ -851,55 +977,87 @@ class MigrationEngine {
         const cv = record.get('coreValue')
 
         try {
-          // Find who created this core value
-          const creatorResult = await prodSession.run(
-            `MATCH (cv:CoreValue { id: $id })-[:CREATED_BY]->(creator:Person) RETURN creator.id as creatorId`,
+          // Find creator and embracing entities for this core value
+          const ownershipResult = await prodSession.run(
+            `MATCH (cv:CoreValue { id: $id })
+             OPTIONAL MATCH (cv)-[:CREATED_BY]->(creator:Person|Community)
+             OPTIONAL MATCH (p:Person|Community)-[:EMBRACES]->(cv)
+             RETURN creator.id as creatorId, labels(creator)[0] as creatorType,
+                    collect(DISTINCT {id: p.id, type: labels(p)[0]}) as embracers`,
             { id: cv.id }
           )
+
           const creatorId =
-            creatorResult.records.length > 0
-              ? creatorResult.records[0].get('creatorId')
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorId')
               : null
+          const creatorType =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('creatorType')
+              : null
+          const embracers =
+            ownershipResult.records.length > 0
+              ? ownershipResult.records[0].get('embracers')
+              : []
 
-          // Find ALL entities that embrace this (Person and Community)
-          const embracersResult = await prodSession.run(
-            `MATCH (p:Person)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN "person" as type, p.id as id
-             UNION
-             MATCH (c:Community)-[:EMBRACES]->(cv:CoreValue { id: $id }) RETURN "community" as type, c.id as id`,
-            { id: cv.id }
-          )
+          // Determine primary context (based on creator)
+          let primaryContextId: string | null = null
+          let secondaryContextIds: string[] = []
 
-          const personIds: string[] = []
-          const communityIds: string[] = []
+          if (creatorId) {
+            // Creator determines primary context
+            if (creatorType === 'Person') {
+              primaryContextId = `context_${creatorId}_goals`
+            } else if (creatorType === 'Community') {
+              primaryContextId = `context_${creatorId}_field`
+            }
 
-          for (const r of embracersResult.records) {
-            const type = r.get('type')
-            const id = r.get('id')
-            if (type === 'person') {
-              personIds.push(id)
-            } else if (type === 'community') {
-              communityIds.push(id)
+            // Add secondary contexts for embracers
+            for (const entity of embracers) {
+              if (entity.id === creatorId) continue // Skip the creator
+
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
+            }
+          } else if (embracers.length > 0) {
+            // No creator, use first embracer as primary
+            const firstEntity = embracers[0]
+            if (firstEntity.type === 'Person') {
+              primaryContextId = `context_${firstEntity.id}_goals`
+            } else if (firstEntity.type === 'Community') {
+              primaryContextId = `context_${firstEntity.id}_field`
+            }
+
+            // Remaining embracers as secondary
+            for (let i = 1; i < embracers.length; i++) {
+              const entity = embracers[i]
+              if (entity.type === 'Person') {
+                const contextId = `context_${entity.id}_goals`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              } else if (entity.type === 'Community') {
+                const contextId = `context_${entity.id}_field`
+                if (!secondaryContextIds.includes(contextId)) {
+                  secondaryContextIds.push(contextId)
+                }
+              }
             }
           }
 
-          // Determine primary and secondary contexts
-          let primaryContextId: string | null = null
-          let secondaryContextId: string | null = null
-
-          if (personIds.length > 0 && communityIds.length > 0) {
-            // Both person and community: create in person's context, share with community
-            primaryContextId = `context_${personIds[0]}_goals`
-            secondaryContextId = `context_${communityIds[0]}_field`
-          } else if (communityIds.length > 0) {
-            // Only community: create in community context
-            primaryContextId = `context_${communityIds[0]}_field`
-          } else if (personIds.length > 0) {
-            // Only person: create in person context
-            primaryContextId = `context_${personIds[0]}_goals`
-          }
-
           if (!primaryContextId) {
-            this.stats.errors.push(`CoreValue ${cv.id} cannot find context`)
+            this.stats.errors.push(
+              `CoreValue ${cv.id} (${cv.name}) has no creator or embracing entity - skipping`
+            )
             continue
           }
 
@@ -907,13 +1065,14 @@ class MigrationEngine {
           await devSession.run(
             `
             MATCH (context:FieldContext { id: $contextId })
-            ${creatorId ? 'MATCH (creator:Person { id: $creatorId })' : ''}
+            ${creatorId ? 'OPTIONAL MATCH (creator:Person { id: $creatorId })' : ''}
             CREATE (pulse:FieldPulse:StoryPulse {
               id: $pulseId,
               title: $title,
               content: $content,
               alignmentChallenges: $alignmentChallenges,
               alignmentExamples: $alignmentExamples,
+              whoSupports: $whoSupports,
               why: $why,
               createdAt: datetime()
             })
@@ -928,13 +1087,14 @@ class MigrationEngine {
               content: cv.description || '',
               alignmentChallenges: cv.alignmentChallenges,
               alignmentExamples: cv.alignmentExamples,
+              whoSupports: cv.whoSupports,
               why: cv.why,
               creatorId,
             }
           )
 
-          // Share with secondary context if both person and community embrace this
-          if (secondaryContextId) {
+          // Add to secondary contexts
+          for (const secondaryContextId of secondaryContextIds) {
             await devSession.run(
               `
               MATCH (context:FieldContext { id: $contextId })
@@ -946,10 +1106,11 @@ class MigrationEngine {
                 pulseId,
               }
             )
-            console.log(`  ✓ ${cv.name} (shared with secondary context)`)
-          } else {
-            console.log(`  ✓ ${cv.name}`)
           }
+
+          console.log(
+            `  ✓ ${cv.name}${secondaryContextIds.length > 0 ? ` (shared with ${secondaryContextIds.length} context(s))` : ''}`
+          )
 
           this.stats.storyPulsesCreated++
         } catch (error) {
@@ -975,9 +1136,13 @@ class MigrationEngine {
     const devSession = this.devDriver.session()
 
     try {
-      // Get all relationships we need to transform
+      // Get all SEMANTIC relationships between entities that will be pulses
+      // These include: Goal-CarePoint, Goal-Resource, Goal-CoreValue, Resource-Resource, etc.
       const relationships = await prodSession.run(`
-        MATCH (source)-[rel:MOTIVATED_BY|APPLIED_TO|ALIGNED_TO|ENABLES|CARES_FOR|DEPENDS_ON|EMBRACES|PROVIDES|HAS_ACCESS_TO]->(target)
+        MATCH (source)-[rel:ALIGNED_TO|APPLIED_IN|APPLIED_TO|CARES_FOR|DEPENDS_ON|ENABLED_BY|ENABLES|GUIDED_BY]->(target)
+        WHERE 
+          (source:Goal OR source:Resource OR source:CarePoint OR source:CoreValue) AND
+          (target:Goal OR target:Resource OR target:CarePoint OR target:CoreValue)
         WITH source, target, rel,
           CASE 
             WHEN source:Goal THEN 'pulse_' + source.id
@@ -994,8 +1159,11 @@ class MigrationEngine {
             ELSE null
           END as targetPulseId
         RETURN sourcePulseId, targetPulseId, type(rel) as relType
-        LIMIT 1000
       `)
+
+      console.log(
+        `  Found ${relationships.records.length} semantic relationships to migrate`
+      )
 
       for (const record of relationships.records) {
         const sourcePulseId = record.get('sourcePulseId')
@@ -1013,32 +1181,37 @@ class MigrationEngine {
             MATCH (source:FieldPulse { id: $sourcePulseId })
             MATCH (target:FieldPulse { id: $targetPulseId })
             
-            // Find all contexts that have BOTH source and target pulses
-            MATCH (source)<-[:HAS_PULSE]-(contextWithSource:FieldContext)
-            MATCH (target)<-[:HAS_PULSE]-(contextWithTarget:FieldContext)
-            WHERE contextWithSource = contextWithTarget
-            WITH source, target, collect(DISTINCT contextWithSource) as sharedContexts
+            // Find all contexts for each pulse
+            OPTIONAL MATCH (source)<-[:HAS_PULSE]-(sourceContext:FieldContext)
+            OPTIONAL MATCH (target)<-[:HAS_PULSE]-(targetContext:FieldContext)
+            
+            // Collect unique contexts from both source and target
+            WITH source, target, 
+                 collect(DISTINCT sourceContext) + collect(DISTINCT targetContext) as allContexts
+            WHERE size(allContexts) > 0
             
             // Create or update the ResonanceLink
             MERGE (link:ResonanceLink { id: $linkId })
             ON CREATE SET
               link.label = $label,
               link.description = $label + " relationship",
-              link.confidence = 1.0,
-              link.evidence = "Migrated from " + $label,
+              link.confidence = null,
+              link.evidence = $label,
               link.createdAt = datetime()
             ON MATCH SET
               link.label = $label,
               link.description = $label + " relationship",
-              link.evidence = "Migrated from " + $label
+              link.evidence = $label
             
-            // Create relationships
+            // Create source and target relationships
             MERGE (link)-[:SOURCE]->(source)
             MERGE (link)-[:TARGET]->(target)
             
-            // Connect to ALL shared contexts
-            WITH link, sharedContexts
-            UNWIND sharedContexts as context
+            // Connect to ALL contexts (both source and target)
+            WITH link, allContexts
+            UNWIND allContexts as context
+            WITH link, context
+            WHERE context IS NOT NULL
             MERGE (context)-[:HAS_RESONANCE]->(link)
             
             RETURN count(context) as contextsConnected
@@ -1053,9 +1226,9 @@ class MigrationEngine {
 
           this.stats.resonanceLinksCreated++
         } catch (error) {
-          // Silently skip if pulses don't exist in target or context issues
-          console.error(
-            `  ✗ Failed to create resonance link for ${sourcePulseId} -> ${targetPulseId} (${relType}): ${error}`
+          // Log specific errors instead of silently skipping
+          console.log(
+            `  ⚠️  Failed to create link: ${sourcePulseId} -> ${targetPulseId} (${relType}): ${error}`
           )
         }
       }
@@ -1113,7 +1286,7 @@ class MigrationEngine {
               role: "MEMBER",
               addedAt: datetime()
             })
-            CREATE (p)-[:IS_MEMBER]->(membership)
+            CREATE (membership)-[:IS_MEMBER]->(p)
             CREATE (space)-[:HAS_MEMBER]->(membership)
             RETURN membership
             `,

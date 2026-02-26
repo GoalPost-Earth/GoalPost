@@ -56,12 +56,12 @@ export function ResonanceNode({
         <div
           onClick={onClick}
           className={cn(
-            'group relative size-40 rounded-full cursor-pointer transition-all duration-500 ease-out',
-            'gp-glass border flex flex-col items-center justify-center text-center p-4',
+            'group relative size-14 rounded-full cursor-pointer transition-all duration-500 ease-out',
+            'gp-glass border flex flex-col items-center justify-center text-center p-2',
             'border-white/20 dark:border-white/20',
             isActive
-              ? 'border-gp-primary/50 dark:border-gp-primary/50 scale-110'
-              : 'hover:scale-105'
+              ? 'border-gp-primary/50 dark:border-gp-primary/50 scale-125'
+              : 'hover:scale-110'
           )}
           style={
             isActive
@@ -71,41 +71,30 @@ export function ResonanceNode({
                 }
               : undefined
           }
+          title={label}
         >
-          {/* Icon */}
+          {/* Icon - compact */}
           <div
             className={cn(
-              'mb-2 transition-colors duration-300',
+              'transition-colors duration-300',
               isActive
                 ? 'text-slate-900 dark:text-white'
                 : 'text-gp-primary/80 dark:text-gp-primary/80 group-hover:text-gp-primary dark:group-hover:text-gp-primary'
             )}
             style={{
               filter: isActive
-                ? 'drop-shadow(0 0 10px color-mix(in srgb, var(--gp-primary) 50%, transparent))'
-                : 'drop-shadow(0 0 8px color-mix(in srgb, var(--gp-primary) 35%, transparent))',
+                ? 'drop-shadow(0 0 8px color-mix(in srgb, var(--gp-primary) 50%, transparent))'
+                : 'drop-shadow(0 0 6px color-mix(in srgb, var(--gp-primary) 35%, transparent))',
             }}
           >
             <span
               className={cn(
-                'material-symbols-outlined text-[48px] transition-all duration-300'
+                'material-symbols-outlined text-[24px] transition-all duration-300'
               )}
             >
               {icon}
             </span>
           </div>
-
-          {/* Label */}
-          <span
-            className={cn(
-              'text-xs font-bold uppercase tracking-widest transition-colors duration-300 leading-tight',
-              isActive
-                ? 'text-slate-900 dark:text-white'
-                : 'text-slate-700 dark:text-white/80 group-hover:text-slate-900 dark:group-hover:text-white'
-            )}
-          >
-            {label}
-          </span>
 
           {/* Active Badge */}
           {isActive && (
@@ -133,6 +122,18 @@ export function ResonanceNode({
             </button>
           )}
         </div>
+
+        {/* Label - displayed below node */}
+        <span
+          className={cn(
+            'absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-colors duration-300 pointer-events-none',
+            isActive
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 dark:text-white/70 group-hover:text-slate-700 dark:group-hover:text-white'
+          )}
+        >
+          {label}
+        </span>
       </div>
     </div>
   )

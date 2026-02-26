@@ -132,6 +132,7 @@ type Person implements PersonInterface
   avatar: String
   status: String
   inviteSent: Boolean
+  gender: String
   
   # Rich profile content
   careManual: String
@@ -140,6 +141,15 @@ type Person implements PersonInterface
   traits: String
   fieldsOfCare: String
   interests: String
+  
+  # Authentication properties (for users)
+  password: String @private
+  refreshToken: String @private
+  refreshTokenExp: DateTime
+  refreshTokenRevoked: Boolean
+  authId: String
+  embedding: [Float!]
+  signupDate: DateTime
   
   # Onboarding (modern schema)
   onboardingCurrentStepIndex: Int!
@@ -203,6 +213,7 @@ type User implements PersonInterface
   location: String
   avatar: String
   status: String
+  gender: String
   
   # Rich profile content
   passions: String
@@ -212,6 +223,13 @@ type User implements PersonInterface
   
   # Authentication & preferences
   aiEnabled: Boolean!
+  password: String @private
+  refreshToken: String @private
+  refreshTokenExp: DateTime
+  refreshTokenRevoked: Boolean
+  authId: String
+  embedding: [Float!]
+  signupDate: DateTime
   
   # Onboarding
   onboardingCurrentStepIndex: Int!
@@ -542,6 +560,7 @@ type GoalPulse implements FieldPulse
   successMeasures: String
   photo: String
   activities: String
+  type: String
   why: String
   location: String
   time: String
@@ -657,6 +676,7 @@ type StoryPulse implements FieldPulse
   # Merged legacy CoreValue properties (all optional)
   alignmentChallenges: String
   alignmentExamples: String
+  whoSupports: String
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)

@@ -30,7 +30,7 @@ export interface PulsePosition {
 // Node radii for collision detection
 // These represent the actual visual bounding box of nodes including title and content
 export const PULSE_NODE_RADIUS = 80 // Pixel radius for pulse nodes (~128px width + title/content area)
-export const RESONANCE_NODE_RADIUS = 100 // Pixel radius for resonance nodes (visual indicator circles)
+export const RESONANCE_NODE_RADIUS = 40 // Pixel radius for resonance nodes (~56px visual size, compact relationship indicators)
 
 /**
  * Generates a deterministic pseudo-random number in [0,1) derived from an input string and salt.

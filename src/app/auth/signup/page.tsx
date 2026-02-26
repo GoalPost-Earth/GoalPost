@@ -57,10 +57,16 @@ function SignupPage() {
         setError(data.error || 'Sign up failed')
         setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
-        // Log user in with returned user data
+        // Log user in with returned user data and tokens
         if (data.user) {
           setUser(data.user)
           localStorage.setItem('user', JSON.stringify(data.user))
+        }
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+        }
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken)
         }
         // Redirect to spaces page
         router.push('/protected/spaces')

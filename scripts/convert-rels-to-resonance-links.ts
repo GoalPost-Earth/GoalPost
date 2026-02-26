@@ -94,7 +94,7 @@ async function convertRelationshipsToResonanceLinks() {
           contextId: rel.contextId,
           label,
           description,
-          evidence: `Migrated from ${rel.relationshipType} relationship`,
+          evidence: rel.relationshipType,
         }
       )
 

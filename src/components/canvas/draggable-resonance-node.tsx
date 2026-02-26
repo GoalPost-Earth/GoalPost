@@ -181,7 +181,7 @@ export function DraggableResonanceNode({
     <div
       ref={nodeRef}
       className={cn(
-        'absolute',
+        'absolute pointer-events-auto',
         isLocalDragging
           ? 'z-50 cursor-grabbing transition-none'
           : 'cursor-grab transition-transform duration-150 ease-out'

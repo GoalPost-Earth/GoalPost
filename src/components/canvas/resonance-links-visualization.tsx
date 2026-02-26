@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { DraggableResonanceNode } from './draggable-resonance-node'
+import { formatResonanceLabel } from '@/utils/graph-utils'
 
 export interface PulsePosition {
   pulseId: string
@@ -212,7 +213,7 @@ export function ResonanceLinksVisualization({
                   fill="rgba(226, 232, 240, 0.9)"
                   className="pointer-events-none select-none"
                 >
-                  {link.label}
+                  {formatResonanceLabel(link.label)}
                 </text>
 
                 {/* Confidence indicator (small dot) */}
@@ -236,7 +237,7 @@ export function ResonanceLinksVisualization({
       </svg>
 
       {/* Render resonance nodes (interactive) */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-auto z-30">
         {validLinks.map((link, linkIndex) => {
           const sourceId = link.source?.[0]?.id
           const targetId = link.target?.[0]?.id
@@ -268,7 +269,7 @@ export function ResonanceLinksVisualization({
               key={`node-${link.id}-${sourceId}-${targetId}-${linkIndex}`}
               id={link.id}
               icon={getResonanceIcon(link.label)}
-              label={link.label}
+              label={formatResonanceLabel(link.label)}
               description={link.description}
               isActive={isActive}
               canvasPosition={{ x: midX, y: midY }}

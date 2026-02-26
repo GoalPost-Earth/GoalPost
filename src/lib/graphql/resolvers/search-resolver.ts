@@ -182,7 +182,8 @@ export const searchResolvers = {
                 WHERE member.id = $userId
               }
             )
-            RETURN p, ctx
+            WITH DISTINCT p, collect(DISTINCT ctx) as contexts
+            RETURN p, contexts
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -207,7 +208,8 @@ export const searchResolvers = {
                 WHERE member.id = $userId
               }
             )
-            RETURN p, ctx
+            WITH DISTINCT p, collect(DISTINCT ctx) as contexts
+            RETURN p, contexts
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -232,7 +234,8 @@ export const searchResolvers = {
                 WHERE member.id = $userId
               }
             )
-            RETURN p, ctx
+            WITH DISTINCT p, collect(DISTINCT ctx) as contexts
+            RETURN p, contexts
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -246,18 +249,21 @@ export const searchResolvers = {
         key: string
       ): EntityRecord[] => records.map((record) => record.get(key).properties)
 
-      // Extract pulse properties with related context
-      const extractPulsesWithContext = (
+      // Extract pulse properties with related contexts (aggregated)
+      const extractPulsesWithContexts = (
         records: Array<{ get: (key: string) => { properties: EntityRecord } }>,
         pulseKey: string,
-        contextKey: string
+        contextsKey: string
       ): EntityRecord[] =>
         records.map((record) => {
           const pulse = record.get(pulseKey).properties
-          const context = record.get(contextKey)?.properties
+          const contexts =
+            record
+              .get(contextsKey)
+              ?.map((ctx: { properties: EntityRecord }) => ctx.properties) || []
           return {
             ...pulse,
-            context: context ? [context] : [],
+            context: contexts,
           }
         })
 
@@ -267,20 +273,20 @@ export const searchResolvers = {
         meSpaces: extractProperties(meSpacesResult.records, 's'),
         weSpaces: extractProperties(weSpacesResult.records, 's'),
         contexts: extractProperties(contextsResult.records, 'f'),
-        goalPulses: extractPulsesWithContext(
+        goalPulses: extractPulsesWithContexts(
           goalPulsesResult.records,
           'p',
-          'ctx'
+          'contexts'
         ),
-        resourcePulses: extractPulsesWithContext(
+        resourcePulses: extractPulsesWithContexts(
           resourcePulsesResult.records,
           'p',
-          'ctx'
+          'contexts'
         ),
-        storyPulses: extractPulsesWithContext(
+        storyPulses: extractPulsesWithContexts(
           storyPulsesResult.records,
           'p',
-          'ctx'
+          'contexts'
         ),
       }
     } catch (error) {

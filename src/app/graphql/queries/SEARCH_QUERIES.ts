@@ -11,16 +11,19 @@ export const SEARCH_ALL = gql`
   query SearchAll($query: String!) {
     searchAll(query: $query) {
       people {
+        __typename
         id
         firstName
         lastName
         email
       }
       contexts {
+        __typename
         id
         title
       }
       goalPulses {
+        __typename
         id
         title
         content
@@ -28,6 +31,7 @@ export const SEARCH_ALL = gql`
         intensity
       }
       resourcePulses {
+        __typename
         id
         title
         content
@@ -35,6 +39,7 @@ export const SEARCH_ALL = gql`
         intensity
       }
       storyPulses {
+        __typename
         id
         title
         content
@@ -42,12 +47,14 @@ export const SEARCH_ALL = gql`
         intensity
       }
       meSpaces {
+        __typename
         id
         name
         visibility
         createdAt
       }
       weSpaces {
+        __typename
         id
         name
         visibility
