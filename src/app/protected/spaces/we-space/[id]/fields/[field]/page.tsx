@@ -179,8 +179,8 @@ function FieldDetailPage() {
   >(new Map())
 
   const params = useParams()
-  const fieldId = params?.field as string
-  const spaceId = (params?.id as string) || ''
+  const fieldId = (params?.field as string) || undefined
+  const spaceId = (params?.id as string) || undefined
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
@@ -216,7 +216,7 @@ function FieldDetailPage() {
   const { data: pulsesByContextData, loading: isPulsesLoading } = useQuery(
     GET_PULSES_BY_CONTEXT,
     {
-      variables: { contextId: fieldId },
+      variables: { contextId: fieldId || '' },
       skip: !fieldId,
     }
   )
@@ -225,7 +225,7 @@ function FieldDetailPage() {
   const { data: membersData, loading: isMembersLoading } = useQuery(
     GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
     {
-      variables: { spaceId },
+      variables: { spaceId: spaceId || '' },
       skip: !spaceId,
     }
   )
@@ -1565,11 +1565,10 @@ function FieldDetailPage() {
     [selectedPerson, handleConnectionClick]
   )
 
-  // Early return if field ID is not available (after all hooks have been called)
-  if (!fieldId) {
-    console.error('❌ No field ID in URL')
+  // Only render the canvas when mounted and params are available to avoid hydration mismatch
+  if (!isMounted || !fieldId) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="relative overflow-hidden flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-pulse mb-4">
             <span className="material-symbols-outlined text-6xl text-gp-accent-muted">
