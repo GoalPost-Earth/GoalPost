@@ -179,17 +179,17 @@ function FieldDetailPage() {
   >(new Map())
 
   const params = useParams()
-  const fieldId = params?.field as string
-  const spaceId = (params?.id as string) || ''
+  const fieldId = (params?.field as string) || undefined
+  const spaceId = (params?.id as string) || undefined
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
 
-  // Resonance discovery hooks - only use when spaceId is available
+  // Resonance discovery hooks - provide empty string as fallback for SSR safety
   const { triggerDiscovery, isLoading: isDiscoveringResonances } =
     useResonanceDiscovery({
-      spaceId: spaceId || undefined,
+      spaceId: spaceId || '',
       onSuccess: () => {
         setIsDiscoverSuggestionsModalOpen(true)
         refetchSuggestions?.()
@@ -216,7 +216,7 @@ function FieldDetailPage() {
   const { data: pulsesByContextData, loading: isPulsesLoading } = useQuery(
     GET_PULSES_BY_CONTEXT,
     {
-      variables: { contextId: fieldId },
+      variables: { contextId: fieldId || '' },
       skip: !fieldId,
     }
   )
@@ -225,7 +225,7 @@ function FieldDetailPage() {
   const { data: membersData, loading: isMembersLoading } = useQuery(
     GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
     {
-      variables: { spaceId },
+      variables: { spaceId: spaceId || '' },
       skip: !spaceId,
     }
   )
@@ -1902,7 +1902,7 @@ function FieldDetailPage() {
         editingResonance={editingResonance}
       />
 
-      {spaceId && (
+      {isMounted && spaceId && (
         <ResonanceSuggestionsModal
           isOpen={isDiscoverSuggestionsModalOpen}
           onClose={() => {

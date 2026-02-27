@@ -186,10 +186,10 @@ function FieldDetailPage() {
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
 
-  // Resonance discovery hooks - only use when spaceId is available
+  // Resonance discovery hooks - provide empty string as fallback for SSR safety
   const { triggerDiscovery, isLoading: isDiscoveringResonances } =
     useResonanceDiscovery({
-      spaceId: spaceId || undefined,
+      spaceId: spaceId || '',
       onSuccess: () => {
         setIsDiscoverSuggestionsModalOpen(true)
         refetchSuggestions?.()
@@ -1913,7 +1913,7 @@ function FieldDetailPage() {
         editingResonance={editingResonance}
       />
 
-      {spaceId && (
+      {isMounted && spaceId && (
         <ResonanceSuggestionsModal
           isOpen={isDiscoverSuggestionsModalOpen}
           onClose={() => {
