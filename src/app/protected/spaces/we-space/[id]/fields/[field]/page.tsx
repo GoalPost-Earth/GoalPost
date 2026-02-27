@@ -284,11 +284,6 @@ function FieldDetailPage() {
     }
   )
 
-  // Redirect if no field ID
-  if (!fieldId) {
-    console.error('❌ No field ID in URL')
-  }
-
   // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
   useEffect(() => {
     const updateCanvas = () =>
@@ -1569,6 +1564,23 @@ function FieldDetailPage() {
     },
     [selectedPerson, handleConnectionClick]
   )
+
+  // Early return if field ID is not available (after all hooks have been called)
+  if (!fieldId) {
+    console.error('❌ No field ID in URL')
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-pulse mb-4">
+            <span className="material-symbols-outlined text-6xl text-gp-accent-muted">
+              psychology
+            </span>
+          </div>
+          <p className="text-gp-ink-muted">Loading field...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative overflow-hidden">
