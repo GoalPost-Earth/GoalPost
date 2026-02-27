@@ -160,7 +160,7 @@ export function GenericCanvas({
               {(enableZoomControls || actionButton || toolbar) && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
                   {enableZoomControls && (
-                    <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass shadow-xl">
+                    <div className="relative z-40 flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass shadow-xl">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
