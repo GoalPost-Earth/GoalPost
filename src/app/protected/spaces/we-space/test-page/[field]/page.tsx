@@ -12,16 +12,24 @@ import type { NodeType } from '@/components/ui/pulse-node'
 import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
 import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
 import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
+import { PersonConnectionLines } from '@/components/canvas/person-connection-lines'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
+import { ConnectionPanel } from '@/components/ui/connection-panel'
+import { PersonPanel } from '@/components/ui/person-panel'
+import { DraggablePersonNode } from '@/components/canvas/draggable-person-node'
 import {
   ResonanceLinkModal,
   type PulseOption,
 } from '@/components/ui/resonance-link-modal'
 import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
+import {
+  GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
+  GET_PERSON_CONNECTIONS,
+} from '@/app/graphql/queries/SPACE_QUERIES'
 import {
   CREATE_RESONANCE_LINK_MUTATION,
   UPDATE_RESONANCE_LINK_MUTATION,
@@ -115,6 +123,55 @@ function FieldDetailPage() {
   } | null>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
 
+  // Person node states
+  type PersonPosition = {
+    personId: string
+    x: number
+    y: number
+    firstName: string
+    lastName: string
+    name: string | null
+    email: string | null
+    photo: string | null
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+    animation: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
+  }
+  const [personPositions, setPersonPositions] = useState<PersonPosition[]>([])
+  const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
+  const [activePersonIds, setActivePersonIds] = useState<Set<string>>(new Set())
+  const [selectedPerson, setSelectedPerson] = useState<{
+    id: string
+    firstName: string
+    lastName: string
+    name: string | null
+    email: string | null
+    photo: string | null
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+  } | null>(null)
+  const [selectedConnection, setSelectedConnection] = useState<{
+    person1: {
+      id: string
+      firstName: string
+      lastName: string
+      name: string | null
+      email: string | null
+      photo: string | null
+      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+    }
+    person2: {
+      id: string
+      firstName: string
+      lastName: string
+      name: string | null
+      email: string | null
+      photo: string | null
+      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+    }
+    why?: string | null
+    interests?: string | null
+  } | null>(null)
+
   // Refs to track current state for synchronous access
   const pulsePositionsRef = useRef<PulsePosition[]>([])
   const resonanceNodePositionsRef = useRef<
@@ -162,6 +219,20 @@ function FieldDetailPage() {
       variables: { contextId: fieldId },
       skip: !fieldId,
     }
+  )
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: membersData, loading: isMembersLoading } = useQuery(
+    GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
+    {
+      variables: { spaceId },
+      skip: !spaceId,
+    }
+  )
+
+  // Lazy query to fetch person connections separately
+  const [fetchPersonConnections, { data: connectionsData }] = useLazyQuery(
+    GET_PERSON_CONNECTIONS
   )
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
@@ -272,6 +343,70 @@ function FieldDetailPage() {
       return positions
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvasSize]
+  )
+
+  // Compute positions for person nodes (placed around periphery)
+  const computePersonPositions = useCallback(
+    (
+      personsData: Array<{
+        id: string
+        firstName: string
+        lastName: string
+        name: string | null
+        email: string | null
+        photo: string | null
+        role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+      }>,
+      existingPulsePositions: PulsePosition[]
+    ) => {
+      const centerX = canvasSize.width / 2
+      const centerY = canvasSize.height / 2
+      const peripheryRadius =
+        Math.min(canvasSize.width, canvasSize.height) / 2.5
+
+      const positions: PersonPosition[] = personsData.map((person, idx) => {
+        // Distribute persons evenly around the periphery
+        const angleStep = (Math.PI * 2) / personsData.length
+        const angle = idx * angleStep
+        const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
+
+        let x = Math.cos(angle) * peripheryRadius + centerX
+        let y = Math.sin(angle) * peripheryRadius + centerY
+
+        // Check for collision with pulses
+        const PERSON_NODE_RADIUS = 40 // Person nodes are slightly smaller
+        const MIN_DISTANCE = PERSON_NODE_RADIUS + PULSE_NODE_RADIUS + 20
+
+        existingPulsePositions.forEach((pulse) => {
+          const dx = x - pulse.x
+          const dy = y - pulse.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < MIN_DISTANCE) {
+            // Push person node further out
+            const pushAngle = Math.atan2(dy, dx)
+            x = pulse.x + Math.cos(pushAngle) * MIN_DISTANCE
+            y = pulse.y + Math.sin(pushAngle) * MIN_DISTANCE
+          }
+        })
+
+        return {
+          personId: person.id,
+          x,
+          y,
+          firstName: person.firstName,
+          lastName: person.lastName,
+          name: person.name,
+          email: person.email,
+          photo: person.photo,
+          role: person.role,
+          animation,
+        }
+      })
+
+      return positions
+    },
     [canvasSize]
   )
 
@@ -411,6 +546,190 @@ function FieldDetailPage() {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulsesByContextData, computePulsePositions, resonanceLinkageEnabled])
 
+  // Compute person connections for visualization
+  const personConnections = useMemo(() => {
+    if (!membersData || !connectionsData) {
+      console.log(
+        '⏳ Waiting for data - membersData:',
+        !!membersData,
+        'connectionsData:',
+        !!connectionsData
+      )
+      return []
+    }
+
+    const space = membersData.weSpaces?.[0]
+    if (!space) return []
+
+    // Create a map of person ID to their connections
+    const connectionsMap = new Map<string, string[]>()
+    connectionsData.people?.forEach(
+      (person: { id: string; connections?: Array<{ id: string }> }) => {
+        if (person.connections) {
+          connectionsMap.set(
+            person.id,
+            person.connections.map((c) => c.id)
+          )
+        }
+      }
+    )
+
+    const connections: Array<{
+      personId: string
+      connectedPersonIds: string[]
+    }> = []
+
+    // GraphQL returns owner as array, take first element
+    const owner = space.owner?.[0]
+    if (owner) {
+      connections.push({
+        personId: owner.id,
+        connectedPersonIds: connectionsMap.get(owner.id) || [],
+      })
+    }
+
+    // For members
+    if (space.members) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      space.members.forEach((membership: any) => {
+        if (membership.member) {
+          connections.push({
+            personId: membership.member.id,
+            connectedPersonIds: connectionsMap.get(membership.member.id) || [],
+          })
+        }
+      })
+    }
+
+    console.log(
+      '🔗 Person connections computed:',
+      connections.length,
+      'connections'
+    )
+    connections.forEach((c) => {
+      if (c.connectedPersonIds.length > 0) {
+        console.log(`  ${c.personId} -> [${c.connectedPersonIds.join(', ')}]`)
+      }
+    })
+
+    return connections
+  }, [membersData, connectionsData])
+
+  // Process members data when it changes
+  useEffect(() => {
+    if (!membersData) return
+
+    try {
+      const space = membersData.weSpaces?.[0]
+      if (!space) {
+        console.log('🔍 No space found in membersData')
+        return
+      }
+      console.log(
+        '👥 Processing space members:',
+        space.id,
+        'Owner:',
+        space.owner,
+        'Members:',
+        space.members?.length
+      )
+
+      // Collect all persons (owner + members)
+      const allPersons: Array<{
+        id: string
+        firstName: string
+        lastName: string
+        name: string | null
+        email: string | null
+        photo: string | null
+        role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+      }> = []
+
+      // Add owner (GraphQL returns array, take first element)
+      const owner = space.owner?.[0]
+      const ownerId = owner?.id
+      if (owner) {
+        allPersons.push({
+          id: owner.id,
+          firstName: owner.firstName,
+          lastName: owner.lastName,
+          name: owner.name,
+          email: owner.email ?? null,
+          photo: owner.photo ?? null,
+          role: 'OWNER' as const,
+        })
+      }
+
+      // Add members (skip if they're also the owner)
+      if (space.members) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        space.members.forEach((membership: any) => {
+          const memberData = membership.member?.[0] // Extract first element from array
+          if (memberData && memberData.id !== ownerId) {
+            allPersons.push({
+              id: memberData.id,
+              firstName: memberData.firstName,
+              lastName: memberData.lastName,
+              name: memberData.name,
+              email: memberData.email ?? null,
+              photo: memberData.photo ?? null,
+              role: membership.role || 'MEMBER',
+            })
+          }
+        })
+      }
+
+      console.log(
+        '✅ Total persons collected:',
+        allPersons.length,
+        allPersons.map((p) => `${p.firstName} ${p.lastName} (${p.role})`)
+      )
+
+      // Compute person positions (avoiding pulse collisions)
+      const positions = computePersonPositions(
+        allPersons,
+        pulsePositionsRef.current
+      )
+      console.log('📍 Person positions computed:', positions.length)
+      setPersonPositions(positions)
+    } catch (error) {
+      console.error('Error processing members data:', error)
+    }
+  }, [membersData, computePersonPositions])
+
+  // Fetch person connections when members data is available
+  useEffect(() => {
+    if (!membersData) return
+
+    const space = membersData.weSpaces?.[0]
+    if (!space) return
+
+    // Collect all person IDs from owner and members
+    const personIds: string[] = []
+
+    const owner = space.owner?.[0]
+    if (owner) {
+      personIds.push(owner.id)
+    }
+
+    if (space.members) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      space.members.forEach((membership: any) => {
+        const memberData = membership.member?.[0] // Extract first element from array
+        if (memberData?.id) {
+          personIds.push(memberData.id)
+        }
+      })
+    }
+
+    // Only fetch if we have person IDs
+    if (personIds.length > 0) {
+      fetchPersonConnections({
+        variables: { personIds },
+      })
+    }
+  }, [membersData, fetchPersonConnections])
+
   // Fetch field name with pulse count
   useEffect(() => {
     if (!fieldId) return
@@ -518,6 +837,11 @@ function FieldDetailPage() {
       // Clicking a different node - make it active and open panel
       const resonance = resonanceLinks.find((link) => link.id === linkId)
       if (resonance) {
+        // Close all other panels
+        setIsPulsePanelOpen(false)
+        setIsPersonPanelOpen(false)
+        setIsConnectionPanelOpen(false)
+
         setActiveResonanceNodeId(linkId)
         setSelectedResonance(resonance)
         setIsResonancePanelOpen(true)
@@ -606,8 +930,7 @@ function FieldDetailPage() {
       updatedResonancePositions.set(linkId, { x: clampedX, y: clampedY })
 
       // Find the resonance link to get source and target pulse IDs
-      //eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const link = resonanceLinks.find((l: any) => l.id === linkId)
+      const link = resonanceLinks.find((l) => l.id === linkId)
 
       let updatedPulses = pulsePositionsRef.current
 
@@ -1091,17 +1414,169 @@ function FieldDetailPage() {
     }
   }
 
+  // Person node handlers
+  const handlePersonPositionChange = useCallback(
+    (personId: string, newX: number, newY: number) => {
+      setPersonPositions((prevPositions) => {
+        return prevPositions.map((pos) =>
+          pos.personId === personId ? { ...pos, x: newX, y: newY } : pos
+        )
+      })
+    },
+    []
+  )
+
+  const handlePersonClick = useCallback(
+    (personId: string) => {
+      // Find the clicked person
+      const clickedPerson = personPositions.find((p) => p.personId === personId)
+      if (!clickedPerson) return
+
+      // Check if clicking the same person that's already selected
+      if (isPersonPanelOpen && selectedPerson?.id === personId) {
+        // Close the panel and hide connections
+        setIsPersonPanelOpen(false)
+        setSelectedPerson(null)
+        setActivePersonIds(new Set()) // Clear all active persons
+        return
+      }
+
+      // Close all other panels
+      setIsPulsePanelOpen(false)
+      setIsResonancePanelOpen(false)
+      setIsConnectionPanelOpen(false)
+
+      // Add person to active set to show their connections
+      setActivePersonIds(new Set([personId])) // Only show this person's connections
+
+      // Open person panel with person info
+      setSelectedPerson({
+        id: clickedPerson.personId,
+        firstName: clickedPerson.firstName,
+        lastName: clickedPerson.lastName,
+        name: clickedPerson.name,
+        email: clickedPerson.email,
+        photo: clickedPerson.photo,
+        role: clickedPerson.role,
+      })
+      setIsPersonPanelOpen(true)
+    },
+    [personPositions, isPersonPanelOpen, selectedPerson]
+  )
+
+  // Handle connection midpoint click - toggle panel open/close
+  const handleConnectionClick = useCallback(
+    (person1Id: string, person2Id: string) => {
+      // If a connection panel is already open
+      if (isConnectionPanelOpen && selectedConnection) {
+        // Check if it's the same connection being clicked
+        if (
+          (selectedConnection.person1.id === person1Id &&
+            selectedConnection.person2.id === person2Id) ||
+          (selectedConnection.person1.id === person2Id &&
+            selectedConnection.person2.id === person1Id)
+        ) {
+          // Same connection clicked again - close panel and hide lines
+          setIsConnectionPanelOpen(false)
+          setSelectedConnection(null)
+          setActivePersonIds((prev) => {
+            const newIds = new Set(prev)
+            newIds.delete(person1Id)
+            newIds.delete(person2Id)
+            return newIds
+          })
+          return
+        }
+      }
+
+      // Find both persons
+      const person1Data = personPositions.find((p) => p.personId === person1Id)
+      const person2Data = personPositions.find((p) => p.personId === person2Id)
+
+      if (!person1Data || !person2Data) return
+
+      // Find their connection info from personConnections (check both directions)
+      const connectionExists =
+        personConnections.some(
+          (pc) =>
+            pc.personId === person1Id &&
+            pc.connectedPersonIds.includes(person2Id)
+        ) ||
+        personConnections.some(
+          (pc) =>
+            pc.personId === person2Id &&
+            pc.connectedPersonIds.includes(person1Id)
+        )
+
+      if (!connectionExists) return
+
+      // Get connection details from GraphQL data if available
+      const space = membersData?.weSpaces?.[0]
+      if (!space) return
+
+      // Close all other panels except person panel (if currently viewing a person)
+      setIsPulsePanelOpen(false)
+      setIsResonancePanelOpen(false)
+      if (isPersonPanelOpen) {
+        setIsPersonPanelOpen(false)
+      }
+
+      setSelectedConnection({
+        person1: {
+          id: person1Data.personId,
+          firstName: person1Data.firstName,
+          lastName: person1Data.lastName,
+          name: person1Data.name,
+          email: person1Data.email,
+          photo: person1Data.photo,
+          role: person1Data.role,
+        },
+        person2: {
+          id: person2Data.personId,
+          firstName: person2Data.firstName,
+          lastName: person2Data.lastName,
+          name: person2Data.name,
+          email: person2Data.email,
+          photo: person2Data.photo,
+          role: person2Data.role,
+        },
+      })
+      setIsConnectionPanelOpen(true)
+
+      // Ensure both persons are in active set to show their connections
+      setActivePersonIds((prev) => new Set([...prev, person1Id, person2Id]))
+    },
+    [
+      personPositions,
+      personConnections,
+      membersData,
+      isConnectionPanelOpen,
+      selectedConnection,
+      isPersonPanelOpen,
+    ]
+  )
+
+  // Handle viewing a specific connection from the person panel
+  const handleViewConnectionFromPanel = useCallback(
+    (connectedPersonId: string) => {
+      if (!selectedPerson) return
+
+      // Close person panel
+      setIsPersonPanelOpen(false)
+
+      // Open connection panel between selected person and the clicked connection
+      handleConnectionClick(selectedPerson.id, connectedPersonId)
+    },
+    [selectedPerson, handleConnectionClick]
+  )
+
   return (
     <div className="relative overflow-hidden">
       <GenericPulseCanvas
         canvasScale={5}
         onScaleChange={setCurrentScale}
         isLoading={isPulsesLoading}
-        isEmpty={
-          !isPulsesLoading &&
-          pulsePositions.length === 0 &&
-          pulseOptions.length > 0
-        }
+        isEmpty={!isPulsesLoading && pulseOptions.length === 0}
         actionButton={
           isMounted && (
             <div className="group flex flex-row items-center gap-3">
@@ -1146,6 +1621,15 @@ function FieldDetailPage() {
       >
         {isMounted && !isPulsesLoading && (
           <>
+            <PersonConnectionLines
+              personPositions={personPositions}
+              connections={personConnections}
+              canvasWidth={canvasSize.width}
+              canvasHeight={canvasSize.height}
+              scale={currentScale}
+              activePersonIds={activePersonIds}
+              onConnectionClick={handleConnectionClick}
+            />
             <ResonanceLinksVisualization
               pulsePositions={pulsePositions}
               resonanceLinks={resonanceLinks}
@@ -1171,6 +1655,11 @@ function FieldDetailPage() {
                   handlePulsePositionChange(pos.pulseId, x, y)
                 }
                 onClick={() => {
+                  // Close all other panels
+                  setIsResonancePanelOpen(false)
+                  setIsPersonPanelOpen(false)
+                  setIsConnectionPanelOpen(false)
+
                   setIsPulsePanelOpen(true)
                   fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
                 }}
@@ -1184,6 +1673,25 @@ function FieldDetailPage() {
                     pos.content
                   )
                 }
+              />
+            ))}
+            {personPositions.map((pos) => (
+              <DraggablePersonNode
+                key={pos.personId}
+                id={pos.personId}
+                firstName={pos.firstName}
+                lastName={pos.lastName}
+                name={pos.name}
+                email={pos.email}
+                photo={pos.photo}
+                role={pos.role}
+                animation={pos.animation}
+                canvasPosition={{ x: pos.x, y: pos.y }}
+                scale={currentScale}
+                onPositionChange={(x: number, y: number) =>
+                  handlePersonPositionChange(pos.personId, x, y)
+                }
+                onClick={() => handlePersonClick(pos.personId)}
               />
             ))}
           </>
@@ -1229,6 +1737,86 @@ function FieldDetailPage() {
             : null
         }
         links={selectedResonance ? [selectedResonance] : []}
+      />
+
+      <ConnectionPanel
+        isOpen={isConnectionPanelOpen}
+        onClose={() => {
+          // Remove both persons from active set to hide their connections
+          if (selectedConnection) {
+            setActivePersonIds((prev) => {
+              const newIds = new Set(prev)
+              newIds.delete(selectedConnection.person1.id)
+              newIds.delete(selectedConnection.person2.id)
+              return newIds
+            })
+          }
+          setIsConnectionPanelOpen(false)
+          setSelectedConnection(null)
+        }}
+        connection={selectedConnection}
+      />
+
+      <PersonPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => {
+          setIsPersonPanelOpen(false)
+          setSelectedPerson((prev) => {
+            if (prev) {
+              setActivePersonIds((ids) => {
+                const newIds = new Set(ids)
+                newIds.delete(prev.id)
+                return newIds
+              })
+            }
+            return null
+          })
+        }}
+        person={selectedPerson}
+        connectedPersons={
+          selectedPerson
+            ? (() => {
+                const connectedIds = new Set<string>()
+
+                // Find direct connections (where selectedPerson is the source)
+                const directConnection = personConnections.find(
+                  (pc) => pc.personId === selectedPerson.id
+                )
+                if (directConnection) {
+                  directConnection.connectedPersonIds.forEach((id) =>
+                    connectedIds.add(id)
+                  )
+                }
+
+                // Find reverse connections (where selectedPerson is the target)
+                personConnections.forEach((pc) => {
+                  if (pc.connectedPersonIds.includes(selectedPerson.id)) {
+                    connectedIds.add(pc.personId)
+                  }
+                })
+
+                // Map to full person objects
+                return Array.from(connectedIds)
+                  .map((connectedId) => {
+                    const connectedPerson = personPositions.find(
+                      (p) => p.personId === connectedId
+                    )
+                    return connectedPerson
+                      ? {
+                          id: connectedPerson.personId,
+                          firstName: connectedPerson.firstName,
+                          lastName: connectedPerson.lastName,
+                          name: connectedPerson.name,
+                          photo: connectedPerson.photo,
+                          role: connectedPerson.role,
+                        }
+                      : null
+                  })
+                  .filter((p): p is NonNullable<typeof p> => p !== null)
+              })()
+            : []
+        }
+        onConnectionClick={handleViewConnectionFromPanel}
       />
 
       {/* Offering Modal for creating new pulses */}
