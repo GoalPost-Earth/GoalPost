@@ -38,8 +38,21 @@ export function GenericCanvas({
   const canvasRef = useRef<HTMLDivElement>(null)
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformRef = useRef<any>(null)
-  const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 1200 })
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
+  const [canvasSize, setCanvasSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return {
+        width: window.innerWidth * canvasScale,
+        height: window.innerHeight * canvasScale,
+      }
+    }
+    return { width: 1200 * canvasScale, height: 1200 * canvasScale }
+  })
+  const [viewportSize, setViewportSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return { width: window.innerWidth, height: window.innerHeight }
+    }
+    return { width: 1200, height: 1200 }
+  })
 
   useEffect(() => {
     // Guard against SSR - only run on client
