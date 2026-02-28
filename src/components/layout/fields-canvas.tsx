@@ -182,11 +182,51 @@ export function FieldsCanvas({
     return initialPositions
   }, [canvasSize.height, canvasSize.width, fields])
 
-  // Update positions when fields change
+  // Update positions when fields change - preserve existing positions
   useEffect(() => {
-    if (fields.length > 0) {
-      setFieldPositions(resolveCollisions(computeFieldPositions()))
+    if (fields.length === 0) {
+      setFieldPositions([])
+      return
     }
+
+    setFieldPositions((prevPositions) => {
+      // Create a map of existing positions by fieldId
+      const existingPositionsMap = new Map(
+        prevPositions.map((pos) => [pos.fieldId, pos])
+      )
+
+      // Get the set of current field IDs
+      const currentFieldIds = new Set(
+        fields.map((f) => f.id || `field-${fields.indexOf(f)}`)
+      )
+
+      // Check if we only need to preserve existing positions (no new fields)
+      const hasNewFields = fields.some((f, idx) => {
+        const fieldId = f.id || `field-${idx}`
+        return !existingPositionsMap.has(fieldId)
+      })
+
+      // If no new fields and we have positions, keep existing positions
+      if (!hasNewFields && prevPositions.length === fields.length) {
+        return prevPositions
+      }
+
+      // Compute fresh positions
+      const freshPositions = computeFieldPositions()
+
+      // Merge: use existing positions where available, fresh for new fields
+      const mergedPositions = freshPositions.map((freshPos) => {
+        const existing = existingPositionsMap.get(freshPos.fieldId)
+        if (existing && currentFieldIds.has(freshPos.fieldId)) {
+          // Preserve manually adjusted position
+          return existing
+        }
+        // Use freshly computed position for new fields
+        return freshPos
+      })
+
+      return resolveCollisions(mergedPositions)
+    })
   }, [fields, computeFieldPositions, resolveCollisions])
 
   const handleCreateField = async (description: string, name?: string) => {

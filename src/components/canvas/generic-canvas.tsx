@@ -200,7 +200,9 @@ export function GenericCanvas({
                   {toolbar && <div>{toolbar}</div>}
 
                   {actionButton && (
-                    <div className="gp-action-button-shell">{actionButton}</div>
+                    <div className="gp-action-button-shell relative z-50 pointer-events-auto">
+                      {actionButton}
+                    </div>
                   )}
                 </div>
               )}

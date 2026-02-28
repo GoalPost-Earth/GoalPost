@@ -1590,9 +1590,12 @@ function FieldDetailPage() {
         isEmpty={!isPulsesLoading && pulseOptions.length === 0}
         actionButton={
           isMounted && (
-            <div className="group flex flex-row items-center gap-3">
+            <div className="group flex flex-row items-center gap-3 relative z-50">
               <button
-                onClick={() => triggerDiscovery()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  triggerDiscovery()
+                }}
                 disabled={isDiscoveringResonances || !spaceId}
                 title={!spaceId ? 'Space ID required' : 'Discover Resonances'}
                 className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
@@ -1603,7 +1606,10 @@ function FieldDetailPage() {
                 <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
               </button>
               <button
-                onClick={() => setIsResonanceLinkModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsResonanceLinkModalOpen(true)
+                }}
                 disabled={pulseOptions.length < 2}
                 title={
                   pulseOptions.length < 2
@@ -1618,7 +1624,10 @@ function FieldDetailPage() {
                 <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
               </button>
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsModalOpen(true)
+                }}
                 className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
               >
                 <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
@@ -1639,7 +1648,6 @@ function FieldDetailPage() {
               canvasHeight={canvasSize.height}
               scale={currentScale}
               activePersonIds={activePersonIds}
-              onConnectionClick={handleConnectionClick}
             />
             <ResonanceLinksVisualization
               pulsePositions={pulsePositions}
