@@ -6,7 +6,7 @@ import { createYoga } from 'graphql-yoga'
 import { jwtDecode } from 'jwt-decode'
 import logger from '@/lib/logger'
 
-export default async function initializeApolloServer() {
+export async function initializeApolloServer() {
   logger.info('🚀 Initializing Apollo Server...')
 
   const driver = neoDriver(
