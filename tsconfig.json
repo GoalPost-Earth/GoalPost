@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "baseUrl": ".",
     "plugins": [
@@ -20,13 +24,27 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/types": ["./src/types"],
-      "@/utils": ["./src/utils"],
-      "@/icons": ["./src/components/icons"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/mutations": ["./src/app/graphql/mutations"],
-      "@/queries/*": ["./src/app/graphql/queries/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/types": [
+        "./src/types"
+      ],
+      "@/utils": [
+        "./src/utils"
+      ],
+      "@/icons": [
+        "./src/components/icons"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/mutations": [
+        "./src/app/graphql/mutations"
+      ],
+      "@/queries/*": [
+        "./src/app/graphql/queries/*"
+      ]
     }
   },
   "include": [
@@ -37,5 +55,7 @@
     ".next/dev/types/**/*.ts",
     ".vscode/apollo-functions.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

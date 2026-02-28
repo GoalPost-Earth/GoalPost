@@ -62,48 +62,7 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  webpack: (config: any, { dev }: any) => {
-    config.experiments = { topLevelAwait: true, layers: true }
-    // Add support for handling GraphQL files
-    config.module.rules.push({
-      test: /\.(graphql|gql)$/,
-      exclude: /node_modules/,
-      loader: 'graphql-tag/loader',
-    })
-
-    config.module.rules.push({
-      test: /\.well-known\/[^.]+$/,
-      type: 'asset/source',
-      exclude: /node_modules/,
-    })
-
-    if (config.cache && !dev) {
-      config.cache = Object.freeze({
-        type: 'memory',
-      })
-    }
-
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        minSize: 20000,
-        maxSize: 70000,
-      },
-      runtimeChunk: 'single', // This reduces duplication by sharing runtime code across bundles
-      minimize: !dev, // Minify the bundles in production mode
-      usedExports: true, // Tree-shake unused exports
-    }
-
-    config.ignoreWarnings = [
-      ...(config.ignoreWarnings || []),
-      { module: /@apollo\/client/ },
-      { module: /@apollo\/experimental-nextjs-app-support/ },
-    ]
-
-    return config
-  },
+  // Webpack is no longer used - all configuration migrated to Turbopack
   experimental: {
     optimizePackageImports: [
       'lodash',
@@ -124,6 +83,27 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  turbopack: {
+    resolveAlias: {
+      // Force all graphql imports to resolve to the exact same instance
+      // This prevents the "Cannot use GraphQLNonNull from another module or realm" error
+      graphql: 'graphql/index.js',
+    },
+    rules: {
+      '*.gql': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '*.graphql': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '**/.well-known/*': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+    },
   },
 }
 
