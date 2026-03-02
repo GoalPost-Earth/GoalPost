@@ -152,10 +152,10 @@ export function OfferingInput({
                 onClick={handleSubmit}
                 disabled={isLoading}
                 className={cn(
-                  'cursor-pointer flex items-center justify-center size-12 rounded-2xl text-white transition-all shadow-[0_4px_15px_-3px_rgba(19,164,236,0.4)] dark:shadow-[0_0_15px_rgba(19,164,236,0.3)]',
+                  'cursor-pointer flex items-center justify-center size-12 rounded-2xl text-white transition-all shadow-md shadow-gp-primary/40 dark:shadow-gp-primary/30',
                   isLoading
                     ? 'bg-gp-primary/50 dark:bg-gp-primary/50 cursor-not-allowed'
-                    : 'bg-gp-primary hover:bg-gp-primary/90 dark:bg-gp-primary dark:hover:bg-gp-primary/80 hover:shadow-[0_6px_20px_-3px_rgba(19,164,236,0.6)] dark:hover:shadow-[0_0_25px_rgba(19,164,236,0.5)]'
+                    : 'bg-gp-primary hover:bg-gp-primary/90 dark:bg-gp-primary dark:hover:bg-gp-primary/80 hover:shadow-lg hover:shadow-gp-primary/50 dark:hover:shadow-gp-primary/40'
                 )}
               >
                 <span

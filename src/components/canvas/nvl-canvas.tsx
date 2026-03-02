@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useRef, useMemo } from 'react'
+import { ReactNode, useRef, useMemo, useCallback, useEffect } from 'react'
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react'
 import type {
   Node,
@@ -57,13 +57,17 @@ export function NvlCanvas({
 }: NvlCanvasProps) {
   const wrapperRef = useRef<any>(null)
   const { animationsEnabled } = useAnimations()
+  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isDraggingRef = useRef(false)
+  const isInitialLayoutRef = useRef(true)
 
   // Merge with defaults
   const finalNvlOptions: Partial<NvlOptions> = useMemo(
     () => ({
-      initialZoom: 1,
+      initialZoom: 0.5, // Start zoomed out
       minScale: minZoom,
       maxScale: maxZoom,
+      allowDynamicMinZoom: true, // Allow zoom out beyond minScale to fit all nodes
       layout,
       renderer: 'canvas',
       ...nvlOptions,
@@ -74,8 +78,11 @@ export function NvlCanvas({
   const finalLayoutOptions = useMemo(
     () => ({
       ...(layout === 'forceDirected' && {
-        simulationIterations: 200,
-        gravity: -10,
+        simulationIterations: 350,
+        gravity: 4.5, // Maximum pull toward center
+        linkDistance: 25, // Very tight spacing
+        charge: -100, // Minimal repulsion for tight clustering
+        linkStrength: 0.98, // Maximum edge attraction
       }),
       ...layoutOptions,
     }),
@@ -93,6 +100,33 @@ export function NvlCanvas({
       }),
       [interactionOptions]
     )
+
+  // Trigger re-layout after drag ends to prevent overlaps
+  const triggerReLayout = useCallback(() => {
+    const nvlRef = wrapperRef.current
+
+    if (
+      nvlRef &&
+      typeof nvlRef.getNodes === 'function' &&
+      layout === 'forceDirected'
+    ) {
+      // Unpin all nodes (dragging pins them, preventing layout from affecting them)
+      const allNodes = nvlRef.getNodes()
+      allNodes.forEach((node: Node) => {
+        nvlRef.unPinNode(node.id)
+      })
+
+      // Update layout options with gentler settings for re-layout
+      nvlRef.setLayoutOptions({
+        ...finalLayoutOptions,
+        simulationIterations: 200, // Gentle re-layout
+        gravity: 1.5, // Slightly less aggressive on re-layout
+      })
+
+      // Restart the force-directed simulation
+      nvlRef.restart()
+    }
+  }, [layout, finalLayoutOptions])
 
   // Setup mouse event callbacks
   const mouseEventCallbacks: InteractiveNvlWrapperProps['mouseEventCallbacks'] =
@@ -124,7 +158,21 @@ export function NvlCanvas({
           onScaleChange?.(zoomLevel)
         },
         onDrag: (nodes: Node[], evt: MouseEvent) => {
-          // Drag enabled - NVL handles node dragging
+          // Mark that dragging is happening
+          isDraggingRef.current = true
+
+          // Clear existing timeout
+          if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current)
+          }
+
+          // Set new timeout - if no drag events for 500ms, drag has ended
+          dragTimeoutRef.current = setTimeout(() => {
+            if (isDraggingRef.current) {
+              isDraggingRef.current = false
+              triggerReLayout()
+            }
+          }, 500)
         },
       }),
       [
@@ -133,6 +181,7 @@ export function NvlCanvas({
         onNodeHover,
         onBackgroundClick,
         onScaleChange,
+        triggerReLayout,
       ]
     )
 
@@ -140,7 +189,7 @@ export function NvlCanvas({
   const nvlCallbacks: Partial<ExternalCallbacks> = useMemo(
     () => ({
       onLayoutDone: () => {
-        // Layout complete
+        console.log('[NVL] onLayoutDone fired')
       },
       onError: (error) => {
         console.error('NVL Error:', error)
@@ -148,6 +197,101 @@ export function NvlCanvas({
     }),
     []
   )
+
+  // Auto-fit on initial load using useEffect instead of onLayoutDone callback
+  useEffect(() => {
+    if (!isInitialLayoutRef.current || nodes.length === 0) {
+      return
+    }
+
+    console.log('[NVL] Starting auto-fit polling')
+
+    // Poll for NVL ref to have methods available
+    const pollForNvlAndFit = (attempts = 0, maxAttempts = 30) => {
+      const nvlRef = wrapperRef.current
+
+      console.log('[NVL] Polling attempt', attempts + 1, {
+        hasRef: !!nvlRef,
+        hasGetNodes: typeof nvlRef?.getNodes === 'function',
+        hasFit: typeof nvlRef?.fit === 'function',
+        nodeCount: nodes.length,
+      })
+
+      // Check if ref has NVL methods (InteractiveNvlWrapper exposes methods directly on ref)
+      if (
+        nvlRef &&
+        typeof nvlRef.getNodes === 'function' &&
+        typeof nvlRef.fit === 'function'
+      ) {
+        console.log('[NVL] NVL ref ready, attempting fit')
+        isInitialLayoutRef.current = false
+
+        try {
+          const allNodes = nvlRef.getNodes()
+          if (!allNodes || allNodes.length === 0) {
+            console.warn('[NVL] No nodes in NVL instance')
+            return
+          }
+
+          const nodeIds = allNodes.map((n: Node) => n.id)
+          console.log('[NVL] Auto-fitting', nodeIds.length, 'nodes')
+
+          // Only fit if there are 2+ nodes; for single node, initialZoom handles it
+          if (nodeIds.length > 1) {
+            nvlRef.fit(nodeIds, { duration: 500 })
+            console.log('[NVL] Fit operation completed')
+          } else {
+            console.log('[NVL] Single node - skipping fit, using initialZoom')
+          }
+        } catch (error) {
+          console.error('[NVL] Auto-fit failed:', error)
+        }
+      } else if (attempts < maxAttempts) {
+        // Try again in 100ms
+        setTimeout(() => pollForNvlAndFit(attempts + 1, maxAttempts), 100)
+      } else {
+        console.error('[NVL] NVL ref not ready after', maxAttempts, 'attempts')
+      }
+    }
+
+    // Start polling after a delay to let React render the component
+    const timeoutId = setTimeout(() => pollForNvlAndFit(), 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [nodes])
+
+  // Reset initial layout flag when nodes change (for navigation between different node sets)
+  useEffect(() => {
+    isInitialLayoutRef.current = true
+  }, [nodes])
+
+  // Cleanup timeout on unmount and add global mouseup listener for drag end detection
+  useEffect(() => {
+    // Add global mouseup listener to detect drag end more reliably
+    const handleGlobalMouseUp = () => {
+      if (isDraggingRef.current) {
+        // Small delay to ensure drag event is fully processed
+        setTimeout(() => {
+          if (isDraggingRef.current) {
+            isDraggingRef.current = false
+            if (dragTimeoutRef.current) {
+              clearTimeout(dragTimeoutRef.current)
+            }
+            triggerReLayout()
+          }
+        }, 100)
+      }
+    }
+
+    window.addEventListener('mouseup', handleGlobalMouseUp)
+
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp)
+      if (dragTimeoutRef.current) {
+        clearTimeout(dragTimeoutRef.current)
+      }
+    }
+  }, [triggerReLayout])
 
   return (
     <main
@@ -195,9 +339,12 @@ export function NvlCanvas({
                 onClick={(e) => {
                   e.stopPropagation()
                   try {
-                    const currentScale = wrapperRef.current?.getScale?.()
-                    if (typeof currentScale === 'number') {
-                      wrapperRef.current?.setZoom?.(currentScale * 0.8)
+                    const nvlRef = wrapperRef.current
+                    if (nvlRef && typeof nvlRef.getScale === 'function') {
+                      const currentScale = nvlRef.getScale()
+                      if (typeof currentScale === 'number') {
+                        nvlRef.setZoom(currentScale * 0.8)
+                      }
                     }
                   } catch (error) {
                     console.warn('Zoom out failed:', error)
@@ -213,9 +360,12 @@ export function NvlCanvas({
                 onClick={(e) => {
                   e.stopPropagation()
                   try {
-                    const currentScale = wrapperRef.current?.getScale?.()
-                    if (typeof currentScale === 'number') {
-                      wrapperRef.current?.setZoom?.(currentScale * 1.2)
+                    const nvlRef = wrapperRef.current
+                    if (nvlRef && typeof nvlRef.getScale === 'function') {
+                      const currentScale = nvlRef.getScale()
+                      if (typeof currentScale === 'number') {
+                        nvlRef.setZoom(currentScale * 1.2)
+                      }
                     }
                   } catch (error) {
                     console.warn('Zoom in failed:', error)
@@ -231,10 +381,15 @@ export function NvlCanvas({
                 onClick={(e) => {
                   e.stopPropagation()
                   try {
-                    if (wrapperRef.current?.fit) {
-                      wrapperRef.current.fit()
-                    } else if (wrapperRef.current?.camera?.reset) {
-                      wrapperRef.current.camera.reset()
+                    const nvlRef = wrapperRef.current
+                    if (
+                      nvlRef &&
+                      typeof nvlRef.getNodes === 'function' &&
+                      typeof nvlRef.fit === 'function'
+                    ) {
+                      const allNodes = nvlRef.getNodes()
+                      const nodeIds = allNodes.map((n: Node) => n.id)
+                      nvlRef.fit(nodeIds, { duration: 500 })
                     }
                   } catch (error) {
                     console.warn('Fit to view failed:', error)

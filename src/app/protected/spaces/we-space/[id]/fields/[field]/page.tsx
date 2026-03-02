@@ -23,7 +23,6 @@ import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { ConnectionPanel } from '@/components/ui/connection-panel'
 import { PersonPanel } from '@/components/ui/person-panel'
-import { DraggablePersonNode } from '@/components/canvas/draggable-person-node'
 import {
   ResonanceLinkModal,
   type PulseOption,
@@ -48,20 +47,12 @@ import {
   DELETE_STORY_PULSE_MUTATION,
   DELETE_RESONANCES_BY_PULSE_MUTATION,
 } from '@/app/graphql/mutations'
-import { useApp, usePageContext } from '@/contexts'
+import { useAnimations, useApp, usePageContext } from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
 import { useResonanceDiscovery } from '@/hooks/useResonanceDiscovery'
 import { useResonanceSuggestions } from '@/hooks/useResonanceSuggestions'
 import { ResonanceSuggestionsModal } from '@/components/ui/resonance-suggestions-modal'
-import {
-  type PulsePosition,
-  PULSE_NODE_RADIUS,
-  RESONANCE_NODE_RADIUS,
-  seededUnitValue,
-  clampPosition,
-  resolveCollisions,
-  resolveBidirectionalResonancePulseCollisions,
-} from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { PULSE_TYPE_CONFIG } from '@/lib/pulse-type-config'
 
 // Icon mappings for pulse types
@@ -82,6 +73,7 @@ const ANIMATION_ORDER: Array<
 
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { animationsEnabled } = useAnimations()
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
   const [isDiscoverSuggestionsModalOpen, setIsDiscoverSuggestionsModalOpen] =
@@ -1419,9 +1411,14 @@ function FieldDetailPage() {
     return (
       <div className="relative overflow-hidden flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-pulse mb-4">
-            <span className="material-symbols-outlined text-6xl text-gp-accent-muted">
-              psychology
+          <div
+            className={cn(
+              'text-gp-primary dark:text-gp-primary',
+              animationsEnabled && 'animate-spin'
+            )}
+          >
+            <span className="material-symbols-outlined text-5xl md:text-6xl">
+              hourglass_bottom
             </span>
           </div>
           <p className="text-gp-ink-muted">Loading field...</p>
