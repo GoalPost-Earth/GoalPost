@@ -8,10 +8,11 @@ export interface ResonanceNodeProps {
   label: string
   description?: string
   isActive: boolean
-  position?: { top: string; left: string }
   onClick: () => void
   onEdit?: () => void
   className?: string
+  isSelected?: boolean
+  isHovered?: boolean
 }
 
 export function ResonanceNode({
@@ -20,27 +21,18 @@ export function ResonanceNode({
   label,
   description = 'Active Resonance',
   isActive,
-  position,
   onClick,
   onEdit,
   className,
+  isSelected = false,
+  isHovered = false,
 }: ResonanceNodeProps) {
   return (
     <div
       className={cn(
-        'absolute z-20 flex items-center justify-center transition-all duration-500 pointer-events-none group',
-        position ? '' : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+        'flex items-center justify-center transition-all duration-500 pointer-events-none group',
         className
       )}
-      style={
-        position
-          ? {
-              top: position.top,
-              left: position.left,
-              transform: 'translate(-50%, -50%)',
-            }
-          : undefined
-      }
     >
       <div className="relative pointer-events-auto">
         {/* Outer glow and ripple effects */}
@@ -61,7 +53,8 @@ export function ResonanceNode({
             'border-white/20 dark:border-white/20',
             isActive
               ? 'border-gp-primary/50 dark:border-gp-primary/50 scale-125'
-              : 'hover:scale-110'
+              : 'hover:scale-110',
+            isSelected && 'ring-2 ring-gp-primary'
           )}
           style={
             isActive
@@ -126,7 +119,7 @@ export function ResonanceNode({
         {/* Label - displayed below node */}
         <span
           className={cn(
-            'absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-colors duration-300 pointer-events-none',
+            'absolute top-full mt-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-colors duration-300 pointer-events-none',
             isActive
               ? 'text-slate-900 dark:text-white'
               : 'text-slate-600 dark:text-white/70 group-hover:text-slate-700 dark:group-hover:text-white'

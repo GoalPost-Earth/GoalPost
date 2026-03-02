@@ -119,7 +119,6 @@ export function FieldDetail({
             icon={node.icon}
             label={node.label}
             type={node.type}
-            position={node.position}
             animation={node.animation}
             onClick={() => onNodeClick?.(node.id)}
           />

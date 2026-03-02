@@ -38,6 +38,7 @@
     "@langchain/core": "^1.1.6",
     "@langchain/openai": "^1.2.0",
     "@neo4j-nvl/base": "^1.0.0",
+    "@neo4j-nvl/interaction-handlers": "^1.1.0",
     "@neo4j-nvl/react": "^0.3.9",
     "@neo4j/graphql": "^6.2.3",
     "@neo4j/graphql-ogm": "^5.9.1",

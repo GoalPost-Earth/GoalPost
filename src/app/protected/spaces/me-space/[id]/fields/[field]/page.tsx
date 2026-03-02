@@ -8,10 +8,13 @@ import {
   useApolloClient,
 } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
+import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { NodeType } from '@/components/ui/pulse-node'
-import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
-import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
-import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
+import { PulseNode } from '@/components/ui/pulse-node'
+import { ResonanceNode } from '@/components/ui/resonance-node'
+import { NvlCanvas } from '@/components/canvas/nvl-canvas'
+import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
+import { formatResonanceLabel } from '@/utils/graph-utils'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
@@ -80,20 +83,12 @@ function FieldDetailPage() {
     name: string
     content: string
   } | null>(null)
-  const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
   const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resonanceLinks, setResonanceLinks] = useState<any[]>([])
-  const [resonanceNodePositions, setResonanceNodePositions] = useState<
-    Map<string, { x: number; y: number }>
-  >(new Map())
-  const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
-    Set<string>
-  >(new Set())
   const [activeResonanceNodeId, setActiveResonanceNodeId] = useState<
     string | null
   >(null)
-  const [currentScale, setCurrentScale] = useState(1)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
   const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,13 +103,20 @@ function FieldDetailPage() {
     sourceType: 'goal' | 'resource' | 'story'
     targetType: 'goal' | 'resource' | 'story'
   } | null>(null)
-  const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
 
-  // Refs to track current state for synchronous access
-  const pulsePositionsRef = useRef<PulsePosition[]>([])
-  const resonanceNodePositionsRef = useRef<
-    Map<string, { x: number; y: number }>
-  >(new Map())
+  // NVL-specific state
+  const [nvlNodes, setNvlNodes] = useState<Node[]>([])
+  const [nvlRelationships, setNvlRelationships] = useState<Relationship[]>([])
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [pulseData, setPulseData] = useState<
+    Array<{
+      id: string
+      title: string
+      content: string
+      type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
+    }>
+  >([])
 
   const params = useParams()
   const fieldId = params?.field as string
@@ -122,19 +124,6 @@ function FieldDetailPage() {
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
-
-  // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
-  useEffect(() => {
-    const updateCanvas = () =>
-      setCanvasSize({
-        width: (window.innerWidth || 1200) * 5,
-        height: (window.innerHeight || 1200) * 5,
-      })
-
-    updateCanvas()
-    window.addEventListener('resize', updateCanvas)
-    return () => window.removeEventListener('resize', updateCanvas)
-  }, [])
 
   const [
     fetchPulseDetails,
@@ -203,50 +192,6 @@ function FieldDetailPage() {
     console.error('❌ No field ID in URL')
   }
 
-  // Compute positions for pulse nodes
-  const computePulsePositions = useCallback(
-    (
-      pulseData: Array<{
-        id: string
-        title: string
-        content: string
-        type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
-      }>
-    ) => {
-      // Matches GenericPulseCanvas with canvasScale=5
-      const centerX = canvasSize.width / 2
-      const centerY = canvasSize.height / 2
-      const maxRadius = Math.min(canvasSize.width, canvasSize.height) / 3
-
-      const positions: PulsePosition[] = pulseData.map((pulse, idx) => {
-        const randomBase = `${pulse.id}-${idx}`
-        const angle = seededUnitValue(randomBase, 7) * Math.PI * 2
-        const radius =
-          Math.pow(seededUnitValue(randomBase, 13), 0.6) * maxRadius
-        const jitterX =
-          (seededUnitValue(randomBase, 23) - 0.5) * PULSE_NODE_RADIUS
-        const jitterY =
-          (seededUnitValue(randomBase, 29) - 0.5) * PULSE_NODE_RADIUS
-        const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
-
-        return {
-          pulseId: pulse.id,
-          x: Math.cos(angle) * radius + centerX + jitterX,
-          y: Math.sin(angle) * radius + centerY + jitterY,
-          icon: pulseTypeIcons[pulse.type],
-          title: pulse.title || '',
-          label: pulse.title || 'Untitled Pulse',
-          content: pulse.content || '',
-          type: pulse.type,
-          animation,
-        }
-      })
-      return positions
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canvasSize]
-  )
-
   // Process pulses data when it changes
   useEffect(() => {
     if (!pulsesByContextData) return
@@ -298,90 +243,20 @@ function FieldDetailPage() {
         : []
       setResonanceLinks(resonances)
 
-      if (allPulses.length > 0) {
-        const positions = computePulsePositions(allPulses)
-        const resolvedPositions = resolveCollisions(
-          positions,
-          canvasSize.width,
-          canvasSize.height
-        )
-        setPulsePositions(resolvedPositions)
+      // Store pulse data for NVL transformation
+      setPulseData(allPulses)
 
-        // Initialize positions for ALL resonance nodes on load
-        // This prevents them from moving when pulses are dragged
-        if (resonances.length > 0) {
-          const newResonancePositions = new Map<
-            string,
-            { x: number; y: number }
-          >()
-          const positionMap = new Map(
-            resolvedPositions.map((p) => [p.pulseId, { x: p.x, y: p.y }])
-          )
-
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          resonances.forEach((link: any) => {
-            // GraphQL returns source/target as arrays with single element
-            const sourceId = link.source?.[0]?.id
-            const targetId = link.target?.[0]?.id
-            if (sourceId && targetId) {
-              const sourcePos = positionMap.get(sourceId)
-              const targetPos = positionMap.get(targetId)
-              if (sourcePos && targetPos) {
-                // Calculate midpoint with seeded offset to prevent overlaps
-                const baseMidX = (sourcePos.x + targetPos.x) / 2
-                const baseMidY = (sourcePos.y + targetPos.y) / 2
-
-                // Add deterministic offset based on link ID to spread out overlapping nodes
-                const offsetX = (seededUnitValue(link.id, 17) - 0.5) * 120
-                const offsetY = (seededUnitValue(link.id, 31) - 0.5) * 120
-
-                newResonancePositions.set(link.id, {
-                  x: baseMidX + offsetX,
-                  y: baseMidY + offsetY,
-                })
-              }
-            }
-          })
-
-          // Apply bidirectional collision detection to resonance nodes
-          // This handles both pulse-resonance AND resonance-resonance collisions from the start
-          console.log(
-            `🧲 Applying collision detection to ${newResonancePositions.size} resonance nodes`
-          )
-          const { resonancePositions: resolvedResonancePositions } =
-            resolveBidirectionalResonancePulseCollisions(
-              newResonancePositions,
-              resolvedPositions,
-              canvasSize.width,
-              canvasSize.height,
-              5 // Full collision resolution on initial load
-            )
-
-          console.log(
-            `✨ Collision detection resulted in ${resolvedResonancePositions.size} resonance nodes`
-          )
-          setResonanceNodePositions(resolvedResonancePositions)
-          resonanceNodePositionsRef.current = resolvedResonancePositions
-        } else {
-          setResonanceNodePositions(new Map())
-        }
-
-        // Set pulse options for resonance link modal
-        setPulseOptions(allPulses)
-        console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
-        console.log(
-          `🔗 Loaded ${resonances.length} resonance links (${resonanceLinkageEnabled ? 'enabled' : 'disabled'})`
-        )
-      } else {
-        setPulsePositions([])
-        console.log(`ℹ️ No pulses found for field ${fieldId}`)
-      }
+      // Set pulse options for resonance link modal
+      setPulseOptions(allPulses)
+      console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
+      console.log(
+        `🔗 Loaded ${resonances.length} resonance links (${resonanceLinkageEnabled ? 'enabled' : 'disabled'})`
+      )
     } catch (error) {
       console.error('Error processing pulses:', error)
-      setPulsePositions([])
     }
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pulsesByContextData, computePulsePositions, resonanceLinkageEnabled])
+  }, [pulsesByContextData, resonanceLinkageEnabled])
 
   // Fetch field name with pulse count
   useEffect(() => {
@@ -432,200 +307,174 @@ function FieldDetailPage() {
     setIsMounted(true)
   }, [])
 
-  // Sync state with refs
+  // Transform data into NVL nodes and relationships
   useEffect(() => {
-    pulsePositionsRef.current = pulsePositions
-  }, [pulsePositions])
+    const nodes: Node[] = []
+    const relationships: Relationship[] = []
 
-  useEffect(() => {
-    resonanceNodePositionsRef.current = resonanceNodePositions
-  }, [resonanceNodePositions])
-
-  // Handle position changes with collision detection
-  const handlePulsePositionChange = useCallback(
-    (pulseId: string, x: number, y: number) => {
-      setPulsePositions((prev) => {
-        const [clampedX, clampedY] = clampPosition(
-          x,
-          y,
-          canvasSize.width,
-          canvasSize.height
+    // Create pulse nodes
+    pulseData.forEach((pulse) => {
+      nodes.push(
+        createNvlNode(
+          {
+            id: `pulse-${pulse.id}`,
+            pulseId: pulse.id,
+            type: 'pulse',
+            pulseType: pulse.type,
+            title: pulse.title,
+            content: pulse.content,
+          },
+          80 // Node size for drag interaction
         )
-        const updated = prev.map((p) =>
-          p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
+      )
+    })
+
+    // Create resonance nodes
+    resonanceLinks.forEach((link: any) => {
+      nodes.push(
+        createNvlNode(
+          {
+            id: `resonance-${link.id}`,
+            resonanceId: link.id,
+            type: 'resonance',
+            label: formatResonanceLabel(link.label) || 'Resonance',
+            description: link.description || '',
+            confidence: link.confidence || 0,
+          },
+          60 // Smaller hitbox for resonance nodes
         )
-        // Apply collision resolution between pulses
-        const resolved = resolveCollisions(
-          updated,
-          canvasSize.width,
-          canvasSize.height
-        )
-        pulsePositionsRef.current = resolved
+      )
+    })
 
-        // Pulse drag does NOT move resonance nodes (they stay in place)
+    // Create relationships for resonance links
+    resonanceLinks.forEach((link: any) => {
+      const sourceId = link.source?.[0]?.id
+      const targetId = link.target?.[0]?.id
+      const resonanceNodeId = `resonance-${link.id}`
 
-        return resolved
-      })
-    },
-    [canvasSize]
-  )
-
-  // Handle resonance node click - manage active state and panel separately
-  const handleResonanceNodeClick = useCallback(
-    (linkId: string) => {
-      // Check if clicking the already active node (toggle off)
-      if (activeResonanceNodeId === linkId) {
-        setActiveResonanceNodeId(null)
-        setIsResonancePanelOpen(false)
-        setSelectedResonance(null)
-        // Also clear the expanded connection lines
-        setExpandedResonanceLinks((prev) => {
-          const next = new Set(prev)
-          next.delete(linkId)
-          return next
+      if (sourceId && targetId) {
+        // Source pulse → Resonance node
+        relationships.push({
+          id: `rel-${link.id}-source`,
+          from: `pulse-${sourceId}`,
+          to: resonanceNodeId,
+          caption: '',
+          type: 'RESONATES_WITH',
         })
-        return
+
+        // Resonance node → Target pulse
+        relationships.push({
+          id: `rel-${link.id}-target`,
+          from: resonanceNodeId,
+          to: `pulse-${targetId}`,
+          caption: '',
+          type: 'RESONATES_WITH',
+        })
       }
+    })
 
-      // Clicking a different node - make it active and open panel
-      const resonance = resonanceLinks.find((link) => link.id === linkId)
-      if (resonance) {
-        setActiveResonanceNodeId(linkId)
-        setSelectedResonance(resonance)
-        setIsResonancePanelOpen(true)
+    console.log(`🔮 NVL nodes created: ${nodes.length}`)
+    console.log(`🔗 NVL relationships created: ${relationships.length}`)
+
+    setNvlNodes(nodes)
+    setNvlRelationships(relationships)
+  }, [pulseData, resonanceLinks])
+
+  // Render React components into NVL node HTML containers
+  useEffect(() => {
+    if (nvlNodes.length === 0) return
+
+    nvlNodes.forEach((node) => {
+      if (!node.html || !(node.html instanceof HTMLElement)) return
+
+      const nodeType = (node as any).type
+
+      if (nodeType === 'pulse') {
+        const pulse = pulseData.find((p) => p.id === (node as any).pulseId)
+        if (pulse) {
+          renderReactComponentToContainer(
+            <PulseNode
+              icon={pulseTypeIcons[pulse.type]}
+              label={pulse.title || 'Untitled Pulse'}
+              type={pulse.type}
+              animation="none"
+              isSelected={selectedNodeId === node.id}
+              isHovered={hoveredNodeId === node.id}
+            />,
+            node.html
+          )
+        }
+      } else if (nodeType === 'resonance') {
+        const resonance = resonanceLinks.find(
+          (r: any) => r.id === (node as any).resonanceId
+        )
+        if (resonance) {
+          renderReactComponentToContainer(
+            <ResonanceNode
+              id={resonance.id}
+              icon="link"
+              label={(node as any).label || 'Resonance'}
+              description={resonance.description}
+              isActive={activeResonanceNodeId === resonance.id}
+              onClick={() => {}} // Handled by NVL canvas
+              isSelected={selectedNodeId === node.id}
+              isHovered={hoveredNodeId === node.id}
+            />,
+            node.html
+          )
+        }
       }
+    })
+  }, [
+    nvlNodes,
+    pulseData,
+    resonanceLinks,
+    selectedNodeId,
+    hoveredNodeId,
+    activeResonanceNodeId,
+  ])
 
-      // Always expand the node's connection lines when clicked
-      setExpandedResonanceLinks((prev) => {
-        const next = new Set(prev)
-        next.add(linkId)
-        return next
-      })
+  // Handle node click
+  const handleNodeClick = useCallback(
+    (node: Node) => {
+      const nodeType = (node as any).type
 
-      // Position should already be initialized from useEffect
-      // If somehow missing, calculate with offset
-      const currentResonancePositions = resonanceNodePositionsRef.current
-      if (!currentResonancePositions.has(linkId)) {
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const link = resonanceLinks.find((l: any) => l.id === linkId)
-        if (link) {
-          const sourceId = link.source?.[0]?.id
-          const targetId = link.target?.[0]?.id
+      if (nodeType === 'pulse') {
+        const pulseId = (node as any).pulseId
+        setSelectedNodeId(node.id)
+        setIsPulsePanelOpen(true)
+        setIsResonancePanelOpen(false)
+        fetchPulseDetails({ variables: { pulseId } })
+      } else if (nodeType === 'resonance') {
+        const resonanceId = (node as any).resonanceId
+        const resonance = resonanceLinks.find((r: any) => r.id === resonanceId)
 
-          if (sourceId && targetId) {
-            const currentPulsePositions = pulsePositionsRef.current
-            const sourcePulse = currentPulsePositions.find(
-              (p) => p.pulseId === sourceId
-            )
-            const targetPulse = currentPulsePositions.find(
-              (p) => p.pulseId === targetId
-            )
-
-            if (sourcePulse && targetPulse) {
-              const baseMidX = (sourcePulse.x + targetPulse.x) / 2
-              const baseMidY = (sourcePulse.y + targetPulse.y) / 2
-
-              // Add deterministic offset to prevent overlaps
-              const offsetX = (seededUnitValue(linkId, 17) - 0.5) * 120
-              const offsetY = (seededUnitValue(linkId, 31) - 0.5) * 120
-
-              const newPosition = {
-                x: baseMidX + offsetX,
-                y: baseMidY + offsetY,
-              }
-
-              resonanceNodePositionsRef.current = new Map(
-                currentResonancePositions
-              )
-              resonanceNodePositionsRef.current.set(linkId, newPosition)
-
-              setResonanceNodePositions((prevPositions) => {
-                const newPositions = new Map(prevPositions)
-                newPositions.set(linkId, newPosition)
-                return newPositions
-              })
-            }
-          }
+        if (resonance) {
+          setSelectedNodeId(node.id)
+          setActiveResonanceNodeId(resonanceId)
+          setSelectedResonance(resonance)
+          setIsResonancePanelOpen(true)
+          setIsPulsePanelOpen(false)
         }
       }
     },
-    [activeResonanceNodeId, resonanceLinks]
+    [resonanceLinks, fetchPulseDetails]
   )
 
-  // Handle resonance node drag - drags connected pulse nodes along
-  const handleResonanceNodeDrag = useCallback(
-    (linkId: string, newX: number, newY: number) => {
-      // Get previous position to calculate delta
-      const prevPos = resonanceNodePositionsRef.current.get(linkId)
-      if (!prevPos) return
+  // Handle node hover
+  const handleNodeHover = useCallback((node: Node | null) => {
+    setHoveredNodeId(node?.id || null)
+  }, [])
 
-      const deltaX = newX - prevPos.x
-      const deltaY = newY - prevPos.y
-
-      // Clamp position to canvas bounds
-      const [clampedX, clampedY] = clampPosition(
-        newX,
-        newY,
-        canvasSize.width,
-        canvasSize.height,
-        RESONANCE_NODE_RADIUS
-      )
-
-      // Update this resonance node's position
-      const updatedResonancePositions = new Map(
-        resonanceNodePositionsRef.current
-      )
-      updatedResonancePositions.set(linkId, { x: clampedX, y: clampedY })
-
-      // Find the resonance link to get source and target pulse IDs
-      //eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const link = resonanceLinks.find((l: any) => l.id === linkId)
-
-      let updatedPulses = pulsePositionsRef.current
-
-      if (link) {
-        const sourceId = link.source?.[0]?.id
-        const targetId = link.target?.[0]?.id
-
-        // Move both source and target pulses by the same delta
-        if (sourceId || targetId) {
-          updatedPulses = pulsePositionsRef.current.map((p) => {
-            if (p.pulseId === sourceId || p.pulseId === targetId) {
-              // Apply the same delta to the pulses
-              return {
-                ...p,
-                x: p.x + deltaX,
-                y: p.y + deltaY,
-              }
-            }
-            return p
-          })
-        }
-      }
-
-      // Apply bidirectional collision detection with pulses
-      // Both resonance and pulse nodes move apart when they collide
-      const {
-        pulsePositions: resolvedPulses,
-        resonancePositions: resolvedResonances,
-      } = resolveBidirectionalResonancePulseCollisions(
-        updatedResonancePositions,
-        updatedPulses,
-        canvasSize.width,
-        canvasSize.height,
-        5 // More iterations for responsive drag collision detection
-      )
-
-      // Update refs immediately (synchronous)
-      pulsePositionsRef.current = resolvedPulses
-      resonanceNodePositionsRef.current = resolvedResonances
-
-      // Update state (asynchronous for both pulse and resonance positions)
-      setPulsePositions(resolvedPulses)
-      setResonanceNodePositions(resolvedResonances)
-    },
-    [canvasSize, resonanceLinks]
-  )
+  // Handle background click
+  const handleBackgroundClick = useCallback(() => {
+    setSelectedNodeId(null)
+    setHoveredNodeId(null)
+    setIsPulsePanelOpen(false)
+    setIsResonancePanelOpen(false)
+    setActiveResonanceNodeId(null)
+    setSelectedResonance(null)
+  }, [])
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
     const goal = pulseDetailsData?.goalPulses?.[0]
@@ -1066,14 +915,19 @@ function FieldDetailPage() {
 
   return (
     <div className="relative overflow-hidden">
-      <GenericPulseCanvas
-        canvasScale={5}
-        onScaleChange={setCurrentScale}
+      <NvlCanvas
+        nodes={nvlNodes}
+        relationships={nvlRelationships}
         isLoading={isPulsesLoading}
-        isEmpty={!isPulsesLoading && pulseOptions.length === 0}
+        layout="forceDirected"
+        onNodeClick={handleNodeClick}
+        onNodeHover={handleNodeHover}
+        onBackgroundClick={handleBackgroundClick}
+        enableZoomControls={true}
+        showBackgroundDecor={true}
         actionButton={
           isMounted && (
-            <div className="group flex flex-row items-center gap-3 relative z-50">
+            <div className="group flex flex-row items-center gap-3 relative z-50 pointer-events-auto">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -1108,52 +962,7 @@ function FieldDetailPage() {
             </div>
           )
         }
-      >
-        {isMounted && !isPulsesLoading && (
-          <>
-            <ResonanceLinksVisualization
-              pulsePositions={pulsePositions}
-              resonanceLinks={resonanceLinks}
-              resonanceNodePositions={resonanceNodePositions}
-              canvasWidth={canvasSize.width}
-              canvasHeight={canvasSize.height}
-              expandedLinks={expandedResonanceLinks}
-              scale={currentScale}
-              onResonanceNodeClick={handleResonanceNodeClick}
-              onResonanceNodeDrag={handleResonanceNodeDrag}
-              onResonanceNodeEdit={handleResonanceEdit}
-            />
-            {pulsePositions.map((pos) => (
-              <DraggablePulseNode
-                key={pos.pulseId}
-                icon={pos.icon}
-                label={pos.label}
-                type={pos.type}
-                animation={pos.animation}
-                canvasPosition={{ x: pos.x, y: pos.y }}
-                scale={currentScale}
-                onPositionChange={(x, y) =>
-                  handlePulsePositionChange(pos.pulseId, x, y)
-                }
-                onClick={() => {
-                  setIsPulsePanelOpen(true)
-                  fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
-                }}
-                onEditClick={(e) =>
-                  handleEditPulse(
-                    e,
-                    pos.pulseId,
-                    pos.type,
-                    pos.label,
-                    pos.title,
-                    pos.content
-                  )
-                }
-              />
-            ))}
-          </>
-        )}
-      </GenericPulseCanvas>
+      />
 
       <PulsePanel
         isOpen={isPulsePanelOpen}
