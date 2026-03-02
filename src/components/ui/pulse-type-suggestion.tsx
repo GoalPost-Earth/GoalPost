@@ -365,7 +365,7 @@ export function PulseTypeSuggestion({
                 onClick={handleConfirm}
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform',
+                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50 transition-all flex items-center justify-center gap-2 transform',
                   isLoading
                     ? 'bg-gp-primary/70 cursor-not-allowed'
                     : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
@@ -401,7 +401,7 @@ export function PulseTypeSuggestion({
                 onClick={handleConfirm}
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)] transition-all flex items-center justify-center gap-2 transform',
+                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50 transition-all flex items-center justify-center gap-2 transform',
                   isLoading
                     ? 'bg-gp-primary/70 cursor-not-allowed'
                     : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'

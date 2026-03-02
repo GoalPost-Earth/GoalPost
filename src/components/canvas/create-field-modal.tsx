@@ -250,7 +250,7 @@ export function CreateFieldModal({
                         'cursor-pointer flex-1 h-12 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 transform active:scale-95',
                         isLoading || !name.trim()
                           ? 'bg-gp-primary/30 dark:bg-gp-primary/20 text-gp-primary/50 dark:text-gp-primary/40 cursor-not-allowed shadow-none'
-                          : 'bg-gp-primary hover:bg-gp-primary/90 text-white shadow-[0_18px_35px_-12px_rgba(19,127,236,0.55)]'
+                          : 'bg-gp-primary hover:bg-gp-primary/90 text-white shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50'
                       )}
                     >
                       {isLoading ? (
