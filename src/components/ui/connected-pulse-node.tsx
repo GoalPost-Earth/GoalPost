@@ -169,7 +169,6 @@ export function ConnectedPulseNode({
         label={label}
         type={type}
         animation={animation ?? 'float'}
-        position="center"
         onClick={handleClick}
       />
     </div>

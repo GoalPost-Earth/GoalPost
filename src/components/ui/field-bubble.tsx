@@ -26,6 +26,7 @@ export interface FieldBubbleProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   shape?: 'circle' | 'organic-1' | 'organic-2' | 'organic-3'
   animationType?: 'float' | 'float-delayed' | 'float-slow' | 'none'
+  animationDelay?: number
   decorators?: Array<{
     icon: string
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
@@ -78,6 +79,7 @@ export function FieldBubble({
   size = 'md',
   shape = 'circle',
   animationType = 'float',
+  animationDelay = 0,
   decorators = [],
   onClick,
   onEditClick,
@@ -86,6 +88,10 @@ export function FieldBubble({
 }: FieldBubbleProps) {
   const bubbleRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
+
+  // Drag detection refs
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
 
   useGSAP(() => {
     if (!bubbleRef.current) return
@@ -97,6 +103,7 @@ export function FieldBubble({
       y: 20,
       duration: 1.2,
       ease: 'back.out',
+      delay: animationDelay,
     })
 
     // Floating animation
@@ -107,7 +114,7 @@ export function FieldBubble({
           : animationType === 'float-delayed'
             ? 5
             : 4
-      const delay = animationType === 'float-delayed' ? 0.5 : 0
+      const delayOffset = animationType === 'float-delayed' ? 0.5 : 0
 
       gsap.to(bubbleRef.current, {
         y: '-=15',
@@ -115,7 +122,7 @@ export function FieldBubble({
         ease: 'sine.inOut',
         yoyo: true,
         repeat: -1,
-        delay,
+        delay: animationDelay + delayOffset,
       })
     }
 
@@ -153,22 +160,62 @@ export function FieldBubble({
     default: 'bg-white/10 border-white/20 text-white/80',
   }
 
+  // Drag detection handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = false
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragStartRef.current) return
+
+    const dx = e.clientX - dragStartRef.current.x
+    const dy = e.clientY - dragStartRef.current.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    // Mark as dragging if moved more than 5 pixels
+    if (distance > 5) {
+      isDraggingRef.current = true
+    }
+  }
+
+  const handleMouseUp = () => {
+    dragStartRef.current = null
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Suppress click if we were dragging
+    if (isDraggingRef.current) {
+      console.log('🚫 FieldBubble click suppressed - was dragging')
+      e.preventDefault()
+      e.stopPropagation()
+      isDraggingRef.current = false
+      return
+    }
+
+    console.log('✓ FieldBubble normal click - navigating')
+    onClick?.()
+  }
+
   return (
     <div
       className={cn(
         positionClasses[position],
         sizeClasses[size],
-        'group cursor-pointer transition-all duration-500',
+        'group cursor-pointer transition-all duration-500 pointer-events-auto',
         className
       )}
-      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onClick={handleClick}
     >
       <div
         ref={bubbleRef}
         className={cn(
           'relative w-full h-full flex items-center justify-center',
           shapeClasses[shape],
-          'bg-gp-glass dark:bg-gp-glass backdrop-blur-md transition-all duration-500',
+          'bg-gp-surface-strong dark:bg-gp-surface-dark transition-all duration-500',
           'border border-white/5 dark:border-white/10 hover:border-white/20 dark:hover:border-white/20',
           'group-hover:shadow-[0_0_40px_color-mix(in_srgb,var(--gp-primary)_55%,transparent)] group-hover:dark:shadow-[0_0_40px_color-mix(in_srgb,var(--gp-primary)_70%,transparent)] transition-all'
         )}
@@ -186,7 +233,7 @@ export function FieldBubble({
               e.stopPropagation()
               onEditClick(e)
             }}
-            className="absolute top-3 right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+            className="absolute -top-3 -right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/30 text-gp-primary transition-all duration-200 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 backdrop-blur-sm z-30"
             title="Edit field"
           >
             <span className="material-symbols-outlined text-lg">edit</span>

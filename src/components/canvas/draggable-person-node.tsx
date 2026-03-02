@@ -180,7 +180,7 @@ export function DraggablePersonNode({
         pointerEvents: 'auto',
       }}
     >
-      <PersonNode {...nodeProps} position="center" onClick={handleClick} />
+      <PersonNode {...nodeProps} onClick={handleClick} />
     </div>
   )
 }

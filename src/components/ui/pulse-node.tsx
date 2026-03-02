@@ -14,31 +14,12 @@ export interface PulseNodeProps {
   icon?: string
   label: string
   type: NodeType
-  position?:
-    | 'center'
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'top-center'
-    | 'right-center'
-    | 'left-center'
-    | { top: string; left: string }
   animation?: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
   className?: string
-}
-
-const positionClasses: Record<string, string> = {
-  center: 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20',
-  'top-left': 'absolute top-[28%] left-[68%] z-10',
-  'top-right': 'absolute top-[35%] left-[32%] z-10',
-  'bottom-left': 'absolute top-[62%] left-[22%] z-10',
-  'bottom-right': 'absolute top-[75%] left-[72%] z-10',
-  'top-center': 'absolute top-[20%] left-[25%] z-10',
-  'right-center': 'absolute top-[45%] left-[82%] z-10',
-  'left-center': 'absolute top-[20%] left-[10%] z-10',
+  isSelected?: boolean
+  isHovered?: boolean
 }
 
 const animationClasses: Record<string, string> = {
@@ -53,47 +34,40 @@ export function PulseNode({
   icon,
   label,
   type,
-  position = 'center',
   animation = 'float',
   onClick,
   onEditClick,
   className,
+  isSelected = false,
+  isHovered = false,
 }: PulseNodeProps) {
   const { animationsEnabled } = useAnimations()
   const config = PULSE_TYPE_CONFIG[type]
   const resolvedIcon = icon ?? getIconForType(type)
-  const posClass = typeof position === 'string' ? positionClasses[position] : ''
   const animClass = animationClasses[animation]
-  const customPosition = typeof position === 'object' ? position : undefined
 
   return (
     <div
       className={cn(
-        'pulse-node group cursor-pointer flex flex-col items-center gap-3 w-32',
-        posClass,
+        'pulse-node group relative flex flex-col items-center gap-3 w-32',
         animationsEnabled && animClass,
+        isSelected && 'ring-2 ring-gp-primary',
         className
       )}
-      onClick={onClick}
-      style={
-        customPosition
-          ? {
-              position: 'absolute',
-              top: customPosition.top,
-              left: customPosition.left,
-            }
-          : undefined
-      }
     >
-      {/* Edit Button */}
+      {/* Edit Button - shown when hovered or selected */}
       {onEditClick && (
         <button
           onClick={(e) => {
             e.stopPropagation()
             onEditClick(e)
           }}
-          className="absolute -top-2 -right-2 p-1.5 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+          className={cn(
+            'absolute -top-2 -right-2 p-1.5 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all z-30 cursor-pointer',
+            isHovered || isSelected ? 'opacity-100' : 'opacity-0'
+          )}
           title="Edit pulse"
+          style={{ pointerEvents: 'auto' }}
         >
           <span className="material-symbols-outlined text-sm">edit</span>
         </button>
@@ -111,7 +85,8 @@ export function PulseNode({
           animationsEnabled &&
             'shadow-[0_0_20px_var(--shadow-color)] group-hover:shadow-[0_0_40px_var(--shadow-color)]',
           animationsEnabled &&
-            `group-hover:border-${type}-tint/30 border border-transparent`
+            `group-hover:border-${type}-tint/30 border border-transparent`,
+          isSelected && 'ring-2 ring-gp-primary scale-110'
         )}
         style={
           {

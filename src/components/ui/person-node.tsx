@@ -11,31 +11,12 @@ export interface PersonNodeProps {
   email?: string | null
   photo?: string | null
   role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
-  position?:
-    | 'center'
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'top-center'
-    | 'right-center'
-    | 'left-center'
-    | { top: string; left: string }
   animation?: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
   onClick?: () => void
   className?: string
   isActive?: boolean
-}
-
-const positionClasses: Record<string, string> = {
-  center: 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20',
-  'top-left': 'absolute top-[28%] left-[68%] z-10',
-  'top-right': 'absolute top-[35%] left-[32%] z-10',
-  'bottom-left': 'absolute top-[62%] left-[22%] z-10',
-  'bottom-right': 'absolute top-[75%] left-[72%] z-10',
-  'top-center': 'absolute top-[20%] left-[25%] z-10',
-  'right-center': 'absolute top-[45%] left-[82%] z-10',
-  'left-center': 'absolute top-[20%] left-[10%] z-10',
+  isSelected?: boolean
+  isHovered?: boolean
 }
 
 const animationClasses: Record<string, string> = {
@@ -46,28 +27,29 @@ const animationClasses: Record<string, string> = {
   none: '',
 }
 
-const roleColors: Record<string, { bg: string; border: string; text: string }> = {
-  OWNER: {
-    bg: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/10',
-    border: 'border-amber-500/40',
-    text: 'text-amber-600 dark:text-amber-400',
-  },
-  ADMIN: {
-    bg: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/10',
-    border: 'border-purple-500/40',
-    text: 'text-purple-600 dark:text-purple-400',
-  },
-  MEMBER: {
-    bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10',
-    border: 'border-blue-500/40',
-    text: 'text-blue-600 dark:text-blue-400',
-  },
-  GUEST: {
-    bg: 'bg-gradient-to-br from-slate-500/20 to-gray-500/10',
-    border: 'border-slate-500/40',
-    text: 'text-slate-600 dark:text-slate-400',
-  },
-}
+const roleColors: Record<string, { bg: string; border: string; text: string }> =
+  {
+    OWNER: {
+      bg: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/10',
+      border: 'border-amber-500/40',
+      text: 'text-amber-600 dark:text-amber-400',
+    },
+    ADMIN: {
+      bg: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/10',
+      border: 'border-purple-500/40',
+      text: 'text-purple-600 dark:text-purple-400',
+    },
+    MEMBER: {
+      bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10',
+      border: 'border-blue-500/40',
+      text: 'text-blue-600 dark:text-blue-400',
+    },
+    GUEST: {
+      bg: 'bg-gradient-to-br from-slate-500/20 to-gray-500/10',
+      border: 'border-slate-500/40',
+      text: 'text-slate-600 dark:text-slate-400',
+    },
+  }
 
 export function PersonNode({
   firstName,
@@ -75,16 +57,15 @@ export function PersonNode({
   name,
   photo,
   role = 'MEMBER',
-  position = 'center',
   animation = 'float',
   onClick,
   className,
   isActive = false,
+  isSelected = false,
+  isHovered = false,
 }: PersonNodeProps) {
   const { animationsEnabled } = useAnimations()
-  const posClass = typeof position === 'string' ? positionClasses[position] : ''
   const animClass = animationClasses[animation]
-  const customPosition = typeof position === 'object' ? position : undefined
   const colors = roleColors[role] || roleColors.MEMBER
 
   const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
@@ -92,21 +73,12 @@ export function PersonNode({
   return (
     <div
       className={cn(
-        'person-node group cursor-pointer flex flex-col items-center gap-2 w-28',
-        posClass,
+        'person-node group flex flex-col items-center gap-2 w-28',
         animationsEnabled && animClass,
+        isSelected && 'ring-2 ring-gp-primary',
         className
       )}
-      onClick={onClick}
-      style={
-        customPosition
-          ? {
-              position: 'absolute',
-              top: customPosition.top,
-              left: customPosition.left,
-            }
-          : undefined
-      }
+      style={{ pointerEvents: 'none' }}
     >
       {/* Node Container */}
       <div

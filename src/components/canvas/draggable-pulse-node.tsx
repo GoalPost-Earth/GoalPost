@@ -198,7 +198,7 @@ export function DraggablePulseNode({
       }}
       onMouseDown={handleMouseDown}
     >
-      <PulseNode {...nodeProps} position="center" onClick={handleClick} />
+      <PulseNode {...nodeProps} onClick={handleClick} />
     </div>
   )
 }

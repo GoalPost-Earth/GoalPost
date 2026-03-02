@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import type { Node } from '@neo4j-nvl/base'
 import {
   useLazyQuery,
   useMutation,
@@ -9,8 +10,15 @@ import {
 } from '@apollo/client/react'
 import { useParams } from 'next/navigation'
 import type { NodeType } from '@/components/ui/pulse-node'
-import { DraggablePulseNode } from '@/components/canvas/draggable-pulse-node'
-import { GenericPulseCanvas } from '@/components/canvas/generic-pulse-canvas'
+import { NvlCanvas } from '@/components/canvas/nvl-canvas'
+import { PulseNode } from '@/components/ui/pulse-node'
+import { PersonNode } from '@/components/ui/person-node'
+import { ResonanceNode } from '@/components/ui/resonance-node'
+import {
+  createNvlNodes,
+  createNvlRelationships,
+  renderReactComponentToContainer,
+} from '@/lib/nvl-utils'
 import { ResonanceLinksVisualization } from '@/components/canvas/resonance-links-visualization'
 import { PersonConnectionLines } from '@/components/canvas/person-connection-lines'
 import { OfferingModal } from '@/components/ui/offering-modal'
@@ -20,7 +28,6 @@ import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { ConnectionPanel } from '@/components/ui/connection-panel'
 import { PersonPanel } from '@/components/ui/person-panel'
-import { DraggablePersonNode } from '@/components/canvas/draggable-person-node'
 import {
   ResonanceLinkModal,
   type PulseOption,
@@ -93,20 +100,13 @@ function FieldDetailPage() {
     name: string
     content: string
   } | null>(null)
-  const [pulsePositions, setPulsePositions] = useState<PulsePosition[]>([])
   const [pulseOptions, setPulseOptions] = useState<PulseOption[]>([])
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resonanceLinks, setResonanceLinks] = useState<any[]>([])
-  const [resonanceNodePositions, setResonanceNodePositions] = useState<
-    Map<string, { x: number; y: number }>
-  >(new Map())
-  const [expandedResonanceLinks, setExpandedResonanceLinks] = useState<
-    Set<string>
-  >(new Set())
   const [activeResonanceNodeId, setActiveResonanceNodeId] = useState<
     string | null
   >(null)
-  const [currentScale, setCurrentScale] = useState(1)
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
   const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,22 +121,6 @@ function FieldDetailPage() {
     sourceType: 'goal' | 'resource' | 'story'
     targetType: 'goal' | 'resource' | 'story'
   } | null>(null)
-  const [canvasSize, setCanvasSize] = useState({ width: 6000, height: 6000 })
-
-  // Person node states
-  type PersonPosition = {
-    personId: string
-    x: number
-    y: number
-    firstName: string
-    lastName: string
-    name: string | null
-    email: string | null
-    photo: string | null
-    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
-    animation: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
-  }
-  const [personPositions, setPersonPositions] = useState<PersonPosition[]>([])
   const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [activePersonIds, setActivePersonIds] = useState<Set<string>>(new Set())
@@ -171,12 +155,6 @@ function FieldDetailPage() {
     why?: string | null
     interests?: string | null
   } | null>(null)
-
-  // Refs to track current state for synchronous access
-  const pulsePositionsRef = useRef<PulsePosition[]>([])
-  const resonanceNodePositionsRef = useRef<
-    Map<string, { x: number; y: number }>
-  >(new Map())
 
   const params = useParams()
   const fieldId = (params?.field as string) || undefined
@@ -289,127 +267,6 @@ function FieldDetailPage() {
     console.error('❌ No field ID in URL')
   }
 
-  // Track canvas size (5x viewport to match GenericPulseCanvas canvasScale=5)
-  useEffect(() => {
-    const updateCanvas = () =>
-      setCanvasSize({
-        width: (window.innerWidth || 1200) * 5,
-        height: (window.innerHeight || 1200) * 5,
-      })
-
-    updateCanvas()
-    window.addEventListener('resize', updateCanvas)
-    return () => window.removeEventListener('resize', updateCanvas)
-  }, [])
-
-  // Compute positions for pulse nodes
-  const computePulsePositions = useCallback(
-    (
-      pulseData: Array<{
-        id: string
-        title: string
-        content: string
-        type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
-      }>
-    ) => {
-      // Matches GenericPulseCanvas with canvasScale=5
-      const centerX = canvasSize.width / 2
-      const centerY = canvasSize.height / 2
-      const maxRadius = Math.min(canvasSize.width, canvasSize.height) / 3
-
-      const positions: PulsePosition[] = pulseData.map((pulse, idx) => {
-        const randomBase = `${pulse.id}-${idx}`
-        const angle = seededUnitValue(randomBase, 7) * Math.PI * 2
-        const radius =
-          Math.pow(seededUnitValue(randomBase, 13), 0.6) * maxRadius
-        const jitterX =
-          (seededUnitValue(randomBase, 23) - 0.5) * PULSE_NODE_RADIUS
-        const jitterY =
-          (seededUnitValue(randomBase, 29) - 0.5) * PULSE_NODE_RADIUS
-        const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
-
-        return {
-          pulseId: pulse.id,
-          x: Math.cos(angle) * radius + centerX + jitterX,
-          y: Math.sin(angle) * radius + centerY + jitterY,
-          icon: pulseTypeIcons[pulse.type],
-          title: pulse.title || '',
-          label: pulse.title || 'Untitled Pulse',
-          content: pulse.content || '',
-          type: pulse.type,
-          animation,
-        }
-      })
-      return positions
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canvasSize]
-  )
-
-  // Compute positions for person nodes (placed around periphery)
-  const computePersonPositions = useCallback(
-    (
-      personsData: Array<{
-        id: string
-        firstName: string
-        lastName: string
-        name: string | null
-        email: string | null
-        photo: string | null
-        role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
-      }>,
-      existingPulsePositions: PulsePosition[]
-    ) => {
-      const centerX = canvasSize.width / 2
-      const centerY = canvasSize.height / 2
-      const peripheryRadius =
-        Math.min(canvasSize.width, canvasSize.height) / 2.5
-
-      const positions: PersonPosition[] = personsData.map((person, idx) => {
-        // Distribute persons evenly around the periphery
-        const angleStep = (Math.PI * 2) / personsData.length
-        const angle = idx * angleStep
-        const animation = ANIMATION_ORDER[idx % ANIMATION_ORDER.length]
-
-        let x = Math.cos(angle) * peripheryRadius + centerX
-        let y = Math.sin(angle) * peripheryRadius + centerY
-
-        // Check for collision with pulses
-        const PERSON_NODE_RADIUS = 40 // Person nodes are slightly smaller
-        const MIN_DISTANCE = PERSON_NODE_RADIUS + PULSE_NODE_RADIUS + 20
-
-        existingPulsePositions.forEach((pulse) => {
-          const dx = x - pulse.x
-          const dy = y - pulse.y
-          const distance = Math.sqrt(dx * dx + dy * dy)
-
-          if (distance < MIN_DISTANCE) {
-            // Push person node further out
-            const pushAngle = Math.atan2(dy, dx)
-            x = pulse.x + Math.cos(pushAngle) * MIN_DISTANCE
-            y = pulse.y + Math.sin(pushAngle) * MIN_DISTANCE
-          }
-        })
-
-        return {
-          personId: person.id,
-          x,
-          y,
-          firstName: person.firstName,
-          lastName: person.lastName,
-          name: person.name,
-          email: person.email,
-          photo: person.photo,
-          role: person.role,
-          animation,
-        }
-      })
-
-      return positions
-    },
-    [canvasSize]
-  )
-
   // Process pulses data when it changes
   useEffect(() => {
     if (!pulsesByContextData) return
@@ -461,90 +318,17 @@ function FieldDetailPage() {
         : []
       setResonanceLinks(resonances)
 
-      if (allPulses.length > 0) {
-        const positions = computePulsePositions(allPulses)
-        const resolvedPositions = resolveCollisions(
-          positions,
-          canvasSize.width,
-          canvasSize.height
-        )
-        setPulsePositions(resolvedPositions)
-
-        // Initialize positions for ALL resonance nodes on load
-        // This prevents them from moving when pulses are dragged
-        if (resonances.length > 0) {
-          const newResonancePositions = new Map<
-            string,
-            { x: number; y: number }
-          >()
-          const positionMap = new Map(
-            resolvedPositions.map((p) => [p.pulseId, { x: p.x, y: p.y }])
-          )
-
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          resonances.forEach((link: any) => {
-            // GraphQL returns source/target as arrays with single element
-            const sourceId = link.source?.[0]?.id
-            const targetId = link.target?.[0]?.id
-            if (sourceId && targetId) {
-              const sourcePos = positionMap.get(sourceId)
-              const targetPos = positionMap.get(targetId)
-              if (sourcePos && targetPos) {
-                // Calculate midpoint with seeded offset to prevent overlaps
-                const baseMidX = (sourcePos.x + targetPos.x) / 2
-                const baseMidY = (sourcePos.y + targetPos.y) / 2
-
-                // Add deterministic offset based on link ID to spread out overlapping nodes
-                const offsetX = (seededUnitValue(link.id, 17) - 0.5) * 120
-                const offsetY = (seededUnitValue(link.id, 31) - 0.5) * 120
-
-                newResonancePositions.set(link.id, {
-                  x: baseMidX + offsetX,
-                  y: baseMidY + offsetY,
-                })
-              }
-            }
-          })
-
-          // Apply bidirectional collision detection to resonance nodes
-          // This handles both pulse-resonance AND resonance-resonance collisions from the start
-          console.log(
-            `🧲 Applying collision detection to ${newResonancePositions.size} resonance nodes`
-          )
-          const { resonancePositions: resolvedResonancePositions } =
-            resolveBidirectionalResonancePulseCollisions(
-              newResonancePositions,
-              resolvedPositions,
-              canvasSize.width,
-              canvasSize.height,
-              5 // Full collision resolution on initial load
-            )
-
-          console.log(
-            `✨ Collision detection resulted in ${resolvedResonancePositions.size} resonance nodes`
-          )
-          setResonanceNodePositions(resolvedResonancePositions)
-          resonanceNodePositionsRef.current = resolvedResonancePositions
-        } else {
-          setResonanceNodePositions(new Map())
-        }
-
-        // Set pulse options for resonance link modal
-        setPulseOptions(allPulses)
-        console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
-        console.log(
-          `🔗 Loaded ${resonances.length} resonance links (${resonanceLinkageEnabled ? 'enabled' : 'disabled'})`
-        )
-      } else {
-        setPulsePositions([])
-        console.log(`ℹ️ No pulses found for field ${fieldId}`)
-      }
+      // Set pulse options for resonance link modal
+      setPulseOptions(allPulses)
+      console.log(`✓ Loaded ${allPulses.length} pulses for field ${fieldId}`)
+      console.log(
+        `🔗 Loaded ${resonances.length} resonance links (${resonanceLinkageEnabled ? 'enabled' : 'disabled'})`
+      )
     } catch (error) {
       console.error('Error processing pulses:', error)
-      setPulsePositions([])
     }
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pulsesByContextData, computePulsePositions, resonanceLinkageEnabled])
+  }, [pulsesByContextData, resonanceLinkageEnabled])
 
   // Compute person connections for visualization
   const personConnections = useMemo(() => {
@@ -684,18 +468,10 @@ function FieldDetailPage() {
         allPersons.length,
         allPersons.map((p) => `${p.firstName} ${p.lastName} (${p.role})`)
       )
-
-      // Compute person positions (avoiding pulse collisions)
-      const positions = computePersonPositions(
-        allPersons,
-        pulsePositionsRef.current
-      )
-      console.log('📍 Person positions computed:', positions.length)
-      setPersonPositions(positions)
     } catch (error) {
       console.error('Error processing members data:', error)
     }
-  }, [membersData, computePersonPositions])
+  }, [membersData])
 
   // Fetch person connections when members data is available
   useEffect(() => {
@@ -779,204 +555,61 @@ function FieldDetailPage() {
     setIsMounted(true)
   }, [])
 
-  // Sync state with refs
-  useEffect(() => {
-    pulsePositionsRef.current = pulsePositions
-  }, [pulsePositions])
-
-  useEffect(() => {
-    resonanceNodePositionsRef.current = resonanceNodePositions
-  }, [resonanceNodePositions])
-
-  // Handle position changes with collision detection
-  const handlePulsePositionChange = useCallback(
-    (pulseId: string, x: number, y: number) => {
-      setPulsePositions((prev) => {
-        const [clampedX, clampedY] = clampPosition(
-          x,
-          y,
-          canvasSize.width,
-          canvasSize.height
-        )
-        const updated = prev.map((p) =>
-          p.pulseId === pulseId ? { ...p, x: clampedX, y: clampedY } : p
-        )
-        // Apply collision resolution between pulses
-        const resolved = resolveCollisions(
-          updated,
-          canvasSize.width,
-          canvasSize.height
-        )
-        pulsePositionsRef.current = resolved
-
-        // Pulse drag does NOT move resonance nodes (they stay in place)
-
-        return resolved
-      })
-    },
-    [canvasSize]
-  )
-
-  // Handle resonance node click - manage active state and panel
-  const handleResonanceNodeClick = useCallback(
-    (linkId: string) => {
-      // Check if clicking the already active node (toggle off)
-      if (activeResonanceNodeId === linkId) {
-        setActiveResonanceNodeId(null)
-        setIsResonancePanelOpen(false)
-        setSelectedResonance(null)
-        // Also clear the expanded connection lines
-        setExpandedResonanceLinks((prev) => {
-          const next = new Set(prev)
-          next.delete(linkId)
-          return next
-        })
-        return
-      }
-
-      // Clicking a different node - make it active and open panel
-      const resonance = resonanceLinks.find((link) => link.id === linkId)
+  // Handle node click - use callback from NVL
+  const handleNodeClick = useCallback(
+    (nodeId: string) => {
+      // Check if it's a resonance node (resonance links have their own IDs)
+      const resonance = resonanceLinks.find((link) => link.id === nodeId)
       if (resonance) {
         // Close all other panels
         setIsPulsePanelOpen(false)
         setIsPersonPanelOpen(false)
         setIsConnectionPanelOpen(false)
 
-        setActiveResonanceNodeId(linkId)
+        setActiveResonanceNodeId(nodeId)
         setSelectedResonance(resonance)
         setIsResonancePanelOpen(true)
+        return
       }
 
-      // Always expand the node's connection lines when clicked
-      setExpandedResonanceLinks((prev) => {
-        const next = new Set(prev)
-        next.add(linkId)
-        return next
-      })
+      // Check if it's a pulse node
+      const pulse = pulseOptions.find((p) => p.id === nodeId)
+      if (pulse) {
+        // Close all other panels
+        setIsResonancePanelOpen(false)
+        setIsPersonPanelOpen(false)
+        setIsConnectionPanelOpen(false)
 
-      // Position should already be initialized from useEffect
-      // If somehow missing, calculate with offset
-      const currentResonancePositions = resonanceNodePositionsRef.current
-      if (!currentResonancePositions.has(linkId)) {
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const link = resonanceLinks.find((l: any) => l.id === linkId)
-        if (link) {
-          const sourceId = link.source?.[0]?.id
-          const targetId = link.target?.[0]?.id
+        setIsPulsePanelOpen(true)
+        fetchPulseDetails({ variables: { pulseId: nodeId } })
+        return
+      }
 
-          if (sourceId && targetId) {
-            const currentPulsePositions = pulsePositionsRef.current
-            const sourcePulse = currentPulsePositions.find(
-              (p) => p.pulseId === sourceId
-            )
-            const targetPulse = currentPulsePositions.find(
-              (p) => p.pulseId === targetId
-            )
+      // Check if it's a person node (starts with 'person_' or is in personPositions)
+      const isPerson = pulseOptions.every((p) => p.id !== nodeId)
+      if (isPerson) {
+        // Close all other panels
+        setIsPulsePanelOpen(false)
+        setIsResonancePanelOpen(false)
+        setIsConnectionPanelOpen(false)
 
-            if (sourcePulse && targetPulse) {
-              const baseMidX = (sourcePulse.x + targetPulse.x) / 2
-              const baseMidY = (sourcePulse.y + targetPulse.y) / 2
-
-              // Add deterministic offset to prevent overlaps
-              const offsetX = (seededUnitValue(linkId, 17) - 0.5) * 120
-              const offsetY = (seededUnitValue(linkId, 31) - 0.5) * 120
-
-              const newPosition = {
-                x: baseMidX + offsetX,
-                y: baseMidY + offsetY,
-              }
-
-              resonanceNodePositionsRef.current = new Map(
-                currentResonancePositions
-              )
-              resonanceNodePositionsRef.current.set(linkId, newPosition)
-
-              setResonanceNodePositions((prevPositions) => {
-                const newPositions = new Map(prevPositions)
-                newPositions.set(linkId, newPosition)
-                return newPositions
-              })
-            }
-          }
-        }
+        // Update person panel (will be populated from membersData)
+        setActivePersonIds(new Set([nodeId]))
+        setIsPersonPanelOpen(true)
       }
     },
-    [activeResonanceNodeId, resonanceLinks]
+    [pulseOptions, resonanceLinks, fetchPulseDetails]
   )
 
-  // Handle resonance node drag - drags connected pulse nodes along
-  const handleResonanceNodeDrag = useCallback(
-    (linkId: string, newX: number, newY: number) => {
-      // Get previous position to calculate delta
-      const prevPos = resonanceNodePositionsRef.current.get(linkId)
-      if (!prevPos) return
-
-      const deltaX = newX - prevPos.x
-      const deltaY = newY - prevPos.y
-
-      // Clamp position to canvas bounds
-      const [clampedX, clampedY] = clampPosition(
-        newX,
-        newY,
-        canvasSize.width,
-        canvasSize.height,
-        RESONANCE_NODE_RADIUS
-      )
-
-      // Update this resonance node's position
-      const updatedResonancePositions = new Map(
-        resonanceNodePositionsRef.current
-      )
-      updatedResonancePositions.set(linkId, { x: clampedX, y: clampedY })
-
-      // Find the resonance link to get source and target pulse IDs
-      const link = resonanceLinks.find((l) => l.id === linkId)
-
-      let updatedPulses = pulsePositionsRef.current
-
-      if (link) {
-        const sourceId = link.source?.[0]?.id
-        const targetId = link.target?.[0]?.id
-
-        // Move both source and target pulses by the same delta
-        if (sourceId || targetId) {
-          updatedPulses = pulsePositionsRef.current.map((p) => {
-            if (p.pulseId === sourceId || p.pulseId === targetId) {
-              // Apply the same delta to the pulses
-              return {
-                ...p,
-                x: p.x + deltaX,
-                y: p.y + deltaY,
-              }
-            }
-            return p
-          })
-        }
-      }
-
-      // Apply bidirectional collision detection with pulses
-      // Both resonance and pulse nodes move apart when they collide
-      const {
-        pulsePositions: resolvedPulses,
-        resonancePositions: resolvedResonances,
-      } = resolveBidirectionalResonancePulseCollisions(
-        updatedResonancePositions,
-        updatedPulses,
-        canvasSize.width,
-        canvasSize.height,
-        5 // More iterations for responsive drag collision detection
-      )
-
-      // Update refs immediately (synchronous)
-      pulsePositionsRef.current = resolvedPulses
-      resonanceNodePositionsRef.current = resolvedResonances
-
-      // Update state (asynchronous for both pulse and resonance positions)
-      setPulsePositions(resolvedPulses)
-      setResonanceNodePositions(resolvedResonances)
-    },
-    [canvasSize, resonanceLinks]
-  )
+  // Handle node hover - receives full Node object from NVL
+  const handleNodeHover = useCallback((node: any) => {
+    // Extract node ID from the Node object if it exists
+    if (node && typeof node === 'object' && 'id' in node) {
+      setHoveredNodeId(node.id as string)
+    } else if (node === null) {
+      setHoveredNodeId(null)
+    }
+  }, [])
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
     const goal = pulseDetailsData?.goalPulses?.[0]
@@ -1414,56 +1047,6 @@ function FieldDetailPage() {
     }
   }
 
-  // Person node handlers
-  const handlePersonPositionChange = useCallback(
-    (personId: string, newX: number, newY: number) => {
-      setPersonPositions((prevPositions) => {
-        return prevPositions.map((pos) =>
-          pos.personId === personId ? { ...pos, x: newX, y: newY } : pos
-        )
-      })
-    },
-    []
-  )
-
-  const handlePersonClick = useCallback(
-    (personId: string) => {
-      // Find the clicked person
-      const clickedPerson = personPositions.find((p) => p.personId === personId)
-      if (!clickedPerson) return
-
-      // Check if clicking the same person that's already selected
-      if (isPersonPanelOpen && selectedPerson?.id === personId) {
-        // Close the panel and hide connections
-        setIsPersonPanelOpen(false)
-        setSelectedPerson(null)
-        setActivePersonIds(new Set()) // Clear all active persons
-        return
-      }
-
-      // Close all other panels
-      setIsPulsePanelOpen(false)
-      setIsResonancePanelOpen(false)
-      setIsConnectionPanelOpen(false)
-
-      // Add person to active set to show their connections
-      setActivePersonIds(new Set([personId])) // Only show this person's connections
-
-      // Open person panel with person info
-      setSelectedPerson({
-        id: clickedPerson.personId,
-        firstName: clickedPerson.firstName,
-        lastName: clickedPerson.lastName,
-        name: clickedPerson.name,
-        email: clickedPerson.email,
-        photo: clickedPerson.photo,
-        role: clickedPerson.role,
-      })
-      setIsPersonPanelOpen(true)
-    },
-    [personPositions, isPersonPanelOpen, selectedPerson]
-  )
-
   // Handle connection midpoint click - toggle panel open/close
   const handleConnectionClick = useCallback(
     (person1Id: string, person2Id: string) => {
@@ -1489,12 +1072,6 @@ function FieldDetailPage() {
         }
       }
 
-      // Find both persons
-      const person1Data = personPositions.find((p) => p.personId === person1Id)
-      const person2Data = personPositions.find((p) => p.personId === person2Id)
-
-      if (!person1Data || !person2Data) return
-
       // Find their connection info from personConnections (check both directions)
       const connectionExists =
         personConnections.some(
@@ -1510,11 +1087,51 @@ function FieldDetailPage() {
 
       if (!connectionExists) return
 
-      // Get connection details from GraphQL data if available
+      // Get space data to find person details
       const space = membersData?.weSpaces?.[0]
       if (!space) return
 
-      // Close all other panels except person panel (if currently viewing a person)
+      // Helper function to find person data from membersData
+      const findPersonById = (id: string) => {
+        const owner = space.owner?.[0]
+        if (owner?.id === id) {
+          return {
+            id: owner.id,
+            firstName: owner.firstName,
+            lastName: owner.lastName,
+            name: owner.name,
+            email: owner.email ?? null,
+            photo: owner.photo ?? null,
+            role: 'OWNER' as const,
+          }
+        }
+
+        if (space.members) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const membership of space.members) {
+            const member = membership.member?.[0]
+            if (member?.id === id) {
+              return {
+                id: member.id,
+                firstName: member.firstName,
+                lastName: member.lastName,
+                name: member.name,
+                email: member.email ?? null,
+                photo: member.photo ?? null,
+                role: membership.role || 'MEMBER',
+              }
+            }
+          }
+        }
+        return null
+      }
+
+      const person1 = findPersonById(person1Id)
+      const person2 = findPersonById(person2Id)
+
+      if (!person1 || !person2) return
+
+      // Close all other panels
       setIsPulsePanelOpen(false)
       setIsResonancePanelOpen(false)
       if (isPersonPanelOpen) {
@@ -1522,24 +1139,8 @@ function FieldDetailPage() {
       }
 
       setSelectedConnection({
-        person1: {
-          id: person1Data.personId,
-          firstName: person1Data.firstName,
-          lastName: person1Data.lastName,
-          name: person1Data.name,
-          email: person1Data.email,
-          photo: person1Data.photo,
-          role: person1Data.role,
-        },
-        person2: {
-          id: person2Data.personId,
-          firstName: person2Data.firstName,
-          lastName: person2Data.lastName,
-          name: person2Data.name,
-          email: person2Data.email,
-          photo: person2Data.photo,
-          role: person2Data.role,
-        },
+        person1,
+        person2,
       })
       setIsConnectionPanelOpen(true)
 
@@ -1547,7 +1148,6 @@ function FieldDetailPage() {
       setActivePersonIds((prev) => new Set([...prev, person1Id, person2Id]))
     },
     [
-      personPositions,
       personConnections,
       membersData,
       isConnectionPanelOpen,
@@ -1570,13 +1170,88 @@ function FieldDetailPage() {
     [selectedPerson, handleConnectionClick]
   )
 
+  // Convert pulse options to NVL nodes with React components
+  const nvlPulseNodes: Node[] = useMemo(() => {
+    return createNvlNodes(
+      pulseOptions.map((p) => ({
+        id: p.id,
+        title: p.title || 'Untitled',
+        type: p.type,
+      }))
+    )
+  }, [pulseOptions])
+
+  // Convert relationships to NVL format
+  const nvlRelationships = useMemo(() => {
+    const rels = resonanceLinks.map((link) => {
+      const sourceId = link.source?.[0]?.id
+      const targetId = link.target?.[0]?.id
+      return {
+        id: link.id,
+        from: sourceId,
+        to: targetId,
+        label: link.label || 'Resonates',
+      }
+    })
+    return createNvlRelationships(rels.filter((r) => r.from && r.to))
+  }, [resonanceLinks])
+
+  // Render PulseNode components into their containers
+  useEffect(() => {
+    pulseOptions.forEach((pulse) => {
+      const container = document.getElementById(`node-${pulse.id}`)
+      if (container) {
+        renderReactComponentToContainer(
+          <PulseNode
+            label={pulse.title || 'Untitled Pulse'}
+            type={pulse.type as NodeType}
+            animation="float"
+            isSelected={pulse.id === activeResonanceNodeId}
+            isHovered={pulse.id === hoveredNodeId}
+            onClick={() => handleNodeClick(pulse.id)}
+            onEditClick={(e) => {
+              handleEditPulse(
+                e,
+                pulse.id,
+                pulse.type as NodeType,
+                pulse.title || '',
+                pulse.title || '',
+                pulse.content || ''
+              )
+            }}
+          />,
+          container
+        )
+      }
+    })
+  }, [
+    pulseOptions,
+    activeResonanceNodeId,
+    hoveredNodeId,
+    handleNodeClick,
+    handleEditPulse,
+  ])
+
   return (
     <div className="relative overflow-hidden">
-      <GenericPulseCanvas
-        canvasScale={5}
-        onScaleChange={setCurrentScale}
-        isLoading={isPulsesLoading}
-        isEmpty={!isPulsesLoading && pulseOptions.length === 0}
+      <NvlCanvas
+        nodes={nvlPulseNodes}
+        relationships={nvlRelationships}
+        layout="forceDirected"
+        minZoom={0.1}
+        maxZoom={3}
+        onNodeClick={(node) => handleNodeClick(node.id)}
+        onNodeHover={(node) => handleNodeHover(node)}
+        onBackgroundClick={() => {
+          setIsPulsePanelOpen(false)
+          setIsResonancePanelOpen(false)
+          setIsPersonPanelOpen(false)
+          setIsConnectionPanelOpen(false)
+          setActiveResonanceNodeId(null)
+          setSelectedPerson(null)
+          setSelectedConnection(null)
+          setActivePersonIds(new Set())
+        }}
         actionButton={
           isMounted && (
             <div className="group flex flex-row items-center gap-3 relative z-50">
@@ -1627,84 +1302,7 @@ function FieldDetailPage() {
             </div>
           )
         }
-      >
-        {isMounted && !isPulsesLoading && (
-          <>
-            <PersonConnectionLines
-              personPositions={personPositions}
-              connections={personConnections}
-              canvasWidth={canvasSize.width}
-              canvasHeight={canvasSize.height}
-              scale={currentScale}
-              activePersonIds={activePersonIds}
-            />
-            <ResonanceLinksVisualization
-              pulsePositions={pulsePositions}
-              resonanceLinks={resonanceLinks}
-              resonanceNodePositions={resonanceNodePositions}
-              canvasWidth={canvasSize.width}
-              canvasHeight={canvasSize.height}
-              expandedLinks={expandedResonanceLinks}
-              scale={currentScale}
-              onResonanceNodeClick={handleResonanceNodeClick}
-              onResonanceNodeDrag={handleResonanceNodeDrag}
-              onResonanceNodeEdit={handleResonanceEdit}
-            />
-            {pulsePositions.map((pos) => (
-              <DraggablePulseNode
-                key={pos.pulseId}
-                icon={pos.icon}
-                label={pos.label}
-                type={pos.type}
-                animation={pos.animation}
-                canvasPosition={{ x: pos.x, y: pos.y }}
-                scale={currentScale}
-                onPositionChange={(x, y) =>
-                  handlePulsePositionChange(pos.pulseId, x, y)
-                }
-                onClick={() => {
-                  // Close all other panels
-                  setIsResonancePanelOpen(false)
-                  setIsPersonPanelOpen(false)
-                  setIsConnectionPanelOpen(false)
-
-                  setIsPulsePanelOpen(true)
-                  fetchPulseDetails({ variables: { pulseId: pos.pulseId } })
-                }}
-                onEditClick={(e) =>
-                  handleEditPulse(
-                    e,
-                    pos.pulseId,
-                    pos.type,
-                    pos.label,
-                    pos.title,
-                    pos.content
-                  )
-                }
-              />
-            ))}
-            {personPositions.map((pos) => (
-              <DraggablePersonNode
-                key={pos.personId}
-                id={pos.personId}
-                firstName={pos.firstName}
-                lastName={pos.lastName}
-                name={pos.name}
-                email={pos.email}
-                photo={pos.photo}
-                role={pos.role}
-                animation={pos.animation}
-                canvasPosition={{ x: pos.x, y: pos.y }}
-                scale={currentScale}
-                onPositionChange={(x: number, y: number) =>
-                  handlePersonPositionChange(pos.personId, x, y)
-                }
-                onClick={() => handlePersonClick(pos.personId)}
-              />
-            ))}
-          </>
-        )}
-      </GenericPulseCanvas>
+      />
 
       <PulsePanel
         isOpen={isPulsePanelOpen}
@@ -1782,8 +1380,44 @@ function FieldDetailPage() {
         }}
         person={selectedPerson}
         connectedPersons={
-          selectedPerson
+          selectedPerson && membersData
             ? (() => {
+                const space = membersData.weSpaces?.[0]
+                if (!space) return []
+
+                // Helper to find person by ID in membersData
+                const findPersonById = (id: string) => {
+                  const owner = space.owner?.[0]
+                  if (owner?.id === id) {
+                    return {
+                      id: owner.id,
+                      firstName: owner.firstName,
+                      lastName: owner.lastName,
+                      name: owner.name,
+                      photo: owner.photo,
+                      role: 'OWNER' as const,
+                    }
+                  }
+
+                  if (space.members) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    for (const membership of space.members) {
+                      const member = membership.member?.[0]
+                      if (member?.id === id) {
+                        return {
+                          id: member.id,
+                          firstName: member.firstName,
+                          lastName: member.lastName,
+                          name: member.name,
+                          photo: member.photo,
+                          role: membership.role || 'MEMBER',
+                        }
+                      }
+                    }
+                  }
+                  return null
+                }
+
                 const connectedIds = new Set<string>()
 
                 // Find direct connections (where selectedPerson is the source)
@@ -1805,21 +1439,7 @@ function FieldDetailPage() {
 
                 // Map to full person objects
                 return Array.from(connectedIds)
-                  .map((connectedId) => {
-                    const connectedPerson = personPositions.find(
-                      (p) => p.personId === connectedId
-                    )
-                    return connectedPerson
-                      ? {
-                          id: connectedPerson.personId,
-                          firstName: connectedPerson.firstName,
-                          lastName: connectedPerson.lastName,
-                          name: connectedPerson.name,
-                          photo: connectedPerson.photo,
-                          role: connectedPerson.role,
-                        }
-                      : null
-                  })
+                  .map((connectedId) => findPersonById(connectedId))
                   .filter((p): p is NonNullable<typeof p> => p !== null)
               })()
             : []

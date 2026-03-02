@@ -88,6 +88,10 @@ export function EntityBubble({
   const ringRef1 = useRef<HTMLDivElement>(null)
   const ringRef2 = useRef<HTMLDivElement>(null)
 
+  // Drag detection refs
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
+
   // Generate unique random values for this bubble instance
   const randomSeedRef = useRef({
     duration: 12 + Math.random() * 12, // 12-20 seconds (very slow)
@@ -260,14 +264,51 @@ export function EntityBubble({
     }
   }
 
+  // Drag detection handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = false
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragStartRef.current) return
+
+    const dx = e.clientX - dragStartRef.current.x
+    const dy = e.clientY - dragStartRef.current.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    // Mark as dragging if moved more than 5 pixels
+    if (distance > 5) {
+      isDraggingRef.current = true
+    }
+  }
+
+  const handleMouseUp = () => {
+    dragStartRef.current = null
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Suppress click if we were dragging
+    if (isDraggingRef.current) {
+      console.log('🚫 EntityBubble click suppressed - was dragging')
+      e.preventDefault()
+      e.stopPropagation()
+      isDraggingRef.current = false
+      return
+    }
+
+    console.log('✓ EntityBubble normal click - navigating')
+    onClick?.()
+  }
+
   return (
     <div
       ref={bubbleRef}
       className={cn(
-        'group relative flex items-center justify-center overflow-visible',
+        'group relative flex items-center justify-center overflow-visible pointer-events-auto',
         sizeClasses[size],
         shapeClasses[shape],
-        'gp-glass',
+        'bg-gp-surface-strong dark:bg-gp-surface-dark border border-white/5 dark:border-white/10',
         animationsEnabled && 'transition-all duration-300',
         animationsEnabled &&
           'shadow-[0_0_26px_color-mix(in_srgb,var(--gp-primary)_24%,transparent)] hover:shadow-[0_0_34px_color-mix(in_srgb,var(--gp-primary)_36%,transparent)]',
@@ -276,7 +317,10 @@ export function EntityBubble({
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onClick={handleClick}
       style={{ willChange: 'transform' }}
     >
       {/* Decorative rotating rings for xl size */}
@@ -300,7 +344,7 @@ export function EntityBubble({
             e.stopPropagation()
             onEditClick(e)
           }}
-          className="absolute top-3 right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+          className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
           title="Edit space"
         >
           <span className="material-symbols-outlined text-lg">edit</span>

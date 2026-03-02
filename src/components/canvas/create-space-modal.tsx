@@ -17,6 +17,7 @@ export interface CreateSpaceModalProps {
   isOpen: boolean
   onClose: () => void
   onCreate?: (payload: { name: string }) => void | Promise<void>
+  onSuccessfulMutation?: () => void
   isLoading?: boolean
   title?: string
   subtitle?: string
@@ -31,6 +32,7 @@ export function CreateSpaceModal({
   isOpen,
   onClose,
   onCreate,
+  onSuccessfulMutation,
   isLoading = false,
   title = 'Create New Space',
   subtitle = 'Name your space',
@@ -89,6 +91,7 @@ export function CreateSpaceModal({
         },
       })
       toast.success('Space deleted successfully')
+      onSuccessfulMutation?.()
       onClose()
     } catch (error) {
       console.error('Error deleting space:', error)
@@ -115,6 +118,7 @@ export function CreateSpaceModal({
             },
           },
         })
+        onSuccessfulMutation?.()
         onClose()
       } catch (error) {
         console.error('Error updating space:', error)
