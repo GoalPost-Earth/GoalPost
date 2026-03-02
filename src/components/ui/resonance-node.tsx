@@ -119,7 +119,7 @@ export function ResonanceNode({
         {/* Label - displayed below node */}
         <span
           className={cn(
-            'absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-colors duration-300 pointer-events-none',
+            'absolute top-full mt-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-colors duration-300 pointer-events-none',
             isActive
               ? 'text-slate-900 dark:text-white'
               : 'text-slate-600 dark:text-white/70 group-hover:text-slate-700 dark:group-hover:text-white'

@@ -14,6 +14,7 @@ import { PulseNode } from '@/components/ui/pulse-node'
 import { ResonanceNode } from '@/components/ui/resonance-node'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
+import { formatResonanceLabel } from '@/utils/graph-utils'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
@@ -336,7 +337,7 @@ function FieldDetailPage() {
             id: `resonance-${link.id}`,
             resonanceId: link.id,
             type: 'resonance',
-            label: link.label || 'Resonance',
+            label: formatResonanceLabel(link.label) || 'Resonance',
             description: link.description || '',
             confidence: link.confidence || 0,
           },
@@ -412,7 +413,7 @@ function FieldDetailPage() {
             <ResonanceNode
               id={resonance.id}
               icon="link"
-              label={resonance.label || 'Resonance'}
+              label={(node as any).label || 'Resonance'}
               description={resonance.description}
               isActive={activeResonanceNodeId === resonance.id}
               onClick={() => {}} // Handled by NVL canvas

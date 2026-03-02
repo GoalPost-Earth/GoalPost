@@ -136,11 +136,11 @@ export function ResonancePanel({
         <div className="flex items-center gap-2 mt-3">
           <span className="flex h-2 w-2 rounded-full bg-gp-primary animate-pulse" />
           <span className="text-xs text-gp-primary">
-            Active •{' '}
-            {typeof resonance.strength === 'number'
-              ? resonance.strength.toFixed(2)
-              : '0.00'}
-            % Confidence
+            Active
+            {typeof resonance.strength === 'number' &&
+              resonance.strength > 0 && (
+                <> • {resonance.strength.toFixed(2)}% Confidence</>
+              )}
           </span>
         </div>
       </div>
@@ -178,7 +178,7 @@ export function ResonancePanel({
                     Type
                   </span>
                   <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong">
-                    AI-Discovered Meaning
+                    Pulse connection
                   </p>
                 </div>
                 <div>
@@ -218,9 +218,11 @@ export function ResonancePanel({
                         className="p-4 rounded-lg bg-gp-glass-bg border border-gp-glass-border space-y-3"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gp-ink-strong dark:text-gp-ink-strong">
-                            {Math.round(link.confidence * 100)}% confidence
-                          </span>
+                          {link.confidence > 0 && (
+                            <span className="text-xs font-bold text-gp-ink-strong dark:text-gp-ink-strong">
+                              {Math.round(link.confidence * 100)}% confidence
+                            </span>
+                          )}
                           <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
                             {createdAt}
                           </span>
@@ -228,7 +230,8 @@ export function ResonancePanel({
 
                         {link.evidence && (
                           <p className="text-xs text-gp-ink-strong dark:text-gp-ink-strong italic leading-relaxed">
-                            <strong>Evidence:</strong> {link.evidence}
+                            <strong>Evidence:</strong>{' '}
+                            {formatResonanceLabel(link.evidence)}
                           </p>
                         )}
 

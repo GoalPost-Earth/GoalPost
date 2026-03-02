@@ -40,12 +40,19 @@ export function formatDate(inputDate: string) {
 }
 
 /**
- * Format resonance link labels from snake_case/UPPER_CASE to Title Case
- * Example: "APPLIED_TO" -> "Applied To", "CONNECTED_TO" -> "Connected To"
+ * Format resonance link labels from snake_case/UPPER_CASE
+ * Example: "APPLIED_TO" -> "APPLIED TO", "CONNECTED_TO" -> "CONNECTED TO"
+ * For mixed case labels, apply Title Case
  */
 export function formatResonanceLabel(label: string): string {
   if (!label) return ''
 
+  // If the label is all uppercase (like APPLIED_TO), keep uppercase and replace underscores
+  if (label === label.toUpperCase() && label.includes('_')) {
+    return label.replace(/_/g, ' ')
+  }
+
+  // Otherwise, apply title case (for mixed case labels)
   return label
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
