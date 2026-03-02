@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { getConfigForType } from '@/lib/pulse-type-config'
 import { formatResonanceLabel } from '@/utils/graph-utils'
@@ -80,6 +81,7 @@ export function ResonancePanel({
   pulses = [],
 }: ResonancePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (panelRef.current) {
@@ -158,7 +160,9 @@ export function ResonancePanel({
             {resonance.description && (
               <div>
                 <p className="text-gp-ink-muted dark:text-gp-ink-soft text-sm leading-relaxed">
-                  {resonance.description}
+                  {formatResonanceLabel(
+                    resonance.description
+                  ).toLocaleUpperCase()}
                 </p>
               </div>
             )}
@@ -276,6 +280,12 @@ export function ResonancePanel({
       {/* Footer */}
       <div className="p-6 border-t border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <button
+          onClick={() => {
+            if (resonance?.id) {
+              router.push(`/protected/dashboard/resonances/${resonance.id}`)
+              onClose()
+            }
+          }}
           className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg transition-all"
           style={{
             background:
@@ -288,10 +298,6 @@ export function ResonancePanel({
             visibility
           </span>
           <span className="truncate">Deep Dive</span>
-        </button>
-        <button className="flex w-full mt-3 cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-transparent border border-gp-glass-border hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-gp-ink-strong dark:text-gp-ink-strong gap-2 text-sm font-medium leading-normal">
-          <span className="material-symbols-outlined text-[20px]">share</span>
-          <span className="truncate">Share Resonance</span>
         </button>
       </div>
     </div>
