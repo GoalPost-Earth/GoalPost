@@ -79,10 +79,10 @@ export function NvlCanvas({
     () => ({
       ...(layout === 'forceDirected' && {
         simulationIterations: 350,
-        gravity: 2.5, // Strong pull toward center for tighter clustering
-        linkDistance: 80, // Very close spacing
-        charge: -250, // Lower repulsion allows closer spacing
-        linkStrength: 0.7, // Stronger attraction
+        gravity: 4.5, // Maximum pull toward center
+        linkDistance: 25, // Very tight spacing
+        charge: -100, // Minimal repulsion for tight clustering
+        linkStrength: 0.98, // Maximum edge attraction
       }),
       ...layoutOptions,
     }),
@@ -236,9 +236,13 @@ export function NvlCanvas({
           const nodeIds = allNodes.map((n: Node) => n.id)
           console.log('[NVL] Auto-fitting', nodeIds.length, 'nodes')
 
-          // Fit all nodes with animation
-          nvlRef.fit(nodeIds, { duration: 500 })
-          console.log('[NVL] Fit operation completed')
+          // Only fit if there are 2+ nodes; for single node, initialZoom handles it
+          if (nodeIds.length > 1) {
+            nvlRef.fit(nodeIds, { duration: 500 })
+            console.log('[NVL] Fit operation completed')
+          } else {
+            console.log('[NVL] Single node - skipping fit, using initialZoom')
+          }
         } catch (error) {
           console.error('[NVL] Auto-fit failed:', error)
         }
