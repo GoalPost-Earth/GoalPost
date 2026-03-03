@@ -278,7 +278,7 @@ export default function SearchPage() {
       </div>
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 py-16 md:py-20 flex flex-col gap-10">
-        <header className="flex flex-col gap-6 ">
+        <header className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl md:text-5xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
               Discover people, spaces, and resonances
@@ -288,57 +288,57 @@ export default function SearchPage() {
               color theme for clarity in light or dark mode.
             </p>
           </div>
+        </header>
 
-          <div className="flex flex-col gap-4 md:gap-6 rounded-3xl p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]">
-            <div className="flex flex-col gap-3">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
-                Search query
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl border border-gp-glass-border bg-white/70 dark:bg-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] px-4 py-3">
-                <span className="material-symbols-outlined text-gp-ink-soft text-xl">
-                  search
-                </span>
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Explore resonances, people, and pulses..."
-                  className="w-full bg-transparent focus:outline-none text-base text-gp-ink-strong dark:text-gp-ink-strong placeholder:text-gp-ink-soft"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'person', label: 'People' },
-                { key: 'meSpace', label: 'Me Spaces' },
-                { key: 'weSpace', label: 'We Spaces' },
-                { key: 'context', label: 'Contexts' },
-                { key: 'goalPulse', label: 'Goals' },
-                { key: 'resourcePulse', label: 'Resources' },
-                { key: 'storyPulse', label: 'Stories' },
-              ].map((option) => {
-                const isActive = activeType === option.key
-                return (
-                  <button
-                    key={option.key}
-                    onClick={() =>
-                      setActiveType(option.key as EntityType | 'all')
-                    }
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-gp-primary/10 border-gp-primary/30 text-gp-ink-strong dark:text-gp-ink-strong'
-                        : 'bg-white/50 dark:bg-white/5 border-gp-glass-border text-gp-ink-muted dark:text-gp-ink-soft hover:border-gp-primary/30'
-                    } ${animationsEnabled ? 'hover:-translate-y-0.5' : ''}`}
-                  >
-                    {option.label}
-                  </button>
-                )
-              })}
+        <div className="sticky top-10 z-20 flex flex-col gap-4 md:gap-6 rounded-3xl p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] ">
+          <div className="flex flex-col gap-3">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
+              Search query
+            </label>
+            <div className="flex items-center gap-3 rounded-2xl border border-gp-glass-border bg-white/70 dark:bg-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] px-4 py-3">
+              <span className="material-symbols-outlined text-gp-ink-soft text-xl">
+                search
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Explore resonances, people, and pulses..."
+                className="w-full bg-transparent focus:outline-none text-base text-gp-ink-strong dark:text-gp-ink-strong placeholder:text-gp-ink-soft"
+              />
             </div>
           </div>
-        </header>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'person', label: 'People' },
+              { key: 'meSpace', label: 'Me Spaces' },
+              { key: 'weSpace', label: 'We Spaces' },
+              { key: 'context', label: 'Contexts' },
+              { key: 'goalPulse', label: 'Goals' },
+              { key: 'resourcePulse', label: 'Resources' },
+              { key: 'storyPulse', label: 'Stories' },
+            ].map((option) => {
+              const isActive = activeType === option.key
+              return (
+                <button
+                  key={option.key}
+                  onClick={() =>
+                    setActiveType(option.key as EntityType | 'all')
+                  }
+                  className={`px-4 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-gp-primary/10 border-gp-primary/30 text-gp-ink-strong dark:text-gp-ink-strong'
+                      : 'bg-white/50 dark:bg-white/5 border-gp-glass-border text-gp-ink-muted dark:text-gp-ink-soft hover:border-gp-primary/30'
+                  } ${animationsEnabled ? 'hover:-translate-y-0.5' : ''}`}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading && debouncedQuery.length > 0 && (
