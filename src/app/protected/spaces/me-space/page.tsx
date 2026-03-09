@@ -2,13 +2,15 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useMutation } from '@apollo/client/react'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { DraggableEntityBubble } from '@/components/canvas/draggable-entity-bubble'
 import { useApp, usePageContext } from '@/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { GenericSpaceCanvas } from '@/components/canvas/generic-space-canvas'
 import { GET_USER_ME_SPACES_QUERY } from '@/app/graphql/queries'
+import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { toast } from 'sonner'
 
 interface SpacePosition {
   spaceId: string
@@ -51,6 +53,8 @@ export default function MeSpacePage() {
       subtitle?: string
     }>
   >([])
+
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   // Fetch MeSpaces using GraphQL
   const {
@@ -267,6 +271,25 @@ export default function MeSpacePage() {
         return
       }
 
+      // Log space creation activity
+      if (data.meSpace?.id) {
+        await logSpaceActivity({
+          variables: {
+            input: {
+              action: 'created',
+              spaceId: data.meSpace.id,
+              spaceType: 'MeSpace',
+              spaceName: name,
+            },
+          },
+        })
+          .then(() => toast.info('Space creation logged'))
+          .catch((err) => {
+            console.error('Error logging space creation:', err)
+            toast.error('Failed to log space creation')
+          })
+      }
+
       setShowCreateModal(false)
       await refetchMeSpaces()
     } catch (err) {
@@ -353,7 +376,30 @@ export default function MeSpacePage() {
           onClose={() => {
             setShowEditModal(false)
             setEditingSpaceId(null)
-            refetchMeSpaces()
+          }}
+          onSuccessfulMutation={async () => {
+            // Log space update activity
+            const editingSpace = userMeSpaces.find(
+              (s) => s.id === editingSpaceId
+            )
+            if (editingSpace?.name && editingSpaceId) {
+              await logSpaceActivity({
+                variables: {
+                  input: {
+                    action: 'updated',
+                    spaceId: editingSpaceId,
+                    spaceType: 'MeSpace',
+                    spaceName: editingSpace.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Space update logged'))
+                .catch((err) => {
+                  console.error('Error logging space update:', err)
+                  toast.error('Failed to log space update')
+                })
+            }
+            await refetchMeSpaces()
           }}
           isEditing={true}
           spaceId={editingSpaceId}

@@ -1,6 +1,6 @@
 /**
  * EXAMPLE: Using Activity Logging GraphQL Mutations
- * 
+ *
  * This file demonstrates how to integrate activity logging into your components
  * using GraphQL mutations instead of HTTP endpoints.
  */
@@ -117,11 +117,15 @@ export function CreatePulseExample() {
   }
 
   return (
-    <button onClick={() => handleCreatePulse({
-      title: 'Example Goal',
-      content: 'This is an example goal',
-      contextId: 'context_123',
-    })}>
+    <button
+      onClick={() =>
+        handleCreatePulse({
+          title: 'Example Goal',
+          content: 'This is an example goal',
+          contextId: 'context_123',
+        })
+      }
+    >
       {loading ? 'Creating...' : 'Create Pulse'}
     </button>
   )

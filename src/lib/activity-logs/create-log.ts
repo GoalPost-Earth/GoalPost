@@ -27,6 +27,21 @@ export interface LogEntry {
   metadata?: Record<string, any>
 }
 
+function parseMetadata(metadata: unknown): Record<string, any> | undefined {
+  if (!metadata) return undefined
+  if (typeof metadata === 'string') {
+    try {
+      return JSON.parse(metadata) as Record<string, any>
+    } catch {
+      return { raw: metadata }
+    }
+  }
+  if (typeof metadata === 'object') {
+    return metadata as Record<string, any>
+  }
+  return { raw: metadata }
+}
+
 /**
  * Create an activity log entry
  * Links to pulses and tracks who performed the action and when
@@ -36,6 +51,7 @@ export async function createLog(input: CreateLogInput): Promise<string> {
 
   const logId = `log_${Date.now()}_${Math.random().toString(36).slice(2)}`
   const now = new Date().toISOString()
+  const metadataJson = input.metadata ? JSON.stringify(input.metadata) : null
 
   try {
     // Create Log node and link to creator
@@ -45,20 +61,25 @@ export async function createLog(input: CreateLogInput): Promise<string> {
         id: $logId,
         description: $description,
         createdAt: $createdAt,
-        metadata: $metadata
+        metadata: $metadataJson,
+        metadataJson: $metadataJson
       })
       
       WITH log
       MATCH (person:Person {id: $userId})
       CREATE (log)-[:CREATED_BY]->(person)
-      
-      WITH log
-      // Link to pulses if provided
-      UNWIND $pulseIds AS pulseId
-      OPTIONAL MATCH (pulse:FieldPulse {id: pulseId})
-      WHERE pulse IS NOT NULL
-      CREATE (log)-[:LOGGED_FOR]->(pulse)
-      
+
+      WITH log, $pulseIds AS pulseIds
+      CALL {
+        WITH log, pulseIds
+        UNWIND pulseIds AS pulseId
+        OPTIONAL MATCH (pulse:FieldPulse {id: pulseId})
+        WITH log, pulse
+        WHERE pulse IS NOT NULL
+        CREATE (log)-[:LOGGED_FOR]->(pulse)
+        RETURN count(*) AS linkedCount
+      }
+
       RETURN log.id as logId
       `,
       {
@@ -67,7 +88,7 @@ export async function createLog(input: CreateLogInput): Promise<string> {
         createdAt: now,
         userId: input.userId,
         pulseIds: input.pulseIds || [],
-        metadata: input.metadata || null,
+        metadataJson,
       }
     )
 
@@ -100,6 +121,7 @@ export async function getContextLogs(
       createdById: string
       createdByName: string
       createdByPhoto?: string
+      metadata?: string
     }>(
       `
       MATCH (log:Log)-[:LOGGED_FOR]->(pulse:FieldPulse)-[:HAS_PULSE]-(context:FieldContext {id: $contextId})
@@ -111,7 +133,8 @@ export async function getContextLogs(
         log.createdAt as createdAt,
         person.id as createdById,
         person.name as createdByName,
-        person.photo as createdByPhoto
+        person.photo as createdByPhoto,
+        log.metadata as metadata
       ORDER BY log.createdAt DESC
       LIMIT $limit
       `,
@@ -127,6 +150,7 @@ export async function getContextLogs(
         name: r.createdByName,
         photo: r.createdByPhoto,
       },
+      metadata: parseMetadata(r.metadata),
     }))
   } catch (error) {
     console.error('Error fetching logs:', error)
@@ -152,6 +176,7 @@ export async function getUserLogs(
       createdById: string
       createdByName: string
       createdByPhoto?: string
+      metadata?: string
     }>(
       `
       MATCH (log:Log)-[:CREATED_BY]->(person:Person {id: $userId})
@@ -163,7 +188,8 @@ export async function getUserLogs(
         log.createdAt as createdAt,
         creator.id as createdById,
         creator.name as createdByName,
-        creator.photo as createdByPhoto
+        creator.photo as createdByPhoto,
+        log.metadata as metadata
       ORDER BY log.createdAt DESC
       LIMIT $limit
       `,
@@ -179,6 +205,7 @@ export async function getUserLogs(
         name: r.createdByName,
         photo: r.createdByPhoto,
       },
+      metadata: parseMetadata(r.metadata),
     }))
   } catch (error) {
     console.error('Error fetching user logs:', error)

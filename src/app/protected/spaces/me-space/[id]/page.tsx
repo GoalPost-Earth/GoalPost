@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useQuery, useMutation } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
 import { usePageContext } from '@/contexts'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
@@ -141,7 +142,7 @@ export default function MeSpaceFieldsPage() {
 
       // Log field creation activity
       if (createdField?.id) {
-        logFieldActivity({
+        await logFieldActivity({
           variables: {
             input: {
               action: 'created',
@@ -151,7 +152,12 @@ export default function MeSpaceFieldsPage() {
               spaceName: meSpace?.name,
             },
           },
-        }).catch((err) => console.warn('Failed to log field creation:', err))
+        })
+          .then(() => toast.info('Field creation logged'))
+          .catch((err) => {
+            console.error('Failed to log field creation:', err)
+            toast.error('Failed to log field creation')
+          })
 
         // Store the created field ID for onboarding navigation
         localStorage.setItem('lastCreatedFieldId', createdField.id)
@@ -159,6 +165,7 @@ export default function MeSpaceFieldsPage() {
         localStorage.setItem('meSpaceId', meSpaceId)
       }
 
+      setShowCreateModal(false)
       await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
@@ -273,7 +280,6 @@ export default function MeSpaceFieldsPage() {
           onClose={() => {
             setShowEditModal(false)
             setEditingFieldId(null)
-            refetch()
           }}
           isEditing={true}
           fieldId={editingFieldId}
@@ -284,6 +290,58 @@ export default function MeSpaceFieldsPage() {
             transformedFields.find((f) => f.id === editingFieldId)
               ?.description || ''
           }
+          onEditSuccess={async () => {
+            const editingField = transformedFields.find(
+              (f) => f.id === editingFieldId
+            )
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'updated',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: meSpace?.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field update logged'))
+                .catch((err) => {
+                  console.error('Failed to log field update:', err)
+                  toast.error('Failed to log field update')
+                })
+            }
+            setShowEditModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
+          onDeleteSuccess={async () => {
+            const editingField = transformedFields.find(
+              (f) => f.id === editingFieldId
+            )
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'deleted',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: meSpace?.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field deletion logged'))
+                .catch((err) => {
+                  console.error('Failed to log field deletion:', err)
+                  toast.error('Failed to log field deletion')
+                })
+            }
+            setShowEditModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
         />
       )}
     </div>
