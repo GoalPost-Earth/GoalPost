@@ -12,6 +12,7 @@ import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_D
 import {
   UPDATE_FIELD_CONTEXT_MUTATION,
   DELETE_FIELD_CONTEXT_MUTATION,
+  LOG_FIELD_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
@@ -36,6 +37,7 @@ export default function FieldContextDetailsPage() {
   // Setup mutations
   const [updateFieldContext] = useMutation(UPDATE_FIELD_CONTEXT_MUTATION)
   const [deleteFieldContext] = useMutation(DELETE_FIELD_CONTEXT_MUTATION)
+  const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
@@ -67,6 +69,19 @@ export default function FieldContextDetailsPage() {
         refetchQueries: ['GetFieldContextDetails'],
       })
 
+      // Log field context update activity
+      logFieldActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            fieldId: contextId,
+            fieldName: editTitle || context?.title,
+            contextId,
+            spaceName: space?.name,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log field update:', err))
+
       setIsEditMode(false)
       setEditTitle('')
       setEditEmergentName('')
@@ -95,6 +110,19 @@ export default function FieldContextDetailsPage() {
       await deleteFieldContext({
         variables: { id: contextId },
       })
+
+      // Log field context deletion activity
+      logFieldActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            fieldId: contextId,
+            fieldName: context.title,
+            contextId,
+            spaceName: space?.name,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log field deletion:', err))
 
       toast.success('Field context deleted successfully')
       router.push('/protected/dashboard')

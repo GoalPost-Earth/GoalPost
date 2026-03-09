@@ -14,6 +14,11 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogPulseActivityDocument
+  '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogSpaceActivityDocument
+  '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogMemberActivityDocument
+  '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogFieldActivityDocument
+  '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogResonanceActivityDocument
   '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n        weSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n': typeof types.CreateFieldContextDocument
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n': typeof types.UpdateFieldContextDocument
   '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteFieldContextDocument
@@ -97,6 +102,16 @@ type Documents = {
   '\n  query GetPersonConnections($personIds: [ID!]!) {\n    people(where: { id_IN: $personIds }) {\n      id\n      connections {\n        id\n        firstName\n        lastName\n        name\n        email\n        photo\n      }\n    }\n  }\n': typeof types.GetPersonConnectionsDocument
 }
 const documents: Documents = {
+  '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogPulseActivityDocument,
+  '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogSpaceActivityDocument,
+  '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogMemberActivityDocument,
+  '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogFieldActivityDocument,
+  '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogResonanceActivityDocument,
   '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n        weSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n':
     types.CreateFieldContextDocument,
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
@@ -275,6 +290,36 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

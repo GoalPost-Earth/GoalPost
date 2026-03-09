@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useApp, usePageContext } from '@/contexts'
+import { NotificationPanel } from '@/components/notifications/NotificationPanel'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
@@ -27,12 +28,14 @@ export default function NavBar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useApp()
   const { pageTitle } = usePageContext()
   const menuRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const notificationRef = useRef<HTMLDivElement>(null)
 
   // Get user's MeSpace
   const userMeSpace = user?.ownsSpaces?.find(
@@ -58,6 +61,7 @@ export default function NavBar() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       const isMobileMenuButton = target.closest('[data-mobile-menu-button]')
+      const isNotificationButton = target.closest('[data-notification-button]')
 
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
@@ -69,15 +73,22 @@ export default function NavBar() {
       ) {
         setShowMobileMenu(false)
       }
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node) &&
+        !isNotificationButton
+      ) {
+        setShowNotifications(false)
+      }
     }
 
-    if (showUserMenu || showMobileMenu) {
+    if (showUserMenu || showMobileMenu || showNotifications) {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showUserMenu, showMobileMenu])
+  }, [showUserMenu, showMobileMenu, showNotifications])
 
   const toggleTheme = () => {
     const newTheme = !isDark
@@ -292,9 +303,20 @@ export default function NavBar() {
         >
           {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
         </button>
-        <button className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
-          {isMounted && <NotificationIcon />}
-        </button>
+        <div className="relative" ref={notificationRef}>
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            data-notification-button
+            className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+            aria-label="Notifications"
+          >
+            {isMounted && <NotificationIcon />}
+          </button>
+          <NotificationPanel
+            isOpen={showNotifications}
+            onClose={() => setShowNotifications(false)}
+          />
+        </div>
         <Link
           href="/protected/search"
           className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
@@ -458,7 +480,11 @@ export default function NavBar() {
               >
                 {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
               </button>
-              <button className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+                aria-label="Notifications"
+              >
                 {isMounted && <NotificationIcon />}
               </button>
             </div>

@@ -1658,6 +1658,12 @@ export type CreateCoreValuePulsesMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateCreateLogResponsesMutationResponse = {
+  __typename?: 'CreateCreateLogResponsesMutationResponse'
+  createLogResponses: Array<CreateLogResponse>
+  info: CreateInfo
+}
+
 export type CreateFieldContextsMutationResponse = {
   __typename?: 'CreateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -1675,6 +1681,73 @@ export type CreateInfo = {
   __typename?: 'CreateInfo'
   nodesCreated: Scalars['Int']['output']
   relationshipsCreated: Scalars['Int']['output']
+}
+
+/** Response when creating an activity log. */
+export type CreateLogResponse = {
+  __typename?: 'CreateLogResponse'
+  log?: Maybe<Log>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type CreateLogResponseAggregate = {
+  __typename?: 'CreateLogResponseAggregate'
+  count: Count
+  node: CreateLogResponseAggregateNode
+}
+
+export type CreateLogResponseAggregateNode = {
+  __typename?: 'CreateLogResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type CreateLogResponseAggregateSelection = {
+  __typename?: 'CreateLogResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type CreateLogResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type CreateLogResponseEdge = {
+  __typename?: 'CreateLogResponseEdge'
+  cursor: Scalars['String']['output']
+  node: CreateLogResponse
+}
+
+/** Fields to sort CreateLogResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one CreateLogResponseSort object. */
+export type CreateLogResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type CreateLogResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type CreateLogResponseWhere = {
+  AND?: InputMaybe<Array<CreateLogResponseWhere>>
+  NOT?: InputMaybe<CreateLogResponseWhere>
+  OR?: InputMaybe<Array<CreateLogResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type CreateLogResponsesConnection = {
+  __typename?: 'CreateLogResponsesConnection'
+  aggregate: CreateLogResponseAggregate
+  edges: Array<CreateLogResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 export type CreateLogsMutationResponse = {
@@ -5820,6 +5893,16 @@ export type LogEdge = {
   node: Log
 }
 
+/** Input for logging field context-related activities. */
+export type LogFieldInput = {
+  action: Scalars['String']['input']
+  contextId: Scalars['ID']['input']
+  fieldId: Scalars['ID']['input']
+  fieldName: Scalars['String']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  spaceName?: InputMaybe<Scalars['String']['input']>
+}
+
 export type LogFieldPulsePulsesAggregateSelection = {
   __typename?: 'LogFieldPulsePulsesAggregateSelection'
   count: CountConnection
@@ -6116,6 +6199,18 @@ export type LogGoalsUpdateFieldInput = {
   update?: InputMaybe<LogGoalsUpdateConnectionInput>
 }
 
+/** Input for logging member-related activities. */
+export type LogMemberInput = {
+  action: Scalars['String']['input']
+  memberId: Scalars['ID']['input']
+  memberName: Scalars['String']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  previousRole?: InputMaybe<Scalars['String']['input']>
+  role?: InputMaybe<Scalars['String']['input']>
+  spaceId: Scalars['ID']['input']
+  spaceName: Scalars['String']['input']
+}
+
 export type LogPersonCreatedByAggregateSelection = {
   __typename?: 'LogPersonCreatedByAggregateSelection'
   count: CountConnection
@@ -6154,6 +6249,16 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   status: StringAggregateSelection
   traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+/** Input for logging pulse-related activities. */
+export type LogPulseInput = {
+  action: Scalars['String']['input']
+  contextId: Scalars['ID']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  pulseId: Scalars['ID']['input']
+  pulseName: Scalars['String']['input']
+  pulseType: Scalars['String']['input']
 }
 
 export type LogPulsesAggregateInput = {
@@ -6294,6 +6399,19 @@ export type LogPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogPulsesDisconnectFieldInput>>
   update?: InputMaybe<LogPulsesUpdateConnectionInput>
+}
+
+/** Input for logging resonance-related activities. */
+export type LogResonanceInput = {
+  action: Scalars['String']['input']
+  contextId: Scalars['ID']['input']
+  label: Scalars['String']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  resonanceId: Scalars['ID']['input']
+  sourceId: Scalars['ID']['input']
+  sourceName: Scalars['String']['input']
+  targetId: Scalars['ID']['input']
+  targetName: Scalars['String']['input']
 }
 
 export type LogResourcePulseResourcesAggregateSelection = {
@@ -6564,6 +6682,15 @@ export type LogSort = {
   createdAt?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+}
+
+/** Input for logging space-related activities. */
+export type LogSpaceInput = {
+  action: Scalars['String']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  spaceId: Scalars['ID']['input']
+  spaceName: Scalars['String']['input']
+  spaceType: Scalars['String']['input']
 }
 
 export type LogUpdateInput = {
@@ -7623,6 +7750,7 @@ export type Mutation = {
   createCarePulses: CreateCarePulsesMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCoreValuePulses: CreateCoreValuePulsesMutationResponse
+  createCreateLogResponses: CreateCreateLogResponsesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createLogs: CreateLogsMutationResponse
@@ -7642,6 +7770,7 @@ export type Mutation = {
   deleteCarePulses: DeleteInfo
   deleteChatbotResponses: DeleteInfo
   deleteCoreValuePulses: DeleteInfo
+  deleteCreateLogResponses: DeleteInfo
   deleteFieldContexts: DeleteInfo
   deleteGoalPulses: DeleteInfo
   deleteLogs: DeleteInfo
@@ -7668,6 +7797,47 @@ export type Mutation = {
    */
   invitePerson?: Maybe<Person>
   /**
+   * Log a field context-related activity (create, update, delete).
+   * Tracks field context operations within spaces.
+   */
+  logFieldActivity: CreateLogResponse
+  /**
+   * Log a member-related activity (added, removed, role-changed).
+   * Captures membership changes in spaces with role information.
+   */
+  logMemberActivity: CreateLogResponse
+  /**
+   * Log a pulse-related activity (create, update, delete).
+   * Automatically creates a Log node with CREATED_BY relationship to the current user
+   * and LOGGED_FOR relationship to the pulse.
+   *
+   * Example:
+   *   mutation {
+   *     logPulseActivity(input: {
+   *       action: "created"
+   *       pulseId: "pulse_123"
+   *       pulseType: "GoalPulse"
+   *       pulseName: "Launch MVP"
+   *       contextId: "context_456"
+   *     }) {
+   *       success
+   *       message
+   *       log { id description createdAt }
+   *     }
+   *   }
+   */
+  logPulseActivity: CreateLogResponse
+  /**
+   * Log a resonance-related activity (created, updated, deleted).
+   * Tracks AI-discovered or user-created resonance links between pulses.
+   */
+  logResonanceActivity: CreateLogResponse
+  /**
+   * Log a space-related activity (create, update, delete).
+   * Creates a Log node with description and metadata about the space operation.
+   */
+  logSpaceActivity: CreateLogResponse
+  /**
    * Remove a member from a space.
    * Only the space owner or members with ADMIN role can remove members.
    * Cannot remove the space owner.
@@ -7679,6 +7849,7 @@ export type Mutation = {
   updateCarePulses: UpdateCarePulsesMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCoreValuePulses: UpdateCoreValuePulsesMutationResponse
+  updateCreateLogResponses: UpdateCreateLogResponsesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateLogs: UpdateLogsMutationResponse
@@ -7730,6 +7901,10 @@ export type MutationCreateChatbotResponsesArgs = {
 
 export type MutationCreateCoreValuePulsesArgs = {
   input: Array<CoreValuePulseCreateInput>
+}
+
+export type MutationCreateCreateLogResponsesArgs = {
+  input: Array<CreateLogResponseCreateInput>
 }
 
 export type MutationCreateFieldContextsArgs = {
@@ -7808,6 +7983,10 @@ export type MutationDeleteChatbotResponsesArgs = {
 export type MutationDeleteCoreValuePulsesArgs = {
   delete?: InputMaybe<CoreValuePulseDeleteInput>
   where?: InputMaybe<CoreValuePulseWhere>
+}
+
+export type MutationDeleteCreateLogResponsesArgs = {
+  where?: InputMaybe<CreateLogResponseWhere>
 }
 
 export type MutationDeleteFieldContextsArgs = {
@@ -7889,6 +8068,26 @@ export type MutationInvitePersonArgs = {
   personId: Scalars['String']['input']
 }
 
+export type MutationLogFieldActivityArgs = {
+  input: LogFieldInput
+}
+
+export type MutationLogMemberActivityArgs = {
+  input: LogMemberInput
+}
+
+export type MutationLogPulseActivityArgs = {
+  input: LogPulseInput
+}
+
+export type MutationLogResonanceActivityArgs = {
+  input: LogResonanceInput
+}
+
+export type MutationLogSpaceActivityArgs = {
+  input: LogSpaceInput
+}
+
 export type MutationRemoveSpaceMemberArgs = {
   memberId: Scalars['ID']['input']
   spaceId: Scalars['ID']['input']
@@ -7917,6 +8116,11 @@ export type MutationUpdateChatbotResponsesArgs = {
 export type MutationUpdateCoreValuePulsesArgs = {
   update?: InputMaybe<CoreValuePulseUpdateInput>
   where?: InputMaybe<CoreValuePulseWhere>
+}
+
+export type MutationUpdateCreateLogResponsesArgs = {
+  update?: InputMaybe<CreateLogResponseUpdateInput>
+  where?: InputMaybe<CreateLogResponseWhere>
 }
 
 export type MutationUpdateFieldContextsArgs = {
@@ -9544,6 +9748,10 @@ export type Query = {
    * LEGACY: Consider using searchAll for unified search experience.
    */
   coreValueSubstringSearch: Array<StoryPulse>
+  createLogResponses: Array<CreateLogResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "createLogResponsesConnection" instead */
+  createLogResponsesAggregate: CreateLogResponseAggregateSelection
+  createLogResponsesConnection: CreateLogResponsesConnection
   fieldContexts: Array<FieldContext>
   /** @deprecated Please use the explicit field "aggregate" inside "fieldContextsConnection" instead */
   fieldContextsAggregate: FieldContextAggregateSelection
@@ -9563,6 +9771,38 @@ export type Query = {
    * Returns: User object or null
    */
   findUserByEmail?: Maybe<User>
+  /**
+   * Get activity logs for a specific context (shows what happened in a space/field).
+   * Returns up to N most recent log entries linked to pulses in this context.
+   *
+   * Args:
+   *   - contextId: The FieldContext ID to fetch logs for
+   *   - limit: Maximum number of logs to return (default: 20)
+   *
+   * Returns: Array of Log objects with creator information
+   */
+  getContextLogs: Array<Log>
+  /**
+   * Get recent logs for spaces owned or joined by the current user.
+   * Used for the notification/activity feed in dashboard sidebars.
+   *
+   * Args:
+   *   - limit: Maximum number of logs to return (default: 30)
+   *
+   * Returns: Array of Log objects, sorted by recency
+   */
+  getMyRecentLogs: Array<Log>
+  /**
+   * Get activity logs for a specific user (shows the user's activity history).
+   * Returns up to N most recent log entries created by this user.
+   *
+   * Args:
+   *   - userId: The Person ID to fetch logs for
+   *   - limit: Maximum number of logs to return (default: 50)
+   *
+   * Returns: Array of Log objects with creator information
+   */
+  getUserLogs: Array<Log>
   goalPulses: Array<GoalPulse>
   /** @deprecated Please use the explicit field "aggregate" inside "goalPulsesConnection" instead */
   goalPulsesAggregate: GoalPulseAggregateSelection
@@ -9761,6 +10001,24 @@ export type QueryCoreValueSubstringSearchArgs = {
   key: Scalars['String']['input']
 }
 
+export type QueryCreateLogResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CreateLogResponseSort>>
+  where?: InputMaybe<CreateLogResponseWhere>
+}
+
+export type QueryCreateLogResponsesAggregateArgs = {
+  where?: InputMaybe<CreateLogResponseWhere>
+}
+
+export type QueryCreateLogResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CreateLogResponseSort>>
+  where?: InputMaybe<CreateLogResponseWhere>
+}
+
 export type QueryFieldContextsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -9799,6 +10057,20 @@ export type QueryFieldPulsesConnectionArgs = {
 
 export type QueryFindUserByEmailArgs = {
   email: Scalars['String']['input']
+}
+
+export type QueryGetContextLogsArgs = {
+  contextId: Scalars['ID']['input']
+  limit?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type QueryGetMyRecentLogsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type QueryGetUserLogsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  userId: Scalars['ID']['input']
 }
 
 export type QueryGoalPulsesArgs = {
@@ -14718,6 +14990,12 @@ export type UpdateCoreValuePulsesMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateCreateLogResponsesMutationResponse = {
+  __typename?: 'UpdateCreateLogResponsesMutationResponse'
+  createLogResponses: Array<CreateLogResponse>
+  info: UpdateInfo
+}
+
 export type UpdateFieldContextsMutationResponse = {
   __typename?: 'UpdateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -16510,6 +16788,71 @@ export type WeSpacesConnection = {
   edges: Array<WeSpaceEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type LogPulseActivityMutationVariables = Exact<{
+  input: LogPulseInput
+}>
+
+export type LogPulseActivityMutation = {
+  __typename?: 'Mutation'
+  logPulseActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
+}
+
+export type LogSpaceActivityMutationVariables = Exact<{
+  input: LogSpaceInput
+}>
+
+export type LogSpaceActivityMutation = {
+  __typename?: 'Mutation'
+  logSpaceActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
+}
+
+export type LogMemberActivityMutationVariables = Exact<{
+  input: LogMemberInput
+}>
+
+export type LogMemberActivityMutation = {
+  __typename?: 'Mutation'
+  logMemberActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
+}
+
+export type LogFieldActivityMutationVariables = Exact<{
+  input: LogFieldInput
+}>
+
+export type LogFieldActivityMutation = {
+  __typename?: 'Mutation'
+  logFieldActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
+}
+
+export type LogResonanceActivityMutationVariables = Exact<{
+  input: LogResonanceInput
+}>
+
+export type LogResonanceActivityMutation = {
+  __typename?: 'Mutation'
+  logResonanceActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
 }
 
 export type CreateFieldContextMutationVariables = Exact<{
@@ -20092,6 +20435,281 @@ export type GetPersonConnectionsQuery = {
   }>
 }
 
+export const LogPulseActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogPulseActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogPulseInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logPulseActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogPulseActivityMutation,
+  LogPulseActivityMutationVariables
+>
+export const LogSpaceActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogSpaceActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogSpaceInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logSpaceActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogSpaceActivityMutation,
+  LogSpaceActivityMutationVariables
+>
+export const LogMemberActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogMemberActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogMemberInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logMemberActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogMemberActivityMutation,
+  LogMemberActivityMutationVariables
+>
+export const LogFieldActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogFieldActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogFieldInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logFieldActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogFieldActivityMutation,
+  LogFieldActivityMutationVariables
+>
+export const LogResonanceActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogResonanceActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogResonanceInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logResonanceActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogResonanceActivityMutation,
+  LogResonanceActivityMutationVariables
+>
 export const CreateFieldContextDocument = {
   kind: 'Document',
   definitions: [

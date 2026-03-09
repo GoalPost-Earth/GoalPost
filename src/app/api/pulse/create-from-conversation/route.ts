@@ -204,6 +204,41 @@ export async function POST(request: NextRequest) {
       `✓ Created pulse ${pulseId} with ${chunkIds.length} conversation chunks`
     )
 
+    // Log the pulse creation activity
+    try {
+      const personResult = await graph.query<{ name: string }>(
+        `MATCH (p:Person {id: $personId}) RETURN p.name as name`,
+        { personId }
+      )
+      const personName =
+        personResult && personResult.length > 0
+          ? personResult[0].name
+          : 'Unknown User'
+
+      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/activity-logs/log-pulse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: personId,
+          action: 'created',
+          pulseId,
+          pulseType,
+          pulseName: title,
+          contextId,
+          metadata: {
+            chunkCount: chunkIds.length,
+            intensity,
+            personName,
+          },
+        }),
+      }).catch((logErr) => {
+        console.warn('Failed to log pulse creation:', logErr)
+      })
+    } catch (logError) {
+      console.warn('Error logging pulse creation:', logError)
+      // Don't fail the request if logging fails
+    }
+
     return NextResponse.json<CreatePulseResponse>({
       success: true,
       pulseId,

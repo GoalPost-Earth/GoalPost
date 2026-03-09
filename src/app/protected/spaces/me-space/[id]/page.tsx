@@ -2,13 +2,14 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useMutation } from '@apollo/client/react'
 import { useCreateField } from '@/hooks'
 import { usePageContext } from '@/contexts'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 import { GET_ME_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
+import { LOG_FIELD_ACTIVITY } from '@/app/graphql/mutations'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 import type { Node } from '@neo4j-nvl/base'
@@ -67,6 +68,7 @@ export default function MeSpaceFieldsPage() {
   const { setPageTitle } = usePageContext()
 
   const { createField, loading: isCreating } = useCreateField()
+  const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
 
   // Fetch MeSpace details and field contexts using GraphQL
   const {
@@ -137,8 +139,21 @@ export default function MeSpaceFieldsPage() {
         description
       )
 
-      // Store the created field ID for onboarding navigation
+      // Log field creation activity
       if (createdField?.id) {
+        logFieldActivity({
+          variables: {
+            input: {
+              action: 'created',
+              fieldId: createdField.id,
+              fieldName: title,
+              contextId: createdField.id,
+              spaceName: meSpace?.name,
+            },
+          },
+        }).catch((err) => console.warn('Failed to log field creation:', err))
+
+        // Store the created field ID for onboarding navigation
         localStorage.setItem('lastCreatedFieldId', createdField.id)
         // Store meSpaceId for onboarding
         localStorage.setItem('meSpaceId', meSpaceId)

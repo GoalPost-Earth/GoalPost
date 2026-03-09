@@ -5,6 +5,7 @@ import { relatedPeopleResolvers } from './related-people-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
 import { userLookupResolvers } from './user-lookup-resolver'
+import { activityLogMutations } from './activity-log-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -429,6 +430,7 @@ const resolvers = {
     ...chatbotResolvers,
     ...inviteMutations,
     ...spaceMembershipResolvers,
+    ...activityLogMutations,
   },
   Query: {
     ...relatedPeopleResolvers,

@@ -46,6 +46,8 @@ import {
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
   DELETE_RESONANCES_BY_PULSE_MUTATION,
+  LOG_PULSE_ACTIVITY,
+  LOG_RESONANCE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { useAnimations, useApp, usePageContext } from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
@@ -246,6 +248,9 @@ function FieldDetailPage() {
   const [createStoryPulse] = useMutation(CREATE_STORY_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
   })
+
+  const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
+  const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
 
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -860,6 +865,31 @@ function FieldDetailPage() {
     }
   }, [pulseDetailsData])
 
+  const getPulseSnapshot = useCallback(
+    async (pulseId: string) => {
+      try {
+        const result = await fetchPulseDetails({ variables: { pulseId } })
+        const data = result.data as typeof pulseDetailsData
+        const goal = data?.goalPulses?.[0]
+        const resource = data?.resourcePulses?.[0]
+        const story = data?.storyPulses?.[0]
+        const entry = goal ?? resource ?? story
+
+        if (!entry) return null
+
+        return {
+          id: entry.id,
+          type: goal ? 'goal' : resource ? 'resource' : ('story' as const),
+          title: entry.title ?? null,
+        }
+      } catch (error) {
+        console.warn('Failed to fetch pulse snapshot:', error)
+        return null
+      }
+    },
+    [fetchPulseDetails]
+  )
+
   const handleResonanceLinkSubmit = async (data: {
     label: string
     confidence: number
@@ -914,6 +944,27 @@ function FieldDetailPage() {
         })
 
         console.log('✅ Resonance link created:', response)
+
+        // Log resonance creation activity
+        const createdResonanceId =
+          response?.createResonanceLinks?.resonanceLinks?.[0]?.id
+        logResonanceActivity({
+          variables: {
+            input: {
+              action: 'created',
+              resonanceId: createdResonanceId || '',
+              label: data.label,
+              sourceId: data.sourceId,
+              sourceName: '', // Not available in create
+              targetId: data.targetId,
+              targetName: '', // Not available in create
+              contextId: fieldId,
+              confidence: data.confidence,
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log resonance creation:', err)
+        )
       }
 
       // Wait for Neo4j to index relationships, then refetch with error handling
@@ -996,6 +1047,23 @@ function FieldDetailPage() {
           id: editingResonance.id,
         },
       })
+
+      // Log resonance deletion activity
+      logResonanceActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            resonanceId: editingResonance.id,
+            label: editingResonance.label,
+            sourceId: editingResonance.sourceId,
+            sourceName: '', // Not available in delete
+            targetId: editingResonance.targetId,
+            targetName: '', // Not available in delete
+            contextId: fieldId,
+            confidence: editingResonance.confidence,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log resonance deletion:', err))
 
       // Clear editing state
       setEditingResonance(null)
@@ -1091,6 +1159,26 @@ function FieldDetailPage() {
         console.log('✅ Pulse updated successfully')
         setSubmitSuccess(true)
 
+        const pulseSnapshot = await getPulseSnapshot(editingPulseId)
+        const snapshotType = pulseSnapshot?.type ?? pulseType
+        const snapshotName = pulseSnapshot?.title ?? name
+
+        // Log pulse update activity
+        logPulseActivity({
+          variables: {
+            input: {
+              action: 'updated',
+              pulseId: editingPulseId,
+              pulseType:
+                snapshotType.charAt(0).toUpperCase() +
+                snapshotType.slice(1) +
+                'Pulse',
+              pulseName: snapshotName,
+              contextId: fieldId,
+            },
+          },
+        }).catch((err) => console.warn('Failed to log pulse update:', err))
+
         // Close modal and reset after success
         setTimeout(() => {
           setIsModalOpen(false)
@@ -1129,9 +1217,11 @@ function FieldDetailPage() {
           baseInput,
         })
 
+        let createdPulseId: string | undefined
+
         // Call appropriate mutation based on type
         if (pulseType === 'goal') {
-          await createGoalPulse({
+          const { data: response } = await createGoalPulse({
             variables: {
               input: [
                 {
@@ -1144,8 +1234,9 @@ function FieldDetailPage() {
               ],
             },
           })
+          createdPulseId = response?.createGoalPulses?.goalPulses?.[0]?.id
         } else if (pulseType === 'resource') {
-          await createResourcePulse({
+          const { data: response } = await createResourcePulse({
             variables: {
               input: [
                 {
@@ -1156,16 +1247,39 @@ function FieldDetailPage() {
               ],
             },
           })
+          createdPulseId =
+            response?.createResourcePulses?.resourcePulses?.[0]?.id
         } else {
-          await createStoryPulse({
+          const { data: response } = await createStoryPulse({
             variables: {
               input: [baseInput],
             },
           })
+          createdPulseId = response?.createStoryPulses?.storyPulses?.[0]?.id
         }
 
         console.log('✅ Pulse created successfully')
         setSubmitSuccess(true)
+
+        // Log pulse creation activity
+        if (createdPulseId) {
+          logPulseActivity({
+            variables: {
+              input: {
+                action: 'created',
+                pulseId: createdPulseId,
+                pulseType:
+                  pulseType.charAt(0).toUpperCase() +
+                  pulseType.slice(1) +
+                  'Pulse',
+                pulseName: name,
+                contextId: fieldId,
+              },
+            },
+          }).catch((err) => console.warn('Failed to log pulse creation:', err))
+        } else {
+          console.warn('Skipping pulse creation log: missing pulse ID')
+        }
 
         // Close modal and reset after success
         setTimeout(() => {
@@ -1226,6 +1340,8 @@ function FieldDetailPage() {
     setSubmitError(null)
 
     try {
+      const pulseSnapshot = await getPulseSnapshot(pulseId)
+
       // First, delete any resonances attached to this pulse
       await deleteResonancesByPulse({ variables: { pulseId } })
 
@@ -1251,6 +1367,25 @@ function FieldDetailPage() {
       }
 
       console.log('✅ Pulse deleted successfully')
+
+      const snapshotType = pulseSnapshot?.type ?? type
+      const snapshotName = pulseSnapshot?.title ?? ''
+
+      // Log pulse deletion activity
+      logPulseActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            pulseId,
+            pulseType:
+              snapshotType.charAt(0).toUpperCase() +
+              snapshotType.slice(1) +
+              'Pulse',
+            pulseName: snapshotName,
+            contextId: fieldId,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log pulse deletion:', err))
     } catch (error) {
       console.error('❌ Error deleting pulse:', error)
       setSubmitError(

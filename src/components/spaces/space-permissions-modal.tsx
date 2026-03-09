@@ -7,6 +7,7 @@ import {
   UPDATE_SPACE_MEMBER_ROLE_MUTATION,
   REMOVE_SPACE_MEMBER_MUTATION,
   RESOLVE_PERSON_BY_EMAIL_QUERY,
+  LOG_MEMBER_ACTIVITY,
 } from '@/app/graphql/mutations'
 import {
   Dialog,
@@ -118,6 +119,8 @@ export function SpacePermissionsModal({
     },
   })
 
+    const [logMemberActivity] = useMutation(LOG_MEMBER_ACTIVITY)
+
   const handleAddMember = async () => {
     if (!addMemberEmail.trim()) {
       setError('Please enter a member email')
@@ -150,6 +153,22 @@ export function SpacePermissionsModal({
           role: selectedRole as any,
         },
       })
+
+        // Log member addition activity
+        logMemberActivity({
+          variables: {
+            input: {
+              action: 'added',
+              spaceId,
+              spaceName,
+              memberId: person.id,
+              memberName: person.name || person.email || 'Unknown',
+              role: selectedRole,
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log member addition:', err)
+        )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add member')
       setLoading(false)
@@ -172,6 +191,27 @@ export function SpacePermissionsModal({
           role: newRole as any,
         },
       })
+
+        // Find member name from members list
+        const member = members.find((m) => m.member.id === memberId)
+        const previousRole = member?.role
+
+        // Log role change activity
+        logMemberActivity({
+          variables: {
+            input: {
+              action: 'role_changed',
+              spaceId,
+              spaceName,
+              memberId,
+              memberName: member?.member.name || 'Unknown',
+              role: newRole,
+              previousRole,
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log role change:', err)
+        )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update role')
       setLoading(false)
@@ -191,6 +231,25 @@ export function SpacePermissionsModal({
           memberId,
         },
       })
+
+        // Find member name from members list
+        const member = members.find((m) => m.member.id === memberId)
+
+        // Log member removal activity
+        logMemberActivity({
+          variables: {
+            input: {
+              action: 'removed',
+              spaceId,
+              spaceName,
+              memberId,
+              memberName: member?.member.name || 'Unknown',
+              role: member?.role || 'GUEST',
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log member removal:', err)
+        )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove member')
       setLoading(false)
