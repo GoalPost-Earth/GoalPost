@@ -261,6 +261,24 @@ export default function WeSpaceFieldsPage() {
         showBackgroundDecor={true}
         isLoading={loading}
         onNodeClick={(node) => handleFieldClick(node.id)}
+        emptyState={
+          <div className="flex flex-col items-center gap-6 max-w-md px-6 text-center">
+            <div className="size-20 md:size-24 rounded-full flex items-center justify-center bg-gp-primary/10 dark:bg-gp-primary/20">
+              <span className="material-symbols-outlined text-gp-primary dark:text-gp-primary text-5xl md:text-6xl">
+                psychology
+              </span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl md:text-2xl font-bold text-gp-ink-strong dark:text-gp-ink-strong">
+                No Fields Yet
+              </h3>
+              <p className="text-sm md:text-base text-gp-ink-muted dark:text-gp-ink-soft">
+                Fields are containers for organizing related pulses and
+                exploring resonances. Create your first field to get started.
+              </p>
+            </div>
+          </div>
+        }
         actionButton={
           <div className="flex items-center gap-2 md:gap-3">
             <button

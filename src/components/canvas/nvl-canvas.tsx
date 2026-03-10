@@ -32,6 +32,7 @@ export interface NvlCanvasProps {
   interactionOptions?: InteractiveNvlWrapperProps['interactionOptions']
   toolbar?: ReactNode
   actionButton?: ReactNode
+  emptyState?: ReactNode
 }
 
 export function NvlCanvas({
@@ -54,6 +55,7 @@ export function NvlCanvas({
   interactionOptions = {},
   toolbar,
   actionButton,
+  emptyState,
 }: NvlCanvasProps) {
   const wrapperRef = useRef<any>(null)
   const { animationsEnabled } = useAnimations()
@@ -329,6 +331,13 @@ export function NvlCanvas({
           console.error('NVL Initialization Error:', error)
         }}
       />
+
+      {/* Empty State */}
+      {!isLoading && nodes.length === 0 && emptyState && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="pointer-events-auto">{emptyState}</div>
+        </div>
+      )}
 
       {/* Controls and Toolbar */}
       {(enableZoomControls || actionButton || toolbar) && (

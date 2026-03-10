@@ -6,14 +6,13 @@ import { useQuery, useMutation } from '@apollo/client/react'
 import type { Node } from '@neo4j-nvl/base'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { EntityBubble } from '@/components/ui/entity-bubble'
-import { useAnimations, useApp, usePageContext } from '@/contexts'
+import { useApp, usePageContext } from '@/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import { GET_USER_WE_SPACES_QUERY } from '@/app/graphql/queries'
 import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 
 // Size variations for visual interest
 const sizeVariations = ['xl', 'lg', 'md', 'md', 'sm', 'lg', 'md', 'sm'] as const
@@ -45,7 +44,6 @@ export default function WeSpacePage() {
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const { animationsEnabled } = useAnimations()
   const [weSpaces, setWeSpaces] = useState<
     Array<{
       id: string
@@ -252,73 +250,48 @@ export default function WeSpacePage() {
         </div>
       )}
 
-      {weSpacesLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div
-              className={cn(
-                'text-gp-primary dark:text-gp-primary',
-                animationsEnabled && 'animate-spin'
-              )}
-            >
-              <span className="material-symbols-outlined text-5xl md:text-6xl">
-                hourglass_bottom
+      <NvlCanvas
+        nodes={nvlSpaceNodes}
+        relationships={[]}
+        layout="forceDirected"
+        enableZoomControls={true}
+        showBackgroundDecor={true}
+        isLoading={weSpacesLoading}
+        onNodeClick={(node) => handleSpaceClick(node.id)}
+        emptyState={
+          <div className="flex flex-col items-center gap-6 max-w-md px-6 text-center">
+            <div className="size-20 md:size-24 rounded-full flex items-center justify-center bg-gp-primary/10 dark:bg-gp-primary/20">
+              <span className="material-symbols-outlined text-gp-primary dark:text-gp-primary text-5xl md:text-6xl">
+                groups
               </span>
             </div>
-            <p className="text-gp-ink-muted dark:text-gp-ink-soft">
-              Loading spaces...
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-xl md:text-2xl font-bold text-gp-ink-strong dark:text-gp-ink-strong">
+                No WeSpaces Yet
+              </h3>
+              <p className="text-sm md:text-base text-gp-ink-muted dark:text-gp-ink-soft">
+                WeSpaces are collaborative containers for your community. Create
+                your first WeSpace to start building together.
+              </p>
+            </div>
           </div>
-        </div>
-      ) : nvlSpaceNodes.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-light text-gp-ink-strong dark:text-gp-ink-strong mb-2">
-              No spaces yet
-            </h2>
-            <p className="text-gp-ink-muted dark:text-gp-ink-soft">
-              Create your first WeSpace to collaborate with your community
-            </p>
-          </div>
+        }
+        actionButton={
           <button
             onClick={() => setShowCreateModal(true)}
+            data-tour="create-wespace-button"
             className="cursor-pointer flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all duration-300 group"
           >
             <div className="absolute inset-0 rounded-full bg-linear-to-r from-gp-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-primary dark:group-hover:text-gp-primary text-[20px] md:text-[24px] transition-colors relative z-10">
               add_circle
             </span>
-            <span className="text-sm md:text-base font-semibold text-gp-ink-strong dark:text-gp-ink-strong group-hover:text-gp-primary dark:group-hover:text-gp-primary transition-colors relative z-10">
+            <span className="hidden md:inline text-sm md:text-base font-semibold text-gp-ink-strong dark:text-gp-ink-strong group-hover:text-gp-primary dark:group-hover:text-gp-primary transition-colors relative z-10">
               Create WeSpace
             </span>
           </button>
-        </div>
-      ) : (
-        <NvlCanvas
-          nodes={nvlSpaceNodes}
-          relationships={[]}
-          layout="forceDirected"
-          enableZoomControls={true}
-          showBackgroundDecor={true}
-          isLoading={false}
-          onNodeClick={(node) => handleSpaceClick(node.id)}
-          actionButton={
-            <button
-              onClick={() => setShowCreateModal(true)}
-              data-tour="create-wespace-button"
-              className="cursor-pointer flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:scale-105 hover:border-white/20 dark:hover:border-white/20 hover:bg-white/10 dark:hover:bg-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all duration-300 group"
-            >
-              <div className="absolute inset-0 rounded-full bg-linear-to-r from-gp-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-primary dark:group-hover:text-gp-primary text-[20px] md:text-[24px] transition-colors relative z-10">
-                add_circle
-              </span>
-              <span className="hidden md:inline text-sm md:text-base font-semibold text-gp-ink-strong dark:text-gp-ink-strong group-hover:text-gp-primary dark:group-hover:text-gp-primary transition-colors relative z-10">
-                Create WeSpace
-              </span>
-            </button>
-          }
-        />
-      )}
+        }
+      />
 
       {/* Create Space Modal */}
       {showCreateModal && (

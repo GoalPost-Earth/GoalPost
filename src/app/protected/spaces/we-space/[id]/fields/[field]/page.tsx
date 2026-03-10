@@ -1574,6 +1574,24 @@ function FieldDetailPage() {
         onBackgroundClick={handleBackgroundClick}
         enableZoomControls={true}
         showBackgroundDecor={true}
+        emptyState={
+          <div className="flex flex-col items-center gap-6 max-w-md px-6 text-center">
+            <div className="size-20 md:size-24 rounded-full flex items-center justify-center bg-gp-primary/10 dark:bg-gp-primary/20">
+              <span className="material-symbols-outlined text-gp-primary dark:text-gp-primary text-5xl md:text-6xl">
+                spa
+              </span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl md:text-2xl font-bold text-gp-ink-strong dark:text-gp-ink-strong">
+                No Pulses Yet
+              </h3>
+              <p className="text-sm md:text-base text-gp-ink-muted dark:text-gp-ink-soft">
+                Pulses represent your goals, resources, and stories. Create your
+                first pulse to begin discovering resonances.
+              </p>
+            </div>
+          </div>
+        }
         actionButton={
           isMounted && (
             <div className="group flex flex-row items-center gap-3 relative z-50 pointer-events-auto">
