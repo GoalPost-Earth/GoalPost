@@ -6,12 +6,14 @@ type ProfileCardProps = {
   children: ReactNode
   hover?: boolean
   onClick?: () => void
+  className?: string
 }
 
 export function ProfileCard({
   children,
   hover = true,
   onClick,
+  className,
 }: ProfileCardProps) {
   return (
     <div
@@ -21,7 +23,8 @@ export function ProfileCard({
         backdrop-blur-2xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)]
         dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]
         ${hover ? 'hover:bg-opacity-[0.85] hover:shadow-lg hover:-translate-y-0.5' : ''}
-        ${onClick ? 'cursor-pointer' : ''}`}
+        ${onClick ? 'cursor-pointer' : ''}
+        ${className || ''}`}
     >
       {children}
     </div>

@@ -120,7 +120,7 @@ export default function PersonProfilePage() {
                     icon="volunteer_activism"
                     title="Fields of Care"
                   />
-                  <ProfileCard>
+                  <ProfileCard className="flex-1">
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
                       {person.fieldsOfCare}
                     </p>
@@ -130,7 +130,7 @@ export default function PersonProfilePage() {
               {person.passions && (
                 <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="favorite" title="Passions" />
-                  <ProfileCard>
+                  <ProfileCard className="flex-1">
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
                       {person.passions}
                     </p>
@@ -141,7 +141,7 @@ export default function PersonProfilePage() {
               {person.traits && (
                 <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="psychology" title="Traits" />
-                  <ProfileCard>
+                  <ProfileCard className="flex-1">
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
                       {person.traits}
                     </p>
