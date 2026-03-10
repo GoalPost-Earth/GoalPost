@@ -2,7 +2,13 @@
 
 import React from 'react'
 
-type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces' | 'people'
+type ViewType =
+  | 'overview'
+  | 'pulses'
+  | 'fields'
+  | 'spaces'
+  | 'people'
+  | 'activity'
 
 interface SidebarProps {
   activeView: ViewType
@@ -23,6 +29,11 @@ export function Sidebar({
     { id: 'fields' as ViewType, label: 'Fields', icon: 'layers' },
     { id: 'spaces' as ViewType, label: 'Spaces', icon: 'workspaces' },
     { id: 'people' as ViewType, label: 'People', icon: 'group' },
+    {
+      id: 'activity' as ViewType,
+      label: 'Activity Logs',
+      icon: 'notifications',
+    },
   ]
 
   return (

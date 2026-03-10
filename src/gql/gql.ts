@@ -14,6 +14,11 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogPulseActivityDocument
+  '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogSpaceActivityDocument
+  '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogMemberActivityDocument
+  '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogFieldActivityDocument
+  '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n': typeof types.LogResonanceActivityDocument
   '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n        weSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n': typeof types.CreateFieldContextDocument
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n': typeof types.UpdateFieldContextDocument
   '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteFieldContextDocument
@@ -50,6 +55,9 @@ type Documents = {
   '\n  mutation UpdateWeSpace($where: WeSpaceWhere!, $update: WeSpaceUpdateInput!) {\n    updateWeSpaces(where: $where, update: $update) {\n      weSpaces {\n        id\n        name\n        visibility\n        createdAt\n        owner {\n          id\n          name\n        }\n        contexts {\n          id\n          title\n        }\n      }\n    }\n  }\n': typeof types.UpdateWeSpaceDocument
   '\n  mutation DeleteMeSpace($where: MeSpaceWhere!) {\n    deleteMeSpaces(where: $where) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteMeSpaceDocument
   '\n  mutation DeleteWeSpace($where: WeSpaceWhere!) {\n    deleteWeSpaces(where: $where) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteWeSpaceDocument
+  '\n  query GetMyRecentLogs($limit: Int = 30) {\n    getMyRecentLogs(limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n': typeof types.GetMyRecentLogsDocument
+  '\n  query GetUserActivityLogs($userId: ID!, $limit: Int = 50) {\n    getUserLogs(userId: $userId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n': typeof types.GetUserActivityLogsDocument
+  '\n  query GetContextLogs($contextId: ID!, $limit: Int = 20) {\n    getContextLogs(contextId: $contextId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n': typeof types.GetContextLogsDocument
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      firstName\n      lastName\n      email\n      phone\n      pronouns\n      location\n      passions\n      traits\n      photo\n      fieldsOfCare\n      onboardingCurrentStepIndex\n      onboardingCompletedSteps\n      onboardingIsCompleted\n      onboardingSkipped\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n        ... on MeSpace {\n          __typename\n          id\n          name\n        }\n        ... on WeSpace {\n          __typename\n          id\n          name\n        }\n      }\n      memberOf {\n        id\n        role\n        space {\n          id\n          name\n          visibility\n          createdAt\n          ... on MeSpace {\n            __typename\n            id\n            name\n          }\n          ... on WeSpace {\n            __typename\n            id\n            name\n          }\n        }\n      }\n    }\n  }\n': typeof types.GetLoggedInUserDocument
   '\n  query getFieldContextDetails($contextId: ID!) {\n    fieldContexts(where: { id_EQ: $contextId }) {\n      id\n      title\n      emergentName\n      createdAt\n      pulses {\n        __typename\n        id\n        title\n        content\n        createdAt\n      }\n      space {\n        id\n        name\n        visibility\n        ... on MeSpace {\n          __typename\n          id\n          name\n          visibility\n        }\n        ... on WeSpace {\n          __typename\n          id\n          name\n          visibility\n        }\n      }\n    }\n  }\n': typeof types.GetFieldContextDetailsDocument
   '\n  query GetFieldContexts($where: FieldContextWhere) {\n    fieldContexts(where: $where) {\n      id\n      title\n      emergentName\n      createdAt\n      space {\n        id\n        name\n        visibility\n      }\n    }\n  }\n': typeof types.GetFieldContextsDocument
@@ -97,6 +105,16 @@ type Documents = {
   '\n  query GetPersonConnections($personIds: [ID!]!) {\n    people(where: { id_IN: $personIds }) {\n      id\n      connections {\n        id\n        firstName\n        lastName\n        name\n        email\n        photo\n      }\n    }\n  }\n': typeof types.GetPersonConnectionsDocument
 }
 const documents: Documents = {
+  '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogPulseActivityDocument,
+  '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogSpaceActivityDocument,
+  '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogMemberActivityDocument,
+  '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogFieldActivityDocument,
+  '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n':
+    types.LogResonanceActivityDocument,
   '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n        weSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n':
     types.CreateFieldContextDocument,
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
@@ -169,6 +187,12 @@ const documents: Documents = {
     types.DeleteMeSpaceDocument,
   '\n  mutation DeleteWeSpace($where: WeSpaceWhere!) {\n    deleteWeSpaces(where: $where) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n':
     types.DeleteWeSpaceDocument,
+  '\n  query GetMyRecentLogs($limit: Int = 30) {\n    getMyRecentLogs(limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n':
+    types.GetMyRecentLogsDocument,
+  '\n  query GetUserActivityLogs($userId: ID!, $limit: Int = 50) {\n    getUserLogs(userId: $userId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n':
+    types.GetUserActivityLogsDocument,
+  '\n  query GetContextLogs($contextId: ID!, $limit: Int = 20) {\n    getContextLogs(contextId: $contextId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n':
+    types.GetContextLogsDocument,
   '\n  query getLoggedInUser($email: String!) {\n    people(where: { email_EQ: $email }) {\n      id\n      name\n      firstName\n      lastName\n      email\n      phone\n      pronouns\n      location\n      passions\n      traits\n      photo\n      fieldsOfCare\n      onboardingCurrentStepIndex\n      onboardingCompletedSteps\n      onboardingIsCompleted\n      onboardingSkipped\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n        ... on MeSpace {\n          __typename\n          id\n          name\n        }\n        ... on WeSpace {\n          __typename\n          id\n          name\n        }\n      }\n      memberOf {\n        id\n        role\n        space {\n          id\n          name\n          visibility\n          createdAt\n          ... on MeSpace {\n            __typename\n            id\n            name\n          }\n          ... on WeSpace {\n            __typename\n            id\n            name\n          }\n        }\n      }\n    }\n  }\n':
     types.GetLoggedInUserDocument,
   '\n  query getFieldContextDetails($contextId: ID!) {\n    fieldContexts(where: { id_EQ: $contextId }) {\n      id\n      title\n      emergentName\n      createdAt\n      pulses {\n        __typename\n        id\n        title\n        content\n        createdAt\n      }\n      space {\n        id\n        name\n        visibility\n        ... on MeSpace {\n          __typename\n          id\n          name\n          visibility\n        }\n        ... on WeSpace {\n          __typename\n          id\n          name\n          visibility\n        }\n      }\n    }\n  }\n':
@@ -275,6 +299,36 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogPulseActivity($input: LogPulseInput!) {\n    logPulseActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogSpaceActivity($input: LogSpaceInput!) {\n    logSpaceActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogMemberActivity($input: LogMemberInput!) {\n    logMemberActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogFieldActivity($input: LogFieldInput!) {\n    logFieldActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n'
+): (typeof documents)['\n  mutation LogResonanceActivity($input: LogResonanceInput!) {\n    logResonanceActivity(input: $input) {\n      success\n      message\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -491,6 +545,24 @@ export function graphql(
 export function graphql(
   source: '\n  mutation DeleteWeSpace($where: WeSpaceWhere!) {\n    deleteWeSpaces(where: $where) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n'
 ): (typeof documents)['\n  mutation DeleteWeSpace($where: WeSpaceWhere!) {\n    deleteWeSpaces(where: $where) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetMyRecentLogs($limit: Int = 30) {\n    getMyRecentLogs(limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetMyRecentLogs($limit: Int = 30) {\n    getMyRecentLogs(limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetUserActivityLogs($userId: ID!, $limit: Int = 50) {\n    getUserLogs(userId: $userId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetUserActivityLogs($userId: ID!, $limit: Int = 50) {\n    getUserLogs(userId: $userId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetContextLogs($contextId: ID!, $limit: Int = 20) {\n    getContextLogs(contextId: $contextId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetContextLogs($contextId: ID!, $limit: Int = 20) {\n    getContextLogs(contextId: $contextId, limit: $limit) {\n      id\n      description\n      createdAt\n      metadata\n      createdBy {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

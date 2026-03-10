@@ -16,6 +16,7 @@ import {
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
   DELETE_RESONANCES_BY_PULSE_MUTATION,
+  LOG_PULSE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
@@ -89,6 +90,7 @@ export default function PulseDetailsPage() {
   const [deleteResonancesByPulse] = useMutation(
     DELETE_RESONANCES_BY_PULSE_MUTATION
   )
+  const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
 
   // Get the pulse from whichever concrete type array returns data
   const pulse =
@@ -230,6 +232,19 @@ export default function PulseDetailsPage() {
           break
       }
 
+      // Log pulse update activity
+      logPulseActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            pulseId,
+            pulseType: pulse?.__typename || 'Unknown',
+            pulseName: editTitle || pulse?.title || 'Untitled',
+            contextId: context?.id,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log pulse update:', err))
+
       handleEditCancel()
     } catch (err) {
       console.error('Failed to update pulse:', err)
@@ -271,6 +286,19 @@ export default function PulseDetailsPage() {
           })
           break
       }
+
+      // Log pulse deletion activity
+      logPulseActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            pulseId,
+            pulseType: pulse.__typename,
+            pulseName: pulse.title || 'Untitled',
+            contextId: context?.id,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log pulse deletion:', err))
 
       router.push('/protected/dashboard')
     } catch (err) {

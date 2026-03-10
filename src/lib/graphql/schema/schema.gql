@@ -820,6 +820,7 @@ type Log @node(labels: ["Log"]) {
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
+  metadata: String
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   
   # Direct references to pulses (for audit trail)
@@ -896,6 +897,79 @@ type UpdateUserAIResponse {
   user: User
 }
 
+"""
+Response when creating an activity log.
+"""
+type CreateLogResponse {
+  success: Boolean!
+  message: String!
+  log: Log
+}
+
+"""
+Input for logging pulse-related activities.
+"""
+input LogPulseInput {
+  action: String!
+  pulseId: ID!
+  pulseType: String!
+  pulseName: String!
+  contextId: ID!
+  metadata: String
+}
+
+"""
+Input for logging space-related activities.
+"""
+input LogSpaceInput {
+  action: String!
+  spaceId: ID!
+  spaceType: String!
+  spaceName: String!
+  metadata: String
+}
+
+"""
+Input for logging member-related activities.
+"""
+input LogMemberInput {
+  action: String!
+  spaceId: ID!
+  spaceName: String!
+  memberId: ID!
+  memberName: String!
+  role: String
+  previousRole: String
+  metadata: String
+}
+
+"""
+Input for logging field context-related activities.
+"""
+input LogFieldInput {
+  action: String!
+  fieldId: ID!
+  fieldName: String!
+  contextId: ID!
+  spaceName: String
+  metadata: String
+}
+
+"""
+Input for logging resonance-related activities.
+"""
+input LogResonanceInput {
+  action: String!
+  resonanceId: ID!
+  label: String!
+  sourceId: ID!
+  sourceName: String!
+  targetId: ID!
+  targetName: String!
+  contextId: ID!
+  metadata: String
+}
+
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -952,6 +1026,56 @@ type Mutation {
   Legacy mutation preserved for compatibility.
   """
   generatePersonEmbeddings(personId: ID!): Boolean!
+  
+  # ============================================================================
+  # ACTIVITY LOGGING MUTATIONS
+  # ============================================================================
+  
+  """
+  Log a pulse-related activity (create, update, delete).
+  Automatically creates a Log node with CREATED_BY relationship to the current user
+  and LOGGED_FOR relationship to the pulse.
+  
+  Example:
+    mutation {
+      logPulseActivity(input: {
+        action: "created"
+        pulseId: "pulse_123"
+        pulseType: "GoalPulse"
+        pulseName: "Launch MVP"
+        contextId: "context_456"
+      }) {
+        success
+        message
+        log { id description createdAt }
+      }
+    }
+  """
+  logPulseActivity(input: LogPulseInput!): CreateLogResponse!
+  
+  """
+  Log a space-related activity (create, update, delete).
+  Creates a Log node with description and metadata about the space operation.
+  """
+  logSpaceActivity(input: LogSpaceInput!): CreateLogResponse!
+  
+  """
+  Log a member-related activity (added, removed, role-changed).
+  Captures membership changes in spaces with role information.
+  """
+  logMemberActivity(input: LogMemberInput!): CreateLogResponse!
+  
+  """
+  Log a field context-related activity (create, update, delete).
+  Tracks field context operations within spaces.
+  """
+  logFieldActivity(input: LogFieldInput!): CreateLogResponse!
+  
+  """
+  Log a resonance-related activity (created, updated, deleted).
+  Tracks AI-discovered or user-created resonance links between pulses.
+  """
+  logResonanceActivity(input: LogResonanceInput!): CreateLogResponse!
 }
 
 # ============================================================================
@@ -1099,4 +1223,43 @@ type Query {
       """
       columnName: "coreValue"
     )
+  
+  # ============================================================================
+  # ACTIVITY LOGS & NOTIFICATIONS
+  # ============================================================================
+  
+  """
+  Get activity logs for a specific context (shows what happened in a space/field).
+  Returns up to N most recent log entries linked to pulses in this context.
+  
+  Args:
+    - contextId: The FieldContext ID to fetch logs for
+    - limit: Maximum number of logs to return (default: 20)
+  
+  Returns: Array of Log objects with creator information
+  """
+  getContextLogs(contextId: ID!, limit: Int = 20): [Log!]!
+  
+  """
+  Get activity logs for a specific user (shows the user's activity history).
+  Returns up to N most recent log entries created by this user.
+  
+  Args:
+    - userId: The Person ID to fetch logs for
+    - limit: Maximum number of logs to return (default: 50)
+  
+  Returns: Array of Log objects with creator information
+  """
+  getUserLogs(userId: ID!, limit: Int = 50): [Log!]!
+  
+  """
+  Get recent logs for spaces owned or joined by the current user.
+  Used for the notification/activity feed in dashboard sidebars.
+  
+  Args:
+    - limit: Maximum number of logs to return (default: 30)
+  
+  Returns: Array of Log objects, sorted by recency
+  """
+  getMyRecentLogs(limit: Int = 30): [Log!]!
 }

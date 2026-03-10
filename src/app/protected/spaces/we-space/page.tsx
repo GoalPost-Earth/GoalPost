@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useMutation } from '@apollo/client/react'
 import type { Node } from '@neo4j-nvl/base'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
 import { EntityBubble } from '@/components/ui/entity-bubble'
@@ -11,6 +11,8 @@ import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import { GET_USER_WE_SPACES_QUERY } from '@/app/graphql/queries'
+import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 // Size variations for visual interest
@@ -55,6 +57,8 @@ export default function WeSpacePage() {
       badge?: { text: string; variant: 'primary' | 'accent' | 'default' }
     }>
   >([])
+
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   // Fetch WeSpaces using GraphQL
   const {
@@ -206,6 +210,25 @@ export default function WeSpacePage() {
         return
       }
 
+      // Log space creation activity
+      if (data.weSpace?.id) {
+        await logSpaceActivity({
+          variables: {
+            input: {
+              action: 'created',
+              spaceId: data.weSpace.id,
+              spaceType: 'WeSpace',
+              spaceName: name,
+            },
+          },
+        })
+          .then(() => toast.info('Space creation logged'))
+          .catch((err) => {
+            console.error('Error logging space creation:', err)
+            toast.error('Failed to log space creation')
+          })
+      }
+
       setShowCreateModal(false)
       // Refresh the spaces list after creating a new one
       await refetchWeSpaces()
@@ -319,8 +342,27 @@ export default function WeSpacePage() {
             setShowEditModal(false)
             setEditingSpaceId(null)
           }}
-          onSuccessfulMutation={() => {
-            refetchWeSpaces()
+          onSuccessfulMutation={async () => {
+            // Log space update activity
+            const editingSpace = weSpaces.find((s) => s.id === editingSpaceId)
+            if (editingSpace?.title && editingSpaceId) {
+              await logSpaceActivity({
+                variables: {
+                  input: {
+                    action: 'updated',
+                    spaceId: editingSpaceId,
+                    spaceType: 'WeSpace',
+                    spaceName: editingSpace.title,
+                  },
+                },
+              })
+                .then(() => toast.info('Space update logged'))
+                .catch((err) => {
+                  console.error('Error logging space update:', err)
+                  toast.error('Failed to log space update')
+                })
+            }
+            await refetchWeSpaces()
           }}
           isEditing={true}
           spaceId={editingSpaceId}

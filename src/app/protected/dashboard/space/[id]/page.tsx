@@ -14,6 +14,7 @@ import {
   UPDATE_WE_SPACE_MUTATION,
   DELETE_ME_SPACE_MUTATION,
   DELETE_WE_SPACE_MUTATION,
+  LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
@@ -39,6 +40,7 @@ export default function SpaceDetailsPage() {
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const space = data?.spaces?.[0] as any
@@ -80,6 +82,18 @@ export default function SpaceDetailsPage() {
           break
       }
 
+      // Log the space update activity
+      logSpaceActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            spaceId,
+            spaceType: space.__typename,
+            spaceName: editName || space.name,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log space update:', err))
+
       setIsEditMode(false)
       setEditName('')
     } catch (err) {
@@ -114,6 +128,18 @@ export default function SpaceDetailsPage() {
           await deleteWeSpace({ variables: { where } })
           break
       }
+
+      // Log the space deletion activity
+      logSpaceActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            spaceId,
+            spaceType: space.__typename,
+            spaceName: space.name,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log space deletion:', err))
 
       toast.success('Space deleted successfully')
       router.push('/protected/dashboard')

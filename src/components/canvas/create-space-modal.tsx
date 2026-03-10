@@ -12,6 +12,7 @@ import {
   DELETE_ME_SPACE_MUTATION,
   DELETE_WE_SPACE_MUTATION,
 } from '@/app/graphql/mutations/SPACE_MUTATIONS'
+import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 
 export interface CreateSpaceModalProps {
   isOpen: boolean
@@ -50,6 +51,7 @@ export function CreateSpaceModal({
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   const [isMutationLoading, setIsMutationLoading] = useState(false)
 
@@ -90,6 +92,24 @@ export function CreateSpaceModal({
           where: { id_EQ: spaceId },
         },
       })
+
+      // Log space deletion activity
+      await logSpaceActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            spaceId: spaceId,
+            spaceType: isWeSpace ? 'WeSpace' : 'MeSpace',
+            spaceName: name.trim(),
+          },
+        },
+      })
+        .then(() => toast.info('Space deletion logged'))
+        .catch((err) => {
+          console.error('Error logging space deletion:', err)
+          toast.error('Failed to log space deletion')
+        })
+
       toast.success('Space deleted successfully')
       onSuccessfulMutation?.()
       onClose()

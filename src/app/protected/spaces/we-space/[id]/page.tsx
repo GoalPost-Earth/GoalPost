@@ -1,9 +1,9 @@
 'use client'
 
-import React from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
 import { useApp, usePageContext } from '@/contexts'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
@@ -11,6 +11,7 @@ import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 import { SpacePermissionsModal } from '@/components/spaces'
 import { GET_WE_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
+import { LOG_FIELD_ACTIVITY } from '@/app/graphql/mutations'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 import type { Node } from '@neo4j-nvl/base'
@@ -70,6 +71,7 @@ export default function WeSpaceFieldsPage() {
   const { user } = useApp()
 
   const { createField, loading: isCreating } = useCreateField()
+  const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
 
   // Fetch WeSpace details and field contexts using GraphQL
   const {
@@ -163,13 +165,32 @@ export default function WeSpaceFieldsPage() {
         description
       )
 
-      // Store the created field ID for onboarding navigation
+      // Log field creation activity
       if (createdField?.id) {
+        await logFieldActivity({
+          variables: {
+            input: {
+              action: 'created',
+              fieldId: createdField.id,
+              fieldName: title,
+              contextId: createdField.id,
+              spaceName: weSpace?.name,
+            },
+          },
+        })
+          .then(() => toast.info('Field creation logged'))
+          .catch((err) => {
+            console.error('Failed to log field creation:', err)
+            toast.error('Failed to log field creation')
+          })
+
+        // Store the created field ID for onboarding navigation
         localStorage.setItem('lastCreatedFieldId', createdField.id)
         // Store weSpaceId for onboarding
         localStorage.setItem('weSpaceId', weSpaceId)
       }
 
+      setShowCreateModal(false)
       await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
@@ -308,7 +329,6 @@ export default function WeSpaceFieldsPage() {
           onClose={() => {
             setShowEditModal(false)
             setEditingFieldId(null)
-            refetch()
           }}
           isEditing={true}
           fieldId={editingFieldId}
@@ -319,6 +339,58 @@ export default function WeSpaceFieldsPage() {
             transformedFields.find((f) => f.id === editingFieldId)
               ?.description || ''
           }
+          onEditSuccess={async () => {
+            const editingField = transformedFields.find(
+              (f) => f.id === editingFieldId
+            )
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'updated',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: weSpace?.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field update logged'))
+                .catch((err) => {
+                  console.error('Failed to log field update:', err)
+                  toast.error('Failed to log field update')
+                })
+            }
+            setShowEditModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
+          onDeleteSuccess={async () => {
+            const editingField = transformedFields.find(
+              (f) => f.id === editingFieldId
+            )
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'deleted',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: weSpace?.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field deletion logged'))
+                .catch((err) => {
+                  console.error('Failed to log field deletion:', err)
+                  toast.error('Failed to log field deletion')
+                })
+            }
+            setShowEditModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
         />
       )}
 
