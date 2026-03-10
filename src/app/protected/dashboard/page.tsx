@@ -6,9 +6,16 @@ import { ActivePulses } from '@/components/dashboard/active-pulses'
 import { FieldsList } from '@/components/dashboard/fields-list'
 import { SpacesList } from '@/components/dashboard/spaces-list'
 import { PeopleList } from '@/components/dashboard/people-list'
+import { ActivityLogs } from '@/components/dashboard/activity-logs'
 import { usePageContext } from '@/contexts'
 
-type ViewType = 'overview' | 'pulses' | 'fields' | 'spaces' | 'people'
+type ViewType =
+  | 'overview'
+  | 'pulses'
+  | 'fields'
+  | 'spaces'
+  | 'people'
+  | 'activity'
 
 export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
@@ -89,12 +96,14 @@ export default function DashboardPage() {
               <FieldsList onViewAll={() => setActiveView('fields')} />
               <SpacesList onViewAll={() => setActiveView('spaces')} />
               <PeopleList onViewAll={() => setActiveView('people')} />
+              <ActivityLogs onViewAll={() => setActiveView('activity')} />
             </>
           )}
           {activeView === 'pulses' && <ActivePulses showAll />}
           {activeView === 'fields' && <FieldsList showAll />}
           {activeView === 'spaces' && <SpacesList showAll />}
           {activeView === 'people' && <PeopleList showAll />}
+          {activeView === 'activity' && <ActivityLogs showAll />}
         </div>
       </main>
     </div>

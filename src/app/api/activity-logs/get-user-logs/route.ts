@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const userId = searchParams.get('userId')
     const limitStr = searchParams.get('limit') || '30'
-    const limit = Math.min(parseInt(limitStr), 100) // Cap at 100
+    const parsedLimit = Number.parseInt(limitStr, 10)
+    const limit = Number.isFinite(parsedLimit)
+      ? Math.max(1, Math.min(parsedLimit, 100))
+      : 30
 
     if (!userId) {
       return NextResponse.json<GetUserLogsResponse>(

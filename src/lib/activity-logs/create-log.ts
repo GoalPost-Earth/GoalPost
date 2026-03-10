@@ -22,6 +22,8 @@ export interface LogEntry {
   createdBy: {
     id: string
     name: string
+    firstName?: string
+    lastName?: string
     photo?: string
   }
   metadata?: Record<string, any>
@@ -112,6 +114,9 @@ export async function getContextLogs(
   limit: number = 20
 ): Promise<LogEntry[]> {
   const graph = await initGraph()
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.min(Math.floor(limit), 100))
+    : 20
 
   try {
     const results = await graph.query<{
@@ -120,6 +125,8 @@ export async function getContextLogs(
       createdAt: string
       createdById: string
       createdByName: string
+      createdByFirstName?: string
+      createdByLastName?: string
       createdByPhoto?: string
       metadata?: string
     }>(
@@ -127,18 +134,29 @@ export async function getContextLogs(
       MATCH (log:Log)-[:LOGGED_FOR]->(pulse:FieldPulse)-[:HAS_PULSE]-(context:FieldContext {id: $contextId})
       WITH log, pulse
       MATCH (log)-[:CREATED_BY]->(person:Person)
+      WITH
+        log,
+        person,
+        trim(coalesce(person.firstName, '') + ' ' + coalesce(person.lastName, '')) AS fullName
       RETURN 
         log.id as id,
         log.description as description,
         log.createdAt as createdAt,
         person.id as createdById,
-        person.name as createdByName,
+        coalesce(
+          person.name,
+          CASE WHEN fullName = '' THEN null ELSE fullName END,
+          person.email,
+          person.id
+        ) as createdByName,
+        person.firstName as createdByFirstName,
+        person.lastName as createdByLastName,
         person.photo as createdByPhoto,
         log.metadata as metadata
       ORDER BY log.createdAt DESC
-      LIMIT $limit
+      LIMIT toInteger($limit)
       `,
-      { contextId, limit }
+      { contextId, limit: normalizedLimit }
     )
 
     return results.map((r) => ({
@@ -148,6 +166,8 @@ export async function getContextLogs(
       createdBy: {
         id: r.createdById,
         name: r.createdByName,
+        firstName: r.createdByFirstName,
+        lastName: r.createdByLastName,
         photo: r.createdByPhoto,
       },
       metadata: parseMetadata(r.metadata),
@@ -160,6 +180,10 @@ export async function getContextLogs(
 
 /**
  * Get recent logs for a specific person
+ * Includes:
+ * - Logs created by the user
+ * - Logs from any WeSpace they own
+ * - Logs from any WeSpace they are a member of
  * Used for user activity/notification feed
  */
 export async function getUserLogs(
@@ -167,6 +191,9 @@ export async function getUserLogs(
   limit: number = 50
 ): Promise<LogEntry[]> {
   const graph = await initGraph()
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.min(Math.floor(limit), 100))
+    : 50
 
   try {
     const results = await graph.query<{
@@ -175,25 +202,51 @@ export async function getUserLogs(
       createdAt: string
       createdById: string
       createdByName: string
+      createdByFirstName?: string
+      createdByLastName?: string
       createdByPhoto?: string
       metadata?: string
     }>(
       `
-      MATCH (log:Log)-[:CREATED_BY]->(person:Person {id: $userId})
-      WITH log
+      MATCH (currentUser:Person {id: $userId})
+      
+      // Get logs: user's own logs OR logs from their WeSpaces
+      OPTIONAL MATCH (userLog:Log)-[:CREATED_BY]->(currentUser)
+      OPTIONAL MATCH (currentUser)-[:OWNS]->(ownedSpace:WeSpace)-[:HAS_CONTEXT]->(ownedContext:FieldContext)-[:HAS_PULSE]-(ownedPulse:FieldPulse)<-[:LOGGED_FOR]-(ownedLog:Log)
+      OPTIONAL MATCH (memberSpace:WeSpace)-[:HAS_MEMBER]->(membership:SpaceMembership)-[:IS_MEMBER]->(currentUser)
+      OPTIONAL MATCH (memberSpace)-[:HAS_CONTEXT]->(memberContext:FieldContext)-[:HAS_PULSE]-(memberPulse:FieldPulse)<-[:LOGGED_FOR]-(memberLog:Log)
+      
+      // Collect and deduplicate all logs
+      WITH collect(distinct userLog) + collect(distinct ownedLog) + collect(distinct memberLog) as allLogs
+      
+      // Filter nulls and process
+      UNWIND allLogs as log
+      WITH log WHERE log IS NOT NULL
       MATCH (log)-[:CREATED_BY]->(creator:Person)
+      WITH
+        log,
+        creator,
+        trim(coalesce(creator.firstName, '') + ' ' + coalesce(creator.lastName, '')) AS fullName
+      
       RETURN 
         log.id as id,
         log.description as description,
         log.createdAt as createdAt,
         creator.id as createdById,
-        creator.name as createdByName,
+        coalesce(
+          creator.name,
+          CASE WHEN fullName = '' THEN null ELSE fullName END,
+          creator.email,
+          creator.id
+        ) as createdByName,
+        creator.firstName as createdByFirstName,
+        creator.lastName as createdByLastName,
         creator.photo as createdByPhoto,
         log.metadata as metadata
       ORDER BY log.createdAt DESC
-      LIMIT $limit
+      LIMIT toInteger($limit)
       `,
-      { userId, limit }
+      { userId, limit: normalizedLimit }
     )
 
     return results.map((r) => ({
@@ -203,6 +256,8 @@ export async function getUserLogs(
       createdBy: {
         id: r.createdById,
         name: r.createdByName,
+        firstName: r.createdByFirstName,
+        lastName: r.createdByLastName,
         photo: r.createdByPhoto,
       },
       metadata: parseMetadata(r.metadata),

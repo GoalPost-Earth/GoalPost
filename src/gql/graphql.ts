@@ -5274,6 +5274,7 @@ export type Log = {
   goalsAggregate?: Maybe<LogGoalPulseGoalsAggregationSelection>
   goalsConnection: LogGoalsConnection
   id: Scalars['ID']['output']
+  metadata?: Maybe<Scalars['String']['output']>
   pulses: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "pulsesConnection" instead */
   pulsesAggregate?: Maybe<LogFieldPulsePulsesAggregationSelection>
@@ -5464,6 +5465,7 @@ export type LogAggregateNode = {
   description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  metadata: StringAggregateSelection
 }
 
 export type LogAggregateSelection = {
@@ -5473,12 +5475,14 @@ export type LogAggregateSelection = {
   description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  metadata: StringAggregateSelection
 }
 
 export type LogCreateInput = {
   createdBy?: InputMaybe<LogCreatedByFieldInput>
   description: Scalars['String']['input']
   goals?: InputMaybe<LogGoalsFieldInput>
+  metadata?: InputMaybe<Scalars['String']['input']>
   pulses?: InputMaybe<LogPulsesFieldInput>
   resources?: InputMaybe<LogResourcesFieldInput>
 }
@@ -6682,6 +6686,7 @@ export type LogSort = {
   createdAt?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  metadata?: InputMaybe<SortDirection>
 }
 
 /** Input for logging space-related activities. */
@@ -6697,6 +6702,7 @@ export type LogUpdateInput = {
   createdBy?: InputMaybe<Array<LogCreatedByUpdateFieldInput>>
   description_SET?: InputMaybe<Scalars['String']['input']>
   goals?: InputMaybe<Array<LogGoalsUpdateFieldInput>>
+  metadata_SET?: InputMaybe<Scalars['String']['input']>
   pulses?: InputMaybe<Array<LogPulsesUpdateFieldInput>>
   resources?: InputMaybe<Array<LogResourcesUpdateFieldInput>>
 }
@@ -6755,6 +6761,11 @@ export type LogWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  metadata_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  metadata_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  metadata_EQ?: InputMaybe<Scalars['String']['input']>
+  metadata_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  metadata_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   pulsesAggregate?: InputMaybe<LogPulsesAggregateInput>
   /** Return Logs where all of the related LogPulsesConnections match this filter */
   pulsesConnection_ALL?: InputMaybe<LogPulsesConnectionWhere>
@@ -17812,6 +17823,77 @@ export type DeleteWeSpaceMutation = {
   }
 }
 
+export type GetMyRecentLogsQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>
+}>
+
+export type GetMyRecentLogsQuery = {
+  __typename?: 'Query'
+  getMyRecentLogs: Array<{
+    __typename?: 'Log'
+    id: string
+    description: string
+    createdAt: any
+    metadata?: string | null
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      photo?: string | null
+    }>
+  }>
+}
+
+export type GetUserActivityLogsQueryVariables = Exact<{
+  userId: Scalars['ID']['input']
+  limit?: InputMaybe<Scalars['Int']['input']>
+}>
+
+export type GetUserActivityLogsQuery = {
+  __typename?: 'Query'
+  getUserLogs: Array<{
+    __typename?: 'Log'
+    id: string
+    description: string
+    createdAt: any
+    metadata?: string | null
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      photo?: string | null
+    }>
+  }>
+}
+
+export type GetContextLogsQueryVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  limit?: InputMaybe<Scalars['Int']['input']>
+}>
+
+export type GetContextLogsQuery = {
+  __typename?: 'Query'
+  getContextLogs: Array<{
+    __typename?: 'Log'
+    id: string
+    description: string
+    createdAt: any
+    metadata?: string | null
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      photo?: string | null
+    }>
+  }>
+}
+
 export type GetLoggedInUserQueryVariables = Exact<{
   email: Scalars['String']['input']
 }>
@@ -25063,6 +25145,257 @@ export const DeleteWeSpaceDocument = {
   DeleteWeSpaceMutation,
   DeleteWeSpaceMutationVariables
 >
+export const GetMyRecentLogsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetMyRecentLogs' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '30' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getMyRecentLogs' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMyRecentLogsQuery,
+  GetMyRecentLogsQueryVariables
+>
+export const GetUserActivityLogsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetUserActivityLogs' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'userId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '50' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getUserLogs' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'userId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'userId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUserActivityLogsQuery,
+  GetUserActivityLogsQueryVariables
+>
+export const GetContextLogsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetContextLogs' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '20' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getContextLogs' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'contextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetContextLogsQuery, GetContextLogsQueryVariables>
 export const GetLoggedInUserDocument = {
   kind: 'Document',
   definitions: [

@@ -820,6 +820,7 @@ type Log @node(labels: ["Log"]) {
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
     @settable(onCreate: true, onUpdate: false)
+  metadata: String
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   
   # Direct references to pulses (for audit trail)

@@ -389,6 +389,14 @@ export function NvlCanvas({
                     ) {
                       const allNodes = nvlRef.getNodes()
                       const nodeIds = allNodes.map((n: Node) => n.id)
+
+                      if (nodeIds.length <= 1) {
+                        // Avoid extreme zoom when only one node is present.
+                        const targetZoom = Math.min(1, maxZoom)
+                        nvlRef.setZoom?.(targetZoom)
+                        return
+                      }
+
                       nvlRef.fit(nodeIds, { duration: 500 })
                     }
                   } catch (error) {

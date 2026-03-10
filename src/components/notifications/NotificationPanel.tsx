@@ -7,6 +7,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { gql } from '@apollo/client'
+import { useApolloClient } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, X } from 'lucide-react'
 import { useApp } from '@/contexts/AppContext'
@@ -28,46 +30,129 @@ interface NotificationPanelProps {
   onClose: () => void
 }
 
+const GET_USER_ACTIVITY_LOGS_QUERY = gql`
+  query GetUserActivityLogsForNotifications($userId: ID!, $limit: Int = 20) {
+    getUserLogs(userId: $userId, limit: $limit) {
+      id
+      description
+      createdAt
+      metadata
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        photo
+      }
+    }
+  }
+`
+
+type GetUserActivityLogsResult = {
+  getUserLogs?: Array<Record<string, any>>
+}
+
+function normalizeLogToNotification(log: any): NotificationItem {
+  const createdByValue = Array.isArray(log?.createdBy)
+    ? log.createdBy[0]
+    : log?.createdBy
+
+  const name =
+    createdByValue?.name ||
+    `${createdByValue?.firstName || ''} ${createdByValue?.lastName || ''}`.trim() ||
+    createdByValue?.id ||
+    'User'
+
+  let metadata: Record<string, any> | undefined
+  if (typeof log?.metadata === 'string') {
+    try {
+      metadata = JSON.parse(log.metadata) as Record<string, any>
+    } catch {
+      metadata = { raw: log.metadata }
+    }
+  } else if (log?.metadata && typeof log.metadata === 'object') {
+    metadata = log.metadata as Record<string, any>
+  }
+
+  return {
+    id: log?.id,
+    description: log?.description || '',
+    createdAt: log?.createdAt,
+    createdBy: {
+      id: createdByValue?.id || 'unknown',
+      name,
+      photo: createdByValue?.photo || undefined,
+    },
+    metadata,
+  }
+}
+
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useApp()
+  const apolloClient = useApolloClient()
 
   // Fetch user's recent logs
   useEffect(() => {
     if (!isOpen || !user?.id) return
 
     const fetchNotifications = async () => {
-      setIsLoading(true)
+      // Only show loading spinner on initial load
+      if (isInitialLoad) {
+        setIsLoading(true)
+      }
       setError(null)
 
       try {
-        const response = await fetch(
-          `/api/activity-logs/get-user-logs?userId=${user.id}&limit=30`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
+        const { data, error: queryError } =
+          await apolloClient.query<GetUserActivityLogsResult>({
+            query: GET_USER_ACTIVITY_LOGS_QUERY,
+            variables: {
+              userId: user.id,
+              limit: 20,
+            },
+            fetchPolicy: 'network-only',
+          })
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch notifications')
+        if (queryError) {
+          throw queryError
         }
 
-        const data = await response.json()
-        setNotifications(data.logs || [])
+        const logs = (data?.getUserLogs || []).map(normalizeLogToNotification)
+
+        // Ensure notifications are sorted by date (newest first)
+        const sortedLogs = logs.sort(
+          (a: NotificationItem, b: NotificationItem) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        setNotifications(sortedLogs)
+
+        // Mark as loaded after first successful fetch
+        if (isInitialLoad) {
+          setIsInitialLoad(false)
+        }
       } catch (err) {
         console.error('Error fetching notifications:', err)
         setError(
           err instanceof Error ? err.message : 'Failed to load notifications'
         )
       } finally {
-        setIsLoading(false)
+        if (isInitialLoad) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchNotifications()
+
+    // Mark notifications as viewed when panel opens
+    if (user?.id) {
+      const storageKey = `lastNotificationView_${user.id}`
+      localStorage.setItem(storageKey, new Date().toISOString())
+    }
 
     // Refresh every 30 seconds when panel is open
     const interval = setInterval(fetchNotifications, 30000)
@@ -96,7 +181,10 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div
+        className="flex-1 overflow-y-auto scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gp-primary" />
@@ -172,7 +260,7 @@ function NotificationItem({
       <div className="flex gap-3">
         {/* Avatar */}
         <div
-          className="w-8 h-8 rounded-full bg-gp-primary/20 flex items-center justify-center flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gp-primary/20 flex items-center justify-center shrink-0"
           title={notification.createdBy.name}
         >
           {notification.createdBy.photo ? (
@@ -190,7 +278,7 @@ function NotificationItem({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong line-clamp-2">
+          <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong wrap-break-word whitespace-normal">
             <span className="text-lg inline-block mr-1">{getIcon()}</span>
             {notification.description}
           </p>
@@ -200,8 +288,63 @@ function NotificationItem({
         </div>
 
         {/* Unread indicator (optional) */}
-        <div className="w-2 h-2 rounded-full bg-gp-primary flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="w-2 h-2 rounded-full bg-gp-primary shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </div>
   )
+}
+
+/**
+ * Hook to get unread notification count
+ */
+export function useUnreadCount(userId?: string) {
+  const [unreadCount, setUnreadCount] = useState(0)
+  const apolloClient = useApolloClient()
+
+  useEffect(() => {
+    if (!userId) {
+      setUnreadCount(0)
+      return
+    }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data, error } =
+          await apolloClient.query<GetUserActivityLogsResult>({
+            query: GET_USER_ACTIVITY_LOGS_QUERY,
+            variables: {
+              userId,
+              limit: 20,
+            },
+            fetchPolicy: 'network-only',
+          })
+
+        if (error) return
+
+        const logs = (data?.getUserLogs || []).map(normalizeLogToNotification)
+
+        // Get last viewed time from localStorage
+        const storageKey = `lastNotificationView_${userId}`
+        const lastViewedStr = localStorage.getItem(storageKey)
+        const lastViewed = lastViewedStr ? new Date(lastViewedStr) : new Date(0)
+
+        // Count logs created after last viewed time
+        const unread = logs.filter(
+          (log: NotificationItem) => new Date(log.createdAt) > lastViewed
+        ).length
+
+        setUnreadCount(unread)
+      } catch (err) {
+        console.error('Error fetching unread count:', err)
+      }
+    }
+
+    fetchUnreadCount()
+
+    // Refresh count every minute
+    const interval = setInterval(fetchUnreadCount, 60000)
+    return () => clearInterval(interval)
+  }, [userId])
+
+  return unreadCount
 }

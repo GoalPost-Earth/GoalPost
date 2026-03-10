@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useApp, usePageContext } from '@/contexts'
-import { NotificationPanel } from '@/components/notifications/NotificationPanel'
+import { NotificationPanel, useUnreadCount } from '@/components/notifications/NotificationPanel'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
@@ -36,6 +36,7 @@ export default function NavBar() {
   const menuRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const unreadCount = useUnreadCount(user?.id)
 
   // Get user's MeSpace
   const userMeSpace = user?.ownsSpaces?.find(
@@ -307,10 +308,15 @@ export default function NavBar() {
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             data-notification-button
-            className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+            className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
             aria-label="Notifications"
           >
             {isMounted && <NotificationIcon />}
+            {isMounted && unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 size-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-black/90 animate-pulse">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
           <NotificationPanel
             isOpen={showNotifications}
@@ -481,11 +487,19 @@ export default function NavBar() {
                 {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
               </button>
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all"
+                onClick={() => {
+                  setShowNotifications(!showNotifications)
+                  setShowMobileMenu(false)
+                }}
+                className="cursor-pointer flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
                 aria-label="Notifications"
               >
                 {isMounted && <NotificationIcon />}
+                {isMounted && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 size-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-black/90">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
