@@ -20,7 +20,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useApp, usePageContext } from '@/contexts'
-import { NotificationPanel, useUnreadCount } from '@/components/notifications/NotificationPanel'
+import {
+  NotificationPanel,
+  useUnreadCount,
+} from '@/components/notifications/NotificationPanel'
 
 export default function NavBar() {
   const [isDark, setIsDark] = useState(false)
