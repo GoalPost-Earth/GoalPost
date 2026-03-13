@@ -2,17 +2,127 @@ import { graphql } from '@/gql'
 
 export const GET_FIELD_CONTEXT_DETAILS = graphql(`
   query getFieldContextDetails($contextId: ID!) {
+    goalPulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+    }
+    resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+    }
+    storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+    }
+    carePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+    }
+    coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+    }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
       title
       emergentName
       createdAt
-      pulses {
-        __typename
+      resonancesInContext {
         id
-        title
-        content
+        label
+        description
+        confidence
+        evidence
         createdAt
+        source {
+          ... on GoalPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on ResourcePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on StoryPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CarePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CoreValuePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+        }
+        target {
+          ... on GoalPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on ResourcePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on StoryPulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CarePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+          ... on CoreValuePulse {
+            id
+            __typename
+            title
+            content
+            createdAt
+          }
+        }
       }
       space {
         id

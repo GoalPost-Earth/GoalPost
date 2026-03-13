@@ -4,8 +4,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { SectionHeader } from '@/components/persons/section-header'
-import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
@@ -16,6 +14,7 @@ import {
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
+import { FieldContextSections } from './field-context-sections'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
@@ -41,7 +40,17 @@ export default function FieldContextDetailsPage() {
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
-  const pulses = context?.pulses || []
+  const pulses = [
+    ...(data?.goalPulses || []),
+    ...(data?.resourcePulses || []),
+    ...(data?.storyPulses || []),
+    ...(data?.carePulses || []),
+    ...(data?.coreValuePulses || []),
+  ].sort(
+    (left, right) =>
+      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+  )
+  const resonances = context?.resonancesInContext || []
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -66,7 +75,12 @@ export default function FieldContextDetailsPage() {
 
       await updateFieldContext({
         variables: { where, update: updateInput },
-        refetchQueries: ['GetFieldContextDetails'],
+        refetchQueries: [
+          {
+            query: GET_FIELD_CONTEXT_DETAILS,
+            variables: { contextId },
+          },
+        ],
       })
 
       // Log field context update activity
@@ -328,108 +342,18 @@ export default function FieldContextDetailsPage() {
             </p>
           </div>
 
-          {/* Grid Layout - Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            {/* Space Info Section */}
-            <div className="flex flex-col gap-4">
-              <SectionHeader icon="location_on" title="Space" />
-              <ProfileCard>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[9px] uppercase font-semibold text-gp-primary block mb-1">
-                      {space?.__typename || 'Space'}
-                    </span>
-                    <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
-                      {space?.name}
-                    </h4>
-                  </div>
-                  <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                    {space?.visibility}
-                  </p>
-                </div>
-              </ProfileCard>
-            </div>
-
-            {/* Metadata Section */}
-            <div className="flex flex-col gap-4">
-              <SectionHeader icon="info" title="Metadata" />
-              <ProfileCard>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      Created
-                    </span>
-                    <p className="text-xs font-semibold text-gp-ink-strong dark:text-white">
-                      {createdDate}
-                    </p>
-                  </div>
-                </div>
-              </ProfileCard>
-            </div>
-
-            {/* Pulses Section */}
-            <div className="flex flex-col gap-4 md:col-span-2">
-              <SectionHeader icon="waves" title="Pulses" />
-              <ProfileCard>
-                <div className="space-y-3">
-                  {pulses.length > 0 ? (
-                    pulses.map((pulse, idx) => (
-                      <div
-                        key={pulse.id}
-                        onClick={() =>
-                          pulse.id &&
-                          router.push(`/protected/dashboard/pulses/${pulse.id}`)
-                        }
-                        className={
-                          idx > 0
-                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                        }
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <div className="flex-1">
-                            <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
-                              {pulse.__typename}
-                            </span>
-                            <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                              {pulse.title}
-                            </h4>
-                          </div>
-                        </div>
-                        {pulse.content && (
-                          <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
-                            {pulse.content.substring(0, 150)}
-                            {pulse.content.length > 150 ? '...' : ''}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      No pulses yet
-                    </p>
-                  )}
-                </div>
-              </ProfileCard>
-            </div>
-
-            {/* Summary Section */}
-            <div className="flex flex-col gap-4 md:col-span-2">
-              <SectionHeader icon="summarize" title="Summary" />
-              <ProfileCard>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                      Total Pulses
-                    </span>
-                    <span className="text-lg font-bold text-gp-primary">
-                      {pulses.length}
-                    </span>
-                  </div>
-                </div>
-              </ProfileCard>
-            </div>
-          </div>
+          <FieldContextSections
+            createdDate={createdDate}
+            pulses={pulses}
+            resonances={resonances}
+            space={space}
+            onPulseClick={(pulseId) =>
+              router.push(`/protected/dashboard/pulses/${pulseId}`)
+            }
+            onResonanceClick={(resonanceId) =>
+              router.push(`/protected/dashboard/resonances/${resonanceId}`)
+            }
+          />
 
           {/* Action Buttons */}
           <div className="flex items-center justify-center gap-6 w-full">

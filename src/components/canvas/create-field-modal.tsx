@@ -58,7 +58,13 @@ export function CreateFieldModal({
 
   // Get fresh pulse count from query, fallback to prop while loading
   const freshPulseCount =
-    fieldContextData?.fieldContexts?.[0]?.pulses?.length ?? pulseCount
+    (fieldContextData
+      ? (fieldContextData.goalPulses?.length || 0) +
+        (fieldContextData.resourcePulses?.length || 0) +
+        (fieldContextData.storyPulses?.length || 0) +
+        (fieldContextData.carePulses?.length || 0) +
+        (fieldContextData.coreValuePulses?.length || 0)
+      : pulseCount)
 
   // Sync state with props when editing a different field
   useEffect(() => {
