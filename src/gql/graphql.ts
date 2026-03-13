@@ -19367,38 +19367,6 @@ export type GetPersonProfileQuery = {
             __typename?: 'FieldContext'
             id: string
             title: string
-            pulses: Array<
-              | {
-                  __typename?: 'CarePulse'
-                  id: string
-                  title: string
-                  intensity?: number | null
-                }
-              | {
-                  __typename?: 'CoreValuePulse'
-                  id: string
-                  title: string
-                  intensity?: number | null
-                }
-              | {
-                  __typename?: 'GoalPulse'
-                  id: string
-                  title: string
-                  intensity?: number | null
-                }
-              | {
-                  __typename?: 'ResourcePulse'
-                  id: string
-                  title: string
-                  intensity?: number | null
-                }
-              | {
-                  __typename?: 'StoryPulse'
-                  id: string
-                  title: string
-                  intensity?: number | null
-                }
-            >
           }>
         }
       | {
@@ -31006,33 +30974,6 @@ export const GetPersonProfileDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'title' },
                                   },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'title',
-                                          },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'intensity',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
                                 ],
                               },
                             },
@@ -31081,6 +31022,43 @@ export const GetPersonProfileDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'pulses' },
+                                    arguments: [
+                                      {
+                                        kind: 'Argument',
+                                        name: { kind: 'Name', value: 'where' },
+                                        value: {
+                                          kind: 'ObjectValue',
+                                          fields: [
+                                            {
+                                              kind: 'ObjectField',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'createdBy_SOME',
+                                              },
+                                              value: {
+                                                kind: 'ObjectValue',
+                                                fields: [
+                                                  {
+                                                    kind: 'ObjectField',
+                                                    name: {
+                                                      kind: 'Name',
+                                                      value: 'id_EQ',
+                                                    },
+                                                    value: {
+                                                      kind: 'Variable',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'personId',
+                                                      },
+                                                    },
+                                                  },
+                                                ],
+                                              },
+                                            },
+                                          ],
+                                        },
+                                      },
+                                    ],
                                     selectionSet: {
                                       kind: 'SelectionSet',
                                       selections: [
