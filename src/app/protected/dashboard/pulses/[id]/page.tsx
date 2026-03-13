@@ -104,8 +104,49 @@ export default function PulseDetailsPage() {
     skip: !context?.id,
   })
 
-  const relatedPulsesMap = new Map<string, { id: string; __typename: string; title: string; content?: string | null }>()
-  const resonances = contextPulseData?.fieldContexts?.[0]?.resonancesInContext || []
+  const formatResonanceLabel = (label?: string) =>
+    label ? label.replace(/_/g, ' ') : 'resonance'
+
+  const relatedPulsesMap = new Map<
+    string,
+    {
+      id: string
+      __typename: string
+      title: string
+      content?: string | null
+      resonances: Array<{ id: string; label: string }>
+    }
+  >()
+  const resonances =
+    contextPulseData?.fieldContexts?.[0]?.resonancesInContext || []
+
+  const addRelatedPulse = (
+    relatedPulse: {
+      id: string
+      __typename: string
+      title: string
+      content?: string | null
+    },
+    resonance: { id: string; label: string }
+  ) => {
+    const existing = relatedPulsesMap.get(relatedPulse.id)
+    const resonanceEntry = {
+      id: resonance.id,
+      label: formatResonanceLabel(resonance.label),
+    }
+
+    if (!existing) {
+      relatedPulsesMap.set(relatedPulse.id, {
+        ...relatedPulse,
+        resonances: [resonanceEntry],
+      })
+      return
+    }
+
+    if (!existing.resonances.some((entry) => entry.id === resonance.id)) {
+      existing.resonances.push(resonanceEntry)
+    }
+  }
 
   resonances.forEach((resonance) => {
     const sourcePulse = resonance.source?.[0]
@@ -114,21 +155,33 @@ export default function PulseDetailsPage() {
     if (!sourcePulse?.id || !targetPulse?.id) return
 
     if (sourcePulse.id === pulseId && targetPulse.id !== pulseId) {
-      relatedPulsesMap.set(targetPulse.id, {
-        id: targetPulse.id,
-        __typename: targetPulse.__typename,
-        title: targetPulse.title,
-        content: targetPulse.content,
-      })
+      addRelatedPulse(
+        {
+          id: targetPulse.id,
+          __typename: targetPulse.__typename,
+          title: targetPulse.title,
+          content: targetPulse.content,
+        },
+        {
+          id: resonance.id,
+          label: resonance.label,
+        }
+      )
     }
 
     if (targetPulse.id === pulseId && sourcePulse.id !== pulseId) {
-      relatedPulsesMap.set(sourcePulse.id, {
-        id: sourcePulse.id,
-        __typename: sourcePulse.__typename,
-        title: sourcePulse.title,
-        content: sourcePulse.content,
-      })
+      addRelatedPulse(
+        {
+          id: sourcePulse.id,
+          __typename: sourcePulse.__typename,
+          title: sourcePulse.title,
+          content: sourcePulse.content,
+        },
+        {
+          id: resonance.id,
+          label: resonance.label,
+        }
+      )
     }
   })
 
@@ -901,38 +954,59 @@ export default function PulseDetailsPage() {
                 <div className="space-y-3">
                   {relatedPulses.length > 0 ? (
                     relatedPulses.map((relatedPulse, idx) => (
-                        <div
-                          key={relatedPulse.id}
-                          onClick={() =>
-                            relatedPulse.id &&
-                            router.push(
-                              `/protected/dashboard/pulses/${relatedPulse.id}`
-                            )
-                          }
-                          className={
-                            idx > 0
-                              ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                              : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                          }
-                        >
-                          <div className="flex justify-between items-start mb-1">
-                            <div className="flex-1">
-                              <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
-                                {relatedPulse.__typename}
-                              </span>
-                              <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                                {relatedPulse.title}
-                              </h4>
-                            </div>
+                      <div
+                        key={relatedPulse.id}
+                        onClick={() =>
+                          relatedPulse.id &&
+                          router.push(
+                            `/protected/dashboard/pulses/${relatedPulse.id}`
+                          )
+                        }
+                        className={
+                          idx > 0
+                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                        }
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex-1">
+                            <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
+                              {relatedPulse.__typename}
+                            </span>
+                            <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                              {relatedPulse.title}
+                            </h4>
                           </div>
-                          {relatedPulse.content && (
-                            <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
-                              {relatedPulse.content.substring(0, 100)}
-                              {relatedPulse.content.length > 100 ? '...' : ''}
-                            </p>
-                          )}
                         </div>
-                      ))
+                        {relatedPulse.content && (
+                          <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
+                            {relatedPulse.content.substring(0, 100)}
+                            {relatedPulse.content.length > 100 ? '...' : ''}
+                          </p>
+                        )}
+                        {relatedPulse.resonances.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {relatedPulse.resonances.map((resonance) => (
+                              <button
+                                key={resonance.id}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  router.push(
+                                    `/protected/dashboard/resonances/${resonance.id}`
+                                  )
+                                }}
+                                className="inline-flex items-center gap-1 rounded-full border border-gp-primary/30 bg-gp-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-gp-primary hover:bg-gp-primary/20 transition-colors cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-[12px]">
+                                  hub
+                                </span>
+                                {resonance.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
                   ) : (
                     <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
                       No resonance-connected pulses
