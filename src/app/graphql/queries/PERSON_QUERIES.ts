@@ -33,6 +33,9 @@ export const GET_PERSON_PROFILE = graphql(`
       traits
       passions
       fieldsOfCare
+      interests
+      careManual
+      favorites
       connections {
         id
         firstName
