@@ -26,7 +26,7 @@ export function Sidebar({
   const navItems = [
     { id: 'overview' as ViewType, label: 'Overview', icon: 'dashboard' },
     { id: 'pulses' as ViewType, label: 'Pulses', icon: 'monitor_heart' },
-    { id: 'fields' as ViewType, label: 'Fields', icon: 'layers' },
+    { id: 'fields' as ViewType, label: 'Field Contexts', icon: 'layers' },
     { id: 'spaces' as ViewType, label: 'Spaces', icon: 'workspaces' },
     { id: 'people' as ViewType, label: 'People', icon: 'group' },
     {

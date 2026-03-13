@@ -22,11 +22,11 @@ export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
       <section className="animate-fade-in [animation-delay:0.1s]">
         <div className="flex items-center justify-between mb-4">
           <h3 className="section-title text-primary-content text-sm font-bold uppercase tracking-widest dark:text-primary">
-            Fields
+            Field Contexts
           </h3>
         </div>
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300">
-          Error loading fields: {error.message}
+          Error loading field contexts: {error.message}
         </div>
       </section>
     )
@@ -36,14 +36,14 @@ export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
     <section className="animate-fade-in [animation-delay:0.1s]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="section-title text-primary-content text-sm font-bold uppercase tracking-widest dark:text-primary">
-          Fields
+          Field Contexts
         </h3>
         {!showAll && (
           <button
             onClick={onViewAll}
             className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
           >
-            View Fields
+            View Field Contexts
           </button>
         )}
       </div>
