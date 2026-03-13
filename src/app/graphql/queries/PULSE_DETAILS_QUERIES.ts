@@ -22,26 +22,6 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
         title
         emergentName
         createdAt
-        pulses {
-          id
-          title
-          content
-          createdAt
-          __typename
-          ... on GoalPulse {
-            status
-            horizon
-            intensity
-          }
-          ... on ResourcePulse {
-            resourceType
-            availability
-            intensity
-          }
-          ... on StoryPulse {
-            intensity
-          }
-        }
         space {
           __typename
           id
