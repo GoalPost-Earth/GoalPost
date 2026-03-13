@@ -417,10 +417,16 @@ export default function SpaceDetailsPage() {
                         return (
                           <div
                             key={membership.id}
+                            onClick={() =>
+                              memberData.id &&
+                              router.push(
+                                `/protected/dashboard/persons/${memberData.id}`
+                              )
+                            }
                             className={
                               idx > 0
-                                ? 'border-t border-gp-glass-border pt-3'
-                                : ''
+                                ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                                : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
                             }
                           >
                             <div className="flex justify-between items-start mb-1">
@@ -486,19 +492,6 @@ export default function SpaceDetailsPage() {
                             {context.pulses?.length || 0} pulses
                           </span>
                         </div>
-                        {context.pulses && context.pulses.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {context.pulses.map((pulse: any) => (
-                              <span
-                                key={pulse.id}
-                                className="px-2 py-0.5 rounded text-[9px] bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-white/60"
-                              >
-                                {pulse.__typename}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     ))
                   ) : (
@@ -531,14 +524,16 @@ export default function SpaceDetailsPage() {
                       {totalPulses}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                      Members
-                    </span>
-                    <span className="text-lg font-bold text-gp-primary">
-                      {members.length}
-                    </span>
-                  </div>
+                  {space.__typename === 'WeSpace' && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                        Members
+                      </span>
+                      <span className="text-lg font-bold text-gp-primary">
+                        {members.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </ProfileCard>
             </div>
@@ -570,19 +565,6 @@ export default function SpaceDetailsPage() {
           </div>
         </ProfileLayout>
       </main>
-
-      {/* Bottom Action Bar */}
-      {/* <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
-        <div className="flex items-center gap-2 p-1.5 rounded-full bg-gp-glass-bg border border-gp-glass-border backdrop-blur-2xl shadow-xl dark:shadow-2xl">
-          <button className="size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors hover:bg-gp-primary/10 dark:hover:bg-gp-primary/20">
-            <span className="material-symbols-outlined">message</span>
-          </button>
-          <div className="w-px h-4 bg-gp-glass-border" />
-          <button className="size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors hover:bg-gp-primary/10 dark:hover:bg-gp-primary/20">
-            <span className="material-symbols-outlined">share</span>
-          </button>
-        </div>
-      </div> */}
     </div>
   )
 }
