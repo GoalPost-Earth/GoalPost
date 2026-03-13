@@ -19347,6 +19347,9 @@ export type GetPersonProfileQuery = {
     traits?: string | null
     passions?: string | null
     fieldsOfCare?: string | null
+    interests?: string | null
+    careManual?: string | null
+    favorites?: string | null
     connections: Array<{
       __typename?: 'Person'
       id: string
@@ -30908,6 +30911,9 @@ export const GetPersonProfileDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'fieldsOfCare' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'favorites' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'connections' },

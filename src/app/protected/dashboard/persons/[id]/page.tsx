@@ -10,6 +10,68 @@ import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
 import Image from 'next/image'
+import type { ReactNode } from 'react'
+
+type LinkifiedTextProps = {
+  text?: string | null
+  className?: string
+}
+
+function LinkifiedText({ text, className }: LinkifiedTextProps) {
+  if (!text) return null
+
+  const linkRegex = /https?:\/\/[^\s<>")\]]+|www\.[^\s<>")\]]+/gi
+  const nodes: ReactNode[] = []
+  let lastIndex = 0
+
+  for (const match of text.matchAll(linkRegex)) {
+    const raw = match[0]
+    const matchIndex = match.index ?? 0
+
+    if (matchIndex > lastIndex) {
+      nodes.push(
+        <span key={`text-${lastIndex}`}>
+          {text.slice(lastIndex, matchIndex)}
+        </span>
+      )
+    }
+
+    const trailingPunctuation = raw.match(/[.,!?;:]+$/)?.[0] ?? ''
+    const cleanUrl = trailingPunctuation
+      ? raw.slice(0, raw.length - trailingPunctuation.length)
+      : raw
+
+    if (cleanUrl) {
+      const href = cleanUrl.startsWith('http')
+        ? cleanUrl
+        : `https://${cleanUrl}`
+
+      nodes.push(
+        <a
+          key={`link-${matchIndex}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gp-primary hover:underline break-all"
+        >
+          {cleanUrl}
+        </a>
+      )
+    }
+
+    if (trailingPunctuation) {
+      nodes.push(<span key={`punct-${matchIndex}`}>{trailingPunctuation}</span>)
+    }
+
+    lastIndex = matchIndex + raw.length
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex)}</span>)
+  }
+
+  return <p className={className}>{nodes.length > 0 ? nodes : text}</p>
+}
 
 export default function PersonProfilePage() {
   const params = useParams()
@@ -115,8 +177,13 @@ export default function PersonProfilePage() {
           </div>
 
           {/* Profile Attributes Section */}
-          {(person.traits || person.passions || person.fieldsOfCare) && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {(person.traits ||
+            person.passions ||
+            person.fieldsOfCare ||
+            person.interests ||
+            person.careManual ||
+            person.favorites) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {person.fieldsOfCare && (
                 <div className="flex flex-col gap-4 h-full">
                   <SectionHeader
@@ -124,9 +191,10 @@ export default function PersonProfilePage() {
                     title="Fields of Care"
                   />
                   <ProfileCard className="flex-1">
-                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
-                      {person.fieldsOfCare}
-                    </p>
+                    <LinkifiedText
+                      text={person.fieldsOfCare}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
                   </ProfileCard>
                 </div>
               )}
@@ -134,9 +202,10 @@ export default function PersonProfilePage() {
                 <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="favorite" title="Passions" />
                   <ProfileCard className="flex-1">
-                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
-                      {person.passions}
-                    </p>
+                    <LinkifiedText
+                      text={person.passions}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
                   </ProfileCard>
                 </div>
               )}
@@ -145,9 +214,46 @@ export default function PersonProfilePage() {
                 <div className="flex flex-col gap-4 h-full">
                   <SectionHeader icon="psychology" title="Traits" />
                   <ProfileCard className="flex-1">
-                    <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
-                      {person.traits}
-                    </p>
+                    <LinkifiedText
+                      text={person.traits}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
+                  </ProfileCard>
+                </div>
+              )}
+
+              {person.interests && (
+                <div className="flex flex-col gap-4 h-full">
+                  <SectionHeader icon="interests" title="Interests" />
+                  <ProfileCard className="flex-1">
+                    <LinkifiedText
+                      text={person.interests}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
+                  </ProfileCard>
+                </div>
+              )}
+
+              {person.careManual && (
+                <div className="flex flex-col gap-4 h-full">
+                  <SectionHeader icon="menu_book" title="Care Manual" />
+                  <ProfileCard className="flex-1">
+                    <LinkifiedText
+                      text={person.careManual}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
+                  </ProfileCard>
+                </div>
+              )}
+
+              {person.favorites && (
+                <div className="flex flex-col gap-4 h-full">
+                  <SectionHeader icon="star" title="Favorites" />
+                  <ProfileCard className="flex-1">
+                    <LinkifiedText
+                      text={person.favorites}
+                      className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                    />
                   </ProfileCard>
                 </div>
               )}
