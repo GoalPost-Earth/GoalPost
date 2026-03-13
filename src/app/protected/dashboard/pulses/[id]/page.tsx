@@ -8,6 +8,7 @@ import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
+import { GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries/PULSE_QUERIES'
 import {
   UPDATE_GOAL_PULSE_MUTATION,
   UPDATE_RESOURCE_PULSE_MUTATION,
@@ -97,7 +98,41 @@ export default function PulseDetailsPage() {
     data?.goalPulses?.[0] || data?.resourcePulses?.[0] || data?.storyPulses?.[0]
   const context = pulse?.context?.[0]
   const space = context?.space?.[0]
-  const contextPulses = context?.pulses || []
+
+  const { data: contextPulseData } = useQuery(GET_PULSES_BY_CONTEXT, {
+    variables: { contextId: context?.id || '' },
+    skip: !context?.id,
+  })
+
+  const relatedPulsesMap = new Map<string, { id: string; __typename: string; title: string; content?: string | null }>()
+  const resonances = contextPulseData?.fieldContexts?.[0]?.resonancesInContext || []
+
+  resonances.forEach((resonance) => {
+    const sourcePulse = resonance.source?.[0]
+    const targetPulse = resonance.target?.[0]
+
+    if (!sourcePulse?.id || !targetPulse?.id) return
+
+    if (sourcePulse.id === pulseId && targetPulse.id !== pulseId) {
+      relatedPulsesMap.set(targetPulse.id, {
+        id: targetPulse.id,
+        __typename: targetPulse.__typename,
+        title: targetPulse.title,
+        content: targetPulse.content,
+      })
+    }
+
+    if (targetPulse.id === pulseId && sourcePulse.id !== pulseId) {
+      relatedPulsesMap.set(sourcePulse.id, {
+        id: sourcePulse.id,
+        __typename: sourcePulse.__typename,
+        title: sourcePulse.title,
+        content: sourcePulse.content,
+      })
+    }
+  })
+
+  const relatedPulses = Array.from(relatedPulsesMap.values())
 
   const handleEditStart = () => {
     setEditTitle(pulse?.title || '')
@@ -861,14 +896,11 @@ export default function PulseDetailsPage() {
 
             {/* Related Pulses Section */}
             <div className="flex flex-col gap-4 md:col-span-2">
-              <SectionHeader icon="waves" title="Related Pulses in Context" />
+              <SectionHeader icon="waves" title="Related Pulses" />
               <ProfileCard>
                 <div className="space-y-3">
-                  {contextPulses.filter((p) => p.id !== pulse?.id).length >
-                  0 ? (
-                    contextPulses
-                      .filter((p) => p.id !== pulse?.id)
-                      .map((relatedPulse, idx) => (
+                  {relatedPulses.length > 0 ? (
+                    relatedPulses.map((relatedPulse, idx) => (
                         <div
                           key={relatedPulse.id}
                           onClick={() =>
@@ -903,7 +935,7 @@ export default function PulseDetailsPage() {
                       ))
                   ) : (
                     <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                      No other pulses in this context
+                      No resonance-connected pulses
                     </p>
                   )}
                 </div>
