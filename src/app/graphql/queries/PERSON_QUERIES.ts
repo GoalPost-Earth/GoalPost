@@ -50,11 +50,6 @@ export const GET_PERSON_PROFILE = graphql(`
           contexts {
             id
             title
-            pulses {
-              id
-              title
-              intensity
-            }
           }
         }
         ... on WeSpace {
@@ -65,7 +60,7 @@ export const GET_PERSON_PROFILE = graphql(`
           contexts {
             id
             title
-            pulses {
+            pulses(where: { createdBy_SOME: { id_EQ: $personId } }) {
               id
               title
               intensity

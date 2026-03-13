@@ -31,6 +31,8 @@ export default function PersonProfilePage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     person.ownsSpaces.forEach((space: any) => {
       const spaceType = space.__typename || 'Space'
+      if (spaceType !== 'WeSpace') return
+
       if (space.contexts) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         space.contexts.forEach((context: any) => {
