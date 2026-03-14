@@ -12,32 +12,21 @@ import {
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
 import { formatResonanceLabel } from '@/utils/graph-utils'
-import { getIconForType } from '@/lib/pulse-type-config'
+import {
+  getIconForType,
+  getConfigForType,
+  type NodeType,
+} from '@/lib/pulse-type-config'
 
-function getPulseTypeLabel(typename: string): string {
-  switch (typename) {
-    case 'GoalPulse':
-      return 'Goal'
-    case 'ResourcePulse':
-      return 'Resource'
-    case 'StoryPulse':
-      return 'Story'
-    default:
-      return 'Pulse'
+function typenameToNodeType(typename: string): NodeType {
+  const map: Record<string, NodeType> = {
+    GoalPulse: 'goal',
+    ResourcePulse: 'resource',
+    StoryPulse: 'story',
+    CarePulse: 'care',
+    CoreValuePulse: 'coreValue',
   }
-}
-
-function getPulseTypeColor(typename: string): string {
-  switch (typename) {
-    case 'GoalPulse':
-      return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-    case 'ResourcePulse':
-      return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-    case 'StoryPulse':
-      return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-    default:
-      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
-  }
+  return map[typename] ?? 'goal'
 }
 
 export default function ResonanceDetailsPage() {
@@ -282,16 +271,26 @@ export default function ResonanceDetailsPage() {
                 {source && (
                   <div className="relative group bg-white/30 dark:bg-white/5 backdrop-blur-[20px] border border-white/50 dark:border-white/10 rounded-[2.5rem] p-8 transition-all duration-500 hover:scale-[1.02]">
                     <div className="flex items-center gap-3 mb-6">
-                      <span className="material-symbols-outlined text-gp-primary text-[20px]">
+                      <span
+                        className={cn(
+                          'material-symbols-outlined text-[20px]',
+                          getConfigForType(
+                            typenameToNodeType(source.__typename ?? '')
+                          ).color
+                        )}
+                      >
                         {getIconForType(
-                          source.__typename === 'GoalPulse'
-                            ? 'goal'
-                            : source.__typename === 'ResourcePulse'
-                              ? 'resource'
-                              : 'story'
+                          typenameToNodeType(source.__typename ?? '')
                         )}
                       </span>
-                      <span className="text-[10px] font-bold tracking-widest text-gp-primary uppercase">
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold tracking-widest uppercase',
+                          getConfigForType(
+                            typenameToNodeType(source.__typename ?? '')
+                          ).color
+                        )}
+                      >
                         {source.__typename?.replace('Pulse', '')}Pulse
                       </span>
                     </div>
@@ -304,12 +303,10 @@ export default function ResonanceDetailsPage() {
                     <div className="flex gap-2 flex-wrap">
                       <span
                         className={cn(
-                          'px-3 py-1 text-[10px] font-semibold rounded-full',
-                          source.__typename === 'GoalPulse'
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                            : source.__typename === 'ResourcePulse'
-                              ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                              : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                          'px-3 py-1 text-[10px] font-semibold rounded-full bg-white/20 dark:bg-black/20',
+                          getConfigForType(
+                            typenameToNodeType(source.__typename ?? '')
+                          ).color
                         )}
                       >
                         SOURCE
@@ -375,16 +372,26 @@ export default function ResonanceDetailsPage() {
                 {target && (
                   <div className="relative group bg-white/30 dark:bg-white/5 backdrop-blur-[20px] border border-white/50 dark:border-white/10 rounded-[2.5rem] p-8 transition-all duration-500 hover:scale-[1.02]">
                     <div className="flex items-center gap-3 mb-6">
-                      <span className="material-symbols-outlined text-gp-accent-glow text-[20px]">
+                      <span
+                        className={cn(
+                          'material-symbols-outlined text-[20px]',
+                          getConfigForType(
+                            typenameToNodeType(target.__typename ?? '')
+                          ).color
+                        )}
+                      >
                         {getIconForType(
-                          target.__typename === 'GoalPulse'
-                            ? 'goal'
-                            : target.__typename === 'ResourcePulse'
-                              ? 'resource'
-                              : 'story'
+                          typenameToNodeType(target.__typename ?? '')
                         )}
                       </span>
-                      <span className="text-[10px] font-bold tracking-widest text-gp-accent-glow uppercase">
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold tracking-widest uppercase',
+                          getConfigForType(
+                            typenameToNodeType(target.__typename ?? '')
+                          ).color
+                        )}
+                      >
                         {target.__typename?.replace('Pulse', '')}Pulse
                       </span>
                     </div>
@@ -397,12 +404,10 @@ export default function ResonanceDetailsPage() {
                     <div className="flex gap-2 flex-wrap">
                       <span
                         className={cn(
-                          'px-3 py-1 text-[10px] font-semibold rounded-full',
-                          target.__typename === 'GoalPulse'
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                            : target.__typename === 'ResourcePulse'
-                              ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                              : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                          'px-3 py-1 text-[10px] font-semibold rounded-full bg-white/20 dark:bg-black/20',
+                          getConfigForType(
+                            typenameToNodeType(target.__typename ?? '')
+                          ).color
                         )}
                       >
                         TARGET

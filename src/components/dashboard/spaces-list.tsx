@@ -63,7 +63,7 @@ export function SpacesList({ showAll = false, onViewAll }: SpacesListProps) {
     return (
       <section className="animate-fade-in [animation-delay:0.2s]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title text-gp-accent-glow text-sm font-bold uppercase tracking-widest">
+          <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
             Spaces
           </h3>
         </div>
@@ -77,7 +77,7 @@ export function SpacesList({ showAll = false, onViewAll }: SpacesListProps) {
   return (
     <section className="animate-fade-in [animation-delay:0.2s]">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="section-title text-gp-accent-glow text-sm font-bold uppercase tracking-widest">
+        <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
           Spaces
         </h3>
         {!showAll && (

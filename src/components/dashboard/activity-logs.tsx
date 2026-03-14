@@ -102,7 +102,7 @@ export function ActivityLogs({
     return (
       <section className="animate-fade-in [animation-delay:0.3s]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title text-gp-primary text-sm font-bold uppercase tracking-widest">
+          <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
             Activity Logs
           </h3>
         </div>
@@ -122,7 +122,7 @@ export function ActivityLogs({
     return (
       <section className="animate-fade-in [animation-delay:0.3s]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title text-gp-primary text-sm font-bold uppercase tracking-widest">
+          <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
             Activity Logs
           </h3>
         </div>
@@ -136,7 +136,7 @@ export function ActivityLogs({
   return (
     <section className="animate-fade-in [animation-delay:0.3s]">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="section-title text-gp-primary text-sm font-bold uppercase tracking-widest">
+        <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
           Activity Logs
         </h3>
         {!showAll && (
