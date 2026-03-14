@@ -21,6 +21,7 @@ import {
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations } from '@/contexts'
+import { getConfigForType, type NodeType } from '@/lib/pulse-type-config'
 import {
   Select,
   SelectContent,
@@ -28,6 +29,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+function typenameToNodeType(typename: string): NodeType {
+  const map: Record<string, NodeType> = {
+    GoalPulse: 'goal',
+    ResourcePulse: 'resource',
+    StoryPulse: 'story',
+    CarePulse: 'care',
+    CoreValuePulse: 'coreValue',
+  }
+  return map[typename] ?? 'goal'
+}
 
 export default function PulseDetailsPage() {
   const params = useParams()
@@ -107,6 +119,26 @@ export default function PulseDetailsPage() {
   const formatResonanceLabel = (label?: string) =>
     label ? label.replace(/_/g, ' ') : 'resonance'
 
+  // Build a reliable id→typename map from the explicitly-typed root arrays.
+  // The union-type inline fragments in resonance source/target can be misresolved
+  // by Apollo's cache, so we use the unambiguous top-level pulse arrays instead.
+  const pulseTypeMap = new Map<string, string>()
+  ;(contextPulseData?.goalPulses ?? []).forEach((p) =>
+    pulseTypeMap.set(p.id, p.__typename)
+  )
+  ;(contextPulseData?.resourcePulses ?? []).forEach((p) =>
+    pulseTypeMap.set(p.id, p.__typename)
+  )
+  ;(contextPulseData?.storyPulses ?? []).forEach((p) =>
+    pulseTypeMap.set(p.id, p.__typename)
+  )
+  ;(contextPulseData?.carePulses ?? []).forEach((p) =>
+    pulseTypeMap.set(p.id, p.__typename)
+  )
+  ;(contextPulseData?.coreValuePulses ?? []).forEach((p) =>
+    pulseTypeMap.set(p.id, p.__typename)
+  )
+
   const relatedPulsesMap = new Map<
     string,
     {
@@ -158,7 +190,7 @@ export default function PulseDetailsPage() {
       addRelatedPulse(
         {
           id: targetPulse.id,
-          __typename: targetPulse.__typename,
+          __typename: pulseTypeMap.get(targetPulse.id) ?? targetPulse.__typename,
           title: targetPulse.title,
           content: targetPulse.content,
         },
@@ -173,7 +205,7 @@ export default function PulseDetailsPage() {
       addRelatedPulse(
         {
           id: sourcePulse.id,
-          __typename: sourcePulse.__typename,
+          __typename: pulseTypeMap.get(sourcePulse.id) ?? sourcePulse.__typename,
           title: sourcePulse.title,
           content: sourcePulse.content,
         },
@@ -865,7 +897,12 @@ export default function PulseDetailsPage() {
         <ProfileLayout>
           {/* Header Section */}
           <div className="flex flex-col items-center text-center mb-12">
-            <span className="text-[9px] uppercase font-semibold text-gp-accent-glow mb-2">
+            <span
+              className={cn(
+                'text-[9px] uppercase font-semibold mb-2',
+                getConfigForType(typenameToNodeType(pulse.__typename)).color
+              )}
+            >
               {pulse.__typename} • {context?.title}
             </span>
             <h1 className="text-4xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong mb-2">
@@ -970,7 +1007,14 @@ export default function PulseDetailsPage() {
                       >
                         <div className="flex justify-between items-start mb-1">
                           <div className="flex-1">
-                            <span className="text-[9px] uppercase font-semibold text-gp-accent-glow block mb-0.5">
+                            <span
+                              className={cn(
+                                'text-[9px] uppercase font-semibold block mb-0.5',
+                                getConfigForType(
+                                  typenameToNodeType(relatedPulse.__typename)
+                                ).color
+                              )}
+                            >
                               {relatedPulse.__typename}
                             </span>
                             <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
