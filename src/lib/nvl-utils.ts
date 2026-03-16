@@ -1,4 +1,5 @@
 import { createRoot, Root } from 'react-dom/client'
+import { flushSync } from 'react-dom'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { ReactNode } from 'react'
 
@@ -43,8 +44,10 @@ export function renderReactComponentToContainer(
     rootMap.set(container, root)
   }
 
-  // Update the component
-  root.render(component)
+  // Force synchronous rendering so the container is populated before NVL
+  // uses it for its HTML node overlay. Without this, React's async scheduling
+  // leaves containers empty when NVL first renders, causing X placeholder icons.
+  flushSync(() => root!.render(component))
 }
 
 /**
