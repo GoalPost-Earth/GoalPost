@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
@@ -11,7 +11,14 @@ import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 import { GET_ME_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import { LOG_FIELD_ACTIVITY } from '@/app/graphql/mutations'
-import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
+import {
+  createClusteredFieldNodePositions,
+  fieldBubbleHitboxSizeMap,
+} from '@/lib/field-cluster-layout'
+import {
+  createNvlNodeElement,
+  renderReactComponentToContainer,
+} from '@/lib/nvl-utils'
 import type { FieldBubbleProps } from '@/components/ui/field-bubble'
 import type { Node } from '@neo4j-nvl/base'
 
@@ -25,14 +32,7 @@ const fieldIcons: Record<string, string> = {
   vitality: 'monitor_heart',
 }
 
-// Map bubble sizes to transparent hitbox sizes for NVL drag interaction
 type FieldSize = 'sm' | 'md' | 'lg' | 'xl'
-const sizeToHitboxMap: Record<FieldSize, number> = {
-  sm: 110, // 180px bubble → 110px hitbox
-  md: 140, // 220px bubble → 140px hitbox
-  lg: 170, // 280px bubble → 170px hitbox
-  xl: 250, // 440px bubble → 250px hitbox
-}
 
 // Size variations for visual interest
 const sizeVariations = ['xl', 'lg', 'md', 'md', 'sm', 'lg', 'md', 'md'] as const
@@ -70,6 +70,9 @@ export default function MeSpaceFieldsPage() {
 
   const { createField, loading: isCreating } = useCreateField()
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
+  // Stable container cache: reuse the same DOM element per field ID so the
+  // React root (and its GSAP context) survives re-renders.
+  const nodeContainerCache = useRef<Map<string, HTMLElement>>(new Map())
 
   // Fetch MeSpace details and field contexts using GraphQL
   const {
@@ -172,26 +175,49 @@ export default function MeSpaceFieldsPage() {
     }
   }
 
-  // Convert fields to NVL nodes with transparent hitboxes for drag
   const nvlFieldNodes: Node[] = useMemo(() => {
-    return transformedFields
-      .filter((field) => field.id) // Only include fields with valid IDs
-      .map((field) => {
-        const hitboxSize = sizeToHitboxMap[field.size] || 140
-        return createNvlNode(
-          {
-            ...field,
-            id: field.id as string, // Ensure id is string after filter
-          },
-          hitboxSize
-        )
-      })
+    const filtered = transformedFields.filter((field) => field.id)
+    const clusteredPositions = createClusteredFieldNodePositions(filtered, 150)
+    const cache = nodeContainerCache.current
+
+    // Purge stale containers for fields that no longer exist
+    const activeIds = new Set(filtered.map((f) => f.id!))
+    for (const id of cache.keys()) {
+      if (!activeIds.has(id)) cache.delete(id)
+    }
+
+    return clusteredPositions.map((position, index) => {
+      const field = filtered[index]
+      // Reuse the existing container element so NVL keeps the same DOM reference
+      // and the React root / GSAP context inside it stays alive.
+      let container = cache.get(position.fieldId)
+      if (!container) {
+        container = createNvlNodeElement(`node-${position.fieldId}`)
+        cache.set(position.fieldId, container)
+      }
+      return {
+        ...field,
+        id: position.fieldId,
+        x: position.x,
+        y: position.y,
+        html: container,
+        size: fieldBubbleHitboxSizeMap[position.size],
+        color: 'rgba(0, 0, 0, 0)',
+        stroke: 'rgba(0, 0, 0, 0)',
+        strokeWidth: 0,
+        caption: '', // Empty caption to prevent text rendering
+        hideLabel: true, // If this property exists
+      } as Node
+    })
   }, [transformedFields])
 
   // Render FieldBubble components into NVL containers
   useEffect(() => {
     transformedFields.forEach((field, idx) => {
-      const container = document.getElementById(`node-${field.id}`)
+      if (!field.id) return
+      // Use the cached container directly instead of a DOM lookup so rendering
+      // works even before NVL has attached the element to the document.
+      const container = nodeContainerCache.current.get(field.id)
       if (container) {
         renderReactComponentToContainer(
           <FieldBubble
@@ -231,7 +257,7 @@ export default function MeSpaceFieldsPage() {
       <NvlCanvas
         nodes={nvlFieldNodes}
         relationships={[]}
-        layout="forceDirected"
+        layout="free"
         enableZoomControls={true}
         showBackgroundDecor={true}
         isLoading={loading}

@@ -21,7 +21,7 @@ export interface NvlCanvasProps {
   enableZoomControls?: boolean
   showBackgroundDecor?: boolean
   isLoading?: boolean
-  layout?: 'forceDirected' | 'hierarchical'
+  layout?: 'forceDirected' | 'hierarchical' | 'free'
   onNodeClick?: (node: Node) => void
   onNodeDoubleClick?: (node: Node) => void
   onNodeHover?: (node: Node | null) => void
@@ -33,6 +33,8 @@ export interface NvlCanvasProps {
   toolbar?: ReactNode
   actionButton?: ReactNode
   emptyState?: ReactNode
+  /** Cap zoom after initial fit so small node-sets are not over-zoomed. Default 1.4 leaves extra room so HTML bubbles do not clip at the canvas edges. */
+  maxInitialZoom?: number
 }
 
 export function NvlCanvas({
@@ -56,20 +58,62 @@ export function NvlCanvas({
   toolbar,
   actionButton,
   emptyState,
+  maxInitialZoom = 1.4,
 }: NvlCanvasProps) {
   const wrapperRef = useRef<any>(null)
   const { animationsEnabled } = useAnimations()
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isDraggingRef = useRef(false)
   const isInitialLayoutRef = useRef(true)
+  // Keep a ref so the stable useMemo callbacks always read the latest value
+  const maxInitialZoomRef = useRef(maxInitialZoom)
+  useEffect(() => {
+    maxInitialZoomRef.current = maxInitialZoom
+  }, [maxInitialZoom])
+
+  const fitNodesWithPadding = useCallback(
+    (nodeIds: string[], duration = 400) => {
+      const nvlRef = wrapperRef.current
+      if (!nvlRef || typeof nvlRef.fit !== 'function' || nodeIds.length <= 1) {
+        return
+      }
+
+      // NVL fit() has no padding option. Emulate viewport padding by capping
+      // the fit zoom so fitted nodes remain inset from the canvas edges.
+      nvlRef.fit(nodeIds, {
+        duration,
+        maxZoom: Math.min(maxZoom, maxInitialZoomRef.current),
+      })
+
+      // NVL fits using the graph node bounds, but our rendered HTML bubbles are
+      // visually larger than those hitboxes. Apply a small extra zoom-out after
+      // the fit animation so bubble edges stay fully visible.
+      setTimeout(() => {
+        const currentScale = nvlRef.getScale?.()
+        if (typeof currentScale !== 'number') {
+          return
+        }
+
+        const paddedScale = Math.min(
+          currentScale * 0.88,
+          maxInitialZoomRef.current
+        )
+
+        if (paddedScale < currentScale) {
+          nvlRef.setZoom?.(paddedScale)
+        }
+      }, duration + 100)
+    },
+    [maxZoom]
+  )
 
   // Merge with defaults
   const finalNvlOptions: Partial<NvlOptions> = useMemo(
     () => ({
-      initialZoom: 0.5, // Start zoomed out
+      initialZoom: 0.5,
       minScale: minZoom,
       maxScale: maxZoom,
-      allowDynamicMinZoom: true, // Allow zoom out beyond minScale to fit all nodes
+      allowDynamicMinZoom: true,
       layout,
       renderer: 'canvas',
       ...nvlOptions,
@@ -80,11 +124,11 @@ export function NvlCanvas({
   const finalLayoutOptions = useMemo(
     () => ({
       ...(layout === 'forceDirected' && {
-        simulationIterations: 350,
-        gravity: 4.5, // Maximum pull toward center
-        linkDistance: 25, // Very tight spacing
-        charge: -100, // Minimal repulsion for tight clustering
-        linkStrength: 0.98, // Maximum edge attraction
+        simulationIterations: 400,
+        gravity: 25,
+        linkDistance: 1,
+        charge: 0,
+        linkStrength: 1.0,
       }),
       ...layoutOptions,
     }),
@@ -97,7 +141,7 @@ export function NvlCanvas({
         enablePan: true,
         enableZoom: true,
         enableDrag: true,
-        enableBoxSelection: false, // Disable box selection UI
+        enableBoxSelection: false,
         ...interactionOptions,
       }),
       [interactionOptions]
@@ -118,11 +162,13 @@ export function NvlCanvas({
         nvlRef.unPinNode(node.id)
       })
 
-      // Update layout options with gentler settings for re-layout
+      // Update layout options with tight settings to restore clustering after drag
       nvlRef.setLayoutOptions({
         ...finalLayoutOptions,
-        simulationIterations: 200, // Gentle re-layout
-        gravity: 1.5, // Slightly less aggressive on re-layout
+        simulationIterations: 250,
+        gravity: 20,
+        charge: 0,
+        linkDistance: 1,
       })
 
       // Restart the force-directed simulation
@@ -187,80 +233,61 @@ export function NvlCanvas({
       ]
     )
 
-  // Setup NVL callbacks
+  // Setup NVL callbacks — fit nodes once the simulation finishes so they are
+  // centered and clustered rather than spread across the canvas mid-simulation.
   const nvlCallbacks: Partial<ExternalCallbacks> = useMemo(
     () => ({
       onLayoutDone: () => {
-        console.log('[NVL] onLayoutDone fired')
+        // Only fit on the initial layout for this node set (not after drag re-layouts)
+        if (!isInitialLayoutRef.current) return
+        isInitialLayoutRef.current = false
+
+        const nvlRef = wrapperRef.current
+        if (!nvlRef || typeof nvlRef.fit !== 'function') return
+
+        try {
+          const allNodes = nvlRef.getNodes?.() ?? []
+          const nodeIds = (allNodes as Node[]).map((n) => n.id)
+          if (nodeIds.length > 1) {
+            fitNodesWithPadding(nodeIds)
+          }
+        } catch (error) {
+          console.error('[NVL] Auto-fit on layout done failed:', error)
+        }
       },
       onError: (error) => {
         console.error('NVL Error:', error)
       },
     }),
-    []
+    [fitNodesWithPadding]
   )
 
-  // Auto-fit on initial load using useEffect instead of onLayoutDone callback
+  // Fallback auto-fit: if onLayoutDone never fires, attempt fit after enough time
+  // for the simulation to have fully converged (simulationIterations * ~4ms).
   useEffect(() => {
-    if (!isInitialLayoutRef.current || nodes.length === 0) {
-      return
-    }
+    if (nodes.length === 0) return
 
-    console.log('[NVL] Starting auto-fit polling')
+    const timeoutId = setTimeout(() => {
+      // onLayoutDone already handled it
+      if (!isInitialLayoutRef.current) return
 
-    // Poll for NVL ref to have methods available
-    const pollForNvlAndFit = (attempts = 0, maxAttempts = 30) => {
       const nvlRef = wrapperRef.current
+      if (!nvlRef || typeof nvlRef.fit !== 'function') return
 
-      console.log('[NVL] Polling attempt', attempts + 1, {
-        hasRef: !!nvlRef,
-        hasGetNodes: typeof nvlRef?.getNodes === 'function',
-        hasFit: typeof nvlRef?.fit === 'function',
-        nodeCount: nodes.length,
-      })
-
-      // Check if ref has NVL methods (InteractiveNvlWrapper exposes methods directly on ref)
-      if (
-        nvlRef &&
-        typeof nvlRef.getNodes === 'function' &&
-        typeof nvlRef.fit === 'function'
-      ) {
-        console.log('[NVL] NVL ref ready, attempting fit')
-        isInitialLayoutRef.current = false
-
-        try {
-          const allNodes = nvlRef.getNodes()
-          if (!allNodes || allNodes.length === 0) {
-            console.warn('[NVL] No nodes in NVL instance')
-            return
-          }
-
-          const nodeIds = allNodes.map((n: Node) => n.id)
-          console.log('[NVL] Auto-fitting', nodeIds.length, 'nodes')
-
-          // Only fit if there are 2+ nodes; for single node, initialZoom handles it
-          if (nodeIds.length > 1) {
-            nvlRef.fit(nodeIds, { duration: 500 })
-            console.log('[NVL] Fit operation completed')
-          } else {
-            console.log('[NVL] Single node - skipping fit, using initialZoom')
-          }
-        } catch (error) {
-          console.error('[NVL] Auto-fit failed:', error)
+      try {
+        const allNodes = nvlRef.getNodes?.() ?? []
+        const nodeIds = (allNodes as Node[]).map((n) => n.id)
+        if (nodeIds.length > 1) {
+          isInitialLayoutRef.current = false
+          fitNodesWithPadding(nodeIds)
         }
-      } else if (attempts < maxAttempts) {
-        // Try again in 100ms
-        setTimeout(() => pollForNvlAndFit(attempts + 1, maxAttempts), 100)
-      } else {
-        console.error('[NVL] NVL ref not ready after', maxAttempts, 'attempts')
+      } catch (error) {
+        console.error('[NVL] Fallback auto-fit failed:', error)
       }
-    }
-
-    // Start polling after a delay to let React render the component
-    const timeoutId = setTimeout(() => pollForNvlAndFit(), 500)
+    }, 2500) // Wait well beyond simulation convergence time
 
     return () => clearTimeout(timeoutId)
-  }, [nodes])
+  }, [nodes, fitNodesWithPadding])
 
   // Reset initial layout flag when nodes change (for navigation between different node sets)
   useEffect(() => {
@@ -406,7 +433,7 @@ export function NvlCanvas({
                         return
                       }
 
-                      nvlRef.fit(nodeIds, { duration: 500 })
+                      fitNodesWithPadding(nodeIds, 500)
                     }
                   } catch (error) {
                     console.warn('Fit to view failed:', error)

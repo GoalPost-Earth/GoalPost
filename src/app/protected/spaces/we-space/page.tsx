@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery, useMutation } from '@apollo/client/react'
 import type { Node } from '@neo4j-nvl/base'
 import type { BubbleSize } from '@/components/ui/entity-bubble'
@@ -9,7 +9,11 @@ import { EntityBubble } from '@/components/ui/entity-bubble'
 import { useApp, usePageContext } from '@/contexts'
 import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
-import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
+import {
+  createNvlNodeElement,
+  renderReactComponentToContainer,
+} from '@/lib/nvl-utils'
+import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout' // Import the clustering function
 import { GET_USER_WE_SPACES_QUERY } from '@/app/graphql/queries'
 import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { toast } from 'sonner'
@@ -35,6 +39,48 @@ const sizeToHitboxMap: Record<BubbleSize, number> = {
   xl: 250, // 440px bubble → 250px hitbox
 }
 
+// Transform space data to entity props
+function transformSpacesToProps(
+  spaces: Array<{
+    id: string
+    name: string
+    members?: Array<{ id: string }>
+    contexts?: Array<{ id: string }>
+  }>
+): Array<{
+  id: string
+  size: (typeof sizeVariations)[number]
+  shape: (typeof shapeVariations)[number]
+  icon: string
+  title: string
+  subtitle: string
+  badge?: { text: string; variant: 'primary' | 'accent' | 'default' }
+}> {
+  return spaces.map((space, idx) => {
+    const memberCount = space.members?.length ?? 0
+    const contextCount = space.contexts?.length ?? 0
+
+    return {
+      id: space.id,
+      size: sizeVariations[idx % sizeVariations.length],
+      shape: shapeVariations[idx % shapeVariations.length],
+      icon: 'groups',
+      title: space.name,
+      subtitle:
+        memberCount > 0
+          ? `${memberCount} member${memberCount !== 1 ? 's' : ''}`
+          : 'Collaborative space',
+      badge:
+        contextCount > 0
+          ? {
+              text: `${contextCount} Field${contextCount !== 1 ? 's' : ''}`,
+              variant: 'primary' as const,
+            }
+          : undefined,
+    }
+  })
+}
+
 export default function WeSpacePage() {
   const router = useRouter()
   const { user } = useApp()
@@ -44,17 +90,9 @@ export default function WeSpacePage() {
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [weSpaces, setWeSpaces] = useState<
-    Array<{
-      id: string
-      size: (typeof sizeVariations)[number]
-      shape: (typeof shapeVariations)[number]
-      icon: string
-      title: string
-      subtitle: string
-      badge?: { text: string; variant: 'primary' | 'accent' | 'default' }
-    }>
-  >([])
+
+  // Add container cache similar to MeSpace page
+  const nodeContainerCache = useRef<Map<string, HTMLElement>>(new Map())
 
   const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
@@ -65,84 +103,68 @@ export default function WeSpacePage() {
     refetch: refetchWeSpaces,
   } = useQuery(GET_USER_WE_SPACES_QUERY)
 
-  // Convert weSpaces to NVL nodes with transparent hitboxes for drag
-  const nvlSpaceNodes: Node[] = useMemo(() => {
-    return weSpaces.map((space) => {
-      const hitboxSize = sizeToHitboxMap[space.size as BubbleSize] || 140
-      return createNvlNode(
-        {
-          ...space,
-        },
-        hitboxSize
-      )
-    })
-  }, [weSpaces])
-
-  const fetchWeSpaces = useCallback(async () => {
-    if (!weSpacesData?.weSpaces) {
-      return
-    }
-
-    const transformedSpaces = weSpacesData.weSpaces.map(
-      (
-        space: {
-          id: string
-          name: string
-          members?: Array<{ id: string }>
-          contexts?: Array<{ id: string }>
-        },
-        idx: number
-      ) => {
-        const memberCount = space.members?.length ?? 0
-        const contextCount = space.contexts?.length ?? 0
-
-        return {
-          id: space.id,
-          size: sizeVariations[idx % sizeVariations.length],
-          shape: shapeVariations[idx % shapeVariations.length],
-          icon: 'groups',
-          title: space.name,
-          subtitle:
-            memberCount > 0
-              ? `${memberCount} member${memberCount !== 1 ? 's' : ''}`
-              : 'Collaborative space',
-          badge:
-            contextCount > 0
-              ? {
-                  text: `${contextCount} Field${contextCount !== 1 ? 's' : ''}`,
-                  variant: 'primary' as const,
-                }
-              : undefined,
-        }
-      }
-    )
-    setWeSpaces(transformedSpaces)
-    //eslint-disable-next-line react-hooks/exhaustive-deps
+  // Transform spaces to component props
+  const transformedSpaces = useMemo(() => {
+    if (!weSpacesData?.weSpaces) return []
+    return transformSpacesToProps(weSpacesData.weSpaces)
   }, [weSpacesData])
 
-  useEffect(() => {
-    fetchWeSpaces()
-  }, [fetchWeSpaces])
-
+  // Set page title
   useEffect(() => {
     setPageTitle(
-      `We Space - ${weSpaces.length} Space${weSpaces.length !== 1 ? 's' : ''}`
+      `We Space - ${transformedSpaces.length} Space${transformedSpaces.length !== 1 ? 's' : ''}`
     )
-  }, [setPageTitle, weSpaces.length])
+  }, [setPageTitle, transformedSpaces.length])
+
+  // Create clustered positions and NVL nodes
+  const nvlSpaceNodes: Node[] = useMemo(() => {
+    const filtered = transformedSpaces.filter((space) => space.id)
+    // Use the same clustering function with spacing value (adjust 150 as needed)
+    const clusteredPositions = createClusteredFieldNodePositions(filtered, 250)
+    const cache = nodeContainerCache.current
+
+    // Purge stale containers for spaces that no longer exist
+    const activeIds = new Set(filtered.map((s) => s.id!))
+    for (const id of cache.keys()) {
+      if (!activeIds.has(id)) cache.delete(id)
+    }
+
+    return clusteredPositions.map((position, index) => {
+      const space = filtered[index]
+      // Reuse the existing container element
+      let container = cache.get(position.fieldId) // Note: fieldId from the clustering function
+      if (!container) {
+        container = createNvlNodeElement(`node-${position.fieldId}`)
+        cache.set(position.fieldId, container)
+      }
+
+      const hitboxSize = sizeToHitboxMap[space.size as BubbleSize] || 140
+
+      return {
+        id: position.fieldId,
+        x: position.x,
+        y: position.y,
+        html: container,
+        size: hitboxSize,
+        color: 'rgba(0, 0, 0, 0)',
+        stroke: 'rgba(0, 0, 0, 0)',
+        strokeWidth: 0,
+        caption: '',
+      } as Node
+    })
+  }, [transformedSpaces])
 
   const handleSpaceClick = useCallback(
     (spaceId: string) => {
-      const space = weSpaces.find((s) => s.id === spaceId)
+      const space = transformedSpaces.find((s) => s.id === spaceId)
       if (space) {
         setPageTitle(space.title)
-        // Persist space name in localStorage to avoid API call on page reload
         localStorage.setItem(`space_${spaceId}`, space.title)
-        // Store weSpaceId for onboarding navigation
         localStorage.setItem('weSpaceId', spaceId)
       }
       router.push(`/protected/spaces/we-space/${spaceId}`)
     },
-    [weSpaces, setPageTitle, router]
+    [transformedSpaces, setPageTitle, router]
   )
 
   const handleEditSpace = useCallback(
@@ -156,8 +178,9 @@ export default function WeSpacePage() {
 
   // Render EntityBubble components into NVL containers
   useEffect(() => {
-    weSpaces.forEach((space, idx) => {
-      const container = document.getElementById(`node-${space.id}`)
+    transformedSpaces.forEach((space, idx) => {
+      if (!space.id) return
+      const container = nodeContainerCache.current.get(space.id)
       if (container) {
         renderReactComponentToContainer(
           <EntityBubble
@@ -175,7 +198,7 @@ export default function WeSpacePage() {
         )
       }
     })
-  }, [weSpaces, handleSpaceClick, handleEditSpace])
+  }, [transformedSpaces, handleSpaceClick, handleEditSpace])
 
   const handleCreateSpace = async ({ name }: { name: string }) => {
     if (!name?.trim()) {
@@ -228,7 +251,8 @@ export default function WeSpacePage() {
       }
 
       setShowCreateModal(false)
-      // Refresh the spaces list after creating a new one
+      // Clear cache before refetching to ensure fresh containers
+      nodeContainerCache.current.clear()
       await refetchWeSpaces()
     } catch (err) {
       setError(
@@ -253,7 +277,7 @@ export default function WeSpacePage() {
       <NvlCanvas
         nodes={nvlSpaceNodes}
         relationships={[]}
-        layout="forceDirected"
+        layout="free"
         enableZoomControls={true}
         showBackgroundDecor={true}
         isLoading={weSpacesLoading}
@@ -317,7 +341,9 @@ export default function WeSpacePage() {
           }}
           onSuccessfulMutation={async () => {
             // Log space update activity
-            const editingSpace = weSpaces.find((s) => s.id === editingSpaceId)
+            const editingSpace = transformedSpaces.find(
+              (s) => s.id === editingSpaceId
+            )
             if (editingSpace?.title && editingSpaceId) {
               await logSpaceActivity({
                 variables: {
@@ -335,13 +361,15 @@ export default function WeSpacePage() {
                   toast.error('Failed to log space update')
                 })
             }
+            // Clear cache before refetching
+            nodeContainerCache.current.clear()
             await refetchWeSpaces()
           }}
           isEditing={true}
           spaceId={editingSpaceId}
           isWeSpace={true}
           initialName={
-            weSpaces.find((s) => s.id === editingSpaceId)?.title || ''
+            transformedSpaces.find((s) => s.id === editingSpaceId)?.title || ''
           }
         />
       )}

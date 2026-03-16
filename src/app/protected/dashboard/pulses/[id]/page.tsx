@@ -190,7 +190,8 @@ export default function PulseDetailsPage() {
       addRelatedPulse(
         {
           id: targetPulse.id,
-          __typename: pulseTypeMap.get(targetPulse.id) ?? targetPulse.__typename,
+          __typename:
+            pulseTypeMap.get(targetPulse.id) ?? targetPulse.__typename,
           title: targetPulse.title,
           content: targetPulse.content,
         },
@@ -205,7 +206,8 @@ export default function PulseDetailsPage() {
       addRelatedPulse(
         {
           id: sourcePulse.id,
-          __typename: pulseTypeMap.get(sourcePulse.id) ?? sourcePulse.__typename,
+          __typename:
+            pulseTypeMap.get(sourcePulse.id) ?? sourcePulse.__typename,
           title: sourcePulse.title,
           content: sourcePulse.content,
         },

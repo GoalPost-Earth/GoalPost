@@ -96,9 +96,9 @@ export function FieldBubble({
   useGSAP(() => {
     if (!bubbleRef.current) return
 
-    // Entrance animation
+    // Entrance animation — opacity is intentionally omitted so all bubbles
+    // remain fully visible regardless of animation timing.
     gsap.from(bubbleRef.current, {
-      opacity: 0,
       scale: 0.8,
       y: 20,
       duration: 1.2,
