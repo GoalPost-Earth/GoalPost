@@ -32,6 +32,7 @@ export default async function initCypherEvaluationChain(llm: BaseChatModel) {
   Fix any errors where possible.
 
   The query must:
+  * Be READ-ONLY and never include CREATE, MERGE, DELETE, SET, REMOVE, or write procedures.
   * Only use the nodes, relationships and properties mentioned in the schema.
   * Assign a variable to nodes or relationships when intending to access their properties.
   * Use \`IS NOT NULL\` to check for property existence.

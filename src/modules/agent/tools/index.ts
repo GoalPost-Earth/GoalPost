@@ -3,6 +3,15 @@ import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import initCypherRetrievalChain from './cypher/cypher-retrieval.chain'
 import initVectorRetrievalChain from './vector-retrieval.chain'
+import { createSpaceSearchTool } from './space/space-search.tool'
+import { createSpaceRenameTool } from './space/space-rename.tool'
+import { createPersonSearchTool } from './person-search.tool'
+import { createFieldContextSearchTool } from './field-context/field-context-search.tool'
+import { createFieldContextUpdateTool } from './field-context/field-context-update.tool'
+import { createPulseSearchTool } from './pulse/pulse-search.tool'
+import { createPulseUpdateTool } from './pulse/pulse-update.tool'
+import { createPulseContextLinkTool } from './pulse/pulse-context-link.tool'
+import { createGraphRagSearchTool } from './rag/graph-rag-search.tool'
 import { DynamicStructuredTool } from '@langchain/community/tools/dynamic'
 import { AgentToolInputSchema } from '../agent.types'
 import { z } from 'zod'
@@ -17,7 +26,18 @@ export default async function initTools(
   const cypherChain = await initCypherRetrievalChain(llm, graph)
   const retrievalChain = await initVectorRetrievalChain(llm, embeddings)
 
-  //  Append chains to output
+  // Create entity-specific tools
+  const personSearchTool = createPersonSearchTool(graph)
+  const spaceSearchTool = createSpaceSearchTool(graph)
+  const spaceRenameTool = createSpaceRenameTool(graph)
+  const fieldContextSearchTool = createFieldContextSearchTool(graph)
+  const fieldContextUpdateTool = createFieldContextUpdateTool(graph)
+  const pulseSearchTool = createPulseSearchTool(graph)
+  const pulseUpdateTool = createPulseUpdateTool(graph)
+  const pulseContextLinkTool = createPulseContextLinkTool(graph)
+  const graphRagSearchTool = createGraphRagSearchTool(graph, embeddings)
+
+  //  Append chains and tools to output
   return [
     new DynamicStructuredTool({
       name: 'graph-cypher-retrieval-chain',
@@ -41,6 +61,15 @@ export default async function initTools(
         config
       ) => retrievalChain.invoke(input, config),
     }),
+    personSearchTool,
+    graphRagSearchTool,
+    spaceSearchTool,
+    spaceRenameTool,
+    fieldContextSearchTool,
+    fieldContextUpdateTool,
+    pulseSearchTool,
+    pulseUpdateTool,
+    pulseContextLinkTool,
   ]
 }
 // end::function[]

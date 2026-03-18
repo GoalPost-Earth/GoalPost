@@ -20,8 +20,7 @@
  */
 
 import { openai } from '@ai-sdk/openai'
-import { streamText, generateText, tool } from 'ai'
-import { z } from 'zod'
+import { streamText, generateText } from 'ai'
 import {
   assistantModeManager,
   buildMessagePayload,
@@ -33,8 +32,7 @@ import type {
   SimulationConfig,
   AssistantMode,
 } from '@/lib/simulation'
-import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
-import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool'
+import { buildSimulationChatTools } from '@/lib/simulation/chat-tools'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -152,6 +150,7 @@ export async function POST(req: Request) {
     const systemPrompt = SYSTEM_PROMPTS[currentMode]
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
+    const tools = buildSimulationChatTools()
 
     console.log('🔍 [DEBUG] Current mode:', currentMode)
     console.log('📝 [DEBUG] Last user message:', lastUserMessage)
@@ -167,133 +166,7 @@ export async function POST(req: Request) {
         temperature,
         system: systemPrompt,
         // OpenAI intelligently decides when to call tools
-        tools: {
-          // Person Search Tool - ALWAYS AVAILABLE
-          // LangChain pattern: Clear description helps model decide when to call
-          search_person: tool({
-            description:
-              'Search the GoalPost database for a person by their name (first, last, or full name). Use this tool whenever the user asks about a specific person. Returns person profile if found, indicates when not in database, or asks for clarification if multiple matches exist.',
-            inputSchema: z.object({
-              name: z
-                .string()
-                .describe(
-                  'The name to search for. Can be first name (e.g., "Robert"), last name (e.g., "Damaschke"), or full name (e.g., "Robert Damaschke")'
-                ),
-            }),
-            execute: async ({ name }: { name: string }) => {
-              console.log(
-                '🔍 [TOOL EXECUTION] search_person called with name:',
-                name
-              )
-              console.log(
-                '🔍 [TOOL EXECUTION] Current mode:',
-                assistantModeManager.getMode()
-              )
-              try {
-                const graph = await Neo4jGraph.initialize({
-                  url: process.env.NEO4J_URI!,
-                  username: process.env.NEO4J_USERNAME!,
-                  password: process.env.NEO4J_PASSWORD!,
-                })
-
-                const personTool = createPersonSearchTool(graph)
-                const result = await personTool.invoke({ name })
-                const parsedResult = JSON.parse(result)
-
-                console.log('🔍 [TOOL RESULT] Person search result:', {
-                  found: parsedResult.found,
-                  count: parsedResult.count,
-                  needsDisambiguation: parsedResult.needsDisambiguation,
-                })
-
-                // Return structured JSON directly for tool UI and coherent LLM responses
-                // The LLM will format the response in its voice (Aiden or regular)
-                return parsedResult
-              } catch (error) {
-                console.error('❌ [TOOL ERROR] Person search failed:', error)
-                return JSON.stringify({
-                  status: 'error',
-                  message:
-                    'I encountered an error while searching the GoalPost database. Please try again.',
-                })
-              }
-            },
-          }),
-
-          // Community Search Tool - ALWAYS AVAILABLE
-          search_community: tool({
-            description:
-              'Search the GoalPost database for communities by name or description. Use this when the user asks about communities, groups, or collective activities.',
-            inputSchema: z.object({
-              query: z
-                .string()
-                .describe(
-                  'Community name or keyword to search for (e.g., "gardening", "tech", community name)'
-                ),
-            }),
-            execute: async ({ query }: { query: string }) => {
-              console.log(
-                '🔍 [TOOL EXECUTION] search_community called with query:',
-                query
-              )
-              try {
-                const graph = await Neo4jGraph.initialize({
-                  url: process.env.NEO4J_URI!,
-                  username: process.env.NEO4J_USERNAME!,
-                  password: process.env.NEO4J_PASSWORD!,
-                })
-
-                const cypherQuery = `
-                  MATCH (c:Community)
-                  WHERE toLower(c.name) CONTAINS toLower($query)
-                    OR toLower(c.description) CONTAINS toLower($query)
-                  OPTIONAL MATCH (c)-[:MOTIVATED_BY]->(g:Goal)
-                  OPTIONAL MATCH (p:Person)-[:BELONGS_TO]->(c)
-                  WITH c, 
-                       collect(DISTINCT g.name)[0..3] as goals,
-                       count(DISTINCT p) as memberCount
-                  RETURN 
-                    c.name as name,
-                    c.description as description,
-                    goals,
-                    memberCount
-                  LIMIT 5
-                `
-
-                const results = await graph.query(cypherQuery, { query })
-
-                console.log(
-                  '🔍 [TOOL RESULT] Community search found:',
-                  results?.length || 0,
-                  'communities'
-                )
-
-                if (!results || results.length === 0) {
-                  return JSON.stringify({
-                    status: 'not_found',
-                    message: `No communities matching "${query}" found in GoalPost.`,
-                  })
-                }
-
-                return JSON.stringify(
-                  {
-                    status: 'found',
-                    count: results.length,
-                    communities: results,
-                  },
-                  null,
-                  2
-                )
-              } catch (error) {
-                console.error('❌ [TOOL ERROR] Community search failed:', error)
-                return JSON.stringify({
-                  status: 'error',
-                  message: 'Error searching communities',
-                })
-              }
-            },
-          }),
-        },
+        tools,
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
@@ -310,6 +183,8 @@ export async function POST(req: Request) {
       model,
       messages: messagesWithSimulation,
       temperature,
+      system: systemPrompt,
+      tools,
     })
 
     return new Response(
