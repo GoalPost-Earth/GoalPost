@@ -224,8 +224,8 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
                 Welcome to GoalPost AI
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs text-center">
-                Ask me about people and communities in GoalPost. I&apos;ll
-                search the database and help you discover connections.
+                Ask me about people, spaces, fields, and pulses. I can search,
+                retrieve semantically, and help update graph entities.
               </p>
             </div>
           ) : (

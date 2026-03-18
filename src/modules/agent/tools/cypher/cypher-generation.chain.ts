@@ -15,10 +15,11 @@ export default async function initCypherGenerationChain(
   // Create Prompt Template
   const cypherPrompt = PromptTemplate.fromTemplate(`
   You are a Neo4j Developer translating user questions into Cypher to answer questions
-  about people that belong to communities of care focused on deepening relationships.
+  about people, spaces, field contexts, pulses, and communities focused on deepening relationships.
   Convert the user's question into a Cypher statement based on the schema.
 
   You must:
+  * Generate READ-ONLY Cypher. Never use CREATE, MERGE, DELETE, SET, REMOVE, CALL db.create.*, or any write operation.
   * Only use the nodes, relationships and properties mentioned in the schema.
   * When required, \`IS NOT NULL\` to check for property existence, and not the exists() function.
   * Use the \`elementId()\` function to return the unique identifier for a node or relationship as \`_id\`.
@@ -46,6 +47,20 @@ export default async function initCypherGenerationChain(
   MATCH (coreValue:CoreValue) 
   WHERE toLower(trim(coreValue.name)) CONTAINS toLower(trim('Vulnerability'))
   RETURN coreValue.name AS name, elementId(coreValue) AS _id, coreValue.description AS description
+
+  Example Question: Show me pulses in the field context called Mutual Aid
+  Example Cypher:
+  MATCH (context:FieldContext)-[:HAS_PULSE]->(pulse:FieldPulse)
+  WHERE toLower(trim(context.title)) CONTAINS toLower(trim('Mutual Aid'))
+  RETURN context.title AS contextTitle, pulse.title AS pulseTitle, pulse.content AS content, elementId(pulse) AS _id
+  LIMIT 10
+
+  Example Question: What field contexts are in the space called Project Atlas?
+  Example Cypher:
+  MATCH (space:Space)-[:HAS_CONTEXT]->(context:FieldContext)
+  WHERE toLower(trim(space.name)) CONTAINS toLower(trim('Project Atlas'))
+  RETURN space.name AS spaceName, context.title AS contextTitle, elementId(context) AS _id
+  LIMIT 10
 
   Schema:
   {schema}

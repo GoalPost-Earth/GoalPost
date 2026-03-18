@@ -20,8 +20,8 @@ export const Thread: FC = () => {
               Welcome to GoalPost AI
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs text-center">
-              Ask me about people and communities in GoalPost. I&apos;ll search
-              the database and help you discover connections.
+              Ask me about people, spaces, field contexts, and pulses. I can
+              search, retrieve semantically, and help edit graph entities.
             </p>
           </div>
         </ThreadPrimitive.Empty>
@@ -70,7 +70,7 @@ const Composer: FC = () => {
   return (
     <ComposerPrimitive.Root className="space-y-2">
       <ComposerPrimitive.Input
-        placeholder="Ask about someone..."
+        placeholder="Ask about a person, pulse, or field context..."
         className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
         rows={1}
       />

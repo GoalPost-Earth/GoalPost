@@ -33,6 +33,17 @@ export interface PersonSearchResult {
     favorites?: string
     communities?: string[]
     connectionCount?: number
+    connectedPeople?: Array<{
+      id: string
+      firstName?: string
+      lastName?: string
+      name: string
+      email?: string
+      photo?: string
+      why?: string
+      interests?: string
+      sharedCommunities?: string[]
+    }>
   }>
   message: string
   needsDisambiguation: boolean
@@ -75,11 +86,37 @@ export function createPersonSearchTool(
           OR toLower(coalesce(p.firstName, '')) STARTS WITH toLower($name)
           // Match if last name starts with search term
           OR toLower(coalesce(p.lastName, '')) STARTS WITH toLower($name)
-        OPTIONAL MATCH (p)-[:BELONGS_TO]->(c:Community)
-        OPTIONAL MATCH (p)-[:CONNECTED_TO]-(conn:Person)
-        WITH p, 
-             collect(DISTINCT c.name) as communities,
-             count(DISTINCT conn) as connectionCount
+        CALL {
+          WITH p
+          OPTIONAL MATCH (p)-[:BELONGS_TO]->(community:Community)
+          RETURN [name IN collect(DISTINCT community.name) WHERE name IS NOT NULL] AS communities
+        }
+        CALL {
+          WITH p
+          OPTIONAL MATCH (p)-[connectionRel:CONNECTED_TO]-(conn:Person)
+          OPTIONAL MATCH (p)-[:BELONGS_TO]->(sharedCommunity:Community)<-[:BELONGS_TO]-(conn)
+          WITH
+            conn,
+            connectionRel,
+            [name IN collect(DISTINCT sharedCommunity.name) WHERE name IS NOT NULL][0..3] AS sharedCommunities
+          ORDER BY toLower(coalesce(conn.name, trim(coalesce(conn.firstName, '') + ' ' + coalesce(conn.lastName, ''))))
+          WITH
+            collect(DISTINCT {
+              id: coalesce(conn.id, elementId(conn)),
+              firstName: conn.firstName,
+              lastName: conn.lastName,
+              name: coalesce(conn.name, trim(coalesce(conn.firstName, '') + ' ' + coalesce(conn.lastName, ''))),
+              email: conn.email,
+              photo: conn.photo,
+              why: connectionRel.why,
+              interests: connectionRel.interests,
+              sharedCommunities: sharedCommunities
+            }) AS rawConnectedPeople,
+            count(DISTINCT conn) AS connectionCount
+          RETURN
+            [item IN rawConnectedPeople WHERE item.id IS NOT NULL][0..10] AS connectedPeople,
+            connectionCount
+        }
         RETURN 
           elementId(p) as id,
           p.firstName as firstName,
@@ -96,6 +133,7 @@ export function createPersonSearchTool(
           p.fieldsOfCare as fieldsOfCare,
           p.favorites as favorites,
           communities,
+          connectedPeople,
           connectionCount
         ORDER BY 
           // Prioritize exact first name matches

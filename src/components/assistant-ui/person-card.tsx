@@ -28,6 +28,16 @@ export interface PersonProfileData {
   favorites?: string
   communities?: string[]
   connectionCount?: number
+  connectedPeople?: Array<{
+    id: string
+    firstName?: string
+    lastName?: string
+    name: string
+    email?: string
+    why?: string
+    interests?: string
+    sharedCommunities?: string[]
+  }>
 }
 
 interface PersonCardProps {
@@ -115,6 +125,43 @@ export function PersonCard({ person, className }: PersonCardProps) {
             <Users className="mr-1 inline h-4 w-4" />
             {person.connectionCount} connection
             {person.connectionCount !== 1 ? 's' : ''}
+          </div>
+        )}
+
+        {/* Connected People */}
+        {person.connectedPeople && person.connectedPeople.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Users className="h-4 w-4" />
+              <span>Connected People</span>
+            </div>
+            <div className="space-y-2">
+              {person.connectedPeople.map((connection) => (
+                <div
+                  key={connection.id}
+                  className="rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm"
+                >
+                  <div className="font-medium">{connection.name}</div>
+                  {connection.why && (
+                    <div className="text-muted-foreground text-xs mt-1">
+                      Why connected: {connection.why}
+                    </div>
+                  )}
+                  {connection.interests && (
+                    <div className="text-muted-foreground text-xs mt-1">
+                      Shared interests: {connection.interests}
+                    </div>
+                  )}
+                  {connection.sharedCommunities &&
+                    connection.sharedCommunities.length > 0 && (
+                      <div className="text-muted-foreground text-xs mt-1">
+                        Shared communities:{' '}
+                        {connection.sharedCommunities.join(', ')}
+                      </div>
+                    )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

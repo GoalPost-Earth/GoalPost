@@ -16,6 +16,14 @@ type PersonProfile = {
   passions?: string[]
   timezone?: string
   bio?: string
+  connectionCount?: number
+  connectedPeople?: Array<{
+    id: string
+    name: string
+    why?: string
+    interests?: string
+    sharedCommunities?: string[]
+  }>
 }
 
 type SearchPersonArgs = {
@@ -196,6 +204,55 @@ export const PersonProfileCardUI = makeAssistantToolUI<
               </div>
             )}
           </div>
+
+          {/* Connections */}
+          {person.connectedPeople && person.connectedPeople.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Users className="h-4 w-4 text-primary" />
+                <span>Connected People</span>
+              </div>
+              <div className="space-y-2">
+                {person.connectedPeople.map((connectedPerson) => (
+                  <div
+                    key={connectedPerson.id}
+                    className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2"
+                  >
+                    <p className="text-sm font-medium">
+                      {connectedPerson.name}
+                    </p>
+                    {connectedPerson.why && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Why connected: {connectedPerson.why}
+                      </p>
+                    )}
+                    {connectedPerson.interests && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Shared interests: {connectedPerson.interests}
+                      </p>
+                    )}
+                    {connectedPerson.sharedCommunities &&
+                      connectedPerson.sharedCommunities.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Shared communities:{' '}
+                          {connectedPerson.sharedCommunities.join(', ')}
+                        </p>
+                      )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(!person.connectedPeople || person.connectedPeople.length === 0) &&
+            person.connectionCount !== undefined &&
+            person.connectionCount > 0 && (
+              <p className="text-sm text-muted-foreground">
+                <Users className="h-4 w-4 inline mr-1" />
+                {person.connectionCount} connection
+                {person.connectionCount !== 1 ? 's' : ''}
+              </p>
+            )}
 
           {/* Passions */}
           {person.passions &&

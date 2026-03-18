@@ -172,8 +172,34 @@ export default async function initCypherRetrievalChain(
 
 function extractIds(
   results: Record<string, any> | Record<string, any>[]
-): unknown {
-  console.log('Function not implemented.', results)
-  throw new Error('Function not implemented.')
+): string[] {
+  const ids = new Set<string>()
+
+  const visit = (value: unknown): void => {
+    if (value === null || value === undefined) return
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        visit(item)
+      }
+      return
+    }
+
+    if (typeof value === 'object') {
+      const record = value as Record<string, unknown>
+
+      if (typeof record._id === 'string' && record._id.length > 0) {
+        ids.add(record._id)
+      }
+
+      for (const nested of Object.values(record)) {
+        visit(nested)
+      }
+    }
+  }
+
+  visit(results)
+
+  return Array.from(ids)
 }
 // end::function[]

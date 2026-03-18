@@ -7,7 +7,6 @@ import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { createAgent } from 'langchain'
 import initTools from './tools'
-import { createPersonSearchTool } from './tools/person-search.tool'
 import { validateQuery } from '@/lib/simulation/guardrails'
 
 /**
@@ -28,6 +27,8 @@ Your role is to help users:
 - Explore resources and care points
 - Understand connections and relationships
 - Navigate the platform
+- Find and edit spaces, field contexts, and pulses safely
+- Use vector retrieval for semantic Graph RAG questions
 
 IMPORTANT GUIDELINES:
 1. When searching for people, use the search_person_by_name tool
@@ -42,6 +43,15 @@ TOOL USAGE:
 - Use "search_person_by_name" for finding specific people by name
 - Use "graph-cypher-retrieval-chain" for complex queries about communities, goals, resources
 - Use "graph-vector-retrieval-chain" for similarity-based searches (finding people with similar interests)
+- Use "graph_rag_search" for semantic retrieval across people and pulses
+- Use "search_field_context" and "update_field_context" for field context operations
+- Use "search_pulse", "update_pulse", and "edit_pulse_context_link" for pulse operations
+- Use "search_space_by_name" and "rename_space" for space operations
+
+EDITING RULES:
+- Search first, then update
+- If multiple matches are returned, ask for a specific ID before editing
+- Never invent IDs or claim an update happened unless the tool confirms success
 
 Remember: You are part of the GoalPost community. Be empathetic, clear, and focused on connection.`
 
@@ -56,9 +66,7 @@ export async function createReActAgent(config: ReActAgentConfig) {
   const { llm, embeddings, graph } = config
 
   // Initialize all tools
-  const baseTools = await initTools(llm, embeddings, graph)
-  const personSearchTool = createPersonSearchTool(graph)
-  const tools = [...baseTools, personSearchTool]
+  const tools = await initTools(llm, embeddings, graph)
 
   // Create the agent using v1 API
   const agent = createAgent({
