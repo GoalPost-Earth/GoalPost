@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Mail, MapPin, Users, Heart, Sparkles, Target } from 'lucide-react'
+import { ConnectionLink } from './connection-link'
 
 export interface PersonProfileData {
   id: string
@@ -137,29 +138,20 @@ export function PersonCard({ person, className }: PersonCardProps) {
             </div>
             <div className="space-y-2">
               {person.connectedPeople.map((connection) => (
-                <div
+                <ConnectionLink
                   key={connection.id}
-                  className="rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm"
-                >
-                  <div className="font-medium">{connection.name}</div>
-                  {connection.why && (
-                    <div className="text-muted-foreground text-xs mt-1">
-                      Why connected: {connection.why}
-                    </div>
-                  )}
-                  {connection.interests && (
-                    <div className="text-muted-foreground text-xs mt-1">
-                      Shared interests: {connection.interests}
-                    </div>
-                  )}
-                  {connection.sharedCommunities &&
-                    connection.sharedCommunities.length > 0 && (
-                      <div className="text-muted-foreground text-xs mt-1">
-                        Shared communities:{' '}
-                        {connection.sharedCommunities.join(', ')}
-                      </div>
-                    )}
-                </div>
+                  connection={{
+                    id: connection.id,
+                    firstName: connection.firstName,
+                    lastName: connection.lastName,
+                    name: connection.name,
+                    email: connection.email,
+                    why: connection.why,
+                    interests: connection.interests,
+                    sharedCommunities: connection.sharedCommunities,
+                  }}
+                  variant="detailed"
+                />
               ))}
             </div>
           </div>

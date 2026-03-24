@@ -6,6 +6,7 @@ import {
 import type { FC } from 'react'
 import { SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EnhancedMessageText } from './enhanced-message-text'
 
 export const Thread: FC = () => {
   return (
@@ -59,8 +60,8 @@ const UserMessage: FC = () => {
 const AssistantMessage: FC = () => {
   return (
     <div className="flex justify-start">
-      <div className="max-w-xs bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm space-y-2">
-        <MessagePrimitive.Content />
+      <div className="max-w-2xl bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm space-y-2">
+        <EnhancedMessageText />
       </div>
     </div>
   )
