@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useApp, usePageContext } from '@/contexts'
@@ -58,36 +58,81 @@ const uploadDescriptions: Record<UploadType, string> = {
 
 const sampleTemplates: Record<
   UploadType,
-  { fileName: string; description: string; csv: string }
+  {
+    fileName: string
+    description: string
+    rows: Array<Record<string, string>>
+  }
 > = {
   'we-space': {
-    fileName: 'we-space-template.csv',
+    fileName: 'we-space-template.xlsx',
     description: 'Creates or matches WeSpaces by lowercase name.',
-    csv: [
-      'name,visibility,description',
-      'collective-growth,public,Community collaboration hub',
-      'research-lab,private,Private coordination space',
-    ].join('\n'),
+    rows: [
+      {
+        name: 'collective-growth',
+        visibility: 'public',
+        description: 'Community collaboration hub',
+      },
+      {
+        name: 'research-lab',
+        visibility: 'private',
+        description: 'Private coordination space',
+      },
+    ],
   },
   'field-context': {
-    fileName: 'field-context-template.csv',
+    fileName: 'field-context-template.xlsx',
     description:
       'Use space_scope to target me-space or we-space. Include we_space_name for we-space rows.',
-    csv: [
-      'name,space_scope,we_space_name,description',
-      'habit-reflection,me-space,,Personal reflection context',
-      'project-planning,we-space,collective-growth,Planning context for team projects',
-    ].join('\n'),
+    rows: [
+      {
+        name: 'habit-reflection',
+        space_scope: 'me-space',
+        we_space_name: '',
+        description: 'Personal reflection context',
+      },
+      {
+        name: 'project-planning',
+        space_scope: 'we-space',
+        we_space_name: 'collective-growth',
+        description: 'Planning context for team projects',
+      },
+    ],
   },
   pulse: {
-    fileName: 'pulse-template.csv',
+    fileName: 'pulse-template.xlsx',
     description:
-      'Requires title, content, space_scope, and field_context_name. we_space_name is required for we-space rows.',
-    csv: [
-      'title,content,space_scope,we_space_name,field_context_name,pulse_type,status,horizon,resource_type,intensity,availability,source_type',
-      'weekly-standup,Shared blockers and wins,we-space,collective-growth,project-planning,story,active,short-term,,,,',
-      'journal-entry,Today I felt centered,me-space,,habit-reflection,care,,,,high,private,reflection',
-    ].join('\n'),
+      'Requires title, content, space_scope, and field_context_name. pulse_type only accepts goal, story, or resource. we_space_name is required for we-space rows.',
+    rows: [
+      {
+        title: 'weekly-standup',
+        content: 'Shared blockers and wins',
+        space_scope: 'we-space',
+        we_space_name: 'collective-growth',
+        field_context_name: 'project-planning',
+        pulse_type: 'story',
+        status: 'active',
+        horizon: 'short-term',
+        resource_type: '',
+        intensity: '',
+        availability: '',
+        source_type: '',
+      },
+      {
+        title: 'journal-entry',
+        content: 'Today I felt centered',
+        space_scope: 'me-space',
+        we_space_name: '',
+        field_context_name: 'habit-reflection',
+        pulse_type: 'story',
+        status: '',
+        horizon: '',
+        resource_type: '',
+        intensity: 'high',
+        availability: 'private',
+        source_type: 'reflection',
+      },
+    ],
   },
 }
 
@@ -97,7 +142,7 @@ const promiseLabels: Record<UploadType, string> = {
   pulse: 'Pulses',
 }
 
-const IMPORT_HISTORY_STORAGE_KEY = 'gp-csv-import-history'
+const IMPORT_HISTORY_STORAGE_KEY = 'gp-xlsx-import-history'
 
 function normalizeHeader(header: string) {
   return header
@@ -107,19 +152,32 @@ function normalizeHeader(header: string) {
     .replace(/^_+|_+$/g, '')
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = ''
+  const bytes = new Uint8Array(buffer)
+  const chunkSize = 0x8000
+
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.subarray(offset, offset + chunkSize)
+    binary += String.fromCharCode(...Array.from(chunk))
+  }
+
+  return btoa(binary)
+}
+
 export default function DashboardImportPage() {
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const [uploadType, setUploadType] = useState<UploadType>('we-space')
   const [isDragging, setIsDragging] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [csvText, setCsvText] = useState('')
+  const [workbookBase64, setWorkbookBase64] = useState('')
   const [preview, setPreview] = useState<ImportPreview | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [history, setHistory] = useState<ImportHistoryItem[]>([])
 
   useEffect(() => {
-    setPageTitle('CSV Imports')
+    setPageTitle('Entity Upload')
   }, [setPageTitle])
 
   useEffect(() => {
@@ -171,7 +229,16 @@ export default function DashboardImportPage() {
 
   function downloadTemplate(type: UploadType) {
     const template = sampleTemplates[type]
-    const blob = new Blob([template.csv], { type: 'text/csv;charset=utf-8;' })
+    const worksheet = XLSX.utils.json_to_sheet(template.rows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template')
+    const workbookArray = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+    const blob = new Blob([workbookArray], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
     const objectUrl = URL.createObjectURL(blob)
     const link = document.createElement('a')
 
@@ -186,24 +253,43 @@ export default function DashboardImportPage() {
   }
 
   async function readFile(file: File) {
-    const text = await file.text()
+    const fileBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(fileBuffer, { type: 'array', raw: false })
+    const firstSheetName = workbook.SheetNames[0]
 
-    const parsed = Papa.parse<Record<string, string>>(text, {
-      header: true,
-      skipEmptyLines: 'greedy',
-      transformHeader: normalizeHeader,
-    })
-
-    if (parsed.errors.length > 0) {
-      toast.error(parsed.errors[0].message)
+    if (!firstSheetName) {
+      throw new Error('This XLSX file has no worksheet. Add a sheet and retry.')
     }
 
-    setCsvText(text)
+    const worksheet = workbook.Sheets[firstSheetName]
+    const headerRows = XLSX.utils.sheet_to_json<(string | number)[]>(
+      worksheet,
+      {
+        header: 1,
+        blankrows: false,
+        raw: false,
+      }
+    )
+
+    const parsedRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+      worksheet,
+      {
+        defval: '',
+        raw: false,
+      }
+    )
+
+    const firstRow = headerRows[0] || []
+    const headers = firstRow
+      .map((value) => normalizeHeader(String(value ?? '')))
+      .filter((value) => value.length > 0)
+
+    setWorkbookBase64(arrayBufferToBase64(fileBuffer))
     setResult(null)
     setPreview({
       fileName: file.name,
-      headers: Object.keys(parsed.data[0] || {}),
-      rowCount: parsed.data.length,
+      headers,
+      rowCount: parsedRows.length,
     })
   }
 
@@ -212,12 +298,18 @@ export default function DashboardImportPage() {
       return
     }
 
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      toast.error('Only CSV files are supported on this page.')
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      toast.error('Only XLSX files are supported on this page.')
       return
     }
 
-    await readFile(file)
+    try {
+      await readFile(file)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Could not read XLSX file.'
+      toast.error(message)
+    }
   }
 
   async function handleSubmit() {
@@ -226,21 +318,27 @@ export default function DashboardImportPage() {
       return
     }
 
-    if (!csvText || !preview) {
-      toast.error('Choose a CSV file before starting the import.')
+    if (!workbookBase64 || !preview) {
+      toast.error('Choose an XLSX file before starting the import.')
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/import/csv', {
+      const token =
+        typeof window !== 'undefined' ? localStorage.getItem('token') : null
+
+      const response = await fetch('/api/import/xlsx', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           userId: user.id,
           uploadType,
-          csvText,
+          workbookBase64,
         }),
       })
 
@@ -294,8 +392,8 @@ export default function DashboardImportPage() {
   return (
     <div className="relative flex flex-1 overflow-y-auto pt-24">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-10%] top-0 h-96 w-96 rounded-full bg-[color-mix(in_srgb,var(--gp-primary)_16%,transparent)] blur-[120px]" />
-        <div className="absolute bottom-[-8%] right-[-8%] h-128 aspect-square rounded-full bg-[color-mix(in_srgb,var(--gp-accent-glow)_14%,transparent)] blur-[140px]" />
+        <div className="absolute left-[-10%] top-0 h-96 w-96 rounded-full bg-gp-primary/10 blur-[120px]" />
+        <div className="absolute bottom-[-8%] right-[-8%] h-128 aspect-square rounded-full bg-gp-accent-glow/10 blur-[140px]" />
       </div>
 
       <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 pb-12 lg:px-10 py-8">
@@ -306,7 +404,7 @@ export default function DashboardImportPage() {
                 Transmutation Portal
               </span>
               <h1 className="max-w-sm text-4xl font-black tracking-tight text-gp-ink-strong dark:text-white">
-                Manifest your CSV architecture
+                Expand your community
               </h1>
               <p className="text-sm leading-6 text-gp-ink-muted dark:text-white/65">
                 {uploadDescriptions[uploadType]}
@@ -315,7 +413,7 @@ export default function DashboardImportPage() {
 
             <div className="space-y-3">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-gp-ink-muted dark:text-white/45">
-                Download CSV Templates
+                Download XLSX Templates
               </p>
               <div className="space-y-2">
                 {(['we-space', 'field-context', 'pulse'] as UploadType[]).map(
@@ -414,23 +512,23 @@ export default function DashboardImportPage() {
               }}
               className={`group relative flex min-h-80 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-4xl border-2 border-dashed p-8 text-center transition ${
                 isDragging
-                  ? 'border-gp-primary bg-[color-mix(in_srgb,var(--gp-primary)_12%,white)] dark:bg-[color-mix(in_srgb,var(--gp-primary)_14%,rgb(15_23_42))]'
-                  : 'border-slate-200/90 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.16),rgba(255,255,255,0.94)_56%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.92))] dark:border-white/15 dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.18),rgba(15,23,42,0.88)_52%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.94))]'
+                  ? 'border-gp-primary bg-gp-primary/10 dark:bg-gp-primary/15'
+                  : 'border-slate-200/90 bg-white dark:border-white/15 dark:bg-slate-900/80'
               }`}
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--gp-accent-glow)_16%,transparent),transparent_58%)] opacity-80 dark:bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--gp-primary)_20%,transparent),transparent_62%)]" />
+              <div className="absolute inset-0 bg-transparent" />
               <div className="relative z-10 flex flex-col items-center gap-5">
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--gp-primary),var(--gp-accent-glow))] text-white shadow-[0_24px_60px_rgba(79,70,229,0.35)]">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gp-primary text-white">
                   <span className="material-symbols-outlined text-4xl">
                     cloud_upload
                   </span>
                 </div>
                 <div className="space-y-2">
                   <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white">
-                    Release your artifacts here
+                    Onboard entities
                   </h2>
                   <p className="mx-auto max-w-md text-sm leading-6 text-gp-ink-muted dark:text-white/65">
-                    Drag and drop a CSV file or browse locally. The importer
+                    Drag and drop an XLSX file or browse locally. The importer
                     validates membership, creates missing records when allowed,
                     and returns row-level failure details.
                   </p>
@@ -444,7 +542,7 @@ export default function DashboardImportPage() {
               </div>
               <input
                 type="file"
-                accept=".csv,text/csv"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 className="hidden"
                 onChange={(event) => {
                   void handleFileSelection(event.target.files?.[0])
@@ -470,7 +568,7 @@ export default function DashboardImportPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--gp-primary),var(--gp-accent-glow))] px-6 py-3 text-sm font-bold text-white shadow-xl transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gp-primary px-6 py-3 text-sm font-bold text-white shadow-xl transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined text-base">
                       bolt

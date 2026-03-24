@@ -1,9 +1,12 @@
-import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 import type { NextRequest } from 'next/server'
-import { verifyJWT } from '@/app/api/auth/utils'
+import { jwtDecode } from 'jwt-decode'
 
 export type CsvImportType = 'we-space' | 'field-context' | 'pulse'
 export type SpaceScope = 'me-space' | 'we-space'
+export type ImportSpaceVisibility = 'PRIVATE' | 'SHARED'
+export type ImportGoalStatus = 'ACTIVE' | 'PAUSED' | 'COMPLETED'
+export type ImportGoalHorizon = 'SHORT' | 'MID' | 'LONG'
 
 export interface AuthenticatedImportUser {
   id: string
@@ -35,7 +38,7 @@ export interface CsvImportResult {
   warnings: string[]
 }
 
-export interface ParsedCsvData {
+export interface ParsedSpreadsheetData {
   rows: Record<string, string>[]
   parseErrors: string[]
 }
@@ -77,35 +80,59 @@ export function getRowValue(
   return undefined
 }
 
-export function parseCsvText(csvText: string): ParsedCsvData {
-  const parsed = Papa.parse<Record<string, string>>(csvText, {
-    header: true,
-    skipEmptyLines: 'greedy',
-    transformHeader: normalizeHeader,
-  })
+export function parseXlsxBase64(workbookBase64: string): ParsedSpreadsheetData {
+  try {
+    const workbookBuffer = Buffer.from(workbookBase64, 'base64')
+    const workbook = XLSX.read(workbookBuffer, {
+      type: 'buffer',
+      cellDates: false,
+      raw: false,
+    })
 
-  const rows = parsed.data.map((row) => {
-    const normalizedRow: Record<string, string> = {}
+    const firstSheetName = workbook.SheetNames[0]
 
-    for (const [key, value] of Object.entries(row)) {
-      if (!key) {
-        continue
+    if (!firstSheetName) {
+      return {
+        rows: [],
+        parseErrors: [
+          'The uploaded XLSX file does not contain any worksheets.',
+        ],
       }
-
-      normalizedRow[normalizeHeader(key)] =
-        typeof value === 'string' ? value : ''
     }
 
-    return normalizedRow
-  })
+    const worksheet = workbook.Sheets[firstSheetName]
+    const sheetRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+      worksheet,
+      {
+        defval: '',
+        raw: false,
+      }
+    )
 
-  const parseErrors = parsed.errors.map((error) => {
-    const rowPrefix =
-      typeof error.row === 'number' ? `Row ${error.row + 2}: ` : ''
-    return `${rowPrefix}${error.message}`
-  })
+    const rows = sheetRows.map((row) => {
+      const normalizedRow: Record<string, string> = {}
 
-  return { rows, parseErrors }
+      for (const [key, value] of Object.entries(row)) {
+        if (!key) {
+          continue
+        }
+
+        normalizedRow[normalizeHeader(key)] =
+          value === null || value === undefined ? '' : String(value)
+      }
+
+      return normalizedRow
+    })
+
+    return { rows, parseErrors: [] }
+  } catch {
+    return {
+      rows: [],
+      parseErrors: [
+        'The XLSX file could not be parsed. Ensure the file is a valid .xlsx workbook with a header row in the first sheet.',
+      ],
+    }
+  }
 }
 
 export function formatRowData(
@@ -130,13 +157,93 @@ export function resolveSpaceScope(rawValue?: string): SpaceScope {
   return 'we-space'
 }
 
+export function resolveSpaceVisibility(
+  rawValue?: string
+): ImportSpaceVisibility {
+  const normalizedValue = normalizeNameForMatch(rawValue ?? '')
+
+  if (!normalizedValue) {
+    return 'SHARED'
+  }
+
+  if (['private', 'closed'].includes(normalizedValue)) {
+    return 'PRIVATE'
+  }
+
+  if (['shared', 'public', 'open'].includes(normalizedValue)) {
+    return 'SHARED'
+  }
+
+  throw new Error(
+    'WeSpace rows only accept visibility values of private or shared.'
+  )
+}
+
+export function resolveGoalStatus(rawValue?: string): ImportGoalStatus {
+  const normalizedValue = normalizeNameForMatch(rawValue ?? '').replace(
+    /[_\s-]+/g,
+    ''
+  )
+
+  if (!normalizedValue) {
+    return 'ACTIVE'
+  }
+
+  if (normalizedValue === 'active') {
+    return 'ACTIVE'
+  }
+
+  if (normalizedValue === 'paused') {
+    return 'PAUSED'
+  }
+
+  if (normalizedValue === 'completed' || normalizedValue === 'done') {
+    return 'COMPLETED'
+  }
+
+  throw new Error(
+    'Goal pulse rows only accept status values of active, paused, or completed.'
+  )
+}
+
+export function resolveGoalHorizon(rawValue?: string): ImportGoalHorizon {
+  const normalizedValue = normalizeNameForMatch(rawValue ?? '').replace(
+    /[_\s-]+/g,
+    ''
+  )
+
+  if (!normalizedValue) {
+    return 'MID'
+  }
+
+  if (normalizedValue === 'short' || normalizedValue === 'shortterm') {
+    return 'SHORT'
+  }
+
+  if (normalizedValue === 'mid' || normalizedValue === 'midterm') {
+    return 'MID'
+  }
+
+  if (normalizedValue === 'long' || normalizedValue === 'longterm') {
+    return 'LONG'
+  }
+
+  throw new Error(
+    'Goal pulse rows only accept horizon values of short, mid, or long.'
+  )
+}
+
 export function resolvePulseType(
   rawValue?: string
-): 'goal' | 'resource' | 'story' | 'care' | 'core-value' {
-  const normalizedValue = normalizeNameForMatch(rawValue ?? 'story').replace(
+): 'goal' | 'resource' | 'story' {
+  const normalizedValue = normalizeNameForMatch(rawValue ?? '').replace(
     /_/g,
     '-'
   )
+
+  if (!normalizedValue) {
+    return 'story'
+  }
 
   if (['goal', 'goals'].includes(normalizedValue)) {
     return 'goal'
@@ -146,17 +253,13 @@ export function resolvePulseType(
     return 'resource'
   }
 
-  if (['care', 'care-pulse', 'carepulse'].includes(normalizedValue)) {
-    return 'care'
+  if (['story', 'stories'].includes(normalizedValue)) {
+    return 'story'
   }
 
-  if (
-    ['core-value', 'corevalue', 'core-value-pulse'].includes(normalizedValue)
-  ) {
-    return 'core-value'
-  }
-
-  return 'story'
+  throw new Error(
+    'Pulse rows only accept pulse_type values of goal, story, or resource.'
+  )
 }
 
 function isJwtPayload(value: unknown): value is {
@@ -171,41 +274,62 @@ function isJwtPayload(value: unknown): value is {
   return typeof value === 'object' && value !== null
 }
 
+export function getImportAccessToken(request: NextRequest): string | undefined {
+  const authorizationHeader = request.headers.get('authorization')
+  const bearerToken = authorizationHeader?.startsWith('Bearer ')
+    ? authorizationHeader.slice('Bearer '.length).trim()
+    : undefined
+  const cookieToken = request.cookies.get('accessToken')?.value
+
+  return bearerToken || cookieToken
+}
+
 export function requireAuthenticatedImportUser(
   request: NextRequest,
   requestedUserId?: string
 ): AuthenticatedImportUser {
-  const accessToken = request.cookies.get('accessToken')?.value
+  const accessToken = getImportAccessToken(request)
 
   if (!accessToken) {
-    throw new Error('You must be logged in to import CSV data.')
+    throw new Error('You must be logged in to import XLSX data.')
   }
 
-  const verifiedToken = verifyJWT(accessToken)
+  let decoded: unknown
 
-  if (!isJwtPayload(verifiedToken) || !verifiedToken.user?.id) {
+  try {
+    // Use jwtDecode (same as the GraphQL server in apollo.ts) — no signature
+    // verification here. Authorization is enforced by Neo4j @authorization
+    // directives when the Bearer token is forwarded to the GraphQL mutations.
+    decoded = jwtDecode(accessToken)
+  } catch {
+    throw new Error(
+      'Your session token could not be read. Sign out, sign in again, and retry.'
+    )
+  }
+
+  if (!isJwtPayload(decoded) || !decoded.user?.id) {
     throw new Error(
       'Your session token is invalid. Please sign in again and retry the import.'
     )
   }
 
-  if (requestedUserId && requestedUserId !== verifiedToken.user.id) {
+  if (requestedUserId && requestedUserId !== decoded.user.id) {
     throw new Error(
       'The authenticated user does not match the requested import user. Refresh the page and try again.'
     )
   }
 
-  const firstName = verifiedToken.user.firstName?.trim()
-  const lastName = verifiedToken.user.lastName?.trim()
+  const firstName = decoded.user.firstName?.trim()
+  const lastName = decoded.user.lastName?.trim()
   const fallbackName = [firstName, lastName].filter(Boolean).join(' ').trim()
 
   return {
-    id: verifiedToken.user.id,
+    id: decoded.user.id,
     displayName:
-      verifiedToken.user.name?.trim() ||
+      decoded.user.name?.trim() ||
       fallbackName ||
-      verifiedToken.user.email?.trim() ||
+      decoded.user.email?.trim() ||
       'User',
-    email: verifiedToken.user.email?.trim(),
+    email: decoded.user.email?.trim(),
   }
 }

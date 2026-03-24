@@ -7,13 +7,17 @@ import {
   formatRowData,
   getRowValue,
   normalizeNameForMatch,
-  parseCsvText,
+  parseXlsxBase64,
+  resolveGoalHorizon,
+  resolveGoalStatus,
   resolvePulseType,
+  resolveSpaceVisibility,
   resolveSpaceScope,
   type AuthenticatedImportUser,
   type CsvImportResult,
   type CsvImportRowError,
   type CsvImportType,
+  type ImportSpaceVisibility,
   type SpaceScope,
 } from './csv-import-utils'
 
@@ -21,7 +25,14 @@ interface ProcessCsvImportParams {
   session: Session
   user: AuthenticatedImportUser
   uploadType: CsvImportType
-  csvText: string
+  workbookBase64: string
+  accessToken: string
+  graphQLEndpoint: string
+}
+
+interface GraphQLRequestContext {
+  accessToken: string
+  graphQLEndpoint: string
 }
 
 interface SpaceRecord {
@@ -44,6 +55,94 @@ const FIELD_NAME_ALIASES = [
 ]
 const SPACE_NAME_ALIASES = ['we_space_name', 'space_name', 'wespace_name']
 const DESCRIPTION_ALIASES = ['description', 'emergent_name', 'details']
+
+const CREATE_WE_SPACE_MUTATION = `
+  mutation CreateImportWeSpace($input: [WeSpaceCreateInput!]!) {
+    createWeSpaces(input: $input) {
+      weSpaces {
+        id
+        name
+      }
+    }
+  }
+`
+
+const CREATE_FIELD_CONTEXT_MUTATION = `
+  mutation CreateImportFieldContext($input: [FieldContextCreateInput!]!) {
+    createFieldContexts(input: $input) {
+      fieldContexts {
+        id
+        title
+      }
+    }
+  }
+`
+
+const CREATE_GOAL_PULSE_MUTATION = `
+  mutation CreateImportGoalPulse($input: [GoalPulseCreateInput!]!) {
+    createGoalPulses(input: $input) {
+      goalPulses {
+        id
+      }
+    }
+  }
+`
+
+const CREATE_RESOURCE_PULSE_MUTATION = `
+  mutation CreateImportResourcePulse($input: [ResourcePulseCreateInput!]!) {
+    createResourcePulses(input: $input) {
+      resourcePulses {
+        id
+      }
+    }
+  }
+`
+
+const CREATE_STORY_PULSE_MUTATION = `
+  mutation CreateImportStoryPulse($input: [StoryPulseCreateInput!]!) {
+    createStoryPulses(input: $input) {
+      storyPulses {
+        id
+      }
+    }
+  }
+`
+
+async function executeGraphQLMutation<TData>(
+  context: GraphQLRequestContext,
+  query: string,
+  variables: Record<string, unknown>
+): Promise<TData> {
+  const response = await fetch(context.graphQLEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${context.accessToken}`,
+    },
+    body: JSON.stringify({ query, variables }),
+  })
+
+  const payload = (await response.json()) as {
+    data?: TData
+    errors?: Array<{ message?: string }>
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      payload.errors?.[0]?.message || 'GraphQL request failed.'
+    throw new Error(errorMessage)
+  }
+
+  if (payload.errors && payload.errors.length > 0) {
+    throw new Error(payload.errors[0].message || 'GraphQL mutation failed.')
+  }
+
+  if (!payload.data) {
+    throw new Error('GraphQL mutation returned no data.')
+  }
+
+  return payload.data
+}
 
 async function findUserMeSpace(session: Session, userId: string) {
   const result = await session.run(
@@ -129,37 +228,46 @@ async function findWeSpaceByName(session: Session, normalizedName: string) {
 }
 
 async function createWeSpace(
-  session: Session,
+  graphQLContext: GraphQLRequestContext,
   userId: string,
-  name: string
+  name: string,
+  visibility: ImportSpaceVisibility
 ): Promise<SpaceRecord> {
-  const result = await session.run(
-    `
-    MATCH (person:Person {id: $userId})
-    CREATE (space:Space:WeSpace {
-      id: randomUUID(),
-      name: $name,
-      visibility: 'SHARED',
-      createdAt: datetime()
-    })
-    CREATE (person)-[:OWNS]->(space)
-    RETURN space.id as id, space.name as name
-    `,
-    { userId, name }
-  )
+  const data = await executeGraphQLMutation<{
+    createWeSpaces: { weSpaces: Array<{ id: string; name: string }> }
+  }>(graphQLContext, CREATE_WE_SPACE_MUTATION, {
+    input: [
+      {
+        name,
+        visibility,
+        createdAt: new Date().toISOString(),
+        owner: {
+          connect: [{ where: { node: { id_EQ: userId } } }],
+        },
+      },
+    ],
+  })
+
+  const createdSpace = data.createWeSpaces.weSpaces[0]
+
+  if (!createdSpace) {
+    throw new Error('Failed to create WeSpace through GraphQL mutation.')
+  }
 
   return {
-    id: result.records[0].get('id') as string,
-    name: result.records[0].get('name') as string,
+    id: createdSpace.id,
+    name: createdSpace.name,
     created: true,
   }
 }
 
 async function resolveSpaceForRow(
   session: Session,
+  graphQLContext: GraphQLRequestContext,
   user: AuthenticatedImportUser,
   scope: SpaceScope,
   rawWeSpaceName: string | undefined,
+  rawVisibility: string | undefined,
   uploadType: CsvImportType
 ): Promise<SpaceRecord> {
   if (scope === 'me-space') {
@@ -178,7 +286,12 @@ async function resolveSpaceForRow(
   )
 
   if (!existingSpace) {
-    return createWeSpace(session, user.id, rawWeSpaceName)
+    return createWeSpace(
+      graphQLContext,
+      user.id,
+      rawWeSpaceName,
+      resolveSpaceVisibility(rawVisibility)
+    )
   }
 
   const canEdit = await canEditContent(session, user.id, existingSpace.id)
@@ -224,40 +337,50 @@ async function findContextInSpace(
 }
 
 async function createContextInSpace(
-  session: Session,
+  graphQLContext: GraphQLRequestContext,
+  userId: string,
+  scope: SpaceScope,
   spaceId: string,
   title: string,
   description?: string
 ): Promise<ContextRecord> {
-  const result = await session.run(
-    `
-    MATCH (space {id: $spaceId})
-    WHERE space:MeSpace OR space:WeSpace
-    CREATE (context:FieldContext {
-      id: randomUUID(),
-      title: $title,
-      emergentName: $description,
-      createdAt: datetime()
-    })
-    CREATE (space)-[:HAS_CONTEXT]->(context)
-    RETURN context.id as id, context.title as title
-    `,
-    {
-      spaceId,
-      title,
-      description: description ?? null,
-    }
-  )
+  const spaceRelationshipField = scope === 'me-space' ? 'meSpace' : 'weSpace'
+  const data = await executeGraphQLMutation<{
+    createFieldContexts: { fieldContexts: Array<{ id: string; title: string }> }
+  }>(graphQLContext, CREATE_FIELD_CONTEXT_MUTATION, {
+    input: [
+      {
+        title,
+        emergentName: description ?? null,
+        createdAt: new Date().toISOString(),
+        createdBy: {
+          connect: [{ where: { node: { id_EQ: userId } } }],
+        },
+        [spaceRelationshipField]: {
+          connect: [{ where: { node: { id_EQ: spaceId } } }],
+        },
+      },
+    ],
+  })
+
+  const createdContext = data.createFieldContexts.fieldContexts[0]
+
+  if (!createdContext) {
+    throw new Error('Failed to create FieldContext through GraphQL mutation.')
+  }
 
   return {
-    id: result.records[0].get('id') as string,
-    title: result.records[0].get('title') as string,
+    id: createdContext.id,
+    title: createdContext.title,
     created: true,
   }
 }
 
 async function resolveContextForRow(
   session: Session,
+  graphQLContext: GraphQLRequestContext,
+  userId: string,
+  scope: SpaceScope,
   spaceId: string,
   rawContextName: string,
   description?: string
@@ -272,11 +395,18 @@ async function resolveContextForRow(
     return { ...existingContext, created: false }
   }
 
-  return createContextInSpace(session, spaceId, rawContextName, description)
+  return createContextInSpace(
+    graphQLContext,
+    userId,
+    scope,
+    spaceId,
+    rawContextName,
+    description
+  )
 }
 
 async function createPulseForRow(
-  session: Session,
+  graphQLContext: GraphQLRequestContext,
   userId: string,
   contextId: string,
   row: Record<string, string>
@@ -295,56 +425,78 @@ async function createPulseForRow(
     )
   }
 
-  const baseParams: Record<string, unknown> = {
-    userId,
-    contextId,
+  const baseInput: Record<string, unknown> = {
     title,
     content,
     intensity: Number.parseFloat(row.intensity || '1') || 1,
+    createdAt: new Date().toISOString(),
+    createdBy: {
+      connect: [{ where: { node: { id_EQ: userId } } }],
+    },
+    context: {
+      connect: [{ where: { node: { id_EQ: contextId } } }],
+    },
   }
-
-  let labelClause = 'FieldPulse:StoryPulse'
-  let extraProperties = ''
 
   if (pulseType === 'goal') {
-    labelClause = 'FieldPulse:GoalPulse'
-    baseParams.status = getRowValue(row, ['status']) || 'ACTIVE'
-    baseParams.horizon = getRowValue(row, ['horizon']) || 'MID'
-    extraProperties = ', status: $status, horizon: $horizon'
-  } else if (pulseType === 'resource') {
-    labelClause = 'FieldPulse:ResourcePulse'
-    baseParams.resourceType = getRowValue(row, ['resource_type']) || 'general'
-    baseParams.availability = Number.parseFloat(row.availability || '1') || 1
-    extraProperties =
-      ', resourceType: $resourceType, availability: $availability'
-  } else if (pulseType === 'care') {
-    labelClause = 'FieldPulse:CarePulse'
-    baseParams.sourceType = getRowValue(row, ['source_type']) || null
-    extraProperties = ', sourceType: $sourceType'
-  } else if (pulseType === 'core-value') {
-    labelClause = 'FieldPulse:CoreValuePulse'
+    const data = await executeGraphQLMutation<{
+      createGoalPulses: { goalPulses: Array<{ id: string }> }
+    }>(graphQLContext, CREATE_GOAL_PULSE_MUTATION, {
+      input: [
+        {
+          ...baseInput,
+          status: resolveGoalStatus(getRowValue(row, ['status'])),
+          horizon: resolveGoalHorizon(getRowValue(row, ['horizon'])),
+        },
+      ],
+    })
+
+    const createdPulse = data.createGoalPulses.goalPulses[0]
+
+    if (!createdPulse) {
+      throw new Error('Failed to create Goal pulse through GraphQL mutation.')
+    }
+
+    return createdPulse.id
   }
 
-  const result = await session.run(
-    `
-    MATCH (person:Person {id: $userId})
-    MATCH (context:FieldContext {id: $contextId})
-    CREATE (pulse:${labelClause} {
-      id: randomUUID(),
-      title: $title,
-      content: $content,
-      intensity: $intensity,
-      createdAt: datetime()
-      ${extraProperties}
+  if (pulseType === 'resource') {
+    const data = await executeGraphQLMutation<{
+      createResourcePulses: { resourcePulses: Array<{ id: string }> }
+    }>(graphQLContext, CREATE_RESOURCE_PULSE_MUTATION, {
+      input: [
+        {
+          ...baseInput,
+          resourceType: getRowValue(row, ['resource_type']) || 'general',
+          availability: Number.parseFloat(row.availability || '1') || 1,
+        },
+      ],
     })
-    CREATE (context)-[:HAS_PULSE]->(pulse)
-    CREATE (pulse)-[:CREATED_BY]->(person)
-    RETURN pulse.id as id
-    `,
-    baseParams
-  )
 
-  return result.records[0].get('id') as string
+    const createdPulse = data.createResourcePulses.resourcePulses[0]
+
+    if (!createdPulse) {
+      throw new Error(
+        'Failed to create Resource pulse through GraphQL mutation.'
+      )
+    }
+
+    return createdPulse.id
+  }
+
+  const data = await executeGraphQLMutation<{
+    createStoryPulses: { storyPulses: Array<{ id: string }> }
+  }>(graphQLContext, CREATE_STORY_PULSE_MUTATION, {
+    input: [baseInput],
+  })
+
+  const createdPulse = data.createStoryPulses.storyPulses[0]
+
+  if (!createdPulse) {
+    throw new Error('Failed to create Story pulse through GraphQL mutation.')
+  }
+
+  return createdPulse.id
 }
 
 async function postProcessCreatedPulses(
@@ -382,7 +534,7 @@ function buildParseFailureResult(parseErrors: string[]): CsvImportResult {
   return {
     success: false,
     message:
-      'The CSV could not be parsed. Fix the malformed rows and try again.',
+      'The XLSX file could not be parsed. Fix the malformed sheet and try again.',
     summary: createEmptySummary(),
     importedRows: 0,
     failedRows: parseErrors.length,
@@ -399,9 +551,16 @@ export async function processCsvImport({
   session,
   user,
   uploadType,
-  csvText,
+  workbookBase64,
+  accessToken,
+  graphQLEndpoint,
 }: ProcessCsvImportParams): Promise<CsvImportResult> {
-  const { rows, parseErrors } = parseCsvText(csvText)
+  const graphQLContext: GraphQLRequestContext = {
+    accessToken,
+    graphQLEndpoint,
+  }
+
+  const { rows, parseErrors } = parseXlsxBase64(workbookBase64)
 
   if (parseErrors.length > 0) {
     return buildParseFailureResult(parseErrors)
@@ -410,7 +569,7 @@ export async function processCsvImport({
   if (rows.length === 0) {
     return {
       success: false,
-      message: 'The uploaded CSV does not contain any data rows.',
+      message: 'The uploaded XLSX file does not contain any data rows.',
       summary: createEmptySummary(),
       importedRows: 0,
       failedRows: 1,
@@ -468,7 +627,12 @@ export async function processCsvImport({
           continue
         }
 
-        await createWeSpace(session, user.id, weSpaceName)
+        await createWeSpace(
+          graphQLContext,
+          user.id,
+          weSpaceName,
+          resolveSpaceVisibility(getRowValue(row, ['visibility']))
+        )
         summary.createdWeSpaces += 1
         continue
       }
@@ -477,11 +641,14 @@ export async function processCsvImport({
         getRowValue(row, ['space_scope', 'space_type', 'scope'])
       )
       const weSpaceName = getRowValue(row, SPACE_NAME_ALIASES)
+      const visibility = getRowValue(row, ['visibility'])
       const space = await resolveSpaceForRow(
         session,
+        graphQLContext,
         user,
         scope,
         weSpaceName,
+        visibility,
         uploadType
       )
 
@@ -503,6 +670,9 @@ export async function processCsvImport({
 
         const context = await resolveContextForRow(
           session,
+          graphQLContext,
+          user.id,
+          scope,
           space.id,
           contextName,
           description
@@ -531,6 +701,9 @@ export async function processCsvImport({
 
       const context = await resolveContextForRow(
         session,
+        graphQLContext,
+        user.id,
+        scope,
         space.id,
         contextName,
         contextDescription
@@ -542,7 +715,12 @@ export async function processCsvImport({
         summary.reusedFieldContexts += 1
       }
 
-      const pulseId = await createPulseForRow(session, user.id, context.id, row)
+      const pulseId = await createPulseForRow(
+        graphQLContext,
+        user.id,
+        context.id,
+        row
+      )
       createdPulseIds.push(pulseId)
       summary.createdPulses += 1
     } catch (error) {

@@ -115,6 +115,8 @@ export async function enrichPersonFromPulses(
     MATCH (p:Person {id: $personId})
     OPTIONAL MATCH (pulse:FieldPulse)-[:INITIATED_BY]->(p)
     WHERE pulse.createdAt > datetime() - duration('P30D')
+    WITH p, pulse
+    ORDER BY pulse.createdAt DESC
     RETURN 
       {
         id: p.id,
@@ -129,7 +131,6 @@ export async function enrichPersonFromPulses(
         createdAt: toString(pulse.createdAt),
         labels: labels(pulse)
       }) as pulses
-    ORDER BY pulse.createdAt DESC
   `,
     { personId }
   )
