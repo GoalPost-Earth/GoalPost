@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { ActivePulses } from '@/components/dashboard/active-pulses'
@@ -90,6 +91,34 @@ export default function DashboardPage() {
         data-tour="dashboard-overview"
       >
         <div className="max-w-6xl mx-auto space-y-10">
+          <section className="rounded-[2rem] border border-white/40 bg-white/65 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="max-w-2xl space-y-2">
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-gp-primary">
+                  Data Imports
+                </p>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                  Upload CSV data for WeSpaces, FieldContexts, and Pulses
+                </h2>
+                <p className="text-sm leading-6 text-slate-600 dark:text-white/65">
+                  Use the dedicated importer to validate memberships,
+                  lowercase-match names, create missing WeSpaces or
+                  FieldContexts when allowed, and get row-by-row failure
+                  details.
+                </p>
+              </div>
+              <Link
+                href="/protected/dashboard/import"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-xl transition hover:scale-[1.01]"
+              >
+                <span className="material-symbols-outlined text-base">
+                  cloud_upload
+                </span>
+                Open Import Page
+              </Link>
+            </div>
+          </section>
+
           {activeView === 'overview' && (
             <>
               <ActivePulses onViewAll={() => setActiveView('pulses')} />

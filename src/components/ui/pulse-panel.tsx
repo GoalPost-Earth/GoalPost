@@ -9,6 +9,7 @@ import { useQuery } from '@apollo/client/react'
 import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERIES'
 import Select, { StylesConfig } from 'react-select'
 import { getConfigForType } from '@/lib/pulse-type-config'
+import { LinkifiedText } from '@/components/ui/linkified-text'
 
 export type PulseKind = 'goal' | 'resource' | 'story'
 
@@ -195,14 +196,13 @@ export function PulsePanel({
                   </span>
                 </div>
                 <div className="relative">
-                  <p
+                  <LinkifiedText
+                    text={pulse.content}
                     className={cn(
                       'text-sm text-gp-ink-strong leading-relaxed whitespace-pre-wrap',
                       !isContentExpanded && 'line-clamp-3'
                     )}
-                  >
-                    {pulse.content}
-                  </p>
+                  />
                   {pulse.content.length > 150 && (
                     <button
                       onClick={() => setIsContentExpanded(!isContentExpanded)}
