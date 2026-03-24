@@ -29,6 +29,11 @@ jspm_packages/
 # Optional REPL history
 .node_repl_history
 
+# Test files (temporary verification scripts)
+test-person-profile-feature.ts
+verify-parsing-logic.ts
+.test-files-ignore
+
 # Output of 'npm pack'
 *.tgz
 
