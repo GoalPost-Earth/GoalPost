@@ -234,14 +234,6 @@ export function PulsePanel({
                   {createdAtText}
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border">
-                <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
-                  Intensity
-                </span>
-                <div className="mt-1 text-sm font-semibold text-gp-ink-strong">
-                  {pulse.intensity ?? 'Not set'}
-                </div>
-              </div>
               <div className="p-3 rounded-xl bg-gp-glass-bg border border-gp-glass-border space-y-1">
                 {pulse.status && (
                   <div>

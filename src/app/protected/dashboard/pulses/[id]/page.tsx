@@ -50,7 +50,6 @@ export default function PulseDetailsPage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
-  const [editIntensity, setEditIntensity] = useState('')
   const [editWhy, setEditWhy] = useState('')
   const [editLocation, setEditLocation] = useState('')
   const [editTime, setEditTime] = useState('')
@@ -64,7 +63,6 @@ export default function PulseDetailsPage() {
 
   // ResourcePulse specific
   const [editResourceType, setEditResourceType] = useState('')
-  const [editAvailability, setEditAvailability] = useState('')
 
   // StoryPulse specific
   const [editLevelFulfilled, setEditLevelFulfilled] = useState('')
@@ -225,7 +223,6 @@ export default function PulseDetailsPage() {
   const handleEditStart = () => {
     setEditTitle(pulse?.title || '')
     setEditContent(pulse?.content || '')
-    setEditIntensity(pulse?.intensity?.toString() || '')
     setEditWhy(pulse?.why || '')
     setEditLocation(pulse?.location || '')
     setEditTime(pulse?.time || '')
@@ -242,7 +239,6 @@ export default function PulseDetailsPage() {
     // ResourcePulse specific
     if (pulse?.__typename === 'ResourcePulse') {
       setEditResourceType(pulse?.resourceType || '')
-      setEditAvailability(pulse?.availability?.toString() || '')
     }
 
     // StoryPulse specific
@@ -264,7 +260,6 @@ export default function PulseDetailsPage() {
     setIsEditMode(false)
     setEditTitle('')
     setEditContent('')
-    setEditIntensity('')
     setEditWhy('')
     setEditLocation('')
     setEditTime('')
@@ -274,7 +269,6 @@ export default function PulseDetailsPage() {
     setEditActivities('')
     setEditType('')
     setEditResourceType('')
-    setEditAvailability('')
     setEditLevelFulfilled('')
     setEditFulfillmentDate('')
     setEditIssuesIdentified('')
@@ -292,7 +286,6 @@ export default function PulseDetailsPage() {
       // Common fields - allow empty strings for text fields, but skip enum fields if empty
       if (editTitle !== undefined) updateInput.title_SET = editTitle
       if (editContent !== undefined) updateInput.content_SET = editContent
-      if (editIntensity) updateInput.intensity_SET = parseFloat(editIntensity)
       if (editWhy !== undefined) updateInput.why_SET = editWhy
       if (editLocation !== undefined) updateInput.location_SET = editLocation
       if (editTime !== undefined) updateInput.time_SET = editTime
@@ -321,8 +314,6 @@ export default function PulseDetailsPage() {
           // Status is a string field in ResourcePulse, so allow empty strings
           if (editResourceType !== undefined)
             updateInput.resourceType_SET = editResourceType
-          if (editAvailability)
-            updateInput.availability_SET = parseFloat(editAvailability)
 
           await updateResourcePulse({
             variables: { where, update: updateInput },
@@ -525,19 +516,6 @@ export default function PulseDetailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
-                    Intensity
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={editIntensity}
-                    onChange={(e) => setEditIntensity(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
-                    placeholder="0.0 - 1.0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
                     Location
                   </label>
                   <input
@@ -653,32 +631,17 @@ export default function PulseDetailsPage() {
               {/* ResourcePulse Specific Fields */}
               {pulse?.__typename === 'ResourcePulse' && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
-                        Resource Type
-                      </label>
-                      <input
-                        type="text"
-                        value={editResourceType}
-                        onChange={(e) => setEditResourceType(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
-                        placeholder="Type of resource"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
-                        Availability
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editAvailability}
-                        onChange={(e) => setEditAvailability(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
-                        placeholder="0.0 - 1.0"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gp-ink-strong dark:text-white mb-2">
+                      Resource Type
+                    </label>
+                    <input
+                      type="text"
+                      value={editResourceType}
+                      onChange={(e) => setEditResourceType(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg dark:bg-gp-glass-bg/50 text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary"
+                      placeholder="Type of resource"
+                    />
                   </div>
 
                   <div>
@@ -1082,17 +1045,6 @@ export default function PulseDetailsPage() {
                           {pulse.__typename}
                         </p>
                       </div>
-                      {pulse?.intensity !== undefined &&
-                        pulse?.intensity !== null && (
-                          <div>
-                            <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                              Intensity
-                            </span>
-                            <p className="text-xs text-gp-ink-strong dark:text-white">
-                              {pulse.intensity}
-                            </p>
-                          </div>
-                        )}
                       {pulse?.why && (
                         <div>
                           <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
@@ -1248,13 +1200,12 @@ export default function PulseDetailsPage() {
 
                   {/* ResourcePulse Specific */}
                   {pulse.__typename === 'ResourcePulse' &&
-                    (pulse?.resourceType ||
-                      pulse?.availability !== undefined) && (
+                    pulse?.resourceType && (
                       <div className="space-y-2 border-t border-gp-glass-border pt-4">
                         <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
                           Resource Details
                         </h5>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                           {pulse?.resourceType && (
                             <div>
                               <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
@@ -1262,16 +1213,6 @@ export default function PulseDetailsPage() {
                               </span>
                               <p className="text-xs text-gp-ink-strong dark:text-white">
                                 {pulse.resourceType}
-                              </p>
-                            </div>
-                          )}
-                          {pulse?.availability !== undefined && (
-                            <div>
-                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                                Availability
-                              </span>
-                              <p className="text-xs text-gp-ink-strong dark:text-white">
-                                {pulse.availability}
                               </p>
                             </div>
                           )}

@@ -59,11 +59,13 @@ export default function ResonanceDetailsPage() {
     (pulse) =>
       pulse?.__typename &&
       ['GoalPulse', 'ResourcePulse', 'StoryPulse'].includes(pulse.__typename)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any
   const target = targetArray.find(
     (pulse) =>
       pulse?.__typename &&
       ['GoalPulse', 'ResourcePulse', 'StoryPulse'].includes(pulse.__typename)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any
 
   const handleEditStart = () => {
@@ -302,7 +304,9 @@ export default function ResonanceDetailsPage() {
                     </p>
                     {source.location && (
                       <div className="flex items-center gap-1.5 mb-4 text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                        <span className="material-symbols-outlined text-[14px]">location_on</span>
+                        <span className="material-symbols-outlined text-[14px]">
+                          location_on
+                        </span>
                         <span>{source.location}</span>
                       </div>
                     )}
@@ -409,7 +413,9 @@ export default function ResonanceDetailsPage() {
                     </p>
                     {target.location && (
                       <div className="flex items-center gap-1.5 mb-4 text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-                        <span className="material-symbols-outlined text-[14px]">location_on</span>
+                        <span className="material-symbols-outlined text-[14px]">
+                          location_on
+                        </span>
                         <span>{target.location}</span>
                       </div>
                     )}
