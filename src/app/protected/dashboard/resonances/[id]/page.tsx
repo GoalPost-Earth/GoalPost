@@ -300,6 +300,12 @@ export default function ResonanceDetailsPage() {
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-4 line-clamp-2">
                       {source.content || 'No description'}
                     </p>
+                    {source.location && (
+                      <div className="flex items-center gap-1.5 mb-4 text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                        <span className="material-symbols-outlined text-[14px]">location_on</span>
+                        <span>{source.location}</span>
+                      </div>
+                    )}
                     <div className="flex gap-2 flex-wrap">
                       <span
                         className={cn(
@@ -401,6 +407,12 @@ export default function ResonanceDetailsPage() {
                     <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-4 line-clamp-2">
                       {target.content || 'No description'}
                     </p>
+                    {target.location && (
+                      <div className="flex items-center gap-1.5 mb-4 text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                        <span className="material-symbols-outlined text-[14px]">location_on</span>
+                        <span>{target.location}</span>
+                      </div>
+                    )}
                     <div className="flex gap-2 flex-wrap">
                       <span
                         className={cn(

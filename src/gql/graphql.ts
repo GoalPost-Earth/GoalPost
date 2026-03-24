@@ -19991,6 +19991,7 @@ export type GetPulseDetailsQuery = {
     createdAt: any
     intensity?: number | null
     resourceType: string
+    location?: string | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -20042,6 +20043,7 @@ export type GetResonanceLinkDetailsQuery = {
           status: GoalStatus
           horizon?: GoalHorizon | null
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
       | {
@@ -20052,6 +20054,7 @@ export type GetResonanceLinkDetailsQuery = {
           resourceType: string
           availability?: number | null
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
       | {
@@ -20060,6 +20063,7 @@ export type GetResonanceLinkDetailsQuery = {
           title: string
           content: string
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
     >
@@ -20074,6 +20078,7 @@ export type GetResonanceLinkDetailsQuery = {
           status: GoalStatus
           horizon?: GoalHorizon | null
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
       | {
@@ -20084,6 +20089,7 @@ export type GetResonanceLinkDetailsQuery = {
           resourceType: string
           availability?: number | null
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
       | {
@@ -20092,6 +20098,7 @@ export type GetResonanceLinkDetailsQuery = {
           title: string
           content: string
           intensity?: number | null
+          location?: string | null
           createdAt: any
         }
     >
@@ -32988,6 +32995,7 @@ export const GetPulseDetailsDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'resourceType' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'context' },
@@ -33191,6 +33199,10 @@ export const GetResonanceLinkDetailsDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
                             },
                           ],
@@ -33231,6 +33243,10 @@ export const GetResonanceLinkDetailsDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
                             },
                           ],
@@ -33260,6 +33276,10 @@ export const GetResonanceLinkDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'intensity' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
                             },
                             {
                               kind: 'Field',
@@ -33316,6 +33336,10 @@ export const GetResonanceLinkDetailsDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
                             },
                           ],
@@ -33356,6 +33380,10 @@ export const GetResonanceLinkDetailsDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
                             },
                           ],
@@ -33385,6 +33413,10 @@ export const GetResonanceLinkDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'intensity' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
                             },
                             {
                               kind: 'Field',

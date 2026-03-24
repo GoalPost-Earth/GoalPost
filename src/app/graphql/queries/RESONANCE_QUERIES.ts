@@ -18,6 +18,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           status
           horizon
           intensity
+          location
           createdAt
         }
         ... on ResourcePulse {
@@ -27,6 +28,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           resourceType
           availability
           intensity
+          location
           createdAt
         }
         ... on StoryPulse {
@@ -34,6 +36,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           title
           content
           intensity
+          location
           createdAt
         }
       }
@@ -46,6 +49,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           status
           horizon
           intensity
+          location
           createdAt
         }
         ... on ResourcePulse {
@@ -55,6 +59,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           resourceType
           availability
           intensity
+          location
           createdAt
         }
         ... on StoryPulse {
@@ -62,6 +67,7 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           title
           content
           intensity
+          location
           createdAt
         }
       }

@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { LinkifiedText } from '@/components/ui/linkified-text'
 
 function typenameToNodeType(typename: string): NodeType {
   const map: Record<string, NodeType> = {
@@ -922,7 +923,7 @@ export default function PulseDetailsPage() {
                 <SectionHeader icon="description" title="Content" />
                 <ProfileCard>
                   <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
-                    {pulse.content}
+                    <LinkifiedText text={pulse.content} />
                   </p>
                 </ProfileCard>
               </div>
@@ -1125,7 +1126,7 @@ export default function PulseDetailsPage() {
                             Location
                           </span>
                           <p className="text-xs text-gp-ink-strong dark:text-white">
-                            {pulse.location}
+                            <LinkifiedText text={pulse.location} />
                           </p>
                         </div>
                       )}

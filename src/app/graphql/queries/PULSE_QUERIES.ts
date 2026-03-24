@@ -168,6 +168,7 @@ export const GET_PULSE_DETAILS = graphql(`
       createdAt
       intensity
       resourceType
+      location
       context {
         id
         title

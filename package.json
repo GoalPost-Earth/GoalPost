@@ -20,6 +20,7 @@
     "load:sample-data": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/load-sample-data.js",
     "seed:user": "cross-env DOTENV_CONFIG_PATH=./.env.local node scripts/seed-initial-user.js",
     "migrate:prod-to-dev": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/migrate-prod-to-dev.ts",
+    "backfill:resonance-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-resonance-created-at.ts",
     "setup:env": "bash scripts/setup-environment.sh",
     "workers": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx src/lib/jobs/workers.ts"
   },
