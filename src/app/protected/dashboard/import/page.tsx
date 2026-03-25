@@ -252,7 +252,10 @@ export default function DashboardImportPage() {
     toast.success(`${template.fileName} downloaded.`)
   }
 
-  async function readFile(file: File) {
+  async function readFile(file: File): Promise<{
+    base64: string
+    preview: ImportPreview
+  }> {
     const fileBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(fileBuffer, { type: 'array', raw: false })
     const firstSheetName = workbook.SheetNames[0]
@@ -284,13 +287,14 @@ export default function DashboardImportPage() {
       .map((value) => normalizeHeader(String(value ?? '')))
       .filter((value) => value.length > 0)
 
-    setWorkbookBase64(arrayBufferToBase64(fileBuffer))
-    setResult(null)
-    setPreview({
-      fileName: file.name,
-      headers,
-      rowCount: parsedRows.length,
-    })
+    return {
+      base64: arrayBufferToBase64(fileBuffer),
+      preview: {
+        fileName: file.name,
+        headers,
+        rowCount: parsedRows.length,
+      },
+    }
   }
 
   async function handleFileSelection(file?: File | null) {
@@ -303,29 +307,19 @@ export default function DashboardImportPage() {
       return
     }
 
-    try {
-      await readFile(file)
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Could not read XLSX file.'
-      toast.error(message)
-    }
-  }
-
-  async function handleSubmit() {
     if (!user?.id) {
       toast.error('You must be logged in to import data.')
-      return
-    }
-
-    if (!workbookBase64 || !preview) {
-      toast.error('Choose an XLSX file before starting the import.')
       return
     }
 
     setIsSubmitting(true)
 
     try {
+      const { base64, preview } = await readFile(file)
+      setWorkbookBase64(base64)
+      setResult(null)
+      setPreview(preview)
+
       const token =
         typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
@@ -338,7 +332,7 @@ export default function DashboardImportPage() {
         body: JSON.stringify({
           userId: user.id,
           uploadType,
-          workbookBase64,
+          workbookBase64: base64,
         }),
       })
 
@@ -372,17 +366,11 @@ export default function DashboardImportPage() {
         toast.error(payload.message || payload.error || 'Import failed.')
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Import failed.'
-      saveHistoryEntry({
-        id: crypto.randomUUID(),
-        attemptedAt: new Date().toISOString(),
-        uploadType,
-        fileName: preview.fileName,
-        success: false,
-        importedRows: 0,
-        failedRows: preview.rowCount,
-        message,
-      })
+      const message =
+        error instanceof Error ? error.message : 'Could not import XLSX file.'
+      setPreview(null)
+      setWorkbookBase64('')
+      setResult(null)
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -564,25 +552,21 @@ export default function DashboardImportPage() {
                       {preview.rowCount} rows detected
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gp-primary px-6 py-3 text-sm font-bold text-white shadow-xl transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <span className="material-symbols-outlined text-base">
-                      bolt
-                    </span>
-                    {isSubmitting
-                      ? 'Importing...'
-                      : `Import ${promiseLabels[uploadType]}`}
-                  </button>
+                  {isSubmitting && (
+                    <div className="inline-flex cursor-wait items-center gap-2 rounded-full bg-blue-500 px-6 py-3 text-sm font-bold text-white shadow-xl">
+                      <span className="material-symbols-outlined animate-spin text-base">
+                        sync
+                      </span>
+                      Importing...
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => downloadTemplate(uploadType)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15"
+                    disabled={isSubmitting}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15"
                   >
                     <span className="material-symbols-outlined text-sm">
                       download

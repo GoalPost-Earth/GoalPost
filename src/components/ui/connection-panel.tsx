@@ -76,7 +76,8 @@ export function ConnectionPanel({
 
   const renderPerson = (person: PersonInConnection) => {
     const colors = roleColors[person.role || 'MEMBER'] || roleColors.MEMBER
-    const initials = `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase()
+    const initials =
+      `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase()
 
     return (
       <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 dark:bg-white/5 border border-gp-glass-border">
@@ -174,6 +175,18 @@ export function ConnectionPanel({
           </div>
         </div>
 
+        {/* Why Connected */}
+        {why && (
+          <div className="bg-white/5 dark:bg-white/5 rounded-lg p-4 border border-gp-glass-border">
+            <h3 className="text-xs font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wider mb-2">
+              Why Connected
+            </h3>
+            <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
+              {why}
+            </p>
+          </div>
+        )}
+
         {/* Person 2 */}
         <div>
           <h3 className="text-xs font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wider mb-2">
@@ -182,29 +195,15 @@ export function ConnectionPanel({
           {renderPerson(person2)}
         </div>
 
-        {/* Connection Details */}
-        {(why || interests) && (
-          <div className="pt-4 border-t border-gp-glass-border space-y-4">
-            {why && (
-              <div>
-                <h3 className="text-xs font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wider mb-2">
-                  Why Connected
-                </h3>
-                <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
-                  {why}
-                </p>
-              </div>
-            )}
-            {interests && (
-              <div>
-                <h3 className="text-xs font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wider mb-2">
-                  Shared Interests
-                </h3>
-                <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
-                  {interests}
-                </p>
-              </div>
-            )}
+        {/* Shared Interests */}
+        {interests && (
+          <div className="pt-4 border-t border-gp-glass-border">
+            <h3 className="text-xs font-semibold text-gp-ink-muted dark:text-gp-ink-soft uppercase tracking-wider mb-2">
+              Shared Interests
+            </h3>
+            <p className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-relaxed">
+              {interests}
+            </p>
           </div>
         )}
       </div>
