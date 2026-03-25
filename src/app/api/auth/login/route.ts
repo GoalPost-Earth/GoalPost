@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { id, hash, ...rest } = result.records[0].get('user')
+    const { id, hash, ownsSpaces, ...rest } = result.records[0].get('user')
     const isValid = await comparePassword(password, hash)
 
     if (!isValid) {
@@ -89,6 +89,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // ownsSpaces is intentionally excluded from the JWT to keep the cookie small.
+    // It is still returned in the response body for client-side caching.
     const token = signJWT({
       user: { id, ...rest },
       expiresAt: Math.floor(Date.now() / 1000) + 60 * 30,
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json(
       {
-        user: { id, ...rest },
+        user: { id, ...rest, ownsSpaces },
         token,
         refreshToken,
         returnTo,

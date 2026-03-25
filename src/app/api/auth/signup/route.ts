@@ -128,7 +128,8 @@ export async function POST(req: NextRequest) {
 
       const user = userDataResult.records[0].get('user')
 
-      // Generate authentication tokens (same as login)
+      // ownsSpaces is intentionally excluded from the JWT to keep the cookie small.
+      // It is still returned in the response body for client-side caching.
       const token = signJWT({
         user: {
           id: user.id,
@@ -136,7 +137,6 @@ export async function POST(req: NextRequest) {
           firstName: user.firstName,
           lastName: user.lastName,
           roles: user.roles,
-          ownsSpaces: user.ownsSpaces,
         },
         expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
       })

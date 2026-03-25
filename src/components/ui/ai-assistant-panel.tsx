@@ -7,6 +7,14 @@ import { useApp } from '@/contexts/AppContext'
 import { SendHorizontalIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   PersonCard,
   type PersonProfileData,
 } from '@/components/assistant-ui/person-card'
@@ -23,6 +31,16 @@ interface Message {
   timestamp: Date
   /** Person profiles extracted from PERSON_PROFILE_FOUND markers or tool results */
   personData?: PersonProfileData[]
+}
+
+interface ApprovedActionPayload {
+  tool: string
+  args: Record<string, unknown>
+}
+
+interface PendingApproval extends ApprovedActionPayload {
+  summary: string
+  approvalHash: string
 }
 
 /**
@@ -102,6 +120,12 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
+    []
+  )
+  const [activeApproval, setActiveApproval] = useState<PendingApproval | null>(
+    null
+  )
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom when messages change
@@ -144,13 +168,17 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
     }
   }, [isOpen])
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return
+  const sendMessage = async (
+    overrideInput?: string,
+    approvedActions?: ApprovedActionPayload[]
+  ) => {
+    const effectiveInput = (overrideInput ?? input).trim()
+    if (!effectiveInput || loading) return
 
     const userMessage: Message = {
       id: `msg_${Date.now()}`,
       role: 'user',
-      content: input,
+      content: effectiveInput,
       timestamp: new Date(),
     }
 
@@ -171,10 +199,11 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
               role: m.role,
               content: m.content,
             })),
-            { role: 'user', content: input },
+            { role: 'user', content: effectiveInput },
           ],
           aiMode,
           currentUserId: user?.id, // Pass the current user ID
+          approvedActions,
         }),
       })
 
@@ -191,6 +220,7 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
       let buffer = ''
       let assistantContent = ''
       const capturedPersonProfiles: PersonProfileData[] = []
+      const capturedApprovals: PendingApproval[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -216,6 +246,25 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
                 capturedPersonProfiles.push(
                   ...(event.result.people as PersonProfileData[])
                 )
+              }
+            } else if (
+              event.type === 'approval_required' &&
+              event.tool &&
+              event.args &&
+              event.approvalHash
+            ) {
+              const alreadyCaptured = capturedApprovals.some(
+                (entry) => entry.approvalHash === event.approvalHash
+              )
+              if (!alreadyCaptured) {
+                capturedApprovals.push({
+                  tool: event.tool,
+                  args: event.args as Record<string, unknown>,
+                  approvalHash: event.approvalHash,
+                  summary:
+                    event.summary ||
+                    `Approve ${event.tool} with the requested arguments`,
+                })
               }
             }
           } catch {
@@ -247,6 +296,22 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
         }
         setMessages((prev) => [...prev, assistantMessage])
       }
+
+      if (capturedApprovals.length > 0) {
+        setPendingApprovals((prev) => {
+          const merged = [...prev]
+          for (const approval of capturedApprovals) {
+            if (
+              !merged.some(
+                (item) => item.approvalHash === approval.approvalHash
+              )
+            ) {
+              merged.push(approval)
+            }
+          }
+          return merged
+        })
+      }
     } catch (error) {
       console.error('[Chat] Error:', error)
       const errorMessage: Message = {
@@ -259,6 +324,23 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const removeApproval = (approvalHash: string) => {
+    setPendingApprovals((prev) =>
+      prev.filter((item) => item.approvalHash !== approvalHash)
+    )
+    setActiveApproval((prev) =>
+      prev?.approvalHash === approvalHash ? null : prev
+    )
+  }
+
+  const approveAction = async (approval: PendingApproval) => {
+    removeApproval(approval.approvalHash)
+    await sendMessage(
+      `Please execute this approved action: ${approval.summary}`,
+      [{ tool: approval.tool, args: approval.args }]
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -275,14 +357,14 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
       {/* Overlay */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[4px] z-[60] opacity-0"
+        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-xs z-60 opacity-0"
         onClick={onClose}
       />
 
       {/* Chat Panel */}
       <div
         ref={panelRef}
-        className="fixed right-0 top-0 h-full w-full max-w-[480px] bg-white dark:bg-[#121b21] border-l border-slate-200 dark:border-white/10 shadow-[-20px_0_60px_rgba(0,0,0,0.3)] dark:shadow-[-20px_0_60px_rgba(0,0,0,0.6)] z-[70] flex flex-col translate-x-full"
+        className="fixed right-0 top-0 h-full w-full max-w-120 bg-white dark:bg-[#121b21] border-l border-slate-200 dark:border-white/10 shadow-[-20px_0_60px_rgba(0,0,0,0.3)] dark:shadow-[-20px_0_60px_rgba(0,0,0,0.6)] z-70 flex flex-col translate-x-full"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-white/5 bg-white/50 dark:bg-white/5 backdrop-blur-md relative z-10">
@@ -372,6 +454,44 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
 
         {/* Composer */}
         <div className="border-t border-slate-200 dark:border-white/10 px-4 py-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+          {pendingApprovals.length > 0 && (
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+                Approval required for {pendingApprovals.length} AI change
+                {pendingApprovals.length > 1 ? 's' : ''}
+              </p>
+              <div className="mt-2 space-y-2">
+                {pendingApprovals.map((approval) => (
+                  <div
+                    key={approval.approvalHash}
+                    className="rounded-md bg-white/70 dark:bg-black/20 px-2 py-2"
+                  >
+                    <p className="text-xs text-slate-700 dark:text-slate-200">
+                      {approval.summary}
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setActiveApproval(approval)}
+                      >
+                        Review
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => removeApproval(approval.approvalHash)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <input
               value={input}
@@ -382,7 +502,9 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
               className="flex-1 px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
             />
             <Button
-              onClick={sendMessage}
+              onClick={() => {
+                void sendMessage()
+              }}
               disabled={loading || !input.trim()}
               className="bg-gp-primary hover:bg-gp-primary/90 text-white"
               size="sm"
@@ -403,6 +525,54 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
           </p>
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(activeApproval)}
+        onOpenChange={(open) => {
+          if (!open) setActiveApproval(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Approve AI Action</DialogTitle>
+            <DialogDescription>
+              Review this requested change before execution.
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeApproval && (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-700 dark:text-slate-200">
+                {activeApproval.summary}
+              </p>
+              <pre className="max-h-48 overflow-auto rounded-md bg-slate-100 dark:bg-white/10 p-3 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
+                {JSON.stringify(activeApproval.args, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (activeApproval) {
+                  removeApproval(activeApproval.approvalHash)
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!activeApproval) return
+                await approveAction(activeApproval)
+              }}
+            >
+              Approve And Run
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

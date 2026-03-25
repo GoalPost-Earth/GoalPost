@@ -9,25 +9,23 @@ import {
 } from '@langchain/core/messages'
 import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool'
 import { createSpaceSearchTool } from '@/modules/agent/tools/space/space-search.tool'
-import { createSpaceRenameTool } from '@/modules/agent/tools/space/space-rename.tool'
-import {
-  searchFieldContexts,
-  updateFieldContext,
-} from '@/modules/agent/tools/field-context/field-context.service'
-import {
-  searchPulses,
-  updatePulse,
-  linkPulseToContext,
-  unlinkPulseFromContext,
-} from '@/modules/agent/tools/pulse/pulse.service'
+import { searchFieldContexts } from '@/modules/agent/tools/field-context/field-context.service'
+import { searchPulses } from '@/modules/agent/tools/pulse/pulse.service'
 import { graphRagSearch } from '@/modules/agent/tools/rag/graph-rag.service'
 import { SYSTEM_PROMPTS } from '@/lib/simulation/system-prompts'
 import type { AssistantMode } from '@/lib/simulation'
-import { DynamicTool } from '@langchain/core/tools'
 import { DynamicStructuredTool } from '@langchain/community/tools/dynamic'
 import { getLangChainEmbeddings } from '@/lib/llm/adapters/langchain-adapter'
 import { initGraph } from '@/modules/graph'
 import { verifyJWT } from '@/app/api/auth/utils'
+import {
+  type ApprovedAction,
+  buildApprovedActionHashSet,
+  createApprovalHash,
+  describeWriteAction,
+  executeAuthorizedWriteTool,
+  isWriteToolName,
+} from './hitl'
 import { z } from 'zod'
 
 // Allow streaming responses up to 30 seconds
@@ -39,6 +37,7 @@ interface ChatRequest {
   tools?: Record<string, unknown>
   aiMode?: AssistantMode
   currentUserId?: string
+  approvedActions?: ApprovedAction[]
 }
 
 interface StreamEvent {
@@ -46,12 +45,15 @@ interface StreamEvent {
     | 'tool_call'
     | 'tool_result'
     | 'tool_error'
+    | 'approval_required'
     | 'message'
     | 'done'
     | 'error'
   tool?: string
   args?: unknown
   result?: unknown
+  summary?: string
+  approvalHash?: string
   content?: string
   error?: string
 }
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
       system,
       aiMode,
       currentUserId: clientProvidedUserId,
+      approvedActions,
     }: ChatRequest = await req.json()
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -105,7 +108,6 @@ export async function POST(req: NextRequest) {
 
           const personTool = createPersonSearchTool(graph)
           const spaceSearchTool = createSpaceSearchTool(graph)
-          const spaceRenameTool = createSpaceRenameTool(graph)
 
           const langchainTools = [
             new DynamicStructuredTool({
@@ -231,13 +233,91 @@ export async function POST(req: NextRequest) {
               }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
               func: async (input: { currentName: string; newName: string }) => {
                 try {
-                  return await spaceRenameTool.invoke(input)
+                  return JSON.stringify({
+                    success: true,
+                    pendingApproval: true,
+                    message:
+                      'Rename request prepared. Waiting for user approval before execution.',
+                    requestedChange: input,
+                  })
                 } catch {
                   return JSON.stringify({
                     success: false,
                     message: 'Failed to rename space',
                   })
                 }
+              },
+            }),
+            new DynamicStructuredTool({
+              name: 'create_field_context',
+              description:
+                'Create a field context (field) in a space you can edit.',
+              schema: z.object({
+                spaceId: z.string().optional(),
+                spaceName: z.string().optional(),
+                title: z.string(),
+                emergentName: z.string().optional(),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: {
+                spaceId?: string
+                spaceName?: string
+                title: string
+                emergentName?: string
+              }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Field context creation prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
+              },
+            }),
+            new DynamicStructuredTool({
+              name: 'delete_field_context',
+              description:
+                'Delete a field context you can edit. If it has pulses, set deletePulses true to remove them too.',
+              schema: z.object({
+                contextId: z.string().optional(),
+                contextTitle: z.string().optional(),
+                currentTitle: z.string().optional(),
+                spaceName: z.string().optional(),
+                deletePulses: z.boolean().optional(),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: {
+                contextId?: string
+                contextTitle?: string
+                currentTitle?: string
+                spaceName?: string
+                deletePulses?: boolean
+              }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Field context deletion prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
+              },
+            }),
+            new DynamicStructuredTool({
+              name: 'update_my_profile',
+              description:
+                'Update the current authenticated user profile. Currently supports updating your own display name only.',
+              schema: z.object({
+                newName: z
+                  .string()
+                  .min(1)
+                  .describe('Your new display name for your own profile.'),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: { newName: string }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Profile update prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
               },
             }),
             new DynamicStructuredTool({
@@ -281,7 +361,13 @@ export async function POST(req: NextRequest) {
                 newEmergentName?: string
               }) => {
                 try {
-                  return JSON.stringify(await updateFieldContext(graph, input))
+                  return JSON.stringify({
+                    success: true,
+                    pendingApproval: true,
+                    message:
+                      'Field context update prepared. Waiting for user approval before execution.',
+                    requestedChange: input,
+                  })
                 } catch {
                   return JSON.stringify({
                     success: false,
@@ -334,6 +420,87 @@ export async function POST(req: NextRequest) {
               },
             }),
             new DynamicStructuredTool({
+              name: 'create_pulse',
+              description: 'Create a pulse in a field context you can edit.',
+              schema: z.object({
+                contextId: z.string().optional(),
+                contextTitle: z.string().optional(),
+                spaceName: z.string().optional(),
+                pulseType: z
+                  .enum([
+                    'GoalPulse',
+                    'ResourcePulse',
+                    'StoryPulse',
+                    'CarePulse',
+                    'CoreValuePulse',
+                    'FieldPulse',
+                  ])
+                  .optional(),
+                title: z.string(),
+                content: z.string(),
+                status: z.string().optional(),
+                intensity: z.number().optional(),
+                horizon: z.string().optional(),
+                resourceType: z.string().optional(),
+                availability: z.number().optional(),
+                why: z.string().optional(),
+                location: z.string().optional(),
+                time: z.string().optional(),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: {
+                contextId?: string
+                contextTitle?: string
+                spaceName?: string
+                pulseType?:
+                  | 'GoalPulse'
+                  | 'ResourcePulse'
+                  | 'StoryPulse'
+                  | 'CarePulse'
+                  | 'CoreValuePulse'
+                  | 'FieldPulse'
+                title: string
+                content: string
+                status?: string
+                intensity?: number
+                horizon?: string
+                resourceType?: string
+                availability?: number
+                why?: string
+                location?: string
+                time?: string
+              }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Pulse creation prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
+              },
+            }),
+            new DynamicStructuredTool({
+              name: 'delete_pulse',
+              description: 'Delete a pulse you can edit.',
+              schema: z.object({
+                pulseId: z.string().optional(),
+                currentTitle: z.string().optional(),
+                contextId: z.string().optional(),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: {
+                pulseId?: string
+                currentTitle?: string
+                contextId?: string
+              }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Pulse deletion prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
+              },
+            }),
+            new DynamicStructuredTool({
               name: 'update_pulse',
               description:
                 'Update pulse properties such as title/content/status/intensity.',
@@ -368,13 +535,36 @@ export async function POST(req: NextRequest) {
                 newTime?: string
               }) => {
                 try {
-                  return JSON.stringify(await updatePulse(graph, input))
+                  return JSON.stringify({
+                    success: true,
+                    pendingApproval: true,
+                    message:
+                      'Pulse update prepared. Waiting for user approval before execution.',
+                    requestedChange: input,
+                  })
                 } catch {
                   return JSON.stringify({
                     success: false,
                     message: 'Failed to update pulse',
                   })
                 }
+              },
+            }),
+            new DynamicStructuredTool({
+              name: 'delete_my_profile',
+              description:
+                'Deactivate the current authenticated user profile. Only applies to your own account.',
+              schema: z.object({
+                confirm: z.boolean().optional(),
+              }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async (input: { confirm?: boolean }) => {
+                return JSON.stringify({
+                  success: true,
+                  pendingApproval: true,
+                  message:
+                    'Profile deactivation prepared. Waiting for user approval before execution.',
+                  requestedChange: input,
+                })
               },
             }),
             new DynamicStructuredTool({
@@ -393,11 +583,13 @@ export async function POST(req: NextRequest) {
                 contextTitle?: string
               }) => {
                 try {
-                  const result =
-                    input.action === 'link'
-                      ? await linkPulseToContext(graph, input)
-                      : await unlinkPulseFromContext(graph, input)
-                  return JSON.stringify(result)
+                  return JSON.stringify({
+                    success: true,
+                    pendingApproval: true,
+                    message:
+                      'Pulse/context link update prepared. Waiting for user approval before execution.',
+                    requestedChange: input,
+                  })
                 } catch {
                   return JSON.stringify({
                     success: false,
@@ -468,6 +660,8 @@ export async function POST(req: NextRequest) {
             const toolsMap = Object.fromEntries(
               langchainTools.map((t) => [t.name, t])
             )
+            const approvedActionHashes =
+              buildApprovedActionHashSet(approvedActions)
             const toolResults: ToolMessage[] = []
 
             // Execute tools
@@ -486,13 +680,51 @@ export async function POST(req: NextRequest) {
                 const tool = toolsMap[toolCall.name]
                 if (!tool) continue
 
-                const result = await tool.invoke(toolCall.args || {})
+                let parsedResult: Record<string, unknown>
+                if (isWriteToolName(toolCall.name)) {
+                  const args = (toolCall.args || {}) as Record<string, unknown>
+                  const approvalHash = createApprovalHash(toolCall.name, args)
+
+                  if (!approvedActionHashes.has(approvalHash)) {
+                    const approvalEvent: StreamEvent = {
+                      type: 'approval_required',
+                      tool: toolCall.name,
+                      args,
+                      summary: describeWriteAction(toolCall.name, args),
+                      approvalHash,
+                    }
+                    controller.enqueue(
+                      encoder.encode(JSON.stringify(approvalEvent) + '\n')
+                    )
+
+                    parsedResult = {
+                      success: false,
+                      approvalRequired: true,
+                      approvalHash,
+                      message:
+                        'This action needs your approval before I can execute it.',
+                    }
+                  } else {
+                    parsedResult = await executeAuthorizedWriteTool(
+                      graph,
+                      currentUserId,
+                      toolCall.name,
+                      args
+                    )
+                  }
+                } else {
+                  const result = await tool.invoke(toolCall.args || {})
+                  parsedResult = JSON.parse(result as string) as Record<
+                    string,
+                    unknown
+                  >
+                }
 
                 // Send tool_result event
                 const resultEvent: StreamEvent = {
                   type: 'tool_result',
                   tool: toolCall.name,
-                  result: JSON.parse(result as string),
+                  result: parsedResult,
                 }
                 controller.enqueue(
                   encoder.encode(JSON.stringify(resultEvent) + '\n')
@@ -501,7 +733,7 @@ export async function POST(req: NextRequest) {
                 if (toolCall.id) {
                   toolResults.push(
                     new ToolMessage({
-                      content: result as string,
+                      content: JSON.stringify(parsedResult),
                       tool_call_id: toolCall.id,
                       name: toolCall.name,
                     })
