@@ -1,11 +1,17 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useQuery } from '@apollo/client/react'
-import Select, { StylesConfig } from 'react-select'
+import type SelectType from 'react-select'
+import type { StylesConfig } from 'react-select'
 import { cn } from '@/lib/utils'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERIES'
+
+const Select = dynamic(() => import('react-select'), {
+  ssr: false,
+}) as typeof SelectType
 
 type PulseType = 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
 

@@ -192,7 +192,9 @@ export default function ProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberSpaces: any[] =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    personData.memberOf?.map((membership: any) => membership.space[0]).filter(Boolean) || []
+    personData.memberOf
+      ?.map((membership: any) => membership.space[0])
+      .filter(Boolean) || []
 
   // Merge and deduplicate spaces
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

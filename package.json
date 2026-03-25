@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-http-header-size=32768' next dev",
+    "dev": "cross-env NODE_OPTIONS=--max-http-header-size=32768 next dev",
     "build": "next build",
     "start": "next start",
     "start:dev": "node scripts/start-dev.js",
