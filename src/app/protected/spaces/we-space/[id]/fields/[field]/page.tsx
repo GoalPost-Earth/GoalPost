@@ -208,13 +208,14 @@ function FieldDetailPage() {
     { data: pulseDetailsData, loading: pulseDetailsLoading },
   ] = useLazyQuery(GET_PULSE_DETAILS)
 
-  const { data: pulsesByContextData, loading: isPulsesLoading } = useQuery(
-    GET_PULSES_BY_CONTEXT,
-    {
-      variables: { contextId: fieldId || '' },
-      skip: !fieldId,
-    }
-  )
+  const {
+    data: pulsesByContextData,
+    loading: isPulsesLoading,
+    refetch: refetchPulsesByContext,
+  } = useQuery(GET_PULSES_BY_CONTEXT, {
+    variables: { contextId: fieldId || '' },
+    skip: !fieldId,
+  })
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: membersData, loading: isMembersLoading } = useQuery(
@@ -1686,6 +1687,12 @@ function FieldDetailPage() {
         isOpen={isPulsePanelOpen}
         isLoading={pulseDetailsLoading}
         pulse={pulseDetails}
+        currentContextId={fieldId}
+        onMoveSuccess={async () => {
+          setIsPulsePanelOpen(false)
+          setSelectedNodeId(null)
+          await refetchPulsesByContext()
+        }}
         onClose={() => {
           setIsPulsePanelOpen(false)
         }}

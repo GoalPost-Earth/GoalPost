@@ -12,6 +12,7 @@ import { useApolloClient } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, X } from 'lucide-react'
 import { useApp } from '@/contexts/AppContext'
+import { useRouter } from 'next/navigation'
 
 export interface NotificationItem {
   id: string
@@ -94,6 +95,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const [error, setError] = useState<string | null>(null)
   const { user } = useApp()
   const apolloClient = useApolloClient()
+  const router = useRouter()
 
   // Fetch user's recent logs
   useEffect(() => {
@@ -221,7 +223,10 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       {/* Footer */}
       {notifications.length > 0 && (
         <div className="px-4 py-3 border-t border-gp-glass-border">
-          <button className="text-sm font-medium text-gp-primary hover:text-gp-primary/80 transition-colors">
+          <button
+            className="text-sm font-medium text-gp-primary hover:text-gp-primary/80 transition-colors cursor-pointer"
+            onClick={() => router.push('/protected/dashboard?tab=activity')}
+          >
             View all activities
           </button>
         </div>

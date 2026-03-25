@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { ActivePulses } from '@/components/dashboard/active-pulses'
 import { FieldsList } from '@/components/dashboard/fields-list'
@@ -22,6 +23,21 @@ export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
   const [activeView, setActiveView] = useState<ViewType>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (
+      tab === 'overview' ||
+      tab === 'pulses' ||
+      tab === 'fields' ||
+      tab === 'spaces' ||
+      tab === 'people' ||
+      tab === 'activity'
+    ) {
+      setActiveView(tab)
+    }
+  }, [searchParams])
 
   // Set page title
   useEffect(() => {

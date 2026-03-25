@@ -36,6 +36,8 @@ export interface PulsePanelProps {
   isOpen: boolean
   isLoading: boolean
   pulse: PulseDetails | null
+  currentContextId?: string
+  onMoveSuccess?: () => void | Promise<void>
   onClose: () => void
   onEdit?: () => void
 }
@@ -77,6 +79,8 @@ export function PulsePanel({
   isOpen,
   isLoading,
   pulse,
+  currentContextId,
+  onMoveSuccess,
   onClose,
   onEdit,
 }: PulsePanelProps) {
@@ -84,7 +88,11 @@ export function PulsePanel({
   const router = useRouter()
   const [isContentExpanded, setIsContentExpanded] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
-  const { sharePulseWithContext, loading: sharingLoading } = usePulseSharing()
+  const {
+    sharePulseWithContext,
+    movePulseToContext,
+    loading: sharingLoading,
+  } = usePulseSharing()
 
   useEffect(() => {
     if (!panelRef.current) return
@@ -365,8 +373,11 @@ export function PulsePanel({
       {showShareModal && pulse && (
         <SharePulseModal
           pulse={pulse}
+          currentContextId={currentContextId}
+          onMoveSuccess={onMoveSuccess}
           onClose={() => setShowShareModal(false)}
           onShare={sharePulseWithContext}
+          onMove={movePulseToContext}
           isLoading={sharingLoading}
         />
       )}
@@ -379,10 +390,17 @@ export function PulsePanel({
  */
 interface SharePulseModalProps {
   pulse: PulseDetails
+  currentContextId?: string
+  onMoveSuccess?: () => void | Promise<void>
   onClose: () => void
   onShare: (
     pulseId: string,
     contextId: string
+  ) => Promise<{ success: boolean; error?: string }>
+  onMove: (
+    pulseId: string,
+    fromContextId: string,
+    toContextId: string
   ) => Promise<{ success: boolean; error?: string }>
   isLoading: boolean
 }
@@ -395,12 +413,22 @@ interface ContextOption {
 
 function SharePulseModal({
   pulse,
+  currentContextId,
+  onMoveSuccess,
   onClose,
   onShare,
+  onMove,
   isLoading,
 }: SharePulseModalProps) {
-  const [selectedContextId, setSelectedContextId] = useState('')
+  const [selectedContexts, setSelectedContexts] = useState<ContextOption[]>([])
+  const [selectedTargetContextId, setSelectedTargetContextId] = useState('')
+  const [mode, setMode] = useState<'share' | 'move'>('share')
   const [shareMessage, setShareMessage] = useState('')
+
+  const moveSourceContextId = currentContextId || pulse.contexts[0]?.id || ''
+  const moveSourceContext =
+    pulse.contexts.find((context) => context.id === moveSourceContextId) ||
+    pulse.contexts[0]
 
   // Fetch all contexts available to the user
   const { data: contextsData, loading: contextsLoading } = useQuery(
@@ -418,7 +446,7 @@ function SharePulseModal({
       })) || []
 
   // Custom styles for react-select to match design system
-  const customStyles: StylesConfig<ContextOption, false> = {
+  const customStyles: StylesConfig<ContextOption, true> = {
     control: (provided, state) => ({
       ...provided,
       backgroundColor:
@@ -471,9 +499,24 @@ function SharePulseModal({
       ...provided,
       color: 'var(--gp-ink-muted)',
     }),
-    singleValue: (provided) => ({
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: 'color-mix(in srgb, var(--gp-primary) 12%, transparent)',
+      border:
+        '1px solid color-mix(in srgb, var(--gp-primary) 35%, transparent)',
+    }),
+    multiValueLabel: (provided) => ({
       ...provided,
       color: 'var(--gp-ink-strong)',
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: 'var(--gp-ink-muted)',
+      ':hover': {
+        backgroundColor:
+          'color-mix(in srgb, var(--gp-primary) 12%, transparent)',
+        color: 'var(--gp-primary)',
+      },
     }),
     noOptionsMessage: (provided) => ({
       ...provided,
@@ -487,19 +530,87 @@ function SharePulseModal({
     }),
   }
 
-  const handleShare = async () => {
-    if (!selectedContextId) return
+  const customStylesSingle = customStyles as unknown as StylesConfig<
+    ContextOption,
+    false
+  >
 
-    const result = await onShare(pulse.id, selectedContextId)
-    if (result.success) {
-      setShareMessage('Pulse shared successfully!')
+  const handleShare = async () => {
+    if (selectedContexts.length === 0) return
+
+    const failedShares: string[] = []
+    let successCount = 0
+    const existingContextIds = new Set(pulse.contexts.map((ctx) => ctx.id))
+
+    for (const context of selectedContexts) {
+      if (existingContextIds.has(context.value)) {
+        failedShares.push(
+          `${context.label}: Pulse already exists in this context`
+        )
+        continue
+      }
+
+      const result = await onShare(pulse.id, context.value)
+      if (result.success) {
+        successCount += 1
+      } else {
+        failedShares.push(
+          `${context.label}: ${result.error || 'Failed to share pulse'}`
+        )
+      }
+    }
+
+    if (failedShares.length === 0) {
+      setShareMessage(
+        `Pulse shared successfully to ${successCount} context${successCount === 1 ? '' : 's'}!`
+      )
       setTimeout(() => {
         onClose()
         setShareMessage('')
       }, 2000)
-    } else {
-      setShareMessage(result.error || 'Failed to share pulse')
+      return
     }
+
+    const successPrefix =
+      successCount > 0
+        ? `Shared to ${successCount} context${successCount === 1 ? '' : 's'}. `
+        : ''
+    setShareMessage(`${successPrefix}${failedShares.join(' | ')}`)
+    if (successCount > 0) {
+      setSelectedContexts([])
+    }
+  }
+
+  const handleMove = async () => {
+    if (!moveSourceContextId || !selectedTargetContextId) return
+
+    if (moveSourceContextId === selectedTargetContextId) {
+      setShareMessage('Source and destination contexts must be different')
+      return
+    }
+
+    const result = await onMove(
+      pulse.id,
+      moveSourceContextId,
+      selectedTargetContextId
+    )
+
+    if (result.success) {
+      if (onMoveSuccess) {
+        await onMoveSuccess()
+        onClose()
+        return
+      }
+
+      setShareMessage('Pulse moved successfully!')
+      setTimeout(() => {
+        onClose()
+        setShareMessage('')
+      }, 2000)
+      return
+    }
+
+    setShareMessage(result.error || 'Failed to move pulse')
   }
 
   return (
@@ -519,50 +630,121 @@ function SharePulseModal({
 
         <div>
           <p className="text-sm text-gp-ink-muted mb-3">
-            Select a context to share this pulse with. When shared, any
-            resonances with pulses in that context will be discoverable.
+            {mode === 'share'
+              ? 'Select one or more contexts to share this pulse with. When shared, any resonances with pulses in that context will be discoverable.'
+              : 'Move this pulse from one context to another. This removes it from the source context and keeps it in the destination context.'}
           </p>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-gp-ink-muted">
-            Target Context
-          </label>
-
-          <Select<ContextOption>
-            options={contextOptions}
-            value={contextOptions.find(
-              (opt) => opt.value === selectedContextId
+        <div className="flex gap-2 p-1 rounded-lg bg-gp-glass-bg border border-gp-glass-border">
+          <button
+            onClick={() => {
+              setMode('share')
+              setShareMessage('')
+            }}
+            className={cn(
+              'flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              mode === 'share'
+                ? 'bg-gp-primary text-white'
+                : 'text-gp-ink-strong hover:bg-white/50 dark:hover:bg-white/5'
             )}
-            onChange={(option) => setSelectedContextId(option?.value || '')}
-            isLoading={contextsLoading}
-            isSearchable
-            placeholder="Choose a context..."
-            noOptionsMessage={() =>
-              contextOptions.length === 0
-                ? 'No additional contexts available'
-                : 'No matching contexts found'
-            }
-            styles={customStyles}
-            formatOptionLabel={(option) => (
-              <div className="flex flex-col">
-                <div className="font-medium text-gp-ink-strong">
-                  {option.label}
-                </div>
-                <div className="text-xs text-gp-ink-muted">
-                  {option.spaceName}
-                </div>
-              </div>
+          >
+            Share
+          </button>
+          <button
+            onClick={() => {
+              setMode('move')
+              setShareMessage('')
+            }}
+            className={cn(
+              'flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              mode === 'move'
+                ? 'bg-gp-primary text-white'
+                : 'text-gp-ink-strong hover:bg-white/50 dark:hover:bg-white/5'
             )}
-          />
-
-          {contextOptions.length === 0 && !contextsLoading && (
-            <p className="text-xs text-gp-ink-muted mt-2">
-              No additional contexts available. Create more contexts to share
-              this pulse.
-            </p>
-          )}
+          >
+            Move
+          </button>
         </div>
+
+        {mode === 'share' ? (
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase text-gp-ink-muted">
+              Target Contexts
+            </label>
+
+            <Select<ContextOption, true>
+              options={contextOptions}
+              value={selectedContexts}
+              onChange={(options) =>
+                setSelectedContexts(options ? [...options] : [])
+              }
+              isLoading={contextsLoading}
+              isMulti
+              isSearchable
+              closeMenuOnSelect={false}
+              placeholder="Choose one or more contexts..."
+              noOptionsMessage={() =>
+                contextOptions.length === 0
+                  ? 'No additional contexts available'
+                  : 'No matching contexts found'
+              }
+              styles={customStyles}
+              formatOptionLabel={(option) => (
+                <div className="flex flex-col">
+                  <div className="font-medium text-gp-ink-strong">
+                    {option.label}
+                  </div>
+                  <div className="text-xs text-gp-ink-muted">
+                    {option.spaceName}
+                  </div>
+                </div>
+              )}
+            />
+
+            {contextOptions.length === 0 && !contextsLoading && (
+              <p className="text-xs text-gp-ink-muted mt-2">
+                No additional contexts available. Create more contexts to share
+                this pulse.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase text-gp-ink-muted">
+                Source Context
+              </label>
+              <div className="px-3 py-2 rounded-lg border border-gp-glass-border bg-gp-glass-bg text-sm text-gp-ink-strong">
+                {moveSourceContext?.title || 'Current context'}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase text-gp-ink-muted">
+                Destination Context
+              </label>
+              <Select<ContextOption, false>
+                options={contextOptions}
+                value={contextOptions.find(
+                  (option) => option.value === selectedTargetContextId
+                )}
+                onChange={(option) =>
+                  setSelectedTargetContextId(option?.value || '')
+                }
+                isLoading={contextsLoading}
+                isSearchable
+                placeholder="Choose destination context..."
+                noOptionsMessage={() =>
+                  contextOptions.length === 0
+                    ? 'No destination contexts available'
+                    : 'No matching contexts found'
+                }
+                styles={customStylesSingle}
+              />
+            </div>
+          </div>
+        )}
 
         {shareMessage && (
           <div
@@ -585,8 +767,12 @@ function SharePulseModal({
             Cancel
           </button>
           <button
-            onClick={handleShare}
-            disabled={!selectedContextId || isLoading}
+            onClick={mode === 'share' ? handleShare : handleMove}
+            disabled={
+              mode === 'share'
+                ? selectedContexts.length === 0 || isLoading
+                : !moveSourceContextId || !selectedTargetContextId || isLoading
+            }
             className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity text-sm font-medium flex items-center justify-center gap-2"
           >
             {isLoading ? (
@@ -599,7 +785,10 @@ function SharePulseModal({
             ) : (
               <>
                 <span className="material-symbols-outlined">check</span>
-                Share
+                {mode === 'share' ? 'Share' : 'Move'}
+                {mode === 'share' && selectedContexts.length > 0
+                  ? ` (${selectedContexts.length})`
+                  : ''}
               </>
             )}
           </button>
