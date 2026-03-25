@@ -192,7 +192,7 @@ export default function ProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberSpaces: any[] =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    personData.memberOf?.map((membership: any) => membership.space) || []
+    personData.memberOf?.map((membership: any) => membership.space[0]).filter(Boolean) || []
 
   // Merge and deduplicate spaces
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -447,7 +447,7 @@ export default function ProfilePage() {
                 My Spaces
               </h2>
               <button
-                onClick={() => router.push('/protected/dashboard')}
+                onClick={() => router.push('/protected/dashboard?tab=spaces')}
                 className="text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors cursor-pointer"
               >
                 View All →
