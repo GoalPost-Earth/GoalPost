@@ -1,26 +1,19 @@
 'use client'
 
-import { useMessage } from '@assistant-ui/react'
-import { MarkdownText } from './markdown-text'
+import { useMessagePartText } from '@assistant-ui/react'
+import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { PersonCard, PersonProfileData } from './person-card'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
+import remarkGfm from 'remark-gfm'
 
 /**
- * Enhanced message renderer that detects person profile data
- * and renders PersonCard components inline
+ * Custom text message part component that detects PERSON_PROFILE_FOUND markers
+ * and renders PersonCard components instead of raw JSON.
+ *
+ * Must be used as the Text component in MessagePrimitive.Parts.
  */
-export function EnhancedMessageText() {
-  const message = useMessage()
-
-  // Access content from the message state
-  const content = message.content
-
-  // Find text content parts - filter for text type and extract text
-  const textParts = content.filter(
-    (part): part is Extract<typeof part, { type: 'text' }> =>
-      part.type === 'text'
-  )
-  const rawTextContent = textParts.map((part) => part.text).join('\n')
+export const EnhancedTextPart = memo(function EnhancedTextPart() {
+  const { text: rawTextContent } = useMessagePartText()
   // Strip PERSON_PROFILE_FOUND markers and their JSON from the text
   const textContent = useMemo(() => {
     if (!rawTextContent.includes('PERSON_PROFILE_FOUND:')) {
@@ -183,35 +176,31 @@ export function EnhancedMessageText() {
       : [{ type: 'text', content: textContent }]
   }, [rawTextContent, textContent])
 
-  // Handle edge case: if content is empty, show default renderer
-  if (!rawTextContent || rawTextContent.trim().length === 0) {
-    return <MarkdownText />
-  }
-
   // Check if we have any person profiles to render
   const hasPersonProfile = parsedContent.some((el) => el.type === 'person')
 
-  // If we found person profiles, render with cards
+  // If we found person profiles, render with cards + cleaned text
   if (hasPersonProfile) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {parsedContent.map((element, index) => {
           if (element.type === 'person') {
             return (
               <PersonCard
                 key={`person-${index}`}
                 person={element.content as PersonProfileData}
-                className="my-4"
+                className="my-2"
               />
             )
           } else {
-            // Render text as prose
+            const txt = (element.content as string).trim()
+            if (!txt) return null
             return (
               <div
                 key={`text-${index}`}
                 className="prose prose-sm dark:prose-invert max-w-none"
               >
-                {element.content as string}
+                {txt}
               </div>
             )
           }
@@ -220,7 +209,9 @@ export function EnhancedMessageText() {
     )
   }
 
-  // No person profiles found - use default markdown renderer with cleaned text
-  // The textContent variable already has markers stripped
-  return <MarkdownText />
-}
+  // No person profiles — fall back to standard markdown rendering.
+  // MarkdownTextPrimitive reads from the same message part context via useMessagePartText internally.
+  return (
+    <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" />
+  )
+})
