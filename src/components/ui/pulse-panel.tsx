@@ -1,21 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
 import { gsap } from 'gsap'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { useQuery } from '@apollo/client/react'
 import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERIES'
-import type SelectType from 'react-select'
-import type { StylesConfig } from 'react-select'
+import Select, { StylesConfig } from 'react-select'
 import { getConfigForType } from '@/lib/pulse-type-config'
 import { LinkifiedText } from '@/components/ui/linkified-text'
-
-const Select = dynamic(() => import('react-select'), {
-  ssr: false,
-}) as typeof SelectType
 
 export type PulseKind = 'goal' | 'resource' | 'story'
 

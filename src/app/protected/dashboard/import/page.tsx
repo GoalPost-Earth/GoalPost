@@ -47,6 +47,39 @@ interface ImportHistoryItem {
   message: string
 }
 
+interface TemplateHeaderRule {
+  label: string
+  aliases: string[]
+}
+
+const conflictingTemplateHeaders: Record<UploadType, TemplateHeaderRule[]> = {
+  'we-space': [
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+    {
+      label: 'FieldContext target',
+      aliases: ['field_context_name', 'context_name'],
+    },
+    {
+      label: 'Pulse type',
+      aliases: ['pulse_type'],
+    },
+  ],
+  'field-context': [
+    {
+      label: 'Pulse type',
+      aliases: ['pulse_type'],
+    },
+    {
+      label: 'Pulse metadata',
+      aliases: ['status', 'horizon', 'resource_type'],
+    },
+  ],
+  pulse: [],
+}
+
 const uploadDescriptions: Record<UploadType, string> = {
   'we-space':
     'Create or reuse collaborative WeSpaces by lowercase name matching.',
@@ -142,6 +175,43 @@ const promiseLabels: Record<UploadType, string> = {
   pulse: 'Pulses',
 }
 
+const requiredTemplateHeaders: Record<UploadType, TemplateHeaderRule[]> = {
+  'we-space': [
+    {
+      label: 'WeSpace name',
+      aliases: ['name', 'we_space_name', 'space_name'],
+    },
+  ],
+  'field-context': [
+    {
+      label: 'FieldContext name',
+      aliases: ['name', 'title', 'field_context_name', 'context_name'],
+    },
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+  ],
+  pulse: [
+    {
+      label: 'Pulse title',
+      aliases: ['title', 'name'],
+    },
+    {
+      label: 'Pulse content',
+      aliases: ['content', 'description', 'details'],
+    },
+    {
+      label: 'FieldContext name',
+      aliases: ['field_context_name', 'context_name'],
+    },
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+  ],
+}
+
 const IMPORT_HISTORY_STORAGE_KEY = 'gp-xlsx-import-history'
 
 function normalizeHeader(header: string) {
@@ -150,6 +220,60 @@ function normalizeHeader(header: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
+}
+
+function validateTemplateHeaders(
+  uploadType: UploadType,
+  headers: string[]
+): string[] {
+  const normalizedHeaders = new Set(
+    headers.map((header) => normalizeHeader(header))
+  )
+
+  const missingRules = requiredTemplateHeaders[uploadType].filter((rule) => {
+    return !rule.aliases.some((alias) =>
+      normalizedHeaders.has(normalizeHeader(alias))
+    )
+  })
+
+  const conflictingRules = conflictingTemplateHeaders[uploadType].filter(
+    (rule) => {
+      return rule.aliases.some((alias) =>
+        normalizedHeaders.has(normalizeHeader(alias))
+      )
+    }
+  )
+
+  if (missingRules.length === 0 && conflictingRules.length === 0) {
+    return []
+  }
+
+  return [`This file does not match the ${uploadType} template.`]
+}
+
+function buildTemplateMismatchResult(
+  uploadType: UploadType,
+  errors: string[]
+): ImportResult {
+  return {
+    success: false,
+    message: `Template mismatch: the uploaded XLSX file is not a valid ${uploadType} template.`,
+    importedRows: 0,
+    failedRows: errors.length,
+    warnings: [],
+    errors: errors.map((message, index) => ({
+      row: index + 1,
+      message,
+      data: {},
+    })),
+    summary: {
+      createdWeSpaces: 0,
+      reusedWeSpaces: 0,
+      createdFieldContexts: 0,
+      reusedFieldContexts: 0,
+      createdPulses: 0,
+    },
+  }
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -316,6 +440,21 @@ export default function DashboardImportPage() {
 
     try {
       const { base64, preview } = await readFile(file)
+      const templateErrors = validateTemplateHeaders(
+        uploadType,
+        preview.headers
+      )
+
+      if (templateErrors.length > 0) {
+        setPreview(preview)
+        setWorkbookBase64('')
+        setResult(buildTemplateMismatchResult(uploadType, templateErrors))
+        toast.error(
+          `Template mismatch: please upload a ${uploadType} template for this import mode.`
+        )
+        return
+      }
+
       setWorkbookBase64(base64)
       setResult(null)
       setPreview(preview)

@@ -13,6 +13,7 @@ import {
   resolvePulseType,
   resolveSpaceVisibility,
   resolveSpaceScope,
+  validateUploadTemplateHeaders,
   type AuthenticatedImportUser,
   type CsvImportResult,
   type CsvImportRowError,
@@ -547,6 +548,25 @@ function buildParseFailureResult(parseErrors: string[]): CsvImportResult {
   }
 }
 
+function buildTemplateValidationFailureResult(
+  uploadType: CsvImportType,
+  templateErrors: string[]
+): CsvImportResult {
+  return {
+    success: false,
+    message: `Template mismatch: the uploaded XLSX file is not a valid ${uploadType} template.`,
+    summary: createEmptySummary(),
+    importedRows: 0,
+    failedRows: templateErrors.length,
+    errors: templateErrors.map((message, index) => ({
+      row: index + 1,
+      message,
+      data: {},
+    })),
+    warnings: [],
+  }
+}
+
 export async function processCsvImport({
   session,
   user,
@@ -582,6 +602,11 @@ export async function processCsvImport({
       ],
       warnings: [],
     }
+  }
+
+  const templateErrors = validateUploadTemplateHeaders(uploadType, rows)
+  if (templateErrors.length > 0) {
+    return buildTemplateValidationFailureResult(uploadType, templateErrors)
   }
 
   const summary = createEmptySummary()

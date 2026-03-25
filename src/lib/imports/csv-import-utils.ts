@@ -43,6 +43,79 @@ export interface ParsedSpreadsheetData {
   parseErrors: string[]
 }
 
+interface TemplateHeaderRule {
+  label: string
+  aliases: string[]
+}
+
+const CONFLICTING_TEMPLATE_HEADERS: Record<
+  CsvImportType,
+  TemplateHeaderRule[]
+> = {
+  'we-space': [
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+    {
+      label: 'FieldContext target',
+      aliases: ['field_context_name', 'context_name'],
+    },
+    {
+      label: 'Pulse type',
+      aliases: ['pulse_type'],
+    },
+  ],
+  'field-context': [
+    {
+      label: 'Pulse type',
+      aliases: ['pulse_type'],
+    },
+    {
+      label: 'Pulse metadata',
+      aliases: ['status', 'horizon', 'resource_type'],
+    },
+  ],
+  pulse: [],
+}
+
+const REQUIRED_TEMPLATE_HEADERS: Record<CsvImportType, TemplateHeaderRule[]> = {
+  'we-space': [
+    {
+      label: 'WeSpace name',
+      aliases: ['name', 'we_space_name', 'space_name'],
+    },
+  ],
+  'field-context': [
+    {
+      label: 'FieldContext name',
+      aliases: ['name', 'title', 'field_context_name', 'context_name'],
+    },
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+  ],
+  pulse: [
+    {
+      label: 'Pulse title',
+      aliases: ['title', 'name'],
+    },
+    {
+      label: 'Pulse content',
+      aliases: ['content', 'description', 'details'],
+    },
+    {
+      label: 'FieldContext name',
+      aliases: ['field_context_name', 'context_name'],
+    },
+    {
+      label: 'Space scope',
+      aliases: ['space_scope', 'space_type', 'scope'],
+    },
+  ],
+}
+
 export function createEmptySummary(): CsvImportSummary {
   return {
     createdWeSpaces: 0,
@@ -133,6 +206,62 @@ export function parseXlsxBase64(workbookBase64: string): ParsedSpreadsheetData {
       ],
     }
   }
+}
+
+export function validateUploadTemplateHeaders(
+  uploadType: CsvImportType,
+  rows: Record<string, string>[]
+): string[] {
+  const headerSet = new Set<string>()
+
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      const normalizedKey = normalizeHeader(key)
+      if (normalizedKey) {
+        headerSet.add(normalizedKey)
+      }
+    }
+  }
+
+  if (headerSet.size === 0) {
+    return [
+      `This file does not contain recognizable header columns for a ${uploadType} import template.`,
+    ]
+  }
+
+  const missingRules = REQUIRED_TEMPLATE_HEADERS[uploadType].filter((rule) => {
+    return !rule.aliases.some((alias) => headerSet.has(normalizeHeader(alias)))
+  })
+
+  const conflictingRules = CONFLICTING_TEMPLATE_HEADERS[uploadType].filter(
+    (rule) => {
+      return rule.aliases.some((alias) => headerSet.has(normalizeHeader(alias)))
+    }
+  )
+
+  if (missingRules.length === 0 && conflictingRules.length === 0) {
+    return []
+  }
+
+  const foundColumns = Array.from(headerSet).sort().join(', ')
+  const missingColumns = missingRules.map((rule) => rule.label).join(', ')
+  const conflictingColumns = conflictingRules
+    .map((rule) => rule.label)
+    .join(', ')
+
+  const failureParts: string[] = []
+  if (missingColumns) {
+    failureParts.push(`Missing required column groups: ${missingColumns}.`)
+  }
+  if (conflictingColumns) {
+    failureParts.push(
+      `Conflicting column groups for ${uploadType}: ${conflictingColumns}.`
+    )
+  }
+
+  return [
+    `This file does not match the ${uploadType} template. ${failureParts.join(' ')} Found columns: ${foundColumns}.`,
+  ]
 }
 
 export function formatRowData(
