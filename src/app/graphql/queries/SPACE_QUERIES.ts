@@ -210,6 +210,11 @@ export const GET_PERSON_CONNECTIONS = graphql(`
         email
         photo
       }
+      connectionEdges {
+        connectedPersonId
+        why
+        interests
+      }
     }
   }
 `)

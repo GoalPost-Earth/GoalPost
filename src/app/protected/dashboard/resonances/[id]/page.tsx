@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { GET_RESONANCE_LINK_DETAILS } from '@/app/graphql/queries/RESONANCE_QUERIES'
 import {
@@ -10,7 +10,7 @@ import {
   DELETE_RESONANCE_LINK_MUTATION,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/contexts'
+import { useAnimations, usePageContext } from '@/contexts'
 import { formatResonanceLabel } from '@/utils/graph-utils'
 import {
   getIconForType,
@@ -41,6 +41,13 @@ export default function ResonanceDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+
+  const { setPageTitle } = usePageContext()
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Resonance Details')
+  }, [setPageTitle])
 
   const { data, loading, error } = useQuery(GET_RESONANCE_LINK_DETAILS, {
     variables: { resonanceId },

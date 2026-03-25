@@ -44,6 +44,11 @@ export const GET_PERSON_PROFILE = graphql(`
         email
         photo
       }
+      connectionEdges {
+        connectedPersonId
+        why
+        interests
+      }
       ownsSpaces {
         ... on MeSpace {
           id

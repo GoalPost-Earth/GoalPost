@@ -73,3 +73,63 @@ export const CANCEL_INVITE_MUTATION = graphql(`
     }
   }
 `)
+
+export const CREATE_PERSON_CONNECTION_MUTATION = graphql(`
+  mutation CreatePersonConnection(
+    $fromPersonId: ID!
+    $toPersonId: ID!
+    $why: String
+    $interests: String
+  ) {
+    createPersonConnection(
+      fromPersonId: $fromPersonId
+      toPersonId: $toPersonId
+      why: $why
+      interests: $interests
+    ) {
+      success
+      message
+      connection {
+        connectedPersonId
+        why
+        interests
+      }
+    }
+  }
+`)
+
+export const UPDATE_PERSON_CONNECTION_MUTATION = graphql(`
+  mutation UpdatePersonConnection(
+    $fromPersonId: ID!
+    $toPersonId: ID!
+    $why: String
+    $interests: String
+  ) {
+    updatePersonConnection(
+      fromPersonId: $fromPersonId
+      toPersonId: $toPersonId
+      why: $why
+      interests: $interests
+    ) {
+      success
+      message
+      connection {
+        connectedPersonId
+        why
+        interests
+      }
+    }
+  }
+`)
+
+export const DELETE_PERSON_CONNECTION_MUTATION = graphql(`
+  mutation DeletePersonConnection($fromPersonId: ID!, $toPersonId: ID!) {
+    deletePersonConnection(
+      fromPersonId: $fromPersonId
+      toPersonId: $toPersonId
+    ) {
+      success
+      message
+    }
+  }
+`)

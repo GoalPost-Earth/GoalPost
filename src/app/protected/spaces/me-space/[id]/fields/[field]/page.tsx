@@ -19,6 +19,10 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import {
+  BulkPulseShareModal,
+  type BulkPulseOperationDetails,
+} from '@/components/ui/bulk-pulse-share-modal'
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import {
   ResonanceLinkModal,
@@ -92,6 +96,7 @@ function FieldDetailPage() {
     string | null
   >(null)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [isBulkShareModalOpen, setIsBulkShareModalOpen] = useState(false)
   const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedResonance, setSelectedResonance] = useState<any | null>(null)
@@ -132,13 +137,14 @@ function FieldDetailPage() {
     { data: pulseDetailsData, loading: pulseDetailsLoading },
   ] = useLazyQuery(GET_PULSE_DETAILS)
 
-  const { data: pulsesByContextData, loading: isPulsesLoading } = useQuery(
-    GET_PULSES_BY_CONTEXT,
-    {
-      variables: { contextId: fieldId },
-      skip: !fieldId,
-    }
-  )
+  const {
+    data: pulsesByContextData,
+    loading: isPulsesLoading,
+    refetch: refetchPulsesByContext,
+  } = useQuery(GET_PULSES_BY_CONTEXT, {
+    variables: { contextId: fieldId },
+    skip: !fieldId,
+  })
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
     useMutation(CREATE_RESONANCE_LINK_MUTATION)
@@ -1119,6 +1125,24 @@ function FieldDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
+                  setIsBulkShareModalOpen(true)
+                }}
+                disabled={pulseData.length === 0}
+                title={
+                  pulseData.length === 0
+                    ? 'No pulses available to share'
+                    : 'Share Pulses'
+                }
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+              >
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                  share
+                </span>
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
                   setIsModalOpen(true)
                 }}
                 data-tour="create-pulse-button"
@@ -1134,10 +1158,30 @@ function FieldDetailPage() {
         }
       />
 
+      <BulkPulseShareModal
+        isOpen={isBulkShareModalOpen}
+        onClose={() => setIsBulkShareModalOpen(false)}
+        currentContextId={fieldId}
+        pulses={pulseData}
+        onOperationComplete={async ({ mode }: BulkPulseOperationDetails) => {
+          await refetchPulsesByContext()
+          if (mode === 'move') {
+            setIsPulsePanelOpen(false)
+            setSelectedNodeId(null)
+          }
+        }}
+      />
+
       <PulsePanel
         isOpen={isPulsePanelOpen}
         isLoading={pulseDetailsLoading}
         pulse={pulseDetails}
+        currentContextId={fieldId}
+        onMoveSuccess={async () => {
+          setIsPulsePanelOpen(false)
+          setSelectedNodeId(null)
+          await refetchPulsesByContext()
+        }}
         onClose={() => {
           setIsPulsePanelOpen(false)
         }}

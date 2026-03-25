@@ -98,9 +98,40 @@ export function usePulseSharing() {
     return refetchResonances({ contextId })
   }
 
+  const movePulseToContext = async (
+    pulseId: string,
+    fromContextId: string,
+    toContextId: string
+  ): Promise<ShareResult> => {
+    if (fromContextId === toContextId) {
+      return {
+        success: false,
+        error: 'Source and destination contexts must be different',
+      }
+    }
+
+    const shareResult = await sharePulseWithContext(pulseId, toContextId)
+    if (!shareResult.success) {
+      return shareResult
+    }
+
+    const removeResult = await removePulseFromContext(pulseId, fromContextId)
+    if (!removeResult.success) {
+      return {
+        success: false,
+        error:
+          removeResult.error ||
+          'Pulse was shared to destination but could not be removed from source',
+      }
+    }
+
+    return { success: true }
+  }
+
   return {
     sharePulseWithContext,
     removePulseFromContext,
+    movePulseToContext,
     getContextResonances,
     resonances: resonanceData?.fieldContexts[0]?.resonances ?? [],
     loading: sharingLoading || removingLoading || resonancesLoading,

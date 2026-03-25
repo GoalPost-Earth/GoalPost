@@ -1664,6 +1664,18 @@ export type CreateCreateLogResponsesMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateCreatePersonConnectionResponsesMutationResponse = {
+  __typename?: 'CreateCreatePersonConnectionResponsesMutationResponse'
+  createPersonConnectionResponses: Array<CreatePersonConnectionResponse>
+  info: CreateInfo
+}
+
+export type CreateDeletePersonConnectionResponsesMutationResponse = {
+  __typename?: 'CreateDeletePersonConnectionResponsesMutationResponse'
+  deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
+  info: CreateInfo
+}
+
 export type CreateFieldContextsMutationResponse = {
   __typename?: 'CreateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -1768,6 +1780,79 @@ export type CreatePeopleMutationResponse = {
   people: Array<Person>
 }
 
+export type CreatePersonConnectionEdgesMutationResponse = {
+  __typename?: 'CreatePersonConnectionEdgesMutationResponse'
+  info: CreateInfo
+  personConnectionEdges: Array<PersonConnectionEdge>
+}
+
+/** Response when creating a person-to-person connection. */
+export type CreatePersonConnectionResponse = {
+  __typename?: 'CreatePersonConnectionResponse'
+  connection?: Maybe<PersonConnectionEdge>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type CreatePersonConnectionResponseAggregate = {
+  __typename?: 'CreatePersonConnectionResponseAggregate'
+  count: Count
+  node: CreatePersonConnectionResponseAggregateNode
+}
+
+export type CreatePersonConnectionResponseAggregateNode = {
+  __typename?: 'CreatePersonConnectionResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type CreatePersonConnectionResponseAggregateSelection = {
+  __typename?: 'CreatePersonConnectionResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type CreatePersonConnectionResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type CreatePersonConnectionResponseEdge = {
+  __typename?: 'CreatePersonConnectionResponseEdge'
+  cursor: Scalars['String']['output']
+  node: CreatePersonConnectionResponse
+}
+
+/** Fields to sort CreatePersonConnectionResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one CreatePersonConnectionResponseSort object. */
+export type CreatePersonConnectionResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type CreatePersonConnectionResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type CreatePersonConnectionResponseWhere = {
+  AND?: InputMaybe<Array<CreatePersonConnectionResponseWhere>>
+  NOT?: InputMaybe<CreatePersonConnectionResponseWhere>
+  OR?: InputMaybe<Array<CreatePersonConnectionResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type CreatePersonConnectionResponsesConnection = {
+  __typename?: 'CreatePersonConnectionResponsesConnection'
+  aggregate: CreatePersonConnectionResponseAggregate
+  edges: Array<CreatePersonConnectionResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 export type CreateRemoveSpaceMemberResponsesMutationResponse = {
   __typename?: 'CreateRemoveSpaceMemberResponsesMutationResponse'
   info: CreateInfo
@@ -1802,6 +1887,12 @@ export type CreateStoryPulsesMutationResponse = {
   __typename?: 'CreateStoryPulsesMutationResponse'
   info: CreateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type CreateUpdatePersonConnectionResponsesMutationResponse = {
+  __typename?: 'CreateUpdatePersonConnectionResponsesMutationResponse'
+  info: CreateInfo
+  updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
 }
 
 export type CreateUpdateSpaceMemberRoleResponsesMutationResponse = {
@@ -1839,6 +1930,72 @@ export type DeleteInfo = {
   __typename?: 'DeleteInfo'
   nodesDeleted: Scalars['Int']['output']
   relationshipsDeleted: Scalars['Int']['output']
+}
+
+/** Response when deleting a person-to-person connection. */
+export type DeletePersonConnectionResponse = {
+  __typename?: 'DeletePersonConnectionResponse'
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type DeletePersonConnectionResponseAggregate = {
+  __typename?: 'DeletePersonConnectionResponseAggregate'
+  count: Count
+  node: DeletePersonConnectionResponseAggregateNode
+}
+
+export type DeletePersonConnectionResponseAggregateNode = {
+  __typename?: 'DeletePersonConnectionResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type DeletePersonConnectionResponseAggregateSelection = {
+  __typename?: 'DeletePersonConnectionResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type DeletePersonConnectionResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type DeletePersonConnectionResponseEdge = {
+  __typename?: 'DeletePersonConnectionResponseEdge'
+  cursor: Scalars['String']['output']
+  node: DeletePersonConnectionResponse
+}
+
+/** Fields to sort DeletePersonConnectionResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one DeletePersonConnectionResponseSort object. */
+export type DeletePersonConnectionResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type DeletePersonConnectionResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type DeletePersonConnectionResponseWhere = {
+  AND?: InputMaybe<Array<DeletePersonConnectionResponseWhere>>
+  NOT?: InputMaybe<DeletePersonConnectionResponseWhere>
+  OR?: InputMaybe<Array<DeletePersonConnectionResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type DeletePersonConnectionResponsesConnection = {
+  __typename?: 'DeletePersonConnectionResponsesConnection'
+  aggregate: DeletePersonConnectionResponseAggregate
+  edges: Array<DeletePersonConnectionResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 /**
@@ -7762,17 +7919,26 @@ export type Mutation = {
   createChatbotResponses: CreateChatbotResponsesMutationResponse
   createCoreValuePulses: CreateCoreValuePulsesMutationResponse
   createCreateLogResponses: CreateCreateLogResponsesMutationResponse
+  createCreatePersonConnectionResponses: CreateCreatePersonConnectionResponsesMutationResponse
+  createDeletePersonConnectionResponses: CreateDeletePersonConnectionResponsesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createLogs: CreateLogsMutationResponse
   createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
+  /**
+   * Create or update a direct person-to-person connection.
+   * Persists a CONNECTED_TO relationship with optional why/interests metadata.
+   */
+  createPersonConnection: CreatePersonConnectionResponse
+  createPersonConnectionEdges: CreatePersonConnectionEdgesMutationResponse
   createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
   createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
   createSearchResults: CreateSearchResultsMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
+  createUpdatePersonConnectionResponses: CreateUpdatePersonConnectionResponsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
   createUsers: CreateUsersMutationResponse
@@ -7782,17 +7948,26 @@ export type Mutation = {
   deleteChatbotResponses: DeleteInfo
   deleteCoreValuePulses: DeleteInfo
   deleteCreateLogResponses: DeleteInfo
+  deleteCreatePersonConnectionResponses: DeleteInfo
+  deleteDeletePersonConnectionResponses: DeleteInfo
   deleteFieldContexts: DeleteInfo
   deleteGoalPulses: DeleteInfo
   deleteLogs: DeleteInfo
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
+  /**
+   * Delete a person-to-person connection.
+   * Removes the CONNECTED_TO relationship between two people.
+   */
+  deletePersonConnection: DeletePersonConnectionResponse
+  deletePersonConnectionEdges: DeleteInfo
   deleteRemoveSpaceMemberResponses: DeleteInfo
   deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
   deleteSearchResults: DeleteInfo
   deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
+  deleteUpdatePersonConnectionResponses: DeleteInfo
   deleteUpdateSpaceMemberRoleResponses: DeleteInfo
   deleteUpdateUserAiResponses: DeleteInfo
   deleteUsers: DeleteInfo
@@ -7861,11 +8036,19 @@ export type Mutation = {
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
   updateCoreValuePulses: UpdateCoreValuePulsesMutationResponse
   updateCreateLogResponses: UpdateCreateLogResponsesMutationResponse
+  updateCreatePersonConnectionResponses: UpdateCreatePersonConnectionResponsesMutationResponse
+  updateDeletePersonConnectionResponses: UpdateDeletePersonConnectionResponsesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateLogs: UpdateLogsMutationResponse
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
+  /**
+   * Update an existing person-to-person connection.
+   * Updates the why and interests metadata for a CONNECTED_TO relationship.
+   */
+  updatePersonConnection: UpdatePersonConnectionResponse
+  updatePersonConnectionEdges: UpdatePersonConnectionEdgesMutationResponse
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
@@ -7877,6 +8060,7 @@ export type Mutation = {
   updateSpaceMemberRole: UpdateSpaceMemberRoleResponse
   updateSpaceMemberships: UpdateSpaceMembershipsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
+  updateUpdatePersonConnectionResponses: UpdateUpdatePersonConnectionResponsesMutationResponse
   updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
   updateUpdateUserAiResponses: UpdateUpdateUserAiResponsesMutationResponse
   /**
@@ -7918,6 +8102,14 @@ export type MutationCreateCreateLogResponsesArgs = {
   input: Array<CreateLogResponseCreateInput>
 }
 
+export type MutationCreateCreatePersonConnectionResponsesArgs = {
+  input: Array<CreatePersonConnectionResponseCreateInput>
+}
+
+export type MutationCreateDeletePersonConnectionResponsesArgs = {
+  input: Array<DeletePersonConnectionResponseCreateInput>
+}
+
 export type MutationCreateFieldContextsArgs = {
   input: Array<FieldContextCreateInput>
 }
@@ -7936,6 +8128,17 @@ export type MutationCreateMeSpacesArgs = {
 
 export type MutationCreatePeopleArgs = {
   input: Array<PersonCreateInput>
+}
+
+export type MutationCreatePersonConnectionArgs = {
+  fromPersonId: Scalars['ID']['input']
+  interests?: InputMaybe<Scalars['String']['input']>
+  toPersonId: Scalars['ID']['input']
+  why?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationCreatePersonConnectionEdgesArgs = {
+  input: Array<PersonConnectionEdgeCreateInput>
 }
 
 export type MutationCreateRemoveSpaceMemberResponsesArgs = {
@@ -7960,6 +8163,10 @@ export type MutationCreateSpaceMembershipsArgs = {
 
 export type MutationCreateStoryPulsesArgs = {
   input: Array<StoryPulseCreateInput>
+}
+
+export type MutationCreateUpdatePersonConnectionResponsesArgs = {
+  input: Array<UpdatePersonConnectionResponseCreateInput>
 }
 
 export type MutationCreateUpdateSpaceMemberRoleResponsesArgs = {
@@ -8000,6 +8207,14 @@ export type MutationDeleteCreateLogResponsesArgs = {
   where?: InputMaybe<CreateLogResponseWhere>
 }
 
+export type MutationDeleteCreatePersonConnectionResponsesArgs = {
+  where?: InputMaybe<CreatePersonConnectionResponseWhere>
+}
+
+export type MutationDeleteDeletePersonConnectionResponsesArgs = {
+  where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
 export type MutationDeleteFieldContextsArgs = {
   delete?: InputMaybe<FieldContextDeleteInput>
   where?: InputMaybe<FieldContextWhere>
@@ -8023,6 +8238,15 @@ export type MutationDeleteMeSpacesArgs = {
 export type MutationDeletePeopleArgs = {
   delete?: InputMaybe<PersonDeleteInput>
   where?: InputMaybe<PersonWhere>
+}
+
+export type MutationDeletePersonConnectionArgs = {
+  fromPersonId: Scalars['ID']['input']
+  toPersonId: Scalars['ID']['input']
+}
+
+export type MutationDeletePersonConnectionEdgesArgs = {
+  where?: InputMaybe<PersonConnectionEdgeWhere>
 }
 
 export type MutationDeleteRemoveSpaceMemberResponsesArgs = {
@@ -8051,6 +8275,10 @@ export type MutationDeleteSpaceMembershipsArgs = {
 export type MutationDeleteStoryPulsesArgs = {
   delete?: InputMaybe<StoryPulseDeleteInput>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type MutationDeleteUpdatePersonConnectionResponsesArgs = {
+  where?: InputMaybe<UpdatePersonConnectionResponseWhere>
 }
 
 export type MutationDeleteUpdateSpaceMemberRoleResponsesArgs = {
@@ -8134,6 +8362,16 @@ export type MutationUpdateCreateLogResponsesArgs = {
   where?: InputMaybe<CreateLogResponseWhere>
 }
 
+export type MutationUpdateCreatePersonConnectionResponsesArgs = {
+  update?: InputMaybe<CreatePersonConnectionResponseUpdateInput>
+  where?: InputMaybe<CreatePersonConnectionResponseWhere>
+}
+
+export type MutationUpdateDeletePersonConnectionResponsesArgs = {
+  update?: InputMaybe<DeletePersonConnectionResponseUpdateInput>
+  where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
 export type MutationUpdateFieldContextsArgs = {
   update?: InputMaybe<FieldContextUpdateInput>
   where?: InputMaybe<FieldContextWhere>
@@ -8157,6 +8395,18 @@ export type MutationUpdateMeSpacesArgs = {
 export type MutationUpdatePeopleArgs = {
   update?: InputMaybe<PersonUpdateInput>
   where?: InputMaybe<PersonWhere>
+}
+
+export type MutationUpdatePersonConnectionArgs = {
+  fromPersonId: Scalars['ID']['input']
+  interests?: InputMaybe<Scalars['String']['input']>
+  toPersonId: Scalars['ID']['input']
+  why?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationUpdatePersonConnectionEdgesArgs = {
+  update?: InputMaybe<PersonConnectionEdgeUpdateInput>
+  where?: InputMaybe<PersonConnectionEdgeWhere>
 }
 
 export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
@@ -8193,6 +8443,11 @@ export type MutationUpdateSpaceMembershipsArgs = {
 export type MutationUpdateStoryPulsesArgs = {
   update?: InputMaybe<StoryPulseUpdateInput>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type MutationUpdateUpdatePersonConnectionResponsesArgs = {
+  update?: InputMaybe<UpdatePersonConnectionResponseUpdateInput>
+  where?: InputMaybe<UpdatePersonConnectionResponseWhere>
 }
 
 export type MutationUpdateUpdateSpaceMemberRoleResponsesArgs = {
@@ -8249,6 +8504,7 @@ export type Person = PersonInterface & {
   authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
   careManual?: Maybe<Scalars['String']['output']>
+  connectionEdges: Array<PersonConnectionEdge>
   connections: Array<Person>
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
@@ -8480,6 +8736,92 @@ export type PersonConnectInput = {
 
 export type PersonConnectWhere = {
   node: PersonWhere
+}
+
+/**
+ * Flat edge type used to expose CONNECTED_TO relationship properties alongside the connected person ID.
+ * Returned by Person.connectionEdges via Cypher to avoid nesting issues with @cypher + @relationship.
+ */
+export type PersonConnectionEdge = {
+  __typename?: 'PersonConnectionEdge'
+  connectedPersonId: Scalars['String']['output']
+  interests?: Maybe<Scalars['String']['output']>
+  why?: Maybe<Scalars['String']['output']>
+}
+
+export type PersonConnectionEdgeAggregate = {
+  __typename?: 'PersonConnectionEdgeAggregate'
+  count: Count
+  node: PersonConnectionEdgeAggregateNode
+}
+
+export type PersonConnectionEdgeAggregateNode = {
+  __typename?: 'PersonConnectionEdgeAggregateNode'
+  connectedPersonId: StringAggregateSelection
+  interests: StringAggregateSelection
+  why: StringAggregateSelection
+}
+
+export type PersonConnectionEdgeAggregateSelection = {
+  __typename?: 'PersonConnectionEdgeAggregateSelection'
+  connectedPersonId: StringAggregateSelection
+  count: Scalars['Int']['output']
+  interests: StringAggregateSelection
+  why: StringAggregateSelection
+}
+
+export type PersonConnectionEdgeCreateInput = {
+  connectedPersonId: Scalars['String']['input']
+  interests?: InputMaybe<Scalars['String']['input']>
+  why?: InputMaybe<Scalars['String']['input']>
+}
+
+export type PersonConnectionEdgeEdge = {
+  __typename?: 'PersonConnectionEdgeEdge'
+  cursor: Scalars['String']['output']
+  node: PersonConnectionEdge
+}
+
+/** Fields to sort PersonConnectionEdges by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonConnectionEdgeSort object. */
+export type PersonConnectionEdgeSort = {
+  connectedPersonId?: InputMaybe<SortDirection>
+  interests?: InputMaybe<SortDirection>
+  why?: InputMaybe<SortDirection>
+}
+
+export type PersonConnectionEdgeUpdateInput = {
+  connectedPersonId_SET?: InputMaybe<Scalars['String']['input']>
+  interests_SET?: InputMaybe<Scalars['String']['input']>
+  why_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type PersonConnectionEdgeWhere = {
+  AND?: InputMaybe<Array<PersonConnectionEdgeWhere>>
+  NOT?: InputMaybe<PersonConnectionEdgeWhere>
+  OR?: InputMaybe<Array<PersonConnectionEdgeWhere>>
+  connectedPersonId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  connectedPersonId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  connectedPersonId_EQ?: InputMaybe<Scalars['String']['input']>
+  connectedPersonId_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  connectedPersonId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  interests_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  interests_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  interests_EQ?: InputMaybe<Scalars['String']['input']>
+  interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  why_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  why_EQ?: InputMaybe<Scalars['String']['input']>
+  why_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  why_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type PersonConnectionEdgesConnection = {
+  __typename?: 'PersonConnectionEdgesConnection'
+  aggregate: PersonConnectionEdgeAggregate
+  edges: Array<PersonConnectionEdgeEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 export type PersonCreateInput = {
@@ -9555,6 +9897,11 @@ export type PersonWhere = {
   careManual_EQ?: InputMaybe<Scalars['String']['input']>
   careManual_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   careManual_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  connectionEdges?: InputMaybe<PersonConnectionEdgeWhere>
+  connectionEdges_ALL?: InputMaybe<PersonConnectionEdgeWhere>
+  connectionEdges_NONE?: InputMaybe<PersonConnectionEdgeWhere>
+  connectionEdges_SINGLE?: InputMaybe<PersonConnectionEdgeWhere>
+  connectionEdges_SOME?: InputMaybe<PersonConnectionEdgeWhere>
   connections?: InputMaybe<PersonWhere>
   connections_ALL?: InputMaybe<PersonWhere>
   connections_NONE?: InputMaybe<PersonWhere>
@@ -9763,6 +10110,14 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "createLogResponsesConnection" instead */
   createLogResponsesAggregate: CreateLogResponseAggregateSelection
   createLogResponsesConnection: CreateLogResponsesConnection
+  createPersonConnectionResponses: Array<CreatePersonConnectionResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "createPersonConnectionResponsesConnection" instead */
+  createPersonConnectionResponsesAggregate: CreatePersonConnectionResponseAggregateSelection
+  createPersonConnectionResponsesConnection: CreatePersonConnectionResponsesConnection
+  deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "deletePersonConnectionResponsesConnection" instead */
+  deletePersonConnectionResponsesAggregate: DeletePersonConnectionResponseAggregateSelection
+  deletePersonConnectionResponsesConnection: DeletePersonConnectionResponsesConnection
   fieldContexts: Array<FieldContext>
   /** @deprecated Please use the explicit field "aggregate" inside "fieldContextsConnection" instead */
   fieldContextsAggregate: FieldContextAggregateSelection
@@ -9841,6 +10196,10 @@ export type Query = {
    * LEGACY: Consider using searchAll for unified search experience.
    */
   peopleSubstringSearch: Array<Person>
+  personConnectionEdges: Array<PersonConnectionEdge>
+  /** @deprecated Please use the explicit field "aggregate" inside "personConnectionEdgesConnection" instead */
+  personConnectionEdgesAggregate: PersonConnectionEdgeAggregateSelection
+  personConnectionEdgesConnection: PersonConnectionEdgesConnection
   personInterfaces: Array<PersonInterface>
   /** @deprecated Please use the explicit field "aggregate" inside "personInterfacesConnection" instead */
   personInterfacesAggregate: PersonInterfaceAggregateSelection
@@ -9914,6 +10273,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "storyPulsesConnection" instead */
   storyPulsesAggregate: StoryPulseAggregateSelection
   storyPulsesConnection: StoryPulsesConnection
+  updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "updatePersonConnectionResponsesConnection" instead */
+  updatePersonConnectionResponsesAggregate: UpdatePersonConnectionResponseAggregateSelection
+  updatePersonConnectionResponsesConnection: UpdatePersonConnectionResponsesConnection
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "updateSpaceMemberRoleResponsesConnection" instead */
   updateSpaceMemberRoleResponsesAggregate: UpdateSpaceMemberRoleResponseAggregateSelection
@@ -10028,6 +10391,42 @@ export type QueryCreateLogResponsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CreateLogResponseSort>>
   where?: InputMaybe<CreateLogResponseWhere>
+}
+
+export type QueryCreatePersonConnectionResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CreatePersonConnectionResponseSort>>
+  where?: InputMaybe<CreatePersonConnectionResponseWhere>
+}
+
+export type QueryCreatePersonConnectionResponsesAggregateArgs = {
+  where?: InputMaybe<CreatePersonConnectionResponseWhere>
+}
+
+export type QueryCreatePersonConnectionResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<CreatePersonConnectionResponseSort>>
+  where?: InputMaybe<CreatePersonConnectionResponseWhere>
+}
+
+export type QueryDeletePersonConnectionResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeletePersonConnectionResponseSort>>
+  where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
+export type QueryDeletePersonConnectionResponsesAggregateArgs = {
+  where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
+export type QueryDeletePersonConnectionResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeletePersonConnectionResponseSort>>
+  where?: InputMaybe<DeletePersonConnectionResponseWhere>
 }
 
 export type QueryFieldContextsArgs = {
@@ -10168,6 +10567,24 @@ export type QueryPeopleConnectionArgs = {
 
 export type QueryPeopleSubstringSearchArgs = {
   key: Scalars['String']['input']
+}
+
+export type QueryPersonConnectionEdgesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonConnectionEdgeSort>>
+  where?: InputMaybe<PersonConnectionEdgeWhere>
+}
+
+export type QueryPersonConnectionEdgesAggregateArgs = {
+  where?: InputMaybe<PersonConnectionEdgeWhere>
+}
+
+export type QueryPersonConnectionEdgesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonConnectionEdgeSort>>
+  where?: InputMaybe<PersonConnectionEdgeWhere>
 }
 
 export type QueryPersonInterfacesArgs = {
@@ -10322,6 +10739,24 @@ export type QueryStoryPulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<StoryPulseSort>>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type QueryUpdatePersonConnectionResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdatePersonConnectionResponseSort>>
+  where?: InputMaybe<UpdatePersonConnectionResponseWhere>
+}
+
+export type QueryUpdatePersonConnectionResponsesAggregateArgs = {
+  where?: InputMaybe<UpdatePersonConnectionResponseWhere>
+}
+
+export type QueryUpdatePersonConnectionResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdatePersonConnectionResponseSort>>
+  where?: InputMaybe<UpdatePersonConnectionResponseWhere>
 }
 
 export type QueryUpdateSpaceMemberRoleResponsesArgs = {
@@ -15007,6 +15442,18 @@ export type UpdateCreateLogResponsesMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateCreatePersonConnectionResponsesMutationResponse = {
+  __typename?: 'UpdateCreatePersonConnectionResponsesMutationResponse'
+  createPersonConnectionResponses: Array<CreatePersonConnectionResponse>
+  info: UpdateInfo
+}
+
+export type UpdateDeletePersonConnectionResponsesMutationResponse = {
+  __typename?: 'UpdateDeletePersonConnectionResponsesMutationResponse'
+  deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
+  info: UpdateInfo
+}
+
 export type UpdateFieldContextsMutationResponse = {
   __typename?: 'UpdateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -15044,6 +15491,79 @@ export type UpdatePeopleMutationResponse = {
   __typename?: 'UpdatePeopleMutationResponse'
   info: UpdateInfo
   people: Array<Person>
+}
+
+export type UpdatePersonConnectionEdgesMutationResponse = {
+  __typename?: 'UpdatePersonConnectionEdgesMutationResponse'
+  info: UpdateInfo
+  personConnectionEdges: Array<PersonConnectionEdge>
+}
+
+/** Response when updating a person-to-person connection. */
+export type UpdatePersonConnectionResponse = {
+  __typename?: 'UpdatePersonConnectionResponse'
+  connection?: Maybe<PersonConnectionEdge>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type UpdatePersonConnectionResponseAggregate = {
+  __typename?: 'UpdatePersonConnectionResponseAggregate'
+  count: Count
+  node: UpdatePersonConnectionResponseAggregateNode
+}
+
+export type UpdatePersonConnectionResponseAggregateNode = {
+  __typename?: 'UpdatePersonConnectionResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type UpdatePersonConnectionResponseAggregateSelection = {
+  __typename?: 'UpdatePersonConnectionResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type UpdatePersonConnectionResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type UpdatePersonConnectionResponseEdge = {
+  __typename?: 'UpdatePersonConnectionResponseEdge'
+  cursor: Scalars['String']['output']
+  node: UpdatePersonConnectionResponse
+}
+
+/** Fields to sort UpdatePersonConnectionResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one UpdatePersonConnectionResponseSort object. */
+export type UpdatePersonConnectionResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type UpdatePersonConnectionResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdatePersonConnectionResponseWhere = {
+  AND?: InputMaybe<Array<UpdatePersonConnectionResponseWhere>>
+  NOT?: InputMaybe<UpdatePersonConnectionResponseWhere>
+  OR?: InputMaybe<Array<UpdatePersonConnectionResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdatePersonConnectionResponsesConnection = {
+  __typename?: 'UpdatePersonConnectionResponsesConnection'
+  aggregate: UpdatePersonConnectionResponseAggregate
+  edges: Array<UpdatePersonConnectionResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
@@ -15147,6 +15667,12 @@ export type UpdateStoryPulsesMutationResponse = {
   __typename?: 'UpdateStoryPulsesMutationResponse'
   info: UpdateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type UpdateUpdatePersonConnectionResponsesMutationResponse = {
+  __typename?: 'UpdateUpdatePersonConnectionResponsesMutationResponse'
+  info: UpdateInfo
+  updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
 }
 
 export type UpdateUpdateSpaceMemberRoleResponsesMutationResponse = {
@@ -17136,6 +17662,64 @@ export type CancelInviteMutation = {
   } | null
 }
 
+export type CreatePersonConnectionMutationVariables = Exact<{
+  fromPersonId: Scalars['ID']['input']
+  toPersonId: Scalars['ID']['input']
+  why?: InputMaybe<Scalars['String']['input']>
+  interests?: InputMaybe<Scalars['String']['input']>
+}>
+
+export type CreatePersonConnectionMutation = {
+  __typename?: 'Mutation'
+  createPersonConnection: {
+    __typename?: 'CreatePersonConnectionResponse'
+    success: boolean
+    message: string
+    connection?: {
+      __typename?: 'PersonConnectionEdge'
+      connectedPersonId: string
+      why?: string | null
+      interests?: string | null
+    } | null
+  }
+}
+
+export type UpdatePersonConnectionMutationVariables = Exact<{
+  fromPersonId: Scalars['ID']['input']
+  toPersonId: Scalars['ID']['input']
+  why?: InputMaybe<Scalars['String']['input']>
+  interests?: InputMaybe<Scalars['String']['input']>
+}>
+
+export type UpdatePersonConnectionMutation = {
+  __typename?: 'Mutation'
+  updatePersonConnection: {
+    __typename?: 'UpdatePersonConnectionResponse'
+    success: boolean
+    message: string
+    connection?: {
+      __typename?: 'PersonConnectionEdge'
+      connectedPersonId: string
+      why?: string | null
+      interests?: string | null
+    } | null
+  }
+}
+
+export type DeletePersonConnectionMutationVariables = Exact<{
+  fromPersonId: Scalars['ID']['input']
+  toPersonId: Scalars['ID']['input']
+}>
+
+export type DeletePersonConnectionMutation = {
+  __typename?: 'Mutation'
+  deletePersonConnection: {
+    __typename?: 'DeletePersonConnectionResponse'
+    success: boolean
+    message: string
+  }
+}
+
 export type CreateGoalPulseMutationVariables = Exact<{
   input: Array<GoalPulseCreateInput> | GoalPulseCreateInput
 }>
@@ -17955,6 +18539,36 @@ export type GetLoggedInUserQuery = {
           }
       >
     }>
+    connections: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+      photo?: string | null
+    }>
+    connectionEdges: Array<{
+      __typename?: 'PersonConnectionEdge'
+      connectedPersonId: string
+      why?: string | null
+      interests?: string | null
+    }>
+  }>
+}
+
+export type SearchPeopleQueryVariables = Exact<{
+  nameContains: Scalars['String']['input']
+}>
+
+export type SearchPeopleQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    name: string
+    email?: string | null
+    photo?: string | null
   }>
 }
 
@@ -19359,6 +19973,12 @@ export type GetPersonProfileQuery = {
       email?: string | null
       photo?: string | null
     }>
+    connectionEdges: Array<{
+      __typename?: 'PersonConnectionEdge'
+      connectedPersonId: string
+      why?: string | null
+      interests?: string | null
+    }>
     ownsSpaces: Array<
       | {
           __typename?: 'MeSpace'
@@ -20528,6 +21148,12 @@ export type GetPersonConnectionsQuery = {
       name: string
       email?: string | null
       photo?: string | null
+    }>
+    connectionEdges: Array<{
+      __typename?: 'PersonConnectionEdge'
+      connectedPersonId: string
+      why?: string | null
+      interests?: string | null
     }>
   }>
 }
@@ -21998,6 +22624,313 @@ export const CancelInviteDocument = {
 } as unknown as DocumentNode<
   CancelInviteMutation,
   CancelInviteMutationVariables
+>
+export const CreatePersonConnectionDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreatePersonConnection' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fromPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'toPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'why' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'interests' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPersonConnection' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'fromPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'fromPersonId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'toPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'toPersonId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'why' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'why' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'interests' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'interests' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectedPersonId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreatePersonConnectionMutation,
+  CreatePersonConnectionMutationVariables
+>
+export const UpdatePersonConnectionDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdatePersonConnection' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fromPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'toPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'why' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'interests' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePersonConnection' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'fromPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'fromPersonId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'toPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'toPersonId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'why' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'why' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'interests' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'interests' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectedPersonId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdatePersonConnectionMutation,
+  UpdatePersonConnectionMutationVariables
+>
+export const DeletePersonConnectionDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeletePersonConnection' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fromPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'toPersonId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deletePersonConnection' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'fromPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'fromPersonId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'toPersonId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'toPersonId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeletePersonConnectionMutation,
+  DeletePersonConnectionMutationVariables
 >
 export const CreateGoalPulseDocument = {
   kind: 'Document',
@@ -25644,6 +26577,45 @@ export const GetLoggedInUserDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connections' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connectionEdges' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectedPersonId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -25655,6 +26627,115 @@ export const GetLoggedInUserDocument = {
   GetLoggedInUserQuery,
   GetLoggedInUserQueryVariables
 >
+export const SearchPeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SearchPeople' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'nameContains' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'OR' },
+                      value: {
+                        kind: 'ListValue',
+                        values: [
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: {
+                                  kind: 'Name',
+                                  value: 'firstName_CONTAINS',
+                                },
+                                value: {
+                                  kind: 'Variable',
+                                  name: { kind: 'Name', value: 'nameContains' },
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: {
+                                  kind: 'Name',
+                                  value: 'lastName_CONTAINS',
+                                },
+                                value: {
+                                  kind: 'Variable',
+                                  name: { kind: 'Name', value: 'nameContains' },
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'email_CONTAINS' },
+                                value: {
+                                  kind: 'Variable',
+                                  name: { kind: 'Name', value: 'nameContains' },
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchPeopleQuery, SearchPeopleQueryVariables>
 export const GetFieldContextDetailsDocument = {
   kind: 'Document',
   definitions: [
@@ -30944,6 +32025,24 @@ export const GetPersonProfileDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'connectionEdges' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectedPersonId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'ownsSpaces' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -34803,6 +35902,24 @@ export const GetPersonConnectionsDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connectionEdges' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectedPersonId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
                     ],
                   },
                 },

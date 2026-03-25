@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
@@ -20,7 +20,7 @@ import {
   LOG_PULSE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/contexts'
+import { useAnimations, usePageContext } from '@/contexts'
 import { getConfigForType, type NodeType } from '@/lib/pulse-type-config'
 import {
   Select,
@@ -45,6 +45,7 @@ function typenameToNodeType(typename: string): NodeType {
 export default function PulseDetailsPage() {
   const params = useParams()
   const router = useRouter()
+  const { setPageTitle } = usePageContext()
   const pulseId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -79,6 +80,11 @@ export default function PulseDetailsPage() {
   const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>(
     {}
   )
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Dashboard')
+  }, [setPageTitle])
 
   const toggleExpanded = (fieldName: string) => {
     setExpandedFields((prev) => ({

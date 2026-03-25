@@ -5,6 +5,7 @@ import { relatedPeopleResolvers } from './related-people-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
 import { userLookupResolvers } from './user-lookup-resolver'
+import { connectionMutations } from './connection-resolver'
 import {
   activityLogMutations,
   activityLogQueries,
@@ -432,6 +433,7 @@ const resolvers = {
   Mutation: {
     ...chatbotResolvers,
     ...inviteMutations,
+    ...connectionMutations,
     ...spaceMembershipResolvers,
     ...activityLogMutations,
   },

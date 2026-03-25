@@ -75,6 +75,16 @@ type ConnectedTo @relationshipProperties {
   interests: String
 }
 
+"""
+Flat edge type used to expose CONNECTED_TO relationship properties alongside the connected person ID.
+Returned by Person.connectionEdges via Cypher to avoid nesting issues with @cypher + @relationship.
+"""
+type PersonConnectionEdge {
+  connectedPersonId: String!
+  why: String
+  interests: String
+}
+
 
 
 # ============================================================================
@@ -178,6 +188,14 @@ type Person implements PersonInterface
       RETURN other
       """
       columnName: "other"
+    )
+  connectionEdges: [PersonConnectionEdge!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[r:CONNECTED_TO]-(other:Person)
+      RETURN {connectedPersonId: other.id, why: r.why, interests: r.interests} AS connectionEdge
+      """
+      columnName: "connectionEdge"
     )
   
   # PULSE ACCESS: Pulses are accessed through FieldContexts in owned/member Spaces
@@ -907,6 +925,32 @@ type CreateLogResponse {
 }
 
 """
+Response when creating a person-to-person connection.
+"""
+type CreatePersonConnectionResponse {
+  success: Boolean!
+  message: String!
+  connection: PersonConnectionEdge
+}
+
+"""
+Response when updating a person-to-person connection.
+"""
+type UpdatePersonConnectionResponse {
+  success: Boolean!
+  message: String!
+  connection: PersonConnectionEdge
+}
+
+"""
+Response when deleting a person-to-person connection.
+"""
+type DeletePersonConnectionResponse {
+  success: Boolean!
+  message: String!
+}
+
+"""
 Input for logging pulse-related activities.
 """
 input LogPulseInput {
@@ -987,6 +1031,37 @@ type Mutation {
   Removes the User label and invite-related properties.
   """
   cancelInvite(personId: String!): Person
+
+  """
+  Create or update a direct person-to-person connection.
+  Persists a CONNECTED_TO relationship with optional why/interests metadata.
+  """
+  createPersonConnection(
+    fromPersonId: ID!
+    toPersonId: ID!
+    why: String
+    interests: String
+  ): CreatePersonConnectionResponse!
+
+  """
+  Update an existing person-to-person connection.
+  Updates the why and interests metadata for a CONNECTED_TO relationship.
+  """
+  updatePersonConnection(
+    fromPersonId: ID!
+    toPersonId: ID!
+    why: String
+    interests: String
+  ): UpdatePersonConnectionResponse!
+
+  """
+  Delete a person-to-person connection.
+  Removes the CONNECTED_TO relationship between two people.
+  """
+  deletePersonConnection(
+    fromPersonId: ID!
+    toPersonId: ID!
+  ): DeletePersonConnectionResponse!
 
   """
   Add a member to a space with a specific role.

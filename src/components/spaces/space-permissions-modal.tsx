@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation, useApolloClient } from '@apollo/client/react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLazyQuery, useMutation } from '@apollo/client/react'
+import ReactSelect from 'react-select'
 import {
   ADD_SPACE_MEMBER_MUTATION,
   UPDATE_SPACE_MEMBER_ROLE_MUTATION,
   REMOVE_SPACE_MEMBER_MUTATION,
-  RESOLVE_PERSON_BY_EMAIL_QUERY,
   LOG_MEMBER_ACTIVITY,
 } from '@/app/graphql/mutations'
+import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,12 @@ import {
 } from '@/components/ui/select'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
+
+interface PersonSelectOption {
+  value: string
+  label: string
+  email: string
+}
 
 interface SpaceMember {
   id: string
@@ -56,7 +63,12 @@ export function SpacePermissionsModal({
   onMembersUpdated,
   onRefetch,
 }: SpacePermissionsModalProps) {
-  const [addMemberEmail, setAddMemberEmail] = useState('')
+  const [selectedPeopleOptions, setSelectedPeopleOptions] = useState<
+    PersonSelectOption[]
+  >([])
+  const [searchInput, setSearchInput] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedRole, setSelectedRole] = useState<
     'ADMIN' | 'MEMBER' | 'GUEST'
   >('GUEST')
@@ -68,25 +80,12 @@ export function SpacePermissionsModal({
     name: string
   } | null>(null)
 
-  const client = useApolloClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchPeople, { data: searchData }] =
+    useLazyQuery<any>(SEARCH_PEOPLE_QUERY)
 
-  const [addSpaceMember] = useMutation(ADD_SPACE_MEMBER_MUTATION, {
-    onCompleted: async (data) => {
-      if (data?.addSpaceMember?.success) {
-        setAddMemberEmail('')
-        setSelectedRole('GUEST')
-        onMembersUpdated?.()
-        await onRefetch?.()
-      } else {
-        setError(data?.addSpaceMember?.message || 'Failed to add member')
-      }
-      setLoading(false)
-    },
-    onError: (err) => {
-      setError(err.message)
-      setLoading(false)
-    },
-  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [addSpaceMember] = useMutation<any>(ADD_SPACE_MEMBER_MUTATION)
 
   const [updateSpaceMemberRole] = useMutation(
     UPDATE_SPACE_MEMBER_ROLE_MUTATION,
@@ -127,9 +126,39 @@ export function SpacePermissionsModal({
 
   const [logMemberActivity] = useMutation(LOG_MEMBER_ACTIVITY)
 
+  useEffect(() => {
+    setSearchResults(searchData?.people || [])
+  }, [searchData])
+
+  const existingMemberIds = useMemo(
+    () => new Set(members.map((member) => member.member.id)),
+    [members]
+  )
+
+  const personOptions: PersonSelectOption[] = useMemo(
+    () =>
+      searchResults
+        .filter((person: any) => !existingMemberIds.has(person.id))
+        .map((person: any) => ({
+          value: person.id,
+          label: person.name,
+          email: person.email,
+        })),
+    [searchResults, existingMemberIds]
+  )
+
+  const handleSearchInput = (value: string) => {
+    setSearchInput(value)
+    if (value.trim().length >= 2) {
+      searchPeople({ variables: { nameContains: value } })
+      return
+    }
+    setSearchResults([])
+  }
+
   const handleAddMember = async () => {
-    if (!addMemberEmail.trim()) {
-      setError('Please enter a member email')
+    if (selectedPeopleOptions.length === 0) {
+      setError('Please search and select at least one member')
       return
     }
 
@@ -137,44 +166,58 @@ export function SpacePermissionsModal({
     setError(null)
 
     try {
-      // First, resolve the email to a person ID
-      const result = await client.query({
-        query: RESOLVE_PERSON_BY_EMAIL_QUERY,
-        variables: { email: addMemberEmail },
-      })
+      const failedAdds: string[] = []
+      let addedCount = 0
 
-      const person = result.data?.findUserByEmail
-      if (!person) {
-        setError(`No user found with email: ${addMemberEmail}`)
-        setLoading(false)
-        return
+      for (const person of selectedPeopleOptions) {
+        const result = await addSpaceMember({
+          variables: {
+            spaceId,
+            memberId: person.value,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            role: selectedRole as any,
+          },
+        })
+
+        if (result.data?.addSpaceMember?.success) {
+          addedCount += 1
+
+          logMemberActivity({
+            variables: {
+              input: {
+                action: 'added',
+                spaceId,
+                spaceName,
+                memberId: person.value,
+                memberName: person.label || person.email || 'Unknown',
+                role: selectedRole,
+              },
+            },
+          }).catch((err) => console.warn('Failed to log member addition:', err))
+        } else {
+          failedAdds.push(
+            `${person.label}: ${result.data?.addSpaceMember?.message || 'Failed to add member'}`
+          )
+        }
       }
 
-      // Now add the member using the resolved person ID
-      await addSpaceMember({
-        variables: {
-          spaceId,
-          memberId: person.id,
-          //eslint-disable-next-line @typescript-eslint/no-explicit-any
-          role: selectedRole as any,
-        },
-      })
+      if (addedCount > 0) {
+        setSelectedPeopleOptions([])
+        setSearchInput('')
+        setSearchResults([])
+        setSelectedRole('GUEST')
+        onMembersUpdated?.()
+        await onRefetch?.()
+      }
 
-      // Log member addition activity
-      logMemberActivity({
-        variables: {
-          input: {
-            action: 'added',
-            spaceId,
-            spaceName,
-            memberId: person.id,
-            memberName: person.name || person.email || 'Unknown',
-            role: selectedRole,
-          },
-        },
-      }).catch((err) => console.warn('Failed to log member addition:', err))
+      if (failedAdds.length > 0) {
+        const successPrefix =
+          addedCount > 0 ? `Added ${addedCount} member(s). ` : ''
+        setError(`${successPrefix}${failedAdds.join(' | ')}`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add member')
+    } finally {
       setLoading(false)
     }
   }
@@ -299,15 +342,78 @@ export function SpacePermissionsModal({
               <h3 className="font-semibold text-xs sm:text-sm text-gp-ink-strong dark:text-white">
                 Add New Member
               </h3>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter member email"
-                  value={addMemberEmail}
-                  onChange={(e) => setAddMemberEmail(e.target.value)}
-                  className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border text-xs sm:text-sm text-gp-ink-strong dark:text-white placeholder-gp-ink-muted"
-                  disabled={loading}
+              <div className="space-y-2">
+                <ReactSelect<PersonSelectOption, true>
+                  value={selectedPeopleOptions}
+                  options={personOptions}
+                  isMulti
+                  isSearchable
+                  isDisabled={loading}
+                  placeholder="Search by name or email to add members..."
+                  noOptionsMessage={() =>
+                    searchInput.trim().length < 2
+                      ? 'Type at least 2 characters'
+                      : 'No matching people found'
+                  }
+                  getOptionLabel={(option) =>
+                    `${option.label} (${option.email})`
+                  }
+                  onInputChange={(value, actionMeta) => {
+                    if (actionMeta.action === 'input-change') {
+                      handleSearchInput(value)
+                    }
+                  }}
+                  onChange={(options) => {
+                    setSelectedPeopleOptions(options ? [...options] : [])
+                  }}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      backgroundColor: 'transparent',
+                      borderColor: 'rgba(148, 163, 184, 0.4)',
+                      borderRadius: '0.5rem',
+                      minHeight: '42px',
+                      boxShadow: 'none',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: 'var(--gp-surface)',
+                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      zIndex: 60,
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused
+                        ? 'rgba(59, 130, 246, 0.1)'
+                        : 'transparent',
+                      color: 'var(--gp-ink-strong)',
+                      cursor: 'pointer',
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-strong)',
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-strong)',
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-muted)',
+                    }),
+                  }}
                 />
+                {selectedPeopleOptions.length > 0 && (
+                  <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                    {selectedPeopleOptions.length} member(s) selected
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Select
                   value={selectedRole}
                   onValueChange={(value) =>
@@ -329,7 +435,9 @@ export function SpacePermissionsModal({
                   disabled={loading}
                   className="px-3 sm:px-4 py-2 rounded-lg bg-gp-primary text-white text-xs sm:text-sm font-medium hover:shadow-lg disabled:opacity-50 transition-all whitespace-nowrap"
                 >
-                  {loading ? 'Adding...' : 'Add'}
+                  {loading
+                    ? 'Adding...'
+                    : `Add ${selectedPeopleOptions.length > 0 ? `(${selectedPeopleOptions.length})` : ''}`}
                 </button>
               </div>
             </div>

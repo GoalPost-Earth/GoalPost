@@ -8,9 +8,9 @@ import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/contexts'
+import { useAnimations, usePageContext } from '@/contexts'
 import Image from 'next/image'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 
 export default function PersonProfilePage() {
@@ -18,6 +18,12 @@ export default function PersonProfilePage() {
   const personId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const router = useRouter()
+  const { setPageTitle } = usePageContext()
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Dashboard')
+  }, [setPageTitle])
 
   const { data, loading, error } = useQuery(GET_PERSON_PROFILE, {
     variables: { personId },
@@ -206,43 +212,75 @@ export default function PersonProfilePage() {
               <SectionHeader icon="group_work" title="Connections" />
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {person.connections.map((connection: any, idx: number) => (
-                  <ProfileCard key={idx}>
-                    <div
-                      className="flex items-center gap-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2"
-                      onClick={() =>
-                        connection.id &&
-                        router.push(
-                          `/protected/dashboard/persons/${connection.id}`
-                        )
-                      }
-                    >
-                      <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
-                        {connection.photo ? (
-                          <Image
-                            src={connection.photo}
-                            alt={connection.name}
-                            width={40}
-                            height={40}
-                            className="size-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="material-symbols-outlined text-gp-primary text-xl">
-                            person
-                          </span>
+                {person.connections.map((connection: any, idx: number) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const edge = person.connectionEdges?.find(
+                    (e: any) => e.connectedPersonId === connection.id
+                  )
+                  return (
+                    <ProfileCard key={idx}>
+                      <div className="flex flex-col gap-3">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2"
+                          onClick={() =>
+                            connection.id &&
+                            router.push(
+                              `/protected/dashboard/persons/${connection.id}`
+                            )
+                          }
+                        >
+                          <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
+                            {connection.photo ? (
+                              <Image
+                                src={connection.photo}
+                                alt={connection.name}
+                                width={40}
+                                height={40}
+                                className="size-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="material-symbols-outlined text-gp-primary text-xl">
+                                person
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-bold text-gp-ink-strong dark:text-white truncate">
+                              {connection.name}
+                            </h4>
+                            <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
+                              {connection.email}
+                            </p>
+                          </div>
+                        </div>
+                        {edge && (
+                          <div className="space-y-2 border-t border-gp-glass-border pt-3">
+                            {edge.why && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gp-ink mb-1 uppercase">
+                                  Why
+                                </p>
+                                <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                                  {edge.why}
+                                </p>
+                              </div>
+                            )}
+                            {edge.interests && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gp-ink mb-1 uppercase">
+                                  Interests
+                                </p>
+                                <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                                  {edge.interests}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-gp-ink-strong dark:text-white truncate">
-                          {connection.name}
-                        </h4>
-                        <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
-                          {connection.email}
-                        </p>
-                      </div>
-                    </div>
-                  </ProfileCard>
-                ))}
+                    </ProfileCard>
+                  )
+                })}
               </div>
             </div>
           )}

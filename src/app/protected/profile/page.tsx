@@ -1,29 +1,128 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { GET_LOGGED_IN_USER } from '@/app/graphql/queries/DASHBOARD_QUERIES'
-import { useApp, usePageContext } from '@/contexts'
+import { useApp, usePageContext, useAnimations } from '@/contexts'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { formatDistanceToNow } from 'date-fns'
+import { useMutation, useLazyQuery } from '@apollo/client/react'
+import ReactSelect from 'react-select'
+import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
+import {
+  CREATE_PERSON_CONNECTION_MUTATION,
+  UPDATE_PERSON_CONNECTION_MUTATION,
+  DELETE_PERSON_CONNECTION_MUTATION,
+} from '@/app/graphql/mutations/PERSON_MUTATIONS'
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
+
+interface PersonSelectOption {
+  value: string
+  label: string
+  email: string
+}
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated } = useApp()
   const { setPageTitle } = usePageContext()
   const { isCompleted, resumeTour, restartTour } = useOnboarding()
+  const { animationsEnabled } = useAnimations()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, loading, error } = useQuery<any>(GET_LOGGED_IN_USER as any, {
-    variables: { email: user?.email ?? '' },
-    skip: !user?.email,
-    fetchPolicy: 'cache-and-network',
-  })
+  const { data, loading, error, refetch } = useQuery<any>(
+    GET_LOGGED_IN_USER as any,
+    {
+      variables: { email: user?.email ?? '' },
+      skip: !user?.email,
+      fetchPolicy: 'cache-and-network',
+    }
+  )
+
+  // Connection creation state
+  const [isAddingConnection, setIsAddingConnection] = useState(false)
+  const [selectedPersonId, setSelectedPersonId] = useState<string>('')
+  const [selectedPersonOption, setSelectedPersonOption] =
+    useState<PersonSelectOption | null>(null)
+  const [connectionWhy, setConnectionWhy] = useState('')
+  const [connectionInterests, setConnectionInterests] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchResults, setSearchResults] = useState<any[]>([])
+
+  // Search people query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchPeople, { data: searchData }] =
+    useLazyQuery<any>(SEARCH_PEOPLE_QUERY)
+
+  // Create connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [createConnection, { loading: creatingConnection }] = useMutation<any>(
+    CREATE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        // Reset form
+        setIsAddingConnection(false)
+        setSelectedPersonId('')
+        setSelectedPersonOption(null)
+        setConnectionWhy('')
+        setConnectionInterests('')
+        setSearchInput('')
+        setSearchResults([])
+        // Refetch user data to update connections list
+        data && router.refresh()
+      },
+    }
+  )
+
+  // Edit connection state
+  const [isEditingConnection, setIsEditingConnection] = useState(false)
+  const [editingConnectionId, setEditingConnectionId] = useState<string>('')
+  const [editingConnectionWhy, setEditingConnectionWhy] = useState('')
+  const [editingConnectionInterests, setEditingConnectionInterests] =
+    useState('')
+
+  // Update connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [updateConnection, { loading: updatingConnection }] = useMutation<any>(
+    UPDATE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        setIsEditingConnection(false)
+        setEditingConnectionId('')
+        setEditingConnectionWhy('')
+        setEditingConnectionInterests('')
+        refetch()
+      },
+    }
+  )
+
+  // Delete connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [deleteConnection, { loading: deletingConnection }] = useMutation<any>(
+    DELETE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        setIsConfirmingDelete(false)
+        setConnectionToDeleteId('')
+        refetch()
+      },
+    }
+  )
+
+  // Delete confirmation state
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [connectionToDeleteId, setConnectionToDeleteId] = useState<string>('')
 
   useEffect(() => {
     setPageTitle('My Profile')
   }, [setPageTitle])
+
+  useEffect(() => {
+    setSearchResults(searchData?.people || [])
+  }, [searchData])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -93,7 +192,7 @@ export default function ProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberSpaces: any[] =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    personData.memberOf?.map((membership: any) => membership.space) || []
+    personData.memberOf?.map((membership: any) => membership.space[0]).filter(Boolean) || []
 
   // Merge and deduplicate spaces
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,6 +229,114 @@ export default function ProfilePage() {
         .join('')
         .toUpperCase()
     : 'U'
+
+  const handleSearchInput = (value: string) => {
+    setSearchInput(value)
+    if (value.trim().length >= 2) {
+      searchPeople({ variables: { nameContains: value } })
+      return
+    }
+    setSearchResults([])
+  }
+
+  const personOptions: PersonSelectOption[] = searchResults
+    .filter((person: any) => person.id !== personData.id)
+    .filter(
+      (person: any) =>
+        !personData.connections?.some(
+          (connection: any) => connection.id === person.id
+        )
+    )
+    .map((person: any) => ({
+      value: person.id,
+      label: person.name,
+      email: person.email,
+    }))
+
+  const handleCreateConnection = async () => {
+    if (!selectedPersonId || !connectionWhy) {
+      alert('Please fill in all fields')
+      return
+    }
+
+    try {
+      const result = await createConnection({
+        variables: {
+          fromPersonId: personData.id,
+          toPersonId: selectedPersonId,
+          why: connectionWhy,
+          interests: connectionInterests,
+        },
+      })
+
+      if (result.data?.createPersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error creating connection:', err)
+    }
+  }
+
+  const handleEditConnection = (
+    connectionId: string,
+    why: string,
+    interests: string
+  ) => {
+    setEditingConnectionId(connectionId)
+    setEditingConnectionWhy(why)
+    setEditingConnectionInterests(interests)
+    setIsEditingConnection(true)
+  }
+
+  const handleUpdateConnection = async () => {
+    if (!editingConnectionId) return
+
+    try {
+      const result = await updateConnection({
+        variables: {
+          fromPersonId: personData.id,
+          toPersonId: editingConnectionId,
+          why: editingConnectionWhy,
+          interests: editingConnectionInterests,
+        },
+      })
+
+      if (result.data?.updatePersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error updating connection:', err)
+    }
+  }
+
+  const handleConfirmDelete = (connectionId: string) => {
+    setConnectionToDeleteId(connectionId)
+    setIsConfirmingDelete(true)
+  }
+
+  const handleDeleteConnection = async () => {
+    if (!connectionToDeleteId) return
+
+    try {
+      const result = await deleteConnection({
+        variables: {
+          fromPersonId: personData.id,
+          toPersonId: connectionToDeleteId,
+        },
+      })
+
+      if (result.data?.deletePersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error deleting connection:', err)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setIsConfirmingDelete(false)
+    setConnectionToDeleteId('')
+  }
 
   return (
     <div className="flex flex-col h-full w-full overflow-auto bg-gp-surface dark:bg-gp-surface-dark transition-colors p-8 pt-28">
@@ -240,7 +447,7 @@ export default function ProfilePage() {
                 My Spaces
               </h2>
               <button
-                onClick={() => router.push('/protected/dashboard')}
+                onClick={() => router.push('/protected/dashboard?tab=spaces')}
                 className="text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors cursor-pointer"
               >
                 View All →
@@ -346,30 +553,15 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center gap-3 pt-3">
               {isCompleted && (
-                <>
-                  <button
-                    onClick={resumeTour}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 cursor-pointer"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 85%, white 15%), color-mix(in srgb, var(--gp-primary) 65%, black 35%))',
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      play_arrow
-                    </span>
-                    Resume Tour
-                  </button>
-                  <button
-                    onClick={restartTour}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:text-gp-primary dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      refresh
-                    </span>
-                    Restart Tour
-                  </button>
-                </>
+                <button
+                  onClick={restartTour}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:text-gp-primary dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    refresh
+                  </span>
+                  Restart Tour
+                </button>
               )}
               {!isCompleted && (
                 <button
@@ -390,38 +582,442 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Account Info */}
-        <div className="chat-card rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-gp-ink-strong dark:text-white mb-4">
-            Account Information
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-slate-200 dark:border-white/10">
-              <span className="text-sm text-gp-ink-muted dark:text-white/60 font-medium">
-                User ID
-              </span>
-              <span className="text-sm text-gp-ink-strong dark:text-white font-mono">
-                {personData.id}
-              </span>
+        {/* Connections */}
+        {personData.connections && personData.connections.length > 0 && (
+          <div className="chat-card rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gp-ink-strong dark:text-white">
+                My Connections
+              </h2>
+              <button
+                onClick={() => setIsAddingConnection(true)}
+                className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  add
+                </span>
+                Add Connection
+              </button>
             </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-200 dark:border-white/10">
-              <span className="text-sm text-gp-ink-muted dark:text-white/60 font-medium">
-                Email
-              </span>
-              <span className="text-sm text-gp-ink-strong dark:text-white">
-                {personData.email}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="text-sm text-gp-ink-muted dark:text-white/60 font-medium">
-                Full Name
-              </span>
-              <span className="text-sm text-gp-ink-strong dark:text-white">
-                {personData.name}
-              </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {personData.connections.map((connection: any) => {
+                // Find the corresponding edge metadata
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const edgeData = personData.connectionEdges?.find(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (edge: any) => edge.connectedPersonId === connection.id
+                )
+
+                return (
+                  <div
+                    key={connection.id}
+                    className="p-4 rounded-lg bg-gp-glass-bg dark:bg-white/5 border border-gp-glass-border dark:border-white/10 hover:shadow-md transition-all"
+                  >
+                    <div
+                      className="flex flex-col gap-3 cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/protected/dashboard/persons/${connection.id}`
+                        )
+                      }
+                    >
+                      <div className="flex items-center gap-3  rounded px-2 -mx-2">
+                        <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
+                          {connection.photo ? (
+                            <Image
+                              src={connection.photo}
+                              alt={connection.name}
+                              width={40}
+                              height={40}
+                              className="size-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="material-symbols-outlined text-gp-primary text-xl">
+                              person
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-gp-ink-strong dark:text-white truncate">
+                            {connection.name}
+                          </h4>
+                          <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
+                            {connection.email}
+                          </p>
+                        </div>
+                        <button
+                          className="cursor-pointer text-[8px] text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditConnection(
+                              connection.id,
+                              edgeData.why || '',
+                              edgeData.interests || ''
+                            )
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-[8px]">
+                            edit
+                          </span>
+                        </button>
+                        <button
+                          className="cursor-pointer text-[8px] text-red-400 hover:text-red-800 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleConfirmDelete(connection.id)
+                          }}
+                          disabled={deletingConnection}
+                        >
+                          <span className="material-symbols-outlined text-[8px]">
+                            delete
+                          </span>
+                        </button>
+                      </div>
+                      {edgeData && (
+                        <div className="space-y-2 border-t border-gp-glass-border pt-3">
+                          {edgeData.why && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-gp-ink mb-1 uppercase">
+                                Why
+                              </p>
+                              <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                                {edgeData.why}
+                              </p>
+                            </div>
+                          )}
+                          {edgeData.interests && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-gp-ink mb-1 uppercase">
+                                Interests
+                              </p>
+                              <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+                                {edgeData.interests}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* No Connections - Create First */}
+        {(!personData.connections || personData.connections.length === 0) && (
+          <div className="chat-card rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-gp-ink-strong dark:text-white mb-4">
+              Connections
+            </h2>
+            <div className="text-center py-8">
+              <div className="text-5xl mb-4 text-gp-primary/40">
+                <span className="material-symbols-outlined text-7xl">
+                  group
+                </span>
+              </div>
+              <p className="text-gp-ink-muted dark:text-white/60 mb-6">
+                You haven't created any connections yet. Start building your
+                network!
+              </p>
+              <button
+                onClick={() => setIsAddingConnection(true)}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold text-white transition-all cursor-pointer mx-auto"
+                style={{
+                  background:
+                    'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+                  boxShadow:
+                    '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+                }}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  add
+                </span>
+                Create First Connection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Add Connection Modal */}
+        {isAddingConnection && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="chat-card rounded-2xl p-8 max-w-md w-full mx-4 relative">
+              {/* Close Button */}
+              <button
+                onClick={() => setIsAddingConnection(false)}
+                className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+
+              <h2 className="text-2xl font-bold text-gp-ink-strong dark:text-white mb-6">
+                Create New Connection
+              </h2>
+
+              {/* Search for person */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                  Search for person
+                </label>
+                <ReactSelect<PersonSelectOption, false>
+                  value={selectedPersonOption}
+                  options={personOptions}
+                  isSearchable
+                  isClearable
+                  isDisabled={creatingConnection}
+                  placeholder="Search by name or email..."
+                  noOptionsMessage={() =>
+                    searchInput.trim().length < 2
+                      ? 'Type at least 2 characters'
+                      : 'No matching people found'
+                  }
+                  getOptionLabel={(option) =>
+                    `${option.label} (${option.email})`
+                  }
+                  onInputChange={(value, actionMeta) => {
+                    if (actionMeta.action === 'input-change') {
+                      handleSearchInput(value)
+                    }
+                  }}
+                  onChange={(option) => {
+                    setSelectedPersonOption(option)
+                    setSelectedPersonId(option?.value || '')
+                  }}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      backgroundColor: 'transparent',
+                      borderColor: 'rgba(148, 163, 184, 0.4)',
+                      borderRadius: '0.5rem',
+                      minHeight: '42px',
+                      boxShadow: 'none',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: 'var(--gp-surface)',
+                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      zIndex: 60,
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused
+                        ? 'rgba(59, 130, 246, 0.1)'
+                        : 'transparent',
+                      color: 'var(--gp-ink-strong)',
+                      cursor: 'pointer',
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-strong)',
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-strong)',
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: 'var(--gp-ink-muted)',
+                    }),
+                  }}
+                />
+              </div>
+
+              {/* Selected person display */}
+              {selectedPersonOption && (
+                <div className="mb-6 p-4 rounded-lg bg-gp-primary/10 border border-gp-primary/20">
+                  <div>
+                    <div className="font-semibold text-gp-ink-strong dark:text-white">
+                      {selectedPersonOption.label}
+                    </div>
+                    <div className="text-xs text-gp-ink-muted dark:text-white/60">
+                      {selectedPersonOption.email}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedPersonId('')
+                        setSelectedPersonOption(null)
+                        setSearchInput('')
+                        setSearchResults([])
+                      }}
+                      className="mt-2 text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Why field */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                  Why are you connecting?
+                </label>
+                <textarea
+                  value={connectionWhy}
+                  onChange={(e) => setConnectionWhy(e.target.value)}
+                  placeholder="Describe how you know this person or why you want to connect..."
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              {/* Interests field */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                  Interests or shared areas{' '}
+                  <span className="text-xs font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={connectionInterests}
+                  onChange={(e) => setConnectionInterests(e.target.value)}
+                  placeholder="What interests or areas do you share?"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsAddingConnection(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 text-gp-ink-strong dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateConnection}
+                  disabled={creatingConnection || !selectedPersonId}
+                  className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+                    boxShadow:
+                      '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+                  }}
+                >
+                  {creatingConnection ? 'Creating...' : 'Create Connection'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Connection Modal */}
+        {isEditingConnection && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="chat-card rounded-2xl p-8 max-w-md w-full mx-4 relative">
+              <button
+                onClick={() => setIsEditingConnection(false)}
+                className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+
+              <h2 className="text-2xl font-bold text-gp-ink-strong dark:text-white mb-6">
+                Edit Connection
+              </h2>
+
+              {/* Why field */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                  Why are you connecting?
+                </label>
+                <textarea
+                  value={editingConnectionWhy}
+                  onChange={(e) => setEditingConnectionWhy(e.target.value)}
+                  placeholder="Tell us why you're connecting with this person..."
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              {/* Interests field */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                  Shared Interests
+                </label>
+                <textarea
+                  value={editingConnectionInterests}
+                  onChange={(e) =>
+                    setEditingConnectionInterests(e.target.value)
+                  }
+                  placeholder="What interests do you share?"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditingConnection(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 text-gp-ink-strong dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateConnection}
+                  disabled={updatingConnection}
+                  className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+                    boxShadow:
+                      '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+                  }}
+                >
+                  {updatingConnection ? 'Updating...' : 'Update Connection'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Connection Confirmation Modal */}
+        {isConfirmingDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+              <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
+                Delete Connection?
+              </h2>
+
+              <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
+                Are you sure you want to delete this connection? This action
+                cannot be undone.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleCancelDelete}
+                  disabled={deletingConnection}
+                  className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConnection}
+                  disabled={deletingConnection}
+                  className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {deletingConnection && (
+                    <span
+                      className={cn(
+                        'material-symbols-outlined text-base',
+                        animationsEnabled && 'animate-spin'
+                      )}
+                    >
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {deletingConnection ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
