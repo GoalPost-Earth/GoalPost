@@ -1,6 +1,9 @@
 'use client'
 
-import { useMessagePartText } from '@assistant-ui/react'
+import {
+  useMessagePartText,
+  TextMessagePartProvider,
+} from '@assistant-ui/react'
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { PersonCard, PersonProfileData } from './person-card'
 import { memo, useMemo } from 'react'
@@ -13,7 +16,8 @@ import remarkGfm from 'remark-gfm'
  * Must be used as the Text component in MessagePrimitive.Parts.
  */
 export const EnhancedTextPart = memo(function EnhancedTextPart() {
-  const { text: rawTextContent } = useMessagePartText()
+  const { text: rawTextContent, status } = useMessagePartText()
+  const isRunning = status.type === 'running'
   // Strip PERSON_PROFILE_FOUND markers and their JSON from the text
   const textContent = useMemo(() => {
     if (!rawTextContent.includes('PERSON_PROFILE_FOUND:')) {
@@ -209,9 +213,12 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
     )
   }
 
-  // No person profiles — fall back to standard markdown rendering.
-  // MarkdownTextPrimitive reads from the same message part context via useMessagePartText internally.
+  // No person profiles — fall back to markdown rendering.
+  // Use TextMessagePartProvider to supply cleaned text (markers stripped) to MarkdownTextPrimitive,
+  // so raw PERSON_PROFILE_FOUND markers are never visible to the user.
   return (
-    <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" />
+    <TextMessagePartProvider text={textContent} isRunning={isRunning}>
+      <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" />
+    </TextMessagePartProvider>
   )
 })

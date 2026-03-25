@@ -3,13 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { usePreferences } from '@/contexts/preferences-context'
-import {
-  ComposerPrimitive,
-  MessagePrimitive,
-  ThreadPrimitive,
-} from '@assistant-ui/react'
 import { SendHorizontalIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  PersonCard,
+  type PersonProfileData,
+} from '@/components/assistant-ui/person-card'
 
 interface AIAssistantPanelProps {
   isOpen: boolean
@@ -21,6 +20,77 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  /** Person profiles extracted from PERSON_PROFILE_FOUND markers or tool results */
+  personData?: PersonProfileData[]
+}
+
+/**
+ * Extracts PersonProfileData from PERSON_PROFILE_FOUND markers in AI text output,
+ * and returns both the profiles and the cleaned text (markers removed).
+ */
+function extractPersonProfiles(rawText: string): {
+  profiles: PersonProfileData[]
+  cleanedText: string
+} {
+  if (!rawText.includes('PERSON_PROFILE_FOUND:')) {
+    return { profiles: [], cleanedText: rawText }
+  }
+
+  const profiles: PersonProfileData[] = []
+  let cleanedText = rawText
+  let markerIndex = cleanedText.indexOf('PERSON_PROFILE_FOUND:')
+
+  while (markerIndex !== -1) {
+    const braceStart = cleanedText.indexOf('{', markerIndex)
+    if (braceStart === -1) break
+
+    let braceCount = 0
+    let braceEnd = -1
+    let inString = false
+    let escapeNext = false
+
+    for (let i = braceStart; i < cleanedText.length; i++) {
+      const char = cleanedText[i]
+      if (escapeNext) {
+        escapeNext = false
+        continue
+      }
+      if (char === '\\') {
+        escapeNext = true
+        continue
+      }
+      if (char === '"') {
+        inString = !inString
+        continue
+      }
+      if (!inString) {
+        if (char === '{') braceCount++
+        else if (char === '}') {
+          braceCount--
+          if (braceCount === 0) {
+            braceEnd = i + 1
+            break
+          }
+        }
+      }
+    }
+
+    if (braceEnd === -1) break
+
+    const jsonString = cleanedText.substring(braceStart, braceEnd)
+    try {
+      const profile = JSON.parse(jsonString) as PersonProfileData
+      profiles.push(profile)
+    } catch {
+      // Malformed JSON, skip this marker
+    }
+
+    cleanedText =
+      cleanedText.substring(0, markerIndex) + cleanedText.substring(braceEnd)
+    markerIndex = cleanedText.indexOf('PERSON_PROFILE_FOUND:')
+  }
+
+  return { profiles, cleanedText: cleanedText.trim() }
 }
 
 export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
@@ -116,6 +186,7 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
       const decoder = new TextDecoder()
       let buffer = ''
       let assistantContent = ''
+      const capturedPersonProfiles: PersonProfileData[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -131,19 +202,44 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
             const event = JSON.parse(line)
             if (event.type === 'message' && event.content) {
               assistantContent = event.content
+            } else if (event.type === 'tool_result' && event.result) {
+              // Capture person data from search_person tool results
+              if (
+                event.tool === 'search_person' &&
+                event.result.found &&
+                Array.isArray(event.result.people)
+              ) {
+                capturedPersonProfiles.push(
+                  ...(event.result.people as PersonProfileData[])
+                )
+              }
             }
-          } catch (e) {
-            // Skip parse errors
+          } catch {
+            // Skip parse errors on malformed lines
           }
         }
       }
 
       if (assistantContent) {
+        // Extract person profiles from PERSON_PROFILE_FOUND markers in the AI text,
+        // and strip those markers so only clean prose is displayed.
+        const { profiles: profilesFromText, cleanedText } =
+          extractPersonProfiles(assistantContent)
+
+        // Merge with tool_result captures, deduplicating by id
+        const allProfiles = [
+          ...capturedPersonProfiles,
+          ...profilesFromText.filter(
+            (p) => !capturedPersonProfiles.some((c) => c.id === p.id)
+          ),
+        ]
+
         const assistantMessage: Message = {
           id: `msg_${Date.now()}`,
           role: 'assistant',
-          content: assistantContent,
+          content: cleanedText,
           timestamp: new Date(),
+          personData: allProfiles.length > 0 ? allProfiles : undefined,
         }
         setMessages((prev) => [...prev, assistantMessage])
       }
@@ -234,15 +330,26 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
                 key={msg.id}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div
-                  className={`max-w-xs rounded-lg px-4 py-3 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-gp-primary text-white'
-                      : 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white'
-                  }`}
-                >
-                  {msg.content}
-                </div>
+                {msg.role === 'assistant' ? (
+                  <div className="max-w-xs space-y-3">
+                    {/* Render person profile cards when search_person returned data */}
+                    {msg.personData?.map((person) => (
+                      <PersonCard
+                        key={person.id}
+                        person={person}
+                        className="w-full"
+                      />
+                    ))}
+                    {/* AI narrative text */}
+                    <div className="bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm whitespace-pre-wrap">
+                      {msg.content}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="max-w-xs rounded-lg px-4 py-3 text-sm bg-gp-primary text-white">
+                    {msg.content}
+                  </div>
+                )}
               </div>
             ))
           )}
