@@ -27,6 +27,7 @@ import { DynamicTool } from '@langchain/core/tools'
 import { DynamicStructuredTool } from '@langchain/community/tools/dynamic'
 import { getLangChainEmbeddings } from '@/lib/llm/adapters/langchain-adapter'
 import { initGraph } from '@/modules/graph'
+import { verifyJWT } from '@/app/api/auth/utils'
 import { z } from 'zod'
 
 // Allow streaming responses up to 30 seconds
@@ -37,6 +38,7 @@ interface ChatRequest {
   system?: string
   tools?: Record<string, unknown>
   aiMode?: AssistantMode
+  currentUserId?: string
 }
 
 interface StreamEvent {
@@ -58,13 +60,36 @@ export async function POST(req: NextRequest) {
   const encoder = new TextEncoder()
 
   try {
-    const { messages, system, aiMode }: ChatRequest = await req.json()
+    // Get request body first to potentially get currentUserId from client
+    const {
+      messages,
+      system,
+      aiMode,
+      currentUserId: clientProvidedUserId,
+    }: ChatRequest = await req.json()
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         { error: 'Messages array is required' },
         { status: 400 }
       )
+    }
+
+    // Determine current user ID from client request or JWT token
+    let currentUserId: string | null = clientProvidedUserId || null
+
+    // Fall back to reading from JWT cookie if not provided in request body
+    if (!currentUserId) {
+      const token = req.cookies.get('accessToken')?.value
+      if (token) {
+        try {
+          const decoded = verifyJWT(token) as { user: { id: string } }
+          currentUserId = decoded.user.id
+        } catch (error) {
+          console.error('Token verification failed:', error)
+          // Continue without user - some tools may not be available
+        }
+      }
     }
 
     const mode = aiMode || 'default'
@@ -83,6 +108,50 @@ export async function POST(req: NextRequest) {
           const spaceRenameTool = createSpaceRenameTool(graph)
 
           const langchainTools = [
+            new DynamicStructuredTool({
+              name: 'get_my_spaces',
+              description:
+                'Get all spaces that the current authenticated user is a member of.',
+              schema: z.object({}) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              func: async () => {
+                if (!currentUserId) {
+                  return JSON.stringify({
+                    found: false,
+                    spaces: [],
+                    message:
+                      'Could not identify current user. Please log in and try again.',
+                  })
+                }
+                try {
+                  const query = `
+                    MATCH (p:Person {id: $userId})-[:BELONGS_TO]->(s:Space)
+                    RETURN s.id AS id, s.name AS name, s.description AS description
+                    ORDER BY s.name
+                  `
+                  const results = await graph.query(query, {
+                    userId: currentUserId,
+                  })
+                  if (results.length === 0) {
+                    return JSON.stringify({
+                      found: false,
+                      spaces: [],
+                      message: 'You are not currently a member of any spaces.',
+                    })
+                  }
+                  return JSON.stringify({
+                    found: true,
+                    spaces: results,
+                    count: results.length,
+                  })
+                } catch (error) {
+                  return JSON.stringify({
+                    found: false,
+                    spaces: [],
+                    message: `Could not fetch your spaces: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  })
+                }
+              },
+            }),
             new DynamicStructuredTool({
               name: 'search_person',
               description:

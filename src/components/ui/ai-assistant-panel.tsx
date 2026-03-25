@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { usePreferences } from '@/contexts/preferences-context'
+import { useApp } from '@/contexts/AppContext'
 import { SendHorizontalIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -97,6 +98,7 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const { aiMode } = usePreferences()
+  const { user } = useApp()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -162,6 +164,7 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send cookies with the request
         body: JSON.stringify({
           messages: [
             ...messages.map((m) => ({
@@ -171,6 +174,7 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
             { role: 'user', content: input },
           ],
           aiMode,
+          currentUserId: user?.id, // Pass the current user ID
         }),
       })
 
