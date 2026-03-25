@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
@@ -17,7 +17,7 @@ import {
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/contexts'
+import { useAnimations, usePageContext } from '@/contexts'
 
 export default function SpaceDetailsPage() {
   const params = useParams()
@@ -29,6 +29,13 @@ export default function SpaceDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+
+  const { setPageTitle } = usePageContext()
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Dashboard')
+  }, [setPageTitle])
 
   const { data, loading, error } = useQuery(GET_SPACE_DETAILS, {
     variables: { spaceId },

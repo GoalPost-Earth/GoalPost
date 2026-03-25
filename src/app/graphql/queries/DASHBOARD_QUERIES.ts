@@ -55,6 +55,38 @@ export const GET_LOGGED_IN_USER = graphql(`
           }
         }
       }
+      connections {
+        id
+        firstName
+        lastName
+        name
+        email
+        photo
+      }
+      connectionEdges {
+        connectedPersonId
+        why
+        interests
+      }
+    }
+  }
+`)
+
+export const SEARCH_PEOPLE_QUERY = graphql(`
+  query SearchPeople($nameContains: String!) {
+    people(
+      where: {
+        OR: [
+          { firstName_CONTAINS: $nameContains }
+          { lastName_CONTAINS: $nameContains }
+          { email_CONTAINS: $nameContains }
+        ]
+      }
+    ) {
+      id
+      name
+      email
+      photo
     }
   }
 `)

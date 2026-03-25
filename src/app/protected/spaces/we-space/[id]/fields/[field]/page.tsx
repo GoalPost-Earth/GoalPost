@@ -417,6 +417,37 @@ function FieldDetailPage() {
     return connections
   }, [membersData, connectionsData])
 
+  // Build a lookup map from sorted personId pair -> { why, interests } from CONNECTED_TO relationship
+  const connectionEdgesMap = useMemo(() => {
+    const map = new Map<
+      string,
+      { why: string | null; interests: string | null }
+    >()
+    if (!connectionsData?.people) return map
+
+    connectionsData.people.forEach(
+      (person: {
+        id: string
+        connectionEdges?: Array<{
+          connectedPersonId: string
+          why?: string | null
+          interests?: string | null
+        }>
+      }) => {
+        if (person.connectionEdges) {
+          person.connectionEdges.forEach((edge) => {
+            const key = [person.id, edge.connectedPersonId].sort().join('::')
+            map.set(key, {
+              why: edge.why ?? null,
+              interests: edge.interests ?? null,
+            })
+          })
+        }
+      }
+    )
+    return map
+  }, [connectionsData])
+
   // Process members data when it changes
   useEffect(() => {
     if (!membersData) return
@@ -1485,6 +1516,10 @@ function FieldDetailPage() {
       const space = membersData?.weSpaces?.[0]
       if (!space) return
 
+      // Look up relationship properties (why, interests) from the edge map
+      const edgeKey = [person1Id, person2Id].sort().join('::')
+      const edgeProps = connectionEdgesMap.get(edgeKey)
+
       // Close all other panels except person panel (if currently viewing a person)
       setIsPulsePanelOpen(false)
       setIsResonancePanelOpen(false)
@@ -1511,6 +1546,8 @@ function FieldDetailPage() {
           photo: person2Data.photo,
           role: person2Data.role,
         },
+        why: edgeProps?.why ?? null,
+        interests: edgeProps?.interests ?? null,
       })
       setIsConnectionPanelOpen(true)
 
@@ -1520,6 +1557,7 @@ function FieldDetailPage() {
     [
       personData,
       personConnections,
+      connectionEdgesMap,
       membersData,
       isConnectionPanelOpen,
       selectedConnection,

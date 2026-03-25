@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
@@ -13,12 +13,13 @@ import {
   LOG_FIELD_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations } from '@/contexts'
+import { useAnimations, usePageContext } from '@/contexts'
 import { FieldContextSections } from './field-context-sections'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
   const router = useRouter()
+  const { setPageTitle } = usePageContext()
   const contextId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -27,6 +28,11 @@ export default function FieldContextDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle('Dashboard')
+  }, [setPageTitle])
 
   const { data, loading, error } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
     variables: { contextId },
