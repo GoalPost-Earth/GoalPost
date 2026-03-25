@@ -90,7 +90,7 @@ export function PulsePanel({
   const [showShareModal, setShowShareModal] = useState(false)
   const {
     sharePulseWithContext,
-    movePulseToContext,
+    removePulseFromContext,
     loading: sharingLoading,
   } = usePulseSharing()
 
@@ -154,7 +154,7 @@ export function PulsePanel({
             {onEdit && (
               <button
                 onClick={onEdit}
-                className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+                className="cursor-pointer text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
                 aria-label="Edit"
                 title="Edit pulse"
               >
@@ -163,7 +163,7 @@ export function PulsePanel({
             )}
             <button
               onClick={onClose}
-              className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+              className="cursor-pointer text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
               aria-label="Close"
             >
               <span className="material-symbols-outlined text-lg">close</span>
@@ -214,7 +214,7 @@ export function PulsePanel({
                   {pulse.content.length > 150 && (
                     <button
                       onClick={() => setIsContentExpanded(!isContentExpanded)}
-                      className="text-xs font-semibold text-gp-primary hover:text-gp-primary/80 mt-1 transition-colors"
+                      className="cursor-pointer text-xs font-semibold text-gp-primary hover:text-gp-primary/80 mt-1 transition-colors"
                     >
                       {isContentExpanded ? 'Read less' : 'Read more'}
                     </button>
@@ -377,7 +377,7 @@ export function PulsePanel({
           onMoveSuccess={onMoveSuccess}
           onClose={() => setShowShareModal(false)}
           onShare={sharePulseWithContext}
-          onMove={movePulseToContext}
+          onRemove={removePulseFromContext}
           isLoading={sharingLoading}
         />
       )}
@@ -397,10 +397,9 @@ interface SharePulseModalProps {
     pulseId: string,
     contextId: string
   ) => Promise<{ success: boolean; error?: string }>
-  onMove: (
+  onRemove: (
     pulseId: string,
-    fromContextId: string,
-    toContextId: string
+    contextId: string
   ) => Promise<{ success: boolean; error?: string }>
   isLoading: boolean
 }
@@ -417,11 +416,13 @@ function SharePulseModal({
   onMoveSuccess,
   onClose,
   onShare,
-  onMove,
+  onRemove,
   isLoading,
 }: SharePulseModalProps) {
   const [selectedContexts, setSelectedContexts] = useState<ContextOption[]>([])
-  const [selectedTargetContextId, setSelectedTargetContextId] = useState('')
+  const [selectedMoveContexts, setSelectedMoveContexts] = useState<
+    ContextOption[]
+  >([])
   const [mode, setMode] = useState<'share' | 'move'>('share')
   const [shareMessage, setShareMessage] = useState('')
 
@@ -530,11 +531,6 @@ function SharePulseModal({
     }),
   }
 
-  const customStylesSingle = customStyles as unknown as StylesConfig<
-    ContextOption,
-    false
-  >
-
   const handleShare = async () => {
     if (selectedContexts.length === 0) return
 
@@ -582,35 +578,71 @@ function SharePulseModal({
   }
 
   const handleMove = async () => {
-    if (!moveSourceContextId || !selectedTargetContextId) return
+    if (!moveSourceContextId || selectedMoveContexts.length === 0) return
 
-    if (moveSourceContextId === selectedTargetContextId) {
-      setShareMessage('Source and destination contexts must be different')
-      return
-    }
+    const failedMoves: string[] = []
+    let destinationSuccessCount = 0
+    const existingContextIds = new Set(pulse.contexts.map((ctx) => ctx.id))
 
-    const result = await onMove(
-      pulse.id,
-      moveSourceContextId,
-      selectedTargetContextId
-    )
-
-    if (result.success) {
-      if (onMoveSuccess) {
-        await onMoveSuccess()
-        onClose()
-        return
+    for (const context of selectedMoveContexts) {
+      if (moveSourceContextId === context.value) {
+        failedMoves.push(
+          `${context.label}: Source and destination contexts must be different`
+        )
+        continue
       }
 
-      setShareMessage('Pulse moved successfully!')
-      setTimeout(() => {
-        onClose()
-        setShareMessage('')
-      }, 2000)
+      if (existingContextIds.has(context.value)) {
+        destinationSuccessCount += 1
+        continue
+      }
+
+      const result = await onShare(pulse.id, context.value)
+      if (result.success) {
+        destinationSuccessCount += 1
+      } else {
+        failedMoves.push(
+          `${context.label}: ${result.error || 'Failed to add pulse to destination context'}`
+        )
+      }
+    }
+
+    if (destinationSuccessCount === 0) {
+      setShareMessage(
+        failedMoves.join(' | ') ||
+          'Failed to move pulse to destination contexts'
+      )
       return
     }
 
-    setShareMessage(result.error || 'Failed to move pulse')
+    const removeResult = await onRemove(pulse.id, moveSourceContextId)
+    if (!removeResult.success) {
+      setShareMessage(
+        `Added to ${destinationSuccessCount} context${destinationSuccessCount === 1 ? '' : 's'}, but failed to remove from source: ${removeResult.error || 'Unknown error'}`
+      )
+      return
+    }
+
+    if (onMoveSuccess) {
+      await onMoveSuccess()
+      onClose()
+      return
+    }
+
+    if (failedMoves.length === 0) {
+      setShareMessage(
+        `Pulse moved successfully to ${destinationSuccessCount} context${destinationSuccessCount === 1 ? '' : 's'}!`
+      )
+    } else {
+      setShareMessage(
+        `Moved to ${destinationSuccessCount} context${destinationSuccessCount === 1 ? '' : 's'}. ${failedMoves.join(' | ')}`
+      )
+    }
+
+    setTimeout(() => {
+      onClose()
+      setShareMessage('')
+    }, 2000)
   }
 
   return (
@@ -622,7 +654,7 @@ function SharePulseModal({
           </h3>
           <button
             onClick={onClose}
-            className="text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            className="cursor-pointer text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -643,7 +675,7 @@ function SharePulseModal({
               setShareMessage('')
             }}
             className={cn(
-              'flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              'cursor-pointer flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
               mode === 'share'
                 ? 'bg-gp-primary text-white'
                 : 'text-gp-ink-strong hover:bg-white/50 dark:hover:bg-white/5'
@@ -657,7 +689,7 @@ function SharePulseModal({
               setShareMessage('')
             }}
             className={cn(
-              'flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              'cursor-pointer flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors',
               mode === 'move'
                 ? 'bg-gp-primary text-white'
                 : 'text-gp-ink-strong hover:bg-white/50 dark:hover:bg-white/5'
@@ -722,25 +754,25 @@ function SharePulseModal({
 
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase text-gp-ink-muted">
-                Destination Context
+                Destination Contexts
               </label>
-              <Select<ContextOption, false>
+              <Select<ContextOption, true>
                 options={contextOptions}
-                value={contextOptions.find(
-                  (option) => option.value === selectedTargetContextId
-                )}
-                onChange={(option) =>
-                  setSelectedTargetContextId(option?.value || '')
+                value={selectedMoveContexts}
+                onChange={(options) =>
+                  setSelectedMoveContexts(options ? [...options] : [])
                 }
                 isLoading={contextsLoading}
+                isMulti
                 isSearchable
-                placeholder="Choose destination context..."
+                closeMenuOnSelect={false}
+                placeholder="Choose destination contexts..."
                 noOptionsMessage={() =>
                   contextOptions.length === 0
                     ? 'No destination contexts available'
                     : 'No matching contexts found'
                 }
-                styles={customStylesSingle}
+                styles={customStyles}
               />
             </div>
           </div>
@@ -762,7 +794,7 @@ function SharePulseModal({
         <div className="flex gap-2 pt-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-sm font-medium"
+            className="cursor-pointer flex-1 px-4 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-sm font-medium"
           >
             Cancel
           </button>
@@ -771,16 +803,18 @@ function SharePulseModal({
             disabled={
               mode === 'share'
                 ? selectedContexts.length === 0 || isLoading
-                : !moveSourceContextId || !selectedTargetContextId || isLoading
+                : !moveSourceContextId ||
+                  selectedMoveContexts.length === 0 ||
+                  isLoading
             }
-            className="flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity text-sm font-medium flex items-center justify-center gap-2"
+            className="cursor-pointer flex-1 px-4 py-2 rounded-lg bg-gp-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity text-sm font-medium flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
                 <span className="material-symbols-outlined animate-spin">
                   sync
                 </span>
-                Sharing...
+                {mode === 'share' ? 'Sharing...' : 'Moving...'}
               </>
             ) : (
               <>
@@ -788,7 +822,9 @@ function SharePulseModal({
                 {mode === 'share' ? 'Share' : 'Move'}
                 {mode === 'share' && selectedContexts.length > 0
                   ? ` (${selectedContexts.length})`
-                  : ''}
+                  : mode === 'move' && selectedMoveContexts.length > 0
+                    ? ` (${selectedMoveContexts.length})`
+                    : ''}
               </>
             )}
           </button>
