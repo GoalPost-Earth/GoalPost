@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
+import { SpacePermissionsModal } from '@/components/spaces'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import {
   UPDATE_ME_SPACE_MUTATION,
@@ -17,7 +18,7 @@ import {
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations, usePageContext } from '@/contexts'
+import { useAnimations, useApp, usePageContext } from '@/contexts'
 
 export default function SpaceDetailsPage() {
   const params = useParams()
@@ -29,7 +30,9 @@ export default function SpaceDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false)
 
+  const { user } = useApp()
   const { setPageTitle } = usePageContext()
 
   // Set page title
@@ -37,7 +40,7 @@ export default function SpaceDetailsPage() {
     setPageTitle('Dashboard')
   }, [setPageTitle])
 
-  const { data, loading, error } = useQuery(GET_SPACE_DETAILS, {
+  const { data, loading, error, refetch } = useQuery(GET_SPACE_DETAILS, {
     variables: { spaceId },
     skip: !spaceId,
   })
@@ -55,6 +58,25 @@ export default function SpaceDetailsPage() {
   const owner = space?.owner?.[0] as any
   const members = space?.members || []
   const contexts = space?.contexts || []
+  const isOwner = owner?.id === user?.id
+
+  const permissionMembers =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    members?.map((membership: any) => {
+      const memberData = membership.member?.[0]
+      return {
+        id: membership.id,
+        role: membership.role,
+        member: {
+          __typename: memberData?.__typename || 'Person',
+          id: memberData?.id || '',
+          name:
+            memberData?.name ||
+            `${memberData?.firstName || ''} ${memberData?.lastName || ''}`.trim(),
+          email: memberData?.email ?? null,
+        },
+      }
+    }) || []
 
   const handleEditStart = () => {
     setEditName(space?.name || '')
@@ -413,7 +435,20 @@ export default function SpaceDetailsPage() {
             {/* Members Section - Only show for WeSpace */}
             {space.__typename === 'WeSpace' && (
               <div className="flex flex-col gap-4 md:col-span-2">
-                <SectionHeader icon="group" title="Members" />
+                <div className="flex items-center justify-between gap-3">
+                  <SectionHeader icon="group" title="Members" />
+                  {isOwner && (
+                    <button
+                      onClick={() => setShowPermissionsModal(true)}
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        person_add
+                      </span>
+                      Add Member
+                    </button>
+                  )}
+                </div>
                 <ProfileCard>
                   <div className="space-y-3">
                     {members.length > 0 ? (
@@ -572,6 +607,19 @@ export default function SpaceDetailsPage() {
           </div>
         </ProfileLayout>
       </main>
+
+      {space.__typename === 'WeSpace' && isOwner && (
+        <SpacePermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => setShowPermissionsModal(false)}
+          spaceId={spaceId}
+          spaceName={space.name}
+          members={permissionMembers}
+          onRefetch={async () => {
+            await refetch()
+          }}
+        />
+      )}
     </div>
   )
 }
