@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { LinkifiedText } from '@/components/ui/linkified-text'
+import { usePulseSharing } from '@/hooks/usePulseSharing'
+import { SharePulseModal, type PulseDetails } from '@/components/ui/pulse-panel'
 
 function typenameToNodeType(typename: string): NodeType {
   const map: Record<string, NodeType> = {
@@ -75,6 +77,7 @@ export default function PulseDetailsPage() {
   const [editWhoSupports, setEditWhoSupports] = useState('')
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>(
@@ -93,10 +96,13 @@ export default function PulseDetailsPage() {
     }))
   }
 
-  const { data, loading, error } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
-    variables: { pulseId },
-    skip: !pulseId,
-  })
+  const { data, loading, error, refetch } = useQuery(
+    GET_PULSE_DETAILS_WITH_CONTEXT,
+    {
+      variables: { pulseId },
+      skip: !pulseId,
+    }
+  )
 
   // Setup mutations for different pulse types
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
@@ -109,6 +115,11 @@ export default function PulseDetailsPage() {
     DELETE_RESONANCES_BY_PULSE_MUTATION
   )
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
+  const {
+    sharePulseWithContext,
+    removePulseFromContext,
+    loading: isSharingPulse,
+  } = usePulseSharing()
 
   // Get the pulse from whichever concrete type array returns data
   const pulse =
@@ -470,6 +481,34 @@ export default function PulseDetailsPage() {
         day: 'numeric',
       })
     : ''
+
+  const pulseForSharing: PulseDetails = {
+    id: pulse.id,
+    type:
+      pulse.__typename === 'ResourcePulse'
+        ? 'resource'
+        : pulse.__typename === 'StoryPulse'
+          ? 'story'
+          : 'goal',
+    title: pulse.title,
+    content: pulse.content || '',
+    createdAt: pulse.createdAt,
+    status: 'status' in pulse ? pulse.status : null,
+    horizon:
+      pulse.__typename === 'GoalPulse' && 'horizon' in pulse
+        ? pulse.horizon
+        : null,
+    resourceType:
+      pulse.__typename === 'ResourcePulse' && 'resourceType' in pulse
+        ? pulse.resourceType
+        : null,
+    createdBy: [],
+    contexts:
+      pulse.context?.map((ctx: { id: string; title?: string | null }) => ({
+        id: ctx.id,
+        title: ctx.title,
+      })) || [],
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
@@ -1457,6 +1496,15 @@ export default function PulseDetailsPage() {
               Edit Pulse
             </button>
             <button
+              onClick={() => setShowShareModal(true)}
+              className="px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                share
+              </span>
+              Share Pulse
+            </button>
+            <button
               onClick={() => setShowDeleteConfirm(true)}
               className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
             >
@@ -1468,6 +1516,20 @@ export default function PulseDetailsPage() {
           </div>
         </ProfileLayout>
       </main>
+
+      {showShareModal && (
+        <SharePulseModal
+          pulse={pulseForSharing}
+          currentContextId={context?.id}
+          onMoveSuccess={async () => {
+            await refetch()
+          }}
+          onClose={() => setShowShareModal(false)}
+          onShare={sharePulseWithContext}
+          onRemove={removePulseFromContext}
+          isLoading={isSharingPulse}
+        />
+      )}
     </div>
   )
 }

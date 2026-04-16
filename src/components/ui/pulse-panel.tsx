@@ -388,7 +388,7 @@ export function PulsePanel({
 /**
  * Modal component for sharing a pulse to other contexts
  */
-interface SharePulseModalProps {
+export interface SharePulseModalProps {
   pulse: PulseDetails
   currentContextId?: string
   onMoveSuccess?: () => void | Promise<void>
@@ -410,7 +410,7 @@ interface ContextOption {
   spaceName: string
 }
 
-function SharePulseModal({
+export function SharePulseModal({
   pulse,
   currentContextId,
   onMoveSuccess,

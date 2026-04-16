@@ -6,43 +6,125 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
+import { OfferingModal } from '@/components/ui/offering-modal'
+import { OfferingInput } from '@/components/ui/offering-input'
+import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
+import { ResonanceLinkModal } from '@/components/ui/resonance-link-modal'
+import { BulkPulseShareModal } from '@/components/ui/bulk-pulse-share-modal'
+import type { NodeType } from '@/components/ui/pulse-node'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import {
+  CREATE_GOAL_PULSE_MUTATION,
+  CREATE_RESOURCE_PULSE_MUTATION,
+  CREATE_STORY_PULSE_MUTATION,
+  UPDATE_GOAL_PULSE_MUTATION,
+  UPDATE_RESOURCE_PULSE_MUTATION,
+  UPDATE_STORY_PULSE_MUTATION,
+  DELETE_GOAL_PULSE_MUTATION,
+  DELETE_RESOURCE_PULSE_MUTATION,
+  DELETE_STORY_PULSE_MUTATION,
+  DELETE_RESONANCES_BY_PULSE_MUTATION,
   UPDATE_FIELD_CONTEXT_MUTATION,
   DELETE_FIELD_CONTEXT_MUTATION,
   LOG_FIELD_ACTIVITY,
+  LOG_PULSE_ACTIVITY,
+  CREATE_RESONANCE_LINK_MUTATION,
+  UPDATE_RESONANCE_LINK_MUTATION,
+  DELETE_RESONANCE_LINK_MUTATION,
+  SHARE_PULSE_WITH_CONTEXT_MUTATION,
+  REMOVE_PULSE_FROM_CONTEXT_MUTATION,
 } from '@/app/graphql/mutations'
+import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
-import { useAnimations, usePageContext } from '@/contexts'
+import { useAnimations, useApp, usePageContext } from '@/contexts'
+import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from './field-context-sections'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
+  const { user } = useApp()
   const contextId = params?.id as string
   const { animationsEnabled } = useAnimations()
+  const [isCreatePulseModalOpen, setIsCreatePulseModalOpen] = useState(false)
+  const [editingPulseId, setEditingPulseId] = useState<string | null>(null)
+  const [editingPulseData, setEditingPulseData] = useState<{
+    type: NodeType
+    name: string
+    content: string
+  } | null>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editEmergentName, setEditEmergentName] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isPulseSubmitting, setIsPulseSubmitting] = useState(false)
+  const [pulseSubmitError, setPulseSubmitError] = useState<string | null>(null)
+  const [pulseSubmitSuccess, setPulseSubmitSuccess] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [showPulseDeleteConfirm, setShowPulseDeleteConfirm] = useState(false)
+  const [pulseToDelete, setPulseToDelete] = useState<{
+    id: string
+    type: NodeType
+    title: string
+  } | null>(null)
+  const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
+    useState(false)
+  const [editingResonance, setEditingResonance] = useState<{
+    id: string
+    label: string
+    confidence: number
+    description: string
+    sourceId: string
+    targetId: string
+    sourceType: NodeType
+    targetType: NodeType
+  } | null>(null)
+  const [isResonanceSubmitting, setIsResonanceSubmitting] = useState(false)
+  const [resonanceSubmitError, setResonanceSubmitError] = useState<
+    string | null
+  >(null)
+  const [isBulkShareModalOpen, setIsBulkShareModalOpen] = useState(false)
 
   // Set page title
   useEffect(() => {
     setPageTitle('Dashboard')
   }, [setPageTitle])
 
-  const { data, loading, error } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
-    variables: { contextId },
-    skip: !contextId,
-  })
+  const { data, loading, error, refetch } = useQuery(
+    GET_FIELD_CONTEXT_DETAILS,
+    {
+      variables: { contextId },
+      skip: !contextId,
+    }
+  )
 
   // Setup mutations
+  const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION)
+  const [createResourcePulse] = useMutation(CREATE_RESOURCE_PULSE_MUTATION)
+  const [createStoryPulse] = useMutation(CREATE_STORY_PULSE_MUTATION)
+  const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
+  const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
+  const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
+  const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION)
+  const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION)
+  const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION)
+  const [deleteResonancesByPulse] = useMutation(
+    DELETE_RESONANCES_BY_PULSE_MUTATION
+  )
   const [updateFieldContext] = useMutation(UPDATE_FIELD_CONTEXT_MUTATION)
   const [deleteFieldContext] = useMutation(DELETE_FIELD_CONTEXT_MUTATION)
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
+  const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
+  const [createResonanceLink] = useMutation(CREATE_RESONANCE_LINK_MUTATION)
+  const [updateResonanceLink] = useMutation(UPDATE_RESONANCE_LINK_MUTATION)
+  const [deleteResonanceLink] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
+  const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
+  const [sharePulseWithContext] = useMutation(SHARE_PULSE_WITH_CONTEXT_MUTATION)
+  const [removePulseFromContext] = useMutation(
+    REMOVE_PULSE_FROM_CONTEXT_MUTATION
+  )
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
@@ -152,6 +234,408 @@ export default function FieldContextDetailsPage() {
       setShowDeleteConfirm(false)
     } finally {
       setIsDeleteLoading(false)
+    }
+  }
+
+  const handleCreatePulse = async (
+    value: string,
+    type: string,
+    name: string
+  ) => {
+    if (!user) {
+      setPulseSubmitError('User not authenticated')
+      return
+    }
+
+    setIsPulseSubmitting(true)
+    setPulseSubmitError(null)
+    setPulseSubmitSuccess(false)
+
+    try {
+      const pulseTypeMap = {
+        goal: 'goal',
+        resource: 'resource',
+        story: 'story',
+      } as const
+
+      const pulseType =
+        pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
+
+      if (editingPulseId) {
+        if (pulseType === 'goal') {
+          await updateGoalPulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
+              },
+            },
+          })
+        } else if (pulseType === 'resource') {
+          await updateResourcePulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
+              },
+            },
+          })
+        } else {
+          await updateStoryPulse({
+            variables: {
+              where: { id_EQ: editingPulseId },
+              update: {
+                title_SET: name,
+                content_SET: value,
+              },
+            },
+          })
+        }
+
+        const currentPulse = pulses.find((pulse) => pulse.id === editingPulseId)
+        const snapshotName = currentPulse?.title ?? name
+
+        logPulseActivity({
+          variables: {
+            input: {
+              action: 'updated',
+              pulseId: editingPulseId,
+              pulseType:
+                pulseType.charAt(0).toUpperCase() +
+                pulseType.slice(1) +
+                'Pulse',
+              pulseName: snapshotName,
+              contextId,
+            },
+          },
+        }).catch((err) => console.warn('Failed to log pulse update:', err))
+      } else {
+        const baseInput = {
+          title: name,
+          content: value,
+          intensity: 1.0,
+          createdAt: new Date().toISOString(),
+          context: {
+            connect: [{ where: { node: { id_EQ: contextId } } }],
+          },
+          createdBy: {
+            connect: [{ where: { node: { id_EQ: user.id } } }],
+          },
+        }
+
+        let createdPulseId: string | undefined
+
+        if (pulseType === 'goal') {
+          const { data: response } = await createGoalPulse({
+            variables: {
+              input: [
+                {
+                  ...baseInput,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  status: 'ACTIVE' as any,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  horizon: 'MID' as any,
+                },
+              ],
+            },
+          })
+          createdPulseId = response?.createGoalPulses?.goalPulses?.[0]?.id
+        } else if (pulseType === 'resource') {
+          const { data: response } = await createResourcePulse({
+            variables: {
+              input: [
+                {
+                  ...baseInput,
+                  resourceType: 'general',
+                  availability: 1.0,
+                },
+              ],
+            },
+          })
+          createdPulseId =
+            response?.createResourcePulses?.resourcePulses?.[0]?.id
+        } else {
+          const { data: response } = await createStoryPulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+          createdPulseId = response?.createStoryPulses?.storyPulses?.[0]?.id
+        }
+
+        if (createdPulseId) {
+          logPulseActivity({
+            variables: {
+              input: {
+                action: 'created',
+                pulseId: createdPulseId,
+                pulseType:
+                  pulseType.charAt(0).toUpperCase() +
+                  pulseType.slice(1) +
+                  'Pulse',
+                pulseName: name,
+                contextId,
+              },
+            },
+          }).catch((err) => console.warn('Failed to log pulse creation:', err))
+        }
+      }
+
+      setPulseSubmitSuccess(true)
+
+      await refetch()
+
+      setTimeout(() => {
+        setIsCreatePulseModalOpen(false)
+        setPulseSubmitSuccess(false)
+        setPulseSubmitError(null)
+        setEditingPulseId(null)
+        setEditingPulseData(null)
+      }, 1500)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create pulse'
+      console.error('Error creating pulse:', error)
+      setPulseSubmitError(errorMessage)
+    } finally {
+      setIsPulseSubmitting(false)
+    }
+  }
+
+  const handleEditPulse = (
+    e: React.MouseEvent,
+    pulseId: string,
+    type: NodeType,
+    title: string,
+    content: string
+  ) => {
+    e.stopPropagation()
+    setEditingPulseId(pulseId)
+    setEditingPulseData({
+      type,
+      name: title,
+      content,
+    })
+    setIsCreatePulseModalOpen(true)
+  }
+
+  const handleDeletePulse = async (
+    e: React.MouseEvent,
+    pulseId: string,
+    type: NodeType,
+    skipConfirm = false
+  ) => {
+    e.stopPropagation()
+
+    const currentPulse = pulses.find((pulse) => pulse.id === pulseId)
+
+    if (!skipConfirm) {
+      setPulseToDelete({
+        id: pulseId,
+        type,
+        title: currentPulse?.title ?? '',
+      })
+      setShowPulseDeleteConfirm(true)
+      return
+    }
+
+    if (!user) {
+      setPulseSubmitError('User not authenticated')
+      return
+    }
+
+    setIsPulseSubmitting(true)
+    setPulseSubmitError(null)
+
+    try {
+      await deleteResonancesByPulse({ variables: { pulseId } })
+
+      if (type === 'goal') {
+        await deleteGoalPulse({ variables: { where: { id_EQ: pulseId } } })
+      } else if (type === 'resource') {
+        await deleteResourcePulse({ variables: { where: { id_EQ: pulseId } } })
+      } else {
+        await deleteStoryPulse({ variables: { where: { id_EQ: pulseId } } })
+      }
+
+      logPulseActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            pulseId,
+            pulseType: type.charAt(0).toUpperCase() + type.slice(1) + 'Pulse',
+            pulseName: currentPulse?.title ?? '',
+            contextId,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log pulse deletion:', err))
+
+      toast.success('Pulse deleted successfully')
+      setShowPulseDeleteConfirm(false)
+      setPulseToDelete(null)
+      await refetch()
+    } catch (error) {
+      console.error('Error deleting pulse:', error)
+      setPulseSubmitError(
+        error instanceof Error ? error.message : 'Failed to delete pulse'
+      )
+      toast.error('Failed to delete pulse')
+    } finally {
+      setIsPulseSubmitting(false)
+    }
+  }
+
+  const confirmDeletePulse = async () => {
+    if (!pulseToDelete) return
+
+    await handleDeletePulse(
+      new MouseEvent('click') as unknown as React.MouseEvent,
+      pulseToDelete.id,
+      pulseToDelete.type,
+      true
+    )
+  }
+
+  const handleResonanceLinkSubmit = async (data: {
+    label: string
+    confidence: number
+    description: string
+    sourceId: string
+    targetId: string
+    sourceType: NodeType
+    targetType: NodeType
+    resonanceId?: string
+  }) => {
+    setIsResonanceSubmitting(true)
+    setResonanceSubmitError(null)
+
+    try {
+      if (data.resonanceId && editingResonance) {
+        // Update existing resonance
+        await updateResonanceLink({
+          variables: {
+            where: { id_EQ: data.resonanceId },
+            update: {
+              label_SET: data.label,
+              confidence_SET: data.confidence,
+              description_SET: data.description,
+            },
+          },
+        })
+
+        logResonanceActivity({
+          variables: {
+            input: {
+              action: 'updated',
+              resonanceId: data.resonanceId,
+              sourceId: data.sourceId,
+              targetId: data.targetId,
+              label: data.label,
+              contextId,
+            },
+          },
+        }).catch((err) => console.warn('Failed to log resonance update:', err))
+
+        toast.success('Resonance link updated successfully')
+      } else {
+        // Create new resonance
+        const response = await createResonanceLink({
+          variables: {
+            input: [
+              {
+                label: data.label,
+                confidence: data.confidence,
+                description: data.description,
+                createdAt: new Date().toISOString(),
+                source: {
+                  connect: [{ where: { node: { id_EQ: data.sourceId } } }],
+                },
+                target: {
+                  connect: [{ where: { node: { id_EQ: data.targetId } } }],
+                },
+                context: {
+                  connect: [{ where: { node: { id_EQ: contextId } } }],
+                },
+              },
+            ],
+          },
+        })
+
+        const createdResonanceId =
+          response.data?.createResonanceLinks?.resonanceLinks?.[0]?.id
+
+        if (createdResonanceId) {
+          logResonanceActivity({
+            variables: {
+              input: {
+                action: 'created',
+                resonanceId: createdResonanceId,
+                sourceId: data.sourceId,
+                targetId: data.targetId,
+                label: data.label,
+                contextId,
+              },
+            },
+          }).catch((err) =>
+            console.warn('Failed to log resonance creation:', err)
+          )
+        }
+
+        toast.success('Resonance link created successfully')
+      }
+
+      setIsResonanceLinkModalOpen(false)
+      setEditingResonance(null)
+      await refetch()
+    } catch (error) {
+      console.error('Error with resonance link:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to process resonance'
+      setResonanceSubmitError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsResonanceSubmitting(false)
+    }
+  }
+
+  const handleDeleteResonance = async () => {
+    if (!editingResonance) return
+
+    setIsResonanceSubmitting(true)
+    setResonanceSubmitError(null)
+
+    try {
+      await deleteResonanceLink({
+        variables: { id: editingResonance.id },
+      })
+
+      logResonanceActivity({
+        variables: {
+          input: {
+            action: 'deleted',
+            resonanceId: editingResonance.id,
+            sourceId: editingResonance.sourceId,
+            targetId: editingResonance.targetId,
+            label: editingResonance.label,
+            contextId,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log resonance deletion:', err))
+
+      toast.success('Resonance link deleted successfully')
+      setIsResonanceLinkModalOpen(false)
+      setEditingResonance(null)
+      await refetch()
+    } catch (error) {
+      console.error('Error deleting resonance:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to delete resonance'
+      setResonanceSubmitError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsResonanceSubmitting(false)
     }
   }
 
@@ -353,6 +837,10 @@ export default function FieldContextDetailsPage() {
             pulses={pulses}
             resonances={resonances}
             space={space}
+            onAddPulse={() => setIsCreatePulseModalOpen(true)}
+            onAddResonance={() => setIsResonanceLinkModalOpen(true)}
+            onEditPulse={handleEditPulse}
+            onDeletePulse={handleDeletePulse}
             onPulseClick={(pulseId) =>
               router.push(`/protected/dashboard/pulses/${pulseId}`)
             }
@@ -373,6 +861,16 @@ export default function FieldContextDetailsPage() {
               Edit Context
             </button>
             <button
+              onClick={() => setIsBulkShareModalOpen(true)}
+              disabled={pulses.length === 0}
+              className="px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                share
+              </span>
+              Share Pulses
+            </button>
+            <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
               className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -385,6 +883,169 @@ export default function FieldContextDetailsPage() {
           </div>
         </ProfileLayout>
       </main>
+
+      <OfferingModal
+        isOpen={isCreatePulseModalOpen && !editingPulseId}
+        onClose={() => {
+          setIsCreatePulseModalOpen(false)
+          setPulseSubmitError(null)
+          setPulseSubmitSuccess(false)
+          setEditingPulseId(null)
+          setEditingPulseData(null)
+        }}
+        position="bottom"
+      >
+        <div className="w-full max-w-160">
+          {pulseSubmitError && (
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">
+              {pulseSubmitError}
+            </div>
+          )}
+          {pulseSubmitSuccess && (
+            <div className="mb-4 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-700 dark:bg-green-500/20 dark:text-green-300">
+              Pulse created successfully!
+            </div>
+          )}
+          <OfferingInput
+            onSubmit={(value: string, type: string, name: string) => {
+              handleCreatePulse(value, type, name)
+            }}
+            isLoading={isPulseSubmitting}
+          />
+        </div>
+      </OfferingModal>
+
+      {editingPulseId && editingPulseData && (
+        <PulseEditModal
+          isOpen={isCreatePulseModalOpen && !!editingPulseId}
+          onClose={() => {
+            setIsCreatePulseModalOpen(false)
+            setPulseSubmitError(null)
+            setEditingPulseId(null)
+            setEditingPulseData(null)
+          }}
+          onSubmit={(type: NodeType, name: string, content: string) => {
+            handleCreatePulse(content, type, name)
+          }}
+          isLoading={isPulseSubmitting}
+          initialType={editingPulseData.type}
+          initialName={editingPulseData.name}
+          initialContent={editingPulseData.content}
+          error={pulseSubmitError}
+          onDelete={async () => {
+            await handleDeletePulse(
+              new MouseEvent('click') as unknown as React.MouseEvent,
+              editingPulseId,
+              editingPulseData.type,
+              true
+            )
+            setIsCreatePulseModalOpen(false)
+            setEditingPulseId(null)
+            setEditingPulseData(null)
+          }}
+        />
+      )}
+
+      <OfferingModal
+        isOpen={showPulseDeleteConfirm}
+        onClose={() => {
+          setShowPulseDeleteConfirm(false)
+          setPulseToDelete(null)
+        }}
+        position="center"
+      >
+        <div className="relative z-10 w-full">
+          <div className="glass-panel rounded-3xl p-8 md:p-12 border border-gp-glass-border dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+            <div className="flex flex-col items-center text-center relative z-10">
+              <div className="mb-8 relative group">
+                <div className="absolute inset-0 bg-red-500/30 rounded-full blur-xl" />
+                <div className="size-16 rounded-full bg-linear-to-br from-red-100 to-red-50 dark:from-red-500/20 dark:to-red-500/10 border border-red-200 dark:border-red-500/30 flex items-center justify-center backdrop-blur-xl shadow-md dark:shadow-inner">
+                  <span className="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">
+                    delete
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="text-3xl md:text-4xl font-light dark:font-extralight text-gp-ink-strong dark:text-white mb-2 tracking-tight leading-tight">
+                Delete Pulse
+              </h2>
+              <p className="text-sm mb-8">
+                <span className="text-red-700 dark:text-red-400">
+                  Are you sure? This action cannot be undone. The pulse will be
+                  permanently deleted.
+                </span>
+              </p>
+
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => {
+                    setShowPulseDeleteConfirm(false)
+                    setPulseToDelete(null)
+                  }}
+                  disabled={isPulseSubmitting}
+                  className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeletePulse}
+                  disabled={isPulseSubmitting}
+                  className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isPulseSubmitting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </OfferingModal>
+
+      <ResonanceLinkModal
+        isOpen={isResonanceLinkModalOpen}
+        onClose={() => {
+          setIsResonanceLinkModalOpen(false)
+          setEditingResonance(null)
+          setResonanceSubmitError(null)
+        }}
+        pulses={pulses.map((pulse) => ({
+          id: pulse.id,
+          title: pulse.title,
+          content: pulse.content,
+          type:
+            (pulse.__typename
+              ?.replace('Pulse', '')
+              .toLowerCase() as NodeType) || 'goal',
+        }))}
+        onSubmit={handleResonanceLinkSubmit}
+        isLoading={isResonanceSubmitting}
+        onDelete={handleDeleteResonance}
+        editingResonance={editingResonance}
+      />
+
+      <BulkPulseShareModal
+        isOpen={isBulkShareModalOpen}
+        onClose={() => {
+          setIsBulkShareModalOpen(false)
+        }}
+        currentContextId={contextId}
+        pulses={pulses.map((pulse) => ({
+          id: pulse.id,
+          title: pulse.title || '',
+          content: pulse.content || '',
+          type:
+            (pulse.__typename
+              ?.replace('Pulse', '')
+              .toLowerCase() as NodeType) || 'goal',
+        }))}
+        onOperationComplete={async () => {
+          toast.success('Pulse shared/moved successfully')
+          setIsBulkShareModalOpen(false)
+          await refetch()
+        }}
+      />
     </div>
   )
 }
