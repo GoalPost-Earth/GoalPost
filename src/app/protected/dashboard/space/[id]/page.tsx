@@ -4,17 +4,31 @@ import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useCreateField } from '@/hooks'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
+import { CreateFieldModal } from '@/components/canvas/create-field-modal'
 import { SpacePermissionsModal } from '@/components/spaces'
+import { OfferingModal } from '@/components/ui/offering-modal'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import {
   UPDATE_ME_SPACE_MUTATION,
   UPDATE_WE_SPACE_MUTATION,
   DELETE_ME_SPACE_MUTATION,
   DELETE_WE_SPACE_MUTATION,
+  UPDATE_SPACE_MEMBER_ROLE_MUTATION,
+  REMOVE_SPACE_MEMBER_MUTATION,
+  LOG_FIELD_ACTIVITY,
+  LOG_MEMBER_ACTIVITY,
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
@@ -30,10 +44,20 @@ export default function SpaceDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [isMemberActionLoading, setIsMemberActionLoading] = useState(false)
   const [showPermissionsModal, setShowPermissionsModal] = useState(false)
+  const [showCreateFieldModal, setShowCreateFieldModal] = useState(false)
+  const [showEditFieldModal, setShowEditFieldModal] = useState(false)
+  const [showMemberDeleteConfirm, setShowMemberDeleteConfirm] = useState(false)
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
+  const [memberToDelete, setMemberToDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
+  const { createField, loading: isCreatingField } = useCreateField()
 
   // Set page title
   useEffect(() => {
@@ -50,6 +74,10 @@ export default function SpaceDetailsPage() {
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
+  const [updateSpaceMemberRole] = useMutation(UPDATE_SPACE_MEMBER_ROLE_MUTATION)
+  const [removeSpaceMember] = useMutation(REMOVE_SPACE_MEMBER_MUTATION)
+  const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
+  const [logMemberActivity] = useMutation(LOG_MEMBER_ACTIVITY)
   const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +87,12 @@ export default function SpaceDetailsPage() {
   const members = space?.members || []
   const contexts = space?.contexts || []
   const isOwner = owner?.id === user?.id
+  const currentUserMembership = members.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (membership: any) => membership.member?.[0]?.id === user?.id
+  )
+  const isAdmin = currentUserMembership?.role === 'ADMIN'
+  const canManageMembers = isOwner || isAdmin
 
   const permissionMembers =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,6 +213,170 @@ export default function SpaceDetailsPage() {
     } finally {
       setIsDeleteLoading(false)
     }
+  }
+
+  const handleCreateField = async (description: string, name?: string) => {
+    if (!spaceId || !space?.__typename) {
+      console.error('Space information not available')
+      return
+    }
+
+    const spaceType =
+      space.__typename === 'MeSpace'
+        ? 'meSpace'
+        : space.__typename === 'WeSpace'
+          ? 'weSpace'
+          : null
+
+    if (!spaceType) {
+      console.error('Unsupported space type for field creation')
+      return
+    }
+
+    try {
+      const title = name || description
+      const createdField = await createField(
+        title,
+        spaceId,
+        spaceType,
+        description
+      )
+
+      if (createdField?.id) {
+        await logFieldActivity({
+          variables: {
+            input: {
+              action: 'created',
+              fieldId: createdField.id,
+              fieldName: title,
+              contextId: createdField.id,
+              spaceName: space.name,
+            },
+          },
+        })
+          .then(() => toast.info('Field creation logged'))
+          .catch((err) => {
+            console.error('Failed to log field creation:', err)
+            toast.error('Failed to log field creation')
+          })
+      }
+
+      setShowCreateFieldModal(false)
+      await refetch()
+    } catch (err) {
+      console.error('Error creating field:', err)
+      toast.error('Failed to create field context')
+    }
+  }
+
+  const handleChangeMemberRole = async (
+    memberId: string,
+    newRole: 'ADMIN' | 'MEMBER' | 'GUEST'
+  ) => {
+    if (!canManageMembers) {
+      toast.error('Only space owners and admins can edit member roles')
+      return
+    }
+
+    setIsMemberActionLoading(true)
+
+    try {
+      await updateSpaceMemberRole({
+        variables: {
+          spaceId,
+          memberId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          role: newRole as any,
+        },
+      })
+
+      const member = permissionMembers.find(
+        (item: (typeof permissionMembers)[number]) =>
+          item.member.id === memberId
+      )
+      const previousRole = member?.role
+
+      logMemberActivity({
+        variables: {
+          input: {
+            action: 'role_changed',
+            spaceId,
+            spaceName: space.name,
+            memberId,
+            memberName: member?.member.name || 'Unknown',
+            role: newRole,
+            previousRole,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log role change:', err))
+
+      toast.success('Member role updated')
+      await refetch()
+    } catch (err) {
+      console.error('Failed to update member role:', err)
+      toast.error('Failed to update member role')
+    } finally {
+      setIsMemberActionLoading(false)
+    }
+  }
+
+  const handleRemoveMemberClick = (memberId: string, memberName: string) => {
+    if (!canManageMembers) {
+      toast.error('Only space owners and admins can remove members')
+      return
+    }
+
+    setMemberToDelete({ id: memberId, name: memberName })
+    setShowMemberDeleteConfirm(true)
+  }
+
+  const confirmRemoveMember = async () => {
+    if (!memberToDelete) return
+
+    setIsMemberActionLoading(true)
+
+    try {
+      await removeSpaceMember({
+        variables: {
+          spaceId,
+          memberId: memberToDelete.id,
+        },
+      })
+
+      const member = permissionMembers.find(
+        (item: (typeof permissionMembers)[number]) =>
+          item.member.id === memberToDelete.id
+      )
+
+      logMemberActivity({
+        variables: {
+          input: {
+            action: 'removed',
+            spaceId,
+            spaceName: space.name,
+            memberId: memberToDelete.id,
+            memberName: member?.member.name || memberToDelete.name,
+            role: member?.role || 'GUEST',
+          },
+        },
+      }).catch((err) => console.warn('Failed to log member removal:', err))
+
+      toast.success('Member removed')
+      setShowMemberDeleteConfirm(false)
+      setMemberToDelete(null)
+      await refetch()
+    } catch (err) {
+      console.error('Failed to remove member:', err)
+      toast.error('Failed to remove member')
+    } finally {
+      setIsMemberActionLoading(false)
+    }
+  }
+
+  const handleEditFieldClick = (e: React.MouseEvent, fieldId: string) => {
+    e.stopPropagation()
+    setEditingFieldId(fieldId)
+    setShowEditFieldModal(true)
   }
 
   if (loading) {
@@ -437,7 +635,7 @@ export default function SpaceDetailsPage() {
               <div className="flex flex-col gap-4 md:col-span-2">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader icon="group" title="Members" />
-                  {isOwner && (
+                  {canManageMembers && (
                     <button
                       onClick={() => setShowPermissionsModal(true)}
                       className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
@@ -467,31 +665,87 @@ export default function SpaceDetailsPage() {
                             }
                             className={
                               idx > 0
-                                ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
-                                : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                                ? 'border-t border-gp-glass-border p-4 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded-2xl px-2 -mx-2'
+                                : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded p-4 -mx-2'
                             }
                           >
-                            <div className="flex justify-between items-start mb-1">
+                            <div className="flex justify-between items-start mb-1 gap-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-[9px] uppercase font-semibold text-gp-accent-glow">
                                     {memberData.__typename}
                                   </span>
-                                  <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
-                                    {membership.role}
-                                  </span>
+                                  {!canManageMembers && (
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-semibold dark:bg-white/10 dark:border-white/10 dark:text-white/60">
+                                      {membership.role}
+                                    </span>
+                                  )}
                                 </div>
                                 <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
                                   {memberData.name}
                                 </h4>
+                                {memberData.__typename === 'Person' &&
+                                  memberData.email && (
+                                    <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                                      {memberData.email}
+                                    </p>
+                                  )}
                               </div>
-                            </div>
-                            {memberData.__typename === 'Person' &&
-                              memberData.email && (
-                                <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                                  {memberData.email}
-                                </p>
+                              {canManageMembers && (
+                                <div
+                                  className="flex min-w-36 flex-col items-stretch gap-2 sm:items-end"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Select
+                                    value={membership.role}
+                                    onValueChange={(value) =>
+                                      handleChangeMemberRole(
+                                        memberData.id,
+                                        value as 'ADMIN' | 'MEMBER' | 'GUEST'
+                                      )
+                                    }
+                                    disabled={isMemberActionLoading}
+                                  >
+                                    <SelectTrigger
+                                      className={cn(
+                                        'w-full text-xs sm:text-sm',
+                                        membership.role === 'ADMIN'
+                                          ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-700 dark:text-red-400'
+                                          : membership.role === 'MEMBER'
+                                            ? 'bg-gp-goal/10 border-gp-goal text-gp-goal'
+                                            : 'bg-gp-primary/10 border-gp-primary text-gp-primary'
+                                      )}
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-100">
+                                      <SelectItem value="GUEST">
+                                        Guest (View)
+                                      </SelectItem>
+                                      <SelectItem value="MEMBER">
+                                        Member (Edit)
+                                      </SelectItem>
+                                      <SelectItem value="ADMIN">
+                                        Admin
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveMemberClick(
+                                        memberData.id,
+                                        memberData.name
+                                      )
+                                    }
+                                    disabled={isMemberActionLoading}
+                                    className="px-2 sm:px-3 py-1 sm:py-2 rounded text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                               )}
+                            </div>
                           </div>
                         )
                       })
@@ -507,7 +761,18 @@ export default function SpaceDetailsPage() {
 
             {/* Contexts Section */}
             <div className="flex flex-col gap-4 md:col-span-2">
-              <SectionHeader icon="category" title="Field Contexts" />
+              <div className="flex items-center justify-between gap-3">
+                <SectionHeader icon="category" title="Field Contexts" />
+                <button
+                  onClick={() => setShowCreateFieldModal(true)}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    add
+                  </span>
+                  Add Field Context
+                </button>
+              </div>
               <ProfileCard>
                 <div className="space-y-3">
                   {contexts.length > 0 ? (
@@ -515,11 +780,19 @@ export default function SpaceDetailsPage() {
                     contexts.map((context: any, idx: number) => (
                       <div
                         key={context.id}
+                        onClick={() =>
+                          context.id &&
+                          router.push(
+                            `/protected/dashboard/field-context/${context.id}`
+                          )
+                        }
                         className={
-                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
+                          idx > 0
+                            ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                            : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
                         }
                       >
-                        <div className="flex justify-between items-start mb-1">
+                        <div className="flex justify-between items-start mb-1 p-4 rounded-2xl">
                           <div className="flex-1">
                             <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
                               {context.title}
@@ -530,9 +803,25 @@ export default function SpaceDetailsPage() {
                               </p>
                             )}
                           </div>
-                          <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                            {context.pulses?.length || 0} pulses
-                          </span>
+                          <div
+                            className="flex items-start gap-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span className="pt-2 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                              {context.pulses?.length || 0} pulses
+                            </span>
+                            <button
+                              onClick={(e) =>
+                                handleEditFieldClick(e, context.id)
+                              }
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/50 text-gp-ink-strong transition-all hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:text-gp-ink-strong dark:hover:bg-white/10"
+                              aria-label={`Edit ${context.title}`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                edit
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -608,7 +897,98 @@ export default function SpaceDetailsPage() {
         </ProfileLayout>
       </main>
 
-      {space.__typename === 'WeSpace' && isOwner && (
+      {showCreateFieldModal && (
+        <CreateFieldModal
+          isOpen={showCreateFieldModal}
+          onClose={() => setShowCreateFieldModal(false)}
+          onCreateField={handleCreateField}
+          isLoading={isCreatingField}
+        />
+      )}
+
+      {showEditFieldModal && editingFieldId && (
+        <CreateFieldModal
+          isOpen={showEditFieldModal}
+          onClose={() => {
+            setShowEditFieldModal(false)
+            setEditingFieldId(null)
+          }}
+          isEditing={true}
+          fieldId={editingFieldId}
+          initialName={
+            contexts.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (context: any) => context.id === editingFieldId
+            )?.title || ''
+          }
+          initialDescription={
+            contexts.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (context: any) => context.id === editingFieldId
+            )?.emergentName || ''
+          }
+          onEditSuccess={async () => {
+            const editingField = contexts.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (context: any) => context.id === editingFieldId
+            )
+
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'updated',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: space.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field update logged'))
+                .catch((err) => {
+                  console.error('Failed to log field update:', err)
+                  toast.error('Failed to log field update')
+                })
+            }
+
+            setShowEditFieldModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
+          onDeleteSuccess={async () => {
+            const editingField = contexts.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (context: any) => context.id === editingFieldId
+            )
+
+            if (editingField?.title && editingFieldId) {
+              await logFieldActivity({
+                variables: {
+                  input: {
+                    action: 'deleted',
+                    fieldId: editingFieldId,
+                    fieldName: editingField.title,
+                    contextId: editingFieldId,
+                    spaceName: space.name,
+                  },
+                },
+              })
+                .then(() => toast.info('Field deletion logged'))
+                .catch((err) => {
+                  console.error('Failed to log field deletion:', err)
+                  toast.error('Failed to log field deletion')
+                })
+            }
+
+            setShowEditFieldModal(false)
+            setEditingFieldId(null)
+            await refetch()
+          }}
+        />
+      )}
+
+      {space.__typename === 'WeSpace' && canManageMembers && (
         <SpacePermissionsModal
           isOpen={showPermissionsModal}
           onClose={() => setShowPermissionsModal(false)}
@@ -620,6 +1000,65 @@ export default function SpaceDetailsPage() {
           }}
         />
       )}
+
+      <OfferingModal
+        isOpen={showMemberDeleteConfirm}
+        onClose={() => {
+          setShowMemberDeleteConfirm(false)
+          setMemberToDelete(null)
+        }}
+        position="center"
+      >
+        <div className="relative z-10 w-full">
+          <div className="glass-panel rounded-3xl p-8 md:p-12 border border-gp-glass-border dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+            <div className="flex flex-col items-center text-center relative z-10">
+              <div className="mb-8 relative group">
+                <div className="absolute inset-0 bg-red-500/30 rounded-full blur-xl" />
+                <div className="size-16 rounded-full bg-linear-to-br from-red-100 to-red-50 dark:from-red-500/20 dark:to-red-500/10 border border-red-200 dark:border-red-500/30 flex items-center justify-center backdrop-blur-xl shadow-md dark:shadow-inner">
+                  <span className="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">
+                    person_remove
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="text-3xl md:text-4xl font-light dark:font-extralight text-gp-ink-strong dark:text-white mb-2 tracking-tight leading-tight">
+                Remove Member
+              </h2>
+              <p className="text-base text-gp-ink-muted dark:text-gp-ink-soft mb-8 max-w-md">
+                Are you sure you want to remove{' '}
+                <span className="font-medium text-gp-ink-strong dark:text-white">
+                  {memberToDelete?.name}
+                </span>{' '}
+                from <span className="font-medium">{space.name}</span>? This
+                action cannot be undone.
+              </p>
+
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => {
+                    setShowMemberDeleteConfirm(false)
+                    setMemberToDelete(null)
+                  }}
+                  disabled={isMemberActionLoading}
+                  className="flex-1 px-6 py-3 rounded-2xl bg-white/60 dark:bg-white/5 border border-gp-glass-border dark:border-white/10 text-gp-ink-strong dark:text-white text-sm font-medium hover:bg-white dark:hover:bg-white/10 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmRemoveMember}
+                  disabled={isMemberActionLoading}
+                  className="flex-1 px-6 py-3 rounded-2xl bg-red-600 dark:bg-red-500 text-white text-sm font-medium hover:bg-red-700 dark:hover:bg-red-600 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                >
+                  {isMemberActionLoading ? 'Removing...' : 'Remove Member'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </OfferingModal>
     </div>
   )
 }
