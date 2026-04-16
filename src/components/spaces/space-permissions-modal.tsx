@@ -80,8 +80,8 @@ export function SpacePermissionsModal({
     name: string
   } | null>(null)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchPeople, { data: searchData }] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useLazyQuery<any>(SEARCH_PEOPLE_QUERY)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,7 +138,9 @@ export function SpacePermissionsModal({
   const personOptions: PersonSelectOption[] = useMemo(
     () =>
       searchResults
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((person: any) => !existingMemberIds.has(person.id))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((person: any) => ({
           value: person.id,
           label: person.name,
@@ -424,7 +426,7 @@ export function SpacePermissionsModal({
                   <SelectTrigger className="w-full sm:w-32">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-100">
                     <SelectItem value="GUEST">Guest</SelectItem>
                     <SelectItem value="MEMBER">Member</SelectItem>
                     <SelectItem value="ADMIN">Admin</SelectItem>
@@ -492,7 +494,7 @@ export function SpacePermissionsModal({
                           >
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-100">
                             <SelectItem value="GUEST">Guest (View)</SelectItem>
                             <SelectItem value="MEMBER">
                               Member (Edit)

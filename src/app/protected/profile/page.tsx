@@ -33,6 +33,7 @@ export default function ProfilePage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, loading, error, refetch } = useQuery<any>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     GET_LOGGED_IN_USER as any,
     {
       variables: { email: user?.email ?? '' },
@@ -49,12 +50,10 @@ export default function ProfilePage() {
   const [connectionWhy, setConnectionWhy] = useState('')
   const [connectionInterests, setConnectionInterests] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [searchResults, setSearchResults] = useState<any[]>([])
 
   // Search people query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchPeople, { data: searchData }] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useLazyQuery<any>(SEARCH_PEOPLE_QUERY)
 
   // Create connection mutation
@@ -70,7 +69,6 @@ export default function ProfilePage() {
         setConnectionWhy('')
         setConnectionInterests('')
         setSearchInput('')
-        setSearchResults([])
         // Refetch user data to update connections list
         data && router.refresh()
       },
@@ -120,9 +118,10 @@ export default function ProfilePage() {
     setPageTitle('My Profile')
   }, [setPageTitle])
 
-  useEffect(() => {
-    setSearchResults(searchData?.people || [])
-  }, [searchData])
+  // Derive search results directly to avoid setState-in-effect cascades.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const searchResults: any[] =
+    searchInput.trim().length >= 2 ? searchData?.people || [] : []
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -191,8 +190,8 @@ export default function ProfilePage() {
   const ownedSpaces: any[] = personData.ownsSpaces || []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberSpaces: any[] =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     personData.memberOf
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ?.map((membership: any) => membership.space[0])
       .filter(Boolean) || []
 
@@ -236,19 +235,21 @@ export default function ProfilePage() {
     setSearchInput(value)
     if (value.trim().length >= 2) {
       searchPeople({ variables: { nameContains: value } })
-      return
     }
-    setSearchResults([])
   }
 
   const personOptions: PersonSelectOption[] = searchResults
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((person: any) => person.id !== personData.id)
     .filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (person: any) =>
         !personData.connections?.some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (connection: any) => connection.id === person.id
         )
     )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((person: any) => ({
       value: person.id,
       label: person.name,
@@ -514,7 +515,7 @@ export default function ProfilePage() {
                   </div>
                 )
               })}
-              {/* eslint-enable @typescript-eslint/no-explicit-any */}
+              { }
             </div>
           </div>
         )}
@@ -605,7 +606,7 @@ export default function ProfilePage() {
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {personData.connections.map((connection: any) => {
                 // Find the corresponding edge metadata
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const edgeData = personData.connectionEdges?.find(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   (edge: any) => edge.connectedPersonId === connection.id
@@ -721,8 +722,8 @@ export default function ProfilePage() {
                 </span>
               </div>
               <p className="text-gp-ink-muted dark:text-white/60 mb-6">
-                You haven't created any connections yet. Start building your
-                network!
+                You haven&apos;t created any connections yet. Start building
+                your network!
               </p>
               <button
                 onClick={() => setIsAddingConnection(true)}
@@ -746,7 +747,7 @@ export default function ProfilePage() {
         {/* Add Connection Modal */}
         {isAddingConnection && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="chat-card rounded-2xl p-8 max-w-md w-full mx-4 relative">
+            <div className="bg-white/80 dark:bg-black/80 rounded-2xl p-8 max-w-md w-full mx-4 relative">
               {/* Close Button */}
               <button
                 onClick={() => setIsAddingConnection(false)}
@@ -842,7 +843,6 @@ export default function ProfilePage() {
                         setSelectedPersonId('')
                         setSelectedPersonOption(null)
                         setSearchInput('')
-                        setSearchResults([])
                       }}
                       className="mt-2 text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors"
                     >

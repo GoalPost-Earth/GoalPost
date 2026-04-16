@@ -1,17 +1,30 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
+import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
+import {
+  CREATE_PERSON_CONNECTION_MUTATION,
+  UPDATE_PERSON_CONNECTION_MUTATION,
+  DELETE_PERSON_CONNECTION_MUTATION,
+} from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { cn } from '@/lib/utils'
 import { useAnimations, usePageContext } from '@/contexts'
 import Image from 'next/image'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
+import ReactSelect from 'react-select'
+
+interface PersonSelectOption {
+  value: string
+  label: string
+  email: string
+}
 
 export default function PersonProfilePage() {
   const params = useParams()
@@ -25,12 +38,194 @@ export default function PersonProfilePage() {
     setPageTitle('Dashboard')
   }, [setPageTitle])
 
-  const { data, loading, error } = useQuery(GET_PERSON_PROFILE, {
+  const { data, loading, error, refetch } = useQuery(GET_PERSON_PROFILE, {
     variables: { personId },
     skip: !personId,
   })
 
+  // Connection creation state
+  const [isAddingConnection, setIsAddingConnection] = useState(false)
+  const [selectedPersonId, setSelectedPersonId] = useState<string>('')
+  const [selectedPersonOption, setSelectedPersonOption] =
+    useState<PersonSelectOption | null>(null)
+  const [connectionWhy, setConnectionWhy] = useState('')
+  const [connectionInterests, setConnectionInterests] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  // Search people query
+  const [searchPeople, { data: searchData }] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    useLazyQuery<any>(SEARCH_PEOPLE_QUERY)
+
+  // Create connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [createConnection, { loading: creatingConnection }] = useMutation<any>(
+    CREATE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        setIsAddingConnection(false)
+        setSelectedPersonId('')
+        setSelectedPersonOption(null)
+        setConnectionWhy('')
+        setConnectionInterests('')
+        setSearchInput('')
+      },
+    }
+  )
+
+  // Edit connection state
+  const [isEditingConnection, setIsEditingConnection] = useState(false)
+  const [editingConnectionId, setEditingConnectionId] = useState<string>('')
+  const [editingConnectionWhy, setEditingConnectionWhy] = useState('')
+  const [editingConnectionInterests, setEditingConnectionInterests] =
+    useState('')
+
+  // Update connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [updateConnection, { loading: updatingConnection }] = useMutation<any>(
+    UPDATE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        setIsEditingConnection(false)
+        setEditingConnectionId('')
+        setEditingConnectionWhy('')
+        setEditingConnectionInterests('')
+      },
+    }
+  )
+
+  // Delete connection state
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [connectionToDeleteId, setConnectionToDeleteId] = useState<string>('')
+
+  // Delete connection mutation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [deleteConnection, { loading: deletingConnection }] = useMutation<any>(
+    DELETE_PERSON_CONNECTION_MUTATION,
+    {
+      onCompleted: () => {
+        setIsConfirmingDelete(false)
+        setConnectionToDeleteId('')
+      },
+    }
+  )
+
   const person = data?.people?.[0]
+
+  // Derive search results directly — avoids setState-in-effect lint error.
+  // Clearing searchInput also clears results since the condition gates on input length.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const searchResults: any[] =
+    searchInput.trim().length >= 2 ? searchData?.people || [] : []
+
+  const handleSearchInput = (value: string) => {
+    setSearchInput(value)
+    if (value.trim().length >= 2) {
+      searchPeople({ variables: { nameContains: value } })
+    }
+  }
+
+  const personOptions: PersonSelectOption[] = searchResults
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((candidate: any) => candidate.id !== person?.id)
+    .filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (candidate: any) =>
+        !person?.connections?.some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (connection: any) => connection.id === candidate.id
+        )
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((candidate: any) => ({
+      value: candidate.id,
+      label: candidate.name,
+      email: candidate.email,
+    }))
+
+  const handleCreateConnection = async () => {
+    if (!person?.id || !selectedPersonId || !connectionWhy) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    try {
+      const result = await createConnection({
+        variables: {
+          fromPersonId: person.id,
+          toPersonId: selectedPersonId,
+          why: connectionWhy,
+          interests: connectionInterests,
+        },
+      })
+
+      if (result.data?.createPersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error creating connection:', err)
+    }
+  }
+
+  const handleConfirmDelete = (connectionId: string) => {
+    setConnectionToDeleteId(connectionId)
+    setIsConfirmingDelete(true)
+  }
+
+  const handleEditConnection = (
+    connectionId: string,
+    why: string,
+    interests: string
+  ) => {
+    setEditingConnectionId(connectionId)
+    setEditingConnectionWhy(why)
+    setEditingConnectionInterests(interests)
+    setIsEditingConnection(true)
+  }
+
+  const handleUpdateConnection = async () => {
+    if (!person?.id || !editingConnectionId) return
+
+    try {
+      const result = await updateConnection({
+        variables: {
+          fromPersonId: person.id,
+          toPersonId: editingConnectionId,
+          why: editingConnectionWhy,
+          interests: editingConnectionInterests,
+        },
+      })
+
+      if (result.data?.updatePersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error updating connection:', err)
+    }
+  }
+
+  const handleDeleteConnection = async () => {
+    if (!person?.id || !connectionToDeleteId) return
+
+    try {
+      const result = await deleteConnection({
+        variables: {
+          fromPersonId: person.id,
+          toPersonId: connectionToDeleteId,
+        },
+      })
+
+      if (result.data?.deletePersonConnection?.success) {
+        await refetch()
+      }
+    } catch (err) {
+      console.error('Error deleting connection:', err)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setIsConfirmingDelete(false)
+    setConnectionToDeleteId('')
+  }
 
   // Extract all pulses from all contexts across all spaces with metadata
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,28 +402,40 @@ export default function PersonProfilePage() {
           )}
 
           {/* Connections Section */}
-          {person.connections && person.connections.length > 0 && (
-            <div className="mb-12">
+          <div className="mb-12">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <SectionHeader icon="group_work" title="Connections" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              <button
+                onClick={() => setIsAddingConnection(true)}
+                className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  add
+                </span>
+                Add Connection
+              </button>
+            </div>
+
+            {person.connections && person.connections.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {person.connections.map((connection: any, idx: number) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const edge = person.connectionEdges?.find(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (e: any) => e.connectedPersonId === connection.id
                   )
                   return (
-                    <ProfileCard key={idx}>
-                      <div className="flex flex-col gap-3">
-                        <div
-                          className="flex items-center gap-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2"
-                          onClick={() =>
-                            connection.id &&
-                            router.push(
-                              `/protected/dashboard/persons/${connection.id}`
-                            )
-                          }
-                        >
+                    <ProfileCard
+                      key={idx}
+                      onClick={() =>
+                        connection.id &&
+                        router.push(
+                          `/protected/dashboard/persons/${connection.id}`
+                        )
+                      }
+                    >
+                      <div className="flex flex-col gap-3 cursor-pointer">
+                        <div className="flex items-center gap-3 hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2">
                           <div className="size-10 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
                             {connection.photo ? (
                               <Image
@@ -252,6 +459,36 @@ export default function PersonProfilePage() {
                               {connection.email}
                             </p>
                           </div>
+                          <button
+                            className="cursor-pointer text-[8px] text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditConnection(
+                                connection.id,
+                                edge?.why || '',
+                                edge?.interests || ''
+                              )
+                            }}
+                            disabled={updatingConnection}
+                            aria-label="Edit connection"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              edit
+                            </span>
+                          </button>
+                          <button
+                            className="cursor-pointer text-[8px] text-red-400 hover:text-red-800 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleConfirmDelete(connection.id)
+                            }}
+                            disabled={deletingConnection}
+                            aria-label="Delete connection"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              delete
+                            </span>
+                          </button>
                         </div>
                         {edge && (
                           <div className="space-y-2 border-t border-gp-glass-border pt-3">
@@ -282,8 +519,14 @@ export default function PersonProfilePage() {
                   )
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <ProfileCard>
+                <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                  No connections yet. Use Add Connection to create one.
+                </p>
+              </ProfileCard>
+            )}
+          </div>
 
           {/* Grid Layout - Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -470,6 +713,270 @@ export default function PersonProfilePage() {
           </button>
         </div>
       </div> */}
+
+      {/* Add Connection Modal */}
+      {isAddingConnection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white/80 dark:bg-black/80 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+            <button
+              onClick={() => setIsAddingConnection(false)}
+              className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h2 className="text-2xl font-bold text-gp-ink-strong dark:text-white mb-6">
+              Create New Connection
+            </h2>
+
+            <div className="mb-6">
+              <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                Search for person
+              </label>
+              <ReactSelect<PersonSelectOption, false>
+                value={selectedPersonOption}
+                options={personOptions}
+                isSearchable
+                isClearable
+                isDisabled={creatingConnection}
+                placeholder="Search by name or email..."
+                noOptionsMessage={() =>
+                  searchInput.trim().length < 2
+                    ? 'Type at least 2 characters'
+                    : 'No matching people found'
+                }
+                getOptionLabel={(option) => `${option.label} (${option.email})`}
+                onInputChange={(value, actionMeta) => {
+                  if (actionMeta.action === 'input-change') {
+                    handleSearchInput(value)
+                  }
+                }}
+                onChange={(option) => {
+                  setSelectedPersonOption(option)
+                  setSelectedPersonId(option?.value || '')
+                }}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    backgroundColor: 'transparent',
+                    borderColor: 'rgba(148, 163, 184, 0.4)',
+                    borderRadius: '0.5rem',
+                    minHeight: '42px',
+                    boxShadow: 'none',
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    backgroundColor: 'var(--gp-surface)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    zIndex: 60,
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isFocused
+                      ? 'rgba(59, 130, 246, 0.1)'
+                      : 'transparent',
+                    color: 'var(--gp-ink-strong)',
+                    cursor: 'pointer',
+                  }),
+                  singleValue: (base) => ({
+                    ...base,
+                    color: 'var(--gp-ink-strong)',
+                  }),
+                  input: (base) => ({
+                    ...base,
+                    color: 'var(--gp-ink-strong)',
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    color: 'var(--gp-ink-muted)',
+                  }),
+                }}
+              />
+            </div>
+
+            {selectedPersonOption && (
+              <div className="mb-6 p-4 rounded-lg bg-gp-primary/10 border border-gp-primary/20">
+                <div>
+                  <div className="font-semibold text-gp-ink-strong dark:text-white">
+                    {selectedPersonOption.label}
+                  </div>
+                  <div className="text-xs text-gp-ink-muted dark:text-white/60">
+                    {selectedPersonOption.email}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPersonId('')
+                      setSelectedPersonOption(null)
+                      setSearchInput('')
+                    }}
+                    className="mt-2 text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                Why are you connecting?
+              </label>
+              <textarea
+                value={connectionWhy}
+                onChange={(e) => setConnectionWhy(e.target.value)}
+                placeholder="Describe how you know this person or why you want to connect..."
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                Interests or shared areas{' '}
+                <span className="text-xs font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={connectionInterests}
+                onChange={(e) => setConnectionInterests(e.target.value)}
+                placeholder="What interests or areas do you share?"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsAddingConnection(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 text-gp-ink-strong dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateConnection}
+                disabled={creatingConnection || !selectedPersonId}
+                className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                style={{
+                  background:
+                    'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+                  boxShadow:
+                    '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+                }}
+              >
+                {creatingConnection ? 'Creating...' : 'Create Connection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Connection Modal */}
+      {isEditingConnection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="chat-card rounded-2xl p-8 max-w-md w-full mx-4 relative">
+            <button
+              onClick={() => setIsEditingConnection(false)}
+              className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h2 className="text-2xl font-bold text-gp-ink-strong dark:text-white mb-6">
+              Edit Connection
+            </h2>
+
+            <div className="mb-6">
+              <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                Why are you connecting?
+              </label>
+              <textarea
+                value={editingConnectionWhy}
+                onChange={(e) => setEditingConnectionWhy(e.target.value)}
+                placeholder="Tell us why you're connecting with this person..."
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="text-sm font-semibold text-gp-ink-muted dark:text-white/60 block mb-2">
+                Shared Interests
+              </label>
+              <textarea
+                value={editingConnectionInterests}
+                onChange={(e) => setEditingConnectionInterests(e.target.value)}
+                placeholder="What interests do you share?"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-gp-ink-strong dark:text-white placeholder-gp-ink-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsEditingConnection(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 text-gp-ink-strong dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateConnection}
+                disabled={updatingConnection}
+                className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                style={{
+                  background:
+                    'linear-gradient(135deg, color-mix(in srgb, var(--gp-primary) 95%, white 5%), color-mix(in srgb, var(--gp-primary) 75%, black 25%))',
+                  boxShadow:
+                    '0 10px 28px color-mix(in srgb, var(--gp-primary) 40%, transparent)',
+                }}
+              >
+                {updatingConnection ? 'Updating...' : 'Update Connection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Connection Confirmation Modal */}
+      {isConfirmingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+            <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
+              Delete Connection?
+            </h2>
+
+            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-6">
+              Are you sure you want to delete this connection? This action
+              cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDelete}
+                disabled={deletingConnection}
+                className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConnection}
+                disabled={deletingConnection}
+                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deletingConnection && (
+                  <span
+                    className={cn(
+                      'material-symbols-outlined text-base',
+                      animationsEnabled && 'animate-spin'
+                    )}
+                  >
+                    hourglass_bottom
+                  </span>
+                )}
+                {deletingConnection ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
