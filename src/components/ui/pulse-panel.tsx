@@ -263,17 +263,7 @@ export function PulsePanel({
                     </div>
                   </div>
                 )}
-                {pulse.resourceType && (
-                  <div>
-                    <span className="text-[11px] uppercase text-gp-ink-muted font-semibold">
-                      Resource Type
-                    </span>
-                    <div className="mt-1 text-sm font-semibold text-gp-ink-strong capitalize">
-                      {pulse.resourceType.toLowerCase()}
-                    </div>
-                  </div>
-                )}
-                {!pulse.status && !pulse.horizon && !pulse.resourceType && (
+                {!pulse.status && !pulse.horizon && (
                   <div className="text-sm text-gp-ink-muted">
                     No additional metadata
                   </div>

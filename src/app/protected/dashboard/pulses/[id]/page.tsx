@@ -1243,28 +1243,6 @@ export default function PulseDetailsPage() {
                       </div>
                     )}
 
-                  {/* ResourcePulse Specific */}
-                  {pulse.__typename === 'ResourcePulse' &&
-                    pulse?.resourceType && (
-                      <div className="space-y-2 border-t border-gp-glass-border pt-4">
-                        <h5 className="text-[11px] uppercase font-semibold text-gp-primary">
-                          Resource Details
-                        </h5>
-                        <div className="grid grid-cols-1 gap-3">
-                          {pulse?.resourceType && (
-                            <div>
-                              <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                                Resource Type
-                              </span>
-                              <p className="text-xs text-gp-ink-strong dark:text-white">
-                                {pulse.resourceType}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                   {/* StoryPulse Specific */}
                   {pulse.__typename === 'StoryPulse' &&
                     (pulse?.levelFulfilled ||
