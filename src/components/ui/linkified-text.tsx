@@ -8,7 +8,8 @@ type LinkifiedTextProps = {
 export function LinkifiedText({ text, className }: LinkifiedTextProps) {
   if (!text) return null
 
-  const linkRegex = /https?:\/\/[^\s<>")\]]+|www\.[^\s<>")\]]+/gi
+  const linkRegex =
+    /(?<!@)\b(?:https?:\/\/|ftp:\/\/|www\.|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,})[^\s<>")\]]*/gi
   const nodes: ReactNode[] = []
   let lastIndex = 0
 
@@ -30,7 +31,7 @@ export function LinkifiedText({ text, className }: LinkifiedTextProps) {
       : raw
 
     if (cleanUrl) {
-      const href = cleanUrl.startsWith('http')
+      const href = /^(https?|ftp):\/\//i.test(cleanUrl)
         ? cleanUrl
         : `https://${cleanUrl}`
 
