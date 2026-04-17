@@ -1,0 +1,75 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'pnpm-lock.yaml\\|package-lock.json\\|yarn.lock'; then echo 'BLOCK: Do not edit lock files — run pnpm install instead'; exit 1; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE '\\.tsx?\"'; then cd \"$PROJECT_DIR/frontend\" && npx tsc --noEmit --pretty 2>&1 | tail -20; fi",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm test*)",
+      "Bash(cd frontend && pnpm *)",
+      "Bash(cd backend && pnpm *)",
+      "Bash(npx prisma *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout -b *)",
+      "Bash(git stash*)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(wc *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "mcp__chrome-devtools__*"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D *)",
+      "Bash(git checkout -- .)",
+      "Bash(git restore .)",
+      "Bash(npx prisma migrate reset*)",
+      "Bash(drop database*)",
+      "Bash(DROP DATABASE*)",
+      "Bash(sudo *)",
+      "Bash(chmod 777*)"
+    ]
+  }
+}
