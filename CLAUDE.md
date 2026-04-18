@@ -1,60 +1,83 @@
-# TDX Mobile App
+# GoalPost
 
 ## What This Is
 
-TDX is an agricultural commodity aggregation and trading platform operating in Ghana. It coordinates sourcing from smallholder farmers, instant payment (MTN MoMo), inventory consolidation, resale to institutional buyers, and delivery logistics.
+GoalPost is a community-first, privacy-respecting digital platform for mutual aid, collective sense-making, and relational depth. It reimagines how people share knowledge, resources, goals, and support through a graph-based approach to relationships and meaning-making.
 
-This repository is the **mobile field operations app** used by Field Agents, Aggregators, Cash Point Agents, and Sourcing Officers.
+The platform prioritizes user data sovereignty, deep interpersonal connection, and AI-powered resonance discovery — finding meaningful semantic connections between user contributions.
 
 ## Project Structure
 
 ```
 /
-├── CLAUDE.md               # This file — mobile app context
-├── kb/                     # Shared domain knowledge (all packages read this)
+├── CLAUDE.md               # This file — project-wide context
+├── kb/                     # Shared domain knowledge (read before working)
+├── docs/                   # Detailed documentation (70+ files)
 ├── .claude/                # Claude Code tools (commands, agents, settings)
 │   ├── commands/           # /fix, /implement, /new-component, /commit
 │   ├── agents/             # security-reviewer, code-reviewer, e2e-tester
 │   └── settings.json       # Permissions, hooks
-├── frontend/               # React + Vite mobile PWA
-│   ├── CLAUDE.md           # Frontend-specific instructions
-│   ├── kb/                 # Frontend-specific knowledge
-│   ├── src/
-│   └── package.json
-└── backend/                # NestJS API (not yet implemented)
-    ├── CLAUDE.md           # Backend-specific instructions
-    ├── kb/                 # Backend-specific knowledge (ADRs, RBAC matrix, API architecture)
-    └── package.json
+├── src/
+│   ├── app/                # Next.js App Router (pages + API routes)
+│   │   ├── api/            # REST + GraphQL endpoints
+│   │   ├── auth/           # Auth pages (login, signup, reset)
+│   │   └── protected/      # Protected routes (dashboard, spaces, profile, assistant, graph, search)
+│   ├── components/         # React components (auth, dashboard, spaces, assistant-ui, chat, persons, canvas, ui)
+│   ├── lib/                # Business logic (graphql, neo4j, llm, simulation, jobs, resonance, permissions, imports)
+│   ├── hooks/              # Custom React hooks
+│   ├── contexts/           # React contexts (auth, theme, page state)
+│   ├── modules/            # Feature modules (agent)
+│   ├── types/              # TypeScript type definitions
+│   ├── gql/                # Generated GraphQL types
+│   ├── constants/          # App constants
+│   ├── config/             # Configuration files
+│   └── utils/              # Utilities
+├── scripts/                # Database init, seed, migration scripts
+├── package.json            # Dependencies & scripts
+└── .env.example            # Environment variable template
 ```
+
+## Tech Stack
+
+| Layer           | Technology                                              |
+| --------------- | ------------------------------------------------------- |
+| Framework       | Next.js 16 + React 19 + TypeScript                      |
+| UI              | Radix UI + Tailwind CSS v4 + shadcn                     |
+| Database        | Neo4j (graph database) with vector indexes              |
+| API             | GraphQL (Apollo Client, GraphQL Yoga) + REST API routes |
+| AI/LLM          | OpenAI API, Vercel AI SDK, LangChain                    |
+| Background Jobs | Vercel Cron Jobs                                        |
+| Email           | Resend                                                  |
+| Visualization   | D3.js, Three.js, XYFlow, Neo4j NVL                      |
 
 ## Shared Knowledge Base
 
-Domain knowledge shared across all packages lives in `kb/`. Read the relevant file before working on any feature.
+Domain knowledge lives in `kb/`. Read the relevant file before working on any feature.
 
-| File | Contents |
-|------|----------|
-| `kb/01-glossary.md` | TDX-specific terms (aggregation, voucher, session, etc.) |
-| `kb/02-user-roles.md` | Mobile app roles: Field Agent, Aggregator, Cash Point, Sourcing Officer |
-| `kb/03-workflows.md` | Core workflows (aggregation, verification, payment, voucher redemption) |
-| `kb/04-state-machines.md` | Entity states, transitions, status labels and colors |
-| `kb/05-data-entities.md` | Full data model — all entities, fields, relationships |
-| `kb/06-adr.md` | Platform-wide architecture decisions |
+| File                      | Contents                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `kb/01-glossary.md`       | GoalPost-specific terms (pulse, resonance, FieldContext, Space, etc.)        |
+| `kb/02-user-roles.md`     | Space-based permissions model (MeSpace owner, WeSpace roles)                 |
+| `kb/03-workflows.md`      | Core workflows (pulse creation, resonance discovery, collaboration)          |
+| `kb/04-state-machines.md` | Entity states and transitions (GoalPulse status, ResonanceLink status)       |
+| `kb/05-data-entities.md`  | Full data model — all Neo4j nodes, fields, relationships, indexes            |
+| `kb/06-adr.md`            | Architecture decisions (graph-first, pulse-first, space-based privacy, etc.) |
 
-Each package also has its own `kb/` with package-specific knowledge.
+Additional documentation in `docs/` covers architecture diagrams, ontology, resonance system, assistant modes, and more.
 
 ## Claude Code Tools
 
 Project-level commands and agents in `.claude/`:
 
-| Tool | Type | Purpose |
-|------|------|---------|
-| `/fix` | Command | Root cause bug fixing — find cause, assess impact, fix properly, verify |
-| `/implement` | Command | Feature implementation — gather requirements, analyze codebase, implement, verify |
-| `/new-component` | Command | Scaffold React component with TDX conventions (shadcn, Tailwind, <400 lines) |
-| `/commit` | Command | Commit using Conventional Commits: `type(scope): description` |
-| `security-reviewer` | Agent | Audit MoMo payments, JWT auth, RBAC, sync, and input validation |
-| `code-reviewer` | Agent | Review against coding conventions, domain correctness, and RBAC compliance |
-| `e2e-tester` | Agent | Browser E2E testing via Chrome DevTools MCP |
+| Tool                | Type    | Purpose                                                                           |
+| ------------------- | ------- | --------------------------------------------------------------------------------- |
+| `/fix`              | Command | Root cause bug fixing — find cause, assess impact, fix properly, verify           |
+| `/implement`        | Command | Feature implementation — gather requirements, analyze codebase, implement, verify |
+| `/new-component`    | Command | Scaffold React component with GoalPost conventions (shadcn, Tailwind, <400 lines) |
+| `/commit`           | Command | Commit using Conventional Commits: `type(scope): description`                     |
+| `security-reviewer` | Agent   | Audit auth, JWT, space permissions, and input validation                          |
+| `code-reviewer`     | Agent   | Review against coding conventions, domain correctness, and permission compliance  |
+| `e2e-tester`        | Agent   | Browser E2E testing via Chrome DevTools MCP                                       |
 
 ## Mandatory Rules
 
@@ -62,52 +85,50 @@ Project-level commands and agents in `.claude/`:
 
 Do NOT write code without reading the relevant KB files first. This is non-negotiable.
 
-| If you are working on... | You MUST read |
-|--------------------------|---------------|
-| Any feature | `kb/01-glossary.md` — use correct TDX terminology |
-| Anything involving roles, permissions, or auth | `kb/02-user-roles.md` + `backend/kb/02-rbac-matrix.md` |
-| Any workflow (aggregation, payment, voucher) | `kb/03-workflows.md` |
-| Any entity status, badge, or state transition | `kb/04-state-machines.md` |
-| Any data model, field, or relationship | `kb/05-data-entities.md` |
-| Architecture decisions or trade-offs | `kb/06-adr.md` |
-| Frontend components or pages | `frontend/CLAUDE.md` + `frontend/kb/02-design-system.md` |
-| Status badges, colors, or available actions | `frontend/kb/03-status-display.md` |
-| Backend modules or API endpoints | `backend/CLAUDE.md` + `backend/kb/01-backend-adr.md` |
+| If you are working on...                                | You MUST read                                          |
+| ------------------------------------------------------- | ------------------------------------------------------ |
+| Any feature                                             | `kb/01-glossary.md` — use correct GoalPost terminology |
+| Anything involving permissions or auth                  | `kb/02-user-roles.md`                                  |
+| Any workflow (pulse creation, resonance, collaboration) | `kb/03-workflows.md`                                   |
+| Any entity status or state transition                   | `kb/04-state-machines.md`                              |
+| Any data model, field, or relationship                  | `kb/05-data-entities.md`                               |
+| Architecture decisions or trade-offs                    | `kb/06-adr.md`                                         |
 
 ### Commands — You MUST use the right command for the task
 
-| If you are asked to... | You MUST use |
-|------------------------|-------------|
-| Fix a bug | `/fix` — never skip root cause analysis |
-| Implement a feature | `/implement` — never skip requirements gathering |
-| Create a frontend component | `/new-component` — never scaffold manually |
-| Commit changes | `/commit` — always use Conventional Commits format |
+| If you are asked to...      | You MUST use                                       |
+| --------------------------- | -------------------------------------------------- |
+| Fix a bug                   | `/fix` — never skip root cause analysis            |
+| Implement a feature         | `/implement` — never skip requirements gathering   |
+| Create a frontend component | `/new-component` — never scaffold manually         |
+| Commit changes              | `/commit` — always use Conventional Commits format |
 
 ### Agents — You MUST dispatch the right agent
 
-| If you are doing... | You MUST dispatch |
-|--------------------|-------------------|
-| Reviewing code quality or conventions | `code-reviewer` agent |
-| Reviewing security (payments, auth, RBAC, sync) | `security-reviewer` agent |
-| Running E2E browser tests | `e2e-tester` agent |
+| If you are doing...                         | You MUST dispatch         |
+| ------------------------------------------- | ------------------------- |
+| Reviewing code quality or conventions       | `code-reviewer` agent     |
+| Reviewing security (auth, JWT, permissions) | `security-reviewer` agent |
+| Running E2E browser tests                   | `e2e-tester` agent        |
 
 ### Things you MUST NOT do
 
 - Do NOT invent terminology — use `kb/01-glossary.md` terms exactly
 - Do NOT guess state transitions — check `kb/04-state-machines.md`
-- Do NOT hardcode roles or permissions — check `backend/kb/02-rbac-matrix.md`
-- Do NOT use USD or $ — this platform uses GHS (Ghana Cedis) only
-- Do NOT skip RBAC guards on any backend endpoint
-- Do NOT skip audit logging on any mutation
+- Do NOT bypass Space-based authorization — all content access flows through Spaces
+- Do NOT skip `@authorization` directives on new GraphQL types
+- Do NOT skip activity logging on mutations
 - Do NOT create components over 400 lines
 - Do NOT commit without Conventional Commits format
+- Do NOT hardcode space roles — check `kb/02-user-roles.md` for the permission model
+- Do NOT use SQL — this project uses Neo4j with Cypher queries exclusively
+- Do NOT add REST endpoints for things that should be GraphQL mutations/queries
 
 ## Operational Context
 
-- **Country:** Ghana
-- **Currency:** GHS (Ghana Cedis)
-- **Payment rail:** MTN Mobile Money (phone number = bank account) + bank transfer
-- **Commodities:** Maize, Soy, Groundnut, Rice (long shelf-life cereals/grains/nuts)
-- **Scale:** ~4,000 farmers, 150 agents, 20 cash point agents
-- **Districts:** Ashanti, Central, Eastern, Greater Accra, Volta
-- **Team:** 5-person dev team. ASAP timeline for first prod release.
+- **Platform type:** Community collaboration / mutual aid / sense-making
+- **Database:** Neo4j (graph) — no relational DB
+- **Auth:** JWT-based with refresh token rotation
+- **AI:** OpenAI for embeddings (text-embedding-3-small) and LLM analysis
+- **Background jobs:** Vercel Cron Jobs (embedding generation, person enrichment, resonance discovery)
+- **Key principle:** User data sovereignty — users control what they share via Spaces

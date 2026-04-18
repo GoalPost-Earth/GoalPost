@@ -1,110 +1,121 @@
 # State Machines
 
-Valid states and transitions for all core entities in the mobile app.
+Valid states and transitions for core entities in GoalPost.
 
-## Aggregation Transaction
+## GoalPulse Status
 
 ```
-Captured → PendingSync → Synced → PendingTallyVerification → Verified → PendingApproval → VoucherGenerated
-                                                              ↘ Disputed → UnderReview → Verified / Rejected
-                                                                            PendingApproval → Rejected
+ACTIVE ⇄ PAUSED → COMPLETED
+ACTIVE → COMPLETED
 ```
 
-| Status | Description |
-|--------|------------|
-| `captured` | Aggregator submitted on device (goods loaded at farmer location) |
-| `pending_sync` | Offline, in local sync queue |
-| `synced` | Server received |
-| `pending_tally_verification` | Waiting for Sourcing Officer tally verification |
-| `verified` | Aggregator record matches tally — two-party verification passed |
-| `disputed` | Mismatch between aggregator record and sourcing officer tally |
-| `under_review` | Operations review in progress |
-| `pending_approval` | Approval pending |
-| `rejected` | Aggregation invalidated — no voucher, no payout |
-| `voucher_generated` | Approval completed — farmer payment authorized |
+| Status      | Description                     |
+| ----------- | ------------------------------- |
+| `ACTIVE`    | Goal is being actively pursued  |
+| `PAUSED`    | Goal is on hold, may be resumed |
+| `COMPLETED` | Goal has been achieved          |
 
 ---
 
-## Cash-Out Voucher
+## GoalPulse Horizon
 
-```
-Generated → PendingRedemption → Validating → Redeemed
-                                           → Rejected → PendingRedemption
-                               → Expired
-```
+Not a state machine — a classification of time scope:
 
-| Status | Description |
-|--------|------------|
-| `generated` | Created after approval, not yet delivered to farmer |
-| `pending_redemption` | Farmer has the code, hasn't visited Cash Point yet |
-| `validating` | Cash Point Agent verifying |
-| `redeemed` | Funds transferred via MoMo, voucher locked |
-| `rejected` | Failed validation, can retry |
-| `expired` | TTL exceeded (if applicable) |
+| Horizon | Description           |
+| ------- | --------------------- |
+| `SHORT` | Near-term objective   |
+| `MID`   | Medium-term objective |
+| `LONG`  | Long-term aspiration  |
 
 ---
 
-## Aggregation Session
+## ResonanceLink Status
 
 ```
-Created → Active ⇄ Paused → Closed
-                  Active → Closed
+Pending → Confirmed
+Pending → Rejected
 ```
 
-| Status | Description | Who Triggers |
-|--------|------------|-------------|
-| `created` | Session exists, no aggregation yet | Operations |
-| `active` | Aggregators can capture, syncs active | Operations |
-| `paused` | No new captures, syncs continue | Operations |
-| `closed` | Finalized, inventory totals locked | Sourcing Officer / Operations |
+| Status      | Description                                 | Who Triggers              |
+| ----------- | ------------------------------------------- | ------------------------- |
+| `pending`   | AI-generated, awaiting human review         | Resonance Discovery Job   |
+| `confirmed` | Human reviewed and confirmed the connection | User via review interface |
+| `rejected`  | Human reviewed and rejected the connection  | User via review interface |
 
 ---
 
-## Inventory Group
+## Space Visibility
 
-```
-Accumulating → PendingTradeRelease → AvailableForTrade → PartiallySold → SoldOut
-                                                       → SoldOut
-```
+Not a state machine — a configuration setting:
 
-| Status | Description |
-|--------|------------|
-| `accumulating` | Active session, quantity growing |
-| `pending_trade_release` | Ready for market |
-| `available_for_trade` | Listed as trade opportunity |
-| `partially_sold` | Some quantity purchased |
-| `sold_out` | All inventory purchased |
+| Visibility | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| `PRIVATE`  | Only visible to owner (MeSpace) or owner + members (WeSpace) |
+| `SHARED`   | Discoverable by others (future feature)                      |
 
 ---
 
-## Agent Task
+## SpaceMembership Role
 
-```
-Available → Claimed → Submitted → UnderReview → Approved → Paid
-                                              → Rejected → Available
-                                              → ClarificationRequested → Submitted
-```
+Not a state machine — an assigned role within a WeSpace:
 
-| Status | Description |
-|--------|------------|
-| `available` | Posted in district task queue |
-| `claimed` | Field Agent claimed it |
-| `submitted` | Evidence/data submitted |
-| `under_review` | Being reviewed |
-| `approved` | Approved for payment |
-| `rejected` | Rejected, returned to queue |
-| `clarification_requested` | More info needed from agent |
-| `paid` | Agent wallet credited |
+| Role     | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `ADMIN`  | Full control — manage members, edit content, view everything |
+| `MEMBER` | Contribute pulses and view content                           |
+| `GUEST`  | View-only access                                             |
 
 ---
 
-## Farmer Profile
+## User Onboarding
 
 ```
-Incomplete → Complete
+Not Started → In Progress → Completed
+                          → Skipped
 ```
 
-| Status | Description |
-|--------|------------|
-| `incomplete` | Missing required fields (phone, ID, etc.) |
-| `complete` | All required data present and verified |
+| State       | Tracked By                                                                         |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Not Started | `onboardingCurrentStepIndex = 0`, `onboardingIsCompleted = false`                  |
+| In Progress | `onboardingCurrentStepIndex > 0`, steps accumulating in `onboardingCompletedSteps` |
+| Completed   | `onboardingIsCompleted = true`                                                     |
+| Skipped     | `onboardingSkipped = true`                                                         |
+
+---
+
+## Background Job States
+
+### Pulse Processing Job
+
+```
+Queued → Processing → Completed
+                    → Failed
+```
+
+### Person Enrichment Job
+
+```
+Queued → Processing → Completed
+                    → Failed
+```
+
+### Resonance Discovery Job
+
+```
+Scheduled (cron) → Running → Completed
+                           → Failed
+```
+
+---
+
+## Assistant Mode
+
+Not a state machine — a runtime toggle:
+
+| Mode                 | Description                                          |
+| -------------------- | ---------------------------------------------------- |
+| `default` (Standard) | Direct database answers, straightforward assistance  |
+| `aiden`              | Questions assumptions, surfaces hidden frames        |
+| `braider`            | Stays present with difficulty without rushing to fix |
+
+Switched at any time via API parameter or UI selector. No persistent state between sessions (singleton in dev; session/DB in production).

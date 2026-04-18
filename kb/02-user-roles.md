@@ -1,106 +1,126 @@
-# User Roles — TDX Mobile App
+# User Roles & Permissions — GoalPost
 
-## Role Summary
+## Overview
 
-| # | Role | Route Protection | Bottom Nav |
-|---|------|-----------------|------------|
-| 1 | Field Agent | Auth only | Home, Tasks, Wallet, Profile |
-| 2 | Aggregator | Role-gated | Home, Commitments, Wallet, Profile |
-| 3 | Cash Point Agent | Role-gated | Home, Redeem, History, Profile |
-| 4 | Sourcing Officer | Role-gated | Home, Profile |
+GoalPost does not use traditional role-based access control with named user roles (like "admin" or "editor"). Instead, privacy and authorization are enforced through **Space ownership and membership**. Access to content flows from Space → FieldContext → Pulse.
 
-> Multi-role users are redirected to `/role-select` on login to choose which dashboard to enter.
+## Access Model
 
----
-
-## Role Descriptions
-
-### 1. Field Agent (`field-agent`)
-
-Farmer onboarding and profile completion. This is their single responsibility.
-
-**Can do:**
-- Register new farmers (name, community, ID)
-- Complete incomplete farmer profiles (claimed from task queue, paid per completion)
-- Track earnings from completed tasks
-- Request wallet withdrawals
-
-**Cannot do:** Create commitments, capture commodities, handle vouchers.
-
-**Routes:** `/field-agent/dashboard`, `/field-agent/onboard`, `/field-agent/tasks`, `/field-agent/tasks/incomplete-profiles`, `/field-agent/farmers/:id`, `/field-agent/farmers/:id/farms`, `/field-agent/profile`, `/field-agent/wallet`
+| Level                | Who Can Access                             |
+| -------------------- | ------------------------------------------ |
+| **MeSpace**          | Owner only                                 |
+| **WeSpace**          | Owner + Members (by membership role)       |
+| **FieldContext**     | Inherits from parent Space                 |
+| **Pulse**            | Inherits from parent FieldContext          |
+| **Person (profile)** | Any authenticated user (for search/lookup) |
 
 ---
 
-### 2. Aggregator (`aggregator`)
+## Space Roles
 
-Commodity sourcing, commitment management, and farmer breakdown recording at loading.
+When a Person is a member of a WeSpace, they hold one of three roles via `SpaceMembership`:
 
-**Can do:**
-- Create commitments ("X kg of commodity available at location Y")
-- Record farmer breakdowns at loading (which farmer contributed how many kilograms)
-- Generate vouchers for farmer payments
-- Capture commodity aggregation data
-- View farmer directory (read-only)
-- Track wallet/earnings
+| Role       | Permissions                                                  |
+| ---------- | ------------------------------------------------------------ |
+| **ADMIN**  | Full control — manage members, edit content, view everything |
+| **MEMBER** | Contribute pulses, view content, cannot manage members       |
+| **GUEST**  | View-only access to the space                                |
 
-**Cannot do:** Register new farmers (that is the field agent's job).
-
-**Routes:** `/aggregator/dashboard`, `/aggregator/capture`, `/aggregator/commitments`, `/aggregator/commitments/new`, `/aggregator/commitments/:id`, `/aggregator/farmers`, `/aggregator/farmers/:id`, `/aggregator/wallet`, `/aggregator/profile`
+The **Space Owner** has implicit full control, equivalent to ADMIN but separate (tracked via `OWNS` relationship, not membership).
 
 ---
 
-### 3. Cash Point Agent (`cash-point`)
+## Permission Functions
 
-MTN MoMo voucher redemption — pays farmers for their commodity contributions.
+Defined in `src/lib/permissions/space-permissions.ts`:
 
-**Can do:**
-- Redeem farmer payment vouchers (enter voucher code)
-- Search vouchers by code or farmer name
-- Verify farmer identity before payout
-- View redemption history
-
-**Cannot do:** Anything related to farmer registration, commitments, or aggregation.
-
-**Routes:** `/cashpoint/dashboard`, `/cashpoint/scan`, `/cashpoint/search`, `/cashpoint/history`, `/cashpoint/profile`, `/cashpoint/success`
-
----
-
-### 4. Sourcing Officer (`sourcing-officer`)
-
-Independent weight verification at aggregation sessions. Records weights in kilograms and compares tallies.
-
-**Can do:**
-- View assigned aggregation session details
-- Record individual weights in kilograms using tally calculator
-- Compare independent tally against system total
-- Detect and flag weight mismatches
-- Close aggregation sessions when tally matches
-
-**Routes:** `/sourcing-officer/dashboard`, `/sourcing-officer/profile`
+| Function                                 | Who Passes                             |
+| ---------------------------------------- | -------------------------------------- |
+| `canManageMembers(userId, spaceId)`      | Owner or ADMIN                         |
+| `canEditContent(userId, spaceId)`        | Owner, ADMIN, or MEMBER                |
+| `canViewContent(userId, spaceId)`        | Owner or any member role               |
+| `getUserSpaceRole(userId, spaceId)`      | Returns `'OWNER'` / SpaceRole / `null` |
+| `isSpaceOwner(userId, spaceId)`          | Boolean — checks `OWNS` relationship   |
+| `memberExistsInSpace(memberId, spaceId)` | Boolean — checks `HAS_MEMBER` chain    |
 
 ---
 
-## Operating Environments
+## Authentication
 
-| Role | Device | Connectivity |
-|------|--------|-------------|
-| Field Agent | Smartphone | Often poor (rural areas) |
-| Aggregator | Smartphone | Often poor (rural areas) |
-| Cash Point Agent | Smartphone | Moderate (semi-urban MoMo agents) |
-| Sourcing Officer | Smartphone | Often poor (at aggregation sites) |
+- **JWT-based** — custom implementation (not a third-party provider)
+- User token contains `user.id`, used for all authorization checks
+- Token stored in localStorage (`token`) and cookie (`accessToken`)
+- Refresh token rotation supported (`refreshToken`, `refreshTokenExp`, `refreshTokenRevoked`)
+- Auth state managed via `AppContext` in `src/contexts/AppContext.tsx`
 
-## Field Agent vs Aggregator Separation
+### Auth Flow
 
-These are explicitly two distinct roles (see `ROLE_SEPARATION.md`):
-- **Field Agent** = farmer onboarding only
-- **Aggregator** = commodity capture and commitment management only
-- The same person CAN hold both roles — the system supports this via multi-role arrays and the role selector screen
-- Shared components (farmer directory, farmer detail) live in `/pages/agent/` and are reused by both
+```
+Sign Up → Login → JWT issued → Token stored (localStorage + cookie)
+    → User data fetched via GraphQL (GET_LOGGED_IN_USER)
+    → MeSpace ID cached in localStorage
+    → Protected routes check isAuthenticated
+```
 
-## Auth & Protection Notes
+### Password Reset
 
-- Role type defined in `AuthContext.tsx`: `UserRole = 'field-agent' | 'aggregator' | 'cash-point' | 'sourcing-officer'`
-- `ProtectedRoute` — checks authentication only (used for field-agent, aggregator)
-- `RoleProtectedRoute` — checks authentication AND `hasRole(requiredRole)` (used for cash-point, sourcing-officer)
-- `hasRole()` checks `user.roles.includes(role)`
-- Auth is currently mock/demo with localStorage persistence (`tdx_user` key)
+```
+Request reset → Email sent via Resend → User clicks link → Set new password
+```
+
+---
+
+## Route Protection
+
+- **Public routes:** `/auth/login`, `/auth/signup`, `/auth/forgot-password`, `/auth/reset-password`
+- **Protected routes:** Everything under `/protected/*` — requires valid JWT
+- No role-based route gating (unlike the previous TDX model); all authenticated users access the same app shell
+- Space-level authorization enforced at the GraphQL layer via `@authorization` directives
+
+---
+
+## GraphQL Authorization
+
+All types use `@authorization` directives that filter data based on `$jwt.user.id`:
+
+- **MeSpace**: Only returns if `owner` matches current user
+- **WeSpace**: Returns if user is owner OR a member
+- **FieldContext**: Returns if user owns/is member of the parent Space (checks both MeSpace and WeSpace paths)
+- **Pulse types**: Same as FieldContext (inherit from parent context's space)
+- **SpaceMembership**: Only returns if user is owner/member of the associated space
+- **Person**: Readable by any authenticated user (no filter)
+- **Log**: Readable by any authenticated user
+
+---
+
+## User Profile
+
+Users have rich profile data beyond basic auth:
+
+| Field                   | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `firstName`, `lastName` | Display name                                    |
+| `email`                 | Login identifier                                |
+| `pronouns`              | Self-described pronouns                         |
+| `location`              | Geographic location                             |
+| `photo`                 | Avatar/profile picture                          |
+| `careManual`            | How this person wants to be cared for           |
+| `favorites`             | Things they value                               |
+| `passions`              | Extracted/self-reported passions                |
+| `traits`                | Personality traits                              |
+| `fieldsOfCare`          | Areas of care and concern                       |
+| `interests`             | Broader interests                               |
+| `embedding`             | Vector embedding of profile for semantic search |
+
+---
+
+## Onboarding
+
+New users go through an onboarding flow tracked by:
+
+| Field                        | Type     | Purpose                         |
+| ---------------------------- | -------- | ------------------------------- |
+| `onboardingCurrentStepIndex` | Int      | Current step in the flow        |
+| `onboardingCompletedSteps`   | [String] | Steps already completed         |
+| `onboardingIsCompleted`      | Boolean  | Whether onboarding is done      |
+| `onboardingSkipped`          | Boolean  | Whether user skipped onboarding |
