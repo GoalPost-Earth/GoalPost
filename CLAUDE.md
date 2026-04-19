@@ -75,9 +75,10 @@ Project-level commands and agents in `.claude/`:
 | `/implement`        | Command | Feature implementation — gather requirements, analyze codebase, implement, verify |
 | `/new-component`    | Command | Scaffold React component with GoalPost conventions (shadcn, Tailwind, <400 lines) |
 | `/commit`           | Command | Commit using Conventional Commits: `type(scope): description`                     |
-| `security-reviewer` | Agent   | Audit auth, JWT, space permissions, and input validation                          |
-| `code-reviewer`     | Agent   | Review against coding conventions, domain correctness, and permission compliance  |
-| `e2e-tester`        | Agent   | Browser E2E testing via Chrome DevTools MCP                                       |
+| `security-reviewer` | Agent   | Audit auth, JWT, space permissions, input validation (uses neo4j MCP)             |
+| `code-reviewer`     | Agent   | Review conventions, domain correctness, permissions (uses neo4j, shadcn, context7 MCPs) |
+| `e2e-tester`        | Agent   | Browser E2E testing (uses chrome-devtools, neo4j MCPs for data verification)      |
+| `test-writer`       | Agent   | Write & run tests for Next.js + Neo4j + GraphQL (uses neo4j, context7 MCPs)      |
 
 ## Mandatory Rules
 
@@ -110,6 +111,7 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 | Reviewing code quality or conventions       | `code-reviewer` agent     |
 | Reviewing security (auth, JWT, permissions) | `security-reviewer` agent |
 | Running E2E browser tests                   | `e2e-tester` agent        |
+| Writing or running tests                    | `test-writer` agent       |
 
 ### Things you MUST NOT do
 

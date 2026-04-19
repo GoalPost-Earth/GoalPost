@@ -55,7 +55,12 @@
       "Bash(wc *)",
       "Bash(head *)",
       "Bash(tail *)",
-      "mcp__chrome-devtools__*"
+      "mcp__chrome-devtools__*",
+      "mcp__neo4j__*",
+      "mcp__shadcn__*",
+      "mcp__assistant-ui__*",
+      "mcp__docs-langchain__*",
+      "mcp__context7__*"
     ],
     "deny": [
       "Bash(rm -rf *)",
