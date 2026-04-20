@@ -17,6 +17,9 @@ import {
 } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { SectionHeader } from '@/components/persons/section-header'
+import { ProfileCard } from '@/components/persons/profile-card'
+import { LinkifiedText } from '@/components/ui/linkified-text'
 
 interface PersonSelectOption {
   value: string
@@ -515,7 +518,7 @@ export default function ProfilePage() {
                   </div>
                 )
               })}
-              { }
+              {}
             </div>
           </div>
         )}
@@ -585,6 +588,90 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Profile Attributes Section */}
+        {(personData.traits ||
+          personData.passions ||
+          personData.fieldsOfCare ||
+          personData.interests ||
+          personData.careManual ||
+          personData.favorites) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {personData.fieldsOfCare && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader
+                  icon="volunteer_activism"
+                  title="Fields of Care"
+                />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.fieldsOfCare}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+            {personData.passions && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader icon="favorite" title="Passions" />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.passions}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+
+            {personData.traits && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader icon="psychology" title="Traits" />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.traits}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+
+            {personData.interests && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader icon="interests" title="Interests" />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.interests}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+
+            {personData.careManual && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader icon="menu_book" title="Care Manual" />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.careManual}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+
+            {personData.favorites && (
+              <div className="flex flex-col gap-4 h-full">
+                <SectionHeader icon="star" title="Favorites" />
+                <ProfileCard className="flex-1">
+                  <LinkifiedText
+                    text={personData.favorites}
+                    className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                  />
+                </ProfileCard>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Connections */}
         {personData.connections && personData.connections.length > 0 && (
           <div className="chat-card rounded-2xl p-6">
@@ -606,7 +693,7 @@ export default function ProfilePage() {
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {personData.connections.map((connection: any) => {
                 // Find the corresponding edge metadata
-                 
+
                 const edgeData = personData.connectionEdges?.find(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   (edge: any) => edge.connectedPersonId === connection.id
