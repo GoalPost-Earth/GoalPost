@@ -10,7 +10,7 @@ export interface PersonNodeProps {
   name: string | null | undefined
   email?: string | null
   photo?: string | null
-  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
+  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER' | 'PERSON'
   animation?: 'float' | 'float-delayed' | 'float-random' | 'pulse-slow' | 'none'
   onClick?: () => void
   className?: string
@@ -44,6 +44,11 @@ const roleColors: Record<string, { bg: string; border: string; text: string }> =
       border: 'border-blue-500/40',
       text: 'text-blue-600 dark:text-blue-400',
     },
+    PERSON: {
+      bg: 'bg-gradient-to-br from-emerald-500/20 to-teal-500/10',
+      border: 'border-emerald-500/40',
+      text: 'text-emerald-600 dark:text-emerald-400',
+    },
     GUEST: {
       bg: 'bg-gradient-to-br from-slate-500/20 to-gray-500/10',
       border: 'border-slate-500/40',
@@ -56,7 +61,7 @@ export function PersonNode({
   lastName,
   name,
   photo,
-  role = 'MEMBER',
+  role = 'PERSON',
   animation = 'float',
   onClick,
   className,
@@ -66,7 +71,8 @@ export function PersonNode({
 }: PersonNodeProps) {
   const { animationsEnabled } = useAnimations()
   const animClass = animationClasses[animation]
-  const colors = roleColors[role] || roleColors.MEMBER
+  const colors = roleColors[role] || roleColors.PERSON
+  const roleLabel = role === 'PERSON' ? 'Person' : role
 
   const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
 
@@ -108,14 +114,14 @@ export function PersonNode({
         {/* Role Badge */}
         <div
           className={cn(
-            'absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase',
+            'absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[9px] font-bold',
             'border shadow-sm',
             colors.bg,
             colors.border,
             colors.text
           )}
         >
-          {role}
+          {roleLabel}
         </div>
       </div>
 

@@ -11,7 +11,7 @@ export interface PersonInConnection {
   name: string | null
   email?: string | null
   photo?: string | null
-  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
+  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER' | 'PERSON'
 }
 
 export interface ConnectionPanelProps {
@@ -37,6 +37,10 @@ const roleColors: Record<string, { bg: string; text: string }> = {
   MEMBER: {
     bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/10',
     text: 'text-blue-600 dark:text-blue-400',
+  },
+  PERSON: {
+    bg: 'bg-gradient-to-br from-emerald-500/20 to-teal-500/10',
+    text: 'text-emerald-600 dark:text-emerald-400',
   },
   GUEST: {
     bg: 'bg-gradient-to-br from-slate-500/20 to-gray-500/10',
@@ -75,7 +79,9 @@ export function ConnectionPanel({
   const { person1, person2, why, interests } = connection
 
   const renderPerson = (person: PersonInConnection) => {
-    const colors = roleColors[person.role || 'MEMBER'] || roleColors.MEMBER
+    const role = person.role || 'PERSON'
+    const colors = roleColors[role] || roleColors.PERSON
+    const roleLabel = role === 'PERSON' ? 'Person' : role
     const initials =
       `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase()
 
@@ -112,12 +118,12 @@ export function ConnectionPanel({
           {person.role && (
             <span
               className={cn(
-                'inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase',
+                'inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold',
                 colors.text,
                 colors.bg
               )}
             >
-              {person.role}
+              {roleLabel}
             </span>
           )}
         </div>

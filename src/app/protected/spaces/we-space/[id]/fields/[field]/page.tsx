@@ -28,15 +28,23 @@ import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { ConnectionPanel } from '@/components/ui/connection-panel'
 import { PersonPanel } from '@/components/ui/person-panel'
 import {
+  AddPersonToFieldModal,
+  type CreateFieldPersonInput,
+} from '@/components/ui/add-person-to-field-modal'
+import {
   ResonanceLinkModal,
   type PulseOption,
 } from '@/components/ui/resonance-link-modal'
-import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
 import {
-  GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
-  GET_PERSON_CONNECTIONS,
-} from '@/app/graphql/queries/SPACE_QUERIES'
+  GET_FIELD_CONTEXT_PEOPLE,
+  GET_PULSE_DETAILS,
+  GET_PULSES_BY_CONTEXT,
+} from '@/app/graphql/queries'
+import { GET_PERSON_CONNECTIONS } from '@/app/graphql/queries/SPACE_QUERIES'
 import {
+  ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
+  REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
+  CREATE_PEOPLE_MUTATION,
   CREATE_RESONANCE_LINK_MUTATION,
   UPDATE_RESONANCE_LINK_MUTATION,
   DELETE_RESONANCE_LINK_MUTATION,
@@ -82,10 +90,14 @@ function FieldDetailPage() {
   const { animationsEnabled } = useAnimations()
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
+  const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false)
   const [isDiscoverSuggestionsModalOpen, setIsDiscoverSuggestionsModalOpen] =
     useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
+  const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
+    useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [editingPulseId, setEditingPulseId] = useState<string | null>(null)
@@ -130,7 +142,7 @@ function FieldDetailPage() {
     name: string | null
     email: string | null
     photo: string | null
-    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
   }
   const [personData, setPersonData] = useState<PersonData[]>([])
   const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
@@ -143,7 +155,7 @@ function FieldDetailPage() {
     name: string | null
     email: string | null
     photo: string | null
-    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
   } | null>(null)
   const [selectedConnection, setSelectedConnection] = useState<{
     person1: {
@@ -153,7 +165,7 @@ function FieldDetailPage() {
       name: string | null
       email: string | null
       photo: string | null
-      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
     }
     person2: {
       id: string
@@ -162,7 +174,7 @@ function FieldDetailPage() {
       name: string | null
       email: string | null
       photo: string | null
-      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST'
+      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
     }
     why?: string | null
     interests?: string | null
@@ -222,12 +234,11 @@ function FieldDetailPage() {
     skip: !fieldId,
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: membersData, loading: isMembersLoading } = useQuery(
-    GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY,
+  const { data: fieldPeopleData, refetch: refetchFieldPeople } = useQuery(
+    GET_FIELD_CONTEXT_PEOPLE,
     {
-      variables: { spaceId: spaceId || '' },
-      skip: !spaceId,
+      variables: { contextId: fieldId || '' },
+      skip: !fieldId,
     }
   )
 
@@ -257,6 +268,13 @@ function FieldDetailPage() {
 
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
+  const [addPersonToFieldContext] = useMutation(
+    ADD_PERSON_TO_FIELD_CONTEXT_MUTATION
+  )
+  const [removePersonFromFieldContext] = useMutation(
+    REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
+  )
+  const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
 
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -356,18 +374,9 @@ function FieldDetailPage() {
 
   // Compute person connections for visualization
   const personConnections = useMemo(() => {
-    if (!membersData || !connectionsData) {
-      console.log(
-        '⏳ Waiting for data - membersData:',
-        !!membersData,
-        'connectionsData:',
-        !!connectionsData
-      )
+    if (!connectionsData || personData.length === 0) {
       return []
     }
-
-    const space = membersData.weSpaces?.[0]
-    if (!space) return []
 
     // Create a map of person ID to their connections
     const connectionsMap = new Map<string, string[]>()
@@ -387,27 +396,12 @@ function FieldDetailPage() {
       connectedPersonIds: string[]
     }> = []
 
-    // GraphQL returns owner as array, take first element
-    const owner = space.owner?.[0]
-    if (owner) {
+    personData.forEach((person) => {
       connections.push({
-        personId: owner.id,
-        connectedPersonIds: connectionsMap.get(owner.id) || [],
+        personId: person.personId,
+        connectedPersonIds: connectionsMap.get(person.personId) || [],
       })
-    }
-
-    // For members
-    if (space.members) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      space.members.forEach((membership: any) => {
-        if (membership.member) {
-          connections.push({
-            personId: membership.member.id,
-            connectedPersonIds: connectionsMap.get(membership.member.id) || [],
-          })
-        }
-      })
-    }
+    })
 
     console.log(
       '🔗 Person connections computed:',
@@ -421,7 +415,7 @@ function FieldDetailPage() {
     })
 
     return connections
-  }, [membersData, connectionsData])
+  }, [connectionsData, personData])
 
   // Build a lookup map from sorted personId pair -> { why, interests } from CONNECTED_TO relationship
   const connectionEdgesMap = useMemo(() => {
@@ -456,59 +450,83 @@ function FieldDetailPage() {
 
   // Process members data when it changes
   useEffect(() => {
-    if (!membersData) return
+    const context = (
+      fieldPeopleData as
+        | {
+            fieldContexts?: Array<{
+              people?: Array<{
+                id: string
+                firstName?: string | null
+                lastName?: string | null
+                name?: string | null
+                email?: string | null
+                photo?: string | null
+              }>
+              weSpace?: Array<{
+                owner?: Array<{ id: string }>
+                members?: Array<{
+                  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+                  member?: Array<{ id: string }>
+                }>
+              }>
+            }>
+          }
+        | undefined
+    )?.fieldContexts?.[0]
+    if (!context) return
 
     try {
-      const space = membersData.weSpaces?.[0]
-      if (!space) {
-        console.log('🔍 No space found in membersData')
-        return
+      const fieldPeople = (context.people || []) as Array<{
+        id: string
+        firstName?: string | null
+        lastName?: string | null
+        name?: string | null
+        email?: string | null
+        photo?: string | null
+      }>
+
+      type FieldMembership = {
+        role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+        member?: Array<{ id: string }>
       }
-      console.log(
-        '👥 Processing space members:',
-        space.id,
-        'Owner:',
-        space.owner,
-        'Members:',
-        space.members?.length
+
+      const weSpace = context.weSpace?.[0]
+      const ownerId = weSpace?.owner?.[0]?.id
+      const roleById = new Map<
+        string,
+        'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+      >()
+
+      if (ownerId) {
+        roleById.set(ownerId, 'OWNER')
+      }
+
+      ;(weSpace?.members as FieldMembership[] | undefined)?.forEach(
+        (membership) => {
+          const member = membership.member?.[0]
+          if (member?.id) {
+            const role = (membership.role || 'MEMBER') as
+              | 'ADMIN'
+              | 'MEMBER'
+              | 'GUEST'
+            roleById.set(member.id, role)
+          }
+        }
       )
 
-      // Collect all persons (owner + members)
       const allPersons: PersonData[] = []
 
-      // Add owner (GraphQL returns array, take first element)
-      const owner = space.owner?.[0]
-      const ownerId = owner?.id
-      if (owner) {
+      fieldPeople.forEach((person) => {
         allPersons.push({
-          personId: owner.id,
-          firstName: owner.firstName,
-          lastName: owner.lastName,
-          name: owner.name,
-          email: owner.email ?? null,
-          photo: owner.photo ?? null,
-          role: 'OWNER' as const,
+          personId: person.id,
+          firstName: person.firstName || '',
+          lastName: person.lastName || '',
+          name: person.name || null,
+          email: person.email ?? null,
+          photo: person.photo ?? null,
+          role: roleById.get(person.id) || 'PERSON',
         })
-      }
-
-      // Add members (skip if they're also the owner)
-      if (space.members) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        space.members.forEach((membership: any) => {
-          const memberData = membership.member?.[0] // Extract first element from array
-          if (memberData && memberData.id !== ownerId) {
-            allPersons.push({
-              personId: memberData.id,
-              firstName: memberData.firstName,
-              lastName: memberData.lastName,
-              name: memberData.name,
-              email: memberData.email ?? null,
-              photo: memberData.photo ?? null,
-              role: membership.role || 'MEMBER',
-            })
-          }
-        })
-      }
+      })
 
       console.log(
         '✅ Total persons collected:',
@@ -521,32 +539,11 @@ function FieldDetailPage() {
     } catch (error) {
       console.error('Error processing members data:', error)
     }
-  }, [membersData])
+  }, [fieldPeopleData])
 
   // Fetch person connections when members data is available
   useEffect(() => {
-    if (!membersData) return
-
-    const space = membersData.weSpaces?.[0]
-    if (!space) return
-
-    // Collect all person IDs from owner and members
-    const personIds: string[] = []
-
-    const owner = space.owner?.[0]
-    if (owner) {
-      personIds.push(owner.id)
-    }
-
-    if (space.members) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      space.members.forEach((membership: any) => {
-        const memberData = membership.member?.[0] // Extract first element from array
-        if (memberData?.id) {
-          personIds.push(memberData.id)
-        }
-      })
-    }
+    const personIds = personData.map((person) => person.personId)
 
     // Only fetch if we have person IDs
     if (personIds.length > 0) {
@@ -554,7 +551,7 @@ function FieldDetailPage() {
         variables: { personIds },
       })
     }
-  }, [membersData, fetchPersonConnections])
+  }, [personData, fetchPersonConnections])
 
   // Fetch field name with pulse count
   useEffect(() => {
@@ -1519,9 +1516,6 @@ function FieldDetailPage() {
       if (!connectionExists) return
 
       // Get connection details from GraphQL data if available
-      const space = membersData?.weSpaces?.[0]
-      if (!space) return
-
       // Look up relationship properties (why, interests) from the edge map
       const edgeKey = [person1Id, person2Id].sort().join('::')
       const edgeProps = connectionEdgesMap.get(edgeKey)
@@ -1564,7 +1558,6 @@ function FieldDetailPage() {
       personData,
       personConnections,
       connectionEdgesMap,
-      membersData,
       isConnectionPanelOpen,
       selectedConnection,
       isPersonPanelOpen,
@@ -1583,6 +1576,101 @@ function FieldDetailPage() {
       handleConnectionClick(selectedPerson.id, connectedPersonId)
     },
     [selectedPerson, handleConnectionClick]
+  )
+
+  const handleAddPersonToField = useCallback(
+    async (input: CreateFieldPersonInput) => {
+      setIsAddingPersonToField(true)
+      try {
+        const personInput = {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          pronouns: input.pronouns,
+          location: input.location,
+          photo: input.photo,
+          avatar: input.avatar,
+          status: input.status,
+          gender: input.gender,
+          careManual: input.careManual,
+          favorites: input.favorites,
+          passions: input.passions,
+          traits: input.traits,
+          fieldsOfCare: input.fieldsOfCare,
+          interests: input.interests,
+        }
+
+        const { data } = await createPerson({
+          variables: {
+            input: [
+              {
+                ...personInput,
+                createdBy: user?.id
+                  ? {
+                      connect: [{ where: { node: { id_EQ: user.id } } }],
+                    }
+                  : undefined,
+              },
+            ],
+          },
+        })
+
+        const personId = data?.createPeople?.people?.[0]?.id
+        if (!personId) {
+          throw new Error('Person creation failed')
+        }
+
+        await addPersonToFieldContext({
+          variables: {
+            contextId: fieldId,
+            personId,
+          },
+        })
+        await refetchFieldPeople()
+        setIsAddPersonModalOpen(false)
+      } finally {
+        setIsAddingPersonToField(false)
+      }
+    },
+    [
+      addPersonToFieldContext,
+      createPerson,
+      fieldId,
+      refetchFieldPeople,
+      user?.id,
+    ]
+  )
+
+  const handleRemovePersonFromField = useCallback(
+    async (personId: string) => {
+      if (!fieldId) return
+
+      setIsRemovingPersonFromField(true)
+      try {
+        await removePersonFromFieldContext({
+          variables: {
+            contextId: fieldId,
+            personId,
+          },
+        })
+
+        setIsPersonPanelOpen(false)
+        setSelectedPerson(null)
+        setIsConnectionPanelOpen(false)
+        setSelectedConnection(null)
+        setActivePersonIds((prev) => {
+          const next = new Set(prev)
+          next.delete(personId)
+          return next
+        })
+
+        await refetchFieldPeople()
+      } finally {
+        setIsRemovingPersonFromField(false)
+      }
+    },
+    [fieldId, removePersonFromFieldContext, refetchFieldPeople]
   )
 
   // Only render the canvas when mounted and params are available to avoid hydration mismatch
@@ -1698,6 +1786,19 @@ function FieldDetailPage() {
               >
                 <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
                   spa
+                </span>
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsAddPersonModalOpen(true)
+                }}
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
+                title="Add Person To Field"
+              >
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                  person_add
                 </span>
                 <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
               </button>
@@ -1845,6 +1946,8 @@ function FieldDetailPage() {
             : []
         }
         onConnectionClick={handleViewConnectionFromPanel}
+        onRemoveFromField={handleRemovePersonFromField}
+        isRemovingFromField={isRemovingPersonFromField}
       />
 
       {/* Offering Modal for creating new pulses */}
@@ -1944,6 +2047,13 @@ function FieldDetailPage() {
           onRefresh={refetchSuggestions}
         />
       )}
+
+      <AddPersonToFieldModal
+        isOpen={isAddPersonModalOpen}
+        isSubmitting={isAddingPersonToField}
+        onClose={() => setIsAddPersonModalOpen(false)}
+        onCreatePerson={handleAddPersonToField}
+      />
     </div>
   )
 }

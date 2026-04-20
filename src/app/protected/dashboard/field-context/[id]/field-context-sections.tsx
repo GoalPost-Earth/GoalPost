@@ -37,12 +37,24 @@ type SpaceRecord = {
   visibility?: string | null
 }
 
+type FieldPersonRecord = {
+  id: string
+  firstName: string
+  lastName: string
+  name?: string | null
+  email?: string | null
+  photo?: string | null
+  role?: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+}
+
 type FieldContextSectionsProps = {
   createdDate: string
   pulses: PulseRecord[]
   resonances: ResonanceRecord[]
+  people: FieldPersonRecord[]
   space?: SpaceRecord | null
   onAddPulse: () => void
+  onAddPerson: () => void
   onAddResonance: () => void
   onEditPulse: (
     e: React.MouseEvent,
@@ -56,6 +68,7 @@ type FieldContextSectionsProps = {
     pulseId: string,
     type: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
   ) => void
+  onPersonClick: (personId: string) => void
   onPulseClick: (pulseId: string) => void
   onResonanceClick: (resonanceId: string) => void
 }
@@ -131,11 +144,14 @@ export function FieldContextSections({
   createdDate,
   pulses,
   resonances,
+  people,
   space,
   onAddPulse,
+  onAddPerson,
   onAddResonance,
   onEditPulse,
   onDeletePulse,
+  onPersonClick,
   onPulseClick,
   onResonanceClick,
 }: FieldContextSectionsProps) {
@@ -172,6 +188,62 @@ export function FieldContextSections({
                 {createdDate}
               </p>
             </div>
+          </div>
+        </ProfileCard>
+      </div>
+
+      <div className="flex flex-col gap-4 md:col-span-2">
+        <div className="flex items-center justify-between gap-3">
+          <SectionHeader icon="group" title="People" />
+          <button
+            onClick={onAddPerson}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              person_add
+            </span>
+            Add Person
+          </button>
+        </div>
+        <ProfileCard>
+          <div className="space-y-3">
+            {people.length > 0 ? (
+              people.map((person, idx) => (
+                <div
+                  key={person.id}
+                  onClick={() => onPersonClick(person.id)}
+                  className={
+                    idx > 0
+                      ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                      : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                  }
+                >
+                  <div className="flex justify-between items-start gap-4 p-4">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[9px] uppercase font-semibold text-emerald-600 dark:text-emerald-400 block mb-0.5">
+                        {person.role === 'PERSON' ? 'Person' : person.role}
+                      </span>
+                      <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white truncate">
+                        {person.name ||
+                          `${person.firstName} ${person.lastName}`}
+                      </h4>
+                      {person.email && (
+                        <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft truncate mt-1">
+                          {person.email}
+                        </p>
+                      )}
+                    </div>
+                    <span className="material-symbols-outlined text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
+                      chevron_right
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                No people added to this field yet
+              </p>
+            )}
           </div>
         </ProfileCard>
       </div>

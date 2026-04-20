@@ -203,6 +203,7 @@ type Person implements PersonInterface
   #   1. Query ownsSpaces → get MeSpaces/WeSpaces
   #   2. Query contexts on those spaces → get FieldContexts
   #   3. Query pulses on those contexts → get GoalPulse/ResourcePulse/StoryPulse
+  contexts: [FieldContext!]! @relationship(type: "HAS_PERSON", direction: IN)
   # 
   # MIGRATION: Legacy direct pulse relationships (goals, resources, coreValues, carePoints)
   # are transformed into pulses within FieldContexts in the person's auto-created MeSpace.
@@ -477,6 +478,7 @@ type FieldContext
   emergentName: String
   createdAt: DateTime!
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  people: [Person!]! @relationship(type: "HAS_PERSON", direction: OUT)
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)

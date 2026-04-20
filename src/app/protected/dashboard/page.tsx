@@ -107,7 +107,7 @@ export default function DashboardPage() {
         data-tour="dashboard-overview"
       >
         <div className="max-w-6xl mx-auto space-y-10">
-          <section className="rounded-[2rem] border border-white/40 bg-white/65 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+          {/* <section className="rounded-[2rem] border border-white/40 bg-white/65 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="max-w-2xl space-y-2">
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-gp-primary">
@@ -133,7 +133,7 @@ export default function DashboardPage() {
                 Open Import Page
               </Link>
             </div>
-          </section>
+          </section> */}
 
           {activeView === 'overview' && (
             <>

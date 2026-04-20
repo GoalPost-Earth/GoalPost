@@ -12,7 +12,7 @@ export interface PersonInPanel {
   name: string | null
   email?: string | null
   photo?: string | null
-  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
+  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER' | 'PERSON'
 }
 
 export interface ConnectedPerson {
@@ -21,7 +21,7 @@ export interface ConnectedPerson {
   lastName: string
   name: string | null
   photo?: string | null
-  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER'
+  role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER' | 'PERSON'
 }
 
 export interface PersonPanelProps {
@@ -30,6 +30,8 @@ export interface PersonPanelProps {
   person: PersonInPanel | null
   connectedPersons?: ConnectedPerson[]
   onConnectionClick?: (connectedPersonId: string) => void
+  onRemoveFromField?: (personId: string) => Promise<void>
+  isRemovingFromField?: boolean
 }
 
 const roleColors: Record<string, { bg: string; text: string; border: string }> =
@@ -49,6 +51,11 @@ const roleColors: Record<string, { bg: string; text: string; border: string }> =
       text: 'text-blue-600 dark:text-blue-400',
       border: 'border-blue-500/40',
     },
+    PERSON: {
+      bg: 'bg-gradient-to-br from-emerald-500/20 to-teal-500/10',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      border: 'border-emerald-500/40',
+    },
     GUEST: {
       bg: 'bg-gradient-to-br from-slate-500/20 to-gray-500/10',
       text: 'text-slate-600 dark:text-slate-400',
@@ -62,6 +69,8 @@ export function PersonPanel({
   person,
   connectedPersons = [],
   onConnectionClick,
+  onRemoveFromField,
+  isRemovingFromField = false,
 }: PersonPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -87,13 +96,17 @@ export function PersonPanel({
 
   if (!isOpen || !person) return null
 
-  const colors = roleColors[person.role || 'MEMBER'] || roleColors.MEMBER
+  const role = person.role || 'PERSON'
+  const colors = roleColors[role] || roleColors.PERSON
+  const roleLabel = role === 'PERSON' ? 'Person' : role
   const initials =
     `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase()
 
   const handleViewProfile = () => {
     router.push(`/protected/dashboard/persons/${person.id}`)
   }
+
+  const canRemoveFromField = role === 'PERSON' && !!onRemoveFromField
 
   return (
     <>
@@ -161,7 +174,7 @@ export function PersonPanel({
                         colors.text
                       )}
                     >
-                      {person.role}
+                      {roleLabel}
                     </div>
                   )}
                 </div>
@@ -216,9 +229,9 @@ export function PersonPanel({
                   </h4>
                   <div className="flex flex-wrap gap-3">
                     {connectedPersons.map((connectedPerson) => {
+                      const connectedRole = connectedPerson.role || 'PERSON'
                       const connectedColors =
-                        roleColors[connectedPerson.role || 'MEMBER'] ||
-                        roleColors.MEMBER
+                        roleColors[connectedRole] || roleColors.PERSON
                       const connectedInitials =
                         `${connectedPerson.firstName?.[0] || ''}${connectedPerson.lastName?.[0] || ''}`.toUpperCase()
 
@@ -276,6 +289,19 @@ export function PersonPanel({
                 </span>
                 View Full Profile
               </button>
+
+              {canRemoveFromField && (
+                <button
+                  onClick={() => onRemoveFromField?.(person.id)}
+                  disabled={isRemovingFromField}
+                  className="w-full px-4 py-3 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    person_remove
+                  </span>
+                  {isRemovingFromField ? 'Removing...' : 'Remove From Field'}
+                </button>
+              )}
             </div>
           </div>
         </div>

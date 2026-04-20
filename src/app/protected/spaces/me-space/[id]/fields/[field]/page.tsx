@@ -12,6 +12,7 @@ import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { PulseNode } from '@/components/ui/pulse-node'
 import { ResonanceNode } from '@/components/ui/resonance-node'
+import { PersonNode } from '@/components/ui/person-node'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import { formatResonanceLabel } from '@/utils/graph-utils'
@@ -19,6 +20,11 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
+import { PersonPanel } from '@/components/ui/person-panel'
+import {
+  AddPersonToFieldModal,
+  type CreateFieldPersonInput,
+} from '@/components/ui/add-person-to-field-modal'
 import {
   BulkPulseShareModal,
   type BulkPulseOperationDetails,
@@ -28,8 +34,15 @@ import {
   ResonanceLinkModal,
   type PulseOption,
 } from '@/components/ui/resonance-link-modal'
-import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
 import {
+  GET_FIELD_CONTEXT_PEOPLE,
+  GET_PULSE_DETAILS,
+  GET_PULSES_BY_CONTEXT,
+} from '@/app/graphql/queries'
+import {
+  ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
+  REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
+  CREATE_PEOPLE_MUTATION,
   CREATE_RESONANCE_LINK_MUTATION,
   UPDATE_RESONANCE_LINK_MUTATION,
   DELETE_RESONANCE_LINK_MUTATION,
@@ -75,12 +88,37 @@ const ANIMATION_ORDER: Array<
   'float' | 'float-delayed' | 'float-random' | 'pulse-slow'
 > = ['float', 'float-delayed', 'float-random', 'pulse-slow']
 
+type FieldContextPeopleResult = {
+  fieldContexts?: Array<{
+    id: string
+    people?: Array<{
+      id: string
+      firstName?: string | null
+      lastName?: string | null
+      name?: string | null
+      email?: string | null
+      photo?: string | null
+    }>
+    meSpace?: Array<{
+      owner?: Array<{ id: string }>
+      members?: Array<{
+        role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+        member?: Array<{ id: string }>
+      }>
+    }>
+  }>
+}
+
 function FieldDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
+  const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
+  const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
+    useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [editingPulseId, setEditingPulseId] = useState<string | null>(null)
@@ -96,6 +134,7 @@ function FieldDetailPage() {
     string | null
   >(null)
   const [isPulsePanelOpen, setIsPulsePanelOpen] = useState(false)
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [isBulkShareModalOpen, setIsBulkShareModalOpen] = useState(false)
   const [isResonancePanelOpen, setIsResonancePanelOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +155,26 @@ function FieldDetailPage() {
   const [nvlRelationships, setNvlRelationships] = useState<Relationship[]>([])
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [personData, setPersonData] = useState<
+    Array<{
+      personId: string
+      firstName: string
+      lastName: string
+      name: string | null
+      email: string | null
+      photo: string | null
+      role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    }>
+  >([])
+  const [selectedPerson, setSelectedPerson] = useState<{
+    id: string
+    firstName: string
+    lastName: string
+    name: string | null
+    email: string | null
+    photo: string | null
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+  } | null>(null)
   const [pulseData, setPulseData] = useState<
     Array<{
       id: string
@@ -145,6 +204,12 @@ function FieldDetailPage() {
     variables: { contextId: fieldId },
     skip: !fieldId,
   })
+
+  const { data: fieldPeopleData, refetch: refetchFieldPeople } =
+    useQuery<FieldContextPeopleResult>(GET_FIELD_CONTEXT_PEOPLE, {
+      variables: { contextId: fieldId },
+      skip: !fieldId,
+    })
 
   const [createResonanceLink, { loading: isCreatingResonanceLink }] =
     useMutation(CREATE_RESONANCE_LINK_MUTATION)
@@ -197,6 +262,13 @@ function FieldDetailPage() {
 
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
+  const [addPersonToFieldContext] = useMutation(
+    ADD_PERSON_TO_FIELD_CONTEXT_MUTATION
+  )
+  const [removePersonFromFieldContext] = useMutation(
+    REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
+  )
+  const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
 
   // Redirect if no field ID
   if (!fieldId) {
@@ -268,6 +340,61 @@ function FieldDetailPage() {
     }
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulsesByContextData, resonanceLinkageEnabled])
+
+  useEffect(() => {
+    const context = fieldPeopleData?.fieldContexts?.[0]
+    if (!context) return
+
+    const fieldPeople = (context.people || []) as Array<{
+      id: string
+      firstName?: string | null
+      lastName?: string | null
+      name?: string | null
+      email?: string | null
+      photo?: string | null
+    }>
+
+    type FieldMembership = {
+      role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+      member?: Array<{ id: string }>
+    }
+
+    const meSpace = context.meSpace?.[0]
+    const ownerId = meSpace?.owner?.[0]?.id
+    const roleById = new Map<
+      string,
+      'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    >()
+
+    if (ownerId) {
+      roleById.set(ownerId, 'OWNER')
+    }
+
+    ;(meSpace?.members as FieldMembership[] | undefined)?.forEach(
+      (membership) => {
+        const member = membership.member?.[0]
+        if (member?.id) {
+          const role = (membership.role || 'MEMBER') as
+            | 'ADMIN'
+            | 'MEMBER'
+            | 'GUEST'
+          roleById.set(member.id, role)
+        }
+      }
+    )
+
+    const normalizedPeople = fieldPeople.map((person) => ({
+      personId: person.id,
+      firstName: person.firstName || '',
+      lastName: person.lastName || '',
+      name: person.name || null,
+      email: person.email || null,
+      photo: person.photo || null,
+      role: roleById.get(person.id) || ('PERSON' as const),
+    }))
+
+    setPersonData(normalizedPeople)
+  }, [fieldPeopleData])
 
   // Fetch field name with pulse count
   useEffect(() => {
@@ -357,6 +484,26 @@ function FieldDetailPage() {
       )
     })
 
+    // Create person nodes
+    personData.forEach((person) => {
+      nodes.push(
+        createNvlNode(
+          {
+            id: `person-${person.personId}`,
+            personId: person.personId,
+            type: 'person',
+            firstName: person.firstName,
+            lastName: person.lastName,
+            name: person.name,
+            email: person.email,
+            photo: person.photo,
+            role: person.role,
+          },
+          80
+        )
+      )
+    })
+
     // Create relationships for resonance links
     resonanceLinks.forEach((link: any) => {
       const sourceId = link.source?.[0]?.id
@@ -389,7 +536,7 @@ function FieldDetailPage() {
 
     setNvlNodes(nodes)
     setNvlRelationships(relationships)
-  }, [pulseData, resonanceLinks])
+  }, [pulseData, resonanceLinks, personData])
 
   // Render React components into NVL node HTML containers
   useEffect(() => {
@@ -434,11 +581,33 @@ function FieldDetailPage() {
             node.html
           )
         }
+      } else if (nodeType === 'person') {
+        const person = personData.find(
+          (p) => p.personId === (node as any).personId
+        )
+        if (person) {
+          renderReactComponentToContainer(
+            <PersonNode
+              id={person.personId}
+              firstName={person.firstName}
+              lastName={person.lastName}
+              name={person.name}
+              email={person.email}
+              photo={person.photo}
+              role={person.role}
+              animation="none"
+              isSelected={selectedNodeId === node.id}
+              isHovered={hoveredNodeId === node.id}
+            />,
+            node.html
+          )
+        }
       }
     })
   }, [
     nvlNodes,
     pulseData,
+    personData,
     resonanceLinks,
     selectedNodeId,
     hoveredNodeId,
@@ -455,6 +624,7 @@ function FieldDetailPage() {
         setSelectedNodeId(node.id)
         setIsPulsePanelOpen(true)
         setIsResonancePanelOpen(false)
+        setIsPersonPanelOpen(false)
         fetchPulseDetails({ variables: { pulseId } })
       } else if (nodeType === 'resonance') {
         const resonanceId = (node as any).resonanceId
@@ -466,10 +636,30 @@ function FieldDetailPage() {
           setSelectedResonance(resonance)
           setIsResonancePanelOpen(true)
           setIsPulsePanelOpen(false)
+          setIsPersonPanelOpen(false)
+        }
+      } else if (nodeType === 'person') {
+        const personId = (node as any).personId
+        const person = personData.find((p) => p.personId === personId)
+
+        if (person) {
+          setSelectedNodeId(node.id)
+          setSelectedPerson({
+            id: person.personId,
+            firstName: person.firstName,
+            lastName: person.lastName,
+            name: person.name,
+            email: person.email,
+            photo: person.photo,
+            role: person.role,
+          })
+          setIsPersonPanelOpen(true)
+          setIsPulsePanelOpen(false)
+          setIsResonancePanelOpen(false)
         }
       }
     },
-    [resonanceLinks, fetchPulseDetails]
+    [personData, resonanceLinks, fetchPulseDetails]
   )
 
   // Handle node hover
@@ -483,9 +673,99 @@ function FieldDetailPage() {
     setHoveredNodeId(null)
     setIsPulsePanelOpen(false)
     setIsResonancePanelOpen(false)
+    setIsPersonPanelOpen(false)
     setActiveResonanceNodeId(null)
     setSelectedResonance(null)
+    setSelectedPerson(null)
   }, [])
+
+  const handleAddPersonToField = useCallback(
+    async (input: CreateFieldPersonInput) => {
+      setIsAddingPersonToField(true)
+      try {
+        const personInput = {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          pronouns: input.pronouns,
+          location: input.location,
+          photo: input.photo,
+          avatar: input.avatar,
+          status: input.status,
+          gender: input.gender,
+          careManual: input.careManual,
+          favorites: input.favorites,
+          passions: input.passions,
+          traits: input.traits,
+          fieldsOfCare: input.fieldsOfCare,
+          interests: input.interests,
+        }
+
+        const { data } = await createPerson({
+          variables: {
+            input: [
+              {
+                ...personInput,
+                createdBy: user?.id
+                  ? {
+                      connect: [{ where: { node: { id_EQ: user.id } } }],
+                    }
+                  : undefined,
+              },
+            ],
+          },
+        })
+
+        const personId = data?.createPeople?.people?.[0]?.id
+        if (!personId) {
+          throw new Error('Person creation failed')
+        }
+
+        await addPersonToFieldContext({
+          variables: {
+            contextId: fieldId,
+            personId,
+          },
+        })
+        await refetchFieldPeople()
+        setIsAddPersonModalOpen(false)
+      } finally {
+        setIsAddingPersonToField(false)
+      }
+    },
+    [
+      addPersonToFieldContext,
+      createPerson,
+      fieldId,
+      refetchFieldPeople,
+      user?.id,
+    ]
+  )
+
+  const handleRemovePersonFromField = useCallback(
+    async (personId: string) => {
+      if (!fieldId) return
+
+      setIsRemovingPersonFromField(true)
+      try {
+        await removePersonFromFieldContext({
+          variables: {
+            contextId: fieldId,
+            personId,
+          },
+        })
+
+        setIsPersonPanelOpen(false)
+        setSelectedPerson(null)
+
+        await refetchFieldPeople()
+      } finally {
+        setIsRemovingPersonFromField(false)
+      }
+    },
+    [fieldId, removePersonFromFieldContext, refetchFieldPeople]
+  )
 
   const pulseDetails: PulseDetails | null = useMemo(() => {
     const goal = pulseDetailsData?.goalPulses?.[0]
@@ -1153,6 +1433,19 @@ function FieldDetailPage() {
                 </span>
                 <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
               </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsAddPersonModalOpen(true)
+                }}
+                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
+                title="Add Person To Field"
+              >
+                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                  person_add
+                </span>
+                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              </button>
             </div>
           )
         }
@@ -1220,6 +1513,18 @@ function FieldDetailPage() {
           links={selectedResonance ? [selectedResonance] : []}
         />
       </div>
+
+      <PersonPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => {
+          setIsPersonPanelOpen(false)
+          setSelectedPerson(null)
+        }}
+        person={selectedPerson}
+        connectedPersons={[]}
+        onRemoveFromField={handleRemovePersonFromField}
+        isRemovingFromField={isRemovingPersonFromField}
+      />
 
       {/* Offering Modal for creating new pulses */}
       <OfferingModal
@@ -1302,6 +1607,13 @@ function FieldDetailPage() {
           isDeletingResonanceLink
         }
         editingResonance={editingResonance}
+      />
+
+      <AddPersonToFieldModal
+        isOpen={isAddPersonModalOpen}
+        isSubmitting={isAddingPersonToField}
+        onClose={() => setIsAddPersonModalOpen(false)}
+        onCreatePerson={handleAddPersonToField}
       />
     </div>
   )

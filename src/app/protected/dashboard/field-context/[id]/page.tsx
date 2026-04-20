@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
@@ -11,9 +11,18 @@ import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { ResonanceLinkModal } from '@/components/ui/resonance-link-modal'
 import { BulkPulseShareModal } from '@/components/ui/bulk-pulse-share-modal'
+import { PersonPanel } from '@/components/ui/person-panel'
+import {
+  AddPersonToFieldModal,
+  type CreateFieldPersonInput,
+} from '@/components/ui/add-person-to-field-modal'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries'
 import {
+  ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
+  REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
+  CREATE_PEOPLE_MUTATION,
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
@@ -86,6 +95,20 @@ export default function FieldContextDetailsPage() {
     string | null
   >(null)
   const [isBulkShareModalOpen, setIsBulkShareModalOpen] = useState(false)
+  const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false)
+  const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
+  const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
+    useState(false)
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
+  const [selectedPerson, setSelectedPerson] = useState<{
+    id: string
+    firstName: string
+    lastName: string
+    name: string | null
+    email: string | null
+    photo: string | null
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+  } | null>(null)
 
   // Set page title
   useEffect(() => {
@@ -94,6 +117,14 @@ export default function FieldContextDetailsPage() {
 
   const { data, loading, error, refetch } = useQuery(
     GET_FIELD_CONTEXT_DETAILS,
+    {
+      variables: { contextId },
+      skip: !contextId,
+    }
+  )
+
+  const { data: fieldPeopleData, refetch: refetchFieldPeople } = useQuery(
+    GET_FIELD_CONTEXT_PEOPLE,
     {
       variables: { contextId },
       skip: !contextId,
@@ -125,9 +156,100 @@ export default function FieldContextDetailsPage() {
   const [removePulseFromContext] = useMutation(
     REMOVE_PULSE_FROM_CONTEXT_MUTATION
   )
+  const [addPersonToFieldContext] = useMutation(
+    ADD_PERSON_TO_FIELD_CONTEXT_MUTATION
+  )
+  const [removePersonFromFieldContext] = useMutation(
+    REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
+  )
+  const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
+  const peopleContext = (
+    fieldPeopleData as
+      | {
+          fieldContexts?: Array<{
+            people?: Array<{
+              id: string
+              firstName?: string | null
+              lastName?: string | null
+              name?: string | null
+              email?: string | null
+              photo?: string | null
+            }>
+            meSpace?: Array<{
+              owner?: Array<{ id: string }>
+              members?: Array<{
+                role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+                member?: Array<{ id: string }>
+              }>
+            }>
+            weSpace?: Array<{
+              owner?: Array<{ id: string }>
+              members?: Array<{
+                role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+                member?: Array<{ id: string }>
+              }>
+            }>
+          }>
+        }
+      | undefined
+  )?.fieldContexts?.[0]
+
+  const people = useMemo(() => {
+    if (!peopleContext) return []
+
+    type FieldMembership = {
+      role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+      member?: Array<{ id: string }>
+    }
+
+    const roleById = new Map<
+      string,
+      'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    >()
+    const ownerId =
+      peopleContext.meSpace?.[0]?.owner?.[0]?.id ||
+      peopleContext.weSpace?.[0]?.owner?.[0]?.id
+
+    if (ownerId) {
+      roleById.set(ownerId, 'OWNER')
+    }
+
+    ;(
+      peopleContext.meSpace?.[0]?.members as FieldMembership[] | undefined
+    )?.forEach((membership) => {
+      const member = membership.member?.[0]
+      if (member?.id) {
+        roleById.set(
+          member.id,
+          (membership.role || 'MEMBER') as 'ADMIN' | 'MEMBER' | 'GUEST'
+        )
+      }
+    })
+    ;(
+      peopleContext.weSpace?.[0]?.members as FieldMembership[] | undefined
+    )?.forEach((membership) => {
+      const member = membership.member?.[0]
+      if (member?.id) {
+        roleById.set(
+          member.id,
+          (membership.role || 'MEMBER') as 'ADMIN' | 'MEMBER' | 'GUEST'
+        )
+      }
+    })
+
+    return (peopleContext.people || []).map((person) => ({
+      id: person.id,
+      firstName: person.firstName || '',
+      lastName: person.lastName || '',
+      name: person.name || null,
+      email: person.email || null,
+      photo: person.photo || null,
+      role: roleById.get(person.id) || ('PERSON' as const),
+    }))
+  }, [peopleContext])
   const pulses = [
     ...(data?.goalPulses || []),
     ...(data?.resourcePulses || []),
@@ -639,6 +761,97 @@ export default function FieldContextDetailsPage() {
     }
   }
 
+  const handleAddPersonToField = async (input: CreateFieldPersonInput) => {
+    setIsAddingPersonToField(true)
+    try {
+      const personInput = {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        pronouns: input.pronouns,
+        location: input.location,
+        photo: input.photo,
+        avatar: input.avatar,
+        status: input.status,
+        gender: input.gender,
+        careManual: input.careManual,
+        favorites: input.favorites,
+        passions: input.passions,
+        traits: input.traits,
+        fieldsOfCare: input.fieldsOfCare,
+        interests: input.interests,
+      }
+
+      const { data: createResponse } = await createPerson({
+        variables: {
+          input: [
+            {
+              ...personInput,
+              createdBy: user?.id
+                ? {
+                    connect: [{ where: { node: { id_EQ: user.id } } }],
+                  }
+                : undefined,
+            },
+          ],
+        },
+      })
+
+      const personId = createResponse?.createPeople?.people?.[0]?.id
+      if (!personId) {
+        throw new Error('Person creation failed')
+      }
+
+      await addPersonToFieldContext({
+        variables: {
+          contextId,
+          personId,
+        },
+      })
+
+      await refetchFieldPeople()
+      setIsAddPersonModalOpen(false)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to add person'
+      toast.error(errorMessage)
+      throw error
+    } finally {
+      setIsAddingPersonToField(false)
+    }
+  }
+
+  const handlePersonClick = (personId: string) => {
+    const person = people.find((entry) => entry.id === personId)
+    if (!person) return
+
+    setSelectedPerson(person)
+    setIsPersonPanelOpen(true)
+  }
+
+  const handleRemovePersonFromField = async (personId: string) => {
+    setIsRemovingPersonFromField(true)
+    try {
+      await removePersonFromFieldContext({
+        variables: {
+          contextId,
+          personId,
+        },
+      })
+
+      setIsPersonPanelOpen(false)
+      setSelectedPerson(null)
+      await refetchFieldPeople()
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to remove person'
+      toast.error(errorMessage)
+    } finally {
+      setIsRemovingPersonFromField(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
@@ -836,11 +1049,14 @@ export default function FieldContextDetailsPage() {
             createdDate={createdDate}
             pulses={pulses}
             resonances={resonances}
+            people={people}
             space={space}
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
+            onAddPerson={() => setIsAddPersonModalOpen(true)}
             onAddResonance={() => setIsResonanceLinkModalOpen(true)}
             onEditPulse={handleEditPulse}
             onDeletePulse={handleDeletePulse}
+            onPersonClick={handlePersonClick}
             onPulseClick={(pulseId) =>
               router.push(`/protected/dashboard/pulses/${pulseId}`)
             }
@@ -850,10 +1066,19 @@ export default function FieldContextDetailsPage() {
           />
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 w-full">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-4 sm:gap-6 w-full">
+            <button
+              onClick={() => setIsAddPersonModalOpen(true)}
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/50 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/30 dark:hover:bg-emerald-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                person_add
+              </span>
+              Add Person
+            </button>
             <button
               onClick={handleEditStart}
-              className="px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
                 edit
@@ -863,7 +1088,7 @@ export default function FieldContextDetailsPage() {
             <button
               onClick={() => setIsBulkShareModalOpen(true)}
               disabled={pulses.length === 0}
-              className="px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">
                 share
@@ -873,7 +1098,7 @@ export default function FieldContextDetailsPage() {
             <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
-              className="px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">
                 delete
@@ -1045,6 +1270,25 @@ export default function FieldContextDetailsPage() {
           setIsBulkShareModalOpen(false)
           await refetch()
         }}
+      />
+
+      <PersonPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => {
+          setIsPersonPanelOpen(false)
+          setSelectedPerson(null)
+        }}
+        person={selectedPerson}
+        connectedPersons={[]}
+        onRemoveFromField={handleRemovePersonFromField}
+        isRemovingFromField={isRemovingPersonFromField}
+      />
+
+      <AddPersonToFieldModal
+        isOpen={isAddPersonModalOpen}
+        isSubmitting={isAddingPersonToField}
+        onClose={() => setIsAddPersonModalOpen(false)}
+        onCreatePerson={handleAddPersonToField}
       />
     </div>
   )
