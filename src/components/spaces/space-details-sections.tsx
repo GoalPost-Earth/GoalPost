@@ -34,6 +34,7 @@ interface SpaceDetailsSectionsProps {
     role: 'ADMIN' | 'MEMBER' | 'GUEST'
   ) => void
   onRemoveMember: (memberId: string, memberName: string) => void
+  getContextHref?: (contextId: string) => string
 }
 
 export function SpaceDetailsSections({
@@ -49,6 +50,7 @@ export function SpaceDetailsSections({
   onShowPermissions,
   onChangeMemberRole,
   onRemoveMember,
+  getContextHref,
 }: SpaceDetailsSectionsProps) {
   const router = useRouter()
 
@@ -273,7 +275,9 @@ export function SpaceDetailsSections({
                   onClick={() =>
                     context.id &&
                     router.push(
-                      `/protected/dashboard/field-context/${context.id}`
+                      getContextHref
+                        ? getContextHref(context.id)
+                        : `/protected/dashboard/field-context/${context.id}`
                     )
                   }
                   className={

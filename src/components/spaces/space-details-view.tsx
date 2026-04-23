@@ -28,6 +28,8 @@ interface SpaceDetailsViewProps {
   spaceData?: any
   /** Refetch callback from the parent query */
   onRefetch?: () => Promise<unknown>
+  /** Optional route builder for opening a field context from the details view */
+  getContextHref?: (contextId: string) => string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,6 +58,7 @@ export function SpaceDetailsView({
   spaceId,
   spaceData,
   onRefetch,
+  getContextHref,
 }: SpaceDetailsViewProps) {
   const router = useRouter()
   const { animationsEnabled } = useAnimations()
@@ -357,6 +360,7 @@ export function SpaceDetailsView({
         onShowPermissions={() => setShowPermissionsModal(true)}
         onChangeMemberRole={handleChangeMemberRole}
         onRemoveMember={handleRemoveMemberClick}
+        getContextHref={getContextHref}
       />
 
       <SpaceDetailsActions

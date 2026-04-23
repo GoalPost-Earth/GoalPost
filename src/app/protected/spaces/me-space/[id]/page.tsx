@@ -103,6 +103,14 @@ export default function MeSpaceFieldsPage() {
     [router]
   )
 
+  const withCurrentView = useCallback(
+    (path: string) => {
+      if (viewMode !== 'details') return path
+      return `${path}?view=details`
+    },
+    [viewMode]
+  )
+
   const { createField, loading: isCreating } = useCreateField()
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
 
@@ -150,9 +158,13 @@ export default function MeSpaceFieldsPage() {
         // Persist field name in localStorage to avoid API call on page reload
         localStorage.setItem(`field_${fieldId}`, field.title)
       }
-      router.push(`/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`)
+      router.push(
+        withCurrentView(
+          `/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`
+        )
+      )
     },
-    [transformedFields, setPageTitle, meSpaceId, router]
+    [transformedFields, setPageTitle, meSpaceId, router, withCurrentView]
   )
 
   const handleEditField = useCallback(
@@ -303,6 +315,11 @@ export default function MeSpaceFieldsPage() {
                 meSpace ? { ...meSpace, __typename: 'MeSpace' } : undefined
               }
               onRefetch={refetch}
+              getContextHref={(contextId) =>
+                withCurrentView(
+                  `/protected/spaces/me-space/${meSpaceId}/fields/${contextId}`
+                )
+              }
             />
           </ProfileLayout>
         </main>

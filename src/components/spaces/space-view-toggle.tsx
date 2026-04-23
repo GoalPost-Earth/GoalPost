@@ -27,7 +27,10 @@ export function SpaceViewToggle({
       )}
     >
       <button
-        onClick={() => onViewChange('graph')}
+        onClick={(event) => {
+          event.stopPropagation()
+          onViewChange('graph')
+        }}
         className={cn(
           'cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
           activeView === 'graph'
@@ -41,7 +44,10 @@ export function SpaceViewToggle({
       </button>
       <div className="w-px h-4 bg-gp-ink-soft/20 dark:bg-white/10" />
       <button
-        onClick={() => onViewChange('details')}
+        onClick={(event) => {
+          event.stopPropagation()
+          onViewChange('details')
+        }}
         className={cn(
           'cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
           activeView === 'details'
