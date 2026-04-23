@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
@@ -38,7 +38,9 @@ import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUT
 import { cn } from '@/lib/utils'
 import { useAnimations, useApp, usePageContext } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
-import { FieldContextSections } from './field-context-sections'
+import { FieldContextSections } from '@/components/fields/field-context-sections'
+import { SpaceViewToggle } from '@/components/spaces'
+import type { SpaceViewMode } from '@/components/spaces'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
@@ -139,6 +141,26 @@ export default function FieldContextDetailsPage() {
       new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
   )
   const resonances = context?.resonancesInContext || []
+
+  const handleViewChange = useCallback(
+    (view: SpaceViewMode) => {
+      if (
+        view !== 'graph' ||
+        !space?.id ||
+        !space?.__typename ||
+        !context?.id
+      ) {
+        return
+      }
+
+      const spaceType = space.__typename === 'WeSpace' ? 'we-space' : 'me-space'
+
+      router.push(
+        `/protected/spaces/${spaceType}/${space.id}/fields/${context.id}`
+      )
+    },
+    [router, space?.__typename, space?.id, context?.id]
+  )
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -814,6 +836,13 @@ export default function FieldContextDetailsPage() {
       {/* Scrollable content */}
       <main className="relative">
         <ProfileLayout>
+          <div className="flex justify-end mb-6">
+            <SpaceViewToggle
+              activeView="details"
+              onViewChange={handleViewChange}
+            />
+          </div>
+
           {/* Header Section */}
           <div className="flex flex-col items-center text-center mb-12">
             <span className="text-[9px] uppercase font-semibold text-gp-primary mb-2">

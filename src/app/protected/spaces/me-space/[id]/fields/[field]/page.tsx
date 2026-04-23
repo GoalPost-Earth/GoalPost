@@ -7,12 +7,15 @@ import {
   useQuery,
   useApolloClient,
 } from '@apollo/client/react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { PulseNode } from '@/components/ui/pulse-node'
 import { ResonanceNode } from '@/components/ui/resonance-node'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
+import { ProfileBackground } from '@/components/persons/profile-background'
+import { ProfileLayout } from '@/components/persons/profile-layout'
+import { FieldContextSections } from '@/components/fields/field-context-sections'
 import { createNvlNode, renderReactComponentToContainer } from '@/lib/nvl-utils'
 import { formatResonanceLabel } from '@/utils/graph-utils'
 import { OfferingModal } from '@/components/ui/offering-modal'
@@ -28,6 +31,8 @@ import {
   ResonanceLinkModal,
   type PulseOption,
 } from '@/components/ui/resonance-link-modal'
+import { SpaceViewToggle } from '@/components/spaces'
+import type { SpaceViewMode } from '@/components/spaces'
 import { GET_PULSE_DETAILS, GET_PULSES_BY_CONTEXT } from '@/app/graphql/queries'
 import {
   CREATE_RESONANCE_LINK_MUTATION,
@@ -76,6 +81,8 @@ const ANIMATION_ORDER: Array<
 > = ['float', 'float-delayed', 'float-random', 'pulse-slow']
 
 function FieldDetailPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
@@ -127,10 +134,29 @@ function FieldDetailPage() {
 
   const params = useParams()
   const fieldId = params?.field as string
+  const meSpaceId = params?.id as string
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
+  const viewParam = searchParams.get('view') as SpaceViewMode | null
+  const [viewMode, setViewMode] = useState<SpaceViewMode>(
+    viewParam === 'details' ? 'details' : 'graph'
+  )
+
+  const handleViewChange = useCallback(
+    (view: SpaceViewMode) => {
+      setViewMode(view)
+      const url = new URL(window.location.href)
+      if (view === 'graph') {
+        url.searchParams.delete('view')
+      } else {
+        url.searchParams.set('view', view)
+      }
+      router.replace(url.pathname + url.search, { scroll: false })
+    },
+    [router]
+  )
 
   const [
     fetchPulseDetails,
@@ -522,6 +548,57 @@ function FieldDetailPage() {
         })) ?? [],
     }
   }, [pulseDetailsData])
+
+  const fieldContext = useMemo(
+    () =>
+      pulsesByContextData?.fieldContexts?.[0] as
+        | {
+            title?: string | null
+            emergentName?: string | null
+            createdAt?: string | null
+            space?: Array<{
+              __typename?: string | null
+              name?: string | null
+              visibility?: string | null
+            }> | null
+          }
+        | undefined,
+    [pulsesByContextData]
+  )
+
+  const createdDate = fieldContext?.createdAt
+    ? new Date(fieldContext.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : 'Unknown'
+
+  const handlePulseDetailsOpen = useCallback(
+    (pulseId: string) => {
+      setSelectedNodeId(`pulse-${pulseId}`)
+      setIsPulsePanelOpen(true)
+      setIsResonancePanelOpen(false)
+      fetchPulseDetails({ variables: { pulseId } })
+    },
+    [fetchPulseDetails]
+  )
+
+  const handleResonanceDetailsOpen = useCallback(
+    (resonanceId: string) => {
+      const resonance = resonanceLinks.find(
+        (link: any) => link.id === resonanceId
+      )
+      if (!resonance) return
+
+      setSelectedNodeId(`resonance-${resonanceId}`)
+      setActiveResonanceNodeId(resonanceId)
+      setSelectedResonance(resonance)
+      setIsResonancePanelOpen(true)
+      setIsPulsePanelOpen(false)
+    },
+    [resonanceLinks]
+  )
 
   const getPulseSnapshot = useCallback(
     async (pulseId: string) => {
@@ -1072,91 +1149,169 @@ function FieldDetailPage() {
   }
 
   return (
-    <div className="relative overflow-hidden">
-      <NvlCanvas
-        nodes={nvlNodes}
-        relationships={nvlRelationships}
-        isLoading={isPulsesLoading}
-        layout="forceDirected"
-        onNodeClick={handleNodeClick}
-        onNodeHover={handleNodeHover}
-        onBackgroundClick={handleBackgroundClick}
-        enableZoomControls={true}
-        showBackgroundDecor={true}
-        emptyState={
-          <div className="flex flex-col items-center gap-6 max-w-md px-6 text-center">
-            <div className="size-20 md:size-24 rounded-full flex items-center justify-center bg-gp-primary/10 dark:bg-gp-primary/20">
-              <span className="material-symbols-outlined text-gp-primary dark:text-gp-primary text-5xl md:text-6xl">
-                spa
-              </span>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl md:text-2xl font-bold text-gp-ink-strong dark:text-gp-ink-strong">
-                No Pulses Yet
-              </h3>
-              <p className="text-sm md:text-base text-gp-ink-muted dark:text-gp-ink-soft">
-                Pulses represent your goals, resources, and stories. Create your
-                first pulse to begin discovering resonances.
-              </p>
-            </div>
-          </div>
-        }
-        actionButton={
-          isMounted && (
-            <div className="group flex flex-row items-center gap-3 relative z-50 pointer-events-auto">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsResonanceLinkModalOpen(true)
-                }}
-                disabled={pulseOptions.length < 2}
-                title={
-                  pulseOptions.length < 2
-                    ? 'Need at least 2 pulses to create a resonance link'
-                    : 'Create Resonance Link'
-                }
-                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
-              >
-                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
-                  link
+    <>
+      {viewMode === 'details' ? (
+        <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
+          <ProfileBackground />
+          <main className="relative">
+            <ProfileLayout>
+              <div className="flex justify-end mb-6">
+                <SpaceViewToggle
+                  activeView={viewMode}
+                  onViewChange={handleViewChange}
+                />
+              </div>
+
+              <div className="flex flex-col items-center text-center mb-12">
+                <span className="text-[9px] uppercase font-semibold text-gp-primary mb-2">
+                  {fieldContext?.space?.[0]?.__typename || 'Space'} •{' '}
+                  {fieldContext?.space?.[0]?.name || 'Unknown space'}
                 </span>
-                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsBulkShareModalOpen(true)
+                <h1 className="text-4xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong mb-2">
+                  {fieldContext?.title || 'Field Context'}
+                </h1>
+                {fieldContext?.emergentName && (
+                  <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft italic mb-2">
+                    &quot;{fieldContext.emergentName}&quot;
+                  </p>
+                )}
+                <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
+                  Created {createdDate}
+                </p>
+              </div>
+
+              <FieldContextSections
+                createdDate={createdDate}
+                pulses={[
+                  ...(pulsesByContextData?.goalPulses || []),
+                  ...(pulsesByContextData?.resourcePulses || []),
+                  ...(pulsesByContextData?.storyPulses || []),
+                  ...(pulsesByContextData?.carePulses || []),
+                  ...(pulsesByContextData?.coreValuePulses || []),
+                ].sort(
+                  (left, right) =>
+                    new Date(right.createdAt).getTime() -
+                    new Date(left.createdAt).getTime()
+                )}
+                resonances={resonanceLinks}
+                space={fieldContext?.space?.[0]}
+                onAddPulse={() => setIsModalOpen(true)}
+                onAddResonance={() => setIsResonanceLinkModalOpen(true)}
+                onEditPulse={(e, pulseId, type, title, content) => {
+                  handleEditPulse(e, pulseId, type, title, title, content)
                 }}
-                disabled={pulseData.length === 0}
-                title={
-                  pulseData.length === 0
-                    ? 'No pulses available to share'
-                    : 'Share Pulses'
-                }
-                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
-              >
-                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
-                  share
-                </span>
-                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsModalOpen(true)
-                }}
-                data-tour="create-pulse-button"
-                className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
-              >
-                <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
-                  spa
-                </span>
-                <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-              </button>
-            </div>
-          )
-        }
-      />
+                onDeletePulse={handleDeletePulse}
+                onPulseClick={handlePulseDetailsOpen}
+                onResonanceClick={handleResonanceDetailsOpen}
+              />
+
+              <div className="flex items-center justify-center gap-6 w-full">
+                <button
+                  onClick={() => setIsBulkShareModalOpen(true)}
+                  disabled={pulseData.length === 0}
+                  className="px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    share
+                  </span>
+                  Share Pulses
+                </button>
+              </div>
+            </ProfileLayout>
+          </main>
+        </div>
+      ) : (
+        <div className="relative overflow-hidden">
+          <NvlCanvas
+            nodes={nvlNodes}
+            relationships={nvlRelationships}
+            isLoading={isPulsesLoading}
+            layout="forceDirected"
+            onNodeClick={handleNodeClick}
+            onNodeHover={handleNodeHover}
+            onBackgroundClick={handleBackgroundClick}
+            enableZoomControls={true}
+            showBackgroundDecor={true}
+            emptyState={
+              <div className="flex flex-col items-center gap-6 max-w-md px-6 text-center">
+                <div className="size-20 md:size-24 rounded-full flex items-center justify-center bg-gp-primary/10 dark:bg-gp-primary/20">
+                  <span className="material-symbols-outlined text-gp-primary dark:text-gp-primary text-5xl md:text-6xl">
+                    spa
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl md:text-2xl font-bold text-gp-ink-strong dark:text-gp-ink-strong">
+                    No Pulses Yet
+                  </h3>
+                  <p className="text-sm md:text-base text-gp-ink-muted dark:text-gp-ink-soft">
+                    Pulses represent your goals, resources, and stories. Create
+                    your first pulse to begin discovering resonances.
+                  </p>
+                </div>
+              </div>
+            }
+            actionButton={
+              isMounted && (
+                <div className="group flex flex-row items-center gap-3 relative z-50 pointer-events-auto">
+                  <SpaceViewToggle
+                    activeView={viewMode}
+                    onViewChange={handleViewChange}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsResonanceLinkModalOpen(true)
+                    }}
+                    disabled={pulseOptions.length < 2}
+                    title={
+                      pulseOptions.length < 2
+                        ? 'Need at least 2 pulses to create a resonance link'
+                        : 'Create Resonance Link'
+                    }
+                    className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+                  >
+                    <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                      link
+                    </span>
+                    <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsBulkShareModalOpen(true)
+                    }}
+                    disabled={pulseData.length === 0}
+                    title={
+                      pulseData.length === 0
+                        ? 'No pulses available to share'
+                        : 'Share Pulses'
+                    }
+                    className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+                  >
+                    <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                      share
+                    </span>
+                    <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsModalOpen(true)
+                    }}
+                    data-tour="create-pulse-button"
+                    className="cursor-pointer relative flex items-center justify-center size-16 rounded-full gp-glass dark:gp-glass shadow-lg hover:shadow-[0_0_35px_color-mix(in_srgb,var(--gp-accent-glow)_45%,transparent)] transition-all duration-500 ease-out border border-gp-glass-border hover:border-gp-accent-glow/40 backdrop-blur-md group-hover:-translate-y-1"
+                  >
+                    <span className="material-symbols-outlined text-3xl text-gp-ink-muted dark:text-gp-ink-soft group-hover:text-gp-accent-glow transition-colors duration-500">
+                      spa
+                    </span>
+                    <div className="absolute inset-0 rounded-full border border-gp-glass-border opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                  </button>
+                </div>
+              )
+            }
+          />
+        </div>
+      )}
 
       <BulkPulseShareModal
         isOpen={isBulkShareModalOpen}
@@ -1303,7 +1458,7 @@ function FieldDetailPage() {
         }
         editingResonance={editingResonance}
       />
-    </div>
+    </>
   )
 }
 
