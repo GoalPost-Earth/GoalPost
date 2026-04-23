@@ -19,23 +19,42 @@ type ViewType =
   | 'people'
   | 'activity'
 
+const DASHBOARD_VIEW_STORAGE_KEY = 'dashboard_active_view'
+
 export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
   const [activeView, setActiveView] = useState<ViewType>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const searchParams = useSearchParams()
 
+  // Restore view from URL or localStorage fallback
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (
+    const validTab =
       tab === 'overview' ||
       tab === 'pulses' ||
       tab === 'fields' ||
       tab === 'spaces' ||
       tab === 'people' ||
       tab === 'activity'
-    ) {
-      setActiveView(tab)
+
+    if (validTab) {
+      setActiveView(tab as ViewType)
+      // Persist to localStorage
+      localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, tab)
+    } else {
+      // Try to restore from localStorage
+      const savedView = localStorage.getItem(DASHBOARD_VIEW_STORAGE_KEY)
+      if (
+        savedView === 'overview' ||
+        savedView === 'pulses' ||
+        savedView === 'fields' ||
+        savedView === 'spaces' ||
+        savedView === 'people' ||
+        savedView === 'activity'
+      ) {
+        setActiveView(savedView as ViewType)
+      }
     }
   }, [searchParams])
 
@@ -96,6 +115,7 @@ export default function DashboardPage() {
         activeView={activeView}
         onViewChange={(view) => {
           setActiveView(view)
+          localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, view)
           setSidebarOpen(false)
         }}
         isOpen={sidebarOpen}
