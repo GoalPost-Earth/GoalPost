@@ -51,6 +51,26 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
     }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
+      title
+      emergentName
+      createdAt
+      space {
+        id
+        name
+        visibility
+        ... on MeSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+        ... on WeSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+      }
       resonancesInContext {
         id
         label

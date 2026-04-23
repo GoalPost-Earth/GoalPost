@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
@@ -9,7 +9,14 @@ import { useApp, usePageContext } from '@/contexts'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
-import { SpacePermissionsModal } from '@/components/spaces'
+import {
+  SpacePermissionsModal,
+  SpaceViewToggle,
+  SpaceDetailsView,
+} from '@/components/spaces'
+import type { SpaceViewMode } from '@/components/spaces'
+import { ProfileBackground } from '@/components/persons/profile-background'
+import { ProfileLayout } from '@/components/persons/profile-layout'
 import { GET_WE_SPACE_DETAILS_QUERY } from '@/app/graphql/queries'
 import { LOG_FIELD_ACTIVITY } from '@/app/graphql/mutations'
 import {
@@ -37,6 +44,16 @@ type FieldSize = 'sm' | 'md' | 'lg' | 'xl'
 
 // Size variations for visual interest
 const sizeVariations = ['xl', 'lg', 'md', 'md', 'sm', 'lg', 'md', 'md'] as const
+const weSpaceNodeContainerCaches = new Map<string, Map<string, HTMLElement>>()
+
+function getWeSpaceNodeContainerCache(spaceId: string) {
+  let cache = weSpaceNodeContainerCaches.get(spaceId)
+  if (!cache) {
+    cache = new Map<string, HTMLElement>()
+    weSpaceNodeContainerCaches.set(spaceId, cache)
+  }
+  return cache
+}
 
 // Transform database field data to FieldBubble props
 function transformFieldsToProps(
@@ -66,15 +83,41 @@ function transformFieldsToProps(
 export default function WeSpaceFieldsPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const weSpaceId = params?.id as string
   const { setPageTitle } = usePageContext()
   const { user } = useApp()
 
+  // View toggle state from URL search params
+  const viewParam = searchParams.get('view') as SpaceViewMode | null
+  const [viewMode, setViewMode] = useState<SpaceViewMode>(
+    viewParam === 'details' ? 'details' : 'graph'
+  )
+
+  const handleViewChange = useCallback(
+    (view: SpaceViewMode) => {
+      setViewMode(view)
+      const url = new URL(window.location.href)
+      if (view === 'graph') {
+        url.searchParams.delete('view')
+      } else {
+        url.searchParams.set('view', view)
+      }
+      router.replace(url.pathname + url.search, { scroll: false })
+    },
+    [router]
+  )
+
+  const withCurrentView = useCallback(
+    (path: string) => {
+      if (viewMode !== 'details') return path
+      return `${path}?view=details`
+    },
+    [viewMode]
+  )
+
   const { createField, loading: isCreating } = useCreateField()
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
-  // Stable container cache: reuse the same DOM element per field ID so the
-  // React root (and its GSAP context) survives re-renders.
-  const nodeContainerCache = useRef<Map<string, HTMLElement>>(new Map())
 
   // Fetch WeSpace details and field contexts using GraphQL
   const {
@@ -119,6 +162,10 @@ export default function WeSpaceFieldsPage() {
 
   // Transform fields to component props early so it's available for callbacks
   const transformedFields = transformFieldsToProps(fields)
+  const filteredFields = useMemo(
+    () => transformedFields.filter((field) => field.id),
+    [transformedFields]
+  )
 
   // Set page title when space loads with field count
   useEffect(() => {
@@ -139,9 +186,13 @@ export default function WeSpaceFieldsPage() {
         // Persist field name in localStorage to avoid API call on page reload
         localStorage.setItem(`field_${fieldId}`, field.title)
       }
-      router.push(`/protected/spaces/we-space/${weSpaceId}/fields/${fieldId}`)
+      router.push(
+        withCurrentView(
+          `/protected/spaces/we-space/${weSpaceId}/fields/${fieldId}`
+        )
+      )
     },
-    [transformedFields, setPageTitle, weSpaceId, router]
+    [transformedFields, setPageTitle, weSpaceId, router, withCurrentView]
   )
 
   const handleEditField = useCallback(
@@ -201,44 +252,46 @@ export default function WeSpaceFieldsPage() {
   }
 
   const nvlFieldNodes: Node[] = useMemo(() => {
-    const filtered = transformedFields.filter((field) => field.id)
-    const clusteredPositions = createClusteredFieldNodePositions(filtered, 150)
-    const cache = nodeContainerCache.current
+    const nodeContainerCache = getWeSpaceNodeContainerCache(weSpaceId)
+    const clusteredPositions = createClusteredFieldNodePositions(
+      filteredFields,
+      150
+    )
 
-    // Purge stale containers for fields that no longer exist
-    const activeIds = new Set(filtered.map((f) => f.id!))
-    for (const id of cache.keys()) {
-      if (!activeIds.has(id)) cache.delete(id)
+    const activeIds = new Set(filteredFields.map((field) => field.id!))
+    for (const id of Array.from(nodeContainerCache.keys())) {
+      if (!activeIds.has(id)) nodeContainerCache.delete(id)
     }
 
-    return clusteredPositions.map((position, index) => {
-      const field = filtered[index]
-      // Reuse the existing container element so NVL keeps the same DOM reference
-      // and the React root / GSAP context inside it stays alive.
-      let container = cache.get(position.fieldId)
-      if (!container) {
-        container = createNvlNodeElement(`node-${position.fieldId}`)
-        cache.set(position.fieldId, container)
-      }
-      return {
-        ...field,
-        id: position.fieldId,
-        x: position.x,
-        y: position.y,
-        html: container,
-        size: fieldBubbleHitboxSizeMap[position.size],
-        color: 'rgba(0, 0, 0, 0)',
-      } as Node
-    })
-  }, [transformedFields])
+    return clusteredPositions
+      .map((position, index) => {
+        const field = filteredFields[index]
+        let container = nodeContainerCache.get(position.fieldId)
+        if (!container) {
+          container = createNvlNodeElement(`node-${position.fieldId}`)
+          nodeContainerCache.set(position.fieldId, container)
+        }
+
+        return {
+          ...field,
+          id: position.fieldId,
+          x: position.x,
+          y: position.y,
+          html: container,
+          size: fieldBubbleHitboxSizeMap[position.size],
+          color: 'rgba(0, 0, 0, 0)',
+        } as Node
+      })
+      .filter((node): node is Node => node !== null)
+  }, [filteredFields, weSpaceId])
 
   // Render FieldBubble components into NVL containers
   useEffect(() => {
-    transformedFields.forEach((field, idx) => {
-      if (!field.id) return
+    const nodeContainerCache = getWeSpaceNodeContainerCache(weSpaceId)
+    filteredFields.forEach((field, idx) => {
       // Use the cached container directly instead of a DOM lookup so rendering
       // works even before NVL has attached the element to the document.
-      const container = nodeContainerCache.current.get(field.id)
+      const container = nodeContainerCache.get(field.id!)
       if (container) {
         renderReactComponentToContainer(
           <FieldBubble
@@ -257,15 +310,48 @@ export default function WeSpaceFieldsPage() {
             shape={field.shape}
             animationType="float"
             animationDelay={idx * 0.15}
-            onClick={() => handleFieldClick(field.id || '')}
-            onEditClick={(e) => handleEditField(e, field.id || '')}
+            onClick={() => handleFieldClick(field.id!)}
+            onEditClick={(e) => handleEditField(e, field.id!)}
           />,
           container
         )
       }
     })
-  }, [transformedFields, handleFieldClick, handleEditField])
+  }, [filteredFields, handleFieldClick, handleEditField, weSpaceId])
 
+  // Details view
+  if (viewMode === 'details') {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
+        <ProfileBackground />
+        <main className="relative">
+          <ProfileLayout>
+            {/* View Toggle at top */}
+            <div className="flex justify-end mb-6">
+              <SpaceViewToggle
+                activeView={viewMode}
+                onViewChange={handleViewChange}
+              />
+            </div>
+            <SpaceDetailsView
+              spaceId={weSpaceId}
+              spaceData={
+                weSpace ? { ...weSpace, __typename: 'WeSpace' } : undefined
+              }
+              onRefetch={refetch}
+              getContextHref={(contextId) =>
+                withCurrentView(
+                  `/protected/spaces/we-space/${weSpaceId}/fields/${contextId}`
+                )
+              }
+            />
+          </ProfileLayout>
+        </main>
+      </div>
+    )
+  }
+
+  // Graph view (default)
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
       {queryError && (
@@ -303,6 +389,10 @@ export default function WeSpaceFieldsPage() {
         }
         actionButton={
           <div className="flex items-center gap-2 md:gap-3">
+            <SpaceViewToggle
+              activeView={viewMode}
+              onViewChange={handleViewChange}
+            />
             <button
               onClick={() => setShowCreateModal(true)}
               data-tour="create-field-button"

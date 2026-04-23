@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
 import { SectionHeader } from '@/components/persons/section-header'
@@ -10,7 +10,8 @@ import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
-import { SpacePermissionsModal } from '@/components/spaces'
+import { SpacePermissionsModal, SpaceViewToggle } from '@/components/spaces'
+import type { SpaceViewMode } from '@/components/spaces'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import {
   Select,
@@ -86,6 +87,18 @@ export default function SpaceDetailsPage() {
   const owner = space?.owner?.[0] as any
   const members = space?.members || []
   const contexts = space?.contexts || []
+
+  // Navigate to graph view for this space
+  const handleViewChange = useCallback(
+    (view: SpaceViewMode) => {
+      if (view === 'graph' && space) {
+        const spaceType =
+          space.__typename === 'WeSpace' ? 'we-space' : 'me-space'
+        router.push(`/protected/spaces/${spaceType}/${spaceId}`)
+      }
+    },
+    [router, spaceId, space]
+  )
   const isOwner = owner?.id === user?.id
   const currentUserMembership = members.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -547,6 +560,14 @@ export default function SpaceDetailsPage() {
       {/* Scrollable content */}
       <main className="relative">
         <ProfileLayout>
+          {/* View Toggle */}
+          <div className="flex justify-end mb-6">
+            <SpaceViewToggle
+              activeView="details"
+              onViewChange={handleViewChange}
+            />
+          </div>
+
           {/* Header Section */}
           <div className="flex flex-col items-center text-center mb-12">
             <span className="text-[9px] uppercase font-semibold text-gp-primary mb-2">

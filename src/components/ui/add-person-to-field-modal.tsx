@@ -123,7 +123,7 @@ export function AddPersonToFieldModal({
       <div className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gp-ink-strong">
-            Create Person For Field
+            Add Person To Field
           </h3>
           <button
             onClick={onClose}
