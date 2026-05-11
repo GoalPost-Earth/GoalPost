@@ -75,10 +75,13 @@ Project-level commands and agents in `.claude/`:
 | `/implement`        | Command | Feature implementation — gather requirements, analyze codebase, implement, verify |
 | `/new-component`    | Command | Scaffold React component with GoalPost conventions (shadcn, Tailwind, <400 lines) |
 | `/commit`           | Command | Commit using Conventional Commits: `type(scope): description`                     |
-| `security-reviewer` | Agent   | Audit auth, JWT, space permissions, input validation (uses neo4j MCP)             |
-| `code-reviewer`     | Agent   | Review conventions, domain correctness, permissions (uses neo4j, shadcn, context7 MCPs) |
-| `e2e-tester`        | Agent   | Browser E2E testing (uses chrome-devtools, neo4j MCPs for data verification)      |
-| `test-writer`       | Agent   | Write & run tests for Next.js + Neo4j + GraphQL (uses neo4j, context7 MCPs)      |
+| `security-reviewer`   | Agent   | Audit auth, JWT, space permissions, input validation (uses neo4j MCP)             |
+| `code-reviewer`       | Agent   | Review conventions, domain correctness, permissions (uses neo4j, shadcn, context7 MCPs) |
+| `e2e-tester`          | Agent   | Browser E2E testing (uses chrome-devtools, neo4j MCPs for data verification)      |
+| `test-writer`         | Agent   | Write & run tests for Next.js + Neo4j + GraphQL (uses neo4j, context7 MCPs)      |
+| `cypher-reviewer`     | Agent   | Audit raw Cypher and `@cypher` SDL blocks for safety, perf, Space-scope, activity logs |
+| `jira-story-writer`   | Agent   | Draft and create well-structured Jira stories for project `GOAL` via the Jira MCP |
+| `prod-database-agent` | Agent   | Investigate prod Neo4j data issues; proposes Cypher fixes that require explicit user confirmation |
 
 ## Mandatory Rules
 
@@ -106,12 +109,51 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 
 ### Agents — You MUST dispatch the right agent
 
-| If you are doing...                         | You MUST dispatch         |
-| ------------------------------------------- | ------------------------- |
-| Reviewing code quality or conventions       | `code-reviewer` agent     |
-| Reviewing security (auth, JWT, permissions) | `security-reviewer` agent |
-| Running E2E browser tests                   | `e2e-tester` agent        |
-| Writing or running tests                    | `test-writer` agent       |
+| If you are doing...                                          | You MUST dispatch           |
+| ------------------------------------------------------------ | --------------------------- |
+| Reviewing code quality or conventions                        | `code-reviewer` agent       |
+| Reviewing security (auth, JWT, permissions)                  | `security-reviewer` agent   |
+| Reviewing Cypher (raw strings or `@cypher` SDL blocks)       | `cypher-reviewer` agent     |
+| Running E2E browser tests                                    | `e2e-tester` agent          |
+| Writing or running tests                                     | `test-writer` agent         |
+| Drafting / creating Jira stories for the `GOAL` project      | `jira-story-writer` agent   |
+| Investigating a prod Neo4j data inconsistency                | `prod-database-agent` agent |
+
+### Jira workflow — status transitions are MANDATORY
+
+Whenever work in a session is tied to a Jira issue (`GOAL-N`):
+
+1. **When you START working on the issue** → transition it to **In Progress**.
+2. **When you FINISH the work in this session** (the implementation is done
+   and ready for human/QA review) → transition it to **Review**.
+
+This applies to every Claude-driven workflow that touches a Jira issue —
+`/fix`, `/implement`, ad-hoc edits, story splits, etc. The downstream board
+states (`Verified By QA`, `Done`) are owned by humans; never move an issue
+into those states yourself.
+
+Mechanics:
+
+```
+# Discover the cloudId once per session
+mcp__jira__getAccessibleAtlassianResources
+
+# Look up the right transition id for the current state
+mcp__jira__getTransitionsForJiraIssue
+  cloudId: <discovered>
+  issueIdOrKey: "GOAL-N"
+
+# Apply it
+mcp__jira__transitionJiraIssue
+  cloudId: <discovered>
+  issueIdOrKey: "GOAL-N"
+  transition: { id: "<id from previous step>" }
+```
+
+If the issue is already past the target state (e.g. already in `Review`),
+leave it alone — don't move it backwards.
+
+Board flow: `(Any) → In Progress → Review → Verified By QA → Done`.
 
 ### Things you MUST NOT do
 
@@ -125,6 +167,8 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 - Do NOT hardcode space roles — check `kb/02-user-roles.md` for the permission model
 - Do NOT use SQL — this project uses Neo4j with Cypher queries exclusively
 - Do NOT add REST endpoints for things that should be GraphQL mutations/queries
+- Do NOT work on a Jira issue without moving it to **In Progress** at start and **Review** when done
+- Do NOT transition a Jira issue into `Verified By QA` or `Done` — those are owned by humans
 
 ## Operational Context
 
