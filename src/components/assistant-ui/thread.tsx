@@ -3,15 +3,36 @@ import {
   MessagePrimitive,
   ThreadPrimitive,
   useAssistantState,
+  useComposerRuntime,
 } from '@assistant-ui/react'
-import type { FC } from 'react'
-import { SendHorizontalIcon } from 'lucide-react'
+import { useCallback, useState, type FC } from 'react'
+import { AudioLines, Mic, SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnhancedTextPart } from './enhanced-message-text'
+import { VoiceProvider, useVoiceContext } from './voice-context'
+import { VoiceController } from './voice-controller'
+import { VoiceModeOverlay } from './voice-mode-overlay'
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 
 export const Thread: FC = () => {
   return (
+    <VoiceProvider>
+      <ThreadInner />
+    </VoiceProvider>
+  )
+}
+
+const ThreadInner: FC = () => {
+  const [voiceModeOpen, setVoiceModeOpen] = useState(false)
+
+  return (
     <ThreadPrimitive.Root className="flex h-full flex-col overflow-hidden bg-white dark:bg-[#121b21]">
+      <VoiceController />
+      <VoiceModeOverlay
+        open={voiceModeOpen}
+        onClose={() => setVoiceModeOpen(false)}
+      />
+
       {/* Messages viewport */}
       <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {/* Welcome message when empty */}
@@ -47,7 +68,7 @@ export const Thread: FC = () => {
 
       {/* Composer at bottom */}
       <div className="border-t border-slate-200 dark:border-white/10 px-4 py-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
-        <Composer />
+        <Composer onOpenVoiceMode={() => setVoiceModeOpen(true)} />
       </div>
     </ThreadPrimitive.Root>
   )
@@ -189,15 +210,75 @@ const PendingAssistantTurn: FC = () => {
   )
 }
 
-const Composer: FC = () => {
+const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
+  const composer = useComposerRuntime()
+  const { armVoiceReply } = useVoiceContext()
+
+  const { isSupported, status, start, stop } = useSpeechRecognition({
+    continuous: false,
+    interimResults: false,
+    onFinal: (final) => {
+      const trimmed = final.trim()
+      if (!trimmed) return
+      armVoiceReply()
+      composer.setText(trimmed)
+      composer.send()
+    },
+  })
+
+  const isListening = status === 'listening'
+
+  const handleMicClick = useCallback(() => {
+    if (isListening) {
+      stop()
+    } else {
+      start()
+    }
+  }, [isListening, start, stop])
+
   return (
     <ComposerPrimitive.Root className="space-y-2">
       <ComposerPrimitive.Input
-        placeholder="Ask about a person, pulse, or field context..."
+        placeholder={
+          isListening
+            ? 'Listening…'
+            : 'Ask about a person, pulse, or field context...'
+        }
         className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
         rows={1}
       />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {isSupported && (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onOpenVoiceMode}
+              aria-label="Open hands-free voice mode"
+              title="Hands-free voice mode"
+              className="border-slate-200 dark:border-white/10"
+            >
+              <AudioLines className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={isListening ? 'default' : 'outline'}
+              onClick={handleMicClick}
+              aria-pressed={isListening}
+              aria-label={isListening ? 'Stop listening' : 'Speak to assistant'}
+              title={isListening ? 'Stop listening' : 'Speak to assistant'}
+              className={
+                isListening
+                  ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
+                  : 'border-slate-200 dark:border-white/10'
+              }
+            >
+              <Mic className="w-4 h-4" />
+            </Button>
+          </>
+        )}
         <ComposerPrimitive.Send asChild>
           <Button
             size="sm"

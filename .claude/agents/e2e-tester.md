@@ -36,6 +36,13 @@ The dev server must be running at `http://localhost:3000`. If not, start it:
 pnpm dev
 ```
 
+## Test Credentials
+
+Use these credentials for authenticated flows on the dev server:
+
+- Email: `deadpool@gmail.com`
+- Password: `Password&1`
+
 ## Verification Method
 
 After EVERY action (click, navigate, fill):
