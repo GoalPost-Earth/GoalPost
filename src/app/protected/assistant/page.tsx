@@ -8,10 +8,19 @@ import {
   AssistantChatTransport,
 } from '@assistant-ui/react-ai-sdk'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { Suspense, useState } from 'react'
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { useFocalEntity } from '@/contexts'
+import type { FocalEntity } from '@/lib/focal-entity/types'
 
 function ChatErrorFallback({
   error,
@@ -45,11 +54,63 @@ function ChatLoading() {
 }
 
 function AidenChatInterface() {
-  const runtime = useChatRuntime({
-    transport: new AssistantChatTransport({
-      api: '/api/chat/simulation',
-    }),
-  })
+  const { sessionContext } = useFocalEntity()
+
+  // Keep a ref so the transport's body resolver always sees the latest
+  // session context without forcing the runtime/transport to rebuild.
+  const sessionContextRef = useRef(sessionContext)
+  useEffect(() => {
+    sessionContextRef.current = sessionContext
+  }, [sessionContext])
+
+  // Track the focal entity sent to the assistant on the previous turn so the
+  // backend can emit a soft-transition prompt when the user navigates focus
+  // mid-conversation.
+  const lastSentFocalRef = useRef<FocalEntity | null>(null)
+
+  // Stable body resolver — invoked at request time (not render), so reading
+  // refs here is safe even though the lint rule can't tell statically.
+  const resolveBody = useCallback(() => {
+    const snapshot = sessionContextRef.current
+    const focalEntity = snapshot.focalEntity
+    const previousFocalEntity = lastSentFocalRef.current
+    lastSentFocalRef.current = focalEntity
+    return {
+      currentUserId: snapshot.currentUserId,
+      spaceId: snapshot.activeSpaceId,
+      fieldContextId: snapshot.activeFieldContextId,
+      focalEntity: focalEntity
+        ? {
+            type: focalEntity.type,
+            id: focalEntity.id,
+            label: focalEntity.label,
+          }
+        : null,
+      previousFocalEntity:
+        previousFocalEntity &&
+        (!focalEntity ||
+          previousFocalEntity.id !== focalEntity.id ||
+          previousFocalEntity.type !== focalEntity.type)
+          ? {
+              type: previousFocalEntity.type,
+              id: previousFocalEntity.id,
+              label: previousFocalEntity.label,
+            }
+          : null,
+    }
+  }, [])
+
+  const transport = useMemo(
+    () =>
+      // eslint-disable-next-line react-hooks/refs -- body is invoked at fetch time, not during render
+      new AssistantChatTransport({
+        api: '/api/chat/simulation',
+        body: resolveBody,
+      }),
+    [resolveBody]
+  )
+
+  const runtime = useChatRuntime({ transport })
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

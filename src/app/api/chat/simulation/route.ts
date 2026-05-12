@@ -33,9 +33,27 @@ import type {
   AssistantMode,
 } from '@/lib/simulation'
 import { buildSimulationChatTools } from '@/lib/simulation/chat-tools'
+import { getAssistantModelId } from '@/lib/llm/factory'
+import { verifyJWT } from '@/app/api/auth/utils'
+import {
+  buildApprovedActionHashSet,
+  type ApprovedAction,
+} from '@/lib/chat/hitl'
+import {
+  isFocalEntityType,
+  type FocalEntityType,
+} from '@/lib/focal-entity/types'
+import { buildSystemPromptWithSessionContext } from '@/lib/simulation/session-context-prompt'
+import { resolveSessionContextNames } from '@/lib/simulation/session-context-resolve'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
+
+interface FocalEntityPayload {
+  type: FocalEntityType
+  id: string
+  label?: string
+}
 
 interface MessagePart {
   type: string
@@ -98,15 +116,36 @@ function convertToAISDKMessages(messages: IncomingMessage[]): ChatMessage[] {
 
 export async function POST(req: Request) {
   try {
+    const body = (await req.json()) as {
+      messages: IncomingMessage[]
+      mode?: AssistantMode
+      config?: Partial<SimulationConfig>
+      currentUserId?: string
+      spaceId?: string
+      fieldContextId?: string
+      focalEntity?: FocalEntityPayload | null
+      previousFocalEntity?: FocalEntityPayload | null
+      approvedActions?: ApprovedAction[]
+    }
     const {
       messages,
       mode,
       config,
-    }: {
-      messages: IncomingMessage[]
-      mode?: AssistantMode
-      config?: Partial<SimulationConfig>
-    } = await req.json()
+      currentUserId: clientProvidedUserId,
+      spaceId,
+      fieldContextId,
+      approvedActions,
+    } = body
+
+    const focalEntity =
+      body.focalEntity && isFocalEntityType(body.focalEntity.type)
+        ? body.focalEntity
+        : null
+    const previousFocalEntity =
+      body.previousFocalEntity &&
+      isFocalEntityType(body.previousFocalEntity.type)
+        ? body.previousFocalEntity
+        : null
 
     // Validate messages
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -119,6 +158,24 @@ export async function POST(req: Request) {
       )
     }
 
+    // Resolve current user from request body, falling back to JWT cookie.
+    // Mirrors /api/chat/route.ts so tool authorization can attach to a real user.
+    let currentUserId: string | null = clientProvidedUserId || null
+    if (!currentUserId) {
+      const cookieHeader = req.headers.get('cookie') || ''
+      const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
+      if (tokenMatch) {
+        try {
+          const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
+            user: { id: string }
+          }
+          currentUserId = decoded.user.id
+        } catch (error) {
+          console.error('[Chat Simulation] Token verification failed:', error)
+        }
+      }
+    }
+
     // Set mode if provided, otherwise use current mode
     if (mode && ['default', 'aiden', 'braider'].includes(mode)) {
       assistantModeManager.setMode(mode)
@@ -127,10 +184,20 @@ export async function POST(req: Request) {
     // Convert assistant-ui format to AI SDK format
     const convertedMessages = convertToAISDKMessages(messages)
 
+    // Resolve assistant model once. config.model wins (per-mode override),
+    // otherwise OPENAI_ASSISTANT_MODEL env, otherwise the project default.
+    const modelName = getAssistantModelId(config?.model)
+
     console.log('[Chat API] Request:', {
       mode: assistantModeManager.getMode(),
       messageCount: convertedMessages.length,
-      model: config?.model || 'gpt-4o-mini',
+      model: modelName,
+      hasUser: !!currentUserId,
+      spaceId: spaceId || null,
+      fieldContextId: fieldContextId || null,
+      focalEntity,
+      hasPreviousFocal: !!previousFocalEntity,
+      approvedActionCount: approvedActions?.length ?? 0,
     })
 
     // Build message payload with mode context
@@ -139,18 +206,44 @@ export async function POST(req: Request) {
     // Increment message count
     assistantModeManager.incrementMessageCount()
 
-    // Configure OpenAI model
-    const modelName = config?.model || 'gpt-4o-mini'
+    // Configure OpenAI model.
+    // Note: `config.temperature` is intentionally ignored — gpt-5.x assistant
+    // models are reasoning models routed through OpenAI's Responses API, which
+    // rejects `temperature` (use `reasoning.effort` to tune output instead).
     const model = openai(modelName)
-    const temperature = config?.temperature ?? 0.7
     const shouldStream = config?.stream !== false // Default to true
 
-    // Get system prompt based on current mode
+    // Get system prompt based on current mode, then append session context so
+    // the model knows which Space/FieldContext to scope tool calls to.
     const currentMode = assistantModeManager.getMode()
-    const systemPrompt = SYSTEM_PROMPTS[currentMode]
+    const basePrompt = SYSTEM_PROMPTS[currentMode]
+    const resolvedNames = await resolveSessionContextNames(
+      spaceId || null,
+      fieldContextId || null,
+      currentUserId
+    )
+    const systemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
+      currentUserId,
+      spaceId: spaceId || null,
+      fieldContextId: fieldContextId || null,
+      spaceName: resolvedNames.activeSpaceName,
+      spaceType: resolvedNames.activeSpaceType,
+      fieldContextTitle: resolvedNames.activeFieldContextTitle,
+      currentUserName: resolvedNames.currentUserName,
+      activeSpaceOwnedByCurrentUser:
+        resolvedNames.activeSpaceOwnedByCurrentUser,
+      focalEntity,
+      previousFocalEntity,
+    })
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
-    const tools = buildSimulationChatTools()
+    const tools = await buildSimulationChatTools({
+      currentUserId,
+      spaceId: spaceId || null,
+      fieldContextId: fieldContextId || null,
+      focalEntity,
+      approvedActionHashes: buildApprovedActionHashSet(approvedActions),
+    })
 
     console.log('🔍 [DEBUG] Current mode:', currentMode)
     console.log('📝 [DEBUG] Last user message:', lastUserMessage)
@@ -161,9 +254,8 @@ export async function POST(req: Request) {
       // OpenAI has native tool calling support - no toolChoice hacks needed
       // AI SDK v5 automatically handles tool execution in streaming mode
       const result = streamText({
-        model: openai('gpt-5'),
+        model,
         messages: messagesWithSimulation,
-        temperature,
         system: systemPrompt,
         // OpenAI intelligently decides when to call tools
         tools,
@@ -182,7 +274,6 @@ export async function POST(req: Request) {
     const result = await generateText({
       model,
       messages: messagesWithSimulation,
-      temperature,
       system: systemPrompt,
       tools,
     })

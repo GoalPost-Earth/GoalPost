@@ -45,7 +45,12 @@ import {
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
-import { useAnimations, useApp, usePageContext } from '@/contexts'
+import {
+  useAnimations,
+  useApp,
+  useFocalEntity,
+  usePageContext,
+} from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
 import { SpaceViewToggle } from '@/components/spaces'
@@ -55,6 +60,7 @@ export default function FieldContextDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
+  const { setFocalLabel } = useFocalEntity()
   const { user } = useApp()
   const contextId = params?.id as string
   const { animationsEnabled } = useAnimations()
@@ -168,6 +174,13 @@ export default function FieldContextDetailsPage() {
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
+
+  // Supply the resolved FieldContext title to the focal-entity primitive so the
+  // assistant can speak of it by name.
+  useEffect(() => {
+    if (!context?.id || !context?.title) return
+    setFocalLabel(context.id, context.title, 'FieldContext')
+  }, [context?.id, context?.title, setFocalLabel])
   const peopleContext = (
     fieldPeopleData as
       | {

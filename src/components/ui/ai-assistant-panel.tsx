@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { usePreferences } from '@/contexts/preferences-context'
-import { useApp } from '@/contexts/AppContext'
-import { SendHorizontalIcon, Loader2 } from 'lucide-react'
+import { useFocalEntity } from '@/contexts'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,23 +13,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Thread } from '@/components/assistant-ui/thread'
 import {
-  PersonCard,
-  type PersonProfileData,
-} from '@/components/assistant-ui/person-card'
+  AssistantRuntimeProvider,
+  useAssistantApi,
+  useAssistantState,
+} from '@assistant-ui/react'
+import {
+  AssistantChatTransport,
+  useChatRuntime,
+} from '@assistant-ui/react-ai-sdk'
+import type { FocalEntity } from '@/lib/focal-entity/types'
 
 interface AIAssistantPanelProps {
   isOpen: boolean
   onClose: () => void
-}
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-  /** Person profiles extracted from PERSON_PROFILE_FOUND markers or tool results */
-  personData?: PersonProfileData[]
 }
 
 interface ApprovedActionPayload {
@@ -43,330 +41,110 @@ interface PendingApproval extends ApprovedActionPayload {
   approvalHash: string
 }
 
-/**
- * Extracts PersonProfileData from PERSON_PROFILE_FOUND markers in AI text output,
- * and returns both the profiles and the cleaned text (markers removed).
- */
-function extractPersonProfiles(rawText: string): {
-  profiles: PersonProfileData[]
-  cleanedText: string
-} {
-  if (!rawText.includes('PERSON_PROFILE_FOUND:')) {
-    return { profiles: [], cleanedText: rawText }
-  }
-
-  const profiles: PersonProfileData[] = []
-  let cleanedText = rawText
-  let markerIndex = cleanedText.indexOf('PERSON_PROFILE_FOUND:')
-
-  while (markerIndex !== -1) {
-    const braceStart = cleanedText.indexOf('{', markerIndex)
-    if (braceStart === -1) break
-
-    let braceCount = 0
-    let braceEnd = -1
-    let inString = false
-    let escapeNext = false
-
-    for (let i = braceStart; i < cleanedText.length; i++) {
-      const char = cleanedText[i]
-      if (escapeNext) {
-        escapeNext = false
-        continue
-      }
-      if (char === '\\') {
-        escapeNext = true
-        continue
-      }
-      if (char === '"') {
-        inString = !inString
-        continue
-      }
-      if (!inString) {
-        if (char === '{') braceCount++
-        else if (char === '}') {
-          braceCount--
-          if (braceCount === 0) {
-            braceEnd = i + 1
-            break
-          }
-        }
-      }
-    }
-
-    if (braceEnd === -1) break
-
-    const jsonString = cleanedText.substring(braceStart, braceEnd)
-    try {
-      const profile = JSON.parse(jsonString) as PersonProfileData
-      profiles.push(profile)
-    } catch {
-      // Malformed JSON, skip this marker
-    }
-
-    cleanedText =
-      cleanedText.substring(0, markerIndex) + cleanedText.substring(braceEnd)
-    markerIndex = cleanedText.indexOf('PERSON_PROFILE_FOUND:')
-  }
-
-  return { profiles, cleanedText: cleanedText.trim() }
-}
-
 export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const { aiMode } = usePreferences()
-  const { user } = useApp()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
-    []
-  )
-  const [activeApproval, setActiveApproval] = useState<PendingApproval | null>(
-    null
-  )
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { sessionContext } = useFocalEntity()
 
-  // Scroll to bottom when messages change
+  const sessionContextRef = useRef(sessionContext)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    sessionContextRef.current = sessionContext
+  }, [sessionContext])
 
-  // Slide in/out animation
-  useEffect(() => {
-    if (panelRef.current && overlayRef.current) {
-      if (isOpen) {
-        gsap.to(overlayRef.current, {
-          opacity: 1,
-          duration: 0.3,
-          ease: 'power2.out',
-        })
+  // Focal entity actually sent on the previous turn — used to surface a
+  // soft-transition prompt when the user shifts focus mid-conversation.
+  const lastSentFocalRef = useRef<FocalEntity | null>(null)
 
-        gsap.fromTo(
-          panelRef.current,
-          { x: '100%' },
-          {
-            x: '0%',
-            duration: 0.4,
-            ease: 'power3.out',
+  // Approved action payloads, replayed on each subsequent turn so the
+  // backend's HITL gate executes them via executeAuthorizedWriteTool.
+  const approvedActionsRef = useRef<ApprovedActionPayload[]>([])
+
+  const resolveBody = useCallback(() => {
+    const snapshot = sessionContextRef.current
+    const focalEntity = snapshot.focalEntity
+    const previousFocalEntity = lastSentFocalRef.current
+    lastSentFocalRef.current = focalEntity
+    return {
+      aiMode,
+      currentUserId: snapshot.currentUserId,
+      spaceId: snapshot.activeSpaceId,
+      fieldContextId: snapshot.activeFieldContextId,
+      focalEntity: focalEntity
+        ? {
+            type: focalEntity.type,
+            id: focalEntity.id,
+            label: focalEntity.label,
           }
-        )
-      } else {
-        gsap.to(overlayRef.current, {
-          opacity: 0,
-          duration: 0.2,
-          ease: 'power2.in',
-        })
+        : null,
+      previousFocalEntity:
+        previousFocalEntity &&
+        (!focalEntity ||
+          previousFocalEntity.id !== focalEntity.id ||
+          previousFocalEntity.type !== focalEntity.type)
+          ? {
+              type: previousFocalEntity.type,
+              id: previousFocalEntity.id,
+              label: previousFocalEntity.label,
+            }
+          : null,
+      approvedActions: approvedActionsRef.current,
+    }
+  }, [aiMode])
 
-        gsap.to(panelRef.current, {
-          x: '100%',
-          duration: 0.3,
-          ease: 'power3.in',
-        })
-      }
+  const transport = useMemo(
+    () =>
+      // eslint-disable-next-line react-hooks/refs -- body is invoked at fetch time, not during render
+      new AssistantChatTransport({
+        api: '/api/chat/simulation',
+        body: resolveBody,
+      }),
+    [resolveBody]
+  )
+
+  const runtime = useChatRuntime({ transport })
+
+  useEffect(() => {
+    if (!panelRef.current || !overlayRef.current) return
+    if (isOpen) {
+      gsap.to(overlayRef.current, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      gsap.fromTo(
+        panelRef.current,
+        { x: '100%' },
+        { x: '0%', duration: 0.4, ease: 'power3.out' }
+      )
+    } else {
+      gsap.to(overlayRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      })
+      gsap.to(panelRef.current, {
+        x: '100%',
+        duration: 0.3,
+        ease: 'power3.in',
+      })
     }
   }, [isOpen])
-
-  const sendMessage = async (
-    overrideInput?: string,
-    approvedActions?: ApprovedActionPayload[]
-  ) => {
-    const effectiveInput = (overrideInput ?? input).trim()
-    if (!effectiveInput || loading) return
-
-    const userMessage: Message = {
-      id: `msg_${Date.now()}`,
-      role: 'user',
-      content: effectiveInput,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setLoading(true)
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Send cookies with the request
-        body: JSON.stringify({
-          messages: [
-            ...messages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-            { role: 'user', content: effectiveInput },
-          ],
-          aiMode,
-          currentUserId: user?.id, // Pass the current user ID
-          approvedActions,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to send message')
-      }
-
-      if (!response.body) {
-        throw new Error('No response body')
-      }
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      let assistantContent = ''
-      const capturedPersonProfiles: PersonProfileData[] = []
-      const capturedApprovals: PendingApproval[] = []
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const event = JSON.parse(line)
-            if (event.type === 'message' && event.content) {
-              assistantContent = event.content
-            } else if (event.type === 'tool_result' && event.result) {
-              // Capture person data from search_person tool results
-              if (
-                event.tool === 'search_person' &&
-                event.result.found &&
-                Array.isArray(event.result.people)
-              ) {
-                capturedPersonProfiles.push(
-                  ...(event.result.people as PersonProfileData[])
-                )
-              }
-            } else if (
-              event.type === 'approval_required' &&
-              event.tool &&
-              event.args &&
-              event.approvalHash
-            ) {
-              const alreadyCaptured = capturedApprovals.some(
-                (entry) => entry.approvalHash === event.approvalHash
-              )
-              if (!alreadyCaptured) {
-                capturedApprovals.push({
-                  tool: event.tool,
-                  args: event.args as Record<string, unknown>,
-                  approvalHash: event.approvalHash,
-                  summary:
-                    event.summary ||
-                    `Approve ${event.tool} with the requested arguments`,
-                })
-              }
-            }
-          } catch {
-            // Skip parse errors on malformed lines
-          }
-        }
-      }
-
-      if (assistantContent) {
-        // Extract person profiles from PERSON_PROFILE_FOUND markers in the AI text,
-        // and strip those markers so only clean prose is displayed.
-        const { profiles: profilesFromText, cleanedText } =
-          extractPersonProfiles(assistantContent)
-
-        // Merge with tool_result captures, deduplicating by id
-        const allProfiles = [
-          ...capturedPersonProfiles,
-          ...profilesFromText.filter(
-            (p) => !capturedPersonProfiles.some((c) => c.id === p.id)
-          ),
-        ]
-
-        const assistantMessage: Message = {
-          id: `msg_${Date.now()}`,
-          role: 'assistant',
-          content: cleanedText,
-          timestamp: new Date(),
-          personData: allProfiles.length > 0 ? allProfiles : undefined,
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-      }
-
-      if (capturedApprovals.length > 0) {
-        setPendingApprovals((prev) => {
-          const merged = [...prev]
-          for (const approval of capturedApprovals) {
-            if (
-              !merged.some(
-                (item) => item.approvalHash === approval.approvalHash
-              )
-            ) {
-              merged.push(approval)
-            }
-          }
-          return merged
-        })
-      }
-    } catch (error) {
-      console.error('[Chat] Error:', error)
-      const errorMessage: Message = {
-        id: `msg_${Date.now()}`,
-        role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const removeApproval = (approvalHash: string) => {
-    setPendingApprovals((prev) =>
-      prev.filter((item) => item.approvalHash !== approvalHash)
-    )
-    setActiveApproval((prev) =>
-      prev?.approvalHash === approvalHash ? null : prev
-    )
-  }
-
-  const approveAction = async (approval: PendingApproval) => {
-    removeApproval(approval.approvalHash)
-    await sendMessage(
-      `Please execute this approved action: ${approval.summary}`,
-      [{ tool: approval.tool, args: approval.args }]
-    )
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
 
   if (!isOpen) return null
 
   return (
     <>
-      {/* Overlay */}
       <div
         ref={overlayRef}
         className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-xs z-60 opacity-0"
         onClick={onClose}
       />
 
-      {/* Chat Panel */}
       <div
         ref={panelRef}
         className="fixed right-0 top-0 h-full w-full max-w-120 bg-white dark:bg-[#121b21] border-l border-slate-200 dark:border-white/10 shadow-[-20px_0_60px_rgba(0,0,0,0.3)] dark:shadow-[-20px_0_60px_rgba(0,0,0,0.6)] z-70 flex flex-col translate-x-full"
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-white/5 bg-white/50 dark:bg-white/5 backdrop-blur-md relative z-10">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center size-8 rounded-full bg-gp-primary/20 text-gp-primary border border-gp-primary/20 shadow-[0_0_12px_rgba(19,164,236,0.3)] dark:shadow-[0_0_12px_rgba(19,164,236,0.2)]">
@@ -397,132 +175,166 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
           </button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-              <div className="text-5xl">🍄</div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Welcome to GoalPost AI
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs text-center">
-                Ask me about people, spaces, fields, and pulses. I can search,
-                retrieve semantically, and help update graph entities.
-              </p>
+        <AssistantRuntimeProvider runtime={runtime}>
+          <TooltipProvider>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <Thread />
+              <ApprovalLayer approvedActionsRef={approvedActionsRef} />
             </div>
-          ) : (
-            messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.role === 'assistant' ? (
-                  <div className="max-w-xs space-y-3">
-                    {/* Render person profile cards when search_person returned data */}
-                    {msg.personData?.map((person) => (
-                      <PersonCard
-                        key={person.id}
-                        person={person}
-                        className="w-full"
-                      />
-                    ))}
-                    {/* AI narrative text */}
-                    <div className="bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm whitespace-pre-wrap">
-                      {msg.content}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="max-w-xs rounded-lg px-4 py-3 text-sm bg-gp-primary text-white">
-                    {msg.content}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+          </TooltipProvider>
+        </AssistantRuntimeProvider>
 
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Thinking...</span>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Composer */}
-        <div className="border-t border-slate-200 dark:border-white/10 px-4 py-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
-          {pendingApprovals.length > 0 && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
-              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
-                Approval required for {pendingApprovals.length} AI change
-                {pendingApprovals.length > 1 ? 's' : ''}
-              </p>
-              <div className="mt-2 space-y-2">
-                {pendingApprovals.map((approval) => (
-                  <div
-                    key={approval.approvalHash}
-                    className="rounded-md bg-white/70 dark:bg-black/20 px-2 py-2"
-                  >
-                    <p className="text-xs text-slate-700 dark:text-slate-200">
-                      {approval.summary}
-                    </p>
-                    <div className="mt-2 flex gap-2">
-                      <Button
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => setActiveApproval(approval)}
-                      >
-                        Review
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => removeApproval(approval.approvalHash)}
-                      >
-                        Dismiss
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about someone..."
-              disabled={loading}
-              className="flex-1 px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
-            />
-            <Button
-              onClick={() => {
-                void sendMessage()
-              }}
-              disabled={loading || !input.trim()}
-              className="bg-gp-primary hover:bg-gp-primary/90 text-white"
-              size="sm"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <SendHorizontalIcon className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Footer */}
         <div className="border-t border-slate-200 dark:border-white/5 px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md">
           <p className="text-[10px] text-slate-500 dark:text-white/40 text-center">
             AI can make mistakes. Verify important information.
           </p>
+        </div>
+      </div>
+    </>
+  )
+}
+
+interface ApprovalLayerProps {
+  approvedActionsRef: React.MutableRefObject<ApprovedActionPayload[]>
+}
+
+/**
+ * Watches thread messages for tool results that return `approvalRequired:true`
+ * (the HITL pending response from /lib/chat/hitl.ts), collects them as
+ * pending approvals, and exposes a Dialog so the user can approve or dismiss.
+ *
+ * On approve, the action is pushed onto `approvedActionsRef` (which the
+ * transport body resolver replays on every subsequent turn), then a new user
+ * message is appended that nudges the assistant to retry the gated action.
+ */
+function ApprovalLayer({ approvedActionsRef }: ApprovalLayerProps) {
+  const api = useAssistantApi()
+  const messages = useAssistantState(({ thread }) => thread.messages)
+
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
+    []
+  )
+  const [activeApproval, setActiveApproval] = useState<PendingApproval | null>(
+    null
+  )
+
+  useEffect(() => {
+    if (!messages) return
+    const seen = new Set(pendingApprovals.map((a) => a.approvalHash))
+    const found: PendingApproval[] = []
+
+    for (const message of messages) {
+      if (message.role !== 'assistant') continue
+      const parts = (
+        message as unknown as {
+          parts?: Array<{
+            type?: string
+            toolName?: string
+            result?: unknown
+          }>
+        }
+      ).parts
+      if (!parts) continue
+      for (const part of parts) {
+        if (part?.type !== 'tool-result' || !part.result) continue
+        const result = part.result as Record<string, unknown>
+        if (result.approvalRequired !== true) continue
+        const hash =
+          typeof result.approvalHash === 'string' ? result.approvalHash : null
+        if (!hash || seen.has(hash)) continue
+        if (
+          approvedActionsRef.current.some(
+            (a) =>
+              a.tool === result.tool &&
+              JSON.stringify(a.args) === JSON.stringify(result.args)
+          )
+        ) {
+          // Already approved earlier in this session; the next turn will replay it.
+          continue
+        }
+        seen.add(hash)
+        found.push({
+          tool: String(result.tool ?? part.toolName ?? ''),
+          args: (result.args as Record<string, unknown>) ?? {},
+          summary:
+            typeof result.summary === 'string'
+              ? result.summary
+              : `Approve ${String(result.tool ?? '')}`,
+          approvalHash: hash,
+        })
+      }
+    }
+
+    if (found.length > 0) {
+      setPendingApprovals((prev) => [...prev, ...found])
+    }
+  }, [messages, pendingApprovals, approvedActionsRef])
+
+  const dismiss = useCallback((hash: string) => {
+    setPendingApprovals((prev) => prev.filter((a) => a.approvalHash !== hash))
+    setActiveApproval((prev) => (prev?.approvalHash === hash ? null : prev))
+  }, [])
+
+  const approve = useCallback(
+    (approval: PendingApproval) => {
+      approvedActionsRef.current = [
+        ...approvedActionsRef.current,
+        { tool: approval.tool, args: approval.args },
+      ]
+      dismiss(approval.approvalHash)
+      try {
+        const composer = api.thread().composer()
+        composer.setText(
+          `Please execute the approved action: ${approval.summary}`
+        )
+        composer.send()
+      } catch (error) {
+        console.warn(
+          '[AIAssistantPanel] Failed to send approval message:',
+          error
+        )
+      }
+    },
+    [api, approvedActionsRef, dismiss]
+  )
+
+  if (pendingApprovals.length === 0) return null
+
+  return (
+    <>
+      <div className="border-t border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2">
+        <p className="text-xs font-medium text-amber-900 dark:text-amber-200 mb-2">
+          Approval required for {pendingApprovals.length} AI change
+          {pendingApprovals.length > 1 ? 's' : ''}
+        </p>
+        <div className="space-y-2 max-h-32 overflow-y-auto">
+          {pendingApprovals.map((approval) => (
+            <div
+              key={approval.approvalHash}
+              className="rounded-md bg-white/70 dark:bg-black/20 px-2 py-2"
+            >
+              <p className="text-xs text-slate-700 dark:text-slate-200">
+                {approval.summary}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <Button
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setActiveApproval(approval)}
+                >
+                  Review
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => dismiss(approval.approvalHash)}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -555,17 +367,14 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
             <Button
               variant="outline"
               onClick={() => {
-                if (activeApproval) {
-                  removeApproval(activeApproval.approvalHash)
-                }
+                if (activeApproval) dismiss(activeApproval.approvalHash)
               }}
             >
               Cancel
             </Button>
             <Button
-              onClick={async () => {
-                if (!activeApproval) return
-                await approveAction(activeApproval)
+              onClick={() => {
+                if (activeApproval) approve(activeApproval)
               }}
             >
               Approve And Run

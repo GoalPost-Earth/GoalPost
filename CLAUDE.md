@@ -62,6 +62,7 @@ Domain knowledge lives in `kb/`. Read the relevant file before working on any fe
 | `kb/04-state-machines.md` | Entity states and transitions (GoalPulse status, ResonanceLink status)       |
 | `kb/05-data-entities.md`  | Full data model — all Neo4j nodes, fields, relationships, indexes            |
 | `kb/06-adr.md`            | Architecture decisions (graph-first, pulse-first, space-based privacy, etc.) |
+| `kb/07-ai-assistant-ux.md` | AI assistant UX conventions — raw-ID prohibition, SESSION CONTEXT shape, tool design, HITL gate, model choice |
 
 Additional documentation in `docs/` covers architecture diagrams, ontology, resonance system, assistant modes, and more.
 
@@ -97,6 +98,7 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 | Any entity status or state transition                   | `kb/04-state-machines.md`                              |
 | Any data model, field, or relationship                  | `kb/05-data-entities.md`                               |
 | Architecture decisions or trade-offs                    | `kb/06-adr.md`                                         |
+| Assistant prompts, tools, chat routes, or anything the model emits to a user | `kb/07-ai-assistant-ux.md`              |
 
 ### Commands — You MUST use the right command for the task
 
@@ -169,6 +171,7 @@ Board flow: `(Any) → In Progress → Review → Verified By QA → Done`.
 - Do NOT add REST endpoints for things that should be GraphQL mutations/queries
 - Do NOT work on a Jira issue without moving it to **In Progress** at start and **Review** when done
 - Do NOT transition a Jira issue into `Verified By QA` or `Done` — those are owned by humans
+- Do NOT expose raw entity IDs (`me_...`, `ws_...`, `ctx_...`, `pulse_...`, person UUIDs) or other internal artifacts (`__typename`, approval hashes, internal flags) in any AI assistant output. See `kb/07-ai-assistant-ux.md` for the full set of AI UX rules.
 
 ## Operational Context
 

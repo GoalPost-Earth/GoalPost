@@ -6,6 +6,7 @@ import {
   UserDataProvider,
   PageContextProvider,
   PreferencesProvider,
+  FocalEntityProvider,
 } from '@/contexts'
 import { ThemeProvider } from '@/contexts/theme-context'
 import { AnimationProvider } from '@/contexts/animation-context'
@@ -30,22 +31,24 @@ export default function ProtectedLayout({
         <AnimationProvider>
           <PreferencesProvider>
             <PageContextProvider>
-              <OnboardingProvider steps={ONBOARDING_STEPS}>
-                <div className="flex flex-col h-screen">
-                  <NavBar />
-                  <UserDataProvider>{children}</UserDataProvider>
-                  <TourController />
-                  <TourOverlay />
-                  <AIChatButton
-                    onClick={() => setIsAIChatOpen(!isAIChatOpen)}
-                    isOpen={isAIChatOpen}
-                  />
-                  <AIAssistantPanel
-                    isOpen={isAIChatOpen}
-                    onClose={() => setIsAIChatOpen(false)}
-                  />
-                </div>
-              </OnboardingProvider>
+              <FocalEntityProvider>
+                <OnboardingProvider steps={ONBOARDING_STEPS}>
+                  <div className="flex flex-col h-screen">
+                    <NavBar />
+                    <UserDataProvider>{children}</UserDataProvider>
+                    <TourController />
+                    <TourOverlay />
+                    <AIChatButton
+                      onClick={() => setIsAIChatOpen(!isAIChatOpen)}
+                      isOpen={isAIChatOpen}
+                    />
+                    <AIAssistantPanel
+                      isOpen={isAIChatOpen}
+                      onClose={() => setIsAIChatOpen(false)}
+                    />
+                  </div>
+                </OnboardingProvider>
+              </FocalEntityProvider>
             </PageContextProvider>
           </PreferencesProvider>
         </AnimationProvider>

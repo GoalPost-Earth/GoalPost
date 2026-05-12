@@ -18,6 +18,7 @@ import {
   LLMProviderError,
   LLMCapability,
 } from '../provider'
+import { getAssistantModelId } from '../factory'
 
 /**
  * OpenAI Provider Implementation
@@ -26,7 +27,7 @@ import {
 export class OpenAIProvider implements LLMProvider {
   name = 'openai'
   embeddingDimension = 1536 // text-embedding-3-small
-  maxContextTokens = 128000 // gpt-4-turbo / gpt-5.1
+  maxContextTokens = 128000 // gpt-4-turbo / gpt-5.x family
   capabilities = new Set<LLMCapability>([
     'chat',
     'embeddings',
@@ -51,7 +52,7 @@ export class OpenAIProvider implements LLMProvider {
 
   constructor(private config: ProviderConfig = {}) {
     const apiKey = config.apiKey || process.env.OPENAI_API_KEY
-    const modelName = config.modelName || 'gpt-5.1'
+    const modelName = getAssistantModelId(config.modelName)
 
     if (!apiKey) {
       throw new LLMProviderError(
@@ -193,8 +194,14 @@ export class OpenAIProvider implements LLMProvider {
       return (tokens / 1000) * this.pricing['text-embedding-3-small']
     }
 
-    // For chat, assume 50/50 prompt/completion split for estimation
-    const modelPricing = this.pricing['gpt-5.1']
+    // For chat, assume 50/50 prompt/completion split for estimation.
+    // Pricing is keyed by model family; fall back to gpt-5.1 if a newer
+    // model id hasn't been added to the table yet.
+    const chatPricing = this.pricing as unknown as Record<
+      string,
+      { prompt: number; completion: number }
+    >
+    const modelPricing = chatPricing[this.modelName] || this.pricing['gpt-5.1']
     const promptCost = (tokens / 2000) * modelPricing.prompt
     const completionCost = (tokens / 2000) * modelPricing.completion
     return promptCost + completionCost

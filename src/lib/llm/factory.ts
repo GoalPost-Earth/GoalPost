@@ -12,6 +12,32 @@ import { MockLLMProvider } from './providers/mock.provider'
 
 export type ProviderType = 'openai' | 'mistral' | 'bedrock' | 'mock'
 
+// Default assistant chat model. Used when OPENAI_ASSISTANT_MODEL is unset.
+// gpt-5.4 is OpenAI's lower-cost reasoning model in the gpt-5 family. It's
+// routed through the Responses API by `@ai-sdk/openai`, so callers must NOT
+// pass `temperature` — tune output via `reasoning.effort` instead.
+// Bump this alongside the env var when upgrading the assistant.
+export const DEFAULT_ASSISTANT_MODEL = 'gpt-5.4'
+
+/**
+ * Resolve the OpenAI model id used for assistant chat / reasoning calls.
+ *
+ * Resolution order:
+ *   1. explicit `override` (per-call or per-mode)
+ *   2. process.env.OPENAI_ASSISTANT_MODEL
+ *   3. DEFAULT_ASSISTANT_MODEL
+ *
+ * The embedding model (text-embedding-3-small) is intentionally NOT routed
+ * through this helper — embeddings are configured separately.
+ */
+export function getAssistantModelId(override?: string | null): string {
+  const trimmedOverride = override?.trim()
+  if (trimmedOverride) return trimmedOverride
+  const envValue = process.env.OPENAI_ASSISTANT_MODEL?.trim()
+  if (envValue) return envValue
+  return DEFAULT_ASSISTANT_MODEL
+}
+
 /**
  * Get an LLM provider instance
  * @param type - Provider type (defaults to LLM_PROVIDER env or 'openai')

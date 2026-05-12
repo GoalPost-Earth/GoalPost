@@ -90,6 +90,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('meSpaceId')
+    localStorage.removeItem('goalpost.focalEntity.v1')
     document.cookie = 'accessToken=; path=/; max-age=0'
   }
 

@@ -14,7 +14,7 @@ import {
   DELETE_PERSON_CONNECTION_MUTATION,
 } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { cn } from '@/lib/utils'
-import { useAnimations, usePageContext } from '@/contexts'
+import { useAnimations, useFocalEntity, usePageContext } from '@/contexts'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
@@ -32,6 +32,7 @@ export default function PersonProfilePage() {
   const { animationsEnabled } = useAnimations()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
+  const { setFocalLabel } = useFocalEntity()
 
   // Set page title
   useEffect(() => {
@@ -110,6 +111,22 @@ export default function PersonProfilePage() {
   )
 
   const person = data?.people?.[0]
+
+  // Refine the provisional PersonPulse focal entity to User when the loaded
+  // record carries the User label, and supply a human label for the assistant.
+  useEffect(() => {
+    if (!person?.id || !person?.name) return
+    // GraphQL codegen narrows __typename to the supertype "Person"; at runtime
+    // the concrete label comes through, so widen via unknown for the check.
+    const typename = (person as { __typename?: string }).__typename
+    const refined =
+      typename === 'User'
+        ? ('User' as const)
+        : typename === 'PersonPulse'
+          ? ('PersonPulse' as const)
+          : undefined
+    setFocalLabel(person.id, person.name, refined)
+  }, [person?.id, person?.name, person?.__typename, setFocalLabel])
 
   // Derive search results directly — avoids setState-in-effect lint error.
   // Clearing searchInput also clears results since the condition gates on input length.

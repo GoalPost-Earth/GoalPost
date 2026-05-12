@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
-import { useApp, usePageContext } from '@/contexts'
+import { useApp, useFocalEntity, usePageContext } from '@/contexts'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
@@ -86,6 +86,7 @@ export default function WeSpaceFieldsPage() {
   const searchParams = useSearchParams()
   const weSpaceId = params?.id as string
   const { setPageTitle } = usePageContext()
+  const { setFocalLabel } = useFocalEntity()
   const { user } = useApp()
 
   // View toggle state from URL search params
@@ -177,6 +178,12 @@ export default function WeSpaceFieldsPage() {
       localStorage.setItem(`space_${weSpaceId}`, weSpace.name)
     }
   }, [weSpace?.name, fields.length, weSpaceId, setPageTitle])
+
+  useEffect(() => {
+    if (weSpaceId && weSpace?.name) {
+      setFocalLabel(weSpaceId, weSpace.name, 'WeSpace')
+    }
+  }, [weSpaceId, weSpace?.name, setFocalLabel])
 
   const handleFieldClick = useCallback(
     (fieldId: string) => {

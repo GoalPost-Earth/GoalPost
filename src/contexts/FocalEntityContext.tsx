@@ -1,0 +1,300 @@
+'use client'
+
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { usePathname } from 'next/navigation'
+import { useApp } from './AppContext'
+import {
+  focalEntityFromRoute,
+  type FocalRouteHints,
+} from '@/lib/focal-entity/route-matcher'
+import {
+  isFocalEntityType,
+  type FocalEntity,
+  type FocalEntityType,
+  type SessionContext,
+} from '@/lib/focal-entity/types'
+
+const STORAGE_KEY = 'goalpost.focalEntity.v1'
+const PERSIST_DEBOUNCE_MS = 1000
+
+interface PersistedShape {
+  type: FocalEntityType
+  id: string
+  label?: string
+}
+
+interface FocalEntityContextValue {
+  focalEntity: FocalEntity | null
+  sessionContext: SessionContext
+  setFocalEntity: (entity: FocalEntity | null) => void
+  setFocalLabel: (
+    id: string,
+    label: string,
+    refinedType?: FocalEntityType
+  ) => void
+}
+
+const EMPTY_SESSION_CONTEXT: SessionContext = {
+  currentUserId: null,
+  activeSpaceId: null,
+  activeFieldContextId: null,
+  focalEntity: null,
+}
+
+// Permissive default so non-protected pages and tests don't crash when the
+// hook is called outside a provider.
+const FALLBACK_VALUE: FocalEntityContextValue = {
+  focalEntity: null,
+  sessionContext: EMPTY_SESSION_CONTEXT,
+  setFocalEntity: () => {},
+  setFocalLabel: () => {},
+}
+
+const FocalEntityContext = createContext<FocalEntityContextValue | undefined>(
+  undefined
+)
+
+export function useFocalEntity(): FocalEntityContextValue {
+  return useContext(FocalEntityContext) ?? FALLBACK_VALUE
+}
+
+function readPersisted(): PersistedShape | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as PersistedShape | null
+    if (!parsed || !isFocalEntityType(parsed.type) || !parsed.id) return null
+    return {
+      type: parsed.type,
+      id: parsed.id,
+      label: typeof parsed.label === 'string' ? parsed.label : undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
+function buildHints(user: ReturnType<typeof useApp>['user']): FocalRouteHints {
+  const meSpaceIds: string[] = []
+  type OwnedSpace = { id?: string; __typename?: string }
+  const ownsSpaces =
+    (user as { ownsSpaces?: OwnedSpace[] } | undefined)?.ownsSpaces ?? []
+  for (const s of ownsSpaces) {
+    if (s.__typename === 'MeSpace' && s.id) meSpaceIds.push(s.id)
+  }
+  return {
+    meSpaceIds,
+    currentUserId: user?.id ?? null,
+  }
+}
+
+function enrichWithLabel(
+  entity: FocalEntity,
+  cache: Record<string, { label: string; type?: FocalEntityType }>
+): FocalEntity {
+  const exact = cache[`${entity.type}:${entity.id}`]
+  if (exact) {
+    return {
+      ...entity,
+      type: exact.type ?? entity.type,
+      label: exact.label,
+    }
+  }
+  for (const key of Object.keys(cache)) {
+    if (key.endsWith(`:${entity.id}`)) {
+      return {
+        ...entity,
+        type: cache[key].type ?? entity.type,
+        label: cache[key].label,
+      }
+    }
+  }
+  return entity
+}
+
+export function FocalEntityProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+  const { user } = useApp()
+
+  const hints = useMemo(() => buildHints(user), [user])
+
+  // Lazy initializer — runs once on first client render. `readPersisted`
+  // guards `typeof window === 'undefined'` so SSR pre-renders see null;
+  // first client paint reads the actual stored value with no effect needed.
+  const [persistedSeed] = useState<PersistedShape | null>(() => readPersisted())
+
+  const [manualFocal, setManualFocal] = useState<FocalEntity | null>(null)
+
+  // Clear manual override on navigation — route should always win after nav.
+  // React's recommended "adjusting state on prop change" pattern (per
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+  // is to compare against state during render, not to setState in an effect.
+  const [lastPathname, setLastPathname] = useState(pathname)
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    if (manualFocal) setManualFocal(null)
+  }
+
+  // Note: we don't manually clear persistedSeed / manualFocal on logout.
+  // AppContext.handleLogout wipes the localStorage key, and the protected
+  // layout unmounts on redirect — taking this provider's state with it.
+  // The next login remounts from a clean slate.
+
+  const [labelCache, setLabelCache] = useState<
+    Record<string, { label: string; type?: FocalEntityType }>
+  >({})
+
+  const setFocalLabel = useCallback(
+    (id: string, label: string, refinedType?: FocalEntityType) => {
+      if (!id || !label) return
+      setLabelCache((prev) => {
+        const next = { ...prev }
+        for (const key of Object.keys(prev)) {
+          if (key.endsWith(`:${id}`)) {
+            next[key] = { label, type: refinedType ?? prev[key].type }
+          }
+        }
+        if (refinedType) {
+          next[`${refinedType}:${id}`] = { label, type: refinedType }
+        }
+        return next
+      })
+    },
+    []
+  )
+
+  const setFocalEntity = useCallback((entity: FocalEntity | null) => {
+    setManualFocal(entity)
+  }, [])
+
+  // Stage 1: identity-only memo. Recomputes when the inputs that change the
+  // current focal identity change (manual override, route, hydration). The
+  // generated `focusedAt` is stable across re-renders that don't change any
+  // of these — including label-cache updates, which is the next stage.
+  const focalIdentity = useMemo<FocalEntity | null>(() => {
+    if (manualFocal) return manualFocal
+
+    const routeMatch = focalEntityFromRoute(pathname, hints)
+    if (routeMatch) {
+      return {
+        type: routeMatch.type,
+        id: routeMatch.id,
+        focusedAt: new Date().toISOString(),
+        source: 'route',
+      }
+    }
+
+    if (persistedSeed) {
+      return {
+        type: persistedSeed.type,
+        id: persistedSeed.id,
+        label: persistedSeed.label,
+        focusedAt: new Date().toISOString(),
+        source: 'persisted',
+      }
+    }
+
+    return null
+  }, [manualFocal, pathname, hints, persistedSeed])
+
+  // Stage 2: enrich with the latest label from the cache without disturbing
+  // the focused-at timestamp. This is what consumers read.
+  const focalEntity = useMemo<FocalEntity | null>(() => {
+    if (!focalIdentity) return null
+    return enrichWithLabel(focalIdentity, labelCache)
+  }, [focalIdentity, labelCache])
+
+  // Persist (debounced) to localStorage on focal change.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handle = window.setTimeout(() => {
+      try {
+        if (focalEntity) {
+          const shape: PersistedShape = {
+            type: focalEntity.type,
+            id: focalEntity.id,
+            label: focalEntity.label,
+          }
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(shape))
+        }
+        // Don't clear on null — navigating to a neutral route shouldn't wipe
+        // persistence. AppContext.handleLogout clears explicitly.
+      } catch {
+        // localStorage write failures are non-fatal.
+      }
+    }, PERSIST_DEBOUNCE_MS)
+    return () => window.clearTimeout(handle)
+  }, [focalEntity])
+
+  const sessionContext = useMemo<SessionContext>(() => {
+    const currentUserId = user?.id ?? null
+    let activeSpaceId: string | null = null
+    let activeFieldContextId: string | null = null
+
+    if (focalEntity) {
+      if (focalEntity.type === 'MeSpace' || focalEntity.type === 'WeSpace') {
+        activeSpaceId = focalEntity.id
+      }
+      if (focalEntity.type === 'FieldContext') {
+        activeFieldContextId = focalEntity.id
+      }
+    }
+
+    // For /protected/spaces/(me|we)-space/[id]/fields/[field], pull the parent
+    // space id from the path. Focal is FieldContext but ambient should still
+    // surface the enclosing Space so assistant tools that scope by spaceId
+    // (search_field_context, search_pulse) work without forcing the user to
+    // restate it.
+    if (pathname) {
+      const segments = pathname.split(/[?#]/)[0].split('/').filter(Boolean)
+      if (
+        segments[0] === 'protected' &&
+        segments[1] === 'spaces' &&
+        (segments[2] === 'me-space' || segments[2] === 'we-space') &&
+        segments[3] &&
+        segments[4] === 'fields'
+      ) {
+        if (!activeSpaceId) activeSpaceId = segments[3]
+      }
+    }
+
+    // Intentionally NO localStorage('meSpaceId') fallback here. A cached
+    // MeSpace id is not the user's *current* Space — it's the Space they
+    // own. Pretending otherwise causes the assistant to say "This is your
+    // MeSpace" on the dashboard root, where the user has not entered any
+    // Space. When the user is on a neutral surface, activeSpaceId is
+    // genuinely null and the model must call get_my_spaces to scope.
+
+    return {
+      currentUserId,
+      activeSpaceId,
+      activeFieldContextId,
+      focalEntity,
+    }
+  }, [user, pathname, focalEntity])
+
+  const value = useMemo<FocalEntityContextValue>(
+    () => ({
+      focalEntity,
+      sessionContext,
+      setFocalEntity,
+      setFocalLabel,
+    }),
+    [focalEntity, sessionContext, setFocalEntity, setFocalLabel]
+  )
+
+  return (
+    <FocalEntityContext.Provider value={value}>
+      {children}
+    </FocalEntityContext.Provider>
+  )
+}

@@ -20,7 +20,8 @@ import {
   LOG_PULSE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
-import { useAnimations, usePageContext } from '@/contexts'
+import { useAnimations, useFocalEntity, usePageContext } from '@/contexts'
+import type { FocalEntityType } from '@/lib/focal-entity/types'
 import { getConfigForType, type NodeType } from '@/lib/pulse-type-config'
 import {
   Select,
@@ -48,6 +49,7 @@ export default function PulseDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
+  const { setFocalLabel } = useFocalEntity()
   const pulseId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -126,6 +128,22 @@ export default function PulseDetailsPage() {
     data?.goalPulses?.[0] || data?.resourcePulses?.[0] || data?.storyPulses?.[0]
   const context = pulse?.context?.[0]
   const space = context?.space?.[0]
+
+  // Refine the provisional GoalPulse focal entity to the actual pulse subtype
+  // once the query resolves, and supply a label for the assistant.
+  useEffect(() => {
+    if (!pulse?.id || !pulse?.title) return
+    const typename = pulse.__typename
+    const refined: FocalEntityType | undefined =
+      typename === 'GoalPulse' ||
+      typename === 'ResourcePulse' ||
+      typename === 'StoryPulse' ||
+      typename === 'CarePulse' ||
+      typename === 'CoreValuePulse'
+        ? typename
+        : undefined
+    setFocalLabel(pulse.id, pulse.title, refined)
+  }, [pulse?.id, pulse?.title, pulse?.__typename, setFocalLabel])
 
   const { data: contextPulseData } = useQuery(GET_PULSES_BY_CONTEXT, {
     variables: { contextId: context?.id || '' },
