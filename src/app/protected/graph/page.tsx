@@ -6,6 +6,8 @@ import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { GraphFocusBanner } from '@/components/graph/graph-focus-banner'
 
 // Import graph visualizer dynamically to prevent server-side rendering
 const GraphVisualizer = dynamic(
@@ -111,6 +113,7 @@ const nodeMetadata: Record<
 
 export default function GraphVisualization() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const focusParam = useSearchParams().get('focus')
 
   // Define ontology nodes with NVL structure
   const nodes: Node[] = [
@@ -228,6 +231,9 @@ export default function GraphVisualization() {
           <span className="text-sm font-medium text-slate-300">Home</span>
         </Link>
       </div>
+
+      {/* Focused-entities banner from the AI assistant pivot (commit 4 placeholder) */}
+      {focusParam ? <GraphFocusBanner focus={focusParam} /> : null}
 
       {/* Legend */}
       <div className="absolute top-4 left-32 z-10 bg-slate-800/80 backdrop-blur border border-white/10 rounded-lg shadow-lg p-6 max-w-md">

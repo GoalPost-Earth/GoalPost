@@ -9,6 +9,7 @@ import { FieldsList } from '@/components/dashboard/fields-list'
 import { SpacesList } from '@/components/dashboard/spaces-list'
 import { PeopleList } from '@/components/dashboard/people-list'
 import { ActivityLogs } from '@/components/dashboard/activity-logs'
+import { FocusedEntities } from '@/components/dashboard/focused-entities'
 import { usePageContext } from '@/contexts'
 
 type ViewType =
@@ -26,6 +27,10 @@ export default function DashboardPage() {
   const [activeView, setActiveView] = useState<ViewType>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const searchParams = useSearchParams()
+  // When ?focus= is present we override the normal view stack to render the
+  // entities surfaced in the most recent AI assistant pivot. Drops back to
+  // the user's saved view as soon as ?focus= is cleared.
+  const focusParam = searchParams.get('focus')
 
   // Restore view from URL or localStorage fallback
   useEffect(() => {
@@ -155,20 +160,26 @@ export default function DashboardPage() {
             </div>
           </section> */}
 
-          {activeView === 'overview' && (
+          {focusParam ? (
+            <FocusedEntities focus={focusParam} />
+          ) : (
             <>
-              <ActivePulses onViewAll={() => setActiveView('pulses')} />
-              <FieldsList onViewAll={() => setActiveView('fields')} />
-              <SpacesList onViewAll={() => setActiveView('spaces')} />
-              <PeopleList onViewAll={() => setActiveView('people')} />
-              <ActivityLogs onViewAll={() => setActiveView('activity')} />
+              {activeView === 'overview' && (
+                <>
+                  <ActivePulses onViewAll={() => setActiveView('pulses')} />
+                  <FieldsList onViewAll={() => setActiveView('fields')} />
+                  <SpacesList onViewAll={() => setActiveView('spaces')} />
+                  <PeopleList onViewAll={() => setActiveView('people')} />
+                  <ActivityLogs onViewAll={() => setActiveView('activity')} />
+                </>
+              )}
+              {activeView === 'pulses' && <ActivePulses showAll />}
+              {activeView === 'fields' && <FieldsList showAll />}
+              {activeView === 'spaces' && <SpacesList showAll />}
+              {activeView === 'people' && <PeopleList showAll />}
+              {activeView === 'activity' && <ActivityLogs showAll />}
             </>
           )}
-          {activeView === 'pulses' && <ActivePulses showAll />}
-          {activeView === 'fields' && <FieldsList showAll />}
-          {activeView === 'spaces' && <SpacesList showAll />}
-          {activeView === 'people' && <PeopleList showAll />}
-          {activeView === 'activity' && <ActivityLogs showAll />}
         </div>
       </main>
     </div>

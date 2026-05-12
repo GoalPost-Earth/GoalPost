@@ -64,6 +64,16 @@ async function initializeDatabase() {
        FOR (n:FieldResonance) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT resonance_link_id IF NOT EXISTS
        FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
+       FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
+      // ownerId UNIQUE is load-bearing for race safety: concurrent first-
+      // writes (user turn + assistant onFinish on a fresh account) would
+      // otherwise both MERGE-miss and CREATE separate thread nodes. With
+      // this constraint, one CREATE wins and the other re-runs the MATCH.
+      `CREATE CONSTRAINT conversation_thread_ownerId IF NOT EXISTS
+       FOR (n:ConversationThread) REQUIRE n.ownerId IS UNIQUE`,
+      `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
+       FOR (n:ConversationTurn) REQUIRE n.id IS UNIQUE`,
     ]
 
     for (const constraint of constraints) {
@@ -143,6 +153,10 @@ async function initializeDatabase() {
        FOR (p:FieldPulse) ON (p.modifiedAt)`,
       `CREATE INDEX chunk_order IF NOT EXISTS
        FOR (c:ConversationChunk) ON (c.order)`,
+      `CREATE INDEX conversation_turn_order IF NOT EXISTS
+       FOR (t:ConversationTurn) ON (t.order)`,
+      `CREATE INDEX conversation_thread_lastTurnAt IF NOT EXISTS
+       FOR (t:ConversationThread) ON (t.lastTurnAt)`,
     ]
 
     for (const index of propertyIndexes) {

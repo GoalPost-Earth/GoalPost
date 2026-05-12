@@ -320,6 +320,59 @@ Minimal additional fields beyond the base FieldPulse interface.
 
 ---
 
+### ConversationThread
+
+**Neo4j Labels:** `["ConversationThread"]`
+
+Server-side persisted AI assistant chat thread. One per `User` Person — the
+most recently updated thread is treated as "active" by the panel hydrator.
+Survives page reloads and reopens of the assistant panel; replays via
+`useChatRuntime({ messages })` on mount.
+
+| Field       | Type     | Notes                                                         |
+| ----------- | -------- | ------------------------------------------------------------- |
+| id          | string   | UUID, UNIQUE                                                  |
+| ownerId     | string   | UNIQUE — load-bearing for race-safe `MERGE` on first write    |
+| createdAt   | datetime |                                                               |
+| lastTurnAt  | datetime | Indexed — drives the "active thread" selection                |
+| turnCount   | int      | Atomic counter — incremented per append, source of `Turn.order`|
+
+**Relationships:**
+
+- `HAS_THREAD` ← Person:User (one owner)
+- `HAS_TURN` → ConversationTurn
+
+---
+
+### ConversationTurn
+
+**Neo4j Labels:** `["ConversationTurn"]`
+
+Single message in a `ConversationThread`. Stores the full `parts` payload
+from the AI SDK `UIMessage` shape so tool calls + results can be replayed
+verbatim on hydration.
+
+| Field     | Type     | Notes                                                                       |
+| --------- | -------- | --------------------------------------------------------------------------- |
+| id        | string   | UUID, UNIQUE                                                                |
+| role      | string   | user / assistant / system                                                   |
+| content   | string   | Plain-text view of the message — derived from text parts on save            |
+| parts     | string   | JSON-serialised `UIMessagePart[]` (text, tool-call, tool-result, …)         |
+| order     | int      | Indexed — monotonically increasing within a thread (gaps allowed under race)|
+| createdAt | datetime |                                                                             |
+
+**Relationships:**
+
+- `HAS_TURN` ← ConversationThread
+
+**Activity Log exemption:** chat turn writes are intentionally NOT mirrored
+into the `Log` stream. The thread itself is the audit trail (every turn is
+timestamped, ordered, and attributed via the user→thread relationship), and
+logging every assistant message would swamp the activity feed. Mirrors the
+existing exemption for `ConversationChunk` writes.
+
+---
+
 ### Log (Activity)
 
 **Neo4j Labels:** `["Log"]`
@@ -340,14 +393,17 @@ Minimal additional fields beyond the base FieldPulse interface.
 
 ## Neo4j Constraints
 
-| Constraint          | Target                  |
-| ------------------- | ----------------------- |
-| `person_id`         | Person.id UNIQUE        |
-| `community_id`      | Community.id UNIQUE     |
-| `space_id`          | Space.id UNIQUE         |
-| `context_id`        | FieldContext.id UNIQUE  |
-| `pulse_id`          | FieldPulse.id UNIQUE    |
-| `resonance_link_id` | ResonanceLink.id UNIQUE |
+| Constraint                | Target                        |
+| ------------------------- | ----------------------------- |
+| `person_id`               | Person.id UNIQUE              |
+| `community_id`            | Community.id UNIQUE           |
+| `space_id`                | Space.id UNIQUE               |
+| `context_id`              | FieldContext.id UNIQUE        |
+| `pulse_id`                | FieldPulse.id UNIQUE          |
+| `resonance_link_id`       | ResonanceLink.id UNIQUE       |
+| `conversation_thread_id`       | ConversationThread.id UNIQUE       |
+| `conversation_thread_ownerId`  | ConversationThread.ownerId UNIQUE  |
+| `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 

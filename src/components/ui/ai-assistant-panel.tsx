@@ -24,7 +24,13 @@ import {
   AssistantChatTransport,
   useChatRuntime,
 } from '@assistant-ui/react-ai-sdk'
+import type { UIMessage } from 'ai'
 import type { FocalEntity } from '@/lib/focal-entity/types'
+import { AIAssistantPivotFooter } from '@/components/ui/ai-assistant-pivot-footer'
+import {
+  fetchHydratedThread,
+  type HydratedThread,
+} from '@/lib/simulation/conversation-thread-client'
 
 interface AIAssistantPanelProps {
   isOpen: boolean
@@ -92,17 +98,30 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
     }
   }, [aiMode])
 
-  const transport = useMemo(
-    () =>
-      // eslint-disable-next-line react-hooks/refs -- body is invoked at fetch time, not during render
-      new AssistantChatTransport({
-        api: '/api/chat/simulation',
-        body: resolveBody,
-      }),
-    [resolveBody]
-  )
+  // Fetch the user's persisted ConversationThread when the panel opens.
+  // `useChatRuntime` needs its `messages` at first call — it isn't reactive
+  // to later changes — so the actual runtime is lifted into <HydratedChat/>
+  // which only mounts after hydration resolves. While loading we render a
+  // light skeleton in place of <Thread/>.
+  const [hydration, setHydration] = useState<
+    | { status: 'idle' }
+    | { status: 'loading' }
+    | { status: 'ready'; thread: HydratedThread | null }
+  >({ status: 'idle' })
 
-  const runtime = useChatRuntime({ transport })
+  useEffect(() => {
+    if (!isOpen) {
+      setHydration({ status: 'idle' })
+      return
+    }
+    setHydration({ status: 'loading' })
+    const controller = new AbortController()
+    fetchHydratedThread(controller.signal).then((thread) => {
+      if (controller.signal.aborted) return
+      setHydration({ status: 'ready', thread })
+    })
+    return () => controller.abort()
+  }, [isOpen])
 
   useEffect(() => {
     if (!panelRef.current || !overlayRef.current) return
@@ -175,14 +194,22 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
           </button>
         </div>
 
-        <AssistantRuntimeProvider runtime={runtime}>
-          <TooltipProvider>
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <Thread />
-              <ApprovalLayer approvedActionsRef={approvedActionsRef} />
-            </div>
-          </TooltipProvider>
-        </AssistantRuntimeProvider>
+        <TooltipProvider>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {hydration.status === 'ready' ? (
+              <HydratedChat
+                initialMessages={hydration.thread?.messages ?? []}
+                resolveBody={resolveBody}
+                approvedActionsRef={approvedActionsRef}
+                onClose={onClose}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-xs text-slate-400 dark:text-white/40">
+                Loading conversation…
+              </div>
+            )}
+          </div>
+        </TooltipProvider>
 
         <div className="border-t border-slate-200 dark:border-white/5 px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md">
           <p className="text-[10px] text-slate-500 dark:text-white/40 text-center">
@@ -191,6 +218,47 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
         </div>
       </div>
     </>
+  )
+}
+
+interface HydratedChatProps {
+  initialMessages: UIMessage[]
+  resolveBody: () => Record<string, unknown>
+  approvedActionsRef: React.MutableRefObject<ApprovedActionPayload[]>
+  onClose: () => void
+}
+
+/**
+ * Mounts the assistant runtime with hydrated messages from the persisted
+ * ConversationThread. Lives in its own component because `useChatRuntime`
+ * reads `messages` once at initialization — if we called it inline in
+ * AIAssistantPanel, the initial fetch would resolve too late to seed the
+ * runtime, and the user would lose their thread history on every reopen.
+ */
+function HydratedChat({
+  initialMessages,
+  resolveBody,
+  approvedActionsRef,
+  onClose,
+}: HydratedChatProps) {
+  const transport = useMemo(
+    () =>
+      // eslint-disable-next-line react-hooks/refs -- body is invoked at fetch time, not during render
+      new AssistantChatTransport({
+        api: '/api/chat/simulation',
+        body: resolveBody,
+      }),
+    [resolveBody]
+  )
+
+  const runtime = useChatRuntime({ transport, messages: initialMessages })
+
+  return (
+    <AssistantRuntimeProvider runtime={runtime}>
+      <Thread />
+      <ApprovalLayer approvedActionsRef={approvedActionsRef} />
+      <AIAssistantPivotFooter onPivot={onClose} />
+    </AssistantRuntimeProvider>
   )
 }
 

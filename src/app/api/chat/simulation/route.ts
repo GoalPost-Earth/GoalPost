@@ -45,6 +45,7 @@ import {
 } from '@/lib/focal-entity/types'
 import { buildSystemPromptWithSessionContext } from '@/lib/simulation/session-context-prompt'
 import { resolveSessionContextNames } from '@/lib/simulation/session-context-resolve'
+import { appendConversationTurn } from '@/lib/simulation/conversation-thread.service'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -237,6 +238,25 @@ export async function POST(req: Request) {
     })
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
+
+    // Persist the user's turn as soon as we receive it. Fire-and-forget — a
+    // Neo4j hiccup must NOT block the assistant response, but we log so
+    // ops can catch sustained failures. The matching assistant turn is
+    // saved from streamText's onFinish callback below.
+    const incomingMessage = body.messages[body.messages.length - 1]
+    if (currentUserId && lastUserMessage) {
+      void appendConversationTurn(currentUserId, {
+        role: 'user',
+        content: lastUserMessage,
+        parts: incomingMessage?.parts ?? incomingMessage?.content ?? null,
+      }).catch((error) => {
+        console.warn(
+          '[Chat Simulation] Failed to persist user turn:',
+          error instanceof Error ? error.message : error
+        )
+      })
+    }
+
     const tools = await buildSimulationChatTools({
       currentUserId,
       spaceId: spaceId || null,
@@ -266,10 +286,40 @@ export async function POST(req: Request) {
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
-      // This ensures tool calls, text, and all message parts stream correctly
+      // This ensures tool calls, text, and all message parts stream correctly.
+      // onFinish receives the full UIMessage list; we grab the last assistant
+      // message and persist it as the matching turn for the user message saved
+      // above. Failure is logged but never propagated — chat UX wins.
       return result.toUIMessageStreamResponse({
         headers: {
           'X-Simulation-Mode': assistantModeManager.getMode(),
+        },
+        onFinish: ({ messages: finalMessages }) => {
+          if (!currentUserId) return
+          const lastAssistant = [...finalMessages]
+            .reverse()
+            .find((m) => m.role === 'assistant')
+          if (!lastAssistant) return
+          const parts = Array.isArray(lastAssistant.parts)
+            ? lastAssistant.parts
+            : []
+          const textContent = parts
+            .filter(
+              (part): part is { type: 'text'; text: string } =>
+                part?.type === 'text' && typeof part.text === 'string'
+            )
+            .map((part) => part.text)
+            .join('')
+          void appendConversationTurn(currentUserId, {
+            role: 'assistant',
+            content: textContent,
+            parts,
+          }).catch((error) => {
+            console.warn(
+              '[Chat Simulation] Failed to persist assistant turn:',
+              error instanceof Error ? error.message : error
+            )
+          })
         },
       })
     }
