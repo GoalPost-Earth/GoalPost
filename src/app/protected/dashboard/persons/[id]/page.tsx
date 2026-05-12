@@ -15,6 +15,8 @@ import {
 } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { cn } from '@/lib/utils'
 import { useAnimations, useFocalEntity, usePageContext } from '@/contexts'
+import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
+import type { PivotEntityType } from '@/lib/simulation/entity-collector'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
@@ -244,6 +246,21 @@ export default function PersonProfilePage() {
     setConnectionToDeleteId('')
   }
 
+  const handleOpenPersonNode = () => {
+    if (!person?.id || !person?.name) return
+    const typename = (person as { __typename?: string }).__typename
+    const focusType: PivotEntityType =
+      typename === 'User'
+        ? 'User'
+        : typename === 'PersonPulse'
+          ? 'PersonPulse'
+          : 'Person'
+    const focus = saveFocusEntities([
+      { type: focusType, id: person.id, name: person.name },
+    ])
+    router.push(`/protected/graph?focus=${focus}`)
+  }
+
   // Extract all pulses from all contexts across all spaces with metadata
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allPulses: any[] = []
@@ -332,6 +349,15 @@ export default function PersonProfilePage() {
             <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs">
               {person.email}
             </p>
+
+            <button
+              onClick={handleOpenPersonNode}
+              className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
+              aria-label={`Open ${person.name}'s node in the graph view`}
+            >
+              <span className="material-symbols-outlined text-[16px]">hub</span>
+              Open Person Node
+            </button>
           </div>
 
           {/* Profile Attributes Section */}
