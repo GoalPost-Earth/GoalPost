@@ -20,7 +20,7 @@
  */
 
 import { openai } from '@ai-sdk/openai'
-import { streamText, generateText } from 'ai'
+import { streamText, generateText, stepCountIs } from 'ai'
 import {
   assistantModeManager,
   buildMessagePayload,
@@ -251,14 +251,18 @@ export async function POST(req: Request) {
 
     // Handle streaming
     if (shouldStream) {
-      // OpenAI has native tool calling support - no toolChoice hacks needed
-      // AI SDK v5 automatically handles tool execution in streaming mode
+      // AI SDK v5 defaults `stopWhen` to `stepCountIs(1)`, which means the
+      // stream halts after the model emits a single tool call — the model
+      // never gets a follow-up step to write the user-visible text response
+      // grounded in the tool result. That manifests as a blank assistant
+      // bubble. Raise the budget so the model loops: tool-call → tool-result
+      // → text (with room for a few sequential tool calls if needed).
       const result = streamText({
         model,
         messages: messagesWithSimulation,
         system: systemPrompt,
-        // OpenAI intelligently decides when to call tools
         tools,
+        stopWhen: stepCountIs(8),
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
@@ -270,12 +274,14 @@ export async function POST(req: Request) {
       })
     }
 
-    // Handle non-streaming response
+    // Handle non-streaming response — same multi-step budget as the
+    // streaming path so a tool-call-only step doesn't leave us with no text.
     const result = await generateText({
       model,
       messages: messagesWithSimulation,
       system: systemPrompt,
       tools,
+      stopWhen: stepCountIs(8),
     })
 
     return new Response(

@@ -110,7 +110,37 @@ For chat + tool-calling + HITL flows the default is **`gpt-5.4`** (agent-tuned, 
 
 ---
 
-## Rule 7 — Pronoun resolution and focal shifts are runtime directives.
+## Rule 7 — `streamText` and `generateText` MUST set `stopWhen` for tool loops.
+
+**The bug this prevents:** the model emits a tool call, the tool runs, the
+stream stops without the model ever writing user-visible text. Blank bubble.
+
+AI SDK v5's `streamText` (and `generateText`) default to
+`stopWhen: stepCountIs(1)`. A "step" is one model invocation with optional
+tool calls. After the first step finishes — even if it produced *only* a
+tool call — the SDK stops. The model never gets a second step where it
+would integrate the tool result and write text.
+
+Every assistant route that registers tools MUST raise the step budget. The
+current convention is `stopWhen: stepCountIs(8)` — enough headroom for a
+handful of sequential tool calls plus the final text response:
+
+```ts
+const result = streamText({
+  model,
+  messages,
+  system,
+  tools,
+  stopWhen: stepCountIs(8),
+})
+```
+
+This applies equally to `generateText`. If you write a new chat route or a
+non-streaming tool-using path, copy the same setting.
+
+---
+
+## Rule 8 — Pronoun resolution and focal shifts are runtime directives.
 
 The pronoun-resolution rule ("call `get_focal_entity` when the user says 'this' AND focalEntity is in SESSION CONTEXT") and the soft-transition behavior ("acknowledge the move before grounding") are emitted by `buildSystemPromptWithSessionContext` **conditionally** on whether `focalEntity` and `previousFocalEntity` are present.
 
@@ -123,7 +153,7 @@ Do not move these directives into the static mode prompts — they'd fire on neu
 | Symptom                                                              | Likely culprit                                                                  |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Assistant exposes a UUID                                             | New id added to SESSION CONTEXT without a paired name (Rule 2); or a tool returning bare ids (Rule 3) |
-| Empty assistant bubble                                               | Reasoning model + tool error (Rule 6); or a tool registered when its session state is missing (Rule 4) |
+| Empty assistant bubble                                               | First check `stopWhen` on the route's `streamText`/`generateText` call — if it's missing or set to `stepCountIs(1)`, the model halts after a tool call without writing text (Rule 7). Then check Rule 6 (reasoning model + tool error) and Rule 4 (tool registered when its session state is missing). |
 | Assistant asks "which space?"                                        | `activeSpaceId` not being sent in body (check the route's body resolver in `assistant/page.tsx` or `ai-assistant-panel.tsx`) |
 | Assistant insists user is in a Space when they are on a neutral surface | Some fallback (e.g. a cached id in localStorage) is being treated as "active." `activeSpaceId` may ONLY come from the user's actual current navigation (a `MeSpace`/`WeSpace` focal entity, or a Space id present in the URL). Cached/owned ids are NOT the current Space. See the FocalEntityProvider — it intentionally has no `meSpaceId` fallback. |
 | Write tool ran without user approval                                 | Tool execute bypassed `runWriteTool` and called the service directly (Rule 5)   |
@@ -141,6 +171,7 @@ Before merging:
 - [ ] Conditional tools are only registered when their required session state is present (Rule 4)
 - [ ] All write tools route through `runWriteTool` (Rule 5)
 - [ ] Model is non-reasoning unless you've handled the reasoning caveats (Rule 6)
+- [ ] `streamText` / `generateText` calls set `stopWhen: stepCountIs(N)` with N high enough to cover tool-call → tool-result → text (Rule 7)
 - [ ] System prompts still include the "NEVER expose raw IDs" rule (Rule 1)
 - [ ] Manually test the path "what {entity} is this" — assistant must respond with a name, not an id
 
