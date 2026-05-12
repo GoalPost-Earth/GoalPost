@@ -2,6 +2,7 @@ import {
   getLangChainChatModel,
   getLangChainEmbeddings,
 } from '@/lib/llm/adapters/langchain-adapter'
+import { getAssistantModelId } from '@/lib/llm/factory'
 import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Embeddings } from '@langchain/core/embeddings'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
@@ -149,7 +150,7 @@ export async function createDefaultReActAgent(
   sessionId?: string
 ) {
   const llm = getLangChainChatModel({
-    modelName: process.env.OPENAI_MODEL || 'gpt-5.1',
+    modelName: getAssistantModelId(process.env.OPENAI_MODEL),
     temperature: 0.7,
   })
 

@@ -11,6 +11,7 @@ import { ChatOpenAI } from '@langchain/openai'
 import { OpenAIEmbeddings } from '@langchain/openai'
 import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Embeddings } from '@langchain/core/embeddings'
+import { getAssistantModelId } from '../factory'
 
 /**
  * Get a LangChain-compatible chat model
@@ -33,7 +34,7 @@ export function getLangChainChatModel(config?: {
 
   return new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
-    modelName: config?.modelName || 'gpt-4o',
+    modelName: getAssistantModelId(config?.modelName),
     temperature: config?.temperature ?? 0.7,
     maxTokens: config?.maxTokens,
     configuration: {

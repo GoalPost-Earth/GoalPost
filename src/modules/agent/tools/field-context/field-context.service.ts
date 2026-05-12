@@ -15,6 +15,7 @@ export interface FieldContextRecord {
 export interface FieldContextSearchInput {
   query: string
   spaceName?: string
+  spaceId?: string
   limit?: number
 }
 
@@ -90,6 +91,7 @@ export async function searchFieldContexts(
 
   const limit = normalizeLimit(input.limit)
   const spaceName = input.spaceName?.trim() || null
+  const spaceId = input.spaceId?.trim() || null
 
   const cypher = `
     MATCH (context:FieldContext)
@@ -103,6 +105,10 @@ export async function searchFieldContexts(
       AND (
         $spaceName IS NULL
         OR toLower(coalesce(space.name, '')) CONTAINS toLower($spaceName)
+      )
+      AND (
+        $spaceId IS NULL
+        OR space.id = $spaceId
       )
     WITH DISTINCT context, space
     OPTIONAL MATCH (context)-[:HAS_PULSE]->(pulse:FieldPulse)
@@ -130,6 +136,7 @@ export async function searchFieldContexts(
   const rawResults = await graph.query<Record<string, unknown>>(cypher, {
     query,
     spaceName,
+    spaceId,
     limit,
   })
 

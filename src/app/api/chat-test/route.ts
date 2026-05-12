@@ -11,6 +11,7 @@ import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool
 import { SYSTEM_PROMPTS } from '@/lib/simulation/system-prompts'
 import type { AssistantMode } from '@/lib/simulation'
 import { DynamicTool } from '@langchain/core/tools'
+import { getAssistantModelId } from '@/lib/llm/factory'
 
 export const maxDuration = 60
 
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
           console.log('[Chat Test] Initializing ChatOpenAI model')
           const model = new ChatOpenAI({
             apiKey: process.env.OPENAI_API_KEY,
-            model: 'gpt-4.1',
+            model: getAssistantModelId(),
             temperature: 0.7,
             maxTokens: 2048,
           })

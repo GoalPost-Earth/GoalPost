@@ -79,7 +79,7 @@ export function AidenSimulationChat() {
         body: JSON.stringify({
           messages: chatMessages,
           config: {
-            model: 'gpt-5.1',
+            // Omit `model` to let the server resolve OPENAI_ASSISTANT_MODEL.
             temperature: 0.7,
             stream: false,
           },

@@ -97,18 +97,20 @@ const AssistantMessage: FC = () => {
 const AssistantMessageLoader: FC = () => {
   const isRunning = useAssistantState(({ thread }) => thread.isRunning)
   const isLastMessage = useAssistantState(({ message }) => message.isLast)
-  const hasContent = useAssistantState(({ message }) =>
+  // Only TEXT parts count as user-readable content. tool-call and reasoning
+  // parts render invisibly by default in assistant-ui — if those exist but
+  // there is no text, the bubble would appear blank without this loader
+  // taking over. So we still treat the message as empty for UX purposes
+  // even when those parts are present, and let isRunning decide between
+  // "Thinking…" and "(No response)".
+  const hasTextContent = useAssistantState(({ message }) =>
     message.parts.some(
       (p) =>
-        (p.type === 'text' &&
-          typeof p.text === 'string' &&
-          p.text.length > 0) ||
-        p.type === 'tool-call' ||
-        p.type === 'reasoning'
+        p.type === 'text' && typeof p.text === 'string' && p.text.length > 0
     )
   )
 
-  if (hasContent) return null
+  if (hasTextContent) return null
   if (isRunning) {
     return (
       <div
