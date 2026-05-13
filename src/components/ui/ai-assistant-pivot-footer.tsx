@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button'
 import { useCollectedEntities } from '@/hooks/use-collected-entities'
 import { MAX_PIVOT_ENTITIES } from '@/lib/simulation/entity-collector'
 import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
+import { useStudioMode, type StudioMode } from '@/components/studio'
 
 /**
  * Footer strip rendered above the chat composer. Surfaces every entity the
  * assistant has discussed in this thread (focal entities the user visited +
  * entities returned by tool calls) and lets the user pivot the conversation
- * into the dashboard or the graph view, both via `?focus=Type:id,...`.
+ * into another mode of the studio, carrying the focus along via
+ * `?focus=Type:id,...` on `/protected`.
  *
  * Renders nothing until at least one entity has been collected — the strip
  * should never push the composer down on empty threads.
@@ -18,20 +20,22 @@ import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
 export function AIAssistantPivotFooter({
   onPivot,
 }: {
-  /** Optional callback fired before navigation (e.g. close the panel). */
+  /** Optional callback fired before mode switch (e.g. close the panel). */
   onPivot?: () => void
 }) {
   const router = useRouter()
+  const { setMode } = useStudioMode()
   const entities = useCollectedEntities()
 
   if (entities.length === 0) return null
 
   const overflow = Math.max(0, entities.length - MAX_PIVOT_ENTITIES)
 
-  const pivot = (path: string) => {
+  const pivot = (targetMode: StudioMode) => {
     const focus = saveFocusEntities(entities)
     onPivot?.()
-    router.push(`${path}?focus=${encodeURIComponent(focus)}`)
+    router.push(`/protected?focus=${encodeURIComponent(focus)}`)
+    setMode(targetMode)
   }
 
   return (
@@ -54,7 +58,7 @@ export function AIAssistantPivotFooter({
             size="sm"
             variant="outline"
             className="h-7 px-2 text-xs"
-            onClick={() => pivot('/protected/graph')}
+            onClick={() => pivot('graph')}
           >
             <span className="material-symbols-outlined text-[14px] mr-1">
               hub
@@ -64,7 +68,7 @@ export function AIAssistantPivotFooter({
           <Button
             size="sm"
             className="h-7 px-2 text-xs"
-            onClick={() => pivot('/protected/dashboard')}
+            onClick={() => pivot('dashboard')}
           >
             <span className="material-symbols-outlined text-[14px] mr-1">
               dashboard

@@ -14,20 +14,34 @@ function detectSupport(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window
 }
 
+const EMPTY_VOICES: SpeechSynthesisVoice[] = []
+
+// `window.speechSynthesis.getVoices()` returns a fresh array on every call in
+// most browsers. Returning that directly from useSyncExternalStore's
+// getSnapshot triggers an infinite re-render loop (each render thinks the
+// store changed). Cache the array at module scope and only refresh when the
+// `voiceschanged` event actually fires.
+let voicesCache: SpeechSynthesisVoice[] | null = null
+
 function subscribeToVoices(callback: () => void): () => void {
   if (!detectSupport()) return () => {}
-  window.speechSynthesis.addEventListener('voiceschanged', callback)
+  const handler = () => {
+    voicesCache = window.speechSynthesis.getVoices()
+    callback()
+  }
+  window.speechSynthesis.addEventListener('voiceschanged', handler)
   return () => {
-    window.speechSynthesis.removeEventListener('voiceschanged', callback)
+    window.speechSynthesis.removeEventListener('voiceschanged', handler)
   }
 }
 
 function getVoicesSnapshot(): SpeechSynthesisVoice[] {
   if (!detectSupport()) return EMPTY_VOICES
-  return window.speechSynthesis.getVoices()
+  if (voicesCache === null) {
+    voicesCache = window.speechSynthesis.getVoices()
+  }
+  return voicesCache
 }
-
-const EMPTY_VOICES: SpeechSynthesisVoice[] = []
 
 export interface UseSpeechSynthesisReturn {
   isSupported: boolean

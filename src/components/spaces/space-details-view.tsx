@@ -216,7 +216,7 @@ export function SpaceDetailsView({
       }).catch((err) => console.warn('Failed to log space deletion:', err))
 
       toast.success('Space deleted successfully')
-      router.push('/protected/dashboard')
+      router.push('/protected')
     } catch (err) {
       console.error('Failed to delete space:', err)
       toast.error('Failed to delete space. Please try again.')

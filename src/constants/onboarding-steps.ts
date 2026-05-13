@@ -65,7 +65,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Your Dashboard',
     description:
       "Here you can see your recent activity, fields, spaces, and the people you're connected with. Everything in one place.",
-    page: '/protected/dashboard',
+    page: '/protected',
     position: 'left',
     selector: '[data-tour="dashboard-overview"]',
   },
@@ -74,7 +74,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Access Your Settings',
     description:
       'Click on your avatar in the top right corner to access your user menu, where you can adjust your preferences and personalize your experience.',
-    page: '/protected/dashboard',
+    page: '/protected',
     position: 'top',
     selector: 'button[aria-label="User menu"]',
   },

@@ -591,7 +591,7 @@ export default function DashboardImportPage() {
                 </p>
               </div>
               <Link
-                href="/protected/dashboard"
+                href="/protected"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/50 bg-white/75 px-4 py-2 text-sm font-semibold text-gp-ink-strong transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white"
               >
                 <span className="material-symbols-outlined text-base">

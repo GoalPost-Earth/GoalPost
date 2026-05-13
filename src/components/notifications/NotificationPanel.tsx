@@ -225,7 +225,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
         <div className="px-4 py-3 border-t border-gp-glass-border">
           <button
             className="text-sm font-medium text-gp-primary hover:text-gp-primary/80 transition-colors cursor-pointer"
-            onClick={() => router.push('/protected/dashboard?tab=activity')}
+            onClick={() => router.push('/protected?tab=activity')}
           >
             View all activities
           </button>

@@ -453,7 +453,7 @@ export default function ProfilePage() {
                 My Spaces
               </h2>
               <button
-                onClick={() => router.push('/protected/dashboard?tab=spaces')}
+                onClick={() => router.push('/protected?tab=spaces')}
                 className="text-xs text-gp-primary hover:text-gp-primary-dark font-semibold transition-colors cursor-pointer"
               >
                 View All →
