@@ -56,10 +56,14 @@ function turnToUIMessage(turn: StoredTurn): UIMessage {
  * caller should treat both as "start with an empty conversation."
  */
 export async function fetchHydratedThread(
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  threadId?: string
 ): Promise<HydratedThread | null> {
   try {
-    const response = await fetch('/api/chat/simulation/thread', {
+    const url = threadId
+      ? `/api/chat/simulation/thread?id=${encodeURIComponent(threadId)}`
+      : '/api/chat/simulation/thread'
+    const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
       signal,

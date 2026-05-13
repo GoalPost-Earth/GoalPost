@@ -45,7 +45,10 @@ import {
 } from '@/lib/focal-entity/types'
 import { buildSystemPromptWithSessionContext } from '@/lib/simulation/session-context-prompt'
 import { resolveSessionContextNames } from '@/lib/simulation/session-context-resolve'
-import { appendConversationTurn } from '@/lib/simulation/conversation-thread.service'
+import {
+  appendConversationTurn,
+  setConversationThreadTitle,
+} from '@/lib/simulation/conversation-thread.service'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -127,6 +130,7 @@ export async function POST(req: Request) {
       focalEntity?: FocalEntityPayload | null
       previousFocalEntity?: FocalEntityPayload | null
       approvedActions?: ApprovedAction[]
+      threadId?: string
     }
     const {
       messages,
@@ -136,6 +140,7 @@ export async function POST(req: Request) {
       spaceId,
       fieldContextId,
       approvedActions,
+      threadId,
     } = body
 
     const focalEntity =
@@ -239,6 +244,12 @@ export async function POST(req: Request) {
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
 
+    // True when the frontend sent exactly one user message — meaning this is
+    // the first exchange in the thread and we should auto-generate a title once
+    // the assistant responds. assistant-ui sends the full history every request,
+    // so length === 1 reliably identifies the first turn.
+    const isFirstExchange = convertedMessages.length === 1
+
     // Persist the user's turn as soon as we receive it. Fire-and-forget — a
     // Neo4j hiccup must NOT block the assistant response, but we log so
     // ops can catch sustained failures. The matching assistant turn is
@@ -249,7 +260,7 @@ export async function POST(req: Request) {
         role: 'user',
         content: lastUserMessage,
         parts: incomingMessage?.parts ?? incomingMessage?.content ?? null,
-      }).catch((error) => {
+      }, threadId).catch((error) => {
         console.warn(
           '[Chat Simulation] Failed to persist user turn:',
           error instanceof Error ? error.message : error
@@ -314,12 +325,40 @@ export async function POST(req: Request) {
             role: 'assistant',
             content: textContent,
             parts,
-          }).catch((error) => {
+          }, threadId).catch((error) => {
             console.warn(
               '[Chat Simulation] Failed to persist assistant turn:',
               error instanceof Error ? error.message : error
             )
           })
+
+          // After the first exchange, auto-generate a title so the sidebar
+          // shows something meaningful. Use gpt-4o-mini — cheap and fast.
+          if (isFirstExchange && lastUserMessage && textContent) {
+            void generateText({
+              model: openai('gpt-4o-mini'),
+              messages: [
+                {
+                  role: 'user',
+                  content: `Generate a concise title (4–7 words, no quotes, no punctuation, no trailing period) that captures what this conversation is about.
+
+User said: ${lastUserMessage.slice(0, 300)}
+Assistant replied: ${textContent.slice(0, 300)}
+
+Title:`,
+                },
+              ],
+            })
+              .then(({ text }) => {
+                const title = text.trim().replace(/^["'`]|["'`]$/g, '').slice(0, 80)
+                if (title) {
+                  return setConversationThreadTitle(currentUserId!, threadId, title)
+                }
+              })
+              .catch((err) => {
+                console.warn('[Chat Simulation] Title generation failed:', err instanceof Error ? err.message : err)
+              })
+          }
         },
       })
     }

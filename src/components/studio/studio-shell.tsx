@@ -64,6 +64,7 @@ export const StudioShell: FC<StudioShellProps> = ({ children }) => {
 const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   const { mode, setMode, isVisited } = useStudioMode()
   const [panelOpen, setPanelOpen] = useState(false)
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
 
   const needsRuntime = isVisited('assistant') || isVisited('voice')
 
@@ -95,7 +96,13 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
 
   const aiPanels = (
     <>
-      {isVisited('assistant') && <AssistantMode visible={mode === 'assistant'} />}
+      {isVisited('assistant') && (
+        <AssistantMode
+          visible={mode === 'assistant'}
+          activeThreadId={selectedThreadId}
+          onSelectThread={setSelectedThreadId}
+        />
+      )}
       {isVisited('voice') && <VoiceMode visible={mode === 'voice'} />}
     </>
   )
@@ -111,9 +118,15 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
         {/* Graph mode lazy-mounts on first visit. */}
         {isVisited('graph') && <GraphMode visible={mode === 'graph'} />}
 
-        {/* Assistant + Voice share the AI runtime, lazy-mounted once. */}
+        {/* Assistant + Voice share the AI runtime. Re-keyed when the user
+            switches threads so the runtime reinitialises with the right history. */}
         {needsRuntime ? (
-          <AssistantRuntimeBoundary>{aiPanels}</AssistantRuntimeBoundary>
+          <AssistantRuntimeBoundary
+            key={selectedThreadId ?? 'active'}
+            threadId={selectedThreadId ?? undefined}
+          >
+            {aiPanels}
+          </AssistantRuntimeBoundary>
         ) : null}
       </div>
 
@@ -136,8 +149,9 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
  * Mounts the AI runtime once the user enters an AI-driven mode. Fetches the
  * persisted conversation thread first so messages hydrate before the
  * runtime is created (`useChatRuntime` reads `messages` only at init).
+ * Re-keyed from StudioBody when `threadId` changes to reload a different thread.
  */
-const AssistantRuntimeBoundary: FC<{ children: ReactNode }> = ({ children }) => {
+const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> = ({ children, threadId }) => {
   const { aiMode } = usePreferences()
   const { sessionContext } = useFocalEntity()
 
@@ -159,6 +173,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode }> = ({ children }) => 
       currentUserId: snapshot.currentUserId,
       spaceId: snapshot.activeSpaceId,
       fieldContextId: snapshot.activeFieldContextId,
+      threadId,
       focalEntity: focalEntity
         ? {
             type: focalEntity.type,
@@ -179,7 +194,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode }> = ({ children }) => 
           : null,
       approvedActions: approvedActionsRef.current,
     }
-  }, [aiMode])
+  }, [aiMode, threadId])
 
   const [hydration, setHydration] = useState<
     | { status: 'loading' }
@@ -188,12 +203,12 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchHydratedThread(controller.signal).then((thread) => {
+    fetchHydratedThread(controller.signal, threadId).then((thread) => {
       if (controller.signal.aborted) return
       setHydration({ status: 'ready', thread })
     })
     return () => controller.abort()
-  }, [])
+  }, [threadId])
 
   if (hydration.status === 'loading') {
     return (

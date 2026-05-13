@@ -26,7 +26,7 @@ const ThreadInner: FC = () => {
   const [voiceModeOpen, setVoiceModeOpen] = useState(false)
 
   return (
-    <ThreadPrimitive.Root className="flex h-full flex-col overflow-hidden bg-white dark:bg-[#121b21]">
+    <ThreadPrimitive.Root className="flex h-full flex-col overflow-hidden bg-transparent">
       <VoiceController />
       <VoiceModeOverlay
         open={voiceModeOpen}
@@ -34,18 +34,24 @@ const ThreadInner: FC = () => {
       />
 
       {/* Messages viewport */}
-      <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {/* Welcome message when empty */}
+      <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        {/* Welcome empty state */}
         <ThreadPrimitive.Empty>
-          <div className="flex flex-col items-center justify-center h-full gap-4">
-            <div className="text-5xl">🍄</div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Welcome to GoalPost AI
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs text-center">
-              Ask me about people, spaces, field contexts, and pulses. I can
-              search, retrieve semantically, and help edit graph entities.
-            </p>
+          <div className="flex flex-col items-center justify-center h-full gap-5 animate-fade-in">
+            <div className="flex items-center justify-center size-16 rounded-full bg-gp-primary/10 border border-gp-primary/20">
+              <span className="material-symbols-outlined text-3xl text-gp-primary">
+                auto_awesome
+              </span>
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-semibold text-gp-ink-strong dark:text-white">
+                GoalPost AI
+              </h2>
+              <p className="text-sm text-gp-ink-muted dark:text-white/50 max-w-xs leading-relaxed">
+                Ask me about people, spaces, field contexts, and pulses. I can
+                search, retrieve semantically, and help edit graph entities.
+              </p>
+            </div>
           </div>
         </ThreadPrimitive.Empty>
 
@@ -57,17 +63,12 @@ const ThreadInner: FC = () => {
           }}
         />
 
-        {/* Standalone "Thinking…" indicator that appears between sending a user
-            message and the assistant message materializing — the AssistantMessage
-            inline loader takes over once the bubble exists. */}
         <PendingAssistantTurn />
-
-        {/* Spacing for composer */}
-        <div className="h-4" />
+        <div className="h-2" />
       </ThreadPrimitive.Viewport>
 
-      {/* Composer at bottom */}
-      <div className="border-t border-slate-200 dark:border-white/10 px-4 py-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+      {/* Composer */}
+      <div className="px-4 py-3 gp-glass border-t border-gp-glass-border">
         <Composer onOpenVoiceMode={() => setVoiceModeOpen(true)} />
       </div>
     </ThreadPrimitive.Root>
@@ -77,7 +78,7 @@ const ThreadInner: FC = () => {
 const UserMessage: FC = () => {
   return (
     <div className="flex justify-end">
-      <div className="max-w-xs bg-gp-primary text-white rounded-lg px-4 py-3 text-sm">
+      <div className="max-w-sm bg-gp-primary text-white rounded-2xl rounded-br-md px-4 py-2.5 text-sm shadow-sm">
         <MessagePrimitive.Content />
       </div>
     </div>
@@ -86,8 +87,13 @@ const UserMessage: FC = () => {
 
 const AssistantMessage: FC = () => {
   return (
-    <div className="flex justify-start">
-      <div className="max-w-2xl bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-sm space-y-2 min-w-[64px]">
+    <div className="flex items-start gap-2.5 justify-start">
+      <div className="shrink-0 size-7 rounded-full bg-gp-primary/10 border border-gp-primary/20 flex items-center justify-center mt-0.5">
+        <span className="material-symbols-outlined text-[14px] leading-none text-gp-primary">
+          auto_awesome
+        </span>
+      </div>
+      <div className="max-w-2xl chat-card text-gp-ink-strong dark:text-white rounded-2xl rounded-tl-md px-4 py-2.5 text-sm space-y-2 min-w-[64px]">
         {/* Error (if the runtime attached one to this message) */}
         <AssistantMessageError />
 
@@ -193,16 +199,21 @@ const PendingAssistantTurn: FC = () => {
   if (lastMessageRole !== 'user') return null
 
   return (
-    <div className="flex justify-start">
+    <div className="flex items-start gap-2.5 justify-start">
+      <div className="shrink-0 size-7 rounded-full bg-gp-primary/10 border border-gp-primary/20 flex items-center justify-center mt-0.5">
+        <span className="material-symbols-outlined text-[14px] leading-none text-gp-primary">
+          auto_awesome
+        </span>
+      </div>
       <div
-        className="bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/60 rounded-lg px-4 py-3 text-sm flex items-center gap-2"
+        className="chat-card text-gp-ink-muted dark:text-white/60 rounded-2xl rounded-tl-md px-4 py-2.5 text-sm flex items-center gap-2"
         aria-live="polite"
         aria-label="Assistant is thinking"
       >
         <span className="inline-flex items-center gap-1">
-          <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
-          <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
-          <span className="size-1.5 rounded-full bg-current animate-bounce" />
+          <span className="size-1.5 rounded-full bg-gp-primary animate-bounce [animation-delay:-0.3s]" />
+          <span className="size-1.5 rounded-full bg-gp-primary animate-bounce [animation-delay:-0.15s]" />
+          <span className="size-1.5 rounded-full bg-gp-primary animate-bounce" />
         </span>
         <span className="text-xs">Thinking…</span>
       </div>
@@ -239,12 +250,8 @@ const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
   return (
     <ComposerPrimitive.Root className="space-y-2">
       <ComposerPrimitive.Input
-        placeholder={
-          isListening
-            ? 'Listening…'
-            : 'Ask about a person, pulse, or field context...'
-        }
-        className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/50 resize-none"
+        placeholder={isListening ? 'Listening…' : 'Ask about a person, pulse, or field context...'}
+        className="w-full px-4 py-3 bg-white/60 dark:bg-white/5 border border-gp-glass-border rounded-xl text-gp-ink-strong dark:text-white placeholder-gp-ink-soft dark:placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/40 resize-none transition-all"
         rows={1}
       />
       <div className="flex justify-end gap-2">

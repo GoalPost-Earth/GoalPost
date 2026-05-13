@@ -16,7 +16,10 @@
  * one rather than returning an anonymous thread — chat history is private.
  */
 import { verifyJWT } from '@/app/api/auth/utils'
-import { getActiveConversationThread } from '@/lib/simulation/conversation-thread.service'
+import {
+  getActiveConversationThread,
+  getConversationThread,
+} from '@/lib/simulation/conversation-thread.service'
 
 export async function GET(req: Request) {
   let userId: string | null = null
@@ -43,7 +46,10 @@ export async function GET(req: Request) {
     })
   }
 
-  const thread = await getActiveConversationThread(userId)
+  const threadId = new URL(req.url).searchParams.get('id')
+  const thread = threadId
+    ? await getConversationThread(userId, threadId)
+    : await getActiveConversationThread(userId)
   return new Response(JSON.stringify({ thread }), {
     status: 200,
     headers: {
