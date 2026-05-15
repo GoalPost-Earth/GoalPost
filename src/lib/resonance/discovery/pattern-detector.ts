@@ -6,6 +6,10 @@
 import { getAnalysisProvider } from '@/lib/llm'
 import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
+import {
+  collectPulsePairEvidence,
+  composeEvidenceString,
+} from './evidence-collector'
 
 const ResonancePatternSchema = z.object({
   label: z
@@ -166,8 +170,29 @@ async function createResonanceSuggestionsInDatabase(
 
   const suggestions: DiscoveredResonance[] = []
 
-  // Create individual ResonanceSuggestion nodes for each pulse connection
+  // Create individual ResonanceSuggestion nodes for each pulse connection.
+  // Before the write we enrich the LLM's narrative evidence with graph-derived
+  // rationale (shared contexts, shared authors, prior resonance neighbors) so
+  // admin reviewers see verifiable structure ahead of the prose explanation —
+  // first step toward Robert's "graph semantics over vector embeddings" goal.
   for (const connection of pattern.pulseConnections) {
+    let enrichedEvidence = connection.evidence
+    try {
+      const graphFacts = await collectPulsePairEvidence(
+        connection.sourcePulseId,
+        connection.targetPulseId
+      )
+      enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
+    } catch (evidenceError) {
+      // Evidence enrichment is best-effort — never block the suggestion
+      // because the rationale Cypher hiccupped. Fall back to the LLM's
+      // narrative and log so ops can catch a sustained failure.
+      console.warn(
+        '[ResonanceSuggestion] Evidence enrichment failed; falling back to LLM-only evidence:',
+        evidenceError instanceof Error ? evidenceError.message : evidenceError
+      )
+    }
+
     // Create ResonanceSuggestion and connect it to the space, context, source, and target
     const suggestionResult = await graph.query<{ suggestionId: string }>(
       `
@@ -175,12 +200,12 @@ async function createResonanceSuggestionsInDatabase(
       MATCH (context:FieldContext {id: $contextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
-      
+
       // Ensure source and target are in the same context
       MATCH (context)-[:HAS_PULSE]->(source)
       MATCH (context)-[:HAS_PULSE]->(target)
       MATCH (space)-[:HAS_CONTEXT]->(context)
-      
+
       // Create ResonanceSuggestion
       CREATE (suggestion:ResonanceSuggestion {
         id: 'rs_' + randomUUID(),
@@ -191,13 +216,13 @@ async function createResonanceSuggestionsInDatabase(
         status: 'pending',
         createdAt: datetime()
       })
-      
+
       // Connect to space, context and pulses
       CREATE (space)-[:HAS_SUGGESTION]->(suggestion)
       CREATE (context)-[:HAS_SUGGESTION]->(suggestion)
       CREATE (suggestion)-[:SOURCE]->(source)
       CREATE (suggestion)-[:TARGET]->(target)
-      
+
       RETURN suggestion.id as suggestionId
     `,
       {
@@ -208,7 +233,7 @@ async function createResonanceSuggestionsInDatabase(
         label: pattern.label,
         description: pattern.description,
         confidence: connection.confidence,
-        evidence: connection.evidence,
+        evidence: enrichedEvidence,
       }
     )
 
@@ -226,7 +251,7 @@ async function createResonanceSuggestionsInDatabase(
         sourcePulseId: connection.sourcePulseId,
         targetPulseId: connection.targetPulseId,
         confidence: connection.confidence,
-        evidence: connection.evidence,
+        evidence: enrichedEvidence,
       })
     }
   }
