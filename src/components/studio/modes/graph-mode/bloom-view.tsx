@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import type { Node } from '@neo4j-nvl/base'
+import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
-import { ONTOLOGY_NODES, ONTOLOGY_RELATIONSHIPS } from './ontology-data'
+import { useFocalEntity } from '@/contexts'
 
 const GraphVisualizer = dynamic(
   () =>
@@ -19,14 +19,75 @@ const GraphVisualizer = dynamic(
   }
 )
 
+interface NeighborhoodResponse {
+  nodes: Node[]
+  relationships: Relationship[]
+}
+
 /**
- * Stock NVL "Bloom" exploration view. Pan/zoom/drag enabled, click a node
- * to open a right-side details panel (mirrors Neo4j Bloom's inspector).
- * Phase 1 reuses the ontology dataset; swapping to a real Cypher
- * neighborhood query is the only change for the next iteration.
+ * NVL "Bloom" exploration view. Fetches the focal entity's one-hop
+ * neighborhood from `/api/graph/neighborhood` and renders it. Honors
+ * `FocalEntityContext` — switching focal in chat / dashboard re-fetches.
+ * When no focal is set the API returns the user's MeSpace by default so the
+ * canvas is never empty on a neutral surface.
+ *
+ * Clicking a node updates the focal entity, which propagates back to the
+ * other modes via FocalEntityContext.
  */
 export const BloomView: FC = () => {
+  const { focalEntity, setFocalEntity } = useFocalEntity()
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  // Single status object so the in-flight transitions happen as one render —
+  // satisfies react-hooks/set-state-in-effect by collapsing the cascading
+  // updates into one (status changes are inherently external-system mirrors).
+  const [status, setStatus] = useState<{
+    state: 'idle' | 'loading' | 'ready' | 'error'
+    data: NeighborhoodResponse
+    error: string | null
+  }>({
+    state: 'idle',
+    data: { nodes: [], relationships: [] },
+    error: null,
+  })
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+    void (async () => {
+      try {
+        const res = await fetch('/api/graph/neighborhood', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            focalType: focalEntity?.type ?? null,
+            focalId: focalEntity?.id ?? null,
+          }),
+          signal: ctrl.signal,
+        })
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string
+          }
+          throw new Error(body.error || `HTTP ${res.status}`)
+        }
+        const payload = (await res.json()) as NeighborhoodResponse
+        if (ctrl.signal.aborted) return
+        setStatus({ state: 'ready', data: payload, error: null })
+      } catch (err) {
+        if (ctrl.signal.aborted) return
+        setStatus((prev) => ({
+          ...prev,
+          state: 'error',
+          error: err instanceof Error ? err.message : 'Unknown error',
+        }))
+      }
+    })()
+    return () => ctrl.abort()
+  }, [focalEntity?.type, focalEntity?.id])
+
+  const loading = status.state === 'idle' || status.state === 'loading'
+  const error = status.state === 'error' ? status.error : null
+  const data = status.data
 
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
@@ -39,12 +100,37 @@ export const BloomView: FC = () => {
     []
   )
 
+  const isEmpty = !loading && !error && data.nodes.length === 0
+
   return (
     <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 relative">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 max-w-md">
+              Could not load graph: {error}
+            </div>
+          </div>
+        )}
+        {isEmpty && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+            <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
+              hub
+            </span>
+            <p className="text-sm text-white/55 max-w-md">
+              Nothing to render here yet. Add a field or a pulse and it will
+              bloom into the graph.
+            </p>
+          </div>
+        )}
         <GraphVisualizer
-          nodes={ONTOLOGY_NODES}
-          relationships={ONTOLOGY_RELATIONSHIPS}
+          nodes={data.nodes}
+          relationships={data.relationships}
           mouseEventCallbacks={mouseEventCallbacks}
         />
       </div>
@@ -76,28 +162,30 @@ export const BloomView: FC = () => {
               style={{ backgroundColor: selectedNode.color }}
               aria-hidden="true"
             />
-            <code className="font-mono text-xs">{selectedNode.id}</code>
+            <span className="text-xs text-white/60">
+              {selectedNode.caption}
+            </span>
           </div>
 
-          <div className="space-y-3 text-xs text-white/70">
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40 mb-1">
-                Properties
-              </p>
-              <dl className="space-y-1">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/50">id</dt>
-                  <dd className="font-mono">{String(selectedNode.id)}</dd>
-                </div>
-                {selectedNode.size != null && (
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-white/50">size</dt>
-                    <dd className="font-mono">{String(selectedNode.size)}</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const id = String(selectedNode.id)
+              // We don't have label-level type metadata from NVL — fall back to
+              // 'FieldContext' for now if nothing else is known. The detail
+              // page route + label cache will refine the type on resolve.
+              setFocalEntity({
+                type: 'FieldContext',
+                id,
+                focusedAt: new Date().toISOString(),
+                source: 'manual',
+              })
+              setSelectedNode(null)
+            }}
+            className="w-full mt-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold py-2 transition-colors cursor-pointer"
+          >
+            Focus on this node
+          </button>
         </div>
       )}
     </div>

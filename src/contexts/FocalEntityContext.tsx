@@ -24,11 +24,21 @@ import {
 
 const STORAGE_KEY = 'goalpost.focalEntity.v1'
 const PERSIST_DEBOUNCE_MS = 1000
+const FOCAL_API_PATH = '/api/user/focal-entity'
 
 interface PersistedShape {
   type: FocalEntityType
   id: string
   label?: string
+}
+
+interface ServerFocalResponse {
+  focalEntity: {
+    type: string
+    id: string
+    label: string | null
+    focusedAt: string
+  } | null
 }
 
 interface FocalEntityContextValue {
@@ -130,7 +140,11 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
   // Lazy initializer — runs once on first client render. `readPersisted`
   // guards `typeof window === 'undefined'` so SSR pre-renders see null;
   // first client paint reads the actual stored value with no effect needed.
+  // The localStorage value is a cache for fast first paint; the server is
+  // the source of truth (see the hydration effect below). If the server
+  // returns a different focal on mount, `serverSeed` overrides this.
   const [persistedSeed] = useState<PersistedShape | null>(() => readPersisted())
+  const [serverSeed, setServerSeed] = useState<PersistedShape | null>(null)
 
   const [manualFocal, setManualFocal] = useState<FocalEntity | null>(null)
 
@@ -193,18 +207,23 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    if (persistedSeed) {
+    // Server wins over localStorage — once the hydration effect resolves,
+    // `serverSeed` reflects the user's last focal across devices. The
+    // localStorage seed only matters during the brief window between first
+    // paint and the GET resolving.
+    const seed = serverSeed ?? persistedSeed
+    if (seed) {
       return {
-        type: persistedSeed.type,
-        id: persistedSeed.id,
-        label: persistedSeed.label,
+        type: seed.type,
+        id: seed.id,
+        label: seed.label,
         focusedAt: new Date().toISOString(),
         source: 'persisted',
       }
     }
 
     return null
-  }, [manualFocal, pathname, hints, persistedSeed])
+  }, [manualFocal, pathname, hints, persistedSeed, serverSeed])
 
   // Stage 2: enrich with the latest label from the cache without disturbing
   // the focused-at timestamp. This is what consumers read.
@@ -213,7 +232,44 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
     return enrichWithLabel(focalIdentity, labelCache)
   }, [focalIdentity, labelCache])
 
-  // Persist (debounced) to localStorage on focal change.
+  // Hydrate from the server once a user is in scope. The server is the
+  // source of truth for "where the user last was" so a fresh browser /
+  // device picks up their focal from their previous session. If the
+  // request fails (offline, server hiccup) we silently fall back to the
+  // localStorage seed — best-effort, never blocking the UI.
+  useEffect(() => {
+    const userId = user?.id
+    if (!userId) return
+    const ctrl = new AbortController()
+    void (async () => {
+      try {
+        const res = await fetch(FOCAL_API_PATH, {
+          method: 'GET',
+          credentials: 'include',
+          signal: ctrl.signal,
+        })
+        if (!res.ok) return
+        const data = (await res.json()) as ServerFocalResponse
+        if (ctrl.signal.aborted) return
+        const focal = data.focalEntity
+        if (focal && isFocalEntityType(focal.type) && focal.id) {
+          setServerSeed({
+            type: focal.type,
+            id: focal.id,
+            label: focal.label ?? undefined,
+          })
+        }
+      } catch {
+        // Network / auth failures are non-fatal — localStorage cache
+        // keeps the UI responsive.
+      }
+    })()
+    return () => ctrl.abort()
+  }, [user?.id])
+
+  // Persist (debounced) to BOTH localStorage and the server on focal
+  // change. localStorage is the fast first-paint cache; the server is the
+  // cross-device source of truth.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const handle = window.setTimeout(() => {
@@ -225,6 +281,22 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
             label: focalEntity.label,
           }
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(shape))
+          // Best-effort server write — a 401 / network blip must not
+          // disrupt the UI. The next focal change retries naturally.
+          if (user?.id) {
+            void fetch(FOCAL_API_PATH, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: focalEntity.type,
+                id: focalEntity.id,
+                label: focalEntity.label ?? null,
+              }),
+            }).catch(() => {
+              /* non-fatal */
+            })
+          }
         }
         // Don't clear on null — navigating to a neutral route shouldn't wipe
         // persistence. AppContext.handleLogout clears explicitly.
@@ -233,7 +305,7 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       }
     }, PERSIST_DEBOUNCE_MS)
     return () => window.clearTimeout(handle)
-  }, [focalEntity])
+  }, [focalEntity, user?.id])
 
   const sessionContext = useMemo<SessionContext>(() => {
     const currentUserId = user?.id ?? null

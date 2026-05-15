@@ -2,11 +2,16 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { GET_ALL_PULSES } from '@/app/graphql/queries'
+import {
+  GET_ALL_PULSES,
+  GET_ALL_PULSES_BY_CONTEXT,
+  GET_ALL_PULSES_BY_SPACE,
+} from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useQuery, useApolloClient } from '@apollo/client/react'
 import { getConfigForType } from '@/lib/pulse-type-config'
+import { useFocalEntity } from '@/contexts'
 
 type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
 
@@ -48,22 +53,64 @@ export function ActivePulses({
 }: ActivePulsesProps) {
   const router = useRouter()
   const client = useApolloClient()
-  const { data, loading, error } = useQuery(GET_ALL_PULSES, {
-    fetchPolicy: 'network-only', // Force fresh data from server
+  const { sessionContext } = useFocalEntity()
+
+  // Three modes, picked by which scope the user is currently in:
+  //   FieldContext  → narrow to that single context's pulses
+  //   Space (only)  → all pulses across every context in the active Space
+  //   neutral       → existing behaviour, full ambient list
+  // The May 11 four-mode pivot requires the dashboard to honour the focal
+  // entity in lock-step with chat / graph / voice — see GOAL-231.
+  const { activeSpaceId, activeFieldContextId } = sessionContext
+  const scope: 'context' | 'space' | 'all' = activeFieldContextId
+    ? 'context'
+    : activeSpaceId
+      ? 'space'
+      : 'all'
+
+  const ctxQuery = useQuery(GET_ALL_PULSES_BY_CONTEXT, {
+    variables: { contextId: activeFieldContextId ?? '' },
+    skip: scope !== 'context',
+    fetchPolicy: 'network-only',
+  })
+  const spaceQuery = useQuery(GET_ALL_PULSES_BY_SPACE, {
+    variables: { spaceId: activeSpaceId ?? '' },
+    skip: scope !== 'space',
+    fetchPolicy: 'network-only',
+  })
+  const allQuery = useQuery(GET_ALL_PULSES, {
+    skip: scope !== 'all',
+    fetchPolicy: 'network-only',
   })
 
-  // Clear cache on mount to ensure fresh data
+  const data =
+    scope === 'context'
+      ? ctxQuery.data
+      : scope === 'space'
+        ? spaceQuery.data
+        : allQuery.data
+  const loading =
+    scope === 'context'
+      ? ctxQuery.loading
+      : scope === 'space'
+        ? spaceQuery.loading
+        : allQuery.loading
+  const error =
+    scope === 'context'
+      ? ctxQuery.error
+      : scope === 'space'
+        ? spaceQuery.error
+        : allQuery.error
+
+  // Clear cache when scope flips so a stale wider/narrower result set never
+  // bleeds across the focal switch. The eviction is keyed by field name, not
+  // query, so it covers all three pulse types.
   React.useEffect(() => {
-    // Evict all cached pulse data
     client.cache.evict({ fieldName: 'goalPulses' })
     client.cache.evict({ fieldName: 'resourcePulses' })
     client.cache.evict({ fieldName: 'storyPulses' })
-    client.cache.gc() // Garbage collect orphaned references
-
-    void client.refetchQueries({
-      include: [GET_ALL_PULSES],
-    })
-  }, [client])
+    client.cache.gc()
+  }, [client, scope, activeSpaceId, activeFieldContextId])
 
   // Combine all pulse types into a single array
   const allPulses = React.useMemo(() => {

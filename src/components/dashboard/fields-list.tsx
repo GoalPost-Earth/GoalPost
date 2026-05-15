@@ -3,8 +3,12 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
-import { GET_ALL_FIELD_CONTEXTS } from '@/app/graphql/queries'
+import {
+  GET_ALL_FIELD_CONTEXTS,
+  GET_FIELD_CONTEXTS_BY_SPACE,
+} from '@/app/graphql/queries'
 import { formatDistanceToNow } from 'date-fns'
+import { useFocalEntity } from '@/contexts'
 
 interface FieldsListProps {
   showAll?: boolean
@@ -13,9 +17,25 @@ interface FieldsListProps {
 
 export function FieldsList({ showAll = false, onViewAll }: FieldsListProps) {
   const router = useRouter()
-  const { data, loading, error } = useQuery(GET_ALL_FIELD_CONTEXTS, {
+  const { sessionContext } = useFocalEntity()
+  const { activeSpaceId } = sessionContext
+
+  // Narrow to the active Space when one is set; fall back to ambient list
+  // on neutral surfaces. The two queries share the same shape, so downstream
+  // rendering is unchanged.
+  const scopedQuery = useQuery(GET_FIELD_CONTEXTS_BY_SPACE, {
+    variables: { spaceId: activeSpaceId ?? '' },
+    skip: !activeSpaceId,
     fetchPolicy: 'cache-and-network',
   })
+  const ambientQuery = useQuery(GET_ALL_FIELD_CONTEXTS, {
+    skip: !!activeSpaceId,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  const data = activeSpaceId ? scopedQuery.data : ambientQuery.data
+  const loading = activeSpaceId ? scopedQuery.loading : ambientQuery.loading
+  const error = activeSpaceId ? scopedQuery.error : ambientQuery.error
 
   if (error) {
     return (
