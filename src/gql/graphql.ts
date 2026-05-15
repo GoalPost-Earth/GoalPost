@@ -2024,6 +2024,10 @@ export type FieldContext = {
   meSpaceAggregate?: Maybe<FieldContextMeSpaceMeSpaceAggregationSelection>
   meSpaceConnection: FieldContextMeSpaceConnection
   owner: Array<Person>
+  people: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "peopleConnection" instead */
+  peopleAggregate?: Maybe<FieldContextPersonPeopleAggregationSelection>
+  peopleConnection: FieldContextPeopleConnection
   pulses: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "pulsesConnection" instead */
   pulsesAggregate?: Maybe<FieldContextFieldPulsePulsesAggregationSelection>
@@ -2147,6 +2151,60 @@ export type FieldContextMeSpaceConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldContextMeSpaceConnectionSort>>
   where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextPeopleArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextPeopleAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextPeopleConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextPeopleConnectionSort>>
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
 }
 
 /**
@@ -2339,6 +2397,7 @@ export type FieldContextAggregateSelection = {
 export type FieldContextConnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
+  people?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
@@ -2353,6 +2412,7 @@ export type FieldContextCreateInput = {
   createdBy?: InputMaybe<FieldContextCreatedByFieldInput>
   emergentName?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<FieldContextMeSpaceFieldInput>
+  people?: InputMaybe<FieldContextPeopleFieldInput>
   pulses?: InputMaybe<FieldContextPulsesFieldInput>
   resonances?: InputMaybe<FieldContextResonancesFieldInput>
   title: Scalars['String']['input']
@@ -2759,6 +2819,7 @@ export type FieldContextCreatedByUpdateFieldInput = {
 export type FieldContextDeleteInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
+  people?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
@@ -2767,6 +2828,7 @@ export type FieldContextDeleteInput = {
 export type FieldContextDisconnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
+  people?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
@@ -3037,6 +3099,403 @@ export type FieldContextMeSpaceUpdateFieldInput = {
   update?: InputMaybe<FieldContextMeSpaceUpdateConnectionInput>
 }
 
+export type FieldContextPeopleAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextPeopleAggregateInput>>
+  NOT?: InputMaybe<FieldContextPeopleAggregateInput>
+  OR?: InputMaybe<Array<FieldContextPeopleAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextPeopleNodeAggregationWhereInput>
+}
+
+export type FieldContextPeopleConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type FieldContextPeopleConnection = {
+  __typename?: 'FieldContextPeopleConnection'
+  aggregate: FieldContextPersonPeopleAggregateSelection
+  edges: Array<FieldContextPeopleRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextPeopleConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type FieldContextPeopleConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextPeopleConnectionWhere>>
+  NOT?: InputMaybe<FieldContextPeopleConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextPeopleConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type FieldContextPeopleCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type FieldContextPeopleDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
+}
+
+export type FieldContextPeopleDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
+}
+
+export type FieldContextPeopleFieldInput = {
+  connect?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextPeopleCreateFieldInput>>
+}
+
+export type FieldContextPeopleNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextPeopleNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextPeopleNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextPeopleNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  phone_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type FieldContextPeopleRelationship = {
+  __typename?: 'FieldContextPeopleRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type FieldContextPeopleUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
+}
+
+export type FieldContextPeopleUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextPeopleCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextPeopleUpdateConnectionInput>
+}
+
 export type FieldContextPersonCreatedByAggregateSelection = {
   __typename?: 'FieldContextPersonCreatedByAggregateSelection'
   count: CountConnection
@@ -3051,6 +3510,46 @@ export type FieldContextPersonCreatedByAggregationSelection = {
 
 export type FieldContextPersonCreatedByNodeAggregateSelection = {
   __typename?: 'FieldContextPersonCreatedByNodeAggregateSelection'
+  authId: StringAggregateSelection
+  avatar: StringAggregateSelection
+  careManual: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  favorites: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  gender: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
+  passions: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
+  status: StringAggregateSelection
+  traits: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type FieldContextPersonPeopleAggregateSelection = {
+  __typename?: 'FieldContextPersonPeopleAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextPersonPeopleNodeAggregateSelection>
+}
+
+export type FieldContextPersonPeopleAggregationSelection = {
+  __typename?: 'FieldContextPersonPeopleAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextPersonPeopleNodeAggregateSelection>
+}
+
+export type FieldContextPersonPeopleNodeAggregateSelection = {
+  __typename?: 'FieldContextPersonPeopleNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
@@ -3424,6 +3923,7 @@ export type FieldContextUpdateInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByUpdateFieldInput>>
   emergentName_SET?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceUpdateFieldInput>>
+  people?: InputMaybe<Array<FieldContextPeopleUpdateFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesUpdateFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesUpdateFieldInput>>
   title_SET?: InputMaybe<Scalars['String']['input']>
@@ -3726,6 +4226,23 @@ export type FieldContextWhere = {
   owner_NONE?: InputMaybe<PersonWhere>
   owner_SINGLE?: InputMaybe<PersonWhere>
   owner_SOME?: InputMaybe<PersonWhere>
+  peopleAggregate?: InputMaybe<FieldContextPeopleAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextPeopleConnections match this filter */
+  peopleConnection_ALL?: InputMaybe<FieldContextPeopleConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextPeopleConnections match this filter */
+  peopleConnection_NONE?: InputMaybe<FieldContextPeopleConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextPeopleConnections match this filter */
+  peopleConnection_SINGLE?: InputMaybe<FieldContextPeopleConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextPeopleConnections match this filter */
+  peopleConnection_SOME?: InputMaybe<FieldContextPeopleConnectionWhere>
+  /** Return FieldContexts where all of the related People match this filter */
+  people_ALL?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where none of the related People match this filter */
+  people_NONE?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where one of the related People match this filter */
+  people_SINGLE?: InputMaybe<PersonWhere>
+  /** Return FieldContexts where some of the related People match this filter */
+  people_SOME?: InputMaybe<PersonWhere>
   pulsesAggregate?: InputMaybe<FieldContextPulsesAggregateInput>
   /** Return FieldContexts where all of the related FieldContextPulsesConnections match this filter */
   pulsesConnection_ALL?: InputMaybe<FieldContextPulsesConnectionWhere>
@@ -8506,6 +9023,10 @@ export type Person = PersonInterface & {
   careManual?: Maybe<Scalars['String']['output']>
   connectionEdges: Array<PersonConnectionEdge>
   connections: Array<Person>
+  contexts: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "contextsConnection" instead */
+  contextsAggregate?: Maybe<PersonFieldContextContextsAggregationSelection>
+  contextsConnection: PersonContextsConnection
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
@@ -8546,6 +9067,45 @@ export type Person = PersonInterface & {
   status?: Maybe<Scalars['String']['output']>
   traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonContextsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonContextsAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonContextsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonContextsConnectionSort>>
+  where?: InputMaybe<PersonContextsConnectionWhere>
 }
 
 /**
@@ -8729,6 +9289,7 @@ export type PersonAggregateSelection = {
 }
 
 export type PersonConnectInput = {
+  contexts?: InputMaybe<Array<PersonContextsConnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByConnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfConnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesConnectFieldInput>>
@@ -8824,10 +9385,131 @@ export type PersonConnectionEdgesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+export type PersonContextsAggregateInput = {
+  AND?: InputMaybe<Array<PersonContextsAggregateInput>>
+  NOT?: InputMaybe<PersonContextsAggregateInput>
+  OR?: InputMaybe<Array<PersonContextsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonContextsNodeAggregationWhereInput>
+}
+
+export type PersonContextsConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type PersonContextsConnection = {
+  __typename?: 'PersonContextsConnection'
+  aggregate: PersonFieldContextContextsAggregateSelection
+  edges: Array<PersonContextsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type PersonContextsConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type PersonContextsConnectionWhere = {
+  AND?: InputMaybe<Array<PersonContextsConnectionWhere>>
+  NOT?: InputMaybe<PersonContextsConnectionWhere>
+  OR?: InputMaybe<Array<PersonContextsConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type PersonContextsCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type PersonContextsDeleteFieldInput = {
+  delete?: InputMaybe<FieldContextDeleteInput>
+  where?: InputMaybe<PersonContextsConnectionWhere>
+}
+
+export type PersonContextsDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<PersonContextsConnectionWhere>
+}
+
+export type PersonContextsFieldInput = {
+  connect?: InputMaybe<Array<PersonContextsConnectFieldInput>>
+  create?: InputMaybe<Array<PersonContextsCreateFieldInput>>
+}
+
+export type PersonContextsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonContextsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonContextsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonContextsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type PersonContextsRelationship = {
+  __typename?: 'PersonContextsRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type PersonContextsUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<PersonContextsConnectionWhere>
+}
+
+export type PersonContextsUpdateFieldInput = {
+  connect?: InputMaybe<Array<PersonContextsConnectFieldInput>>
+  create?: InputMaybe<Array<PersonContextsCreateFieldInput>>
+  delete?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
+  update?: InputMaybe<PersonContextsUpdateConnectionInput>
+}
+
 export type PersonCreateInput = {
   authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
+  contexts?: InputMaybe<PersonContextsFieldInput>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   email?: InputMaybe<Scalars['String']['input']>
   embedding?: InputMaybe<Array<Scalars['Float']['input']>>
@@ -9254,12 +9936,14 @@ export type PersonCreatedByUpdateFieldInput = {
 }
 
 export type PersonDeleteInput = {
+  contexts?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
 }
 
 export type PersonDisconnectInput = {
+  contexts?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
@@ -9269,6 +9953,27 @@ export type PersonEdge = {
   __typename?: 'PersonEdge'
   cursor: Scalars['String']['output']
   node: Person
+}
+
+export type PersonFieldContextContextsAggregateSelection = {
+  __typename?: 'PersonFieldContextContextsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonFieldContextContextsNodeAggregateSelection>
+}
+
+export type PersonFieldContextContextsAggregationSelection = {
+  __typename?: 'PersonFieldContextContextsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<PersonFieldContextContextsNodeAggregateSelection>
+}
+
+export type PersonFieldContextContextsNodeAggregateSelection = {
+  __typename?: 'PersonFieldContextContextsNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
 }
 
 export type PersonInterface = {
@@ -9844,6 +10549,7 @@ export type PersonUpdateInput = {
   authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   careManual_SET?: InputMaybe<Scalars['String']['input']>
+  contexts?: InputMaybe<Array<PersonContextsUpdateFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
   email_SET?: InputMaybe<Scalars['String']['input']>
   embedding_POP?: InputMaybe<Scalars['Int']['input']>
@@ -9907,6 +10613,23 @@ export type PersonWhere = {
   connections_NONE?: InputMaybe<PersonWhere>
   connections_SINGLE?: InputMaybe<PersonWhere>
   connections_SOME?: InputMaybe<PersonWhere>
+  contextsAggregate?: InputMaybe<PersonContextsAggregateInput>
+  /** Return People where all of the related PersonContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<PersonContextsConnectionWhere>
+  /** Return People where none of the related PersonContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<PersonContextsConnectionWhere>
+  /** Return People where one of the related PersonContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<PersonContextsConnectionWhere>
+  /** Return People where some of the related PersonContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<PersonContextsConnectionWhere>
+  /** Return People where all of the related FieldContexts match this filter */
+  contexts_ALL?: InputMaybe<FieldContextWhere>
+  /** Return People where none of the related FieldContexts match this filter */
+  contexts_NONE?: InputMaybe<FieldContextWhere>
+  /** Return People where one of the related FieldContexts match this filter */
+  contexts_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return People where some of the related FieldContexts match this filter */
+  contexts_SOME?: InputMaybe<FieldContextWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -14560,6 +15283,10 @@ export type StoryPulse = FieldPulse & {
   issuesResolved?: Maybe<Scalars['String']['output']>
   levelFulfilled?: Maybe<Scalars['String']['output']>
   location?: Maybe<Scalars['String']['output']>
+  sourceFilename?: Maybe<Scalars['String']['output']>
+  sourceMimeType?: Maybe<Scalars['String']['output']>
+  sourceUploadedAt?: Maybe<Scalars['DateTime']['output']>
+  sourceUri?: Maybe<Scalars['String']['output']>
   status?: Maybe<Scalars['String']['output']>
   successMeasures?: Maybe<Scalars['String']['output']>
   time?: Maybe<Scalars['String']['output']>
@@ -14660,6 +15387,10 @@ export type StoryPulseAggregateNode = {
   issuesResolved: StringAggregateSelection
   levelFulfilled: StringAggregateSelection
   location: StringAggregateSelection
+  sourceFilename: StringAggregateSelection
+  sourceMimeType: StringAggregateSelection
+  sourceUploadedAt: DateTimeAggregateSelection
+  sourceUri: StringAggregateSelection
   status: StringAggregateSelection
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
@@ -14683,6 +15414,10 @@ export type StoryPulseAggregateSelection = {
   issuesResolved: StringAggregateSelection
   levelFulfilled: StringAggregateSelection
   location: StringAggregateSelection
+  sourceFilename: StringAggregateSelection
+  sourceMimeType: StringAggregateSelection
+  sourceUploadedAt: DateTimeAggregateSelection
+  sourceUri: StringAggregateSelection
   status: StringAggregateSelection
   successMeasures: StringAggregateSelection
   time: StringAggregateSelection
@@ -14789,6 +15524,10 @@ export type StoryPulseCreateInput = {
   issuesResolved?: InputMaybe<Scalars['String']['input']>
   levelFulfilled?: InputMaybe<Scalars['String']['input']>
   location?: InputMaybe<Scalars['String']['input']>
+  sourceFilename?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType?: InputMaybe<Scalars['String']['input']>
+  sourceUploadedAt?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUri?: InputMaybe<Scalars['String']['input']>
   status?: InputMaybe<Scalars['String']['input']>
   successMeasures?: InputMaybe<Scalars['String']['input']>
   time?: InputMaybe<Scalars['String']['input']>
@@ -15232,6 +15971,10 @@ export type StoryPulseSort = {
   issuesResolved?: InputMaybe<SortDirection>
   levelFulfilled?: InputMaybe<SortDirection>
   location?: InputMaybe<SortDirection>
+  sourceFilename?: InputMaybe<SortDirection>
+  sourceMimeType?: InputMaybe<SortDirection>
+  sourceUploadedAt?: InputMaybe<SortDirection>
+  sourceUri?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
   successMeasures?: InputMaybe<SortDirection>
   time?: InputMaybe<SortDirection>
@@ -15257,6 +16000,10 @@ export type StoryPulseUpdateInput = {
   issuesResolved_SET?: InputMaybe<Scalars['String']['input']>
   levelFulfilled_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
+  sourceFilename_SET?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType_SET?: InputMaybe<Scalars['String']['input']>
+  sourceUploadedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUri_SET?: InputMaybe<Scalars['String']['input']>
   status_SET?: InputMaybe<Scalars['String']['input']>
   successMeasures_SET?: InputMaybe<Scalars['String']['input']>
   time_SET?: InputMaybe<Scalars['String']['input']>
@@ -15366,6 +16113,29 @@ export type StoryPulseWhere = {
   location_EQ?: InputMaybe<Scalars['String']['input']>
   location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceFilename_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  sourceFilename_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceFilename_EQ?: InputMaybe<Scalars['String']['input']>
+  sourceFilename_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  sourceFilename_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType_EQ?: InputMaybe<Scalars['String']['input']>
+  sourceMimeType_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  sourceMimeType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceUploadedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUploadedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUploadedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUploadedAt_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['DateTime']['input']>>
+  >
+  sourceUploadedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUploadedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  sourceUri_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  sourceUri_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  sourceUri_EQ?: InputMaybe<Scalars['String']['input']>
+  sourceUri_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  sourceUri_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
@@ -17501,6 +18271,50 @@ export type ConnectFieldToSpaceMutation = {
   }
 }
 
+export type AddPersonToFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  personId: Scalars['ID']['input']
+}>
+
+export type AddPersonToFieldContextMutation = {
+  __typename?: 'Mutation'
+  updateFieldContexts: {
+    __typename?: 'UpdateFieldContextsMutationResponse'
+    fieldContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      people: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        email?: string | null
+      }>
+    }>
+  }
+}
+
+export type RemovePersonFromFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  personId: Scalars['ID']['input']
+}>
+
+export type RemovePersonFromFieldContextMutation = {
+  __typename?: 'Mutation'
+  updateFieldContexts: {
+    __typename?: 'UpdateFieldContextsMutationResponse'
+    fieldContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      people: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        email?: string | null
+      }>
+    }>
+  }
+}
+
 export type CreateGoalPulsesMutationVariables = Exact<{
   input: Array<GoalPulseCreateInput> | GoalPulseCreateInput
 }>
@@ -18719,6 +19533,81 @@ export type GetFieldContextDetailsQuery = {
   }>
 }
 
+export type GetFieldContextPeopleQueryVariables = Exact<{
+  contextId: Scalars['ID']['input']
+}>
+
+export type GetFieldContextPeopleQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    people: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+      photo?: string | null
+    }>
+    meSpace: Array<{
+      __typename?: 'MeSpace'
+      id: string
+      owner: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        email?: string | null
+        photo?: string | null
+      }>
+      members: Array<{
+        __typename?: 'SpaceMembership'
+        id: string
+        role: SpaceRole
+        member: Array<{
+          __typename?: 'Person'
+          id: string
+          firstName: string
+          lastName: string
+          name: string
+          email?: string | null
+          photo?: string | null
+        }>
+      }>
+    }>
+    weSpace: Array<{
+      __typename?: 'WeSpace'
+      id: string
+      owner: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        email?: string | null
+        photo?: string | null
+      }>
+      members: Array<{
+        __typename?: 'SpaceMembership'
+        id: string
+        role: SpaceRole
+        member: Array<{
+          __typename?: 'Person'
+          id: string
+          firstName: string
+          lastName: string
+          name: string
+          email?: string | null
+          photo?: string | null
+        }>
+      }>
+    }>
+  }>
+}
+
 export type GetFieldContextsQueryVariables = Exact<{
   where?: InputMaybe<FieldContextWhere>
 }>
@@ -19787,6 +20676,166 @@ export type GetAllPulsesQuery = {
       name: string
       email?: string | null
     }>
+  }>
+}
+
+export type GetAllPulsesByContextQueryVariables = Exact<{
+  contextId: Scalars['ID']['input']
+}>
+
+export type GetAllPulsesByContextQuery = {
+  __typename?: 'Query'
+  goalPulses: Array<{
+    __typename: 'GoalPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+  resourcePulses: Array<{
+    __typename: 'ResourcePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+  storyPulses: Array<{
+    __typename: 'StoryPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+}
+
+export type GetAllPulsesBySpaceQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetAllPulsesBySpaceQuery = {
+  __typename?: 'Query'
+  goalPulses: Array<{
+    __typename: 'GoalPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+  resourcePulses: Array<{
+    __typename: 'ResourcePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+  storyPulses: Array<{
+    __typename: 'StoryPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+}
+
+export type GetFieldContextsBySpaceQueryVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+}>
+
+export type GetFieldContextsBySpaceQuery = {
+  __typename?: 'Query'
+  fieldContexts: Array<{
+    __typename?: 'FieldContext'
+    id: string
+    title: string
+    emergentName?: string | null
+    createdAt: any
+    space: Array<
+      | {
+          __typename?: 'MeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          visibility: SpaceVisibility
+        }
+    >
+    weSpace: Array<{
+      __typename?: 'WeSpace'
+      id: string
+      name: string
+      visibility: SpaceVisibility
+    }>
+    pulses: Array<
+      | { __typename: 'CarePulse'; id: string; createdAt: any }
+      | { __typename: 'CoreValuePulse'; id: string; createdAt: any }
+      | { __typename: 'GoalPulse'; id: string; createdAt: any }
+      | { __typename: 'ResourcePulse'; id: string; createdAt: any }
+      | { __typename: 'StoryPulse'; id: string; createdAt: any }
+    >
   }>
 }
 
@@ -21984,6 +23033,342 @@ export const ConnectFieldToSpaceDocument = {
 } as unknown as DocumentNode<
   ConnectFieldToSpaceMutation,
   ConnectFieldToSpaceMutationVariables
+>
+export const AddPersonToFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddPersonToFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'contextId' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'people' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'connect' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'where' },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'node',
+                                            },
+                                            value: {
+                                              kind: 'ObjectValue',
+                                              fields: [
+                                                {
+                                                  kind: 'ObjectField',
+                                                  name: {
+                                                    kind: 'Name',
+                                                    value: 'id_EQ',
+                                                  },
+                                                  value: {
+                                                    kind: 'Variable',
+                                                    name: {
+                                                      kind: 'Name',
+                                                      value: 'personId',
+                                                    },
+                                                  },
+                                                },
+                                              ],
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'people' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddPersonToFieldContextMutation,
+  AddPersonToFieldContextMutationVariables
+>
+export const RemovePersonFromFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemovePersonFromFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateFieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'contextId' },
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'people' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'disconnect' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'where' },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'node',
+                                            },
+                                            value: {
+                                              kind: 'ObjectValue',
+                                              fields: [
+                                                {
+                                                  kind: 'ObjectField',
+                                                  name: {
+                                                    kind: 'Name',
+                                                    value: 'id_EQ',
+                                                  },
+                                                  value: {
+                                                    kind: 'Variable',
+                                                    name: {
+                                                      kind: 'Name',
+                                                      value: 'personId',
+                                                    },
+                                                  },
+                                                },
+                                              ],
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'people' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemovePersonFromFieldContextMutation,
+  RemovePersonFromFieldContextMutationVariables
 >
 export const CreateGoalPulsesDocument = {
   kind: 'Document',
@@ -27465,6 +28850,273 @@ export const GetFieldContextDetailsDocument = {
   GetFieldContextDetailsQuery,
   GetFieldContextDetailsQueryVariables
 >
+export const GetFieldContextPeopleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldContextPeople' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'contextId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'people' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'meSpace' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'members' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'role' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'member' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'firstName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'photo' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'weSpace' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'members' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'role' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'member' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'firstName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'lastName' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'photo' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldContextPeopleQuery,
+  GetFieldContextPeopleQueryVariables
+>
 export const GetFieldContextsDocument = {
   kind: 'Document',
   definitions: [
@@ -31475,6 +33127,977 @@ export const GetAllPulsesDocument = {
     },
   ],
 } as unknown as DocumentNode<GetAllPulsesQuery, GetAllPulsesQueryVariables>
+export const GetAllPulsesByContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllPulsesByContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllPulsesByContextQuery,
+  GetAllPulsesByContextQueryVariables
+>
+export const GetAllPulsesBySpaceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllPulsesBySpace' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'OR' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'meSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'weSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'OR' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'meSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'weSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'OR' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'meSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'weSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAllPulsesBySpaceQuery,
+  GetAllPulsesBySpaceQueryVariables
+>
+export const GetFieldContextsBySpaceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetFieldContextsBySpace' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'fieldContexts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'OR' },
+                      value: {
+                        kind: 'ListValue',
+                        values: [
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'meSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            kind: 'ObjectValue',
+                            fields: [
+                              {
+                                kind: 'ObjectField',
+                                name: { kind: 'Name', value: 'weSpace_SOME' },
+                                value: {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: { kind: 'Name', value: 'id_EQ' },
+                                      value: {
+                                        kind: 'Variable',
+                                        name: {
+                                          kind: 'Name',
+                                          value: 'spaceId',
+                                        },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'space' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'weSpace' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'visibility' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'GoalPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'ResourcePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'StoryPulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CarePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetFieldContextsBySpaceQuery,
+  GetFieldContextsBySpaceQueryVariables
+>
 export const GetAllFieldContextsDocument = {
   kind: 'Document',
   definitions: [

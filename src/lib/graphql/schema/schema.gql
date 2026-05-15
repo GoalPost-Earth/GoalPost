@@ -166,7 +166,18 @@ type Person implements PersonInterface
   onboardingCompletedSteps: [String!]
   onboardingIsCompleted: Boolean
   onboardingSkipped: Boolean
-  
+
+  # Persisted focal entity. Mirrors the client-side FocalEntityContext so
+  # the user's "where I last was" survives a fresh browser / new device.
+  # All four are written together on every change; null when no focal is set.
+  # Type is one of the FocalEntityType discriminators
+  # (MeSpace/WeSpace/FieldContext/User/PersonPulse/<Pulse subtype>) —
+  # validated server-side via isFocalEntityType.
+  lastFocalType: String
+  lastFocalId: String
+  lastFocalLabel: String
+  lastFocalAt: DateTime
+
   # Timestamps
   createdAt: DateTime!
     @timestamp(operations: [CREATE])
@@ -174,7 +185,7 @@ type Person implements PersonInterface
   updatedAt: DateTime
     @timestamp(operations: [UPDATE])
     @settable(onCreate: false, onUpdate: true)
-  
+
   # Modern relationships (pulse-first architecture)
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
@@ -697,7 +708,16 @@ type StoryPulse implements FieldPulse
   alignmentChallenges: String
   alignmentExamples: String
   whoSupports: String
-  
+
+  # Source-document properties (populated only when a StoryPulse was
+  # created via document ingest — e.g. /api/import/document). Lets the
+  # assistant answer "where did this pulse come from?" without raw IDs.
+  # All optional — legacy StoryPulses are unaffected.
+  sourceUri: String
+  sourceMimeType: String
+  sourceFilename: String
+  sourceUploadedAt: DateTime
+
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
 }

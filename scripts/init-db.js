@@ -74,6 +74,14 @@ async function initializeDatabase() {
        FOR (n:ConversationThread) REQUIRE n.ownerId IS UNIQUE`,
       `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
        FOR (n:ConversationTurn) REQUIRE n.id IS UNIQUE`,
+      // Context-scoped document ingest writes a `ContextExtraction` event
+      // per run (`src/lib/imports/context-extraction.ts`). The id is
+      // generated client-side (`extraction_<ts>_<uuid>`), so a UNIQUE
+      // constraint protects against double-writes if the route ever
+      // retries — matches the project pattern of every other event-style
+      // node having an id uniqueness gate.
+      `CREATE CONSTRAINT context_extraction_id IF NOT EXISTS
+       FOR (n:ContextExtraction) REQUIRE n.id IS UNIQUE`,
     ]
 
     for (const constraint of constraints) {
@@ -131,9 +139,21 @@ async function initializeDatabase() {
         )
         console.log(`✓ Created ${index.description}: ${index.name}`)
       } catch (error) {
+        // Neo4j wraps schema errors raised inside a procedure call as
+        // `ProcedureCallFailed`, so the "already exists" check must look
+        // at either the wrapped cause or the error message — the
+        // outermost `error.code` is the procedure code, not the schema
+        // code, on Aura's vector procedure path.
+        const causeCode = error?.cause?.code ?? error?.cause?.gqlStatus
+        const messageLooksLikeExists =
+          typeof error?.message === 'string' &&
+          /already exists/i.test(error.message)
         if (
           error.code ===
-          'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists'
+            'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists' ||
+          causeCode ===
+            'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists' ||
+          messageLooksLikeExists
         ) {
           console.log(`✓ Vector index already exists: ${index.name}`)
         } else {

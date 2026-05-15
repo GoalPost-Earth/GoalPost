@@ -3,6 +3,11 @@ import { canEditContent } from '@/lib/permissions/space-permissions'
 import { enrichPersonFromPulses } from '@/lib/resonance/embeddings/person-enricher'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import {
+  assertOwnsThread,
+  recordContextExtraction,
+} from './context-extraction'
+import { createLog } from '@/lib/activity-logs/create-log'
+import {
   createEmptySummary,
   formatRowData,
   getRowValue,
@@ -29,6 +34,19 @@ interface ProcessCsvImportParams {
   workbookBase64: string
   accessToken: string
   graphQLEndpoint: string
+  /**
+   * When the import is initiated from inside a chat thread, the assistant
+   * passes the active `ConversationThread.id` here. The service then records
+   * a `ContextExtraction` event tying the produced pulses back to the thread
+   * so the assistant can answer "where did this pulse come from?" later.
+   * Legacy callers (bulk admin imports) omit this and skip the event.
+   */
+  conversationThreadId?: string
+  /**
+   * Human-readable label for the source — usually the original filename.
+   * Surfaced in the activity log and the `ContextExtraction.sourceLabel`.
+   */
+  sourceLabel?: string
 }
 
 interface GraphQLRequestContext {
@@ -574,10 +592,19 @@ export async function processCsvImport({
   workbookBase64,
   accessToken,
   graphQLEndpoint,
+  conversationThreadId,
+  sourceLabel,
 }: ProcessCsvImportParams): Promise<CsvImportResult> {
   const graphQLContext: GraphQLRequestContext = {
     accessToken,
     graphQLEndpoint,
+  }
+
+  // When the import is thread-scoped, verify thread ownership BEFORE any
+  // writes happen. A spoofed thread id must not be silently dropped — the
+  // caller needs to know the link won't be established.
+  if (conversationThreadId) {
+    await assertOwnsThread(session, user.id, conversationThreadId)
   }
 
   const { rows, parseErrors } = parseXlsxBase64(workbookBase64)
@@ -763,6 +790,44 @@ export async function processCsvImport({
   const warnings = await postProcessCreatedPulses(user.id, createdPulseIds)
   const importedRows = rows.length - errors.length
   const failedRows = errors.length
+
+  // Thread-scoped trace + activity log. Best-effort — a failure here must
+  // not fail the whole import (pulses are already in the graph), but we
+  // surface it as a warning so ops can catch a sustained failure.
+  if (conversationThreadId && createdPulseIds.length > 0) {
+    const resolvedSource = sourceLabel || `${uploadType} import`
+    try {
+      const { extractionId } = await recordContextExtraction(session, {
+        userId: user.id,
+        conversationThreadId,
+        pulseIds: createdPulseIds,
+        sourceLabel: resolvedSource,
+        extractorKind: 'xlsx',
+      })
+      await createLog({
+        userId: user.id,
+        description: `Ingested ${createdPulseIds.length} pulse${
+          createdPulseIds.length === 1 ? '' : 's'
+        } from "${resolvedSource}" into the active thread.`,
+        pulseIds: createdPulseIds,
+        metadata: {
+          source: 'context-extraction',
+          conversationThreadId,
+          extractionId,
+          uploadType,
+          pulseCount: createdPulseIds.length,
+        },
+      })
+    } catch (extractionError) {
+      const message =
+        extractionError instanceof Error
+          ? extractionError.message
+          : 'Unknown error'
+      warnings.push(
+        `Pulses were imported, but linking them to the conversation thread failed: ${message}`
+      )
+    }
+  }
 
   if (failedRows === 0) {
     return {

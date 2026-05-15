@@ -14,6 +14,18 @@ const xlsxImportSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   uploadType: z.enum(['we-space', 'field-context', 'pulse']),
   workbookBase64: z.string().min(1, 'XLSX file content is required'),
+  /**
+   * Optional. When the import is triggered from inside an assistant chat
+   * thread, the client passes the active `ConversationThread.id` so the
+   * server can record a `ContextExtraction` event linking the produced
+   * pulses back to the thread. Bulk admin imports omit this.
+   */
+  conversationThreadId: z.string().min(1).optional(),
+  /**
+   * Optional human-readable source label (usually the original filename).
+   * Used by the activity log and the `ContextExtraction.sourceLabel`.
+   */
+  sourceLabel: z.string().min(1).max(255).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -38,11 +50,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { userId, uploadType, workbookBase64 } = validatedBody.data as {
-    userId: string
-    uploadType: CsvImportType
-    workbookBase64: string
-  }
+  const { userId, uploadType, workbookBase64, conversationThreadId, sourceLabel } =
+    validatedBody.data as {
+      userId: string
+      uploadType: CsvImportType
+      workbookBase64: string
+      conversationThreadId?: string
+      sourceLabel?: string
+    }
 
   try {
     const user = requireAuthenticatedImportUser(request, userId)
@@ -69,6 +84,8 @@ export async function POST(request: NextRequest) {
         workbookBase64,
         accessToken,
         graphQLEndpoint: `${request.nextUrl.origin}/api/graphql`,
+        conversationThreadId,
+        sourceLabel,
       })
 
       const status = result.success ? 200 : result.importedRows > 0 ? 207 : 400
