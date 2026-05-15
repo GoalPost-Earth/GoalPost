@@ -12,33 +12,18 @@
  *               turns: [{ id, role, content,
  *                         parts, order, createdAt }] } }
  *
- * Auth: requires a valid `accessToken` cookie. The handler refuses without
- * one rather than returning an anonymous thread — chat history is private.
+ * Auth: accepts JWT via `Authorization: Bearer …` header or `accessToken=`
+ * cookie. The handler refuses without one rather than returning an
+ * anonymous thread — chat history is private.
  */
-import { verifyJWT } from '@/app/api/auth/utils'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import {
   getActiveConversationThread,
   getConversationThread,
 } from '@/lib/simulation/conversation-thread.service'
 
 export async function GET(req: Request) {
-  let userId: string | null = null
-  const cookieHeader = req.headers.get('cookie') || ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-  if (tokenMatch) {
-    try {
-      const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
-        user: { id: string }
-      }
-      userId = decoded.user.id
-    } catch (error) {
-      console.error(
-        '[Chat Simulation Thread] Token verification failed:',
-        error
-      )
-    }
-  }
-
+  const userId = resolveAuthenticatedUserId(req)
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthenticated' }), {
       status: 401,

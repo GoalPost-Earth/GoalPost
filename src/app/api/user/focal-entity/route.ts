@@ -10,31 +10,22 @@
  * but this endpoint is the source of truth — switching browsers or
  * devices should not lose the user's "where I last was."
  *
- * Auth is JWT cookie (mirrors `/api/chat/simulation` and the other
- * user-scoped endpoints). The Cypher always anchors on the authenticated
- * user so a missing or spoofed id can't read or overwrite someone else's
- * focal.
+ * Auth accepts JWT from either an `Authorization: Bearer ...` header
+ * (what the Apollo client + GraphQL route already use) or an
+ * `accessToken=` cookie. `resolveAuthenticatedUserId` in
+ * `src/app/api/auth/utils.ts` is the canonical resolver. The Cypher
+ * always anchors on the authenticated user so a missing or spoofed id
+ * can't read or overwrite someone else's focal.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { initializeDB, getSession } from '@/app/api/auth/neo4j'
-import { parseRequestBody, verifyJWT } from '@/app/api/auth/utils'
+import {
+  parseRequestBody,
+  resolveAuthenticatedUserId,
+} from '@/app/api/auth/utils'
 import { isFocalEntityType } from '@/lib/focal-entity/types'
-
-function resolveUserId(req: NextRequest): string | null {
-  const cookieHeader = req.headers.get('cookie') || ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-  if (!tokenMatch) return null
-  try {
-    const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
-      user: { id: string }
-    }
-    return decoded.user.id
-  } catch {
-    return null
-  }
-}
 
 const upsertSchema = z.object({
   type: z.string().refine(isFocalEntityType, {
@@ -74,7 +65,7 @@ function rowToFocal(row: StoredFocalRow | undefined): StoredFocal | null {
 }
 
 export async function GET(request: NextRequest) {
-  const userId = resolveUserId(request)
+  const userId = resolveAuthenticatedUserId(request)
   if (!userId) {
     return NextResponse.json(
       { error: 'Authentication required.' },
@@ -114,7 +105,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const userId = resolveUserId(request)
+  const userId = resolveAuthenticatedUserId(request)
   if (!userId) {
     return NextResponse.json(
       { error: 'Authentication required.' },
@@ -178,7 +169,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = resolveUserId(request)
+  const userId = resolveAuthenticatedUserId(request)
   if (!userId) {
     return NextResponse.json(
       { error: 'Authentication required.' },

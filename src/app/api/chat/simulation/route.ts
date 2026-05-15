@@ -34,7 +34,7 @@ import type {
 } from '@/lib/simulation'
 import { buildSimulationChatTools } from '@/lib/simulation/chat-tools'
 import { getAssistantModelId } from '@/lib/llm/factory'
-import { verifyJWT } from '@/app/api/auth/utils'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import {
   buildApprovedActionHashSet,
   type ApprovedAction,
@@ -164,22 +164,13 @@ export async function POST(req: Request) {
       )
     }
 
-    // Resolve current user from request body, falling back to JWT cookie.
-    // Mirrors /api/chat/route.ts so tool authorization can attach to a real user.
+    // Resolve current user from request body first, then fall back to the
+    // canonical Authorization-header-or-cookie resolver. Mirrors what the
+    // legacy `/api/chat/route.ts` already does so tool authorization can
+    // attach to a real user regardless of which transport the client uses.
     let currentUserId: string | null = clientProvidedUserId || null
     if (!currentUserId) {
-      const cookieHeader = req.headers.get('cookie') || ''
-      const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-      if (tokenMatch) {
-        try {
-          const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
-            user: { id: string }
-          }
-          currentUserId = decoded.user.id
-        } catch (error) {
-          console.error('[Chat Simulation] Token verification failed:', error)
-        }
-      }
+      currentUserId = resolveAuthenticatedUserId(req)
     }
 
     // Set mode if provided, otherwise use current mode

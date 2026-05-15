@@ -20,7 +20,7 @@ import { z } from 'zod'
 import { initializeDB, getSession } from '@/app/api/auth/neo4j'
 import {
   parseRequestBody,
-  verifyJWT,
+  resolveAuthenticatedUserId,
 } from '@/app/api/auth/utils'
 import { parseError } from '@/utils'
 import {
@@ -53,23 +53,9 @@ const documentIngestSchema = z
     }
   )
 
-function resolveUserId(req: NextRequest): string | null {
-  const cookieHeader = req.headers.get('cookie') || ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-  if (!tokenMatch) return null
-  try {
-    const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
-      user: { id: string }
-    }
-    return decoded.user.id
-  } catch {
-    return null
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const userId = resolveUserId(request)
+    const userId = resolveAuthenticatedUserId(request)
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required.' },

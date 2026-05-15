@@ -15,7 +15,10 @@
  * mirroring `src/app/api/chat/simulation/route.ts`.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyJWT, parseRequestBody } from '../../auth/utils'
+import {
+  parseRequestBody,
+  resolveAuthenticatedUserId,
+} from '../../auth/utils'
 import { getSession, initializeDB } from '../../auth/neo4j'
 import { parseError } from '@/utils'
 import { z } from 'zod'
@@ -90,24 +93,6 @@ function toNVL(
     caption: r.type,
   }))
   return { nodes, relationships }
-}
-
-/**
- * Resolve the user's authenticated id from JWT cookie. Mirrors the chat
- * simulation route's resolver — single source of truth for who's asking.
- */
-function resolveUserId(req: NextRequest): string | null {
-  const cookieHeader = req.headers.get('cookie') || ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-  if (!tokenMatch) return null
-  try {
-    const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as {
-      user: { id: string }
-    }
-    return decoded.user.id
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -511,7 +496,7 @@ async function fetchDefaultNeighborhood(
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = resolveUserId(request)
+    const userId = resolveAuthenticatedUserId(request)
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required.' },

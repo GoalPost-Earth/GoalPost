@@ -18,6 +18,56 @@ export const verifyJWT = (token: string) =>
   jwt.verify(token, process.env.JWT_SECRET ?? '')
 
 /**
+ * Resolve the authenticated user's id from a request. Tries both
+ * transports the client uses today:
+ *
+ *   1. `Authorization: Bearer <jwt>` header — what the Apollo / GraphQL
+ *      client sends and what `/api/graphql` itself reads.
+ *   2. `accessToken=<jwt>` cookie — what older API routes expect.
+ *
+ * Returns null when neither produces a valid JWT. Verification failures
+ * are swallowed so a stale token on one transport doesn't shadow a good
+ * token on the other.
+ *
+ * Centralising this here prevents the "GraphQL works but the new route
+ * 401s" class of bug — any route that needs the caller's id should
+ * call this instead of grepping cookies itself.
+ */
+export function resolveAuthenticatedUserId(
+  req: Request | NextRequest
+): string | null {
+  type DecodedJwt = { user?: { id?: unknown } } | string | undefined
+
+  const authHeader = req.headers.get('authorization') || ''
+  const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i)
+  if (bearerMatch) {
+    try {
+      const decoded = verifyJWT(bearerMatch[1].trim()) as DecodedJwt
+      if (typeof decoded === 'object' && typeof decoded?.user?.id === 'string') {
+        return decoded.user.id
+      }
+    } catch {
+      // fall through to cookie
+    }
+  }
+
+  const cookieHeader = req.headers.get('cookie') || ''
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
+  if (tokenMatch) {
+    try {
+      const decoded = verifyJWT(decodeURIComponent(tokenMatch[1])) as DecodedJwt
+      if (typeof decoded === 'object' && typeof decoded?.user?.id === 'string') {
+        return decoded.user.id
+      }
+    } catch {
+      // both transports failed → return null
+    }
+  }
+
+  return null
+}
+
+/**
  * Parses the request body as JSON and checks for empty body.
  * Returns an object: { ok: true, body } or { ok: false, error, status }
  */

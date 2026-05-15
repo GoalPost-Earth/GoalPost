@@ -2,28 +2,14 @@
  * GET  /api/chat/simulation/threads  — list thread summaries for the user
  * POST /api/chat/simulation/threads  — create a new empty thread
  */
-import { verifyJWT } from '@/app/api/auth/utils'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import {
   listConversationThreadsSummary,
   createConversationThread,
 } from '@/lib/simulation/conversation-thread.service'
 
-function getUserId(req: Request): string | null {
-  const cookieHeader = req.headers.get('cookie') ?? ''
-  const match = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/)
-  if (!match) return null
-  try {
-    const decoded = verifyJWT(decodeURIComponent(match[1])) as {
-      user: { id: string }
-    }
-    return decoded.user.id
-  } catch {
-    return null
-  }
-}
-
 export async function GET(req: Request) {
-  const userId = getUserId(req)
+  const userId = resolveAuthenticatedUserId(req)
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthenticated' }), {
       status: 401,
@@ -38,7 +24,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const userId = getUserId(req)
+  const userId = resolveAuthenticatedUserId(req)
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthenticated' }), {
       status: 401,
