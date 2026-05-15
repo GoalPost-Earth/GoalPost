@@ -28,7 +28,11 @@ export default async function initTools(
 
   // Create entity-specific tools
   const personSearchTool = createPersonSearchTool(graph)
-  const spaceSearchTool = createSpaceSearchTool(graph)
+  // Legacy agent path (chatbot-resolvers.ts) does not carry a user identity.
+  // Passing null causes the tool to refuse rather than leak every Space in the
+  // graph. The active chat surface (src/lib/simulation/chat-tools.ts) passes
+  // the resolved userId from the request JWT, which is the path Robert hits.
+  const spaceSearchTool = createSpaceSearchTool(graph, null)
   const spaceRenameTool = createSpaceRenameTool(graph)
   const fieldContextSearchTool = createFieldContextSearchTool(graph)
   const fieldContextUpdateTool = createFieldContextUpdateTool(graph)

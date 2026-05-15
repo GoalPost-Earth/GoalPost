@@ -1,7 +1,39 @@
+/**
+ * Graph RAG retrieval — semantic search across people, pulses, and
+ * conversation chunks, enriched with graph relationships.
+ *
+ * Vector-index role separation (`scripts/init-db.js` defines all three at
+ * 1536-dim cosine):
+ *
+ *   personBioVectorIndex          — Person.embedding, for person similarity.
+ *                                   Source for `searchPeopleByVector`.
+ *   pulseContentVectorIndex       — FieldPulse.embedding, for pulse-level
+ *                                   semantic match. Source for
+ *                                   `searchPulsesByVector` and the
+ *                                   resonance-discovery cron (cosine is
+ *                                   only the candidate-pick step there;
+ *                                   the *why* now comes from graph
+ *                                   traversal via
+ *                                   `evidence-collector.ts`).
+ *   conversationChunkVectorIndex  — ConversationChunk.embedding, for
+ *                                   chunk-level recall ("what was said in
+ *                                   that earlier moment?"). Source for
+ *                                   `searchChunksByVector` — Robert's
+ *                                   "graph semantics over vectors" line
+ *                                   keeps chunks for language-translation
+ *                                   retrieval, not as the primary matcher.
+ *
+ * The active chat surface (`/api/chat/simulation`) hits this module via
+ * the `graph_rag_search` tool. The legacy `src/modules/agent/vector.store.ts`
+ * Neo4jVectorStore wrapper is superseded by `searchPeopleByVector` here
+ * and stays only because the deprecated agent path
+ * (`src/modules/agent/agent.ts` → `chatbot-resolvers.ts`) still imports it.
+ */
+
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { Embeddings } from '@langchain/core/embeddings'
 
-export type GraphRagScope = 'people' | 'pulses' | 'all'
+export type GraphRagScope = 'people' | 'pulses' | 'chunks' | 'all'
 
 export interface GraphRagSearchInput {
   query: string
@@ -11,7 +43,7 @@ export interface GraphRagSearchInput {
 }
 
 export interface GraphRagMatch {
-  entityType: 'person' | 'pulse'
+  entityType: 'person' | 'pulse' | 'chunk'
   id: string
   title: string
   score: number
@@ -26,6 +58,7 @@ export interface GraphRagSearchResult {
   count: number
   peopleMatches: GraphRagMatch[]
   pulseMatches: GraphRagMatch[]
+  chunkMatches: GraphRagMatch[]
   combinedMatches: GraphRagMatch[]
   warnings: string[]
   message: string
@@ -87,6 +120,62 @@ async function searchPeopleByVector(
   const rows = await graph.query<Record<string, unknown>>(cypher, {
     embedding,
     limit,
+  })
+
+  return (rows || []).map(mapMatch)
+}
+
+/**
+ * Chunk-level recall via `conversationChunkVectorIndex`. Used when the
+ * user asks the agent to find a specific *moment* from a past pulse's
+ * source conversation rather than the pulse as a whole. Returns the
+ * matching chunk plus enough metadata to navigate back to the parent
+ * pulse without exposing raw IDs in user-facing output (per
+ * kb/07-ai-assistant-ux.md Rule 1 — the model gets the parent pulse's
+ * title here, never just the chunk id).
+ */
+async function searchChunksByVector(
+  graph: Neo4jGraph,
+  embedding: number[],
+  limit: number,
+  contextId?: string
+): Promise<GraphRagMatch[]> {
+  const cypher = `
+    CALL db.index.vector.queryNodes('conversationChunkVectorIndex', $limit, $embedding)
+    YIELD node, score
+    MATCH (pulse:FieldPulse)-[:HAS_CHUNK]->(node)
+    WHERE
+      $contextId IS NULL
+      OR EXISTS {
+        MATCH (:FieldContext {id: $contextId})-[:HAS_PULSE]->(pulse)
+      }
+    OPTIONAL MATCH (context:FieldContext)-[:HAS_PULSE]->(pulse)
+    WITH
+      node, pulse, score,
+      head([title IN collect(DISTINCT context.title) WHERE title IS NOT NULL]) AS contextTitle,
+      head([id IN collect(DISTINCT context.id) WHERE id IS NOT NULL]) AS contextId
+    RETURN
+      'chunk' AS entityType,
+      node.id AS id,
+      coalesce(pulse.title, 'Untitled Pulse') AS title,
+      node.content AS snippet,
+      score,
+      {
+        pulseId: pulse.id,
+        pulseTitle: pulse.title,
+        contextId: contextId,
+        contextTitle: contextTitle,
+        role: node.role,
+        order: node.order
+      } AS metadata
+    ORDER BY score DESC
+    LIMIT $limit
+  `
+
+  const rows = await graph.query<Record<string, unknown>>(cypher, {
+    embedding,
+    limit,
+    contextId: contextId?.trim() || null,
   })
 
   return (rows || []).map(mapMatch)
@@ -161,17 +250,18 @@ function buildResultMessage(
   query: string,
   peopleCount: number,
   pulseCount: number,
+  chunkCount: number,
   warnings: string[]
 ): string {
-  const chunks = [
-    `Graph RAG retrieval for "${query}" found ${peopleCount} people match(es) and ${pulseCount} pulse match(es).`,
+  const parts = [
+    `Graph RAG retrieval for "${query}" found ${peopleCount} people match(es), ${pulseCount} pulse match(es), and ${chunkCount} conversation chunk match(es).`,
   ]
 
   if (warnings.length > 0) {
-    chunks.push(`Warnings: ${warnings.join(' | ')}`)
+    parts.push(`Warnings: ${warnings.join(' | ')}`)
   }
 
-  return chunks.join(' ')
+  return parts.join(' ')
 }
 
 export async function graphRagSearch(
@@ -189,6 +279,7 @@ export async function graphRagSearch(
       count: 0,
       peopleMatches: [],
       pulseMatches: [],
+      chunkMatches: [],
       combinedMatches: [],
       warnings: [],
       message: 'Please provide a query for Graph RAG retrieval.',
@@ -203,6 +294,7 @@ export async function graphRagSearch(
 
   let peopleMatches: GraphRagMatch[] = []
   let pulseMatches: GraphRagMatch[] = []
+  let chunkMatches: GraphRagMatch[] = []
 
   if (scope === 'all' || scope === 'people') {
     try {
@@ -229,9 +321,24 @@ export async function graphRagSearch(
     }
   }
 
-  const combinedMatches = [...peopleMatches, ...pulseMatches]
+  if (scope === 'all' || scope === 'chunks') {
+    try {
+      chunkMatches = await searchChunksByVector(
+        graph,
+        embedding,
+        limit,
+        input.contextId
+      )
+    } catch (error) {
+      warnings.push(
+        `Chunk vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
+  }
+
+  const combinedMatches = [...peopleMatches, ...pulseMatches, ...chunkMatches]
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit * 2)
+    .slice(0, limit * 3)
 
   return {
     success: combinedMatches.length > 0,
@@ -240,12 +347,14 @@ export async function graphRagSearch(
     count: combinedMatches.length,
     peopleMatches,
     pulseMatches,
+    chunkMatches,
     combinedMatches,
     warnings,
     message: buildResultMessage(
       query,
       peopleMatches.length,
       pulseMatches.length,
+      chunkMatches.length,
       warnings
     ),
   }

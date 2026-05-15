@@ -393,7 +393,7 @@ export async function buildSimulationChatTools(
         logToolDispatch('search_space', ctx, { name })
         try {
           const graph = await initGraph()
-          const spaceTool = createSpaceSearchTool(graph)
+          const spaceTool = createSpaceSearchTool(graph, ctx.currentUserId)
           const result = await spaceTool.invoke({ name })
           return JSON.parse(result)
         } catch (error) {
@@ -829,13 +829,15 @@ export async function buildSimulationChatTools(
 
     graph_rag_search: tool({
       description:
-        'Semantic Graph RAG retrieval across people and pulses using vector indexes, enriched with graph relationships. If activeFieldContextId is in session context, defaults the contextId filter to it.',
+        'Semantic Graph RAG retrieval across people, pulses, and conversation chunks (specific moments from a pulse\'s source conversation). Uses vector indexes enriched with graph relationships. If activeFieldContextId is in session context, defaults the contextId filter to it.',
       inputSchema: z.object({
         query: z.string().describe('Natural language search query.'),
         scope: z
-          .enum(['people', 'pulses', 'all'])
+          .enum(['people', 'pulses', 'chunks', 'all'])
           .optional()
-          .describe('Search scope (default: all).'),
+          .describe(
+            'Search scope. Use `chunks` when the user is asking about a specific moment or quote from a past conversation. Default: all.'
+          ),
         contextId: z
           .string()
           .optional()
@@ -857,7 +859,7 @@ export async function buildSimulationChatTools(
         limit,
       }: {
         query: string
-        scope?: 'people' | 'pulses' | 'all'
+        scope?: 'people' | 'pulses' | 'chunks' | 'all'
         contextId?: string
         limit?: number
       }) => {

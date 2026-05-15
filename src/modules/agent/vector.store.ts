@@ -2,11 +2,19 @@ import { EmbeddingsInterface } from '@langchain/core/embeddings'
 import { Neo4jVectorStore } from '@langchain/community/vectorstores/neo4j_vector'
 
 /**
- * Create a new vector search index that uses the existing
- * `moviePlots` index.
+ * @deprecated Superseded by `searchPeopleByVector` in
+ * `src/modules/agent/tools/rag/graph-rag.service.ts` for the active chat
+ * surface (`/api/chat/simulation`). Retained only because the legacy
+ * agent path (`src/modules/agent/agent.ts` → `chatbot-resolvers.ts`)
+ * still imports it. Remove together with the legacy agent path.
  *
- * @param {EmbeddingsInterface} embeddings  The embeddings model
- * @returns {Promise<Neo4jVectorStore>}
+ * Both paths read from the same `personBioVectorIndex` — the index is
+ * single-role (person bio similarity); this wrapper is the duplicate.
+ *
+ * Vector-index role separation (see `graph-rag.service.ts` top-level
+ * docstring): personBio for people, pulseContent for pulses,
+ * conversationChunk for chunk-level moments. This wrapper hits only the
+ * person index.
  */
 // tag::function[]
 export default async function initVectorStore(
