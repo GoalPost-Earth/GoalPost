@@ -1,19 +1,10 @@
-'use client'
-
-import { useEffect } from 'react'
-import { usePageContext } from '@/contexts'
+import { redirect } from 'next/navigation'
 
 /**
- * `/protected` root. The Studio's Dashboard mode detects this pathname and
- * renders `<StudioOverview/>` directly — the page itself just sets the page
- * title and returns null, so we don't double-render the overview.
+ * `/protected` root → forward to the dashboard. The studio shell renders
+ * around the route content, so this just picks the default landing surface
+ * (chat alongside the dashboard canvas).
  */
 export default function ProtectedHomePage() {
-  const { setPageTitle } = usePageContext()
-
-  useEffect(() => {
-    setPageTitle('Home')
-  }, [setPageTitle])
-
-  return null
+  redirect('/protected/dashboard')
 }

@@ -24,18 +24,17 @@ import {
   type HydratedThread,
 } from '@/lib/simulation/conversation-thread-client'
 import { onOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
-import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
 import { TourController } from '@/components/onboarding/TourController'
 import { TourOverlay } from '@/components/onboarding/TourOverlay'
 import {
-  StudioPanesProvider,
-  useStudioPanes,
-  STUDIO_MODES,
-  type PaneId,
-} from './studio-panes-context'
+  StudioCanvasProvider,
+  useStudioCanvas,
+} from './studio-canvas-context'
 import { StudioChrome } from './studio-chrome'
-import { FloatingAssistantTrigger } from './floating-assistant-trigger'
-import { PaneHost } from './pane-host'
+import { CanvasHost } from './canvas-host'
+import { ChatHost } from './chat-host'
+import { FloatingChatTrigger } from './floating-chat-trigger'
+import { FloatingChatPanel } from './floating-chat-panel'
 
 interface ApprovedActionPayload {
   tool: string
@@ -49,61 +48,65 @@ export interface StudioShellProps {
 }
 
 /**
- * The studio is the protected layout. A horizontal split hosts two panes,
- * each of which can render any of the three modes (dashboard / graph /
- * chat). Either pane can be fullscreened.
+ * The studio is the protected layout. A primary chat surface sits on the
+ * right; a togglable canvas on the left hosts the active route content
+ * (dashboard cards, pulse detail, graph, etc.). Either side can be
+ * fullscreened.
  */
 export const StudioShell: FC<StudioShellProps> = ({ children }) => {
   return (
-    <StudioPanesProvider>
+    <StudioCanvasProvider>
       <StudioBody>{children}</StudioBody>
-    </StudioPanesProvider>
+    </StudioCanvasProvider>
   )
 }
 
 const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   const {
-    left,
-    right,
-    fullscreenPane,
-    focusedPane,
-    setPaneMode,
-    focusPane,
+    canvasOpen,
+    fullscreenSide,
+    chatLayout,
+    floatingChatOpen,
+    setCanvasOpen,
+    toggleCanvas,
     toggleFullscreen,
     exitFullscreen,
-    isVisited,
-  } = useStudioPanes()
-  const [panelOpen, setPanelOpen] = useState(false)
+    toggleFloatingChat,
+    setFloatingChatOpen,
+  } = useStudioCanvas()
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
 
-  // Mount the AI runtime if chat is (or has been) live in either pane.
-  const needsRuntime =
-    left === 'chat' ||
-    right === 'chat' ||
-    isVisited('left', 'chat') ||
-    isVisited('right', 'chat')
-
-  // Slice 5 (GOAL-240) — open the assistant panel automatically when an
-  // upload (or any caller) requests a thread switch.
+  // Below this breakpoint the studio shows only one surface at a time. The
+  // canvas takes priority when open; the user closes it to access chat.
+  const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
-    return onOpenAssistantThread(() => {
-      setPanelOpen(true)
-    })
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
-  // Keyboard shortcuts. All ignored while typing into inputs/textareas.
-  //   1/2/3        → switch focused pane to dashboard/graph/chat
-  //   Shift+1..3   → switch the OTHER pane
-  //   Tab          → toggle pane focus
-  //   F            → fullscreen the focused pane
-  //   Esc          → exit fullscreen
-  //   V            → toggle composer mic when focused pane is chat
-  //   G is handled inside graph-mode (Spatial / Bloom).
-  const DIGIT_CODE_TO_INDEX: Record<string, number> = useMemo(
-    () => ({ Digit1: 0, Digit2: 1, Digit3: 2 }),
-    []
-  )
+  // Open the canvas whenever an external caller wants the assistant to
+  // jump into a particular thread or surface — keeps the workflow visible.
+  useEffect(() => {
+    return onOpenAssistantThread(() => {
+      setCanvasOpen(true)
+    })
+  }, [setCanvasOpen])
 
+  // Effective layout: mobile always forces 'floating', regardless of the
+  // user's stored desktop preference.
+  const effectiveLayout: 'docked' | 'floating' = isMobile
+    ? 'floating'
+    : chatLayout
+
+  // Keyboard shortcuts.
+  //   C   → toggle canvas (docked only)
+  //   F   → fullscreen the active side (docked) / toggle floating chat
+  //   Esc → exit fullscreen / close floating chat
+  //   V   → toggle composer mic (forwarded to chat composer)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -120,46 +123,36 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
 
-      const otherPane: PaneId = focusedPane === 'left' ? 'right' : 'left'
-      const focusedMode = focusedPane === 'left' ? left : right
-
-      // Shift+digit → switch the other pane (only when it exists).
-      if (e.shiftKey) {
-        const idx = DIGIT_CODE_TO_INDEX[e.code]
-        if (idx !== undefined && right !== null) {
-          e.preventDefault()
-          setPaneMode(otherPane, STUDIO_MODES[idx])
-        }
-        return
-      }
-
-      // Plain digit → switch focused pane.
-      const digitIdx = Number(e.key) - 1
-      if (digitIdx >= 0 && digitIdx < STUDIO_MODES.length) {
+      if (effectiveLayout === 'docked' && (e.key === 'c' || e.key === 'C')) {
         e.preventDefault()
-        setPaneMode(focusedPane, STUDIO_MODES[digitIdx])
-        return
-      }
-
-      if (e.key === 'Tab' && right !== null) {
-        e.preventDefault()
-        focusPane(otherPane)
+        toggleCanvas()
         return
       }
 
       if (e.key === 'f' || e.key === 'F') {
         e.preventDefault()
-        toggleFullscreen(focusedPane)
+        if (effectiveLayout === 'floating') {
+          toggleFloatingChat()
+        } else {
+          toggleFullscreen(canvasOpen ? 'canvas' : 'chat')
+        }
         return
       }
 
-      if (e.key === 'Escape' && fullscreenPane !== null) {
-        e.preventDefault()
-        exitFullscreen()
-        return
+      if (e.key === 'Escape') {
+        if (effectiveLayout === 'floating' && floatingChatOpen) {
+          e.preventDefault()
+          setFloatingChatOpen(false)
+          return
+        }
+        if (fullscreenSide !== null) {
+          e.preventDefault()
+          exitFullscreen()
+          return
+        }
       }
 
-      if ((e.key === 'v' || e.key === 'V') && focusedMode === 'chat') {
+      if (e.key === 'v' || e.key === 'V') {
         e.preventDefault()
         window.dispatchEvent(new CustomEvent('goalpost:voice-mic-toggle'))
         return
@@ -168,109 +161,80 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [
-    DIGIT_CODE_TO_INDEX,
-    left,
-    right,
-    focusedPane,
-    fullscreenPane,
-    setPaneMode,
-    focusPane,
+    effectiveLayout,
+    canvasOpen,
+    fullscreenSide,
+    floatingChatOpen,
+    toggleCanvas,
     toggleFullscreen,
     exitFullscreen,
+    toggleFloatingChat,
+    setFloatingChatOpen,
   ])
 
-  // Below this breakpoint the studio collapses to single-pane (focused only).
-  // Both pane modes stay in state so swapping focus returns the user to their
-  // previous layout.
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(max-width: 767px)')
-    const sync = () => setIsMobile(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
+  const canvasNode = (
+    <CanvasHost fullscreen={fullscreenSide === 'canvas'}>{children}</CanvasHost>
+  )
 
-  // When both panes hold the same mode that consumes `children` (dashboard
-  // route content), rendering the subtree twice can cause Apollo queries to
-  // duplicate. The non-focused pane gets a sentinel children fallback in
-  // that case so only the focused pane drives navigation state.
-  const leftChildren = children
-  const rightChildren =
-    left === 'dashboard' && right === 'dashboard' && focusedPane === 'left'
-      ? null
-      : children
-
-  const renderPane = (pane: PaneId, fullscreen: boolean) => (
-    <PaneHost
-      pane={pane}
-      fullscreen={fullscreen}
+  const chatNode = (
+    <ChatHost
+      fullscreen={fullscreenSide === 'chat'}
       selectedThreadId={selectedThreadId}
       onSelectThread={setSelectedThreadId}
-      chatCompact={isMobile}
-    >
-      {pane === 'left' ? leftChildren : rightChildren}
-    </PaneHost>
+      compact={isMobile}
+    />
   )
 
-  const splitView = (
-    <div className="relative h-full w-full">
-      {isMobile ? (
-        // Mobile: only the focused pane is visible; tap the swap control in
-        // the pane header to flip to the other pane.
-        renderPane(focusedPane, true)
-      ) : fullscreenPane !== null ? (
-        // Fullscreen: render the active pane edge-to-edge, no splitter.
-        <div className="h-full w-full" key={fullscreenPane}>
-          {renderPane(fullscreenPane, true)}
-        </div>
-      ) : right === null ? (
-        // Single-pane mode (legacy / explicit collapse) — show left only.
-        renderPane('left', true)
-      ) : (
-        <PanelGroup
-          direction="horizontal"
-          autoSaveId="goalpost.studio.split.v1"
-          className="h-full w-full"
-        >
-          <Panel defaultSize={50} minSize={20} order={1}>
-            {renderPane('left', false)}
-          </Panel>
-          <PanelResizeHandle className="w-1.5 bg-slate-900 hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
-          <Panel defaultSize={50} minSize={20} order={2}>
-            {renderPane('right', false)}
-          </Panel>
-        </PanelGroup>
-      )}
-    </div>
-  )
+  const mainView = (() => {
+    // Floating layout (desktop pref OR mobile): canvas always takes the full
+    // viewport; chat is summoned via the floating trigger.
+    if (effectiveLayout === 'floating') return canvasNode
+
+    // Docked: classic split with fullscreen shortcuts.
+    if (fullscreenSide === 'canvas') return canvasNode
+    if (fullscreenSide === 'chat') return chatNode
+    if (!canvasOpen) return chatNode
+
+    return (
+      <PanelGroup
+        direction="horizontal"
+        autoSaveId="goalpost.studio.chat35-canvas65.v1"
+        className="h-full w-full"
+      >
+        <Panel defaultSize={35} minSize={20} order={1}>
+          {chatNode}
+        </Panel>
+        <PanelResizeHandle className="w-1.5 bg-slate-900 hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
+        <Panel defaultSize={65} minSize={25} order={2}>
+          {canvasNode}
+        </Panel>
+      </PanelGroup>
+    )
+  })()
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-950">
       <StudioChrome />
 
       <div className="relative flex-1 overflow-hidden">
-        {needsRuntime ? (
-          <AssistantRuntimeBoundary
-            key={selectedThreadId ?? 'active'}
-            threadId={selectedThreadId ?? undefined}
-          >
-            {splitView}
-          </AssistantRuntimeBoundary>
-        ) : (
-          splitView
-        )}
-      </div>
+        <AssistantRuntimeBoundary
+          key={selectedThreadId ?? 'active'}
+          threadId={selectedThreadId ?? undefined}
+        >
+          {mainView}
 
-      <FloatingAssistantTrigger
-        isOpen={panelOpen}
-        onClick={() => setPanelOpen((v) => !v)}
-      />
-      <AIAssistantPanel
-        isOpen={panelOpen}
-        onClose={() => setPanelOpen(false)}
-      />
+          {effectiveLayout === 'floating' && (
+            <>
+              <FloatingChatTrigger />
+              <FloatingChatPanel
+                fullViewport={isMobile}
+                selectedThreadId={selectedThreadId}
+                onSelectThread={setSelectedThreadId}
+              />
+            </>
+          )}
+        </AssistantRuntimeBoundary>
+      </div>
 
       <TourController />
       <TourOverlay />
@@ -279,7 +243,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
 }
 
 /**
- * Mounts the AI runtime once a chat pane is live. Fetches the persisted
+ * Mounts the AI runtime for the chat surface. Fetches the persisted
  * conversation thread first so messages hydrate before the runtime is
  * created (`useChatRuntime` reads `messages` only at init).
  */

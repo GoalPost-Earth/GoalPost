@@ -3,6 +3,45 @@
 import type { UIMessage } from 'ai'
 
 /**
+ * Resolve a fresh JWT for authenticated chat-thread API calls. Mirrors the
+ * dance in `OnboardingContext.callOnboardingAPI`: hit /access-token first, fall
+ * back to /refresh-token, then attach the result as `Authorization: Bearer`.
+ *
+ * Plain cookie-only fetches stopped being enough once the server route
+ * started honouring `Authorization` first — a stale cookie now 401s where
+ * a refreshed bearer would have succeeded.
+ */
+async function getAccessTokenForChatApi(): Promise<string | null> {
+  try {
+    const tokenRes = await fetch('/api/auth/access-token', {
+      credentials: 'include',
+    })
+    if (tokenRes.ok) {
+      const data = (await tokenRes.json()) as { accessToken?: string }
+      if (data.accessToken) return data.accessToken
+    }
+    const refreshRes = await fetch('/api/auth/refresh-token', {
+      credentials: 'include',
+    })
+    if (refreshRes.ok) {
+      const data = (await refreshRes.json()) as { accessToken?: string }
+      if (data.accessToken) return data.accessToken
+    }
+  } catch {
+    // fall through to null
+  }
+  return null
+}
+
+export async function chatApiAuthHeaders(): Promise<Record<string, string>> {
+  const token = await getAccessTokenForChatApi()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+// Internal alias so the in-module callers stay terse.
+const authHeaders = chatApiAuthHeaders
+
+/**
  * Client helpers for hydrating the AI assistant panel from the
  * `/api/chat/simulation/thread(s)` endpoints.
  *
@@ -95,6 +134,7 @@ export async function fetchHydratedThread(
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
+      headers: await authHeaders(),
       signal,
     })
     if (!response.ok) return null
@@ -133,6 +173,7 @@ export async function fetchThreadList(
     const response = await fetch('/api/chat/simulation/threads', {
       method: 'GET',
       credentials: 'include',
+      headers: await authHeaders(),
       signal,
     })
     if (!response.ok) return []
@@ -149,6 +190,30 @@ export async function fetchThreadList(
 }
 
 /**
+ * Create a new empty thread server-side. Returns the new thread id, or `null`
+ * if the request failed (e.g. unauthenticated). Callers should treat null as
+ * "stay on the current thread."
+ */
+export async function createConversationThread(): Promise<string | null> {
+  try {
+    const res = await fetch('/api/chat/simulation/threads', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await authHeaders(),
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { threadId?: string }
+    return typeof data.threadId === 'string' ? data.threadId : null
+  } catch (error) {
+    console.warn(
+      '[conversation-thread-client] createConversationThread failed:',
+      error instanceof Error ? error.message : error
+    )
+    return null
+  }
+}
+
+/**
  * Pin a thread as the user's "last viewed" so a hard refresh re-opens it.
  * Fire-and-forget: failures degrade to legacy most-recent-by-lastTurnAt
  * selection on next hydration.
@@ -158,7 +223,10 @@ export async function persistLastViewedThread(threadId: string): Promise<void> {
     await fetch('/api/chat/simulation/threads', {
       method: 'PATCH',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await authHeaders()),
+      },
       body: JSON.stringify({ lastViewedThreadId: threadId }),
     })
   } catch (error) {

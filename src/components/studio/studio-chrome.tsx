@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FC } from 'react'
 import Link from 'next/link'
+import { MessageCircle, PanelLeftOpen } from 'lucide-react'
 import {
   GoalPostLogo,
   SunIcon,
   MoonIcon,
   NotificationIcon,
 } from '@/components/icons'
-import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -24,32 +24,25 @@ import {
   useUnreadCount,
 } from '@/components/notifications/NotificationPanel'
 import { FocalContextBadge } from './focal-context-badge'
-import { ModeSwitcher, MODES } from './mode-switcher'
 import { StudioSearchInput } from './studio-search-input'
-import { useStudioPanes } from './studio-panes-context'
+import { useStudioCanvas } from './studio-canvas-context'
 
 const NOOP_SUBSCRIBE = () => () => {}
 const GET_TRUE_SNAPSHOT = () => true
 const GET_FALSE_SNAPSHOT = () => false
 
 /**
- * The single-row glass header that replaces NavBar as the only chrome in the
- * worktree. Hosts the focal-context breadcrumb (left), the four-mode
- * switcher (center), and the search/notifications/theme/user controls
- * (right). A 1px gradient strip underneath tints to the active mode's color
- * so the user always knows where they are.
+ * The single-row glass header. Hosts the logo + focal-context breadcrumb on
+ * the left, and search / notifications / theme / user controls on the
+ * right. Pane-level mode chips now live inside each pane's header instead
+ * of the chrome.
  */
 export const StudioChrome: FC = () => {
-  const { focusedMode } = useStudioPanes()
   const { user, logout } = useApp()
+  const { chatLayout, setChatLayout } = useStudioCanvas()
   // Start at light mode on both server and first client paint to avoid a
-  // hydration mismatch. After mount, sync from localStorage / system pref —
-  // the user sees a one-frame flicker to dark only if their stored
-  // preference disagrees, which is acceptable and the canonical pattern.
+  // hydration mismatch. After mount, sync from localStorage / system pref.
   const [isDark, setIsDark] = useState(false)
-  // useSyncExternalStore is the canonical "is this running on the client?"
-  // gate — server snapshot returns false, client returns true, and no
-  // setState is required.
   const isMounted = useSyncExternalStore(
     NOOP_SUBSCRIBE,
     GET_TRUE_SNAPSHOT,
@@ -62,7 +55,6 @@ export const StudioChrome: FC = () => {
   const notificationRef = useRef<HTMLDivElement>(null)
   const unreadCount = useUnreadCount(user?.id)
 
-  // After mount, read the persisted theme + system preference and apply.
   useEffect(() => {
     const stored = localStorage.getItem('theme')
     const prefersDark = window.matchMedia(
@@ -73,7 +65,6 @@ export const StudioChrome: FC = () => {
     setIsDark(shouldBeDark)
   }, [])
 
-  // Apply theme class on <html> whenever isDark changes.
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
@@ -108,8 +99,6 @@ export const StudioChrome: FC = () => {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light')
   }
 
-  const activeMode = MODES.find((m) => m.id === focusedMode) ?? MODES[0]
-
   return (
     <>
       <header className="relative z-30 mx-4 lg:mx-8 mt-4 gp-glass rounded-full border border-gp-glass-border shadow-lg">
@@ -125,10 +114,6 @@ export const StudioChrome: FC = () => {
               </span>
             </Link>
             <FocalContextBadge />
-          </div>
-
-          <div className="hidden md:flex items-center justify-center shrink-0">
-            <ModeSwitcher />
           </div>
 
           <div className="flex items-center gap-2 lg:gap-3 shrink-0">
@@ -152,6 +137,29 @@ export const StudioChrome: FC = () => {
                 onClose={() => setShowNotifications(false)}
               />
             </div>
+            <button
+              onClick={() =>
+                setChatLayout(chatLayout === 'docked' ? 'floating' : 'docked')
+              }
+              className="hidden md:flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+              aria-label={
+                chatLayout === 'docked'
+                  ? 'Switch to floating chat'
+                  : 'Dock chat to the side'
+              }
+              title={
+                chatLayout === 'docked'
+                  ? 'Switch to floating chat'
+                  : 'Dock chat to the side'
+              }
+            >
+              {chatLayout === 'docked' ? (
+                <MessageCircle className="w-4 h-4" />
+              ) : (
+                <PanelLeftOpen className="w-4 h-4" />
+              )}
+            </button>
+
             <button
               onClick={toggleTheme}
               className="hidden md:flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
@@ -223,20 +231,6 @@ export const StudioChrome: FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Mobile mode switcher row */}
-        <div className="md:hidden flex items-center justify-center px-3 pb-2">
-          <ModeSwitcher />
-        </div>
-
-        {/* Mode-tinted accent strip — soft gradient under the chrome */}
-        <span
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none absolute -bottom-1.5 left-6 right-6 h-1.5 rounded-full bg-gradient-to-r opacity-70 blur-sm transition-all duration-300',
-            activeMode.accent
-          )}
-        />
       </header>
 
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>

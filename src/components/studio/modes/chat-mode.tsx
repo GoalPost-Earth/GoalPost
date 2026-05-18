@@ -4,6 +4,7 @@ import { type FC, useCallback } from 'react'
 import { Thread } from '@/components/assistant-ui/thread'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ThreadsSidebar } from '@/components/studio/threads-sidebar'
+import { createConversationThread } from '@/lib/simulation/conversation-thread-client'
 import { cn } from '@/lib/utils'
 
 interface ChatModeProps {
@@ -21,13 +22,8 @@ export const ChatMode: FC<ChatModeProps> = ({
   compact = false,
 }) => {
   const handleNewThread = useCallback(async () => {
-    const res = await fetch('/api/chat/simulation/threads', {
-      method: 'POST',
-      credentials: 'include',
-    })
-    if (!res.ok) return
-    const { threadId } = (await res.json()) as { threadId: string }
-    onSelectThread(threadId)
+    const threadId = await createConversationThread()
+    if (threadId) onSelectThread(threadId)
   }, [onSelectThread])
 
   return (

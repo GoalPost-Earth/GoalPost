@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const userId = getUserId(req)
+  const userId = resolveAuthenticatedUserId(req)
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthenticated' }), {
       status: 401,

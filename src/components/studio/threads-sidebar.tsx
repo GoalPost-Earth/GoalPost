@@ -2,15 +2,10 @@
 
 import { type FC, useEffect, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-
-interface ThreadSummary {
-  id: string
-  createdAt: string
-  lastTurnAt: string | null
-  turnCount: number
-  snippet: string
-  title: string | null
-}
+import {
+  fetchThreadList,
+  type ThreadSummary,
+} from '@/lib/simulation/conversation-thread-client'
 
 interface ThreadsSidebarProps {
   activeThreadId: string | null
@@ -44,12 +39,8 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
 
   const fetchThreads = useCallback(async () => {
     try {
-      const res = await fetch('/api/chat/simulation/threads', { credentials: 'include' })
-      if (!res.ok) return
-      const data = (await res.json()) as { threads: ThreadSummary[] }
-      setThreads(data.threads)
-    } catch {
-      // non-fatal
+      const list = await fetchThreadList()
+      setThreads(list)
     } finally {
       setLoading(false)
     }
