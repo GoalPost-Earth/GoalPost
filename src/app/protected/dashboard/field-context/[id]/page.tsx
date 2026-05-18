@@ -61,8 +61,13 @@ import {
 } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
+import {
+  DocumentList,
+  type DocumentRecord,
+} from '@/components/fields/document-list'
 import { SpaceViewToggle } from '@/components/spaces'
 import type { SpaceViewMode } from '@/components/spaces'
+import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
@@ -157,18 +162,10 @@ export default function FieldContextDetailsPage() {
       skip: !contextId,
     }
   )
-  const documents = useMemo(() => {
+  const documents = useMemo<DocumentRecord[]>(() => {
     const raw = (
       documentsData as
-        | {
-            documentsByFieldContext?: Array<{
-              id: string
-              filename: string
-              mimeType: string
-              sizeBytes: number
-              uploadedAt: string
-            }>
-          }
+        | { documentsByFieldContext?: DocumentRecord[] }
         | undefined
     )?.documentsByFieldContext
     return raw ?? []
@@ -301,6 +298,32 @@ export default function FieldContextDetailsPage() {
       role: roleById.get(person.id) || ('PERSON' as const),
     }))
   }, [peopleContext])
+
+  // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
+  // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
+  // GUEST and non-members do not. The route boundary re-checks this server-side
+  // (see `handleIngestDocument`), so this is purely a "don't show a control
+  // the user cannot use" measure — never a security boundary on its own.
+  const canEditContent = useMemo(() => {
+    if (!peopleContext || !user?.id) return false
+    const ownerId =
+      peopleContext.meSpace?.[0]?.owner?.[0]?.id ||
+      peopleContext.weSpace?.[0]?.owner?.[0]?.id
+    if (ownerId && ownerId === user.id) return true
+    type FieldMembership = {
+      role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+      member?: Array<{ id: string }>
+    }
+    const all: FieldMembership[] = [
+      ...((peopleContext.meSpace?.[0]?.members as FieldMembership[]) || []),
+      ...((peopleContext.weSpace?.[0]?.members as FieldMembership[]) || []),
+    ]
+    return all.some(
+      (m) =>
+        m.member?.[0]?.id === user.id &&
+        (m.role === 'ADMIN' || m.role === 'MEMBER')
+    )
+  }, [peopleContext, user?.id])
   const pulses = [
     ...(data?.goalPulses || []),
     ...(data?.resourcePulses || []),
@@ -896,7 +919,7 @@ export default function FieldContextDetailsPage() {
   const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
     setIsUploadingDocument(true)
     try {
-      await uploadDocument({
+      const result = await uploadDocument({
         variables: {
           input: {
             fieldContextId: contextId,
@@ -907,8 +930,17 @@ export default function FieldContextDetailsPage() {
           },
         },
       })
+      // Slice 5 (GOAL-240) — fire-and-forget signal so the assistant panel
+      // auto-switches to the freshly created ingest thread. The studio shell
+      // listens for the same event to open the panel if it's currently closed.
+      const newThreadId = (
+        result.data as {
+          uploadDocument?: { threadId?: string }
+        } | null | undefined
+      )?.uploadDocument?.threadId
+      if (newThreadId) emitOpenAssistantThread(newThreadId)
       toast.success(
-        'Document uploaded. Open Assistant to review the extracted entities.'
+        'Document uploaded. Review the extracted entities in the assistant.'
       )
       setIsUploadDocumentModalOpen(false)
       await refetchDocuments()
@@ -1152,37 +1184,11 @@ export default function FieldContextDetailsPage() {
             </p>
           </div>
 
-          {documents.length > 0 && (
-            <div className="mb-10 rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[20px]">
-                  description
-                </span>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gp-ink-strong dark:text-white">
-                  Uploaded Documents
-                </h2>
-              </div>
-              <ul className="space-y-2">
-                {documents.map((doc) => (
-                  <li
-                    key={doc.id}
-                    className="flex items-center justify-between gap-3 text-sm text-gp-ink-strong dark:text-white"
-                  >
-                    <span className="truncate flex-1" title={doc.filename}>
-                      {doc.filename}
-                    </span>
-                    <span className="text-xs text-gp-ink-muted whitespace-nowrap">
-                      {(doc.sizeBytes / 1024).toFixed(1)} KB ·{' '}
-                      {new Date(doc.uploadedAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <DocumentList
+            documents={documents}
+            onRefetch={refetchDocuments}
+          />
+
 
           <FieldContextSections
             createdDate={createdDate}
@@ -1215,15 +1221,17 @@ export default function FieldContextDetailsPage() {
               </span>
               Add Person
             </button>
-            <button
-              onClick={() => setIsUploadDocumentModalOpen(true)}
-              className="w-full sm:w-auto px-8 py-3 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/50 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                upload_file
-              </span>
-              Upload Document
-            </button>
+            {canEditContent && (
+              <button
+                onClick={() => setIsUploadDocumentModalOpen(true)}
+                className="w-full sm:w-auto px-8 py-3 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/50 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  upload_file
+                </span>
+                Upload Document
+              </button>
+            )}
             <button
               onClick={handleEditStart}
               className="w-full sm:w-auto px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"

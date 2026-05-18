@@ -10,7 +10,11 @@ import {
   activityLogMutations,
   activityLogQueries,
 } from './activity-log-resolver'
-import { documentMutations, documentQueries } from './document-resolver'
+import {
+  documentMutations,
+  documentQueries,
+  documentTypeResolvers,
+} from './document-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -424,12 +428,25 @@ const resolvers = {
 
   FieldPulse: {
     __resolveType: (obj: Record<string, unknown>) => {
+      // The doc-ingestion list resolver already stamps __typename on extracted
+      // pulses; respect it before falling back to property sniffing.
+      if (
+        obj.__typename === 'GoalPulse' ||
+        obj.__typename === 'ResourcePulse' ||
+        obj.__typename === 'StoryPulse' ||
+        obj.__typename === 'CarePulse' ||
+        obj.__typename === 'CoreValuePulse'
+      ) {
+        return obj.__typename
+      }
       // Check discriminator properties to determine concrete type
       if ('status' in obj) return 'GoalPulse'
       if ('resourceType' in obj) return 'ResourcePulse'
       return 'StoryPulse' // Default fallback
     },
   },
+
+  Document: documentTypeResolvers,
 
   Mutation: {
     ...chatbotResolvers,

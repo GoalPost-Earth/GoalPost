@@ -22,3 +22,19 @@ export const UPLOAD_DOCUMENT_MUTATION = gql`
     }
   }
 `
+
+/**
+ * Re-run extraction against an existing Document (slice 6 of GOAL-235).
+ * Reuses the stored blob + original userHint. Produces a fresh ingest thread
+ * titled "Ingest: <filename> (re-extracted)". Same permission gate as
+ * UploadDocument.
+ */
+export const RE_EXTRACT_DOCUMENT_MUTATION = gql`
+  mutation ReExtractDocument($documentId: ID!) {
+    reExtractDocument(documentId: $documentId) {
+      documentId
+      threadId
+      pendingApprovalCount
+    }
+  }
+`

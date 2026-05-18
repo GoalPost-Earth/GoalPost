@@ -31,6 +31,10 @@ export interface UploadDocumentInput {
   filename: string
   mimeType: string
   buffer: Buffer
+  /** Pages in the source document. `1` for .txt/.md, real page count for .pdf. */
+  pageCount?: number
+  /** Optional one-line "What is this?" hint reused on re-extract (GOAL-241). */
+  userHint?: string | null
 }
 
 export interface UploadedDocument {
@@ -38,8 +42,10 @@ export interface UploadedDocument {
   filename: string
   mimeType: string
   sizeBytes: number
+  pageCount: number | null
   blobKey: string
   blobUrl: string
+  userHint: string | null
 }
 
 export async function uploadDocument(
@@ -59,6 +65,8 @@ export async function uploadDocument(
           filename: $filename,
           mimeType: $mimeType,
           sizeBytes: $sizeBytes,
+          pageCount: $pageCount,
+          userHint: $userHint,
           uploadedAt: datetime()
         })
         CREATE (c)-[:HAS_DOCUMENT]->(d)
@@ -72,6 +80,8 @@ export async function uploadDocument(
           filename: input.filename,
           mimeType: input.mimeType,
           sizeBytes: input.buffer.length,
+          pageCount: input.pageCount ?? null,
+          userHint: input.userHint?.trim() ? input.userHint.trim() : null,
         }
       )
     )
@@ -105,8 +115,79 @@ export async function uploadDocument(
       filename: input.filename,
       mimeType: input.mimeType,
       sizeBytes: input.buffer.length,
+      pageCount: input.pageCount ?? null,
       blobKey: ref.key,
       blobUrl: ref.url,
+      userHint: input.userHint?.trim() ? input.userHint.trim() : null,
+    }
+  } finally {
+    await session.close()
+  }
+}
+
+export interface DocumentRecord {
+  id: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  pageCount: number | null
+  blobKey: string
+  blobUrl: string
+  userHint: string | null
+  fieldContextId: string
+  uploaderUserId: string
+}
+
+/**
+ * Loads a Document by id along with the ids needed to re-extract: its parent
+ * FieldContext (so the permission gate + roster lookup work) and the original
+ * uploader (so the new ingest thread can be anchored back to the right
+ * Person:User). Returns `null` if the document doesn't exist — callers
+ * surface that as a not-found instead of throwing.
+ */
+export async function loadDocumentRecord(
+  driver: Driver,
+  documentId: string
+): Promise<DocumentRecord | null> {
+  const session = driver.session()
+  try {
+    const result = await session.executeRead(async (tx) =>
+      tx.run(
+        `
+        MATCH (c:FieldContext)-[:HAS_DOCUMENT]->(d:Document {id: $documentId})
+        OPTIONAL MATCH (d)-[:UPLOADED_BY]->(u:Person:User)
+        RETURN
+          d.id AS id,
+          d.filename AS filename,
+          d.mimeType AS mimeType,
+          d.sizeBytes AS sizeBytes,
+          d.pageCount AS pageCount,
+          d.blobKey AS blobKey,
+          d.blobUrl AS blobUrl,
+          d.userHint AS userHint,
+          c.id AS fieldContextId,
+          u.id AS uploaderUserId
+        LIMIT 1
+        `,
+        { documentId }
+      )
+    )
+    const record = result.records[0]
+    if (!record) return null
+    return {
+      id: record.get('id') as string,
+      filename: record.get('filename') as string,
+      mimeType: record.get('mimeType') as string,
+      sizeBytes: Number(record.get('sizeBytes') ?? 0),
+      pageCount:
+        record.get('pageCount') === null
+          ? null
+          : Number(record.get('pageCount')),
+      blobKey: (record.get('blobKey') as string | null) ?? '',
+      blobUrl: (record.get('blobUrl') as string | null) ?? '',
+      userHint: (record.get('userHint') as string | null) ?? null,
+      fieldContextId: record.get('fieldContextId') as string,
+      uploaderUserId: (record.get('uploaderUserId') as string | null) ?? '',
     }
   } finally {
     await session.close()

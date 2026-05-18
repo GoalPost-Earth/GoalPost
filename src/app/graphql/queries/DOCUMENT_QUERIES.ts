@@ -15,7 +15,24 @@ export const GET_DOCUMENTS_BY_FIELD_CONTEXT = gql`
       filename
       mimeType
       sizeBytes
+      pageCount
+      userHint
       uploadedAt
+      extractedPeople {
+        id
+        firstName
+        lastName
+      }
+      extractedPulses {
+        __typename
+        id
+        title
+      }
+      ingestThreads {
+        id
+        title
+        createdAt
+      }
     }
   }
 `

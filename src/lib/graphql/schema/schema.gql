@@ -204,11 +204,18 @@ type Person implements PersonInterface
   #   2. Query contexts on those spaces → get FieldContexts
   #   3. Query pulses on those contexts → get GoalPulse/ResourcePulse/StoryPulse
   contexts: [FieldContext!]! @relationship(type: "HAS_PERSON", direction: IN)
-  # 
+  #
   # MIGRATION: Legacy direct pulse relationships (goals, resources, coreValues, carePoints)
   # are transformed into pulses within FieldContexts in the person's auto-created MeSpace.
-  
+
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  """
+  Documents this person was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+  Empty for manually-created Person nodes. Each Document is auth-filtered via its own
+  @authorization directive, so non-members of the parent Space see an empty list even if
+  the underlying EXTRACTED_FROM edge exists.
+  """
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -560,16 +567,45 @@ type Document
   filename: String!
   mimeType: String!
   sizeBytes: Int!
+  """Page count for paginated formats (.pdf). 1 for .txt/.md. Null when unknown (legacy uploads)."""
+  pageCount: Int
   """Blob storage key. Internal — UI surfaces filename instead."""
   blobKey: String
   """Provider-issued URL for the blob. May be expiring/private; treat as opaque."""
   blobUrl: String
+  """Optional one-line "What is this?" hint captured at upload. Reused on re-extract (slice 6)."""
+  userHint: String
   uploadedAt: DateTime!
   fieldContext: [FieldContext!]! @relationship(type: "HAS_DOCUMENT", direction: IN)
   uploadedBy: [Person!]! @relationship(type: "UPLOADED_BY", direction: OUT)
   """People extracted from this document (provenance — see EXTRACTED_FROM)."""
   extractedPeople: [Person!]!
     @relationship(type: "EXTRACTED_FROM", direction: IN)
+  """FieldPulses extracted from this document (provenance — see EXTRACTED_FROM)."""
+  extractedPulses: [FieldPulse!]!
+    @relationship(type: "EXTRACTED_FROM", direction: IN)
+  """Ingest threads spawned from this document — initial upload + every Re-extract attempt. Ordered newest first."""
+  ingestThreads: [DocumentIngestThread!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:HAS_INGEST_THREAD]->(t:ConversationThread)
+      RETURN {id: t.id, title: t.title, createdAt: toString(t.createdAt)} AS thread
+      ORDER BY t.createdAt DESC
+      """
+      columnName: "thread"
+    )
+}
+
+"""
+Lightweight projection of a ConversationThread spawned by document ingestion.
+We deliberately do not surface the underlying ConversationThread node as a
+GraphQL type — its lifecycle is owned by the assistant subsystem, not the
+graph schema.
+"""
+type DocumentIngestThread {
+  id: ID!
+  title: String!
+  createdAt: String!
 }
 
 """
@@ -587,8 +623,9 @@ type IngestDocumentResponse {
 input UploadDocumentInput {
   fieldContextId: ID!
   filename: String!
+  """Allowed v1 mimeTypes: text/plain, text/markdown, application/pdf."""
   mimeType: String!
-  """Base64-encoded file contents. Slice 1 cap: 50 KB. Slice 1 mimeType: text/plain."""
+  """Base64-encoded file contents. Upload byte ceiling: 10 MB. Post-extraction cap: ~50K characters / ~20 PDF pages."""
   fileBase64: String!
   """Optional one-line user hint to the extraction model ("meeting notes from Q2 strategy")."""
   hint: String
@@ -612,6 +649,11 @@ interface FieldPulse {
   intensity: Float
   createdBy: [Person!]! @declareRelationship
   context: [FieldContext!]! @declareRelationship
+  """
+  Documents this pulse was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+  Empty for manually-created pulses. Returned newest-uploaded first.
+  """
+  extractedFrom: [Document!]! @declareRelationship
 }
 
 """
@@ -668,6 +710,7 @@ type GoalPulse implements FieldPulse
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -721,6 +764,7 @@ type ResourcePulse implements FieldPulse
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -781,6 +825,7 @@ type StoryPulse implements FieldPulse
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -823,6 +868,7 @@ type CarePulse implements FieldPulse
   sourceType: String
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -864,6 +910,7 @@ type CoreValuePulse implements FieldPulse
   intensity: Float
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -1254,6 +1301,20 @@ type Mutation {
   See `POST /api/ingest/document` for the multipart REST alternative.
   """
   uploadDocument(input: UploadDocumentInput!): IngestDocumentResponse!
+
+  """
+  Re-run the extraction model against an existing Document (slice 6 of
+  GOAL-235). The original blob is reused; no new blob is written, no new
+  Document node is created. A fresh ConversationThread titled
+  `Ingest: <filename> (re-extracted)` is created and linked back to the
+  Document via HAS_INGEST_THREAD so the Document detail view can list every
+  attempt.
+
+  Caller must hold canEditContent on the FieldContext's parent Space (same
+  gate as `uploadDocument`). Previously approved entities are untouched —
+  re-extract only proposes new tool calls.
+  """
+  reExtractDocument(documentId: ID!): IngestDocumentResponse!
 }
 
 # ============================================================================
