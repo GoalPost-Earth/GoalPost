@@ -55,11 +55,14 @@ export const FloatingChatPanel: FC<FloatingChatPanelProps> = ({
       </header>
 
       <div className="relative flex-1 overflow-hidden">
+        {/* Always compact in the floating panel — quick chats, not full
+            thread navigation. The threads sidebar lives in the docked
+            layout's ChatHost instead. */}
         <ChatMode
           visible
           activeThreadId={selectedThreadId}
           onSelectThread={onSelectThread}
-          compact={fullViewport}
+          compact
         />
       </div>
     </div>

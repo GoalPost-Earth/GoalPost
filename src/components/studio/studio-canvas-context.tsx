@@ -12,6 +12,7 @@ import {
 
 export type FullscreenSide = 'canvas' | 'chat' | null
 export type ChatLayout = 'docked' | 'floating'
+export type CanvasView = 'dashboard' | 'graph'
 
 interface CanvasState {
   canvasOpen: boolean
@@ -20,6 +21,8 @@ interface CanvasState {
   chatLayout: ChatLayout
   /** Whether the floating chat panel is currently open. */
   floatingChatOpen: boolean
+  /** What the canvas surfaces: the route's dashboard content, or the NVL graph. */
+  canvasView: CanvasView
 }
 
 interface StudioCanvasContextValue extends CanvasState {
@@ -30,6 +33,7 @@ interface StudioCanvasContextValue extends CanvasState {
   setChatLayout: (layout: ChatLayout) => void
   toggleFloatingChat: () => void
   setFloatingChatOpen: (open: boolean) => void
+  setCanvasView: (view: CanvasView) => void
 }
 
 const StudioCanvasContext = createContext<StudioCanvasContextValue | null>(null)
@@ -41,6 +45,7 @@ const DEFAULT_STATE: CanvasState = {
   fullscreenSide: null,
   chatLayout: 'docked',
   floatingChatOpen: false,
+  canvasView: 'dashboard',
 }
 
 // SSR-safe initial render — keeps server and first client paint identical.
@@ -68,6 +73,10 @@ function readStored(): CanvasState | null {
       // floatingChatOpen is intentionally NOT restored — the panel always
       // boots closed so a refresh doesn't pop it open unexpectedly.
       floatingChatOpen: false,
+      canvasView:
+        parsed.canvasView === 'graph' || parsed.canvasView === 'dashboard'
+          ? parsed.canvasView
+          : DEFAULT_STATE.canvasView,
     }
   } catch {
     return null
@@ -157,6 +166,12 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const setCanvasView = useCallback((view: CanvasView) => {
+    setState((prev) =>
+      prev.canvasView === view ? prev : { ...prev, canvasView: view }
+    )
+  }, [])
+
   const value = useMemo<StudioCanvasContextValue>(
     () => ({
       ...state,
@@ -167,6 +182,7 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       setChatLayout,
       toggleFloatingChat,
       setFloatingChatOpen,
+      setCanvasView,
     }),
     [
       state,
@@ -177,6 +193,7 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       setChatLayout,
       toggleFloatingChat,
       setFloatingChatOpen,
+      setCanvasView,
     ]
   )
 
