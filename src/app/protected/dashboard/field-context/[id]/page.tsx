@@ -16,9 +16,16 @@ import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
 } from '@/components/ui/add-person-to-field-modal'
+import {
+  UploadDocumentModal,
+  type UploadDocumentSubmitInput,
+} from '@/components/ui/upload-document-modal'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
-import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries'
+import {
+  GET_FIELD_CONTEXT_PEOPLE,
+  GET_DOCUMENTS_BY_FIELD_CONTEXT,
+} from '@/app/graphql/queries'
 import {
   ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
   REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
@@ -42,6 +49,7 @@ import {
   DELETE_RESONANCE_LINK_MUTATION,
   SHARE_PULSE_WITH_CONTEXT_MUTATION,
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
+  UPLOAD_DOCUMENT_MUTATION,
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
@@ -107,6 +115,9 @@ export default function FieldContextDetailsPage() {
   const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
   const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
     useState(false)
+  const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
+    useState(false)
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
@@ -138,6 +149,30 @@ export default function FieldContextDetailsPage() {
       skip: !contextId,
     }
   )
+
+  const { data: documentsData, refetch: refetchDocuments } = useQuery(
+    GET_DOCUMENTS_BY_FIELD_CONTEXT,
+    {
+      variables: { fieldContextId: contextId },
+      skip: !contextId,
+    }
+  )
+  const documents = useMemo(() => {
+    const raw = (
+      documentsData as
+        | {
+            documentsByFieldContext?: Array<{
+              id: string
+              filename: string
+              mimeType: string
+              sizeBytes: number
+              uploadedAt: string
+            }>
+          }
+        | undefined
+    )?.documentsByFieldContext
+    return raw ?? []
+  }, [documentsData])
 
   // Setup mutations
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION)
@@ -171,6 +206,7 @@ export default function FieldContextDetailsPage() {
     REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
   )
   const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
+  const [uploadDocument] = useMutation(UPLOAD_DOCUMENT_MUTATION)
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
@@ -857,6 +893,35 @@ export default function FieldContextDetailsPage() {
     }
   }
 
+  const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
+    setIsUploadingDocument(true)
+    try {
+      await uploadDocument({
+        variables: {
+          input: {
+            fieldContextId: contextId,
+            filename: input.filename,
+            mimeType: input.mimeType,
+            fileBase64: input.fileBase64,
+            hint: input.hint,
+          },
+        },
+      })
+      toast.success(
+        'Document uploaded. Open Assistant to review the extracted entities.'
+      )
+      setIsUploadDocumentModalOpen(false)
+      await refetchDocuments()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Upload failed'
+      toast.error(message)
+      throw error
+    } finally {
+      setIsUploadingDocument(false)
+    }
+  }
+
   const handlePersonClick = (personId: string) => {
     const person = people.find((entry) => entry.id === personId)
     if (!person) return
@@ -1087,6 +1152,38 @@ export default function FieldContextDetailsPage() {
             </p>
           </div>
 
+          {documents.length > 0 && (
+            <div className="mb-10 rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[20px]">
+                  description
+                </span>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gp-ink-strong dark:text-white">
+                  Uploaded Documents
+                </h2>
+              </div>
+              <ul className="space-y-2">
+                {documents.map((doc) => (
+                  <li
+                    key={doc.id}
+                    className="flex items-center justify-between gap-3 text-sm text-gp-ink-strong dark:text-white"
+                  >
+                    <span className="truncate flex-1" title={doc.filename}>
+                      {doc.filename}
+                    </span>
+                    <span className="text-xs text-gp-ink-muted whitespace-nowrap">
+                      {(doc.sizeBytes / 1024).toFixed(1)} KB ·{' '}
+                      {new Date(doc.uploadedAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <FieldContextSections
             createdDate={createdDate}
             pulses={pulses}
@@ -1117,6 +1214,15 @@ export default function FieldContextDetailsPage() {
                 person_add
               </span>
               Add Person
+            </button>
+            <button
+              onClick={() => setIsUploadDocumentModalOpen(true)}
+              className="w-full sm:w-auto px-8 py-3 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/50 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                upload_file
+              </span>
+              Upload Document
             </button>
             <button
               onClick={handleEditStart}
@@ -1331,6 +1437,13 @@ export default function FieldContextDetailsPage() {
         isSubmitting={isAddingPersonToField}
         onClose={() => setIsAddPersonModalOpen(false)}
         onCreatePerson={handleAddPersonToField}
+      />
+
+      <UploadDocumentModal
+        isOpen={isUploadDocumentModalOpen}
+        isSubmitting={isUploadingDocument}
+        onClose={() => setIsUploadDocumentModalOpen(false)}
+        onSubmit={handleUploadDocument}
       />
     </div>
   )
