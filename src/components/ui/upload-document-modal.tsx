@@ -3,20 +3,32 @@
 import { useCallback, useState } from 'react'
 
 /**
- * Upload-document modal for slice 1 (GOAL-236).
+ * Upload-document modal for slices 1–3 (GOAL-236 / GOAL-238).
  *
- * Slice-1 constraints (mirrored in `src/lib/ingest/upload-document-input.ts`):
- *   - mimeType allow-list: text/plain
- *   - size cap: 50 KB (base64-inflated stays well under typical request limits)
+ * v1 constraints (mirrored in `src/lib/ingest/upload-document-input.ts` and
+ * `src/lib/ingest/document-text-extractor.ts`):
+ *   - mimeType allow-list: text/plain, text/markdown, application/pdf
+ *   - upload byte ceiling: 10 MB (defense-in-depth)
+ *   - extraction caps: ~50K characters / ~20 PDF pages, enforced server-side
  *
  * The modal converts the picked File to base64 on the client and hands the
  * result back via `onSubmit`. It deliberately does no network work itself —
- * the parent page wires the mutation so loading / error state is owned where
+ * the parent page wires the mutation so loading/error state is owned where
  * the rest of the field-context state already lives.
+ *
+ * Server-side rejections (oversize after extraction, unsupported sniffed
+ * mime, etc.) flow back through `onSubmit` rejection and render inline below
+ * the form per slice-3 AC ("not a toast that disappears").
  */
 
-const SLICE_ONE_ALLOWED_MIME_TYPES = ['text/plain'] as const
-const SLICE_ONE_MAX_SIZE_BYTES = 50 * 1024
+const ALLOWED_MIME_TYPES = ['text/plain', 'text/markdown', 'application/pdf'] as const
+const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.pdf']
+const ACCEPT_ATTRIBUTE = `${ALLOWED_FILE_EXTENSIONS.join(',')},text/plain,text/markdown,application/pdf`
+const MAX_BYTES = 10 * 1024 * 1024
+const MAX_PAGES = 20
+const MAX_CHARS = 50_000
+
+type AllowedMime = (typeof ALLOWED_MIME_TYPES)[number]
 
 export interface UploadDocumentSubmitInput {
   filename: string
@@ -47,7 +59,15 @@ async function fileToBase64(file: File): Promise<string> {
 function inferMimeType(file: File): string {
   if (file.type) return file.type
   if (/\.txt$/i.test(file.name)) return 'text/plain'
+  if (/\.md$/i.test(file.name) || /\.markdown$/i.test(file.name)) return 'text/markdown'
+  if (/\.pdf$/i.test(file.name)) return 'application/pdf'
   return ''
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function UploadDocumentModal({
@@ -78,12 +98,14 @@ export function UploadDocumentModal({
       return
     }
     const mimeType = inferMimeType(file)
-    if (!SLICE_ONE_ALLOWED_MIME_TYPES.includes(mimeType as 'text/plain')) {
-      setError('Only .txt files are supported in this preview.')
+    if (!ALLOWED_MIME_TYPES.includes(mimeType as AllowedMime)) {
+      setError("We don't yet support this file type. v1 accepts .txt, .md, and .pdf.")
       return
     }
-    if (file.size > SLICE_ONE_MAX_SIZE_BYTES) {
-      setError('Files must be 50 KB or smaller in this preview.')
+    if (file.size > MAX_BYTES) {
+      setError(
+        `This document is too large (${formatBytes(file.size)}). The upload limit is ${formatBytes(MAX_BYTES)}.`
+      )
       return
     }
 
@@ -98,6 +120,8 @@ export function UploadDocumentModal({
       })
       reset()
     } catch (err) {
+      // Server-side rejections (oversize after extraction, unsupported sniffed
+      // mime, parse failure) land here and render inline.
       setError(err instanceof Error ? err.message : 'Upload failed')
     }
   }, [file, hint, onSubmit, reset])
@@ -128,23 +152,23 @@ export function UploadDocumentModal({
 
         <label
           htmlFor="upload-document-file"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gp-glass-border bg-gp-glass-bg/40 px-4 py-8 cursor-pointer hover:border-gp-primary transition-colors"
+          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gp-glass-border bg-gp-glass-bg/40 px-4 py-8 cursor-pointer hover:border-gp-primary transition-colors text-center"
         >
           <span className="material-symbols-outlined text-3xl text-gp-ink-muted">
             upload_file
           </span>
           <span className="text-sm text-gp-ink-strong dark:text-white font-medium">
-            {file ? file.name : 'Choose a .txt file'}
+            {file ? file.name : 'Choose a file'}
           </span>
           <span className="text-xs text-gp-ink-muted">
             {file
-              ? `${(file.size / 1024).toFixed(1)} KB`
-              : 'Up to 50 KB, text/plain only in this preview'}
+              ? formatBytes(file.size)
+              : `Accepts .txt, .md, .pdf — up to ~${MAX_PAGES} pages or ~${(MAX_CHARS / 1000).toFixed(0)}K characters`}
           </span>
           <input
             id="upload-document-file"
             type="file"
-            accept=".txt,text/plain"
+            accept={ACCEPT_ATTRIBUTE}
             className="sr-only"
             onChange={(event) => {
               setError(null)
@@ -177,12 +201,15 @@ export function UploadDocumentModal({
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+          >
             {error}
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={handleClose}
@@ -195,7 +222,7 @@ export function UploadDocumentModal({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || !file}
-            className="px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting && (
               <span className="material-symbols-outlined text-base animate-spin">

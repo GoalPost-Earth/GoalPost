@@ -4,13 +4,17 @@ import type { UIMessage } from 'ai'
 
 /**
  * Client helpers for hydrating the AI assistant panel from the
- * `GET /api/chat/simulation/thread` endpoint.
+ * `/api/chat/simulation/thread(s)` endpoints.
  *
  * Conversion target: the AI SDK `UIMessage` shape that `useChatRuntime`
  * accepts as its initial `messages` option. We restore the original `parts`
  * tree verbatim when the server has one (preserving tool calls + results so
  * the chat is replayed faithfully); otherwise we synthesise a single text
  * part from the stored `content` so older or text-only turns still render.
+ *
+ * Slice 5 (GOAL-240) adds `mode`, `kind`, and `title` to the hydrated shape
+ * so the assistant panel can lock the mode selector on ingest threads and
+ * render thread titles in the switcher without exposing raw IDs.
  */
 
 export interface StoredTurn {
@@ -26,7 +30,24 @@ export interface HydratedThread {
   id: string
   createdAt: string
   lastTurnAt: string | null
+  /** 'default' | 'aiden' | 'braider'. Source of truth for which assistant mode this thread runs in. */
+  mode: string
+  /** 'reflective' | 'ingest'. UI uses this to lock the mode selector on ingest threads. */
+  kind: string
+  /** Human-readable title (e.g. "Ingest: meeting-notes.pdf"). Null for the implicit reflective thread. */
+  title: string | null
   messages: UIMessage[]
+}
+
+export interface ThreadSummary {
+  id: string
+  createdAt: string
+  lastTurnAt: string | null
+  turnCount: number
+  snippet: string
+  title: string | null
+  mode: string
+  kind: string
 }
 
 interface ThreadFetchResponse {
@@ -34,8 +55,15 @@ interface ThreadFetchResponse {
     id: string
     createdAt: string
     lastTurnAt: string | null
+    mode?: string
+    kind?: string
+    title?: string | null
     turns: StoredTurn[]
   } | null
+}
+
+interface ThreadsListResponse {
+  threads: ThreadSummary[]
 }
 
 function turnToUIMessage(turn: StoredTurn): UIMessage {
@@ -51,9 +79,10 @@ function turnToUIMessage(turn: StoredTurn): UIMessage {
 }
 
 /**
- * Fetch the active thread and convert it to the runtime's UIMessage[] shape.
- * Returns `null` when the user has no thread yet OR the fetch failed — the
- * caller should treat both as "start with an empty conversation."
+ * Fetch the active thread (or a specific one by id) and convert it to the
+ * runtime's UIMessage[] shape. Returns `null` when the user has no thread yet
+ * OR the fetch failed — the caller should treat both as "start with an empty
+ * conversation."
  */
 export async function fetchHydratedThread(
   signal?: AbortSignal,
@@ -75,6 +104,9 @@ export async function fetchHydratedThread(
       id: data.thread.id,
       createdAt: data.thread.createdAt,
       lastTurnAt: data.thread.lastTurnAt,
+      mode: typeof data.thread.mode === 'string' ? data.thread.mode : 'default',
+      kind: typeof data.thread.kind === 'string' ? data.thread.kind : 'reflective',
+      title: typeof data.thread.title === 'string' ? data.thread.title : null,
       messages: data.thread.turns
         .filter((turn) => turn && typeof turn.id === 'string')
         .map(turnToUIMessage),
@@ -86,5 +118,53 @@ export async function fetchHydratedThread(
       error instanceof Error ? error.message : error
     )
     return null
+  }
+}
+
+/**
+ * List the user's recent threads for the switcher. Newest first. Returns an
+ * empty array on auth / network failure so the switcher can render an empty
+ * state instead of crashing.
+ */
+export async function fetchThreadList(
+  signal?: AbortSignal
+): Promise<ThreadSummary[]> {
+  try {
+    const response = await fetch('/api/chat/simulation/threads', {
+      method: 'GET',
+      credentials: 'include',
+      signal,
+    })
+    if (!response.ok) return []
+    const data = (await response.json()) as ThreadsListResponse
+    return Array.isArray(data.threads) ? data.threads : []
+  } catch (error) {
+    if ((error as { name?: string })?.name === 'AbortError') return []
+    console.warn(
+      '[conversation-thread-client] Thread list fetch failed:',
+      error instanceof Error ? error.message : error
+    )
+    return []
+  }
+}
+
+/**
+ * Pin a thread as the user's "last viewed" so a hard refresh re-opens it.
+ * Fire-and-forget: failures degrade to legacy most-recent-by-lastTurnAt
+ * selection on next hydration.
+ */
+export async function persistLastViewedThread(threadId: string): Promise<void> {
+  try {
+    await fetch('/api/chat/simulation/threads', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lastViewedThreadId: threadId }),
+    })
+  } catch (error) {
+    console.warn(
+      '[conversation-thread-client] persistLastViewedThread failed:',
+      error instanceof Error ? error.message : error
+    )
   }
 }

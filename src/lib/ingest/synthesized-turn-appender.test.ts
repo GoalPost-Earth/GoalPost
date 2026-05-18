@@ -124,3 +124,134 @@ describe('SynthesizedTurnAppender — buildSynthesizedAssistantTurnParts', () =>
     expect(parts[0].type).toBe('tool-create_person')
   })
 })
+
+describe('SynthesizedTurnAppender — multi-call batch shape contract (slice 2)', () => {
+  // Slice 2 acceptance criterion: EACH pending tool call in a multi-call
+  // batch is byte-identical in approvalHash + describeWriteAction shape to a
+  // runtime runWriteTool-emitted equivalent. The HITL Dialog cannot tell
+  // mixed-tool synthesized parts apart from mixed-tool runtime parts.
+  const batch = [
+    {
+      tool: 'create_person' as const,
+      args: {
+        firstName: 'Sarah',
+        lastName: 'Chen',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      },
+    },
+    {
+      tool: 'create_pulse' as const,
+      args: {
+        pulseType: 'GoalPulse',
+        title: 'Ship migration',
+        content: 'Cut over before EOQ.',
+        horizon: 'SHORT',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      },
+    },
+    {
+      tool: 'create_pulse' as const,
+      args: {
+        pulseType: 'ResourcePulse',
+        title: 'Shared infra budget',
+        content: 'Pool of credits.',
+        resourceType: 'budget',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      },
+    },
+    {
+      tool: 'create_pulse' as const,
+      args: {
+        pulseType: 'StoryPulse',
+        title: 'Why we started this',
+        content: 'The old system paged weekly.',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      },
+    },
+  ]
+
+  it('emits one tool part per batched call, in order, each with the correct tool-<name> type', () => {
+    const parts = buildSynthesizedAssistantTurnParts({
+      toolCalls: batch,
+      assistantText: 'Found one person and three pulses.',
+    })
+    expect(parts).toHaveLength(5) // 4 tool parts + 1 text part
+    expect(parts[0].type).toBe('tool-create_person')
+    expect(parts[1].type).toBe('tool-create_pulse')
+    expect(parts[2].type).toBe('tool-create_pulse')
+    expect(parts[3].type).toBe('tool-create_pulse')
+    expect(parts[4]).toEqual({
+      type: 'text',
+      text: 'Found one person and three pulses.',
+    })
+  })
+
+  it('every batched part has approvalHash byte-identical to runtime createApprovalHash for the same (tool, args)', () => {
+    const parts = buildSynthesizedAssistantTurnParts({
+      toolCalls: batch,
+      assistantText: '',
+    })
+    for (let i = 0; i < batch.length; i++) {
+      const part = parts[i]
+      if (part.type === 'text') throw new Error('expected tool part')
+      const output = part.output as unknown as Record<string, unknown>
+      expect(output.approvalHash).toBe(
+        createApprovalHash(batch[i].tool, batch[i].args)
+      )
+    }
+  })
+
+  it('every batched part has summary byte-identical to runtime describeWriteAction for the same (tool, args)', () => {
+    const parts = buildSynthesizedAssistantTurnParts({
+      toolCalls: batch,
+      assistantText: '',
+    })
+    for (let i = 0; i < batch.length; i++) {
+      const part = parts[i]
+      if (part.type === 'text') throw new Error('expected tool part')
+      const output = part.output as unknown as Record<string, unknown>
+      expect(output.summary).toBe(
+        describeWriteAction(batch[i].tool, batch[i].args)
+      )
+    }
+  })
+
+  it('every batched part has output deeply equal to buildPendingApprovalResult — the single shared factory both runtime and synthesis must call', () => {
+    const parts = buildSynthesizedAssistantTurnParts({
+      toolCalls: batch,
+      assistantText: '',
+    })
+    for (let i = 0; i < batch.length; i++) {
+      const part = parts[i]
+      if (part.type === 'text') throw new Error('expected tool part')
+      expect(part.output).toEqual(
+        buildPendingApprovalResult(batch[i].tool, batch[i].args)
+      )
+    }
+  })
+
+  it('summary for each create_pulse part renders Rule-1 compliant copy — never __typename, never raw ids', () => {
+    const parts = buildSynthesizedAssistantTurnParts({
+      toolCalls: batch,
+      assistantText: '',
+    })
+    for (const part of parts) {
+      if (part.type === 'text') continue
+      const output = part.output as unknown as Record<string, unknown>
+      const summary = String(output.summary)
+      expect(summary).not.toContain('GoalPulse')
+      expect(summary).not.toContain('ResourcePulse')
+      expect(summary).not.toContain('StoryPulse')
+      expect(summary).not.toContain('ctx_')
+      expect(summary).not.toContain('doc_')
+    }
+  })
+})

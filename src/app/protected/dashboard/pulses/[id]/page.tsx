@@ -33,6 +33,15 @@ import {
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { SharePulseModal, type PulseDetails } from '@/components/ui/pulse-panel'
+import {
+  EntityProvenance,
+  type ProvenanceDocument,
+} from '@/components/fields/entity-provenance'
+import {
+  GET_GOAL_PULSE_PROVENANCE,
+  GET_RESOURCE_PULSE_PROVENANCE,
+  GET_STORY_PULSE_PROVENANCE,
+} from '@/app/graphql/queries/PROVENANCE_QUERIES'
 
 function typenameToNodeType(typename: string): NodeType {
   const map: Record<string, NodeType> = {
@@ -105,6 +114,37 @@ export default function PulseDetailsPage() {
       skip: !pulseId,
     }
   )
+
+  // Slice 7 (GOAL-242) — separate raw-gql provenance fetches per pulse type
+  // (codegen'd query strings are pinned, so editing them would churn the
+  // generated types). We fire all three; Apollo dedupes and the unmatched
+  // queries return empty arrays. Unauthorized viewers get empty lists via
+  // Document's @authorization directive.
+  type PulseProvenanceResult = {
+    id: string
+    extractedFrom?: ProvenanceDocument[]
+  }
+  const { data: goalProv } = useQuery<{ goalPulses?: PulseProvenanceResult[] }>(
+    GET_GOAL_PULSE_PROVENANCE,
+    { variables: { pulseId }, skip: !pulseId }
+  )
+  const { data: resourceProv } = useQuery<{
+    resourcePulses?: PulseProvenanceResult[]
+  }>(GET_RESOURCE_PULSE_PROVENANCE, {
+    variables: { pulseId },
+    skip: !pulseId,
+  })
+  const { data: storyProv } = useQuery<{
+    storyPulses?: PulseProvenanceResult[]
+  }>(GET_STORY_PULSE_PROVENANCE, {
+    variables: { pulseId },
+    skip: !pulseId,
+  })
+  const provenanceDocuments =
+    goalProv?.goalPulses?.[0]?.extractedFrom ??
+    resourceProv?.resourcePulses?.[0]?.extractedFrom ??
+    storyProv?.storyPulses?.[0]?.extractedFrom ??
+    null
 
   // Setup mutations for different pulse types
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
@@ -941,6 +981,8 @@ export default function PulseDetailsPage() {
               Created {createdDate}
             </p>
           </div>
+
+          <EntityProvenance documents={provenanceDocuments} />
 
           {/* Content Section */}
           {pulse.content && (

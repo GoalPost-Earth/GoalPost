@@ -5,14 +5,6 @@ import { gsap } from 'gsap'
 import { usePreferences } from '@/contexts/preferences-context'
 import { useFocalEntity } from '@/contexts'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Thread } from '@/components/assistant-ui/thread'
 import {
@@ -29,8 +21,13 @@ import type { FocalEntity } from '@/lib/focal-entity/types'
 import { AIAssistantPivotFooter } from '@/components/ui/ai-assistant-pivot-footer'
 import {
   fetchHydratedThread,
+  persistLastViewedThread,
   type HydratedThread,
 } from '@/lib/simulation/conversation-thread-client'
+import { ThreadSwitcher } from '@/components/chat/thread-switcher'
+import { onOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { ApprovalBatchDialog } from '@/components/chat/approval-batch-dialog'
+import { applyFieldEdits } from '@/lib/chat/approval-display'
 
 interface AIAssistantPanelProps {
   isOpen: boolean
@@ -66,13 +63,35 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
   // backend's HITL gate executes them via executeAuthorizedWriteTool.
   const approvedActionsRef = useRef<ApprovedActionPayload[]>([])
 
+  // Slice 5 (GOAL-240) — hydrate state carries the active thread so the
+  // panel can lock the mode selector on ingest threads, render a title in
+  // the switcher trigger, and force `aiMode='default'` for ingest threads.
+  const [hydration, setHydration] = useState<
+    | { status: 'idle' }
+    | { status: 'loading'; targetThreadId: string | null }
+    | { status: 'ready'; thread: HydratedThread | null }
+  >({ status: 'idle' })
+  // Bumped when a new ingest thread lands so the switcher refetches its list.
+  const [switcherRefreshKey, setSwitcherRefreshKey] = useState(0)
+
+  const isIngestThread =
+    hydration.status === 'ready' && hydration.thread?.kind === 'ingest'
+
+  // The chat assistant's mode is normally driven by the user's global
+  // preference. Slice 5 makes ingest threads pin Standard regardless —
+  // Aiden / Braider never take action, so their behaviour would break the
+  // synthesized turn's pre-staged tool calls. The lock is enforced both
+  // server-side (ConversationThread.mode = 'default' at create) and
+  // request-side here.
+  const effectiveAiMode = isIngestThread ? 'default' : aiMode
+
   const resolveBody = useCallback(() => {
     const snapshot = sessionContextRef.current
     const focalEntity = snapshot.focalEntity
     const previousFocalEntity = lastSentFocalRef.current
     lastSentFocalRef.current = focalEntity
     return {
-      aiMode,
+      aiMode: effectiveAiMode,
       currentUserId: snapshot.currentUserId,
       spaceId: snapshot.activeSpaceId,
       fieldContextId: snapshot.activeFieldContextId,
@@ -96,32 +115,54 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
           : null,
       approvedActions: approvedActionsRef.current,
     }
-  }, [aiMode])
+  }, [effectiveAiMode])
 
-  // Fetch the user's persisted ConversationThread when the panel opens.
-  // `useChatRuntime` needs its `messages` at first call — it isn't reactive
-  // to later changes — so the actual runtime is lifted into <HydratedChat/>
-  // which only mounts after hydration resolves. While loading we render a
-  // light skeleton in place of <Thread/>.
-  const [hydration, setHydration] = useState<
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'ready'; thread: HydratedThread | null }
-  >({ status: 'idle' })
-
+  // Hydration loader. Re-fires whenever `targetThreadId` changes — `null`
+  // means "active thread per server state" (last-viewed pin or most recent).
   useEffect(() => {
     if (!isOpen) {
       setHydration({ status: 'idle' })
       return
     }
-    setHydration({ status: 'loading' })
+    const target =
+      hydration.status === 'loading' ? hydration.targetThreadId : null
     const controller = new AbortController()
-    fetchHydratedThread(controller.signal).then((thread) => {
-      if (controller.signal.aborted) return
-      setHydration({ status: 'ready', thread })
-    })
+    fetchHydratedThread(controller.signal, target ?? undefined).then(
+      (thread) => {
+        if (controller.signal.aborted) return
+        setHydration({ status: 'ready', thread })
+        // Persist last-viewed so a hard refresh re-opens the same thread.
+        if (thread?.id) {
+          void persistLastViewedThread(thread.id)
+        }
+      }
+    )
     return () => controller.abort()
+    // We deliberately do not depend on hydration here — when a switch is
+    // requested we transition through `loading` and re-trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, hydration.status === 'loading' ? hydration.targetThreadId : null])
+
+  // Open this panel and switch to a specific thread when other components
+  // (e.g. the FieldContext upload handler) request it.
+  useEffect(() => {
+    if (!isOpen) return
+    return onOpenAssistantThread(({ threadId }) => {
+      setSwitcherRefreshKey((k) => k + 1)
+      setHydration({ status: 'loading', targetThreadId: threadId })
+    })
   }, [isOpen])
+
+  // Initial fetch when the panel opens fresh (no target → server-active).
+  useEffect(() => {
+    if (!isOpen) return
+    if (hydration.status !== 'idle') return
+    setHydration({ status: 'loading', targetThreadId: null })
+  }, [isOpen, hydration.status])
+
+  const handleSelectThread = useCallback((threadId: string) => {
+    setHydration({ status: 'loading', targetThreadId: threadId })
+  }, [])
 
   useEffect(() => {
     if (!panelRef.current || !overlayRef.current) return
@@ -165,39 +206,58 @@ export function AIAssistantPanel({ isOpen, onClose }: AIAssistantPanelProps) {
         className="fixed right-0 top-0 h-full w-full max-w-120 bg-white dark:bg-[#121b21] border-l border-slate-200 dark:border-white/10 shadow-[-20px_0_60px_rgba(0,0,0,0.3)] dark:shadow-[-20px_0_60px_rgba(0,0,0,0.6)] z-70 flex flex-col translate-x-full"
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-white/5 bg-white/50 dark:bg-white/5 backdrop-blur-md relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-8 rounded-full bg-gp-primary/20 text-gp-primary border border-gp-primary/20 shadow-[0_0_12px_rgba(19,164,236,0.3)] dark:shadow-[0_0_12px_rgba(19,164,236,0.2)]">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center justify-center size-8 rounded-full bg-gp-primary/20 text-gp-primary border border-gp-primary/20 shadow-[0_0_12px_rgba(19,164,236,0.3)] dark:shadow-[0_0_12px_rgba(19,164,236,0.2)] shrink-0">
               <span className="material-symbols-outlined text-[18px]">
                 smart_toy
               </span>
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white tracking-wide">
                 GoalPost AI
               </h3>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="relative flex size-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full size-1.5 bg-green-500" />
-                </span>
-                <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-widest font-medium">
-                  Active
-                </p>
+              <div className="mt-0.5">
+                <ThreadSwitcher
+                  activeThreadId={
+                    hydration.status === 'ready'
+                      ? hydration.thread?.id ?? null
+                      : null
+                  }
+                  onSelectThread={(t) => handleSelectThread(t.id)}
+                  refreshKey={switcherRefreshKey}
+                />
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="cursor-pointer size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+            aria-label="Close assistant panel"
+            className="cursor-pointer size-8 flex items-center justify-center rounded-full text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
 
+        {isIngestThread && (
+          <div
+            role="status"
+            className="border-b border-gp-primary/20 bg-gp-primary/5 dark:bg-gp-primary/10 px-6 py-2 text-[11px] text-slate-700 dark:text-white/70 flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[14px] text-gp-primary">
+              lock
+            </span>
+            <span>Ingest threads run in Standard mode.</span>
+          </div>
+        )}
+
         <TooltipProvider>
           <div className="flex-1 overflow-hidden flex flex-col">
             {hydration.status === 'ready' ? (
               <HydratedChat
+                // Key by thread id so switching threads forces useChatRuntime
+                // to remount with fresh `initialMessages` — the runtime reads
+                // them once at construction time.
+                key={hydration.thread?.id ?? 'empty'}
                 initialMessages={hydration.thread?.messages ?? []}
                 resolveBody={resolveBody}
                 approvedActionsRef={approvedActionsRef}
@@ -282,9 +342,7 @@ function ApprovalLayer({ approvedActionsRef }: ApprovalLayerProps) {
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
     []
   )
-  const [activeApproval, setActiveApproval] = useState<PendingApproval | null>(
-    null
-  )
+  const [batchOpen, setBatchOpen] = useState(false)
 
   useEffect(() => {
     if (!messages) return
@@ -340,21 +398,13 @@ function ApprovalLayer({ approvedActionsRef }: ApprovalLayerProps) {
 
   const dismiss = useCallback((hash: string) => {
     setPendingApprovals((prev) => prev.filter((a) => a.approvalHash !== hash))
-    setActiveApproval((prev) => (prev?.approvalHash === hash ? null : prev))
   }, [])
 
-  const approve = useCallback(
-    (approval: PendingApproval) => {
-      approvedActionsRef.current = [
-        ...approvedActionsRef.current,
-        { tool: approval.tool, args: approval.args },
-      ]
-      dismiss(approval.approvalHash)
+  const sendComposerMessage = useCallback(
+    (text: string) => {
       try {
         const composer = api.thread().composer()
-        composer.setText(
-          `Please execute the approved action: ${approval.summary}`
-        )
+        composer.setText(text)
         composer.send()
       } catch (error) {
         console.warn(
@@ -363,7 +413,60 @@ function ApprovalLayer({ approvedActionsRef }: ApprovalLayerProps) {
         )
       }
     },
-    [api, approvedActionsRef, dismiss]
+    [api]
+  )
+
+  const approveOne = useCallback(
+    (
+      approvalHash: string,
+      edits: Record<string, string>
+    ) => {
+      const target = pendingApprovals.find(
+        (a) => a.approvalHash === approvalHash
+      )
+      if (!target) return
+      const mergedArgs = applyFieldEdits(target.args, edits)
+      approvedActionsRef.current = [
+        ...approvedActionsRef.current,
+        { tool: target.tool, args: mergedArgs },
+      ]
+      dismiss(approvalHash)
+      sendComposerMessage(
+        `Please execute the approved action: ${target.summary}`
+      )
+    },
+    [approvedActionsRef, dismiss, pendingApprovals, sendComposerMessage]
+  )
+
+  const approveAll = useCallback(
+    (
+      approvals: Array<{
+        approvalHash: string
+        tool: string
+        args: Record<string, unknown>
+      }>
+    ) => {
+      if (approvals.length === 0) return
+      approvedActionsRef.current = [
+        ...approvedActionsRef.current,
+        ...approvals.map((a) => ({ tool: a.tool, args: a.args })),
+      ]
+      const hashes = new Set(approvals.map((a) => a.approvalHash))
+      setPendingApprovals((prev) =>
+        prev.filter((a) => !hashes.has(a.approvalHash))
+      )
+      setBatchOpen(false)
+      const summary =
+        approvals.length === 1
+          ? `Please execute the approved action: ${
+              pendingApprovals.find(
+                (p) => p.approvalHash === approvals[0].approvalHash
+              )?.summary ?? approvals[0].tool
+            }`
+          : `Please execute the ${approvals.length} approved actions I just confirmed.`
+      sendComposerMessage(summary)
+    },
+    [approvedActionsRef, pendingApprovals, sendComposerMessage]
   )
 
   if (pendingApprovals.length === 0) return null
@@ -371,85 +474,37 @@ function ApprovalLayer({ approvedActionsRef }: ApprovalLayerProps) {
   return (
     <>
       <div className="border-t border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2">
-        <p className="text-xs font-medium text-amber-900 dark:text-amber-200 mb-2">
-          Approval required for {pendingApprovals.length} AI change
-          {pendingApprovals.length > 1 ? 's' : ''}
-        </p>
-        <div className="space-y-2 max-h-32 overflow-y-auto">
-          {pendingApprovals.map((approval) => (
-            <div
-              key={approval.approvalHash}
-              className="rounded-md bg-white/70 dark:bg-black/20 px-2 py-2"
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+            {pendingApprovals.length === 1
+              ? 'Approval required for 1 proposed change'
+              : `Approval required for ${pendingApprovals.length} proposed changes`}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="h-7 px-3 text-xs"
+              onClick={() => setBatchOpen(true)}
             >
-              <p className="text-xs text-slate-700 dark:text-slate-200">
-                {approval.summary}
-              </p>
-              <div className="mt-2 flex gap-2">
-                <Button
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setActiveApproval(approval)}
-                >
-                  Review
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => dismiss(approval.approvalHash)}
-                >
-                  Dismiss
-                </Button>
-              </div>
-            </div>
-          ))}
+              Review {pendingApprovals.length > 1 ? 'batch' : ''}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Dialog
-        open={Boolean(activeApproval)}
-        onOpenChange={(open) => {
-          if (!open) setActiveApproval(null)
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Approve AI Action</DialogTitle>
-            <DialogDescription>
-              Review this requested change before execution.
-            </DialogDescription>
-          </DialogHeader>
-
-          {activeApproval && (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-700 dark:text-slate-200">
-                {activeApproval.summary}
-              </p>
-              <pre className="max-h-48 overflow-auto rounded-md bg-slate-100 dark:bg-white/10 p-3 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
-                {JSON.stringify(activeApproval.args, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (activeApproval) dismiss(activeApproval.approvalHash)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (activeApproval) approve(activeApproval)
-              }}
-            >
-              Approve And Run
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ApprovalBatchDialog
+        open={batchOpen}
+        pendingApprovals={pendingApprovals.map((a) => ({
+          approvalHash: a.approvalHash,
+          tool: a.tool,
+          args: a.args,
+          summary: a.summary,
+        }))}
+        onOpenChange={setBatchOpen}
+        onApproveAll={approveAll}
+        onApproveOne={approveOne}
+        onReject={dismiss}
+      />
     </>
   )
 }

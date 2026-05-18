@@ -1,13 +1,21 @@
 /**
- * Pure input validator for the `uploadDocument` GraphQL mutation. Same gates
- * the REST POST route applies, factored out so the mutation resolver can
- * surface clean error messages without re-implementing validation. Keep in
- * step with the mimeType + size set in
- * `src/app/api/ingest/document/route.ts`.
+ * Pure input validator for the `uploadDocument` GraphQL mutation. The REST
+ * POST route reuses this so both transports share size/mime gates. The cap
+ * here is a defense-in-depth byte ceiling — the real "is this doc too big"
+ * decision happens after extraction in `DocumentTextExtractor` against the
+ * ~50K-char / ~20-page caps.
  */
 
-const ALLOWED_MIME = new Set<string>(['text/plain'])
-const MAX_BYTES = 50 * 1024
+const ALLOWED_MIME = new Set<string>([
+  'text/plain',
+  'text/markdown',
+  'application/pdf',
+])
+
+// Generous byte ceiling so a legitimate 20-page PDF (often 2–5 MB) passes
+// through, while a wildly out-of-band upload (50 MB image renamed to .pdf)
+// is bounced before we hit the parser.
+const MAX_BYTES = 10 * 1024 * 1024
 
 export interface RawUploadDocumentInput {
   fieldContextId: string
@@ -43,7 +51,6 @@ function decodeBase64Strict(b64: string): Buffer | null {
   const decoded = Buffer.from(b64, 'base64')
   const reencoded = decoded.toString('base64')
   const normalised = b64.replace(/\s+/g, '')
-  // strip trailing padding for comparison
   if (reencoded.replace(/=+$/, '') !== normalised.replace(/=+$/, '')) {
     return null
   }
@@ -67,7 +74,7 @@ export function validateUploadDocumentInput(
   if (!ALLOWED_MIME.has(mimeType)) {
     return {
       ok: false,
-      error: `Unsupported mimeType "${mimeType}". Slice 1 supports text/plain only.`,
+      error: `We don't yet support this file type ("${mimeType}"). v1 accepts .txt, .md, and .pdf.`,
     }
   }
 
@@ -78,7 +85,7 @@ export function validateUploadDocumentInput(
   if (buffer.length > MAX_BYTES) {
     return {
       ok: false,
-      error: `File is too large (${buffer.length} bytes). Slice 1 cap is ${MAX_BYTES} bytes.`,
+      error: `This document is too large (${(buffer.length / (1024 * 1024)).toFixed(1)} MB). The upload limit is ${MAX_BYTES / (1024 * 1024)} MB.`,
     }
   }
 

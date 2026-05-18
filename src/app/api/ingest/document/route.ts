@@ -91,8 +91,9 @@ export async function POST(req: Request) {
   )
 
   if (!result.ok) {
-    return new Response(JSON.stringify({ error: result.error }), {
-      status: 403,
+    const status = result.reason === 'forbidden' ? 403 : 400
+    return new Response(JSON.stringify({ error: result.error, reason: result.reason }), {
+      status,
       headers: { 'Content-Type': 'application/json' },
     })
   }
