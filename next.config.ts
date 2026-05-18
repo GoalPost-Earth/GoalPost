@@ -1,4 +1,8 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { NextConfig } from 'next'
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 
 const securityHeaders = [
   {
@@ -85,6 +89,7 @@ const nextConfig: NextConfig = {
     ],
   },
   turbopack: {
+    root: projectRoot,
     resolveAlias: {
       // Force all graphql imports to resolve to the exact same instance
       // This prevents the "Cannot use GraphQLNonNull from another module or realm" error

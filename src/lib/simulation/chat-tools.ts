@@ -14,6 +14,7 @@ import {
   createApprovalHash,
   executeAuthorizedWriteTool,
   isWriteToolName,
+  type PendingApprovalResult,
   type WriteToolName,
 } from '@/lib/chat/hitl'
 import {
@@ -109,7 +110,7 @@ async function runWriteTool(
   toolName: WriteToolName,
   args: Record<string, unknown>,
   ctx: SimulationChatToolContext
-): Promise<Record<string, unknown>> {
+): Promise<PendingApprovalResult | Record<string, unknown>> {
   if (!isWriteToolName(toolName)) {
     return {
       success: false,

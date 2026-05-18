@@ -59,3 +59,6 @@ verify-parsing-logic.ts
 # Other
 Thumbs.db
 .vercel
+
+# Ad-hoc agent scratch files (do not let Tailwind scan)
+.profile-tmp/
