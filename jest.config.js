@@ -4,4 +4,7 @@ export default {
   testEnvironment: 'node',
   setupFiles: ['dotenv/config'],
   testTimeout: 45000,
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
 }

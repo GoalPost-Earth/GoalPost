@@ -1,0 +1,392 @@
+import {
+  extractEntities,
+  type ExtractionModelClient,
+  type ExtractionModelInput,
+} from './extraction-model-invoker'
+
+const baseInput: ExtractionModelInput = {
+  documentText: 'Sarah Chen led the migration. Bob arrived late.',
+  filename: 'meeting-notes.txt',
+  hint: null,
+  roster: { persons: [], pulses: [] },
+  fieldContextId: 'ctx_1',
+  fieldContextTitle: 'Care Practices',
+  documentId: 'doc_1',
+}
+
+describe('ExtractionModelInvoker', () => {
+  it('passes through one fully-named person as a create_person tool call', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+      assistantText: 'I found one person.',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls).toHaveLength(1)
+    expect(result.toolCalls[0].tool).toBe('create_person')
+    expect(result.toolCalls[0].args).toMatchObject({
+      firstName: 'Sarah',
+      lastName: 'Chen',
+      contextId: 'ctx_1',
+      contextTitle: 'Care Practices',
+      documentId: 'doc_1',
+    })
+    expect(result.assistantText).toContain('Sarah Chen')
+  })
+
+  it('filters out partial persons (missing lastName) and surfaces them in assistantText, never as tool calls', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [
+        { firstName: 'Sarah', lastName: 'Chen' },
+        { firstName: 'Bob', lastName: '' },
+        { firstName: '', lastName: 'Patel' },
+      ],
+      assistantText: 'Three mentions.',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls).toHaveLength(1)
+    expect(result.toolCalls[0].args.firstName).toBe('Sarah')
+    expect(result.assistantText.toLowerCase()).toMatch(/skip|partial|low-confidence|incomplete/)
+  })
+
+  it('returns the empty-result path with no tool calls and a clear assistant message when the model finds nothing', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [],
+      assistantText: '',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls).toEqual([])
+    expect(result.assistantText.toLowerCase()).toContain("didn't find")
+  })
+
+  it('returns the failure path (not a thrown error) when the model client throws', async () => {
+    // Acceptance criterion: "nothing in graph, nothing in UI" must never be possible.
+    // On model error the route still synthesizes an assistant turn — failure
+    // is surfaced as text, not propagated as an exception.
+    const modelClient: ExtractionModelClient = async () => {
+      throw new Error('upstream timeout')
+    }
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('failure')
+    if (result.kind !== 'failure') throw new Error('unreachable')
+    expect(result.assistantText.toLowerCase()).toContain('extraction failed')
+    expect(result.assistantText).toContain('upstream timeout')
+  })
+
+  it('uses the human-readable filename (never raw documentId) in the assistant text', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+      assistantText: '',
+    })
+    const result = await extractEntities(
+      { ...baseInput, filename: 'q2-strategy.txt', documentId: 'doc_abc12345' },
+      modelClient
+    )
+    expect(result.assistantText).toContain('q2-strategy.txt')
+    expect(result.assistantText).not.toContain('doc_abc12345')
+  })
+
+  it('drops CarePulse/CoreValuePulse server-side (v1 allowlist) and surfaces them in assistantText, never as tool calls', async () => {
+    // v1 acceptance criterion: a model that emits CarePulse/CoreValuePulse
+    // must have it filtered out before the synthesized turn is written. We
+    // cast through `unknown` to force-feed an out-of-allowlist kind that the
+    // Zod schema would normally reject — the test exists to confirm the
+    // runtime filter catches it if the model ever leaks one anyway.
+    const modelClient = (async () => ({
+      persons: [],
+      pulses: [
+        {
+          kind: 'CarePulse',
+          title: 'Bring soup',
+          content: 'Take soup to Mae after surgery.',
+        },
+        {
+          kind: 'GoalPulse',
+          title: 'Ship migration',
+          content: 'Cut the data migration over before EOQ.',
+        },
+      ],
+      assistantText: '',
+    })) as unknown as ExtractionModelClient
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls).toHaveLength(1)
+    expect(result.toolCalls[0].args.pulseType).toBe('GoalPulse')
+    // The dropped pulse must NOT silently disappear — it surfaces in copy.
+    expect(result.assistantText).toContain('Bring soup')
+  })
+
+  it('drops pulses missing title or content and surfaces them in assistantText, never as tool calls', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [],
+      pulses: [
+        { kind: 'GoalPulse', title: 'Valid goal', content: 'Has both fields.' },
+        { kind: 'ResourcePulse', title: '', content: 'No title.' },
+        { kind: 'StoryPulse', title: 'No body', content: '   ' },
+      ],
+      assistantText: '',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls).toHaveLength(1)
+    expect(result.toolCalls[0].args.title).toBe('Valid goal')
+    // Dropped pulse with a title appears in copy; the body-only one cannot
+    // be named since it had no title.
+    expect(result.assistantText).toContain('No body')
+  })
+
+  it('emits a create_pulse tool call for each fully-formed Goal/Resource/Story pulse', async () => {
+    // Slice 2 — batch extraction. The extractor now returns pulses alongside
+    // persons. Each pulse becomes a create_pulse synthesized tool call with
+    // the correct pulseType, contextId/title, and documentId for provenance.
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+      pulses: [
+        {
+          kind: 'GoalPulse',
+          title: 'Ship migration',
+          content: 'Cut the data migration over before EOQ.',
+          horizon: 'SHORT',
+        },
+        {
+          kind: 'ResourcePulse',
+          title: 'Shared infra budget',
+          content: 'Pool of credits available to the migration team.',
+          resourceType: 'budget',
+        },
+        {
+          kind: 'StoryPulse',
+          title: 'Why we started this',
+          content: 'The old system was paging the team weekly.',
+        },
+      ],
+      assistantText: 'Found person and pulses.',
+    })
+
+    const result = await extractEntities(baseInput, modelClient)
+    expect(result.kind).toBe('ok')
+    if (result.kind !== 'ok') throw new Error('unreachable')
+
+    // 1 person + 3 pulses = 4 tool calls
+    expect(result.toolCalls).toHaveLength(4)
+
+    const personCalls = result.toolCalls.filter((c) => c.tool === 'create_person')
+    const pulseCalls = result.toolCalls.filter((c) => c.tool === 'create_pulse')
+    expect(personCalls).toHaveLength(1)
+    expect(pulseCalls).toHaveLength(3)
+
+    const byType = new Map(
+      pulseCalls.map((c) => [c.args.pulseType as string, c.args])
+    )
+    expect(byType.get('GoalPulse')).toMatchObject({
+      title: 'Ship migration',
+      content: 'Cut the data migration over before EOQ.',
+      horizon: 'SHORT',
+      contextId: 'ctx_1',
+      contextTitle: 'Care Practices',
+      documentId: 'doc_1',
+    })
+    expect(byType.get('ResourcePulse')).toMatchObject({
+      title: 'Shared infra budget',
+      resourceType: 'budget',
+      contextId: 'ctx_1',
+      documentId: 'doc_1',
+    })
+    expect(byType.get('StoryPulse')).toMatchObject({
+      title: 'Why we started this',
+      contextId: 'ctx_1',
+      documentId: 'doc_1',
+    })
+  })
+
+  // Slice 4 (GOAL-239) — in-extractor dedup + partial-person filter.
+  describe('slice 4 — roster dedup', () => {
+    const rosterInput: ExtractionModelInput = {
+      ...baseInput,
+      roster: {
+        persons: [
+          { id: 'person_sarah_existing', name: 'Sarah Chen' },
+          { id: 'person_robert_existing', name: 'Robert Patel' },
+        ],
+        pulses: [
+          {
+            id: 'pulse_goal_existing',
+            title: 'Grow event attendance',
+            pulseType: 'GoalPulse',
+          },
+        ],
+      },
+    }
+
+    it('emits update_person when the model echoes the roster id (existingId)', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          {
+            firstName: 'Sarah',
+            lastName: 'Chen',
+            existingId: 'person_sarah_existing',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_person')
+      expect(result.toolCalls[0].args).toMatchObject({
+        personId: 'person_sarah_existing',
+        firstName: 'Sarah',
+        lastName: 'Chen',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      })
+    })
+
+    it('emits update_person on case-insensitive trimmed full-name match even without existingId', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          { firstName: '  sarah ', lastName: 'CHEN' },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_person')
+      expect(result.toolCalls[0].args.personId).toBe('person_sarah_existing')
+    })
+
+    it('emits create_person for a fully-named mention not in the roster', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Mae', lastName: 'Liang' }],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('create_person')
+    })
+
+    it('emits update_pulse when the model echoes a roster pulse id of matching kind', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Increase event attendance',
+            content: 'Boost the next two events.',
+            existingId: 'pulse_goal_existing',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_pulse')
+      expect(result.toolCalls[0].args).toMatchObject({
+        pulseId: 'pulse_goal_existing',
+        newTitle: 'Increase event attendance',
+        newContent: 'Boost the next two events.',
+        pulseType: 'GoalPulse',
+        contextId: 'ctx_1',
+        documentId: 'doc_1',
+      })
+    })
+
+    it('falls back to create_pulse if existingId points at a pulse of a different kind', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'ResourcePulse',
+            title: 'Should not become an update',
+            content: 'Mismatched kind.',
+            existingId: 'pulse_goal_existing',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('create_pulse')
+    })
+
+    it('collapses duplicate person mentions in the same document to a single tool call', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          { firstName: 'Mae', lastName: 'Liang' },
+          { firstName: ' MAE ', lastName: 'liang' },
+          { firstName: 'Mae', lastName: 'Liang' },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].args.firstName).toBe('Mae')
+      expect(result.toolCalls[0].args.lastName).toBe('Liang')
+    })
+
+    it('collapses duplicate pulse mentions in the same document to a single tool call', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship migration',
+            content: 'First mention.',
+          },
+          {
+            kind: 'GoalPulse',
+            title: '  ship migration  ',
+            content: 'Second mention of the same goal.',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].args.title).toBe('Ship migration')
+    })
+
+    it('surfaces the matched names in assistantText without leaking raw ids', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          {
+            firstName: 'Sarah',
+            lastName: 'Chen',
+            existingId: 'person_sarah_existing',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(rosterInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.assistantText).toContain('Sarah Chen')
+      expect(result.assistantText).not.toContain('person_sarah_existing')
+      // copy describes the dedup outcome in human-readable form
+      expect(result.assistantText.toLowerCase()).toMatch(
+        /already track|update|match/
+      )
+    })
+  })
+})

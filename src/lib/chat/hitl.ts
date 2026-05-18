@@ -10,7 +10,7 @@ import {
   type UpdatePulseInput,
   type PulseContextLinkInput,
 } from '@/modules/agent/tools/pulse/pulse.service'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 
 export type WriteToolName =
   | 'rename_space'
@@ -23,6 +23,8 @@ export type WriteToolName =
   | 'edit_pulse_context_link'
   | 'update_my_profile'
   | 'delete_my_profile'
+  | 'create_person'
+  | 'update_person'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -46,6 +48,8 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'edit_pulse_context_link',
   'update_my_profile',
   'delete_my_profile',
+  'create_person',
+  'update_person',
 ])
 
 function stableStringify(value: unknown): string {
@@ -78,6 +82,24 @@ export function createApprovalHash(
   return createHash('sha256').update(payload).digest('hex')
 }
 
+function pulseTypeLabel(rawType: unknown): string {
+  const type = typeof rawType === 'string' ? rawType.trim() : ''
+  switch (type) {
+    case 'GoalPulse':
+      return 'goal'
+    case 'ResourcePulse':
+      return 'resource'
+    case 'StoryPulse':
+      return 'story'
+    case 'CarePulse':
+      return 'care note'
+    case 'CoreValuePulse':
+      return 'core value'
+    default:
+      return 'pulse'
+  }
+}
+
 export function describeWriteAction(
   tool: WriteToolName,
   args: Record<string, unknown>
@@ -91,10 +113,27 @@ export function describeWriteAction(
       return `Create field context "${String(args.title || '')}" in ${String(args.spaceId || args.spaceName || 'selected space')}`
     case 'delete_field_context':
       return `Delete field context ${String(args.contextId || args.currentTitle || 'target context')}`
-    case 'update_pulse':
-      return `Update pulse ${String(args.pulseId || args.currentTitle || 'target')}`
-    case 'create_pulse':
-      return `Create ${String(args.pulseType || 'FieldPulse')} "${String(args.title || '')}"`
+    case 'update_pulse': {
+      const title = String(args.currentTitle || args.newTitle || '').trim()
+      const where = String(args.contextTitle || args.contextName || '').trim()
+      const label = pulseTypeLabel(args.pulseType)
+      const titleClause = title ? ` "${title}"` : ''
+      const whereClause = where ? ` in ${where}` : ''
+      if (title || where || args.pulseType) {
+        return `Update ${label}${titleClause}${whereClause}`
+      }
+      // Fallback for callers that don't carry the doc-ingest enrichment.
+      return `Update pulse ${String(args.pulseId || 'target')}`
+    }
+    case 'create_pulse': {
+      const title = String(args.title || '').trim()
+      const where =
+        String(args.contextTitle || args.contextName || '').trim()
+      const label = pulseTypeLabel(args.pulseType)
+      const titleClause = title ? ` "${title}"` : ''
+      const whereClause = where ? ` in ${where}` : ''
+      return `Add ${label}${titleClause}${whereClause}`
+    }
     case 'delete_pulse':
       return `Delete pulse ${String(args.pulseId || args.currentTitle || 'target pulse')}`
     case 'edit_pulse_context_link':
@@ -103,6 +142,27 @@ export function describeWriteAction(
       return `Update your profile name to \"${String(args.newName || '')}\"`
     case 'delete_my_profile':
       return 'Deactivate your own user profile'
+    case 'create_person': {
+      const first = String(args.firstName || '').trim()
+      const last = String(args.lastName || '').trim()
+      const full = [first, last].filter(Boolean).join(' ') || 'person'
+      const where =
+        String(args.contextTitle || args.contextName || '').trim() ||
+        'this field context'
+      return `Add ${full} to ${where}`
+    }
+    case 'update_person': {
+      const first = String(args.firstName || '').trim()
+      const last = String(args.lastName || '').trim()
+      const full =
+        [first, last].filter(Boolean).join(' ') ||
+        String(args.currentName || '').trim() ||
+        'person'
+      const where =
+        String(args.contextTitle || args.contextName || '').trim() ||
+        'this field context'
+      return `Update ${full} in ${where}`
+    }
     default:
       return `Run ${tool}`
   }
@@ -149,6 +209,10 @@ interface CreatePulseInput extends ContextLocatorInput {
   why?: string
   location?: string
   time?: string
+  /** Optional source Document — when present, EXTRACTED_FROM edge is created (ADR-0002). */
+  documentId?: string
+  /** Optional ingest thread — slice 7: stamps the Log.metadata audit trail. */
+  conversationThreadId?: string
 }
 
 interface DeletePulseInput {
@@ -165,6 +229,76 @@ const ALLOWED_PULSE_TYPES = new Set<PulseCreationType>([
   'CoreValuePulse',
   'FieldPulse',
 ])
+
+/**
+ * Slice 7 (GOAL-242) — look up a Document's filename so per-entity Log rows
+ * can reference it in user-readable copy. Returns null when the document is
+ * missing or the lookup fails (the description simply omits the suffix —
+ * never blocks the write).
+ */
+async function lookupDocumentFilename(
+  graph: Neo4jGraph,
+  documentId: string
+): Promise<string | null> {
+  try {
+    const rows = await graph.query<{ filename: string | null }>(
+      `MATCH (d:Document {id: $documentId}) RETURN d.filename AS filename LIMIT 1`,
+      { documentId }
+    )
+    const value = rows?.[0]?.filename
+    return typeof value === 'string' && value.trim() ? value.trim() : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Slice 7 (GOAL-242) — server-side audit trail JSON for ingest-path Log rows.
+ * Returns null when no provenance applies, so the Cypher conditional SET stays
+ * a no-op for manual creates/updates (existing behavior preserved).
+ */
+function buildIngestLogMetadata(
+  documentId: string | null,
+  conversationThreadId: string | null
+): string | null {
+  if (!documentId && !conversationThreadId) return null
+  const payload: Record<string, string> = {}
+  if (documentId) payload.documentId = documentId
+  if (conversationThreadId) payload.conversationThreadId = conversationThreadId
+  return JSON.stringify(payload)
+}
+
+/**
+ * The single source of truth for the "pending HITL approval" tool-result
+ * shape. Both the runtime gate (runWriteTool in chat-tools.ts) and the
+ * doc-ingestion synthesized-turn appender must call this exact factory so
+ * the HITL Dialog hydrates either path identically. Drift here silently
+ * breaks approval — pinned by hitl.test.ts.
+ */
+export interface PendingApprovalResult {
+  success: false
+  approvalRequired: true
+  approvalHash: string
+  tool: WriteToolName
+  args: Record<string, unknown>
+  summary: string
+  message: string
+}
+
+export function buildPendingApprovalResult(
+  tool: WriteToolName,
+  args: Record<string, unknown>
+): PendingApprovalResult {
+  return {
+    success: false,
+    approvalRequired: true,
+    approvalHash: createApprovalHash(tool, args),
+    tool,
+    args,
+    summary: describeWriteAction(tool, args),
+    message: 'This action needs your approval before I can execute it.',
+  }
+}
 
 export function buildApprovedActionHashSet(
   approvedActions: ApprovedAction[] | undefined
@@ -825,12 +959,30 @@ async function createPulseAuthorized(
     ? (input.pulseType as PulseCreationType) || 'FieldPulse'
     : 'FieldPulse'
   const pulseLabel = pulseType === 'FieldPulse' ? '' : `:${pulseType}`
+  const documentId = input.documentId?.trim() || null
+  const conversationThreadId = input.conversationThreadId?.trim() || null
+  const documentFilename = documentId
+    ? await lookupDocumentFilename(graph, documentId)
+    : null
+  const pulseId = `pulse_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const where = input.contextTitle?.trim() || ''
+  const humanLabel = pulseTypeLabel(pulseType)
+  const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
+  const description =
+    (where
+      ? `Added ${humanLabel} "${title}" to ${where}`
+      : `Added ${humanLabel} "${title}"`) + filenameSuffix
+  // Slice 7: server-side audit metadata. Never user-facing; surfaced only via
+  // the Log row's metadata field for downstream audits.
+  const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
 
   const query = `
     MATCH (context:FieldContext {id: $contextId})
     MATCH (person:Person {id: $currentUserId})
+    OPTIONAL MATCH (doc:Document {id: $documentId})
     CREATE (pulse:FieldPulse${pulseLabel} {
-      id: 'pulse_' + randomUUID(),
+      id: $pulseId,
       title: $title,
       content: $content,
       createdAt: datetime(),
@@ -862,6 +1014,19 @@ async function createPulseAuthorized(
     )
     CREATE (context)-[:HAS_PULSE]->(pulse)
     CREATE (pulse)-[:INITIATED_BY]->(person)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+      SET log.metadata = $metadata
+    )
+    CREATE (log)-[:CREATED_BY]->(person)
+    CREATE (log)-[:LOGGED_FOR]->(pulse)
+    FOREACH (_ IN CASE WHEN doc IS NULL THEN [] ELSE [1] END |
+      CREATE (pulse)-[:EXTRACTED_FROM]->(doc)
+    )
     RETURN pulse.id AS id, pulse.title AS title
     LIMIT 1
   `
@@ -869,6 +1034,11 @@ async function createPulseAuthorized(
   const rows = await graph.query<{ id: string; title: string }>(query, {
     contextId: resolvedContext.contextId,
     currentUserId,
+    documentId,
+    pulseId,
+    logId,
+    description,
+    metadata,
     title,
     content,
     status: input.status?.trim() || null,
@@ -901,7 +1071,10 @@ async function createPulseAuthorized(
     title: rows[0].title,
     pulseType,
     contextId: resolvedContext.contextId,
-    message: `Created ${pulseType} "${rows[0].title}".`,
+    documentId,
+    message: where
+      ? `Added ${humanLabel} "${rows[0].title}" to ${where}.`
+      : `Added ${humanLabel} "${rows[0].title}".`,
   }
 }
 
@@ -946,6 +1119,266 @@ async function deletePulseAuthorized(
     title: rows[0].title,
     deletedChunkCount: Number(rows[0].deletedChunkCount || 0),
     message: `Deleted pulse "${rows[0].title}".`,
+  }
+}
+
+interface CreatePersonAuthorizedInput {
+  firstName?: string
+  lastName?: string
+  contextId?: string
+  contextTitle?: string
+  documentId?: string
+  conversationThreadId?: string
+}
+
+async function createPersonAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreatePersonAuthorizedInput
+  const firstName = input.firstName?.trim() || ''
+  const lastName = input.lastName?.trim() || ''
+  const contextId = input.contextId?.trim() || ''
+  const contextTitle = input.contextTitle?.trim() || ''
+  const documentId = input.documentId?.trim() || null
+  const conversationThreadId = input.conversationThreadId?.trim() || null
+
+  if (!firstName || !lastName) {
+    return {
+      success: false,
+      message: 'create_person requires both firstName and lastName.',
+    }
+  }
+  if (!contextId) {
+    return {
+      success: false,
+      message: 'create_person requires a contextId.',
+    }
+  }
+
+  const allowed = await canEditContext(graph, currentUserId, contextId)
+  if (!allowed) {
+    return {
+      success: false,
+      message: 'You can only add people to field contexts in spaces you belong to.',
+    }
+  }
+
+  const documentFilename = documentId
+    ? await lookupDocumentFilename(graph, documentId)
+    : null
+  const personId = `person_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const name = `${firstName} ${lastName}`
+  const where = contextTitle || 'this field context'
+  const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
+  const description = `Added ${name} to ${where}${filenameSuffix}`
+  const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
+
+  const rows = await graph.query<{ id: string; name: string }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})
+    MATCH (u:Person {id: $currentUserId})
+    OPTIONAL MATCH (d:Document {id: $documentId})
+    CREATE (p:Person:PersonPulse {
+      id: $personId,
+      firstName: $firstName,
+      lastName: $lastName,
+      name: $name,
+      createdAt: datetime()
+    })
+    CREATE (c)-[:HAS_PERSON]->(p)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+      SET log.metadata = $metadata
+    )
+    CREATE (log)-[:CREATED_BY]->(u)
+    FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+      CREATE (p)-[:EXTRACTED_FROM]->(d)
+    )
+    RETURN p.id AS id, p.name AS name
+    LIMIT 1
+    `,
+    {
+      contextId,
+      currentUserId,
+      documentId,
+      personId,
+      firstName,
+      lastName,
+      name,
+      logId,
+      description,
+      metadata,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: 'Failed to create the person.',
+    }
+  }
+
+  return {
+    success: true,
+    personId: rows[0].id,
+    name: rows[0].name,
+    contextId,
+    documentId,
+    message: `Added ${rows[0].name} to ${where}.`,
+  }
+}
+
+interface UpdatePersonAuthorizedInput {
+  personId?: string
+  firstName?: string
+  lastName?: string
+  currentName?: string
+  contextId?: string
+  contextTitle?: string
+  documentId?: string
+  conversationThreadId?: string
+}
+
+async function updatePersonAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as UpdatePersonAuthorizedInput
+  const personId = input.personId?.trim() || ''
+  const firstName = input.firstName?.trim() || ''
+  const lastName = input.lastName?.trim() || ''
+  const contextId = input.contextId?.trim() || ''
+  const contextTitle = input.contextTitle?.trim() || ''
+  const documentId = input.documentId?.trim() || null
+  const conversationThreadId = input.conversationThreadId?.trim() || null
+
+  if (!personId) {
+    return {
+      success: false,
+      message: 'update_person requires a personId.',
+    }
+  }
+
+  // Auth check: the user must be able to edit *some* FieldContext that
+  // hosts this person. Passing the contextId from the synthesized turn keeps
+  // the gate aligned with the ingest path (the document was uploaded into
+  // that FieldContext, so it is also where the existing person lives).
+  if (contextId) {
+    const allowed = await canEditContext(graph, currentUserId, contextId)
+    if (!allowed) {
+      return {
+        success: false,
+        message:
+          'You can only edit people in field contexts in spaces you belong to.',
+      }
+    }
+  } else {
+    const allowedRows = await graph.query<{ allowed: boolean }>(
+      `
+      MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(p:Person {id: $personId})
+      OPTIONAL MATCH (owner:Person {id: $currentUserId})-[:OWNS]->(space)
+      OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $currentUserId})
+      WITH (owner IS NOT NULL OR member IS NOT NULL) AS allowed
+      RETURN allowed
+      LIMIT 1
+      `,
+      { personId, currentUserId }
+    )
+    if (!allowedRows?.[0]?.allowed) {
+      return {
+        success: false,
+        message:
+          'You can only edit people in field contexts in spaces you belong to.',
+      }
+    }
+  }
+
+  const newFirstName = firstName || null
+  const newLastName = lastName || null
+  const hasNameChange = Boolean(newFirstName || newLastName)
+
+  const documentFilename = documentId
+    ? await lookupDocumentFilename(graph, documentId)
+    : null
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const composedName = [firstName, lastName].filter(Boolean).join(' ').trim()
+  const displayName =
+    composedName || input.currentName?.trim() || 'person'
+  const where = contextTitle || 'this field context'
+  const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
+  const description = `Updated ${displayName} in ${where}${filenameSuffix}`
+  const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
+
+  const rows = await graph.query<{
+    id: string
+    firstName: string | null
+    lastName: string | null
+    name: string | null
+  }>(
+    `
+    MATCH (p:Person {id: $personId})
+    MATCH (u:Person {id: $currentUserId})
+    OPTIONAL MATCH (d:Document {id: $documentId})
+    FOREACH (_ IN CASE WHEN $newFirstName IS NULL THEN [] ELSE [1] END |
+      SET p.firstName = $newFirstName
+    )
+    FOREACH (_ IN CASE WHEN $newLastName IS NULL THEN [] ELSE [1] END |
+      SET p.lastName = $newLastName
+    )
+    FOREACH (_ IN CASE WHEN NOT $hasNameChange THEN [] ELSE [1] END |
+      SET p.name = trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))
+    )
+    SET p.updatedAt = datetime()
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+      SET log.metadata = $metadata
+    )
+    CREATE (log)-[:CREATED_BY]->(u)
+    FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+      MERGE (p)-[:EXTRACTED_FROM]->(d)
+    )
+    RETURN p.id AS id, p.firstName AS firstName, p.lastName AS lastName, p.name AS name
+    LIMIT 1
+    `,
+    {
+      personId,
+      currentUserId,
+      documentId,
+      newFirstName,
+      newLastName,
+      hasNameChange,
+      logId,
+      description,
+      metadata,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: 'Failed to update the person.',
+    }
+  }
+
+  return {
+    success: true,
+    personId: rows[0].id,
+    name: rows[0].name || displayName,
+    contextId,
+    documentId,
+    message: `Updated ${rows[0].name || displayName} in ${where}.`,
   }
 }
 
@@ -1036,14 +1469,84 @@ export async function executeAuthorizedWriteTool(
   }
 
   if (toolName === 'update_pulse') {
-    const input = rawArgs as unknown as UpdatePulseInput
+    const input = rawArgs as unknown as UpdatePulseInput & {
+      documentId?: string
+      pulseType?: string
+      contextTitle?: string
+    }
     const resolved = await resolveAuthorizedPulseId(graph, currentUserId, input)
     if (!resolved.ok) return resolved.result
 
-    return (await updatePulse(graph, {
+    const updateResult = (await updatePulse(graph, {
       ...input,
       pulseId: resolved.pulseId,
-    })) as unknown as ToolExecutionResult
+    })) as unknown as ToolExecutionResult & {
+      pulse?: { id?: string; title?: string }
+    }
+
+    if (!updateResult.success) return updateResult
+
+    // Doc-ingestion provenance: when the synthesized turn carries a
+    // documentId, append EXTRACTED_FROM (idempotent via MERGE) and a single
+    // Log entry attributed to the editor — parity with manual create/update.
+    const documentId =
+      typeof input.documentId === 'string' && input.documentId.trim()
+        ? input.documentId.trim()
+        : null
+    const conversationThreadId =
+      typeof (input as { conversationThreadId?: string }).conversationThreadId ===
+        'string' &&
+      (input as { conversationThreadId?: string }).conversationThreadId!.trim()
+        ? (input as { conversationThreadId?: string })
+            .conversationThreadId!.trim()
+        : null
+    if (documentId) {
+      const updatedTitle =
+        updateResult.pulse?.title || input.currentTitle || 'pulse'
+      const where =
+        typeof input.contextTitle === 'string' ? input.contextTitle.trim() : ''
+      const humanLabel = pulseTypeLabel(input.pulseType)
+      const documentFilename = await lookupDocumentFilename(graph, documentId)
+      const filenameSuffix = documentFilename
+        ? ` (from ${documentFilename})`
+        : ''
+      const description =
+        (where
+          ? `Updated ${humanLabel} "${updatedTitle}" in ${where}`
+          : `Updated ${humanLabel} "${updatedTitle}"`) + filenameSuffix
+      const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
+      const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+      await graph.query(
+        `
+        MATCH (pulse:FieldPulse {id: $pulseId})
+        MATCH (u:Person {id: $currentUserId})
+        OPTIONAL MATCH (d:Document {id: $documentId})
+        CREATE (log:Log {
+          id: $logId,
+          description: $description,
+          createdAt: datetime()
+        })
+        FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+          SET log.metadata = $metadata
+        )
+        CREATE (log)-[:CREATED_BY]->(u)
+        CREATE (log)-[:LOGGED_FOR]->(pulse)
+        FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+          MERGE (pulse)-[:EXTRACTED_FROM]->(d)
+        )
+        `,
+        {
+          pulseId: resolved.pulseId,
+          currentUserId,
+          documentId,
+          logId,
+          description,
+          metadata,
+        }
+      )
+    }
+
+    return updateResult
   }
 
   if (toolName === 'create_pulse') {
@@ -1090,6 +1593,14 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'delete_my_profile') {
     return await deleteMyProfileAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_person') {
+    return await createPersonAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'update_person') {
+    return await updatePersonAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {

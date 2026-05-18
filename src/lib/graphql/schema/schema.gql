@@ -215,11 +215,18 @@ type Person implements PersonInterface
   #   2. Query contexts on those spaces → get FieldContexts
   #   3. Query pulses on those contexts → get GoalPulse/ResourcePulse/StoryPulse
   contexts: [FieldContext!]! @relationship(type: "HAS_PERSON", direction: IN)
-  # 
+  #
   # MIGRATION: Legacy direct pulse relationships (goals, resources, coreValues, carePoints)
   # are transformed into pulses within FieldContexts in the person's auto-created MeSpace.
-  
+
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  """
+  Documents this person was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+  Empty for manually-created Person nodes. Each Document is auth-filtered via its own
+  @authorization directive, so non-members of the parent Space see an empty list even if
+  the underlying EXTRACTED_FROM edge exists.
+  """
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -491,6 +498,7 @@ type FieldContext
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   people: [Person!]! @relationship(type: "HAS_PERSON", direction: OUT)
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
+  documents: [Document!]! @relationship(type: "HAS_DOCUMENT", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)
   resonancesInContext: [ResonanceLink!]!
@@ -525,6 +533,116 @@ type FieldContext
 }
 
 # ============================================================================
+# DOCUMENTS (Doc Ingestion Provenance — see GOAL-235 + ADR-0002)
+# ============================================================================
+
+"""
+An uploaded source document attached to a FieldContext. Created by the
+doc-ingestion route (POST /api/ingest/document or `uploadDocument`
+mutation). The original file lives in blob storage (`blobKey` / `blobUrl`);
+the graph node carries metadata + provenance edges.
+
+Authorization: inherits from the parent Space — same pattern as FieldContext.
+Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+delete mutation).
+"""
+type Document
+  @node(labels: ["Document"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            fieldContext_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  filename: String!
+  mimeType: String!
+  sizeBytes: Int!
+  """Page count for paginated formats (.pdf). 1 for .txt/.md. Null when unknown (legacy uploads)."""
+  pageCount: Int
+  """Blob storage key. Internal — UI surfaces filename instead."""
+  blobKey: String
+  """Provider-issued URL for the blob. May be expiring/private; treat as opaque."""
+  blobUrl: String
+  """Optional one-line "What is this?" hint captured at upload. Reused on re-extract (slice 6)."""
+  userHint: String
+  uploadedAt: DateTime!
+  fieldContext: [FieldContext!]! @relationship(type: "HAS_DOCUMENT", direction: IN)
+  uploadedBy: [Person!]! @relationship(type: "UPLOADED_BY", direction: OUT)
+  """People extracted from this document (provenance — see EXTRACTED_FROM)."""
+  extractedPeople: [Person!]!
+    @relationship(type: "EXTRACTED_FROM", direction: IN)
+  """FieldPulses extracted from this document (provenance — see EXTRACTED_FROM)."""
+  extractedPulses: [FieldPulse!]!
+    @relationship(type: "EXTRACTED_FROM", direction: IN)
+  """Ingest threads spawned from this document — initial upload + every Re-extract attempt. Ordered newest first."""
+  ingestThreads: [DocumentIngestThread!]!
+    @cypher(
+      statement: """
+      MATCH (this)-[:HAS_INGEST_THREAD]->(t:ConversationThread)
+      RETURN {id: t.id, title: t.title, createdAt: toString(t.createdAt)} AS thread
+      ORDER BY t.createdAt DESC
+      """
+      columnName: "thread"
+    )
+}
+
+"""
+Lightweight projection of a ConversationThread spawned by document ingestion.
+We deliberately do not surface the underlying ConversationThread node as a
+GraphQL type — its lifecycle is owned by the assistant subsystem, not the
+graph schema.
+"""
+type DocumentIngestThread {
+  id: ID!
+  title: String!
+  createdAt: String!
+}
+
+"""
+Response payload for `uploadDocument`. Returned shape mirrors what
+POST /api/ingest/document returns (route is the REST alternative).
+"""
+type IngestDocumentResponse {
+  documentId: ID!
+  threadId: ID!
+  """Number of pre-staged HITL tool calls awaiting user approval on the new thread."""
+  pendingApprovalCount: Int!
+}
+
+"""Input for `uploadDocument`. File contents are base64-encoded inline."""
+input UploadDocumentInput {
+  fieldContextId: ID!
+  filename: String!
+  """Allowed v1 mimeTypes: text/plain, text/markdown, application/pdf."""
+  mimeType: String!
+  """Base64-encoded file contents. Upload byte ceiling: 10 MB. Post-extraction cap: ~50K characters / ~20 PDF pages."""
+  fileBase64: String!
+  """Optional one-line user hint to the extraction model ("meeting notes from Q2 strategy")."""
+  hint: String
+}
+
+# ============================================================================
 # PULSES (First-Class Citizens - The Write Path)
 # ============================================================================
 
@@ -542,6 +660,11 @@ interface FieldPulse {
   intensity: Float
   createdBy: [Person!]! @declareRelationship
   context: [FieldContext!]! @declareRelationship
+  """
+  Documents this pulse was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+  Empty for manually-created pulses. Returned newest-uploaded first.
+  """
+  extractedFrom: [Document!]! @declareRelationship
 }
 
 """
@@ -598,6 +721,7 @@ type GoalPulse implements FieldPulse
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -651,6 +775,7 @@ type ResourcePulse implements FieldPulse
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -720,6 +845,7 @@ type StoryPulse implements FieldPulse
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -762,6 +888,7 @@ type CarePulse implements FieldPulse
   sourceType: String
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -803,6 +930,7 @@ type CoreValuePulse implements FieldPulse
   intensity: Float
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
+  extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 """
@@ -1173,6 +1301,40 @@ type Mutation {
   Tracks AI-discovered or user-created resonance links between pulses.
   """
   logResonanceActivity(input: LogResonanceInput!): CreateLogResponse!
+
+  # ============================================================================
+  # DOC INGESTION MUTATIONS (see GOAL-235)
+  # ============================================================================
+
+  """
+  Upload a document to a FieldContext for AI extraction. Caller must hold
+  canEditContent on the FieldContext's parent Space.
+
+  Side effects:
+    - Creates a Document node anchored to the FieldContext via HAS_DOCUMENT.
+    - Persists the file to blob storage.
+    - Invokes the extraction model and lands the result as a pre-staged
+      assistant turn in a fresh ConversationThread titled `Ingest: <filename>`.
+    - Returns the pending approval count so the UI can route the user to the
+      new thread.
+
+  See `POST /api/ingest/document` for the multipart REST alternative.
+  """
+  uploadDocument(input: UploadDocumentInput!): IngestDocumentResponse!
+
+  """
+  Re-run the extraction model against an existing Document (slice 6 of
+  GOAL-235). The original blob is reused; no new blob is written, no new
+  Document node is created. A fresh ConversationThread titled
+  `Ingest: <filename> (re-extracted)` is created and linked back to the
+  Document via HAS_INGEST_THREAD so the Document detail view can list every
+  attempt.
+
+  Caller must hold canEditContent on the FieldContext's parent Space (same
+  gate as `uploadDocument`). Previously approved entities are untouched —
+  re-extract only proposes new tool calls.
+  """
+  reExtractDocument(documentId: ID!): IngestDocumentResponse!
 }
 
 # ============================================================================
@@ -1325,6 +1487,16 @@ type Query {
   # ACTIVITY LOGS & NOTIFICATIONS
   # ============================================================================
   
+  # ============================================================================
+  # DOC INGESTION QUERIES (see GOAL-235)
+  # ============================================================================
+
+  """
+  List all documents attached to a FieldContext, newest first. Returns an
+  empty array if the caller cannot view the parent Space.
+  """
+  documentsByFieldContext(fieldContextId: ID!): [Document!]!
+
   """
   Get activity logs for a specific context (shows what happened in a space/field).
   Returns up to N most recent log entries linked to pulses in this context.

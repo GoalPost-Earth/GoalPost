@@ -59,6 +59,12 @@ export interface ConversationThreadRecord {
   id: string
   createdAt: string
   lastTurnAt: string | null
+  /** Stored AssistantMode. `'default' | 'aiden' | 'braider'`. `'default'` if unset. */
+  mode: string
+  /** `'ingest'` for doc-ingestion threads; `'reflective'` for the user's normal chat. */
+  kind: string
+  /** Human-readable title (e.g. "Ingest: meeting-notes.pdf"). Null when unset. */
+  title: string | null
   turns: ConversationTurnRecord[]
 }
 
@@ -136,10 +142,14 @@ export async function appendConversationTurn(
             t.id = $newThreadId,
             t.createdAt = datetime(),
             t.lastTurnAt = datetime(),
-            t.turnCount = 0
+            t.turnCount = 0,
+            t.mode = 'default',
+            t.kind = 'reflective'
         WITH t
         SET t.turnCount = coalesce(t.turnCount, 0) + 1,
-            t.lastTurnAt = datetime()
+            t.lastTurnAt = datetime(),
+            t.mode = coalesce(t.mode, 'default'),
+            t.kind = coalesce(t.kind, 'reflective')
         WITH t, t.turnCount - 1 AS nextOrder
         CREATE (t)-[:HAS_TURN]->(turn:ConversationTurn {
           id: $turnId,
@@ -184,6 +194,8 @@ export interface ConversationThreadSummary {
   turnCount: number
   snippet: string
   title: string | null
+  mode: string
+  kind: string
 }
 
 /** Return a lightweight list of all threads for the user, newest first. */
@@ -209,7 +221,9 @@ export async function listConversationThreadsSummary(
           toString(t.lastTurnAt) AS lastTurnAt,
           coalesce(t.turnCount, 0) AS turnCount,
           substring(coalesce(firstTurn.content, ''), 0, 120) AS snippet,
-          t.title AS title
+          t.title AS title,
+          coalesce(t.mode, 'default') AS mode,
+          coalesce(t.kind, 'reflective') AS kind
         ORDER BY t.lastTurnAt DESC
         LIMIT 50
         `,
@@ -223,6 +237,8 @@ export async function listConversationThreadsSummary(
       turnCount: Number(r.get('turnCount') ?? 0),
       snippet: (r.get('snippet') as string) ?? '',
       title: (r.get('title') as string | null) ?? null,
+      mode: (r.get('mode') as string) ?? 'default',
+      kind: (r.get('kind') as string) ?? 'reflective',
     }))
   } catch (error) {
     console.warn('[conversation-thread] listSummary failed:', error instanceof Error ? error.message : error)
@@ -262,6 +278,9 @@ export async function getConversationThread(
           t.id AS threadId,
           toString(t.createdAt) AS createdAt,
           toString(t.lastTurnAt) AS lastTurnAt,
+          coalesce(t.mode, 'default') AS mode,
+          coalesce(t.kind, 'reflective') AS kind,
+          t.title AS title,
           reverse(recentTurnsDesc) AS turns
         `,
         { userId, threadId, maxTurns: MAX_REPLAY_TURNS }
@@ -284,6 +303,9 @@ export async function getConversationThread(
       id: record.get('threadId') as string,
       createdAt: (record.get('createdAt') as string) ?? '',
       lastTurnAt: (record.get('lastTurnAt') as string) ?? null,
+      mode: (record.get('mode') as string) ?? 'default',
+      kind: (record.get('kind') as string) ?? 'reflective',
+      title: (record.get('title') as string | null) ?? null,
       turns,
     }
   } catch (error) {
@@ -311,13 +333,49 @@ export async function createConversationThread(
           ownerId: $userId,
           createdAt: datetime(),
           lastTurnAt: datetime(),
-          turnCount: 0
+          turnCount: 0,
+          mode: 'default',
+          kind: 'reflective'
         })
         `,
         { userId, threadId: newId }
       )
     )
     return { threadId: newId }
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Record that the user is now viewing a specific thread. Persists
+ * `lastViewedThreadId` on the user node so a hard refresh re-opens the same
+ * thread instead of falling back to the most-recent-by-lastTurnAt thread.
+ *
+ * Auth-scoped: the thread must belong to this user, otherwise the write is
+ * a no-op.
+ */
+export async function setLastViewedConversationThread(
+  userId: string,
+  threadId: string
+): Promise<void> {
+  if (!userId || !threadId) return
+  const session = driver.session()
+  try {
+    await session.executeWrite(async (tx) =>
+      tx.run(
+        `
+        MATCH (p:Person:User {id: $userId})-[:HAS_THREAD]->(t:ConversationThread {id: $threadId})
+        SET p.lastViewedThreadId = t.id
+        `,
+        { userId, threadId }
+      )
+    )
+  } catch (error) {
+    console.warn(
+      '[conversation-thread] setLastViewed failed:',
+      error instanceof Error ? error.message : error
+    )
   } finally {
     await session.close()
   }
@@ -368,9 +426,17 @@ export async function getActiveConversationThread(
     const result = await session.executeRead(async (tx) => {
       return tx.run(
         `
-        MATCH (p:Person:User {id: $userId})-[:HAS_THREAD]->(t:ConversationThread)
-        WITH t
-        ORDER BY t.lastTurnAt DESC
+        // Slice 5: honour the user's last-viewed thread when set. The user
+        // might have switched away from the ingest thread back to their
+        // reflective chat — that intent must survive a hard refresh.
+        // Pinned thread wins; otherwise fall back to most-recent-by-lastTurnAt.
+        MATCH (p:Person:User {id: $userId})
+        WITH p, p.lastViewedThreadId AS pinnedId
+        MATCH (p)-[:HAS_THREAD]->(t:ConversationThread)
+        WITH t, pinnedId
+        ORDER BY
+          CASE WHEN t.id = pinnedId THEN 0 ELSE 1 END,
+          t.lastTurnAt DESC
         LIMIT 1
         // Push LIMIT into a subquery so long threads don't materialise every
         // turn before slicing. Returns the most recent N turns descending.
@@ -394,6 +460,9 @@ export async function getActiveConversationThread(
           t.id AS threadId,
           toString(t.createdAt) AS createdAt,
           toString(t.lastTurnAt) AS lastTurnAt,
+          coalesce(t.mode, 'default') AS mode,
+          coalesce(t.kind, 'reflective') AS kind,
+          t.title AS title,
           reverse(recentTurnsDesc) AS turns
         `,
         { userId, maxTurns: MAX_REPLAY_TURNS }
@@ -418,6 +487,9 @@ export async function getActiveConversationThread(
       id: record.get('threadId') as string,
       createdAt: (record.get('createdAt') as string) ?? '',
       lastTurnAt: (record.get('lastTurnAt') as string) ?? null,
+      mode: (record.get('mode') as string) ?? 'default',
+      kind: (record.get('kind') as string) ?? 'reflective',
+      title: (record.get('title') as string | null) ?? null,
       turns,
     }
   } catch (error) {

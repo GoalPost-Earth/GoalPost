@@ -53,6 +53,7 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@types/papaparse": "^5.5.2",
     "@types/three": "^0.182.0",
+    "@vercel/blob": "^2.3.3",
     "@xyflow/react": "^12.10.0",
     "ai": "^6.0.62",
     "bcryptjs": "^3.0.2",

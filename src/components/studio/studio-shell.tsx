@@ -22,6 +22,7 @@ import {
   fetchHydratedThread,
   type HydratedThread,
 } from '@/lib/simulation/conversation-thread-client'
+import { onOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
 import { TourController } from '@/components/onboarding/TourController'
 import { TourOverlay } from '@/components/onboarding/TourOverlay'
@@ -67,6 +68,16 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
 
   const needsRuntime = isVisited('assistant') || isVisited('voice')
+
+  // Slice 5 (GOAL-240) — open the assistant panel automatically when an
+  // upload (or any caller) requests a thread switch. The panel itself also
+  // listens for the same event and handles the re-hydrate; the shell's role
+  // here is just to make sure the panel is visible.
+  useEffect(() => {
+    return onOpenAssistantThread(() => {
+      setPanelOpen(true)
+    })
+  }, [])
 
   // Keyboard shortcuts: 1/2/3/4 to switch modes (ignored while typing).
   useEffect(() => {

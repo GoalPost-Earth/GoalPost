@@ -16,9 +16,16 @@ import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
 } from '@/components/ui/add-person-to-field-modal'
+import {
+  UploadDocumentModal,
+  type UploadDocumentSubmitInput,
+} from '@/components/ui/upload-document-modal'
 import type { NodeType } from '@/components/ui/pulse-node'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
-import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries'
+import {
+  GET_FIELD_CONTEXT_PEOPLE,
+  GET_DOCUMENTS_BY_FIELD_CONTEXT,
+} from '@/app/graphql/queries'
 import {
   ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
   REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
@@ -42,6 +49,7 @@ import {
   DELETE_RESONANCE_LINK_MUTATION,
   SHARE_PULSE_WITH_CONTEXT_MUTATION,
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
+  UPLOAD_DOCUMENT_MUTATION,
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
@@ -53,8 +61,13 @@ import {
 } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
+import {
+  DocumentList,
+  type DocumentRecord,
+} from '@/components/fields/document-list'
 import { SpaceViewToggle } from '@/components/spaces'
 import type { SpaceViewMode } from '@/components/spaces'
+import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
@@ -107,6 +120,9 @@ export default function FieldContextDetailsPage() {
   const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
   const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
     useState(false)
+  const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
+    useState(false)
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
@@ -138,6 +154,22 @@ export default function FieldContextDetailsPage() {
       skip: !contextId,
     }
   )
+
+  const { data: documentsData, refetch: refetchDocuments } = useQuery(
+    GET_DOCUMENTS_BY_FIELD_CONTEXT,
+    {
+      variables: { fieldContextId: contextId },
+      skip: !contextId,
+    }
+  )
+  const documents = useMemo<DocumentRecord[]>(() => {
+    const raw = (
+      documentsData as
+        | { documentsByFieldContext?: DocumentRecord[] }
+        | undefined
+    )?.documentsByFieldContext
+    return raw ?? []
+  }, [documentsData])
 
   // Setup mutations
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION)
@@ -171,6 +203,7 @@ export default function FieldContextDetailsPage() {
     REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
   )
   const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
+  const [uploadDocument] = useMutation(UPLOAD_DOCUMENT_MUTATION)
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
@@ -265,6 +298,32 @@ export default function FieldContextDetailsPage() {
       role: roleById.get(person.id) || ('PERSON' as const),
     }))
   }, [peopleContext])
+
+  // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
+  // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
+  // GUEST and non-members do not. The route boundary re-checks this server-side
+  // (see `handleIngestDocument`), so this is purely a "don't show a control
+  // the user cannot use" measure — never a security boundary on its own.
+  const canEditContent = useMemo(() => {
+    if (!peopleContext || !user?.id) return false
+    const ownerId =
+      peopleContext.meSpace?.[0]?.owner?.[0]?.id ||
+      peopleContext.weSpace?.[0]?.owner?.[0]?.id
+    if (ownerId && ownerId === user.id) return true
+    type FieldMembership = {
+      role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
+      member?: Array<{ id: string }>
+    }
+    const all: FieldMembership[] = [
+      ...((peopleContext.meSpace?.[0]?.members as FieldMembership[]) || []),
+      ...((peopleContext.weSpace?.[0]?.members as FieldMembership[]) || []),
+    ]
+    return all.some(
+      (m) =>
+        m.member?.[0]?.id === user.id &&
+        (m.role === 'ADMIN' || m.role === 'MEMBER')
+    )
+  }, [peopleContext, user?.id])
   const pulses = [
     ...(data?.goalPulses || []),
     ...(data?.resourcePulses || []),
@@ -857,6 +916,44 @@ export default function FieldContextDetailsPage() {
     }
   }
 
+  const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
+    setIsUploadingDocument(true)
+    try {
+      const result = await uploadDocument({
+        variables: {
+          input: {
+            fieldContextId: contextId,
+            filename: input.filename,
+            mimeType: input.mimeType,
+            fileBase64: input.fileBase64,
+            hint: input.hint,
+          },
+        },
+      })
+      // Slice 5 (GOAL-240) — fire-and-forget signal so the assistant panel
+      // auto-switches to the freshly created ingest thread. The studio shell
+      // listens for the same event to open the panel if it's currently closed.
+      const newThreadId = (
+        result.data as {
+          uploadDocument?: { threadId?: string }
+        } | null | undefined
+      )?.uploadDocument?.threadId
+      if (newThreadId) emitOpenAssistantThread(newThreadId)
+      toast.success(
+        'Document uploaded. Review the extracted entities in the assistant.'
+      )
+      setIsUploadDocumentModalOpen(false)
+      await refetchDocuments()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Upload failed'
+      toast.error(message)
+      throw error
+    } finally {
+      setIsUploadingDocument(false)
+    }
+  }
+
   const handlePersonClick = (personId: string) => {
     const person = people.find((entry) => entry.id === personId)
     if (!person) return
@@ -1087,6 +1184,12 @@ export default function FieldContextDetailsPage() {
             </p>
           </div>
 
+          <DocumentList
+            documents={documents}
+            onRefetch={refetchDocuments}
+          />
+
+
           <FieldContextSections
             createdDate={createdDate}
             pulses={pulses}
@@ -1118,6 +1221,17 @@ export default function FieldContextDetailsPage() {
               </span>
               Add Person
             </button>
+            {canEditContent && (
+              <button
+                onClick={() => setIsUploadDocumentModalOpen(true)}
+                className="w-full sm:w-auto px-8 py-3 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/50 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  upload_file
+                </span>
+                Upload Document
+              </button>
+            )}
             <button
               onClick={handleEditStart}
               className="w-full sm:w-auto px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
@@ -1331,6 +1445,13 @@ export default function FieldContextDetailsPage() {
         isSubmitting={isAddingPersonToField}
         onClose={() => setIsAddPersonModalOpen(false)}
         onCreatePerson={handleAddPersonToField}
+      />
+
+      <UploadDocumentModal
+        isOpen={isUploadDocumentModalOpen}
+        isSubmitting={isUploadingDocument}
+        onClose={() => setIsUploadDocumentModalOpen(false)}
+        onSubmit={handleUploadDocument}
       />
     </div>
   )

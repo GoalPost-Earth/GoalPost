@@ -21,6 +21,11 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import ReactSelect from 'react-select'
+import {
+  EntityProvenance,
+  type ProvenanceDocument,
+} from '@/components/fields/entity-provenance'
+import { GET_PERSON_PROVENANCE } from '@/app/graphql/queries/PROVENANCE_QUERIES'
 
 interface PersonSelectOption {
   value: string
@@ -45,6 +50,19 @@ export default function PersonProfilePage() {
     variables: { personId },
     skip: !personId,
   })
+
+  // Slice 7 (GOAL-242) — provenance query is split off so adding the
+  // `extractedFrom` selection doesn't invalidate the codegen'd typing of
+  // GET_PERSON_PROFILE. Unauthorized viewers get an empty list via the
+  // Document type's @authorization directive.
+  const { data: provenanceData } = useQuery<{
+    people?: { id: string; extractedFrom?: ProvenanceDocument[] }[]
+  }>(GET_PERSON_PROVENANCE, {
+    variables: { personId },
+    skip: !personId,
+  })
+  const provenanceDocuments =
+    provenanceData?.people?.[0]?.extractedFrom ?? null
 
   // Connection creation state
   const [isAddingConnection, setIsAddingConnection] = useState(false)
@@ -359,6 +377,8 @@ export default function PersonProfilePage() {
               Open Person Node
             </button>
           </div>
+
+          <EntityProvenance documents={provenanceDocuments} />
 
           {/* Profile Attributes Section */}
           {(person.traits ||
