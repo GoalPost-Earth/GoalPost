@@ -27,7 +27,7 @@ export const DashboardMode: FC<DashboardModeProps> = ({ visible, children }) => 
   return (
     <div
       className={cn(
-        'absolute inset-0 flex flex-col overflow-hidden',
+        'relative h-full w-full flex flex-col overflow-hidden',
         !visible && 'pointer-events-none'
       )}
       style={{ visibility: visible ? 'visible' : 'hidden' }}

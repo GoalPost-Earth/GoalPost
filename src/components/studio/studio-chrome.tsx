@@ -26,7 +26,7 @@ import {
 import { FocalContextBadge } from './focal-context-badge'
 import { ModeSwitcher, MODES } from './mode-switcher'
 import { StudioSearchInput } from './studio-search-input'
-import { useStudioMode } from './studio-mode-context'
+import { useStudioPanes } from './studio-panes-context'
 
 const NOOP_SUBSCRIBE = () => () => {}
 const GET_TRUE_SNAPSHOT = () => true
@@ -40,7 +40,7 @@ const GET_FALSE_SNAPSHOT = () => false
  * so the user always knows where they are.
  */
 export const StudioChrome: FC = () => {
-  const { mode } = useStudioMode()
+  const { focusedMode } = useStudioPanes()
   const { user, logout } = useApp()
   // Start at light mode on both server and first client paint to avoid a
   // hydration mismatch. After mount, sync from localStorage / system pref —
@@ -108,7 +108,7 @@ export const StudioChrome: FC = () => {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light')
   }
 
-  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0]
+  const activeMode = MODES.find((m) => m.id === focusedMode) ?? MODES[0]
 
   return (
     <>

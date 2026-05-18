@@ -5,13 +5,12 @@ import {
   useAssistantState,
   useComposerRuntime,
 } from '@assistant-ui/react'
-import { useCallback, useState, type FC } from 'react'
-import { AudioLines, Mic, SendHorizontalIcon } from 'lucide-react'
+import { useCallback, useEffect, type FC } from 'react'
+import { Headphones, Mic, SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnhancedTextPart } from './enhanced-message-text'
 import { VoiceProvider, useVoiceContext } from './voice-context'
 import { VoiceController } from './voice-controller'
-import { VoiceModeOverlay } from './voice-mode-overlay'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 
 export const Thread: FC = () => {
@@ -23,15 +22,9 @@ export const Thread: FC = () => {
 }
 
 const ThreadInner: FC = () => {
-  const [voiceModeOpen, setVoiceModeOpen] = useState(false)
-
   return (
     <ThreadPrimitive.Root className="flex h-full flex-col overflow-hidden bg-transparent">
       <VoiceController />
-      <VoiceModeOverlay
-        open={voiceModeOpen}
-        onClose={() => setVoiceModeOpen(false)}
-      />
 
       {/* Messages viewport */}
       <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
@@ -69,7 +62,7 @@ const ThreadInner: FC = () => {
 
       {/* Composer */}
       <div className="px-4 py-3 gp-glass border-t border-gp-glass-border">
-        <Composer onOpenVoiceMode={() => setVoiceModeOpen(true)} />
+        <Composer />
       </div>
     </ThreadPrimitive.Root>
   )
@@ -221,13 +214,21 @@ const PendingAssistantTurn: FC = () => {
   )
 }
 
-const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
+const Composer: FC = () => {
   const composer = useComposerRuntime()
-  const { armVoiceReply } = useVoiceContext()
+  const { armVoiceReply, continuousVoice, setContinuousVoice } =
+    useVoiceContext()
 
-  const { isSupported, status, start, stop } = useSpeechRecognition({
+  const {
+    isSupported,
+    status,
+    transcript,
+    interimTranscript,
+    start,
+    stop,
+  } = useSpeechRecognition({
     continuous: false,
-    interimResults: false,
+    interimResults: true,
     onFinal: (final) => {
       const trimmed = final.trim()
       if (!trimmed) return
@@ -239,6 +240,15 @@ const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
 
   const isListening = status === 'listening'
 
+  // Stream the live transcript into the composer textarea while listening so
+  // the user sees their words appear (ChatGPT-style). When recognition ends
+  // the `onFinal` callback above takes over and sends the final transcript.
+  useEffect(() => {
+    if (!isListening) return
+    const live = (transcript + ' ' + interimTranscript).trim()
+    composer.setText(live)
+  }, [isListening, transcript, interimTranscript, composer])
+
   const handleMicClick = useCallback(() => {
     if (isListening) {
       stop()
@@ -247,10 +257,29 @@ const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
     }
   }, [isListening, start, stop])
 
+  // Toggle the mic from the shell's `V` shortcut. Multiple chat panes would
+  // each have their own composer, but the browser only allows one active
+  // recognizer at a time anyway — duplicate toggles are harmless.
+  useEffect(() => {
+    const onToggle = () => handleMicClick()
+    window.addEventListener('goalpost:voice-mic-toggle', onToggle)
+    return () => window.removeEventListener('goalpost:voice-mic-toggle', onToggle)
+  }, [handleMicClick])
+
+  const handleContinuousToggle = useCallback(() => {
+    setContinuousVoice(!continuousVoice)
+  }, [continuousVoice, setContinuousVoice])
+
   return (
     <ComposerPrimitive.Root className="space-y-2">
       <ComposerPrimitive.Input
-        placeholder={isListening ? 'Listening…' : 'Ask about a person, pulse, or field context...'}
+        placeholder={
+          isListening
+            ? 'Listening… speak naturally'
+            : continuousVoice
+              ? 'Hands-free on — tap mic to talk'
+              : 'Ask about a person, pulse, or field context...'
+        }
         className="w-full px-4 py-3 bg-white/60 dark:bg-white/5 border border-gp-glass-border rounded-xl text-gp-ink-strong dark:text-white placeholder-gp-ink-soft dark:placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/40 resize-none transition-all"
         rows={1}
       />
@@ -260,30 +289,49 @@ const Composer: FC<{ onOpenVoiceMode: () => void }> = ({ onOpenVoiceMode }) => {
             <Button
               type="button"
               size="sm"
-              variant="outline"
-              onClick={onOpenVoiceMode}
-              aria-label="Open hands-free voice mode"
-              title="Hands-free voice mode"
-              className="border-slate-200 dark:border-white/10"
-            >
-              <AudioLines className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={isListening ? 'default' : 'outline'}
-              onClick={handleMicClick}
-              aria-pressed={isListening}
-              aria-label={isListening ? 'Stop listening' : 'Speak to assistant'}
-              title={isListening ? 'Stop listening' : 'Speak to assistant'}
+              variant={continuousVoice ? 'default' : 'outline'}
+              onClick={handleContinuousToggle}
+              aria-pressed={continuousVoice}
+              aria-label={
+                continuousVoice ? 'Disable hands-free voice' : 'Enable hands-free voice'
+              }
+              title={
+                continuousVoice
+                  ? 'Hands-free voice on — every reply will be spoken'
+                  : 'Turn on hands-free voice'
+              }
               className={
-                isListening
+                continuousVoice
                   ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
                   : 'border-slate-200 dark:border-white/10'
               }
             >
-              <Mic className="w-4 h-4" />
+              <Headphones className="w-4 h-4" />
             </Button>
+            <div className="relative">
+              {isListening && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-gp-primary/60 animate-pulse"
+                />
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant={isListening ? 'default' : 'outline'}
+                onClick={handleMicClick}
+                aria-pressed={isListening}
+                aria-label={isListening ? 'Stop listening' : 'Speak to assistant'}
+                title={isListening ? 'Stop listening' : 'Speak to assistant'}
+                className={
+                  isListening
+                    ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
+                    : 'border-slate-200 dark:border-white/10'
+                }
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+            </div>
           </>
         )}
         <ComposerPrimitive.Send asChild>

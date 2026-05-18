@@ -81,7 +81,7 @@ export const GraphMode: FC<GraphModeProps> = ({ visible }) => {
   return (
     <div
       className={cn(
-        'absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950',
+        'relative h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950',
         !visible && 'pointer-events-none'
       )}
       style={{ visibility: visible ? 'visible' : 'hidden' }}

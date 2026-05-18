@@ -12,8 +12,8 @@ import { useVoiceContext } from './voice-context'
  * Activation rules:
  *  - One-shot: the composer mic button calls armVoiceReply() before sending.
  *    The very next assistant turn is spoken; the flag is then cleared.
- *  - Continuous: the voice-mode overlay sets continuousVoice=true, in which
- *    case every assistant turn is spoken until the overlay closes.
+ *  - Continuous: a caller sets continuousVoice=true, in which case every
+ *    assistant turn is spoken until it flips back to false.
  */
 export const VoiceController: FC = () => {
   const { consumeVoiceArm, continuousVoice } = useVoiceContext()

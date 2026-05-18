@@ -9,6 +9,7 @@ import {
   type FC,
   type ReactNode,
 } from 'react'
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import {
   AssistantChatTransport,
@@ -27,16 +28,14 @@ import { AIAssistantPanel } from '@/components/ui/ai-assistant-panel'
 import { TourController } from '@/components/onboarding/TourController'
 import { TourOverlay } from '@/components/onboarding/TourOverlay'
 import {
-  StudioModeProvider,
-  useStudioMode,
+  StudioPanesProvider,
+  useStudioPanes,
   STUDIO_MODES,
-} from './studio-mode-context'
+  type PaneId,
+} from './studio-panes-context'
 import { StudioChrome } from './studio-chrome'
 import { FloatingAssistantTrigger } from './floating-assistant-trigger'
-import { DashboardMode } from './modes/dashboard-mode'
-import { GraphMode } from './modes/graph-mode'
-import { AssistantMode } from './modes/assistant-mode'
-import { VoiceMode } from './modes/voice-mode'
+import { PaneHost } from './pane-host'
 
 interface ApprovedActionPayload {
   tool: string
@@ -50,36 +49,61 @@ export interface StudioShellProps {
 }
 
 /**
- * The studio is now the protected layout. Hosts every `/protected/*` route
- * as `children` inside Dashboard mode, with Graph / Assistant / Voice modes
- * overlaying the same focal entity.
+ * The studio is the protected layout. A horizontal split hosts two panes,
+ * each of which can render any of the three modes (dashboard / graph /
+ * chat). Either pane can be fullscreened.
  */
 export const StudioShell: FC<StudioShellProps> = ({ children }) => {
   return (
-    <StudioModeProvider>
+    <StudioPanesProvider>
       <StudioBody>{children}</StudioBody>
-    </StudioModeProvider>
+    </StudioPanesProvider>
   )
 }
 
 const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
-  const { mode, setMode, isVisited } = useStudioMode()
+  const {
+    left,
+    right,
+    fullscreenPane,
+    focusedPane,
+    setPaneMode,
+    focusPane,
+    toggleFullscreen,
+    exitFullscreen,
+    isVisited,
+  } = useStudioPanes()
   const [panelOpen, setPanelOpen] = useState(false)
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
 
-  const needsRuntime = isVisited('assistant') || isVisited('voice')
+  // Mount the AI runtime if chat is (or has been) live in either pane.
+  const needsRuntime =
+    left === 'chat' ||
+    right === 'chat' ||
+    isVisited('left', 'chat') ||
+    isVisited('right', 'chat')
 
   // Slice 5 (GOAL-240) — open the assistant panel automatically when an
-  // upload (or any caller) requests a thread switch. The panel itself also
-  // listens for the same event and handles the re-hydrate; the shell's role
-  // here is just to make sure the panel is visible.
+  // upload (or any caller) requests a thread switch.
   useEffect(() => {
     return onOpenAssistantThread(() => {
       setPanelOpen(true)
     })
   }, [])
 
-  // Keyboard shortcuts: 1/2/3/4 to switch modes (ignored while typing).
+  // Keyboard shortcuts. All ignored while typing into inputs/textareas.
+  //   1/2/3        → switch focused pane to dashboard/graph/chat
+  //   Shift+1..3   → switch the OTHER pane
+  //   Tab          → toggle pane focus
+  //   F            → fullscreen the focused pane
+  //   Esc          → exit fullscreen
+  //   V            → toggle composer mic when focused pane is chat
+  //   G is handled inside graph-mode (Spatial / Bloom).
+  const DIGIT_CODE_TO_INDEX: Record<string, number> = useMemo(
+    () => ({ Digit1: 0, Digit2: 1, Digit3: 2 }),
+    []
+  )
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -95,27 +119,131 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
           return
         }
       }
-      const idx = Number(e.key) - 1
-      if (idx >= 0 && idx < STUDIO_MODES.length) {
+
+      const otherPane: PaneId = focusedPane === 'left' ? 'right' : 'left'
+      const focusedMode = focusedPane === 'left' ? left : right
+
+      // Shift+digit → switch the other pane (only when it exists).
+      if (e.shiftKey) {
+        const idx = DIGIT_CODE_TO_INDEX[e.code]
+        if (idx !== undefined && right !== null) {
+          e.preventDefault()
+          setPaneMode(otherPane, STUDIO_MODES[idx])
+        }
+        return
+      }
+
+      // Plain digit → switch focused pane.
+      const digitIdx = Number(e.key) - 1
+      if (digitIdx >= 0 && digitIdx < STUDIO_MODES.length) {
         e.preventDefault()
-        setMode(STUDIO_MODES[idx])
+        setPaneMode(focusedPane, STUDIO_MODES[digitIdx])
+        return
+      }
+
+      if (e.key === 'Tab' && right !== null) {
+        e.preventDefault()
+        focusPane(otherPane)
+        return
+      }
+
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault()
+        toggleFullscreen(focusedPane)
+        return
+      }
+
+      if (e.key === 'Escape' && fullscreenPane !== null) {
+        e.preventDefault()
+        exitFullscreen()
+        return
+      }
+
+      if ((e.key === 'v' || e.key === 'V') && focusedMode === 'chat') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('goalpost:voice-mic-toggle'))
+        return
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [setMode])
+  }, [
+    DIGIT_CODE_TO_INDEX,
+    left,
+    right,
+    focusedPane,
+    fullscreenPane,
+    setPaneMode,
+    focusPane,
+    toggleFullscreen,
+    exitFullscreen,
+  ])
 
-  const aiPanels = (
-    <>
-      {isVisited('assistant') && (
-        <AssistantMode
-          visible={mode === 'assistant'}
-          activeThreadId={selectedThreadId}
-          onSelectThread={setSelectedThreadId}
-        />
+  // Below this breakpoint the studio collapses to single-pane (focused only).
+  // Both pane modes stay in state so swapping focus returns the user to their
+  // previous layout.
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  // When both panes hold the same mode that consumes `children` (dashboard
+  // route content), rendering the subtree twice can cause Apollo queries to
+  // duplicate. The non-focused pane gets a sentinel children fallback in
+  // that case so only the focused pane drives navigation state.
+  const leftChildren = children
+  const rightChildren =
+    left === 'dashboard' && right === 'dashboard' && focusedPane === 'left'
+      ? null
+      : children
+
+  const renderPane = (pane: PaneId, fullscreen: boolean) => (
+    <PaneHost
+      pane={pane}
+      fullscreen={fullscreen}
+      selectedThreadId={selectedThreadId}
+      onSelectThread={setSelectedThreadId}
+      chatCompact={isMobile}
+    >
+      {pane === 'left' ? leftChildren : rightChildren}
+    </PaneHost>
+  )
+
+  const splitView = (
+    <div className="relative h-full w-full">
+      {isMobile ? (
+        // Mobile: only the focused pane is visible; tap the swap control in
+        // the pane header to flip to the other pane.
+        renderPane(focusedPane, true)
+      ) : fullscreenPane !== null ? (
+        // Fullscreen: render the active pane edge-to-edge, no splitter.
+        <div className="h-full w-full" key={fullscreenPane}>
+          {renderPane(fullscreenPane, true)}
+        </div>
+      ) : right === null ? (
+        // Single-pane mode (legacy / explicit collapse) — show left only.
+        renderPane('left', true)
+      ) : (
+        <PanelGroup
+          direction="horizontal"
+          autoSaveId="goalpost.studio.split.v1"
+          className="h-full w-full"
+        >
+          <Panel defaultSize={50} minSize={20} order={1}>
+            {renderPane('left', false)}
+          </Panel>
+          <PanelResizeHandle className="w-1.5 bg-slate-900 hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
+          <Panel defaultSize={50} minSize={20} order={2}>
+            {renderPane('right', false)}
+          </Panel>
+        </PanelGroup>
       )}
-      {isVisited('voice') && <VoiceMode visible={mode === 'voice'} />}
-    </>
+    </div>
   )
 
   return (
@@ -123,22 +251,16 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
       <StudioChrome />
 
       <div className="relative flex-1 overflow-hidden">
-        {/* Dashboard mode is always mounted — it owns the route content. */}
-        <DashboardMode visible={mode === 'dashboard'}>{children}</DashboardMode>
-
-        {/* Graph mode lazy-mounts on first visit. */}
-        {isVisited('graph') && <GraphMode visible={mode === 'graph'} />}
-
-        {/* Assistant + Voice share the AI runtime. Re-keyed when the user
-            switches threads so the runtime reinitialises with the right history. */}
         {needsRuntime ? (
           <AssistantRuntimeBoundary
             key={selectedThreadId ?? 'active'}
             threadId={selectedThreadId ?? undefined}
           >
-            {aiPanels}
+            {splitView}
           </AssistantRuntimeBoundary>
-        ) : null}
+        ) : (
+          splitView
+        )}
       </div>
 
       <FloatingAssistantTrigger
@@ -157,10 +279,9 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
 }
 
 /**
- * Mounts the AI runtime once the user enters an AI-driven mode. Fetches the
- * persisted conversation thread first so messages hydrate before the
- * runtime is created (`useChatRuntime` reads `messages` only at init).
- * Re-keyed from StudioBody when `threadId` changes to reload a different thread.
+ * Mounts the AI runtime once a chat pane is live. Fetches the persisted
+ * conversation thread first so messages hydrate before the runtime is
+ * created (`useChatRuntime` reads `messages` only at init).
  */
 const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> = ({ children, threadId }) => {
   const { aiMode } = usePreferences()

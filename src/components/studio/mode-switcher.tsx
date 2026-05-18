@@ -2,7 +2,7 @@
 
 import { type FC } from 'react'
 import { cn } from '@/lib/utils'
-import { useStudioMode, type StudioMode } from './studio-mode-context'
+import { useStudioPanes, type StudioMode } from './studio-panes-context'
 
 interface ModeMeta {
   id: StudioMode
@@ -29,23 +29,20 @@ export const MODES: ModeMeta[] = [
     accent: 'from-emerald-400/80 to-teal-400/80',
   },
   {
-    id: 'assistant',
-    label: 'Assistant',
+    id: 'chat',
+    label: 'Chat',
     icon: 'auto_awesome',
     shortcut: '3',
     accent: 'from-violet-400/80 to-fuchsia-400/80',
   },
-  {
-    id: 'voice',
-    label: 'Voice',
-    icon: 'graphic_eq',
-    shortcut: '4',
-    accent: 'from-amber-400/80 to-rose-400/80',
-  },
 ]
 
+/**
+ * Switches the focused pane between dashboard / graph / chat. Lives in the
+ * top chrome — for per-pane controls, see PaneHeader.
+ */
 export const ModeSwitcher: FC = () => {
-  const { mode, setMode } = useStudioMode()
+  const { focusedMode, focusedPane, setPaneMode } = useStudioPanes()
 
   return (
     <div
@@ -54,7 +51,7 @@ export const ModeSwitcher: FC = () => {
       className="flex items-center gap-1 rounded-full border border-white/15 bg-slate-900/60 p-1 backdrop-blur-xl shadow-lg dark:bg-slate-900/60"
     >
       {MODES.map((m) => {
-        const active = mode === m.id
+        const active = focusedMode === m.id
         return (
           <button
             key={m.id}
@@ -62,7 +59,7 @@ export const ModeSwitcher: FC = () => {
             role="tab"
             aria-selected={active}
             aria-label={`${m.label} (press ${m.shortcut})`}
-            onClick={() => setMode(m.id)}
+            onClick={() => setPaneMode(focusedPane, m.id)}
             className={cn(
               'group relative flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold tracking-wide transition-all cursor-pointer',
               active

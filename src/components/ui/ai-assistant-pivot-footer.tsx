@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useCollectedEntities } from '@/hooks/use-collected-entities'
 import { MAX_PIVOT_ENTITIES } from '@/lib/simulation/entity-collector'
 import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
-import { useStudioMode, type StudioMode } from '@/components/studio'
+import { useStudioPanes, type StudioMode } from '@/components/studio'
 
 /**
  * Footer strip rendered above the chat composer. Surfaces every entity the
@@ -24,7 +24,7 @@ export function AIAssistantPivotFooter({
   onPivot?: () => void
 }) {
   const router = useRouter()
-  const { setMode } = useStudioMode()
+  const { focusedPane, setPaneMode } = useStudioPanes()
   const entities = useCollectedEntities()
 
   if (entities.length === 0) return null
@@ -35,7 +35,7 @@ export function AIAssistantPivotFooter({
     const focus = saveFocusEntities(entities)
     onPivot?.()
     router.push(`/protected?focus=${encodeURIComponent(focus)}`)
-    setMode(targetMode)
+    setPaneMode(focusedPane, targetMode)
   }
 
   return (

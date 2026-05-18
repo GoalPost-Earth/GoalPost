@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FC } from 'react'
 import { gsap } from 'gsap'
-import { useStudioMode } from './studio-mode-context'
+import { useStudioPanes } from './studio-panes-context'
 
 interface FloatingAssistantTriggerProps {
   isOpen: boolean
@@ -11,20 +11,19 @@ interface FloatingAssistantTriggerProps {
 
 /**
  * Bottom-left glass pill that opens the existing AIAssistantPanel. Hidden
- * when the user is already in the Assistant or Voice mode — those surfaces
- * own the AI conversation directly, so the floating trigger would be
- * redundant.
+ * when chat is already visible in either pane — that surface owns the AI
+ * conversation directly, so the floating trigger would be redundant.
  */
 export const FloatingAssistantTrigger: FC<FloatingAssistantTriggerProps> = ({
   isOpen,
   onClick,
 }) => {
-  const { mode } = useStudioMode()
+  const { left, right } = useStudioPanes()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const groupRef = useRef<HTMLDivElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
 
-  const hidden = mode === 'assistant' || mode === 'voice'
+  const hidden = left === 'chat' || right === 'chat'
 
   useEffect(() => {
     if (hidden) return

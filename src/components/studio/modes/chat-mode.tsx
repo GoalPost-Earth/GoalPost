@@ -6,16 +6,19 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ThreadsSidebar } from '@/components/studio/threads-sidebar'
 import { cn } from '@/lib/utils'
 
-interface AssistantModeProps {
+interface ChatModeProps {
   visible: boolean
   activeThreadId: string | null
   onSelectThread: (id: string) => void
+  /** Hide the threads sidebar (e.g. on narrow panes). */
+  compact?: boolean
 }
 
-export const AssistantMode: FC<AssistantModeProps> = ({
+export const ChatMode: FC<ChatModeProps> = ({
   visible,
   activeThreadId,
   onSelectThread,
+  compact = false,
 }) => {
   const handleNewThread = useCallback(async () => {
     const res = await fetch('/api/chat/simulation/threads', {
@@ -30,7 +33,7 @@ export const AssistantMode: FC<AssistantModeProps> = ({
   return (
     <div
       className={cn(
-        'absolute inset-0 flex bg-gp-surface dark:bg-gp-surface-dark',
+        'relative h-full w-full flex bg-gp-surface dark:bg-gp-surface-dark',
         !visible && 'pointer-events-none'
       )}
       style={{
@@ -43,11 +46,13 @@ export const AssistantMode: FC<AssistantModeProps> = ({
       }}
       aria-hidden={!visible}
     >
-      <ThreadsSidebar
-        activeThreadId={activeThreadId}
-        onSelectThread={onSelectThread}
-        onNewThread={handleNewThread}
-      />
+      {!compact && (
+        <ThreadsSidebar
+          activeThreadId={activeThreadId}
+          onSelectThread={onSelectThread}
+          onNewThread={handleNewThread}
+        />
+      )}
 
       <div className="flex-1 overflow-hidden min-w-0">
         <TooltipProvider>
