@@ -10,8 +10,8 @@ import { graphRagSearch } from '@/modules/agent/tools/rag/graph-rag.service'
 import { canViewContent } from '@/lib/permissions/space-permissions'
 import { driver } from '@/lib/neo4j/driver'
 import {
+  buildPendingApprovalResult,
   createApprovalHash,
-  describeWriteAction,
   executeAuthorizedWriteTool,
   isWriteToolName,
   type WriteToolName,
@@ -118,15 +118,7 @@ async function runWriteTool(
   }
   const approvalHash = createApprovalHash(toolName, args)
   if (!ctx.approvedActionHashes.has(approvalHash)) {
-    return {
-      success: false,
-      approvalRequired: true,
-      approvalHash,
-      tool: toolName,
-      args,
-      summary: describeWriteAction(toolName, args),
-      message: 'This action needs your approval before I can execute it.',
-    }
+    return buildPendingApprovalResult(toolName, args)
   }
   try {
     const graph = await initGraph()

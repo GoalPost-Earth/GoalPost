@@ -10,7 +10,7 @@ import {
   type UpdatePulseInput,
   type PulseContextLinkInput,
 } from '@/modules/agent/tools/pulse/pulse.service'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 
 export type WriteToolName =
   | 'rename_space'
@@ -23,6 +23,7 @@ export type WriteToolName =
   | 'edit_pulse_context_link'
   | 'update_my_profile'
   | 'delete_my_profile'
+  | 'create_person'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -46,6 +47,7 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'edit_pulse_context_link',
   'update_my_profile',
   'delete_my_profile',
+  'create_person',
 ])
 
 function stableStringify(value: unknown): string {
@@ -103,6 +105,15 @@ export function describeWriteAction(
       return `Update your profile name to \"${String(args.newName || '')}\"`
     case 'delete_my_profile':
       return 'Deactivate your own user profile'
+    case 'create_person': {
+      const first = String(args.firstName || '').trim()
+      const last = String(args.lastName || '').trim()
+      const full = [first, last].filter(Boolean).join(' ') || 'person'
+      const where =
+        String(args.contextTitle || args.contextName || '').trim() ||
+        'this field context'
+      return `Add ${full} to ${where}`
+    }
     default:
       return `Run ${tool}`
   }
@@ -165,6 +176,38 @@ const ALLOWED_PULSE_TYPES = new Set<PulseCreationType>([
   'CoreValuePulse',
   'FieldPulse',
 ])
+
+/**
+ * The single source of truth for the "pending HITL approval" tool-result
+ * shape. Both the runtime gate (runWriteTool in chat-tools.ts) and the
+ * doc-ingestion synthesized-turn appender must call this exact factory so
+ * the HITL Dialog hydrates either path identically. Drift here silently
+ * breaks approval — pinned by hitl.test.ts.
+ */
+export interface PendingApprovalResult {
+  success: false
+  approvalRequired: true
+  approvalHash: string
+  tool: WriteToolName
+  args: Record<string, unknown>
+  summary: string
+  message: string
+}
+
+export function buildPendingApprovalResult(
+  tool: WriteToolName,
+  args: Record<string, unknown>
+): PendingApprovalResult {
+  return {
+    success: false,
+    approvalRequired: true,
+    approvalHash: createApprovalHash(tool, args),
+    tool,
+    args,
+    summary: describeWriteAction(tool, args),
+    message: 'This action needs your approval before I can execute it.',
+  }
+}
 
 export function buildApprovedActionHashSet(
   approvedActions: ApprovedAction[] | undefined
@@ -949,6 +992,108 @@ async function deletePulseAuthorized(
   }
 }
 
+interface CreatePersonAuthorizedInput {
+  firstName?: string
+  lastName?: string
+  contextId?: string
+  contextTitle?: string
+  documentId?: string
+}
+
+async function createPersonAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreatePersonAuthorizedInput
+  const firstName = input.firstName?.trim() || ''
+  const lastName = input.lastName?.trim() || ''
+  const contextId = input.contextId?.trim() || ''
+  const contextTitle = input.contextTitle?.trim() || ''
+  const documentId = input.documentId?.trim() || null
+
+  if (!firstName || !lastName) {
+    return {
+      success: false,
+      message: 'create_person requires both firstName and lastName.',
+    }
+  }
+  if (!contextId) {
+    return {
+      success: false,
+      message: 'create_person requires a contextId.',
+    }
+  }
+
+  const allowed = await canEditContext(graph, currentUserId, contextId)
+  if (!allowed) {
+    return {
+      success: false,
+      message: 'You can only add people to field contexts in spaces you belong to.',
+    }
+  }
+
+  const personId = `person_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const name = `${firstName} ${lastName}`
+  const where = contextTitle || 'this field context'
+  const description = `Added ${name} to ${where}`
+
+  const rows = await graph.query<{ id: string; name: string }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})
+    MATCH (u:Person {id: $currentUserId})
+    OPTIONAL MATCH (d:Document {id: $documentId})
+    CREATE (p:Person:PersonPulse {
+      id: $personId,
+      firstName: $firstName,
+      lastName: $lastName,
+      name: $name,
+      createdAt: datetime()
+    })
+    CREATE (c)-[:HAS_PERSON]->(p)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    CREATE (log)-[:CREATED_BY]->(u)
+    FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+      CREATE (p)-[:EXTRACTED_FROM]->(d)
+    )
+    RETURN p.id AS id, p.name AS name
+    LIMIT 1
+    `,
+    {
+      contextId,
+      currentUserId,
+      documentId,
+      personId,
+      firstName,
+      lastName,
+      name,
+      logId,
+      description,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: 'Failed to create the person.',
+    }
+  }
+
+  return {
+    success: true,
+    personId: rows[0].id,
+    name: rows[0].name,
+    contextId,
+    documentId,
+    message: `Added ${rows[0].name} to ${where}.`,
+  }
+}
+
 async function deleteMyProfileAuthorized(
   graph: Neo4jGraph,
   currentUserId: string,
@@ -1090,6 +1235,10 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'delete_my_profile') {
     return await deleteMyProfileAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_person') {
+    return await createPersonAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {
