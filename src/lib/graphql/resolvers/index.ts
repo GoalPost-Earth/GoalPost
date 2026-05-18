@@ -10,6 +10,7 @@ import {
   activityLogMutations,
   activityLogQueries,
 } from './activity-log-resolver'
+import { documentMutations, documentQueries } from './document-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -436,12 +437,14 @@ const resolvers = {
     ...connectionMutations,
     ...spaceMembershipResolvers,
     ...activityLogMutations,
+    ...documentMutations,
   },
   Query: {
     ...relatedPeopleResolvers,
     ...searchResolvers,
     ...userLookupResolvers,
     ...activityLogQueries,
+    ...documentQueries,
   },
 }
 

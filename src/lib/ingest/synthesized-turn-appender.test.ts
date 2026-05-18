@@ -45,13 +45,13 @@ describe('SynthesizedTurnAppender — buildPendingToolCallPart', () => {
 
   it('embeds the same approvalHash the runtime would compute for the same (tool, args)', () => {
     const part = buildPendingToolCallPart('create_person', args)
-    const output = part.output as Record<string, unknown>
+    const output = part.output as unknown as Record<string, unknown>
     expect(output.approvalHash).toBe(createApprovalHash('create_person', args))
   })
 
   it('embeds the same summary describeWriteAction would render', () => {
     const part = buildPendingToolCallPart('create_person', args)
-    const output = part.output as Record<string, unknown>
+    const output = part.output as unknown as Record<string, unknown>
     expect(output.summary).toBe(describeWriteAction('create_person', args))
   })
 
@@ -60,8 +60,8 @@ describe('SynthesizedTurnAppender — buildPendingToolCallPart', () => {
     const b = buildPendingToolCallPart('create_person', args)
     expect(a.toolCallId).not.toBe(b.toolCallId)
     // but both still produce the same approvalHash — hash is keyed on (tool, args)
-    const aOut = a.output as Record<string, unknown>
-    const bOut = b.output as Record<string, unknown>
+    const aOut = a.output as unknown as Record<string, unknown>
+    const bOut = b.output as unknown as Record<string, unknown>
     expect(aOut.approvalHash).toBe(bOut.approvalHash)
   })
 })

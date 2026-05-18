@@ -3,11 +3,10 @@ import { verifyJWT } from '@/app/api/auth/utils'
 import { handleIngestDocument } from '@/lib/ingest/handle-ingest-document'
 import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
 import { createVercelBlobStore } from '@/lib/ingest/vercel-blob-store'
+import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import { validateUploadDocumentInput } from '@/lib/ingest/upload-document-input'
 
 export const maxDuration = 60
-
-const MAX_BYTES = 50 * 1024 // 50KB cap per PRD scope-limits — slice 3 raises this with proper pagecount calc.
-const ALLOWED_MIME = new Set<string>(['text/plain'])
 
 function unauthorized(message = 'Authentication required') {
   return new Response(JSON.stringify({ error: message }), {
@@ -37,6 +36,13 @@ function resolveCurrentUserId(req: Request): string | null {
   }
 }
 
+function resolveBlobStore() {
+  if (process.env.INGEST_BLOB_BACKEND === 'memory') {
+    return createMemoryBlobStore()
+  }
+  return createVercelBlobStore()
+}
+
 export async function POST(req: Request) {
   const currentUserId = resolveCurrentUserId(req)
   if (!currentUserId) return unauthorized()
@@ -56,34 +62,31 @@ export async function POST(req: Request) {
   if (typeof fieldContextId !== 'string' || !fieldContextId.trim()) {
     return badRequest('Missing "fieldContextId" form value.')
   }
-  if (file.size > MAX_BYTES) {
-    return badRequest(
-      `File is too large (${file.size} bytes). Slice 1 supports up to ${MAX_BYTES} bytes.`
-    )
-  }
-  const mimeType = file.type || 'text/plain'
-  const mimeRoot = mimeType.split(';')[0].trim().toLowerCase()
-  if (!ALLOWED_MIME.has(mimeRoot)) {
-    return badRequest(
-      `Unsupported mimeType "${mimeRoot}". Slice 1 supports text/plain only.`
-    )
-  }
 
-  const buffer = Buffer.from(await file.arrayBuffer())
+  // Re-use the GraphQL-side validator so REST and GraphQL share size/mime gates.
+  const fileBase64 = Buffer.from(await file.arrayBuffer()).toString('base64')
+  const validation = validateUploadDocumentInput({
+    fieldContextId: fieldContextId.trim(),
+    filename: file.name,
+    mimeType: file.type || 'text/plain',
+    fileBase64,
+    hint: typeof hint === 'string' ? hint : null,
+  })
+  if (!validation.ok) return badRequest(validation.error)
 
   const result = await handleIngestDocument(
     {
       driver,
-      blobStore: createVercelBlobStore(),
+      blobStore: resolveBlobStore(),
       modelClient: createOpenAIExtractionModelClient(),
     },
     {
       currentUserId,
-      fieldContextId: fieldContextId.trim(),
-      filename: file.name,
-      mimeType: mimeRoot,
-      buffer,
-      hint: typeof hint === 'string' && hint.trim().length > 0 ? hint.trim() : null,
+      fieldContextId: validation.parsed.fieldContextId,
+      filename: validation.parsed.filename,
+      mimeType: validation.parsed.mimeType,
+      buffer: validation.parsed.buffer,
+      hint: validation.parsed.hint,
     }
   )
 

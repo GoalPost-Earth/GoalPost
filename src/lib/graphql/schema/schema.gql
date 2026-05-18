@@ -480,6 +480,7 @@ type FieldContext
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   people: [Person!]! @relationship(type: "HAS_PERSON", direction: OUT)
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
+  documents: [Document!]! @relationship(type: "HAS_DOCUMENT", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)
   resonancesInContext: [ResonanceLink!]!
@@ -511,6 +512,86 @@ type FieldContext
       """
       columnName: "owner"
     )
+}
+
+# ============================================================================
+# DOCUMENTS (Doc Ingestion Provenance — see GOAL-235 + ADR-0002)
+# ============================================================================
+
+"""
+An uploaded source document attached to a FieldContext. Created by the
+doc-ingestion route (POST /api/ingest/document or `uploadDocument`
+mutation). The original file lives in blob storage (`blobKey` / `blobUrl`);
+the graph node carries metadata + provenance edges.
+
+Authorization: inherits from the parent Space — same pattern as FieldContext.
+Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+delete mutation).
+"""
+type Document
+  @node(labels: ["Document"])
+  @authorization(
+    filter: [
+      {
+        where: {
+          node: {
+            fieldContext_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  filename: String!
+  mimeType: String!
+  sizeBytes: Int!
+  """Blob storage key. Internal — UI surfaces filename instead."""
+  blobKey: String
+  """Provider-issued URL for the blob. May be expiring/private; treat as opaque."""
+  blobUrl: String
+  uploadedAt: DateTime!
+  fieldContext: [FieldContext!]! @relationship(type: "HAS_DOCUMENT", direction: IN)
+  uploadedBy: [Person!]! @relationship(type: "UPLOADED_BY", direction: OUT)
+  """People extracted from this document (provenance — see EXTRACTED_FROM)."""
+  extractedPeople: [Person!]!
+    @relationship(type: "EXTRACTED_FROM", direction: IN)
+}
+
+"""
+Response payload for `uploadDocument`. Returned shape mirrors what
+POST /api/ingest/document returns (route is the REST alternative).
+"""
+type IngestDocumentResponse {
+  documentId: ID!
+  threadId: ID!
+  """Number of pre-staged HITL tool calls awaiting user approval on the new thread."""
+  pendingApprovalCount: Int!
+}
+
+"""Input for `uploadDocument`. File contents are base64-encoded inline."""
+input UploadDocumentInput {
+  fieldContextId: ID!
+  filename: String!
+  mimeType: String!
+  """Base64-encoded file contents. Slice 1 cap: 50 KB. Slice 1 mimeType: text/plain."""
+  fileBase64: String!
+  """Optional one-line user hint to the extraction model ("meeting notes from Q2 strategy")."""
+  hint: String
 }
 
 # ============================================================================
@@ -1153,6 +1234,26 @@ type Mutation {
   Tracks AI-discovered or user-created resonance links between pulses.
   """
   logResonanceActivity(input: LogResonanceInput!): CreateLogResponse!
+
+  # ============================================================================
+  # DOC INGESTION MUTATIONS (see GOAL-235)
+  # ============================================================================
+
+  """
+  Upload a document to a FieldContext for AI extraction. Caller must hold
+  canEditContent on the FieldContext's parent Space.
+
+  Side effects:
+    - Creates a Document node anchored to the FieldContext via HAS_DOCUMENT.
+    - Persists the file to blob storage.
+    - Invokes the extraction model and lands the result as a pre-staged
+      assistant turn in a fresh ConversationThread titled `Ingest: <filename>`.
+    - Returns the pending approval count so the UI can route the user to the
+      new thread.
+
+  See `POST /api/ingest/document` for the multipart REST alternative.
+  """
+  uploadDocument(input: UploadDocumentInput!): IngestDocumentResponse!
 }
 
 # ============================================================================
@@ -1305,6 +1406,16 @@ type Query {
   # ACTIVITY LOGS & NOTIFICATIONS
   # ============================================================================
   
+  # ============================================================================
+  # DOC INGESTION QUERIES (see GOAL-235)
+  # ============================================================================
+
+  """
+  List all documents attached to a FieldContext, newest first. Returns an
+  empty array if the caller cannot view the parent Space.
+  """
+  documentsByFieldContext(fieldContextId: ID!): [Document!]!
+
   """
   Get activity logs for a specific context (shows what happened in a space/field).
   Returns up to N most recent log entries linked to pulses in this context.
