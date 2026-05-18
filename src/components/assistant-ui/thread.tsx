@@ -6,7 +6,8 @@ import {
   useComposerRuntime,
 } from '@assistant-ui/react'
 import { useCallback, useEffect, type FC } from 'react'
-import { Headphones, Mic, SendHorizontalIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Headphones, Mic, Paperclip, SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnhancedTextPart } from './enhanced-message-text'
 import { VoiceProvider, useVoiceContext } from './voice-context'
@@ -216,6 +217,7 @@ const PendingAssistantTurn: FC = () => {
 
 const Composer: FC = () => {
   const composer = useComposerRuntime()
+  const router = useRouter()
   const { armVoiceReply, continuousVoice, setContinuousVoice } =
     useVoiceContext()
 
@@ -284,6 +286,17 @@ const Composer: FC = () => {
         rows={1}
       />
       <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => router.push('/protected/dashboard/import')}
+          aria-label="Import CSV"
+          title="Import CSV (WeSpace / FieldContext / Pulse)"
+          className="border-slate-200 dark:border-white/10"
+        >
+          <Paperclip className="w-4 h-4" />
+        </Button>
         {isSupported && (
           <>
             <Button
