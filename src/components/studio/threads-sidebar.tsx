@@ -1,6 +1,7 @@
 'use client'
 
 import { type FC, useEffect, useState, useCallback } from 'react'
+import { PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   fetchThreadList,
@@ -12,6 +13,8 @@ interface ThreadsSidebarProps {
   onSelectThread: (id: string) => void
   onNewThread: () => Promise<void>
 }
+
+const COLLAPSED_KEY = 'goalpost.studio.threadsSidebarCollapsed'
 
 function formatDate(iso: string | null): string {
   if (!iso) return ''
@@ -36,6 +39,23 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
   const [threads, setThreads] = useState<ThreadSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem(COLLAPSED_KEY)
+    if (stored === 'true') setCollapsed(true)
+  }, [])
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(COLLAPSED_KEY, String(next))
+      }
+      return next
+    })
+  }, [])
 
   const fetchThreads = useCallback(async () => {
     try {
@@ -58,17 +78,23 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
     }
   }
 
-  return (
-    <aside className="flex flex-col h-full w-60 shrink-0 gp-glass border-r border-gp-glass-border">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <h2 className="section-title text-xs font-bold uppercase tracking-widest text-gp-accent-glow">
-          Threads
-        </h2>
+  if (collapsed) {
+    return (
+      <aside className="flex flex-col h-full w-10 shrink-0 gp-glass border-r border-gp-glass-border items-center py-3 gap-2">
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-label="Expand threads"
+          title="Expand threads"
+          className="flex items-center justify-center size-7 rounded-md text-gp-ink-muted dark:text-white/55 hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/10 transition-colors cursor-pointer"
+        >
+          <PanelLeftOpen className="w-4 h-4" />
+        </button>
         <button
           type="button"
           onClick={() => void handleNewThread()}
           disabled={creating}
+          aria-label="New conversation"
           title="New conversation"
           className={cn(
             'flex items-center justify-center size-7 rounded-full transition-all cursor-pointer',
@@ -76,10 +102,46 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
             'disabled:opacity-40 disabled:cursor-not-allowed'
           )}
         >
-          <span className="material-symbols-outlined text-[16px] leading-none">
-            {creating ? 'hourglass_empty' : 'add'}
-          </span>
+          <Plus className="w-4 h-4" />
         </button>
+      </aside>
+    )
+  }
+
+  return (
+    <aside className="flex flex-col h-full w-60 shrink-0 gp-glass border-r border-gp-glass-border">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <h2 className="section-title text-xs font-bold uppercase tracking-widest text-gp-accent-glow">
+          Threads
+        </h2>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => void handleNewThread()}
+            disabled={creating}
+            title="New conversation"
+            aria-label="New conversation"
+            className={cn(
+              'flex items-center justify-center size-7 rounded-full transition-all cursor-pointer',
+              'bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary',
+              'disabled:opacity-40 disabled:cursor-not-allowed'
+            )}
+          >
+            <span className="material-symbols-outlined text-[16px] leading-none">
+              {creating ? 'hourglass_empty' : 'add'}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label="Collapse threads"
+            title="Collapse threads"
+            className="flex items-center justify-center size-7 rounded-md text-gp-ink-muted dark:text-white/55 hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="mx-3 h-px bg-gp-glass-border mb-1" />
