@@ -56,6 +56,15 @@ async function initializeDatabase() {
        FOR (n:Community) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT space_id IF NOT EXISTS
        FOR (n:Space) REQUIRE n.id IS UNIQUE`,
+      // Enforces the "one MeSpace per Person" invariant at the DB layer.
+      // Application-level guards (validateOneMeSpacePerPerson, atomic
+      // create in /api/me-space/create) close TOCTOU races, but a stray
+      // direct Cypher run from a migration or admin session could still
+      // double-write. Denormalizing the owner id onto the MeSpace node +
+      // UNIQUE constraint here is the structural guarantee. See
+      // kb/05-data-entities.md and kb/03-workflows.md for the domain rule.
+      `CREATE CONSTRAINT mespace_owner_unique IF NOT EXISTS
+       FOR (n:MeSpace) REQUIRE n.ownerId IS UNIQUE`,
       `CREATE CONSTRAINT context_id IF NOT EXISTS
        FOR (n:FieldContext) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT pulse_id IF NOT EXISTS

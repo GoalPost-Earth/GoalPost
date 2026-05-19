@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { useFocalEntity } from '@/contexts'
+import type { NvlRefHandle } from '@/components/graph/visualizer'
 
 const GraphVisualizer = dynamic(
   () =>
@@ -37,6 +38,40 @@ interface NeighborhoodResponse {
 export const BloomView: FC = () => {
   const { focalEntity, setFocalEntity } = useFocalEntity()
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const nvlRef = useRef<NvlRefHandle | null>(null)
+
+  // Listen for zoom commands from the floating canvas action bar.
+  useEffect(() => {
+    const adjust = (factor: number) => {
+      const ref = nvlRef.current
+      if (!ref || typeof ref.getScale !== 'function') return
+      const current = ref.getScale()
+      if (typeof current === 'number') ref.setZoom?.(current * factor)
+    }
+    const fit = () => {
+      const ref = nvlRef.current
+      if (!ref || typeof ref.getNodes !== 'function' || typeof ref.fit !== 'function') return
+      const allNodes = ref.getNodes()
+      const ids = allNodes.map((n) => n.id)
+      if (ids.length <= 1) {
+        ref.setZoom?.(1)
+        return
+      }
+      ref.fit(ids, { animated: true, maxZoom: 1.4 })
+    }
+    const onIn = () => adjust(1.2)
+    const onOut = () => adjust(0.8)
+    const onFit = () => fit()
+    window.addEventListener('goalpost:graph-zoom-in', onIn)
+    window.addEventListener('goalpost:graph-zoom-out', onOut)
+    window.addEventListener('goalpost:graph-zoom-fit', onFit)
+    return () => {
+      window.removeEventListener('goalpost:graph-zoom-in', onIn)
+      window.removeEventListener('goalpost:graph-zoom-out', onOut)
+      window.removeEventListener('goalpost:graph-zoom-fit', onFit)
+    }
+  }, [])
+
   // Single status object so the in-flight transitions happen as one render —
   // satisfies react-hooks/set-state-in-effect by collapsing the cascading
   // updates into one (status changes are inherently external-system mirrors).
@@ -129,6 +164,7 @@ export const BloomView: FC = () => {
           </div>
         )}
         <GraphVisualizer
+          ref={nvlRef}
           nodes={data.nodes}
           relationships={data.relationships}
           mouseEventCallbacks={mouseEventCallbacks}

@@ -136,13 +136,16 @@ export async function getOrCreateMeSpace(
   const personName = person.get('name') || person.get('email')
   const meSpaceName = name || `${personName}'s Space`
 
-  // Create new MeSpace
+  // Create new MeSpace. `ownerId` is denormalized onto the node so the
+  // Neo4j UNIQUE constraint (see scripts/init-db.js) can enforce the
+  // "one MeSpace per Person" invariant at the DB layer.
   const result = await session.run(
     `MATCH (person:Person {id: $personId})
      CREATE (meSpace:Space:MeSpace {
        id: 'me_' + randomUUID(),
        name: $name,
        visibility: 'PRIVATE',
+       ownerId: $personId,
        createdAt: datetime(),
        modifiedAt: datetime()
      })

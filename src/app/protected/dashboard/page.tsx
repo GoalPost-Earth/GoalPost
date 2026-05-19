@@ -2,10 +2,7 @@
 
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import {
-  SpacesOverview,
-  SpacesActionBar,
-} from '@/components/dashboard/spaces-overview'
+import { SpacesOverview } from '@/components/dashboard/spaces-overview'
 import { FocusedEntities } from '@/components/dashboard/focused-entities'
 import { usePageContext } from '@/contexts'
 
@@ -68,7 +65,6 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {!focusParam && <SpacesActionBar />}
     </div>
   )
 }

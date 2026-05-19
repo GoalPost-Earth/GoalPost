@@ -75,26 +75,37 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 
 **Neo4j Labels:** `["Space", "MeSpace"]`
 
-| Field           | Type     | Notes            |
-| --------------- | -------- | ---------------- |
-| id              | string   | Unique           |
-| name            | string   | Required         |
-| visibility      | enum     | PRIVATE / SHARED |
-| description     | string   | Optional         |
-| why             | string   | Optional         |
-| location        | string   | Optional         |
-| time            | string   | Optional         |
-| activities      | string   | Optional         |
-| resultsAchieved | string   | Optional         |
-| status          | string   | Optional         |
-| createdAt       | datetime |                  |
+**Cardinality:** Exactly one per Person. Auto-created at signup. A Person may never own more than one MeSpace.
+
+| Field           | Type     | Notes                                     |
+| --------------- | -------- | ----------------------------------------- |
+| id              | string   | Unique                                    |
+| name            | string   | Required                                  |
+| visibility      | enum     | PRIVATE / SHARED                          |
+| ownerId         | string   | Denormalized Person.id — UNIQUE constraint |
+| description     | string   | Optional                                  |
+| why             | string   | Optional                                  |
+| location        | string   | Optional                                  |
+| time            | string   | Optional                                  |
+| activities      | string   | Optional                                  |
+| resultsAchieved | string   | Optional                                  |
+| status          | string   | Optional                                  |
+| createdAt       | datetime |                                           |
 
 **Relationships:**
 
-- `OWNS` ← Person (one owner)
+- `OWNS` ← Person (one owner, and that Person owns no other MeSpace)
 - `HAS_CONTEXT` → FieldContext
 
-**Authorization:** Only the owner can read/write.
+**Authorization:** Only the owner can read/write (GraphQL `@authorization` filter).
+
+**Enforcement of the one-per-Person invariant:**
+
+1. **DB constraint** — `mespace_owner_unique` UNIQUE on `MeSpace.ownerId` (`scripts/init-db.js`).
+2. **REST endpoint** — `/api/me-space/create` uses an atomic `MATCH (p) WHERE NOT EXISTS { (p)-[:OWNS]->(:MeSpace) }` Cypher (no TOCTOU).
+3. **Signup** — `getOrCreateMeSpace` in `src/lib/validation/space-validation.ts` is idempotent; it returns the existing MeSpace if one is already owned.
+4. **GraphQL** — the auto-generated `createMeSpaces` mutation is disabled via `@mutation(operations: [UPDATE, DELETE])`; only `updateMeSpaces` and `deleteMeSpaces` are exposed.
+5. **Audit** — `auditMeSpaceConstraint(session)` reports any Persons with >1 MeSpace (use during migrations).
 
 ---
 

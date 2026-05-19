@@ -12,7 +12,7 @@ export default function Home() {
     if (isLoading) return
 
     if (isAuthenticated) {
-      router.push('/protected/spaces')
+      router.push('/protected/dashboard')
     } else {
       router.push('/auth/login')
     }

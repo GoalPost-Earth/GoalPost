@@ -354,6 +354,15 @@ Authorization: Only the owner can view, create, update, or delete a MeSpace.
 """
 type MeSpace implements Space
   @node(labels: ["Space", "MeSpace"])
+  # Disables the auto-generated `createMeSpaces` root mutation.
+  # All MeSpace creation MUST go through /api/me-space/create which
+  # enforces the "one per Person" invariant atomically (with WHERE NOT
+  # EXISTS) and denormalizes `ownerId` so the DB UNIQUE constraint
+  # (see scripts/init-db.js → mespace_owner_unique) holds. Allowing
+  # CREATE here would let an authenticated user spawn a second MeSpace
+  # via the Apollo client / GraphQL playground, bypassing the guard.
+  # See kb/03-workflows.md:41 and kb/05-data-entities.md for the rule.
+  @mutation(operations: [UPDATE, DELETE])
   @authorization(
     filter: [{ where: { node: { owner_SOME: { id_EQ: "$jwt.user.id" } } } }]
   ) {
