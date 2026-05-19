@@ -4,8 +4,10 @@ import React, { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
+import { PlusCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
+import { useStudioCanvas } from '@/components/studio/studio-canvas-context'
 
 type SpaceFilter = 'all' | 'me' | 'we'
 
@@ -34,6 +36,11 @@ const FILTER_META: { id: SpaceFilter; label: string }[] = [
  *
  * Clicking a space drills into its field contexts at
  * `/protected/dashboard/space/[id]`, which in turn leads to pulses.
+ *
+ * The Graph view (custom NVL) is owned by the canvas-host (see
+ * `studio-canvas-context.canvasView`). Toggling there switches between
+ * this dashboard surface and the Bloom NVL — this component always
+ * renders cards.
  */
 export function SpacesOverview() {
   const router = useRouter()
@@ -161,6 +168,54 @@ export function SpacesOverview() {
         </div>
       )}
     </section>
+  )
+}
+
+/**
+ * Floating action bar pinned to the bottom-center of the canvas pane.
+ * Hosts the create-space buttons so users can spin up a new MeSpace or
+ * WeSpace without leaving the dashboard. The view toggle (Dashboard /
+ * Graph) is intentionally NOT duplicated here — it already lives in the
+ * canvas-host header, so adding a second toggle was redundant and risked
+ * conflicting with the canvas-host's Bloom NVL view.
+ *
+ * Rendered as a sibling of the dashboard's <main> so it floats at the
+ * canvas-pane bottom regardless of card-grid scroll position.
+ *
+ * Hidden when the canvas is in graph mode (canvas-host owns that surface).
+ */
+export function SpacesActionBar() {
+  const router = useRouter()
+  const { canvasView } = useStudioCanvas()
+
+  if (canvasView !== 'dashboard') return null
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center px-4">
+      <div className="pointer-events-auto flex items-center gap-2 md:gap-3">
+        <button
+          type="button"
+          onClick={() => router.push('/protected/spaces/me-space')}
+          className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/20 hover:border-white/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+        >
+          <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+          <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+            MeSpace
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/protected/spaces/we-space')}
+          className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/20 hover:border-white/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+          data-tour="create-wespace-button"
+        >
+          <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
+          <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+            WeSpace
+          </span>
+        </button>
+      </div>
+    </div>
   )
 }
 

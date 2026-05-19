@@ -2,20 +2,21 @@
 
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { SpacesOverview } from '@/components/dashboard/spaces-overview'
+import {
+  SpacesOverview,
+  SpacesActionBar,
+} from '@/components/dashboard/spaces-overview'
 import { FocusedEntities } from '@/components/dashboard/focused-entities'
 import { usePageContext } from '@/contexts'
 
 /**
  * The dashboard landing — a focused, filterable view of every space the
- * user can access. Drilling into a space reveals its field contexts; field
- * contexts reveal their pulses. The old sidebar (Overview / Pulses /
- * Fields / Spaces / People / Activity tabs + CSV-imports link) was
- * retired — those entry points moved to:
- *   - Spaces are the canonical entry point (this page)
- *   - Pulses / Fields / People are reached by drilling through a space
- *   - CSV import is now an attachment affordance in the chat composer
- *   - Search lives in the chrome
+ * user can access (cards). Drilling into a space leads to its field
+ * contexts, which lead to pulses.
+ *
+ * The Graph view (custom NVL Bloom) is owned by the canvas-host's
+ * Dashboard / Graph toggle in its header — this page is the "Dashboard"
+ * side of that flip.
  */
 export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
@@ -55,7 +56,7 @@ export default function DashboardPage() {
       </div>
 
       <main
-        className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8"
+        className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24"
         data-tour="dashboard-overview"
       >
         <div className="max-w-6xl mx-auto">
@@ -66,6 +67,8 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {!focusParam && <SpacesActionBar />}
     </div>
   )
 }
