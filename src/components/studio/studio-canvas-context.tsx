@@ -12,7 +12,17 @@ import {
 
 export type FullscreenSide = 'canvas' | 'chat' | null
 export type ChatLayout = 'docked' | 'floating'
-export type CanvasView = 'dashboard' | 'graph'
+/**
+ * Three canonical canvas surfaces — see kb/01-glossary.md.
+ * - `dashboard` → Dashboard View (cards of spaces / route content)
+ * - `graph`     → Graph View (GoalPost-curated NVL, focal-entity centered)
+ * - `bloom`     → Bloom Exploration (native NVL, open-ended)
+ *
+ * The kb is explicit: Graph View and Bloom Exploration are NOT
+ * synonymous and must never be conflated. They live as sibling top-level
+ * options, not as a sub-toggle of "Graph."
+ */
+export type CanvasView = 'dashboard' | 'graph' | 'bloom'
 
 interface CanvasState {
   canvasOpen: boolean
@@ -74,7 +84,9 @@ function readStored(): CanvasState | null {
       // boots closed so a refresh doesn't pop it open unexpectedly.
       floatingChatOpen: false,
       canvasView:
-        parsed.canvasView === 'graph' || parsed.canvasView === 'dashboard'
+        parsed.canvasView === 'graph' ||
+        parsed.canvasView === 'bloom' ||
+        parsed.canvasView === 'dashboard'
           ? parsed.canvasView
           : DEFAULT_STATE.canvasView,
     }

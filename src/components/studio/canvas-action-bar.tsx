@@ -3,7 +3,7 @@
 import { type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
-import { LayoutGrid, Network, PlusCircle } from 'lucide-react'
+import { LayoutGrid, Network, PlusCircle, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
@@ -35,7 +35,9 @@ export const StudioCanvasActionBar: FC = () => {
   })
   const canCreateMeSpace = (meSpacesData?.meSpaces?.length ?? 0) === 0
 
-  const inGraph = canvasView === 'graph'
+  // Zoom controls apply to both Graph View and Bloom Exploration — they
+  // are sibling NVL surfaces per kb/01-glossary.md.
+  const inGraphSurface = canvasView === 'graph' || canvasView === 'bloom'
 
   const dispatchZoom = (action: 'in' | 'out' | 'fit') => {
     window.dispatchEvent(new CustomEvent(`goalpost:graph-zoom-${action}`))
@@ -44,7 +46,7 @@ export const StudioCanvasActionBar: FC = () => {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
       <div className="pointer-events-auto flex items-center gap-3 md:gap-4">
-        {inGraph && (
+        {inGraphSurface && (
           <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 shadow-xl">
             <ZoomButton
               label="Zoom out"
@@ -124,9 +126,12 @@ const ViewToggle: FC<{
   activeView: CanvasView
   onChange: (view: CanvasView) => void
 }> = ({ activeView, onChange }) => {
+  // Order + labels follow the kb canonical names (kb/01-glossary.md):
+  // Dashboard View → Graph View → Bloom Exploration.
   const items: { id: CanvasView; label: string; Icon: typeof LayoutGrid }[] = [
-    { id: 'graph', label: 'Graph view', Icon: Network },
     { id: 'dashboard', label: 'Dashboard view', Icon: LayoutGrid },
+    { id: 'graph', label: 'Graph view', Icon: Network },
+    { id: 'bloom', label: 'Bloom exploration', Icon: Workflow },
   ]
 
   return (

@@ -4,7 +4,8 @@ import { useState, type FC, type ReactNode } from 'react'
 import { Maximize2, Minimize2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStudioCanvas } from './studio-canvas-context'
-import { GraphMode } from './modes/graph-mode'
+import { SpatialView } from './modes/graph-mode/spatial-view'
+import { BloomView } from './modes/graph-mode/bloom-view'
 import { StudioCanvasActionBar } from './canvas-action-bar'
 
 interface CanvasHostProps {
@@ -15,20 +16,27 @@ interface CanvasHostProps {
 }
 
 /**
- * The canvas pane — hosts either the active route (dashboard cards, pulse
- * detail, etc.) or the NVL graph. The Dashboard|Graph toggle and create
- * actions live in the floating `StudioCanvasActionBar` pinned to the
- * bottom-center; the header only carries fullscreen + close.
+ * The canvas pane — hosts one of the three canonical surfaces:
+ *  - Dashboard View (route content: cards, detail pages)
+ *  - Graph View (curated NVL, GoalPost-styled — see kb/01-glossary.md)
+ *  - Bloom Exploration (native NVL, open-ended — see kb/01-glossary.md)
  *
- * Graph is lazy-mounted on first visit and kept alive via `visibility:hidden`
- * so the user's pan/zoom state isn't lost when they flip back to dashboard.
+ * The view selector + create actions live in the floating
+ * `StudioCanvasActionBar` pinned to the bottom-center; the header only
+ * carries fullscreen + close.
+ *
+ * Graph and Bloom are each lazy-mounted on first visit and kept alive
+ * via `visibility:hidden` so pan / zoom / focal state survives flipping
+ * between any two views.
  */
 export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const { canvasView, toggleFullscreen, setCanvasOpen } = useStudioCanvas()
 
-  // Lazy-mount graph on first visit, then keep it mounted across toggles.
+  // Lazy-mount Graph + Bloom independently; each retains state across toggles.
   const [graphVisited, setGraphVisited] = useState(canvasView === 'graph')
+  const [bloomVisited, setBloomVisited] = useState(canvasView === 'bloom')
   if (canvasView === 'graph' && !graphVisited) setGraphVisited(true)
+  if (canvasView === 'bloom' && !bloomVisited) setBloomVisited(true)
 
   return (
     <section
@@ -77,8 +85,28 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
         </div>
 
         {graphVisited && (
-          <div className="absolute inset-0">
-            <GraphMode visible={canvasView === 'graph'} />
+          <div
+            className={cn(
+              'absolute inset-0',
+              canvasView !== 'graph' && 'pointer-events-none'
+            )}
+            style={{ visibility: canvasView === 'graph' ? 'visible' : 'hidden' }}
+            aria-hidden={canvasView !== 'graph'}
+          >
+            <SpatialView />
+          </div>
+        )}
+
+        {bloomVisited && (
+          <div
+            className={cn(
+              'absolute inset-0',
+              canvasView !== 'bloom' && 'pointer-events-none'
+            )}
+            style={{ visibility: canvasView === 'bloom' ? 'visible' : 'hidden' }}
+            aria-hidden={canvasView !== 'bloom'}
+          >
+            <BloomView />
           </div>
         )}
 
