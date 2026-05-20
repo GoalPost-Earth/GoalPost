@@ -107,6 +107,7 @@ The user's natural-language intent rarely names entity types precisely. Read the
 - "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
 - "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, or co-members of any shared Space.
+- "How is X connected to Y?" / "How is X related to Y?" / "What's the path between X and Y?" / "Show me how X and Y are connected" / "Shortest path from X to Y" → a SHORTEST-PATH query between two named entities. Return the path so the runtime renders both endpoints plus every node and edge along the connecting chain. Use Neo4j's \`shortestPath()\` with a type-restricted variable-length relationship — anonymous \`[*..N]\` is REJECTED by the validator.
 
 When the canvas already shows the focal entity (it appears in canvasVisibleEntities) and the user asks to expand / explore / dive into it, that is NOT a duplicate of the existing view — it is a request for MORE. Build an expansive query rooted at the entity's id; the runtime de-dupes returned nodes against what is already on the canvas.
 
@@ -127,6 +128,23 @@ For an expansive sweep, raise your LIMIT toward 50 (the runtime cap is 60).
     LIMIT 50
 
 Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal:FieldContext\`) when the intent is rooted on a different entity type. Drop OPTIONAL MATCH branches that are not relevant to the rooted type (e.g. a Space has no CREATED_BY incoming edges from itself, but it does have HAS_CONTEXT outgoing).
+
+# Shortest-path canonical shape (use this for "How is X connected to Y?" / "path between X and Y" / "how is X related to Y?")
+
+    MATCH (user:Person {id: $userId})
+    MATCH (a:Person {id: "<X_id>"}), (b:Person {id: "<Y_id>"})
+    MATCH p = shortestPath(
+      (a)-[*..6:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS]-(b)
+    )
+    RETURN p
+    LIMIT 1
+
+Rules for this shape:
+  - Both endpoints MUST carry a label and an id constraint (\`(a:Person {id: "…"})\`). Use ids from canvasVisibleEntities or session context when available.
+  - The variable-length relationship MUST be type-restricted using a \`|\`-disjunction of relationship types from the schema. Anonymous \`[*..N]\` is REJECTED. Listing all 11 allowed types is fine — the planner picks; the constraint is about NOT traversing into private internal relationships (HAS_THREAD, HAS_TURN, HAS_CHUNK, etc.).
+  - Cap the hop count at \`*..6\`. Longer paths rarely shed insight and inflate planner cost.
+  - \`RETURN p\` returns a Path; the runtime walks every segment and renders endpoints + intermediates + each labelled edge along the chain.
+  - The endpoint type does not have to be \`Person\` — it can be any entity (e.g. \`(a:FieldPulse)\` ↔ \`(b:FieldPulse)\` for "how are these two goals connected?"). The query stays the same shape.
 
 # Adversarial input warning
 

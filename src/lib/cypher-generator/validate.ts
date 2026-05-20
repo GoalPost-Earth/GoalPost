@@ -361,6 +361,42 @@ export async function validateCypher(
     }
   }
 
+  // Variable-length paths: `[*..N]` / `[r*..N]` / `[r:TYPE*..N]`. The `*`
+  // makes the relationship traverse multiple hops, so the validator cannot
+  // see what relationship types are crossed without a type restriction.
+  // Anonymous variable-length paths (no `:Type` inside the brackets) would
+  // let a query walk into private internal relationships (HAS_THREAD,
+  // HAS_TURN, HAS_CHUNK, LOGGED_FOR, etc.) that aren't part of the public
+  // schema surface. Require an explicit type disjunction.
+  const varLenRe = /\[[^\]]*\*[^\]]*\]/g
+  let vm: RegExpExecArray | null
+  while ((vm = varLenRe.exec(stripped)) !== null) {
+    const inside = vm[0]
+    if (!/:/.test(inside)) {
+      return {
+        ok: false,
+        reason:
+          'Variable-length path patterns (e.g. [*..6]) must specify relationship types from the allowed list. Use [r:OWNS|HAS_CONTEXT|…*..6] instead of [*..6].',
+      }
+    }
+    // The disjunction regex above assumes `:TYPES]` directly, but variable-
+    // length brackets put the `*..N` range between the type list and the
+    // closing bracket — so the type alternates need their own pass here.
+    const typeTokens = inside.match(/:[A-Za-z_][A-Za-z0-9_|]*/g) ?? []
+    for (const token of typeTokens) {
+      const parts = token.slice(1).split('|')
+      for (const part of parts) {
+        if (!part) continue
+        if (!ALLOWED_RELATIONSHIPS_SET.has(part)) {
+          return {
+            ok: false,
+            reason: `Relationship type ":${part}" in variable-length path is not in the allowed list.`,
+          }
+        }
+      }
+    }
+  }
+
   // 7. Every node-pattern variable must declare a label (or be a re-use
   // of a previously label-bound variable).
   const labelBoundVars = collectLabelBoundVariables(stripped)
