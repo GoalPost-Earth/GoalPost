@@ -144,3 +144,65 @@
 - Computed fields use `@cypher` directives for complex access patterns
 
 **Why:** Declarative authorization at the schema level is harder to bypass than middleware. The `@neo4j/graphql` library automatically applies filters to every query, making it impossible to accidentally return unauthorized data.
+
+---
+
+## ADR-011: Canvas Views Share One Apollo Cache — Toggling Never Refetches
+
+**Decision:** The three canonical canvas surfaces (Dashboard View, Graph View, Bloom Exploration) are pure visual transforms of the **same Apollo-cached data**. Flipping between them MUST be a zero-network frontend change.
+
+**Rules:**
+
+- All three views consume the same Apollo queries (currently `GET_ALL_ME_SPACES` + `GET_ALL_WE_SPACES`) with `fetchPolicy: 'cache-first'`.
+- Bloom Exploration is NOT allowed to fetch its own data. It is "native NVL rendering," not "native NVL fetching."
+- New view modes must reuse the queries the first-mounted view already warmed.
+- Loading skeletons may render only on a genuinely cold cache (first ever mount of any of the three).
+
+**Why:** Toggling a view is a presentational concern. A second network round-trip on toggle produced confusing loading flashes and made the surfaces feel unrelated. Sharing the cache also keeps the three views structurally honest — they show the same things, just differently.
+
+**Where this bites if violated:**
+
+- A view that issues its own REST call (e.g. an earlier draft of `BloomView` POSTing to `/api/graph/neighborhood`) will flash a loading state every time the user flips to it, even when the data is already in the cache.
+- Different queries with overlapping fields create silent cache misses (Apollo keys by selection set). Reuse the canonical query names.
+
+---
+
+## ADR-012: NVL `layout: 'free'` Is Mandatory When Positions Are Pre-Computed
+
+**Decision:** When the application computes `(x, y)` positions for NVL nodes (e.g. via `createClusteredFieldNodePositions`), the `InteractiveNvlWrapper` MUST be passed `nvlOptions: { layout: 'free' }`.
+
+**Rules:**
+
+- `GraphVisualizer` and `NvlCanvas` consumers that set per-node `x`/`y` always include `layout: 'free'` in `nvlOptions`.
+- Forget this and NVL silently runs its default force-directed simulation, which **ignores your positions** and arranges nodes by physics — usually scattering unconnected nodes across an empty canvas.
+- The post-mount auto-fit pattern (`nvlRef.fit(ids, { maxZoom })` deferred ~120ms) requires the layout to honor positions; otherwise `fit()` lands on whitespace and the canvas reads as blank.
+- An `nvlRef.fit(...)` call belongs in a `useEffect` gated by a `hasInitialFitRef` so it runs exactly once per data load.
+
+**Why:** NVL's default is force-directed because most callers ship relationships and want emergent layout. GoalPost's cluster layouts are deliberate (e.g. grouping spaces by visual proximity), so we override.
+
+**Where this bites if violated:**
+
+- "I see a blank canvas, did this break?" — the bubbles exist but are physics-scattered hundreds of pixels off-screen.
+- The auto-fit zooms out trying to encompass scattered nodes, then snaps to `maxZoom` cap and lands on emptiness.
+
+---
+
+## ADR-013: Authenticated Client Fetches Use the Bearer-Token Dance, Not Just the Cookie
+
+**Decision:** Any client-side `fetch` to a user-scoped REST route MUST attach `Authorization: Bearer <jwt>` resolved via `/api/auth/access-token` (with a `/api/auth/refresh-token` fallback). Cookie-only `credentials: 'include'` is not sufficient.
+
+**Rules:**
+
+- The canonical helper is `chatApiAuthHeaders` in `src/lib/simulation/conversation-thread-client.ts`. Reuse it (or inline the same dance) for any new REST fetch from the browser.
+- The pattern: try `/api/auth/access-token` first; if not OK, try `/api/auth/refresh-token`; attach the resulting `accessToken` as `Authorization: Bearer <jwt>`. Cookie still goes along via `credentials: 'include'`.
+- Server routes resolve identity through `resolveAuthenticatedUserId(req)` (`src/app/api/auth/utils.ts`), which accepts either transport — the cookie is the legacy path, the bearer is what Apollo refreshes against.
+- Apollo Client traffic does NOT need this dance — Apollo manages its own refresh cycle. The rule applies only to hand-written `fetch` calls.
+- Even better: avoid the REST fetch entirely and go through Apollo (see ADR-011).
+
+**Why:** The `accessToken` cookie has a 30-minute lifetime. When it expires, the cookie is gone but the user's refresh token is still valid — Apollo silently refreshes and continues, but a raw `fetch` 401s. The bearer dance gives raw fetches the same refresh capability Apollo already has.
+
+**Where this bites if violated:**
+
+- Routes silently 401 after 30 minutes of activity. UI shows empty data, not an error chip, because the catch path swallows the 401.
+- Symptom: "It worked yesterday but now shows nothing" — the cookie went stale, refresh wasn't attempted, the API returned 401.
+- This bug has shown up at least twice (chat thread routes, Bloom neighborhood). Treat it as a recurring class.

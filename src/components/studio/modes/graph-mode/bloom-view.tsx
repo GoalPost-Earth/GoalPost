@@ -1,46 +1,187 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type FC } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import { useQuery } from '@apollo/client/react'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
+import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { useFocalEntity } from '@/contexts'
+import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
-
-const GraphVisualizer = dynamic(
-  () =>
-    import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-full bg-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
-      </div>
-    ),
-  }
-)
-
-interface NeighborhoodResponse {
-  nodes: Node[]
-  relationships: Relationship[]
-}
+import { GraphLoadingState } from './graph-loading-state'
 
 /**
- * NVL "Bloom" exploration view. Fetches the focal entity's one-hop
- * neighborhood from `/api/graph/neighborhood` and renders it. Honors
- * `FocalEntityContext` — switching focal in chat / dashboard re-fetches.
- * When no focal is set the API returns the user's MeSpace by default so the
- * canvas is never empty on a neutral surface.
+ * Bloom Exploration — the native NVL rendering of the user's spaces.
  *
- * Clicking a node updates the focal entity, which propagates back to the
- * other modes via FocalEntityContext.
+ * Per kb/01-glossary.md: "A separate, more open-ended graph surface that
+ * exposes native Neo4j NVL exploration capabilities ... with minimal
+ * GoalPost-specific opinionation."
+ *
+ * Architectural rule (set by the user): Bloom does NOT fetch — it is a
+ * pure visual transform of the same Apollo-cached data the Dashboard
+ * cards and Graph view already loaded. Toggling between the three
+ * canvas views is therefore a zero-network frontend change.
+ *
+ * Visual differentiation from Graph view:
+ *   - Graph view → custom `EntityBubble` HTML nodes (GoalPost-styled).
+ *   - Bloom view → native NVL nodes (caption + color + size only),
+ *     letting NVL render and interact with them as it would by default.
  */
-export const BloomView: FC = () => {
-  const { focalEntity, setFocalEntity } = useFocalEntity()
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
-  const nvlRef = useRef<NvlRefHandle | null>(null)
 
-  // Listen for zoom commands from the floating canvas action bar.
+// Warm the NVL chunk as soon as this module is parsed. The fetch runs in
+// parallel with the Apollo queries above so by the time the cache resolves
+// the chunk is cached and next/dynamic skips the "Preparing canvas" flash
+// that otherwise stacks behind the data skeleton.
+const visualizerChunk = import('@/components/graph/visualizer').then(
+  (mod) => mod.GraphVisualizer
+)
+
+const GraphVisualizer = dynamic(() => visualizerChunk, {
+  ssr: false,
+  loading: () => (
+    <div className="relative w-full h-full bg-slate-950">
+      <GraphLoadingState label="Preparing canvas" />
+    </div>
+  ),
+})
+
+const NO_RELATIONSHIPS: Relationship[] = []
+
+const SPACE_COLOR = {
+  MeSpace: '#f59e0b', // amber — matches the Me Space card accent
+  WeSpace: '#14b8a6', // teal — matches the We Space card accent
+} as const
+
+const SPACE_SIZE = {
+  MeSpace: 44,
+  WeSpace: 48,
+} as const
+
+interface SpaceRecord {
+  id: string
+  name: string
+  type: 'MeSpace' | 'WeSpace'
+}
+
+export const BloomView: FC = () => {
+  const router = useRouter()
+  const { setFocalEntity } = useFocalEntity()
+  const nvlRef = useRef<NvlRefHandle | null>(null)
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+
+  // Identical Apollo queries to SpacesOverview + SpatialView. `cache-first`
+  // hits the warm cache on every flip — zero network round-trip.
+  const { data: meData, loading: meLoading } = useQuery(GET_ALL_ME_SPACES, {
+    fetchPolicy: 'cache-first',
+  })
+  const { data: weData, loading: weLoading } = useQuery(GET_ALL_WE_SPACES, {
+    fetchPolicy: 'cache-first',
+  })
+  const loading = meLoading || weLoading
+
+  const spaces: SpaceRecord[] = useMemo(() => {
+    const me = (meData?.meSpaces ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      type: 'MeSpace' as const,
+    }))
+    const we = (weData?.weSpaces ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      type: 'WeSpace' as const,
+    }))
+    return [...me, ...we]
+  }, [meData, weData])
+
+  // Native NVL nodes — caption / color / size only. NVL paints these
+  // directly without any HTML container; that's the "minimal GoalPost
+  // opinionation" the kb calls out.
+  const nodes: Node[] = useMemo(() => {
+    if (spaces.length === 0) return []
+    const positions = createClusteredFieldNodePositions(
+      spaces.map((s) => ({ id: s.id, size: 'lg' })),
+      130
+    )
+    return positions.map((position, idx) => {
+      const space = spaces[idx]
+      return {
+        id: space.id,
+        x: position.x,
+        y: position.y,
+        caption: space.name,
+        color: SPACE_COLOR[space.type],
+        size: SPACE_SIZE[space.type],
+      } as Node
+    })
+  }, [spaces])
+
+  const handleNodeClick = useCallback(
+    (node: Node) => {
+      setSelectedNode(node)
+      const space = spaces.find((s) => s.id === String(node.id))
+      if (space) {
+        setFocalEntity({
+          type: space.type,
+          id: space.id,
+          focusedAt: new Date().toISOString(),
+          source: 'manual',
+        })
+      }
+    },
+    [spaces, setFocalEntity]
+  )
+
+  const mouseEventCallbacks: MouseEventCallbacks = useMemo(
+    () => ({
+      onNodeClick: (node) => handleNodeClick(node),
+      onCanvasClick: () => setSelectedNode(null),
+      onDrag: true,
+      onPan: true,
+      onZoom: true,
+    }),
+    [handleNodeClick]
+  )
+
+  // `layout: 'free'` makes NVL honor the (x, y) we computed. Without it,
+  // the default force-directed simulation would scatter unconnected nodes
+  // across an empty canvas and the post-mount `fit()` would land on
+  // whitespace.
+  const nvlOptions = useMemo(
+    () => ({
+      layout: 'free',
+      initialZoom: 0.7,
+      minScale: 0.2,
+      maxScale: 3,
+    }),
+    []
+  )
+
+  // Auto-fit once on first node availability so NVL frames the cluster.
+  const hasInitialFitRef = useRef(false)
+  useEffect(() => {
+    if (hasInitialFitRef.current) return
+    if (spaces.length === 0) return
+    const timeout = window.setTimeout(() => {
+      const ref = nvlRef.current
+      if (!ref) return
+      hasInitialFitRef.current = true
+      if (spaces.length === 1) {
+        ref.setZoom?.(1)
+        return
+      }
+      if (typeof ref.fit !== 'function') return
+      ref.fit(
+        spaces.map((s) => s.id),
+        { animated: false, maxZoom: 1.4 }
+      )
+    }, 120)
+    return () => window.clearTimeout(timeout)
+  }, [spaces])
+
+  // Listen for zoom commands from the floating canvas action bar — same
+  // contract SpatialView honors.
   useEffect(() => {
     const adjust = (factor: number) => {
       const ref = nvlRef.current
@@ -72,103 +213,35 @@ export const BloomView: FC = () => {
     }
   }, [])
 
-  // Single status object so the in-flight transitions happen as one render —
-  // satisfies react-hooks/set-state-in-effect by collapsing the cascading
-  // updates into one (status changes are inherently external-system mirrors).
-  const [status, setStatus] = useState<{
-    state: 'idle' | 'loading' | 'ready' | 'error'
-    data: NeighborhoodResponse
-    error: string | null
-  }>({
-    state: 'idle',
-    data: { nodes: [], relationships: [] },
-    error: null,
-  })
-
-  useEffect(() => {
-    const ctrl = new AbortController()
-    void (async () => {
-      try {
-        const res = await fetch('/api/graph/neighborhood', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            focalType: focalEntity?.type ?? null,
-            focalId: focalEntity?.id ?? null,
-          }),
-          signal: ctrl.signal,
-        })
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as {
-            error?: string
-          }
-          throw new Error(body.error || `HTTP ${res.status}`)
-        }
-        const payload = (await res.json()) as NeighborhoodResponse
-        if (ctrl.signal.aborted) return
-        setStatus({ state: 'ready', data: payload, error: null })
-      } catch (err) {
-        if (ctrl.signal.aborted) return
-        setStatus((prev) => ({
-          ...prev,
-          state: 'error',
-          error: err instanceof Error ? err.message : 'Unknown error',
-        }))
-      }
-    })()
-    return () => ctrl.abort()
-  }, [focalEntity?.type, focalEntity?.id])
-
-  const loading = status.state === 'idle' || status.state === 'loading'
-  const error = status.state === 'error' ? status.error : null
-  const data = status.data
-
-  const mouseEventCallbacks: MouseEventCallbacks = useMemo(
-    () => ({
-      onNodeClick: (node) => setSelectedNode(node),
-      onCanvasClick: () => setSelectedNode(null),
-      onDrag: true,
-      onPan: true,
-      onZoom: true,
-    }),
-    []
-  )
-
-  const isEmpty = !loading && !error && data.nodes.length === 0
+  const isEmpty = !loading && spaces.length === 0
 
   return (
     <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 relative">
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
-          </div>
-        )}
-        {error && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 max-w-md">
-              Could not load graph: {error}
-            </div>
-          </div>
-        )}
-        {isEmpty && (
+        {loading && spaces.length === 0 ? (
+          <GraphLoadingState
+            label="Bloom is gathering"
+            subtitle="Native NVL view of your spaces."
+          />
+        ) : isEmpty ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
             <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
               hub
             </span>
             <p className="text-sm text-white/55 max-w-md">
-              Nothing to render here yet. Add a field or a pulse and it will
-              bloom into the graph.
+              Nothing to render yet. Create a MeSpace or WeSpace from the
+              dashboard and they will appear here as native NVL nodes.
             </p>
           </div>
+        ) : (
+          <GraphVisualizer
+            ref={nvlRef}
+            nodes={nodes}
+            relationships={NO_RELATIONSHIPS}
+            mouseEventCallbacks={mouseEventCallbacks}
+            nvlOptions={nvlOptions}
+          />
         )}
-        <GraphVisualizer
-          ref={nvlRef}
-          nodes={data.nodes}
-          relationships={data.relationships}
-          mouseEventCallbacks={mouseEventCallbacks}
-        />
       </div>
 
       {selectedNode && (
@@ -176,7 +249,7 @@ export const BloomView: FC = () => {
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-                Node
+                Space
               </p>
               <h3 className="mt-1 text-xl font-bold text-white">
                 {selectedNode.caption}
@@ -198,29 +271,20 @@ export const BloomView: FC = () => {
               style={{ backgroundColor: selectedNode.color }}
               aria-hidden="true"
             />
-            <span className="text-xs text-white/60">
-              {selectedNode.caption}
+            <span className="text-xs text-white/60 uppercase tracking-wider">
+              {spaces.find((s) => s.id === String(selectedNode.id))?.type ??
+                'Space'}
             </span>
           </div>
 
           <button
             type="button"
             onClick={() => {
-              const id = String(selectedNode.id)
-              // We don't have label-level type metadata from NVL — fall back to
-              // 'FieldContext' for now if nothing else is known. The detail
-              // page route + label cache will refine the type on resolve.
-              setFocalEntity({
-                type: 'FieldContext',
-                id,
-                focusedAt: new Date().toISOString(),
-                source: 'manual',
-              })
-              setSelectedNode(null)
+              router.push(`/protected/dashboard/space/${String(selectedNode.id)}`)
             }}
             className="w-full mt-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold py-2 transition-colors cursor-pointer"
           >
-            Focus on this node
+            Open space
           </button>
         </div>
       )}
