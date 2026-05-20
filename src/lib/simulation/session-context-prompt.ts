@@ -31,6 +31,25 @@ export interface SessionContextPromptInput {
     id: string
     label?: string
   } | null
+  /**
+   * Which canvas surface the user is looking at right now. Lets the
+   * assistant say "the FieldContext on your Bloom canvas" instead of
+   * generic "the FieldContext."
+   */
+  canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+  /**
+   * Everything currently rendered on the canvas (Bloom cluster,
+   * Graph nodes, Dashboard cards). The model should resolve user
+   * mentions against this list BEFORE issuing a fresh graph search
+   * — if "JD's Tech Lab" is already on screen, there's no need to
+   * call query_for_bloom or search_space.
+   */
+  canvasVisibleEntities?: Array<{
+    id: string
+    name: string
+    type: string
+    source: 'dashboard' | 'graph' | 'bloom'
+  }>
 }
 
 /**
@@ -107,6 +126,45 @@ export function buildSystemPromptWithSessionContext(
         `- previousFocalEntity.label: ${ctx.previousFocalEntity.label}`
       )
     }
+  }
+
+  // Canvas snapshot — what the user can actually see right now.
+  // Rendered as a compact block of `- name (type, source) [id]` lines so
+  // the model can scan it cheaply. Capped at 40 entries to keep the
+  // prompt small; if the user has a larger graph open, the assistant
+  // can still call query_for_bloom for entities not in the snapshot.
+  const visible = (ctx.canvasVisibleEntities ?? []).slice(0, 40)
+  if (ctx.canvasView || visible.length > 0) {
+    lines.push('')
+    lines.push('## CANVAS CONTEXT')
+    if (ctx.canvasView) {
+      lines.push(`- canvasView: ${ctx.canvasView}`)
+    }
+    if (visible.length === 0) {
+      lines.push('- canvasVisibleEntities: (nothing rendered on the canvas)')
+    } else {
+      lines.push(`- canvasVisibleEntities (${visible.length}):`)
+      for (const entity of visible) {
+        lines.push(
+          `  - ${entity.name} (${entity.type}, source=${entity.source}) [id=${entity.id}]`
+        )
+      }
+    }
+    if (
+      (ctx.canvasVisibleEntities?.length ?? 0) > visible.length
+    ) {
+      lines.push(
+        `  - …${(ctx.canvasVisibleEntities?.length ?? 0) - visible.length} more entities visible on the canvas, not listed`
+      )
+    }
+    lines.push('')
+    lines.push(
+      'CANVAS-FIRST RESOLUTION: When the user names or describes something, FIRST check ' +
+        'canvasVisibleEntities above. If a match exists (case-insensitive name match, or a ' +
+        'clear paraphrase), the entity is ALREADY on screen — use its id directly. Do not ' +
+        'call search_* or query_for_bloom to re-discover it. Only fall back to a graph search ' +
+        'when no canvas-visible entity matches.'
+    )
   }
 
   lines.push('')

@@ -4,6 +4,7 @@ import { useState, type FC, type ReactNode } from 'react'
 import { Maximize2, Minimize2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStudioCanvas } from './studio-canvas-context'
+import { useBloomOverlay } from './bloom-overlay-context'
 import { SpatialView } from './modes/graph-mode/spatial-view'
 import { BloomView } from './modes/graph-mode/bloom-view'
 import { StudioCanvasActionBar } from './canvas-action-bar'
@@ -33,6 +34,8 @@ interface CanvasHostProps {
  */
 export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const { canvasView, toggleFullscreen, setCanvasOpen } = useStudioCanvas()
+  const { overlay, clearOverlay } = useBloomOverlay()
+  const showOverlayChip = canvasView === 'bloom' && overlay !== null
 
   // Lazy-mount Graph + Bloom independently; each retains state across toggles.
   const [graphVisited, setGraphVisited] = useState(canvasView === 'graph')
@@ -47,7 +50,20 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
         'relative h-full w-full flex flex-col overflow-hidden bg-slate-950'
       )}
     >
-      <header className="flex items-center justify-end gap-2 px-3 py-1.5 border-b border-white/10 bg-slate-900/40 backdrop-blur-md">
+      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-white/10 bg-slate-900/40 backdrop-blur-md">
+        <div className="flex items-center gap-2 min-w-0">
+          {showOverlayChip && (
+            <button
+              type="button"
+              onClick={clearOverlay}
+              title="Restore the default Bloom view"
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs font-medium hover:bg-amber-500/25 transition-colors cursor-pointer max-w-xs truncate"
+            >
+              <span className="truncate">Custom view from chat</span>
+              <X className="w-3 h-3 shrink-0" />
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <button
             type="button"

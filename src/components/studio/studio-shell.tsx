@@ -30,6 +30,11 @@ import {
   StudioCanvasProvider,
   useStudioCanvas,
 } from './studio-canvas-context'
+import { BloomOverlayProvider } from './bloom-overlay-context'
+import {
+  VisibleEntitiesProvider,
+  useVisibleEntities,
+} from './visible-entities-context'
 import { StudioChrome } from './studio-chrome'
 import { CanvasHost } from './canvas-host'
 import { ChatHost } from './chat-host'
@@ -56,7 +61,11 @@ export interface StudioShellProps {
 export const StudioShell: FC<StudioShellProps> = ({ children }) => {
   return (
     <StudioCanvasProvider>
-      <StudioBody>{children}</StudioBody>
+      <BloomOverlayProvider>
+        <VisibleEntitiesProvider>
+          <StudioBody>{children}</StudioBody>
+        </VisibleEntitiesProvider>
+      </BloomOverlayProvider>
     </StudioCanvasProvider>
   )
 }
@@ -250,11 +259,26 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
 const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> = ({ children, threadId }) => {
   const { aiMode } = usePreferences()
   const { sessionContext } = useFocalEntity()
+  const { canvasView } = useStudioCanvas()
+  const { entities: visibleEntities } = useVisibleEntities()
 
   const sessionContextRef = useRef(sessionContext)
   useEffect(() => {
     sessionContextRef.current = sessionContext
   }, [sessionContext])
+
+  // Mirror the canvas snapshot into refs so `resolveBody` (called by
+  // assistant-ui at submit time, outside React's render cycle) reads
+  // the latest values without forcing a transport rebuild every time
+  // the user clicks a node.
+  const canvasViewRef = useRef(canvasView)
+  useEffect(() => {
+    canvasViewRef.current = canvasView
+  }, [canvasView])
+  const visibleEntitiesRef = useRef(visibleEntities)
+  useEffect(() => {
+    visibleEntitiesRef.current = visibleEntities
+  }, [visibleEntities])
 
   const lastSentFocalRef = useRef<FocalEntity | null>(null)
   const approvedActionsRef = useRef<ApprovedActionPayload[]>([])
@@ -288,6 +312,8 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
               label: previousFocalEntity.label,
             }
           : null,
+      canvasView: canvasViewRef.current,
+      canvasVisibleEntities: visibleEntitiesRef.current,
       approvedActions: approvedActionsRef.current,
     }
   }, [aiMode, threadId])

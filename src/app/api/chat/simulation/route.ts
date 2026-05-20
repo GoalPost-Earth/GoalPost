@@ -131,6 +131,25 @@ export async function POST(req: Request) {
       previousFocalEntity?: FocalEntityPayload | null
       approvedActions?: ApprovedAction[]
       threadId?: string
+      /**
+       * Which canvas surface the user is on right now (dashboard /
+       * graph / bloom). Surfaced into SESSION CONTEXT so the
+       * assistant can describe actions in terms the user sees.
+       */
+      canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+      /**
+       * Flat list of every entity currently rendered somewhere on
+       * the canvas, published by the view components via
+       * VisibleEntitiesProvider. Lets the assistant resolve user
+       * mentions ("show me JD's Tech Lab") against entities already
+       * on screen before falling back to a fresh graph search.
+       */
+      canvasVisibleEntities?: Array<{
+        id: string
+        name: string
+        type: string
+        source: 'dashboard' | 'graph' | 'bloom'
+      }>
     }
     const {
       messages,
@@ -141,6 +160,8 @@ export async function POST(req: Request) {
       fieldContextId,
       approvedActions,
       threadId,
+      canvasView,
+      canvasVisibleEntities,
     } = body
 
     const focalEntity =
@@ -231,6 +252,8 @@ export async function POST(req: Request) {
         resolvedNames.activeSpaceOwnedByCurrentUser,
       focalEntity,
       previousFocalEntity,
+      canvasView: canvasView ?? null,
+      canvasVisibleEntities: canvasVisibleEntities ?? [],
     })
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
@@ -265,6 +288,11 @@ export async function POST(req: Request) {
       fieldContextId: fieldContextId || null,
       focalEntity,
       approvedActionHashes: buildApprovedActionHashSet(approvedActions),
+      spaceName: resolvedNames.activeSpaceName,
+      spaceType: resolvedNames.activeSpaceType,
+      fieldContextTitle: resolvedNames.activeFieldContextTitle,
+      canvasView: canvasView ?? null,
+      canvasVisibleEntities: canvasVisibleEntities ?? [],
     })
 
     console.log('🔍 [DEBUG] Current mode:', currentMode)

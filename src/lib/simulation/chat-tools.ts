@@ -20,6 +20,7 @@ import {
   isFocalEntityType,
   type FocalEntityType,
 } from '@/lib/focal-entity/types'
+import { generateAndRunForBloom } from '@/lib/cypher-generator'
 import type { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 
 type ToolError = {
@@ -42,6 +43,27 @@ export interface SimulationChatToolContext {
   focalEntity: { type: FocalEntityType; id: string; label?: string } | null
   /** Pre-computed approval hashes from the request's approvedActions. */
   approvedActionHashes: Set<string>
+  /**
+   * Names resolved once per request from session-context-resolve.ts.
+   * Lets tools (e.g. query_for_bloom) speak about the active scope
+   * without re-querying Neo4j.
+   */
+  spaceName?: string | null
+  spaceType?: 'MeSpace' | 'WeSpace' | null
+  fieldContextTitle?: string | null
+  /**
+   * Which canvas surface the user is currently looking at, plus the
+   * flat list of entities rendered there. Forwarded to
+   * `query_for_bloom` so the Cypher generator can prefer a
+   * canvas-known id over a fresh keyword search.
+   */
+  canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+  canvasVisibleEntities?: Array<{
+    id: string
+    name: string
+    type: string
+    source: 'dashboard' | 'graph' | 'bloom'
+  }>
 }
 
 /**
@@ -236,6 +258,11 @@ export async function buildSimulationChatTools(
     fieldContextId: null,
     focalEntity: null,
     approvedActionHashes: new Set<string>(),
+    spaceName: null,
+    spaceType: null,
+    fieldContextTitle: null,
+    canvasView: null,
+    canvasVisibleEntities: [],
   }
 ) {
   const embeddings = getLangChainEmbeddings()
@@ -761,6 +788,60 @@ export async function buildSimulationChatTools(
       execute: async (args: { confirm?: boolean }) => {
         logToolDispatch('delete_my_profile', ctx, args)
         return runWriteTool('delete_my_profile', { ...args }, ctx)
+      },
+    }),
+
+    query_for_bloom: tool({
+      description:
+        'Pull specific graph entities (spaces, field contexts, pulses, people, resonances) into the Bloom canvas so the user can SEE them. Use whenever the user wants to visualize, show, bring up, pull up, or see something in the graph — especially when the conversation has drifted to an entity that is not currently on the canvas. Provide a precise natural-language intent that names entity types and any names, titles, or keywords from the conversation. The tool generates safe read-only Cypher under the hood, runs it scoped to the current user, and returns NVL-shaped nodes and relationships. After this tool returns nodes, emit a BLOOM_GRAPH_OVERLAY marker in your reply text immediately followed by the JSON payload { summary, nodes, relationships }, then continue in plain English. Never paste the Cypher. Never mention raw ids.',
+      inputSchema: z.object({
+        intent: z
+          .string()
+          .min(8)
+          .max(500)
+          .describe(
+            'Natural-language description of what to show in Bloom. Be precise about entity types and names/keywords from the conversation. Example: "Show the field context titled Care Practices in the user\'s active MeSpace, and the pulses inside it."'
+          ),
+      }),
+      execute: async ({ intent }: { intent: string }) => {
+        logToolDispatch('query_for_bloom', ctx, { intent })
+        if (!ctx.currentUserId) {
+          return {
+            found: false,
+            summary:
+              'I need you to be signed in before I can pull graph data into Bloom.',
+          }
+        }
+        try {
+          const result = await generateAndRunForBloom({
+            intent,
+            userId: ctx.currentUserId,
+            activeSpaceId: ctx.spaceId,
+            activeSpaceName: ctx.spaceName ?? null,
+            activeSpaceType: ctx.spaceType ?? null,
+            activeFieldContextId: ctx.fieldContextId,
+            activeFieldContextTitle: ctx.fieldContextTitle ?? null,
+            focalEntity: ctx.focalEntity
+              ? {
+                  type: ctx.focalEntity.type,
+                  id: ctx.focalEntity.id,
+                  label: ctx.focalEntity.label ?? null,
+                }
+              : null,
+            canvasVisibleEntities: ctx.canvasVisibleEntities ?? [],
+          })
+          if (!result.found) {
+            return { found: false, summary: result.summary }
+          }
+          return {
+            found: true,
+            summary: result.summary,
+            nodes: result.nodes,
+            relationships: result.relationships,
+          }
+        } catch (error) {
+          return toErrorResult('Failed to query graph for Bloom', error)
+        }
       },
     }),
 
