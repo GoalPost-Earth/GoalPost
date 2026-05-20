@@ -62,19 +62,9 @@ export const SpaceWarpTransition: FC = () => {
 
   // Stable handler — bind once so re-renders during animation don't
   // tear the event listener down mid-flight.
-  const beginWarp = useCallback(
-    (descriptor: SpaceWarpDescriptor) => {
-      setState({ phase: 'warping', descriptor })
-      // The destination is a "dashboard-style" surface. If the user
-      // initiated from Graph View, flip the canvas back to dashboard so
-      // the SpaceDashboardView (route children) is what the overlay
-      // dissolves into.
-      if (lastCanvasViewRef.current !== 'dashboard') {
-        setCanvasView('dashboard')
-      }
-    },
-    [setCanvasView]
-  )
+  const beginWarp = useCallback((descriptor: SpaceWarpDescriptor) => {
+    setState({ phase: 'warping', descriptor })
+  }, [])
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -166,7 +156,16 @@ export const SpaceWarpTransition: FC = () => {
     // Route slightly before the timeline ends so the destination is
     // painting underneath while the overlay is still at full opacity.
     // No spinner flash — the warp IS the loader.
+    //
+    // The canvasView flip happens at the same moment: by t=380ms the
+    // backdrop is fully opaque, so flipping from graph→dashboard view
+    // (so SpaceDashboardView is the route content the overlay
+    // dissolves into) doesn't flash the SpacesOverview cards
+    // underneath.
     const routeAt = window.setTimeout(() => {
+      if (lastCanvasViewRef.current !== 'dashboard') {
+        setCanvasView('dashboard')
+      }
       router.push(`/protected/dashboard/space/${descriptor.spaceId}`)
     }, 380)
 
@@ -174,7 +173,7 @@ export const SpaceWarpTransition: FC = () => {
       window.clearTimeout(routeAt)
       tl.kill()
     }
-  }, [state, router])
+  }, [state, router, setCanvasView])
 
   // Settle phase — fade the overlay out as the destination paints.
   useEffect(() => {

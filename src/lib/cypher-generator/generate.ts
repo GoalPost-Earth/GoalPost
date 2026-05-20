@@ -74,12 +74,26 @@ ${SCHEMA_DOC}
 
    …and then traverse from \`user\` into the data, e.g.:
 
-       MATCH (user)-[:OWNS]->(space:Space)-[:HAS_CONTEXT]->(ctx:FieldContext)
-       MATCH (space:Space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(user)
+       MATCH (user)-[owns:OWNS]->(space:Space)-[hc:HAS_CONTEXT]->(ctx:FieldContext)
+       MATCH (space:Space)-[hm:HAS_MEMBER]->(sm:SpaceMembership)-[im:IS_MEMBER]->(user)
 
    The literal pattern \`Person {id: $userId}\` MUST appear in the query — that is how the validator recognises the anchor.
 
-5. The query MUST end with a RETURN clause whose columns are node or relationship variables. Do not RETURN scalar projections like \`p.id\`, \`count(*)\`, or \`labels(n)\`. Do not use \`collect()\` to pack many nodes into one row — return one node per row and let the runtime LIMIT cap. Multi-column rows (one row carrying several distinct variables like \`RETURN user, space, ctx\`) are fine.
+5. RELATIONSHIPS ARE CRITICAL. The Bloom canvas draws lines between nodes ONLY when the relationship variables appear in your RETURN. Therefore:
+   (a) EVERY relationship in your MATCH patterns MUST be bound to a variable (e.g. \`[hc:HAS_CONTEXT]\`, NOT \`[:HAS_CONTEXT]\`). Anonymous relationships are wasted — they exist in the planner but never reach the result.
+   (b) EVERY bound relationship MUST appear in the RETURN. A query that matches edges and then drops them is wrong.
+   (c) The RETURN clause's columns must be node or relationship variables (never scalar projections like \`p.id\`, \`count(*)\`, or \`labels(n)\`; never \`collect()\`). One row per matched path is correct; multi-column rows like \`RETURN user, owns, space, hc, ctx\` are fine.
+
+   Canonical shape:
+
+       MATCH (user:Person {id: $userId})
+       MATCH (user)-[owns:OWNS]->(s:WeSpace {id: "ws_some_id"})
+       MATCH (s)-[hc:HAS_CONTEXT]->(ctx:FieldContext)
+       MATCH (ctx)-[hp:HAS_PULSE]->(p:FieldPulse)
+       RETURN user, owns, s, hc, ctx, hp, p
+       LIMIT 25
+
+   That query renders as four nodes + three labelled edges in Bloom. If you omit \`owns\`, \`hc\`, or \`hp\` from the RETURN, the corresponding edges DISAPPEAR — the user sees disconnected nodes floating in space, which is a UX bug.
 6. Add a LIMIT clause (e.g. \`LIMIT 25\`). The runtime additionally wraps your query in \`CALL { … } RETURN * LIMIT $maxNodes\` for safety.
 7. Prefer matching by id (\`{id: $someId}\`) when an id is provided in the session context. Use CASE-INSENSITIVE substring for name/title fuzzing: \`toLower(ctx.title) CONTAINS toLower("care")\` — inline server-controlled literals (Space name, FieldContext title) safely quoted; do NOT introduce additional $parameters beyond $userId.
 8. Keep the query short and focused. Aim for ≤ 6 MATCH clauses.

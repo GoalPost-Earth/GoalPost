@@ -20,6 +20,10 @@
 import neo4j, { type Node, type Relationship } from 'neo4j-driver'
 import { driver } from '@/lib/neo4j/driver'
 import { canViewContent } from '@/lib/permissions/space-permissions'
+import {
+  ALLOWED_RELATIONSHIPS,
+  type AllowedRelationship,
+} from './schema-context'
 import type { NVLNode, NVLRelationship } from './types'
 
 const MAX_NODES = 60
@@ -267,6 +271,67 @@ async function mapNodesToEnclosingSpaces(
   return result
 }
 
+/**
+ * Find every whitelisted relationship that exists between any two of
+ * `nodeIds` and isn't already in `existingKeys`. Lets the executor
+ * rescue the visual when the generator MATCHed edges but forgot to
+ * bind / RETURN them. Bounded by `budget` so we honor the row cap.
+ *
+ * Uses the project's allowed-relationships whitelist as the disjunction
+ * filter so the query is safe and bounded regardless of what surprise
+ * relationship types might exist in the graph.
+ */
+async function fillInRelationships(
+  session: ReturnType<typeof driver.session>,
+  nodeIds: string[],
+  budget: number,
+  existingKeys: Set<string>
+): Promise<NVLRelationship[]> {
+  if (nodeIds.length < 2 || budget <= 0) return []
+  const allowed: AllowedRelationship[] = [...ALLOWED_RELATIONSHIPS]
+  const result = await session.executeRead((tx) =>
+    tx.run(
+      `
+      UNWIND $nodeIds AS aid
+      MATCH (a {id: aid})
+      MATCH (a)-[r]->(b)
+      WHERE b.id IN $nodeIds AND type(r) IN $allowedTypes
+      RETURN a.id AS fromId, b.id AS toId, type(r) AS relType, r.id AS relId
+      LIMIT $budget
+      `,
+      {
+        nodeIds,
+        allowedTypes: allowed,
+        budget: neo4j.int(budget),
+      }
+    )
+  )
+
+  const rels: NVLRelationship[] = []
+  for (const record of result.records) {
+    const fromId = record.get('fromId') as string | null
+    const toId = record.get('toId') as string | null
+    const relType = record.get('relType') as string | null
+    const relPropId = record.get('relId') as string | null
+    if (!fromId || !toId || !relType) continue
+    // Synthesise a stable key so dedupe works against the originally
+    // collected relationships (which key on `id` or `from->type->to`).
+    const key =
+      typeof relPropId === 'string' && relPropId
+        ? relPropId
+        : `${fromId}-${relType}->${toId}`
+    if (existingKeys.has(key)) continue
+    existingKeys.add(key)
+    rels.push({
+      id: key,
+      from: fromId,
+      to: toId,
+      caption: relType,
+    })
+  }
+  return rels
+}
+
 export interface ExecuteArgs {
   cypher: string
   userId: string
@@ -370,6 +435,7 @@ export async function executeForBloom(
       })
 
     const nvlRels: NVLRelationship[] = []
+    const seenRelKeys = new Set<string>()
     for (const [key, rel] of collected.rels.entries()) {
       // Resolve from/to ids by walking element ids back to property ids.
       const fromNode = nodeArray.find(
@@ -382,12 +448,30 @@ export async function executeForBloom(
       const toId = toNode ? nodeId(toNode) : null
       if (!fromId || !toId) continue
       if (!keptNodeIds.has(fromId) || !keptNodeIds.has(toId)) continue
+      seenRelKeys.add(key)
       nvlRels.push({
         id: key,
         from: fromId,
         to: toId,
         caption: rel.type,
       })
+    }
+
+    // Defense in depth: ask Neo4j for every whitelisted relationship
+    // between any two kept nodes that the generator didn't already
+    // return. This rescues the visual when the LLM matches edges but
+    // forgets to bind / RETURN them (you see disconnected nodes
+    // floating on the canvas otherwise). Bounded by MAX_RELS minus what
+    // we already have so we still honor the row cap.
+    const remainingRelBudget = MAX_RELS - nvlRels.length
+    if (keptNodeIds.size >= 2 && remainingRelBudget > 0) {
+      const filled = await fillInRelationships(
+        session,
+        [...keptNodeIds],
+        remainingRelBudget,
+        seenRelKeys
+      )
+      for (const rel of filled) nvlRels.push(rel)
     }
 
     return {
