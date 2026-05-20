@@ -905,6 +905,7 @@ CREATE
   (link1:ResonanceLink
     {
       id: "rl_timeline_1",
+      label: "Timeline Anxiety",
       confidence: 0.89,
       evidence:
         "Robert's timeline concerns evolve from anxiety to confidence as team execution proves solid",
@@ -923,6 +924,7 @@ CREATE
   (link2:ResonanceLink
     {
       id: "rl_tech_1",
+      label: "Technical Clarity",
       confidence: 0.87,
       evidence:
         "JD's LLM strategy uncertainty resolves through pragmatic analysis of launch priorities",
@@ -940,6 +942,7 @@ CREATE
   (link3:ResonanceLink
     {
       id: "rl_tech_2",
+      label: "Technical Clarity",
       confidence: 0.85,
       evidence:
         "Technical confidence in OpenAI choice leads to reduced timeline anxiety",
@@ -958,6 +961,7 @@ CREATE
   (link4:ResonanceLink
     {
       id: "rl_ux_1",
+      label: "UX Clarity",
       confidence: 0.91,
       evidence:
         "Jesse's journey from 'how do we make this intuitive?' to 'finding the right balance' shows design process",
@@ -975,6 +979,7 @@ CREATE
   (link5:ResonanceLink
     {
       id: "rl_ux_2",
+      label: "UX Clarity",
       confidence: 0.93,
       evidence:
         "Design clarity achieved through iteration and user testing - breakthrough moment",
@@ -993,6 +998,7 @@ CREATE
   (link6:ResonanceLink
     {
       id: "rl_strategy_1",
+      label: "Strategic Focus",
       confidence: 0.88,
       evidence:
         "Jennifer's insight about MeSpace value leads to strategic scope decision",
@@ -1010,6 +1016,7 @@ CREATE
   (link7:ResonanceLink
     {
       id: "rl_strategy_2",
+      label: "Strategic Focus",
       confidence: 0.90,
       evidence:
         "Robert recognizes brilliance of MeSpace-first strategy - founders aligned",
@@ -1028,6 +1035,7 @@ CREATE
   (link8:ResonanceLink
     {
       id: "rl_triumph_1",
+      label: "Triumph",
       confidence: 0.94,
       evidence:
         "JD and Jesse both celebrating successful execution in their respective domains",
@@ -1045,6 +1053,7 @@ CREATE
   (link9:ResonanceLink
     {
       id: "rl_triumph_2",
+      label: "Triumph",
       confidence: 0.95,
       evidence:
         "Jesse's UX victory and Jennifer's team reflection unite in celebration of collaborative triumph",
@@ -1062,6 +1071,7 @@ CREATE
   (link10:ResonanceLink
     {
       id: "rl_triumph_3",
+      label: "Triumph",
       confidence: 0.92,
       evidence:
         "Jennifer's pride pulses showing arc from support to celebration",

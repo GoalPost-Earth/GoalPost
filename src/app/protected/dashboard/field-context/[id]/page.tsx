@@ -2,10 +2,10 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, type FC } from 'react'
 import { toast } from 'sonner'
-import { ProfileBackground } from '@/components/persons/profile-background'
-import { ProfileLayout } from '@/components/persons/profile-layout'
+import { formatDistanceToNow } from 'date-fns'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
@@ -984,43 +984,71 @@ export default function FieldContextDetailsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <span
-            className={cn(
-              'material-symbols-outlined text-5xl text-gp-primary',
-              animationsEnabled && 'animate-spin'
-            )}
-          >
-            hourglass_bottom
-          </span>
-          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-            Loading...
-          </p>
-        </div>
-      </div>
-    )
+  if (loading && !data) {
+    return <FieldContextSkeleton />
   }
 
   if (error || !context) {
     return (
-      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center">
-        <div className="text-red-500">Error loading field context</div>
-      </div>
+      <FieldContextError
+        onBack={() => router.push('/protected/dashboard')}
+      />
     )
   }
 
-  const createdDate = new Date(context.createdAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const createdAt = context.createdAt ? new Date(context.createdAt) : null
+  const createdDate = createdAt
+    ? createdAt.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : 'Unknown'
+  const createdLabel =
+    createdAt && !Number.isNaN(createdAt.getTime())
+      ? formatDistanceToNow(createdAt, { addSuffix: true })
+      : '—'
+
+  const isMe = space?.__typename === 'MeSpace'
+  const spaceBackHref = space?.id
+    ? `/protected/dashboard/space/${space.id}`
+    : '/protected/dashboard'
+  const spaceLabel = space?.__typename
+    ? space.__typename === 'MeSpace'
+      ? 'Me Space'
+      : 'We Space'
+    : 'Space'
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
-      <ProfileBackground />
+    <div className="relative flex h-full w-full overflow-hidden">
+      {/* Backdrop — mirrors the in-space dashboard so a Field reads as a
+          continuation of its owning Space. Warm (amber) accent for
+          MeSpace, cool (teal) for WeSpace. */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]" />
+        <div
+          className="absolute top-[10%] left-[10%] w-125 h-125 rounded-full blur-[120px] animate-blob"
+          style={{
+            backgroundColor: isMe
+              ? 'color-mix(in srgb, var(--gp-accent-glow) 12%, transparent)'
+              : 'color-mix(in srgb, var(--gp-primary) 12%, transparent)',
+          }}
+        />
+        <div
+          className="absolute bottom-[10%] right-[10%] w-100 h-100 rounded-full blur-[100px] animate-blob [animation-delay:2s]"
+          style={{
+            backgroundColor:
+              'color-mix(in srgb, var(--gp-accent-glow) 10%, transparent)',
+          }}
+        />
+        <div
+          className="absolute top-[40%] left-[60%] w-75 h-75 rounded-full blur-[100px] animate-blob [animation-delay:4s]"
+          style={{
+            backgroundColor:
+              'color-mix(in srgb, var(--gp-goal) 10%, transparent)',
+          }}
+        />
+      </div>
 
       {/* Edit Modal */}
       {isEditMode && (
@@ -1157,38 +1185,113 @@ export default function FieldContextDetailsPage() {
       )}
 
       {/* Scrollable content */}
-      <main className="relative">
-        <ProfileLayout>
-          <div className="flex justify-end mb-6">
-            <SpaceViewToggle
-              activeView="details"
-              onViewChange={handleViewChange}
-            />
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+        <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+          {/* Top bar — back to the owning Space + view toggle + info */}
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => router.push(spaceBackHref)}
+              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                arrow_back
+              </span>
+              {space?.name || 'Space'}
+            </button>
+            <div className="flex items-center gap-2">
+              <SpaceViewToggle
+                activeView="details"
+                onViewChange={handleViewChange}
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  dispatchOpenInfoDrawer({
+                    type: 'FieldContext',
+                    id: contextId,
+                  })
+                }
+                className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  info
+                </span>
+                Details
+              </button>
+            </div>
           </div>
 
-          {/* Header Section */}
-          <div className="flex flex-col items-center text-center mb-12">
-            <span className="text-[9px] uppercase font-semibold text-gp-primary mb-2">
-              {space?.__typename || 'Space'} • {space?.name}
-            </span>
-            <h1 className="text-4xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong mb-2">
-              {context.title}
-            </h1>
-            {context.emergentName && (
-              <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft italic mb-2">
-                &quot;{context.emergentName}&quot;
+          {/* Hero — field identity. Icon block + space badge + title +
+              emergent subtitle + created label, mirroring the in-space
+              dashboard hero. */}
+          <header className="flex flex-col items-center text-center gap-3">
+            <div
+              className={cn(
+                'size-16 rounded-3xl border flex items-center justify-center shadow-lg',
+                isMe
+                  ? 'bg-amber-500/20 border-amber-300/40 text-amber-600 dark:text-amber-200'
+                  : 'bg-teal-500/20 border-teal-300/40 text-teal-600 dark:text-teal-200'
+              )}
+            >
+              <span className="material-symbols-outlined text-4xl">
+                category
+              </span>
+            </div>
+            <div className="space-y-2">
+              <span
+                className={cn(
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
+                  isMe
+                    ? 'bg-amber-500/20 border-amber-400/40 text-amber-700 dark:text-amber-100'
+                    : 'bg-teal-500/20 border-teal-400/40 text-teal-700 dark:text-teal-100'
+                )}
+              >
+                {spaceLabel}
+                {space?.name ? ` · ${space.name}` : ''}
+              </span>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                {context.title || 'Untitled field'}
+              </h1>
+              {context.emergentName && (
+                <p className="text-sm italic text-slate-500 dark:text-white/55">
+                  &quot;{context.emergentName}&quot;
+                </p>
+              )}
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/45">
+                Created {createdLabel}
               </p>
-            )}
-            <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft">
-              Created {createdDate}
-            </p>
-          </div>
+            </div>
+
+            {/* At-a-glance counters */}
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full">
+              <Stat
+                icon="graphic_eq"
+                label="Pulses"
+                value={pulses.length}
+              />
+              <Stat
+                icon="hub"
+                label="Resonances"
+                value={resonances.length}
+              />
+              <Stat
+                icon="groups"
+                label="People"
+                value={people.length}
+              />
+              <Stat
+                icon="description"
+                label="Documents"
+                value={documents.length}
+              />
+            </div>
+          </header>
 
           <DocumentList
             documents={documents}
             onRefetch={refetchDocuments}
           />
-
 
           <FieldContextSections
             createdDate={createdDate}
@@ -1211,10 +1314,10 @@ export default function FieldContextDetailsPage() {
           />
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-4 sm:gap-6 w-full">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-3 w-full">
             <button
               onClick={() => setIsAddPersonModalOpen(true)}
-              className="w-full sm:w-auto px-8 py-3 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/50 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/30 dark:hover:bg-emerald-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/40 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-500/30 dark:hover:bg-emerald-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
                 person_add
@@ -1224,7 +1327,7 @@ export default function FieldContextDetailsPage() {
             {canEditContent && (
               <button
                 onClick={() => setIsUploadDocumentModalOpen(true)}
-                className="w-full sm:w-auto px-8 py-3 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/50 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/40 dark:border-amber-500/20 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   upload_file
@@ -1234,7 +1337,7 @@ export default function FieldContextDetailsPage() {
             )}
             <button
               onClick={handleEditStart}
-              className="w-full sm:w-auto px-8 py-3 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/15 text-gp-ink-strong dark:text-white font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
                 edit
@@ -1244,7 +1347,7 @@ export default function FieldContextDetailsPage() {
             <button
               onClick={() => setIsBulkShareModalOpen(true)}
               disabled={pulses.length === 0}
-              className="w-full sm:w-auto px-8 py-3 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/40 dark:border-blue-500/20 text-blue-700 dark:text-blue-300 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">
                 share
@@ -1254,7 +1357,7 @@ export default function FieldContextDetailsPage() {
             <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
-              className="w-full sm:w-auto px-8 py-3 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/50 dark:border-red-500/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/30 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-red-500/15 dark:bg-red-500/10 border border-red-500/40 dark:border-red-500/20 text-red-700 dark:text-red-300 font-medium hover:bg-red-500/25 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">
                 delete
@@ -1262,7 +1365,7 @@ export default function FieldContextDetailsPage() {
               {loading ? 'Checking...' : 'Delete Context'}
             </button>
           </div>
-        </ProfileLayout>
+        </div>
       </main>
 
       <OfferingModal
@@ -1456,3 +1559,110 @@ export default function FieldContextDetailsPage() {
     </div>
   )
 }
+
+const Stat: FC<{
+  icon: string
+  label: string
+  value: string | number
+}> = ({ icon, label, value }) => (
+  <div className="rounded-xl border border-white/40 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] px-3 py-2.5 text-left backdrop-blur-sm">
+    <div className="flex items-center gap-1.5 text-slate-500 dark:text-white/45">
+      <span className="material-symbols-outlined text-[14px]">{icon}</span>
+      <span className="text-[10px] uppercase tracking-wider font-semibold">
+        {label}
+      </span>
+    </div>
+    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white tabular-nums">
+      {value}
+    </p>
+  </div>
+)
+
+const FieldContextSkeleton: FC = () => (
+  <div className="relative flex h-full w-full overflow-hidden">
+    <div className="absolute inset-0 pointer-events-none z-0">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]" />
+      <div
+        className="absolute top-[10%] left-[10%] w-125 h-125 rounded-full blur-[120px] animate-blob"
+        style={{
+          backgroundColor:
+            'color-mix(in srgb, var(--gp-primary) 10%, transparent)',
+        }}
+      />
+      <div
+        className="absolute bottom-[10%] right-[10%] w-100 h-100 rounded-full blur-[100px] animate-blob [animation-delay:2s]"
+        style={{
+          backgroundColor:
+            'color-mix(in srgb, var(--gp-accent-glow) 10%, transparent)',
+        }}
+      />
+      <div
+        className="absolute top-[40%] left-[60%] w-75 h-75 rounded-full blur-[100px] animate-blob [animation-delay:4s]"
+        style={{
+          backgroundColor:
+            'color-mix(in srgb, var(--gp-goal) 10%, transparent)',
+        }}
+      />
+    </div>
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex items-center justify-between gap-3">
+          <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-8 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+        </div>
+        <div className="flex flex-col items-center gap-3 mt-2">
+          <div className="size-16 rounded-3xl bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-5 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-9 w-72 rounded-md bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-3 w-48 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full mt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-14 rounded-xl bg-white/30 dark:bg-white/5 animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-32 rounded-2xl bg-white/30 dark:bg-white/5 border border-white/15 dark:border-white/10 animate-pulse"
+            />
+          ))}
+          {[3, 4].map((i) => (
+            <div
+              key={i}
+              className="md:col-span-2 h-44 rounded-2xl bg-white/30 dark:bg-white/5 border border-white/15 dark:border-white/10 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    </main>
+  </div>
+)
+
+const FieldContextError: FC<{ onBack: () => void }> = ({ onBack }) => (
+  <div className="relative flex h-full w-full items-center justify-center">
+    <div className="text-center space-y-4 max-w-md px-6">
+      <div className="size-14 mx-auto rounded-2xl border border-red-300/40 bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-300">
+        <span className="material-symbols-outlined text-3xl">error</span>
+      </div>
+      <p className="text-sm text-slate-500 dark:text-white/55">
+        This field context is no longer available — it may have been deleted
+        or you lost access.
+      </p>
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-2 px-4 h-9 rounded-full bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/15 text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-white/60 dark:hover:bg-white/20 transition-colors cursor-pointer"
+      >
+        <span className="material-symbols-outlined text-[16px]">
+          arrow_back
+        </span>
+        Back to dashboard
+      </button>
+    </div>
+  </div>
+)
