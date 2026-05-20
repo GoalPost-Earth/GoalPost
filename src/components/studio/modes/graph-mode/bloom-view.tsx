@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { useFocalEntity } from '@/contexts'
+import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { GraphLoadingState } from './graph-loading-state'
@@ -88,17 +89,26 @@ interface FieldContextRecord {
 
 export const BloomView: FC = () => {
   const router = useRouter()
-  const { setFocalEntity, sessionContext } = useFocalEntity()
+  const { setFocalEntity } = useFocalEntity()
   const { overlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
 
-  // When the user is inside a Space, render that space's field contexts
-  // instead of the top-level space cluster — same context-flip the Graph
-  // view performs (see spatial-view.tsx). Overlay still takes priority
-  // over both modes.
-  const activeSpaceId = sessionContext.activeSpaceId
+  // "In-space" is a URL concept, not a focal-entity concept. Reading
+  // `sessionContext.activeSpaceId` would conflate the user's *persisted*
+  // last-space with the *current route* — at the dashboard root that
+  // would render field contexts when we should be showing top-level
+  // spaces. Drive the scope strictly from the pathname. Overlay still
+  // takes priority over both modes.
+  const pathname = usePathname()
+  const activeSpaceId = useMemo(() => {
+    const match = focalEntityFromRoute(pathname)
+    if (!match) return null
+    return match.type === 'MeSpace' || match.type === 'WeSpace'
+      ? match.id
+      : null
+  }, [pathname])
   const inSpace = !!activeSpaceId && !overlay
 
   // Identical Apollo queries to SpacesOverview + SpatialView. `cache-first`

@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, type FC } from 'react'
 import dynamic from 'next/dynamic'
+import { usePathname, useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
+import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import { EntityBubble, type BubbleSize } from '@/components/ui/entity-bubble'
 import {
   createNvlNodeElement,
@@ -62,9 +65,45 @@ interface SpaceRecord {
   type: 'MeSpace' | 'WeSpace'
 }
 
+interface FieldContextRecord {
+  id: string
+  title: string
+  emergentName?: string | null
+  pulseCount: number
+  spaceKind: 'MeSpace' | 'WeSpace'
+}
+
+type Descriptor =
+  | {
+      kind: 'space'
+      id: string
+      type: 'MeSpace' | 'WeSpace'
+      size: BubbleSize
+      shape: (typeof BUBBLE_SHAPES)[number]
+      icon: string
+      title: string
+      subtitle: string
+      badge?: { text: string; variant: 'accent' | 'primary' }
+    }
+  | {
+      kind: 'field'
+      id: string
+      type: 'FieldContext'
+      spaceKind: 'MeSpace' | 'WeSpace'
+      size: BubbleSize
+      shape: (typeof BUBBLE_SHAPES)[number]
+      icon: string
+      title: string
+      subtitle: string
+      badge?: { text: string; variant: 'accent' | 'primary' }
+    }
+
 const NO_RELATIONSHIPS: Relationship[] = []
 
-const BUBBLE_SIZES: BubbleSize[] = [
+// Space bubbles can use the full size range — at the top level there are
+// usually only a handful of spaces, so an `xl` hero bubble reads as the
+// user's primary identity-bearing surface.
+const SPACE_BUBBLE_SIZES: BubbleSize[] = [
   'xl',
   'lg',
   'md',
@@ -74,6 +113,21 @@ const BUBBLE_SIZES: BubbleSize[] = [
   'md',
   'sm',
 ]
+
+// Field-context bubbles drop the `xl`. A space can hold a dozen fields and
+// the `xl` hitbox (440px) would dominate the cluster and crowd out
+// neighbors — fields are peers, not heroes.
+const FIELD_BUBBLE_SIZES: BubbleSize[] = [
+  'lg',
+  'md',
+  'md',
+  'sm',
+  'md',
+  'lg',
+  'md',
+  'sm',
+]
+
 const BUBBLE_SHAPES = [
   'circle',
   'organic-1',
@@ -99,8 +153,24 @@ const SIZE_TO_HITBOX: Record<BubbleSize, number> = {
 }
 
 export const SpatialView: FC = () => {
+  const router = useRouter()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const containerCacheRef = useRef<Map<string, HTMLElement>>(new Map())
+
+  // "In-space" is a URL concept, not a focal-entity concept. We must NOT
+  // read `sessionContext.activeSpaceId` here — that value also reflects
+  // *persisted* focal (the user's last space from a prior session), which
+  // would make the graph view falsely render field contexts at the
+  // dashboard root. Drive scope strictly from the current pathname.
+  const pathname = usePathname()
+  const activeSpaceId = useMemo(() => {
+    const match = focalEntityFromRoute(pathname)
+    if (!match) return null
+    return match.type === 'MeSpace' || match.type === 'WeSpace'
+      ? match.id
+      : null
+  }, [pathname])
+  const inSpace = !!activeSpaceId
 
   // Same queries the dashboard cards use → Apollo cache is already warm.
   // `cache-first` keeps the toggle truly instant (no network round-trip).
@@ -110,7 +180,24 @@ export const SpatialView: FC = () => {
   const { data: weData, loading: weLoading } = useQuery(GET_ALL_WE_SPACES, {
     fetchPolicy: 'cache-first',
   })
-  const loading = meLoading || weLoading
+
+  // In-space details — `cache-first` is intentional even on cold load.
+  // `CanvasHost` keeps `SpaceDashboardView` mounted (under
+  // `visibility:hidden`) regardless of which canvas surface is active, so
+  // the dashboard's `cache-and-network` `GET_SPACE_DETAILS` fetch always
+  // runs at this route. Apollo dedupes our `cache-first` read against
+  // that in-flight request, so we get the cached result the moment it
+  // resolves — no double round-trip, no separate spinner.
+  const { data: spaceDetailsData, loading: spaceDetailsLoading } = useQuery(
+    GET_SPACE_DETAILS,
+    {
+      variables: { spaceId: activeSpaceId ?? '' },
+      skip: !activeSpaceId,
+      fetchPolicy: 'cache-first',
+    }
+  )
+
+  const loading = inSpace ? spaceDetailsLoading : meLoading || weLoading
 
   const spaces: SpaceRecord[] = useMemo(() => {
     const me = (meData?.meSpaces ?? []).map((s) => ({
@@ -124,40 +211,81 @@ export const SpatialView: FC = () => {
     return [...me, ...we]
   }, [meData, weData])
 
-  // Stable descriptors per space.
-  const descriptors = useMemo(
-    () =>
-      spaces.map((space, idx) => {
-        const isMe = space.type === 'MeSpace'
-        const contextCount = space.contexts?.length ?? 0
-        const memberCount = space.members?.length ?? 0
+  const fieldContexts: FieldContextRecord[] = useMemo(() => {
+    if (!inSpace) return []
+    const space = spaceDetailsData?.spaces?.[0]
+    if (!space) return []
+    const spaceKind =
+      space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
+    const contexts = ('contexts' in space ? space.contexts : undefined) ?? []
+    return contexts.map((ctx) => ({
+      id: ctx.id,
+      title: ctx.title || 'Untitled field',
+      emergentName: ctx.emergentName ?? null,
+      pulseCount: ctx.pulses?.length ?? 0,
+      spaceKind,
+    }))
+  }, [inSpace, spaceDetailsData])
+
+  // Stable descriptors. In-space mode produces field-context bubbles;
+  // top-level mode produces space bubbles. The downstream NVL + container
+  // pipeline is identical — `kind` only changes click behavior.
+  const descriptors: Descriptor[] = useMemo(() => {
+    if (inSpace) {
+      return fieldContexts.map((ctx, idx) => {
+        const isMe = ctx.spaceKind === 'MeSpace'
+        const subtitle = ctx.emergentName
+          ? `"${ctx.emergentName}"`
+          : ctx.pulseCount > 0
+            ? `${ctx.pulseCount} pulse${ctx.pulseCount === 1 ? '' : 's'}`
+            : 'No pulses yet'
         return {
-          id: space.id,
-          type: space.type,
-          size: BUBBLE_SIZES[idx % BUBBLE_SIZES.length],
+          kind: 'field',
+          id: ctx.id,
+          type: 'FieldContext',
+          spaceKind: ctx.spaceKind,
+          size: FIELD_BUBBLE_SIZES[idx % FIELD_BUBBLE_SIZES.length],
           shape: BUBBLE_SHAPES[idx % BUBBLE_SHAPES.length],
-          icon: isMe ? 'self_improvement' : 'groups',
-          title: space.name,
-          subtitle: isMe
-            ? memberCount > 0
-              ? 'Inner Sanctuary'
-              : 'Inner Sanctuary'
-            : memberCount > 0
-              ? `${memberCount} member${memberCount === 1 ? '' : 's'}`
-              : 'Collective Field',
+          icon: 'category',
+          title: ctx.title,
+          subtitle,
           badge:
-            contextCount > 0
+            ctx.pulseCount > 0
               ? {
-                  text: `${contextCount} Field${contextCount === 1 ? '' : 's'}`,
-                  variant: (isMe ? 'accent' : 'primary') as
-                    | 'accent'
-                    | 'primary',
+                  text: `${ctx.pulseCount} Pulse${ctx.pulseCount === 1 ? '' : 's'}`,
+                  variant: isMe ? 'accent' : 'primary',
                 }
               : undefined,
         }
-      }),
-    [spaces]
-  )
+      })
+    }
+    return spaces.map((space, idx) => {
+      const isMe = space.type === 'MeSpace'
+      const contextCount = space.contexts?.length ?? 0
+      const memberCount = space.members?.length ?? 0
+      return {
+        kind: 'space',
+        id: space.id,
+        type: space.type,
+        size: SPACE_BUBBLE_SIZES[idx % SPACE_BUBBLE_SIZES.length],
+        shape: BUBBLE_SHAPES[idx % BUBBLE_SHAPES.length],
+        icon: isMe ? 'self_improvement' : 'groups',
+        title: space.name,
+        subtitle: isMe
+          ? 'Inner Sanctuary'
+          : memberCount > 0
+            ? `${memberCount} member${memberCount === 1 ? '' : 's'}`
+            : 'Collective Field',
+        badge:
+          contextCount > 0
+            ? {
+                text: `${contextCount} Field${contextCount === 1 ? '' : 's'}`,
+                variant: isMe ? 'accent' : 'primary',
+              }
+            : undefined,
+      }
+    })
+  }, [inSpace, fieldContexts, spaces])
 
   // Purge cached containers for spaces that no longer exist.
   useEffect(() => {
@@ -203,24 +331,31 @@ export const SpatialView: FC = () => {
   }, [descriptors])
   /* eslint-enable react-hooks/refs */
 
-  // Dispatching the warp event (instead of routing directly) lets the
-  // global SpaceWarpTransition overlay grow a clone of THIS bubble into
-  // the destination view — the loader IS the fade-out. We snapshot the
-  // bubble's actual on-screen rect via its NVL container so the clone
-  // starts pixel-aligned with where the user clicked.
+  // Click behavior diverges by descriptor kind:
+  //   - Space bubble → dispatchOpenSpaceWarp animates a clone into the
+  //     SpaceDashboardView. We snapshot the bubble's actual on-screen rect
+  //     via its NVL container so the clone starts pixel-aligned.
+  //   - Field-context bubble → plain navigation to the field-context page.
+  //     No warp yet; the field-context route lives in a different design
+  //     surface that hasn't been wired into the warp overlay.
   const handleOpen = useCallback(
-    (spaceId: string) => {
-      const desc = descriptors.find((d) => d.id === spaceId)
-      const container = containerCacheRef.current.get(spaceId)
+    (id: string) => {
+      const desc = descriptors.find((d) => d.id === id)
+      if (!desc) return
+      if (desc.kind === 'field') {
+        router.push(`/protected/dashboard/field-context/${id}`)
+        return
+      }
+      const container = containerCacheRef.current.get(id)
       // EntityBubble renders the actual visible circle as the first
       // child inside the NVL container — measure that, not the
       // container, since NVL clips to its own bounding box.
       const visual =
         (container?.firstElementChild as HTMLElement | null) ?? container ?? null
       const rect = visual?.getBoundingClientRect()
-      if (!desc || !rect) return
+      if (!rect) return
       dispatchOpenSpaceWarp({
-        spaceId,
+        spaceId: id,
         rect: {
           x: rect.x,
           y: rect.y,
@@ -232,7 +367,7 @@ export const SpatialView: FC = () => {
         icon: desc.icon as 'self_improvement' | 'groups',
       })
     },
-    [descriptors]
+    [descriptors, router]
   )
 
   // Mount React EntityBubbles into their NVL containers. Bubble body
@@ -264,18 +399,19 @@ export const SpatialView: FC = () => {
     })
   }, [descriptors, handleOpen])
 
-  // Auto-fit once on first node availability. NVL's default initial zoom
-  // would otherwise land the viewport on empty whitespace, making the
-  // canvas look broken until the user discovers the zoom controls.
-  const hasInitialFitRef = useRef(false)
+  // Auto-fit once per scope (top-level vs in-space-X). Tracking via a
+  // ref keyed off the scope string means we only re-fit when entering /
+  // leaving a space, not on every descriptor re-derivation.
+  const lastFitScopeRef = useRef<string | null>(null)
   useEffect(() => {
-    if (hasInitialFitRef.current) return
+    const scope = activeSpaceId ?? 'root'
+    if (lastFitScopeRef.current === scope) return
     if (descriptors.length === 0) return
     // Defer one tick so NVL has time to lay nodes out before we measure.
     const timeout = window.setTimeout(() => {
       const ref = nvlRef.current
       if (!ref) return
-      hasInitialFitRef.current = true
+      lastFitScopeRef.current = scope
       if (descriptors.length === 1) {
         ref.setZoom?.(1)
         return
@@ -287,7 +423,7 @@ export const SpatialView: FC = () => {
       )
     }, 120)
     return () => window.clearTimeout(timeout)
-  }, [descriptors])
+  }, [descriptors, activeSpaceId])
 
   // Listen for zoom commands from the floating canvas action bar — same
   // contract BloomView honors so both NVL surfaces feel identical.
@@ -382,17 +518,22 @@ export const SpatialView: FC = () => {
 
       {loading && descriptors.length === 0 ? (
         <GraphLoadingState
-          label="Loading spaces"
-          subtitle="Gathering your MeSpaces and WeSpaces."
+          label={inSpace ? 'Loading field contexts' : 'Loading spaces'}
+          subtitle={
+            inSpace
+              ? 'Gathering this space’s field contexts.'
+              : 'Gathering your MeSpaces and WeSpaces.'
+          }
         />
       ) : isEmpty ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
           <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
-            workspaces
+            {inSpace ? 'category' : 'workspaces'}
           </span>
           <p className="text-sm text-white/55 max-w-md">
-            No spaces to visualize yet. Create a MeSpace or WeSpace from the
-            dashboard and they will appear here as bubbles.
+            {inSpace
+              ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a bubble.'
+              : 'No spaces to visualize yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as bubbles.'}
           </p>
         </div>
       ) : (
