@@ -70,6 +70,20 @@ mcp__neo4j__neo4j-read_neo4j_cypher({
 - Glass-morphism patterns applied consistently
 - Responsive design considered (mobile-first)
 
+### Light & Dark Mode Parity (MANDATORY)
+
+Every UI change must work in **both light and dark mode**. Light mode is a first-class target — not an afterthought. Treat any of the following as **Must Fix**:
+
+- Hardcoded colors (hex, rgb, `slate-*`, `gray-*`, `white`, `black`) used on text/background/border without a `dark:` counterpart, when a token would do the job
+- Use of `gp-surface-dark`, `gp-ink-strong`, or any dark-tuned token on a surface that renders in both modes without a light-mode alternative
+- Glass panels (`gp-glass`, `gp-card`) whose foreground (text, icons, dividers) only has sufficient contrast in one mode
+- Backdrops / radial gradients / blobs that wash out (or go black-on-black) in the opposite mode
+- New CSS variables added to `globals.css` for dark mode only, with no `:root` (light) counterpart, or vice versa
+- Inline `style={{ color: '#...' }}` / `backgroundColor` for anything other than computed `color-mix(var(--gp-token) ...)` tints
+- Conditional rendering keyed off `resolvedTheme === 'dark'` to swap whole surfaces — this is a smell; tokens should flip automatically
+
+For each finding, call out **which mode breaks and how** (e.g. "text-slate-900 on `gp-glass` is unreadable in dark mode; use `text-foreground`"). When in doubt, demand the author verify the change in both modes before merging.
+
 ### GraphQL
 
 - Queries and mutations use proper types from `src/gql/graphql.ts`

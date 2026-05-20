@@ -24,6 +24,23 @@ When you build new UI, use this file as the source of truth. Match these tokens 
 - `src/app/auth/login/page.tsx` — canonical example of layered radial gradients + glass cards
 - `src/app/protected/dashboard/page.tsx` — canonical example of dashboard backdrop with floating blobs
 
+## Light & dark mode parity (non-negotiable)
+
+GoalPost ships **light and dark** simultaneously. Light mode is the default and **must not regress** as features are built. Every surface, panel, card, button, icon, illustration, gradient, and overlay must work in both modes.
+
+**The rule:** if a change can't render correctly in both light and dark, it isn't done.
+
+**How to honor this in practice:**
+- Reference tokens, never raw colors. `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground` flip automatically. `bg-gp-surface`, `text-gp-ink-strong`, `text-gp-ink-muted` flip via the `.dark` theme override.
+- Tints come from `color-mix(in srgb, var(--gp-token) X%, transparent)` — never a literal `rgba(...)` of a specific hex.
+- Use `dark:` variants only when a token genuinely doesn't exist for the case. If you reach for `dark:bg-slate-900` or `dark:text-white`, stop — there is almost certainly a token that already does this.
+- Do **not** key surface swaps off `resolvedTheme === 'dark'` in component logic. Tokens handle the flip; JS branching on theme is a smell that produces drift.
+- Any new CSS variable added to `globals.css` must define **both** a light value (in `:root`) and a dark override (in `.dark`). Adding one without the other is a regression.
+- Glass panels need foreground (text + icons + dividers) that meets WCAG AA in both modes — the same `text-muted-foreground` that reads fine on dark glass may be invisible on light glass and vice versa. Check both.
+- Backdrops (radial gradients, floating blobs, dot grids) must use `gp-*` tokens via `color-mix`, never hardcoded tints, so they re-tint with the mode.
+
+**Before declaring any UI change complete:** toggle the theme in the running app (or `/run`) and confirm the change reads correctly in **light, dark, and at least one non-default theme** (warm or purple). If you haven't done this, the change is not done. Code reviewers will block on missing parity.
+
 ## Foundations
 
 ### Typography
@@ -184,6 +201,9 @@ Standard shadcn library: `button`, `card`, `dialog`, `dropdown-menu`, `select`, 
 
 **Don't**
 - Hardcode hex colors in components — always use a token
+- Ship a surface that only works in dark (or only in light) mode — light is a first-class target, not a follow-up task
+- Add a CSS variable with only a `:root` or only a `.dark` value — both must be defined
+- Branch on `resolvedTheme === 'dark'` to swap whole surfaces — tokens handle this
 - Introduce Lucide icons into product UI (Material Symbols only outside primitives)
 - Add new theme classes without updating all five entity color overrides
 - Build flat opaque cards on auth/dashboard backdrops — they break the glass aesthetic
