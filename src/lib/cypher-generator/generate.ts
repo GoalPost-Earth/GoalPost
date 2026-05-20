@@ -133,10 +133,20 @@ Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal
 
     MATCH (user:Person {id: $userId})
     MATCH (a:Person {id: "<X_id>"}), (b:Person {id: "<Y_id>"})
-    MATCH p = shortestPath(
+    OPTIONAL MATCH p = shortestPath(
       (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
     )
-    RETURN p
+    RETURN a, b, p
+    LIMIT 1
+
+  CRITICAL — use \`OPTIONAL MATCH p = shortestPath(…)\` and \`RETURN a, b, p\` (NOT \`MATCH p\` and \`RETURN p\`). The optional shortestPath means: when no connecting path exists in the user's visible graph, the query still returns both endpoint nodes, and the runtime renders them on the canvas without an edge between them. This is the desired UX — "I see JD and Robert; they don't appear connected here" beats "nothing visualised, sorry."
+
+  When the user names the endpoints by name rather than id (e.g. "JD Addy" and "Robert Damashek") and the names aren't in canvasVisibleEntities, match by case-insensitive name CONTAINS:
+
+    MATCH (a:Person) WHERE toLower(a.name) CONTAINS toLower("<name from user>") WITH a LIMIT 1
+    MATCH (b:Person) WHERE toLower(b.name) CONTAINS toLower("<other name>") WITH a, b LIMIT 1
+    OPTIONAL MATCH p = shortestPath((a)-[…*..6]-(b))
+    RETURN a, b, p
     LIMIT 1
 
   NOTE on relationship syntax: the type list comes BEFORE the variable-length range. Write \`[:OWNS|HAS_MEMBER*..6]\`, NOT \`[*..6:OWNS|HAS_MEMBER]\` (Neo4j parses the second as a syntax error).

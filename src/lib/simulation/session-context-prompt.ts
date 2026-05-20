@@ -175,6 +175,16 @@ export function buildSystemPromptWithSessionContext(
         'Glossary for what "X\'s relationships" should mean (NOT just ResonanceLink nodes — ' +
         'everything reachable in 1-2 hops the current user can see).'
     )
+    lines.push('')
+    lines.push(
+      'PATH-FINDING between two named entities ("how is X connected to Y?", "what\'s the path ' +
+        'between X and Y?", "how is X related to Y?") is ALSO query_for_bloom, not graph_rag_search. ' +
+        'Pass an intent like "shortest path between <X name> and <Y name>". The generator emits a ' +
+        '`shortestPath` query that ALWAYS returns both endpoint nodes — even when no path exists ' +
+        'in the user\'s visible graph — so the canvas shows X and Y side-by-side regardless. When ' +
+        'no path is found, narrate "I can see both X and Y, but I can\'t see a connection between ' +
+        'them in your graph"; do NOT claim a tool failure.'
+    )
   }
 
   lines.push('')
