@@ -103,7 +103,7 @@ export function SpacesOverview() {
         <div
           role="tablist"
           aria-label="Filter spaces"
-          className="flex items-center gap-1 rounded-full border border-white/15 bg-slate-900/40 p-1 backdrop-blur"
+          className="flex items-center gap-1 rounded-full border border-gp-glass-border bg-gp-glass-bg p-1 backdrop-blur"
         >
           {FILTER_META.map((f) => {
             const count =
@@ -124,14 +124,14 @@ export function SpacesOverview() {
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide transition-all cursor-pointer',
                   active
                     ? 'bg-gradient-to-r from-gp-primary/80 to-gp-accent-glow/80 text-white shadow-inner'
-                    : 'text-white/55 hover:text-white/85 hover:bg-white/5'
+                    : 'text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/5'
                 )}
               >
                 <span>{f.label}</span>
                 <span
                   className={cn(
                     'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-mono',
-                    active ? 'bg-white/20' : 'bg-white/10'
+                    active ? 'bg-white/20' : 'bg-gp-ink-strong/10'
                   )}
                 >
                   {count}
@@ -147,7 +147,7 @@ export function SpacesOverview() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-44 rounded-2xl bg-white/5 border border-white/10 animate-pulse"
+              className="h-44 rounded-2xl bg-gp-ink-strong/[0.04] dark:bg-white/5 border border-gp-glass-border animate-pulse"
             />
           ))}
         </div>
@@ -243,15 +243,15 @@ function SpaceCard({ space }: SpaceCardProps) {
         title="View details"
         className={cn(
           'absolute top-3 right-3 z-10 flex items-center justify-center size-7 rounded-full',
-          'bg-white/10 dark:bg-white/5 border border-white/15 backdrop-blur-md',
+          'bg-gp-glass-bg border border-gp-glass-border backdrop-blur-md',
           // Touch devices: always visible (no hover state to discover it
           // by). Hover-capable devices: invisible at rest, revealed on
           // group-hover / focus-visible — same affordance as before.
           'opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
-          'hover:bg-white/20 dark:hover:bg-white/15 transition-all cursor-pointer'
+          'hover:bg-gp-ink-strong/10 dark:hover:bg-white/15 transition-all cursor-pointer'
         )}
       >
-        <Info className="w-3.5 h-3.5 text-white/80" />
+        <Info className="w-3.5 h-3.5 text-gp-ink-strong/80 dark:text-white/80" />
       </button>
 
       <div className="flex items-start gap-4 mb-4">
@@ -276,13 +276,13 @@ function SpaceCard({ space }: SpaceCardProps) {
               className={cn(
                 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
                 isMe
-                  ? 'bg-amber-500/20 border border-amber-400/40 text-amber-100'
-                  : 'bg-teal-500/20 border border-teal-400/40 text-teal-100'
+                  ? 'bg-amber-500/20 border border-amber-400/40 text-amber-900 dark:text-amber-100'
+                  : 'bg-teal-500/20 border border-teal-400/40 text-teal-900 dark:text-teal-100'
               )}
             >
               {isMe ? 'Me Space' : 'We Space'}
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-white/45">
+            <span className="text-[10px] uppercase tracking-wider text-gp-ink-soft dark:text-white/45">
               {isMe ? 'Inner Sanctuary' : 'Collective Field'}
             </span>
           </div>
@@ -309,7 +309,7 @@ function SpaceCard({ space }: SpaceCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+      <div className="mt-4 pt-3 border-t border-gp-glass-border flex items-center justify-between">
         <span className="text-[10px] text-slate-500 dark:text-white/40">
           Owner:{' '}
           <span className="font-semibold text-slate-700 dark:text-white/70">
@@ -338,8 +338,8 @@ function EmptyState({ filter }: { filter: SpaceFilter }) {
         : 'No spaces yet. Create a space to get started.'
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-12 text-center">
-      <span className="material-symbols-outlined text-5xl text-white/25 mb-3">
+    <div className="rounded-2xl border border-gp-glass-border bg-gp-glass-bg p-12 text-center">
+      <span className="material-symbols-outlined text-5xl text-gp-ink-soft mb-3">
         workspaces
       </span>
       <p className="text-sm text-slate-500 dark:text-white/55">{message}</p>

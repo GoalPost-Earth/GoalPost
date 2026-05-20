@@ -47,10 +47,10 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
     <section
       aria-label="Canvas"
       className={cn(
-        'relative h-full w-full flex flex-col overflow-hidden bg-slate-950'
+        'relative h-full w-full flex flex-col overflow-hidden bg-gp-surface dark:bg-gp-surface-dark'
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-white/10 bg-slate-900/40 backdrop-blur-md">
+      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <div className="flex items-center gap-2 min-w-0">
           {showOverlayChip && (
             <button
@@ -70,7 +70,7 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
             onClick={() => toggleFullscreen('canvas')}
             aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen canvas'}
             title={fullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen (F)'}
-            className="hidden md:flex items-center justify-center size-7 rounded-md text-white/55 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="hidden md:flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
           >
             {fullscreen ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -83,7 +83,7 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
             onClick={() => setCanvasOpen(false)}
             aria-label="Close canvas"
             title="Close canvas"
-            className="flex items-center justify-center size-7 rounded-md text-white/55 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>

@@ -97,19 +97,25 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     return () => mq.removeEventListener('change', sync)
   }, [])
 
-  // Open the canvas whenever an external caller wants the assistant to
-  // jump into a particular thread or surface — keeps the workflow visible.
-  useEffect(() => {
-    return onOpenAssistantThread(() => {
-      setCanvasOpen(true)
-    })
-  }, [setCanvasOpen])
-
   // Effective layout: mobile always forces 'floating', regardless of the
   // user's stored desktop preference.
   const effectiveLayout: 'docked' | 'floating' = isMobile
     ? 'floating'
     : chatLayout
+
+  // Open the canvas whenever an external caller wants the assistant to
+  // jump into a particular thread or surface — keeps the workflow visible.
+  // Doc-ingestion (GOAL-235) emits this with a threadId after upload so the
+  // assistant runtime hydrates into the freshly created ingest thread; if
+  // the chat is in floating mode we also pop it open so the user actually
+  // sees it.
+  useEffect(() => {
+    return onOpenAssistantThread(({ threadId }) => {
+      if (threadId) setSelectedThreadId(threadId)
+      setCanvasOpen(true)
+      if (effectiveLayout === 'floating') setFloatingChatOpen(true)
+    })
+  }, [setCanvasOpen, setFloatingChatOpen, effectiveLayout])
 
   // Keyboard shortcuts.
   //   C   → toggle canvas (docked only)
@@ -213,7 +219,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
         <Panel defaultSize={35} minSize={20} order={1}>
           {chatNode}
         </Panel>
-        <PanelResizeHandle className="w-1.5 bg-slate-900 hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
+        <PanelResizeHandle className="w-1.5 bg-gp-glass-border hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
         <Panel defaultSize={65} minSize={25} order={2}>
           {canvasNode}
         </Panel>
@@ -222,7 +228,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   })()
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-950">
+    <div className="flex flex-col h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark">
       <StudioChrome />
 
       <div className="relative flex-1 overflow-hidden">
@@ -334,8 +340,8 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
 
   if (hydration.status === 'loading') {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
+      <div className="absolute inset-0 flex items-center justify-center bg-gp-surface dark:bg-gp-surface-dark">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gp-ink-soft/40" />
       </div>
     )
   }

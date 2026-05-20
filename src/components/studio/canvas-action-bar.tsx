@@ -7,6 +7,7 @@ import { LayoutGrid, Network, PlusCircle, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
+import { FieldContextUploadAction } from './field-context-upload-action'
 
 /**
  * Floating action bar pinned to the bottom-center of the canvas pane.
@@ -47,7 +48,7 @@ export const StudioCanvasActionBar: FC = () => {
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
       <div className="pointer-events-auto flex items-center gap-3 md:gap-4">
         {inGraphSurface && (
-          <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 shadow-xl">
+          <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass border border-gp-glass-border shadow-xl">
             <ZoomButton
               label="Zoom out"
               icon="remove"
@@ -70,12 +71,14 @@ export const StudioCanvasActionBar: FC = () => {
 
         <ViewToggle activeView={canvasView} onChange={setCanvasView} />
 
+        <FieldContextUploadAction />
+
         <div className="flex items-center gap-2 md:gap-3">
           {canCreateMeSpace && (
             <button
               type="button"
               onClick={() => router.push('/protected/spaces/me-space')}
-              className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/20 hover:border-white/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+              className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
               aria-label="Create MeSpace"
             >
               <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
@@ -88,7 +91,7 @@ export const StudioCanvasActionBar: FC = () => {
             type="button"
             onClick={() => router.push('/protected/spaces/we-space')}
             data-tour="create-wespace-button"
-            className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/20 hover:border-white/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+            className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
             aria-label="Create WeSpace"
           >
             <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
@@ -116,7 +119,7 @@ const ZoomButton: FC<{
     onClick={onClick}
     aria-label={label}
     title={label}
-    className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-white/10 dark:hover:bg-white/20 transition-all"
+    className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-all"
   >
     <span className="material-symbols-outlined">{icon}</span>
   </button>
@@ -138,7 +141,7 @@ const ViewToggle: FC<{
     <div
       role="tablist"
       aria-label="Canvas view"
-      className="flex items-center gap-1 p-1 rounded-full gp-glass dark:gp-glass border border-white/10 dark:border-white/10 shadow-xl"
+      className="flex items-center gap-1 p-1 rounded-full gp-glass dark:gp-glass border border-gp-glass-border shadow-xl"
     >
       {items.map(({ id, label, Icon }, idx) => {
         const active = activeView === id
@@ -156,7 +159,7 @@ const ViewToggle: FC<{
                 'cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
                 active
                   ? 'bg-gp-primary/20 text-gp-primary'
-                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-white/10 dark:hover:bg-white/20'
+                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20'
               )}
             >
               <Icon className="w-4 h-4" />

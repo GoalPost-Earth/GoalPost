@@ -31,11 +31,11 @@ export const ChatHost: FC<ChatHostProps> = ({
     <section
       aria-label="Chat"
       className={cn(
-        'relative h-full w-full flex flex-col overflow-hidden bg-slate-950'
+        'relative h-full w-full flex flex-col overflow-hidden bg-gp-surface dark:bg-gp-surface-dark'
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-white/10 bg-slate-900/40 backdrop-blur-md">
-        <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/55">
+      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
+        <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-gp-ink-muted">
           Chat
         </span>
         <div className="flex items-center gap-1">
@@ -44,7 +44,7 @@ export const ChatHost: FC<ChatHostProps> = ({
             onClick={() => toggleFullscreen('chat')}
             aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen chat'}
             title={fullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen (F)'}
-            className="hidden md:flex items-center justify-center size-7 rounded-md text-white/55 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="hidden md:flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
           >
             {fullscreen ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -58,7 +58,7 @@ export const ChatHost: FC<ChatHostProps> = ({
               onClick={() => setCanvasOpen(true)}
               aria-label="Show canvas"
               title="Show canvas"
-              className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 rounded-full border border-gp-glass-border bg-gp-glass-bg px-2.5 py-1 text-[11px] font-semibold text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
             >
               <PanelRightOpen className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Show canvas</span>
