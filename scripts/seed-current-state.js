@@ -703,6 +703,7 @@ async function createPulses() {
     UNWIND $pulses as pulse
     CREATE (fp:FieldPulse:GoalPulse {
       id: pulse.id,
+      title: coalesce(pulse.title, pulse.content),
       content: pulse.content,
       why: pulse.why,
       intensity: pulse.intensity,
