@@ -43,6 +43,22 @@ Use these credentials for authenticated flows on the dev server:
 - Email: `deadpool@gmail.com`
 - Password: `Password&1`
 
+## Viewport Defaults
+
+Chrome DevTools MCP opens pages in a window narrower than the Tailwind `md` breakpoint (768px), so the app renders in its mobile layout by default. **Before navigating to any page**, set the desktop viewport:
+
+```
+mcp__chrome-devtools__emulate({ viewport: "1440x900x2" })
+```
+
+Run the primary pass of every flow at desktop. Then, for any flow with a mobile-specific code path (drawer vs. sidebar, bottom nav, touch gestures, responsive grid collapse), repeat at mobile:
+
+```
+mcp__chrome-devtools__emulate({ viewport: "375x812x3,mobile,touch" })
+```
+
+Report results for both viewports separately. Never declare a flow PASS based on a single viewport when responsive behavior is in scope.
+
 ## Verification Method
 
 After EVERY action (click, navigate, fill):
@@ -167,19 +183,12 @@ Use `mcp__chrome-devtools__list_network_requests` to check:
 - Assets load correctly (images, fonts, icons)
 - JWT token is included in Authorization headers for protected API calls
 
-## Mobile Viewport Testing
+## Additional Viewports
 
-Use `mcp__chrome-devtools__emulate` to test responsive behavior:
+Desktop and mobile are required (see "Viewport Defaults" above). For flows where tablet has its own layout path, also run:
 
 ```
-# Test mobile viewport
-mcp__chrome-devtools__emulate({ viewport: "375x812x3,mobile,touch" })
-
-# Test tablet viewport
 mcp__chrome-devtools__emulate({ viewport: "768x1024x2,touch" })
-
-# Reset to desktop
-mcp__chrome-devtools__emulate({ viewport: "1440x900x2" })
 ```
 
 ## Performance Checks
