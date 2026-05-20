@@ -65,6 +65,10 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      {/* EntityInfoDrawer is mounted at the canvas-host level so it works
+          across Dashboard, Graph, and Bloom views (a mount here would be
+          hidden by the per-view visibility cascade in non-dashboard
+          modes). */}
     </div>
   )
 }

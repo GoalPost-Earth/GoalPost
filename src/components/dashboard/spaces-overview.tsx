@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
+import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
+import { dispatchOpenInfoDrawer } from './entity-info-drawer'
+import { dispatchOpenSpaceWarp } from './space-warp-transition'
 
 type SpaceFilter = 'all' | 'me' | 'we'
 
@@ -41,7 +43,6 @@ const FILTER_META: { id: SpaceFilter; label: string }[] = [
  * renders cards.
  */
 export function SpacesOverview() {
-  const router = useRouter()
   const [filter, setFilter] = useState<SpaceFilter>('all')
 
   const {
@@ -155,13 +156,7 @@ export function SpacesOverview() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {visibleSpaces.map((space) => (
-            <SpaceCard
-              key={space.id}
-              space={space}
-              onOpen={() =>
-                router.push(`/protected/dashboard/space/${space.id}`)
-              }
-            />
+            <SpaceCard key={space.id} space={space} />
           ))}
         </div>
       )}
@@ -171,10 +166,9 @@ export function SpacesOverview() {
 
 interface SpaceCardProps {
   space: UnifiedSpace
-  onOpen: () => void
 }
 
-function SpaceCard({ space, onOpen }: SpaceCardProps) {
+function SpaceCard({ space }: SpaceCardProps) {
   const isMe = space.type === 'MeSpace'
   const owner = space.owner?.[0]
   const ownerName =
@@ -187,13 +181,43 @@ function SpaceCard({ space, onOpen }: SpaceCardProps) {
     addSuffix: true,
   })
 
+  // Snapshot the card's on-screen rect at click time so the warp
+  // overlay can grow a clone of THIS exact card into the destination
+  // view. Both Graph View bubbles and Dashboard cards funnel through
+  // the same `goalpost:open-space-warp` event — the destination is
+  // always the new in-space dashboard view.
+  const cardRef = useRef<HTMLDivElement>(null)
+  const handleOpen = () => {
+    const rect = cardRef.current?.getBoundingClientRect()
+    if (!rect) return
+    dispatchOpenSpaceWarp({
+      spaceId: space.id,
+      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      type: space.type,
+      title: space.name,
+      icon: isMe ? 'self_improvement' : 'groups',
+    })
+  }
+
+  // Outer is a div-as-button so the nested info button doesn't violate
+  // the "no buttons inside buttons" rule. Body click opens the space;
+  // the (i) button opens the right-side details drawer.
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <div
+      ref={cardRef}
+      role="button"
+      tabIndex={0}
+      onClick={handleOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleOpen()
+        }
+      }}
       className={cn(
         'group relative text-left rounded-2xl p-5 border overflow-hidden transition-all cursor-pointer',
         'hover:-translate-y-0.5 hover:shadow-xl',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
         isMe
           ? 'border-amber-300/30 dark:border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent hover:from-amber-500/20 hover:via-rose-500/10'
           : 'border-teal-300/30 dark:border-teal-500/20 bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent hover:from-teal-500/20 hover:via-emerald-500/10'
@@ -207,6 +231,25 @@ function SpaceCard({ space, onOpen }: SpaceCardProps) {
           isMe ? 'from-amber-400 to-rose-400' : 'from-teal-400 to-emerald-400'
         )}
       />
+
+      {/* Info button — opens the right-side details drawer */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          dispatchOpenInfoDrawer({ type: space.type, id: space.id })
+        }}
+        aria-label="View details"
+        title="View details"
+        className={cn(
+          'absolute top-3 right-3 z-10 flex items-center justify-center size-7 rounded-full',
+          'bg-white/10 dark:bg-white/5 border border-white/15 backdrop-blur-md',
+          'opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
+          'hover:bg-white/20 dark:hover:bg-white/15 transition-all cursor-pointer'
+        )}
+      >
+        <Info className="w-3.5 h-3.5 text-white/80" />
+      </button>
 
       <div className="flex items-start gap-4 mb-4">
         <div
@@ -279,7 +322,7 @@ function SpaceCard({ space, onOpen }: SpaceCardProps) {
           arrow_forward
         </span>
       </div>
-    </button>
+    </div>
   )
 }
 

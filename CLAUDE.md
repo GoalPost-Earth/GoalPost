@@ -121,6 +121,56 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 | Drafting / creating Jira stories for the `GOAL` project      | `jira-story-writer` agent   |
 | Investigating a prod Neo4j data inconsistency                | `prod-database-agent` agent |
 
+#### Proactive dispatch — run without being asked
+
+The table above describes which agent to use for which review. The
+following rules say **when** to dispatch without waiting for the user to
+ask. These run automatically when the opportunity is present.
+
+**`code-reviewer` — after every non-trivial code change.**
+Dispatch once a logical unit of work is complete (a slice landed, a
+feature wired, a bug fix verified). "Non-trivial" = anything beyond a
+typo, a single-line tweak, or a doc-only change. Run it before
+proposing a commit, so the user sees a reviewed diff rather than a raw
+one. Provide the agent with the list of changed files + the goal.
+
+**`e2e-tester` — after any user-facing change reachable in the browser.**
+Dispatch whenever a UI change can be exercised end-to-end: a new page,
+a new interaction (click, drawer, modal), a route change, a layout
+flip, a new component visible on a route. Skip only for pure
+backend / lib / kb edits with no observable surface. Run it after the
+dev server has compiled the change.
+
+**`security-reviewer` — anytime a security-sensitive file is touched.**
+Dispatch automatically when an edit lands in any of these paths or
+matches any of these patterns. Don't ask permission — just run it.
+
+Security-sensitive paths (this list is the floor, not the ceiling):
+
+- `src/app/api/auth/**` — login, signup, JWT issuance, refresh, password
+- `src/app/api/auth/utils.ts` — `resolveAuthenticatedUserId`,
+  `signJWT`, `verifyJWT`, `hashPassword`
+- `src/app/api/me-space/**` — MeSpace invariant + ownership
+- `src/lib/validation/**` — invariant + permission helpers
+- `src/lib/graphql/schema/schema.gql` — `@authorization`, `@mutation`,
+  `@private` directives; any change to the SDL's auth surface
+- `scripts/init-db.js` — Neo4j constraints, especially anything
+  enforcing ownership / uniqueness invariants
+- `src/middleware.ts` (if/when added) — request-level gates
+
+Security-sensitive patterns (regardless of path):
+
+- Anything that reads/writes `accessToken`, `refreshToken`, `password`,
+  cookie auth, bearer headers
+- Anything that constructs or modifies `@authorization` filters
+- Anything that touches `OWNS` / `HAS_MEMBER` relationships in Cypher
+- Anything that changes how `$jwt.user.id` is consumed
+- Mutations on `User`, `Person`, `MeSpace`, `WeSpace`, `SpaceMembership`
+- Adding / removing `@private` fields on any type
+
+The agent dispatch is mandatory before the commit, not as a follow-up.
+A failed or "needs work" review blocks the commit until addressed.
+
 ### Jira workflow — status transitions are MANDATORY
 
 Whenever work in a session is tied to a Jira issue (`GOAL-N`):

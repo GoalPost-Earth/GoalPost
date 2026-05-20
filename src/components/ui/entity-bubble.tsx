@@ -31,6 +31,7 @@ export interface EntityBubbleProps {
   className?: string
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
+  onInfoClick?: (e: React.MouseEvent) => void
   children?: ReactNode
 }
 
@@ -80,6 +81,7 @@ export function EntityBubble({
   className,
   onClick,
   onEditClick,
+  onInfoClick,
   children,
 }: EntityBubbleProps) {
   const { animationsEnabled } = useAnimations()
@@ -340,14 +342,32 @@ export function EntityBubble({
       {/* Edit Button */}
       {onEditClick && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation()
             onEditClick(e)
           }}
-          className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30"
+          className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30 cursor-pointer"
           title="Edit space"
+          aria-label="Edit space"
         >
           <span className="material-symbols-outlined text-lg">edit</span>
+        </button>
+      )}
+
+      {/* Info Button — opens the right-side details drawer (ADR-011 / SpaceDetailsView). */}
+      {onInfoClick && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onInfoClick(e)
+          }}
+          className="pointer-events-auto absolute -top-2 -left-2 p-2 rounded-full bg-white/15 hover:bg-white/30 text-white transition-all opacity-0 group-hover:opacity-100 z-30 cursor-pointer"
+          title="View details"
+          aria-label="View details"
+        >
+          <span className="material-symbols-outlined text-lg">info</span>
         </button>
       )}
 

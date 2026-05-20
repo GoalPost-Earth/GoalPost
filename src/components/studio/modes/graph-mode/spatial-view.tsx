@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
@@ -14,6 +13,8 @@ import {
 } from '@/lib/nvl-utils'
 import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import { dispatchOpenSpaceWarp } from '@/components/dashboard/space-warp-transition'
 import { GraphLoadingState } from './graph-loading-state'
 
 /**
@@ -98,7 +99,6 @@ const SIZE_TO_HITBOX: Record<BubbleSize, number> = {
 }
 
 export const SpatialView: FC = () => {
-  const router = useRouter()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const containerCacheRef = useRef<Map<string, HTMLElement>>(new Map())
 
@@ -203,14 +203,41 @@ export const SpatialView: FC = () => {
   }, [descriptors])
   /* eslint-enable react-hooks/refs */
 
+  // Dispatching the warp event (instead of routing directly) lets the
+  // global SpaceWarpTransition overlay grow a clone of THIS bubble into
+  // the destination view — the loader IS the fade-out. We snapshot the
+  // bubble's actual on-screen rect via its NVL container so the clone
+  // starts pixel-aligned with where the user clicked.
   const handleOpen = useCallback(
     (spaceId: string) => {
-      router.push(`/protected/dashboard/space/${spaceId}`)
+      const desc = descriptors.find((d) => d.id === spaceId)
+      const container = containerCacheRef.current.get(spaceId)
+      // EntityBubble renders the actual visible circle as the first
+      // child inside the NVL container — measure that, not the
+      // container, since NVL clips to its own bounding box.
+      const visual =
+        (container?.firstElementChild as HTMLElement | null) ?? container ?? null
+      const rect = visual?.getBoundingClientRect()
+      if (!desc || !rect) return
+      dispatchOpenSpaceWarp({
+        spaceId,
+        rect: {
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+        },
+        type: desc.type,
+        title: desc.title,
+        icon: desc.icon as 'self_improvement' | 'groups',
+      })
     },
-    [router]
+    [descriptors]
   )
 
-  // Mount React EntityBubbles into their NVL containers.
+  // Mount React EntityBubbles into their NVL containers. Bubble body
+  // opens the space; the (i) overlay opens the right-side details
+  // drawer (see EntityInfoDrawer).
   useEffect(() => {
     descriptors.forEach((desc, idx) => {
       const container = containerCacheRef.current.get(desc.id)
@@ -225,6 +252,9 @@ export const SpatialView: FC = () => {
           badge={desc.badge}
           animationDelay={idx * 0.08}
           onClick={() => handleOpen(desc.id)}
+          onInfoClick={() =>
+            dispatchOpenInfoDrawer({ type: desc.type, id: desc.id })
+          }
         />,
         container
       )
