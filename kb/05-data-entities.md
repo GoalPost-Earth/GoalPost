@@ -18,6 +18,10 @@ FieldPulse ──HAS_CHUNK──▶ ConversationChunk
 Person ──CONNECTED_TO── Person (bidirectional)
 Log ──CREATED_BY──▶ Person
 Log ──LOGGED_FOR──▶ FieldPulse
+FieldContext ──HAS_DOCUMENT──▶ Document
+Document ──UPLOADED_BY──▶ Person:User
+Person/FieldPulse ──EXTRACTED_FROM──▶ Document
+Document ──HAS_INGEST_THREAD──▶ ConversationThread
 ```
 
 ## Core Entities
@@ -399,6 +403,48 @@ existing exemption for `ConversationChunk` writes.
 
 - `CREATED_BY` → Person
 - `LOGGED_FOR` → GoalPulse / ResourcePulse / FieldPulse
+
+### Document
+
+**Neo4j Labels:** `["Document"]`
+
+Uploaded source document attached to a FieldContext. Created by the
+doc-ingestion flow (`uploadDocument` mutation / `POST /api/ingest/document`);
+the original file lives in blob storage (Vercel Blob or memory store for
+dev), the graph node carries metadata and provenance edges. See
+PRD `docs/prd/document-ingestion.md`, ADR-0001, and ADR-0002.
+
+| Field      | Type     | Notes                                                                                  |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| id         | string   | Required, unique                                                                       |
+| filename   | string   | Required                                                                               |
+| mimeType   | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                   |
+| sizeBytes  | int      | Required                                                                               |
+| pageCount  | int      | `1` for .txt/.md; real page count for .pdf; null when unknown                          |
+| blobKey    | string   | Internal — UI surfaces filename instead                                                |
+| blobUrl    | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
+| userHint   | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
+| uploadedAt | datetime | Immutable, set on create                                                               |
+
+**Relationships:**
+
+- `HAS_DOCUMENT` ← FieldContext (parent context owns the document)
+- `UPLOADED_BY` → Person:User (the uploader)
+- `EXTRACTED_FROM` ← Person (extracted persons trace back here)
+- `EXTRACTED_FROM` ← FieldPulse (extracted goal/resource/story pulses trace back here)
+- `HAS_INGEST_THREAD` → ConversationThread (one per upload + one per re-extract)
+
+**Authorization:** inherits read access from the parent Space — the same
+`@authorization` pattern as FieldContext. Writes (`uploadDocument`,
+`reExtractDocument`, `deleteDocument`) all gate on `canEditContent` against
+the parent Space (`kb/02-user-roles.md`).
+
+**Lifecycle:** Documents are **never auto-deleted**. Deletion is user-driven
+via `deleteDocument`, which removes the blob and the Document node;
+previously approved Persons and FieldPulses extracted from the document
+survive (their `EXTRACTED_FROM` edges drop with the Document). v1 has no
+file-versioning; uploading a new revision of a source creates a new
+Document node with its own ingest thread.
 
 ---
 

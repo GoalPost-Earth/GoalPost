@@ -7,6 +7,7 @@ import { validateUploadDocumentInput } from '@/lib/ingest/upload-document-input'
 import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
 import { createVercelBlobStore } from '@/lib/ingest/vercel-blob-store'
 import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import { handleDeleteDocument } from '@/lib/ingest/handle-delete-document'
 
 /**
  * GraphQL surface for the doc-ingestion epic.
@@ -140,6 +141,39 @@ export const documentMutations = {
       threadId: result.threadId,
       pendingApprovalCount: result.pendingApprovals.length,
     }
+  },
+
+  deleteDocument: async (
+    _parent: unknown,
+    args: { documentId: string },
+    context: ResolverContext
+  ) => {
+    const userId = requireUserId(context)
+    const documentId = String(args.documentId ?? '').trim()
+    if (!documentId) {
+      throw new GraphQLError('documentId is required.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      })
+    }
+
+    // Orchestrator does gate + Log + DETACH DELETE in a single
+    // transaction, then a best-effort blob cleanup. A missing document and
+    // a forbidden access return the same `forbidden` failure to avoid
+    // leaking document existence to non-members.
+    const result = await handleDeleteDocument(
+      { driver, blobStore: resolveBlobStore() },
+      { currentUserId: userId, documentId }
+    )
+
+    if (!result.ok) {
+      const code =
+        result.reason === 'forbidden' ? 'FORBIDDEN' : 'BAD_USER_INPUT'
+      throw new GraphQLError(result.error, {
+        extensions: { code, reason: result.reason },
+      })
+    }
+
+    return { documentId: result.documentId, deleted: true }
   },
 }
 

@@ -155,3 +155,37 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 4. Data mapped to GoalPost entities (Persons, Pulses, etc.).
 5. Entities created in Neo4j with appropriate relationships.
 6. Import status tracked and reported to user.
+
+## WF-10 — Document Ingestion (FieldContext)
+
+**Actor:** Authenticated User with `canEditContent` on the parent Space.
+
+See PRD `docs/prd/document-ingestion.md` for the full spec and
+`docs/adr/0001-doc-ingestion-dedicated-extraction-endpoint.md` /
+`docs/adr/0002-document-node-and-blob-provenance.md` for rationale.
+
+1. User uploads a `.txt` / `.md` / `.pdf` from the studio with a
+   FieldContext focused (`uploadDocument` mutation / `POST /api/ingest/document`).
+2. Server gates on `canEditContent`, extracts text, persists the blob,
+   creates a Document node anchored to the FieldContext via `HAS_DOCUMENT`
+   and to the uploader via `UPLOADED_BY`.
+3. A dedicated extraction model (independent of the chat assistant; may
+   be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the text
+   alongside the FieldContext roster and proposes Persons + FieldPulses.
+4. A fresh ConversationThread titled `Ingest: <filename>` is created
+   (`kind = 'ingest'`, `mode = 'default'`). The thread is linked back to
+   the source Document via `HAS_INGEST_THREAD`.
+5. A synthesized assistant turn is appended carrying pre-staged HITL
+   write tool calls (matching the runtime HITL hash/shape). The chat
+   panel auto-switches to the new thread.
+6. User reviews the batch approval dialog and approves / edits / rejects.
+   Approved tool calls flow through `executeAuthorizedWriteTool` — same
+   path as manual creation, plus an `EXTRACTED_FROM` edge from each
+   approved Person/FieldPulse back to the Document, and a `Log` per entity
+   stamping `metadata.documentId` + `metadata.conversationThreadId`.
+7. Re-extract reuses the stored blob + original hint and creates a new
+   ingest thread. Delete removes the blob and Document node; extracted
+   entities survive (their `EXTRACTED_FROM` edges drop with the Document).
+8. Extracted pulses flow through the existing post-creation embedding and
+   enrichment jobs (WF-05) and become eligible for daily resonance
+   discovery (WF-06) without any ingest-specific pipeline.

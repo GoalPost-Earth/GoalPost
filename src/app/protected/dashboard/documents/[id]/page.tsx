@@ -1,15 +1,17 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useQuery, useMutation } from '@apollo/client/react'
 import { gql } from '@apollo/client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { usePageContext } from '@/contexts'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { DELETE_DOCUMENT_MUTATION } from '@/app/graphql/mutations'
 
 /**
  * Slice 7 (GOAL-242) — Document detail view, reached by clicking the filename
@@ -128,6 +130,9 @@ export default function DocumentDetailPage() {
       skip: !documentId,
     }
   )
+
+  const [deleteDocument] = useMutation(DELETE_DOCUMENT_MUTATION)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const document = data?.documents?.[0]
   const uploader = document?.uploadedBy?.[0]
@@ -290,8 +295,8 @@ export default function DocumentDetailPage() {
             </div>
           </div>
 
-          {field && (
-            <div className="flex justify-center">
+          <div className="flex justify-center gap-3 flex-wrap">
+            {field && (
               <button
                 type="button"
                 onClick={() =>
@@ -303,8 +308,37 @@ export default function DocumentDetailPage() {
               >
                 Back to {field.title}
               </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={async () => {
+                // Per PRD: extracted Persons and FieldPulses survive deletion.
+                const ok = window.confirm(
+                  `Delete "${document.filename}"? The file and provenance record will be removed. Any extracted people or pulses you've already approved will stay.`
+                )
+                if (!ok) return
+                setIsDeleting(true)
+                try {
+                  await deleteDocument({ variables: { documentId } })
+                  toast.success('Document deleted.')
+                  if (field) {
+                    router.push(`/protected/dashboard/field-context/${field.id}`)
+                  } else {
+                    router.push('/protected/dashboard')
+                  }
+                } catch (error) {
+                  const message =
+                    error instanceof Error ? error.message : 'Delete failed'
+                  toast.error(message)
+                  setIsDeleting(false)
+                }
+              }}
+              className="px-6 py-2 rounded-full text-xs font-semibold border border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isDeleting ? 'Deleting…' : 'Delete document'}
+            </button>
+          </div>
         </ProfileLayout>
       </main>
     </div>

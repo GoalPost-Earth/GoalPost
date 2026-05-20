@@ -157,6 +157,72 @@ describe('DocumentStorage — uploadDocument', () => {
     expect(await blobStore.get(result.blobKey)).toBeNull()
   })
 
+  itIf(true)('deleteDocument preserves extracted Persons and FieldPulses (only the EXTRACTED_FROM edge drops)', async () => {
+    if (!neo4jAvailable) return
+    const blobStore = createMemoryBlobStore()
+    const docId = `test_${testRunId}_doc_extracted`
+    const personId = `test_${testRunId}_person_extracted`
+    const pulseId = `test_${testRunId}_pulse_extracted`
+    await uploadDocument({
+      driver,
+      blobStore,
+      documentId: docId,
+      fieldContextId: ids.fieldContext,
+      uploaderUserId: ids.user,
+      filename: 'with-extractions.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Sarah ran the migration.'),
+    })
+
+    // Simulate an approved extraction: a Person + a GoalPulse with
+    // EXTRACTED_FROM edges back to the Document.
+    const session = driver.session()
+    try {
+      await session.run(
+        `
+        MATCH (d:Document {id: $docId})
+        MATCH (c:FieldContext {id: $ctxId})
+        CREATE (p:Person:PersonPulse {id: $personId, firstName: 'Sarah', lastName: 'Chen', createdAt: datetime()})
+        CREATE (c)-[:HAS_PERSON]->(p)
+        CREATE (p)-[:EXTRACTED_FROM]->(d)
+        CREATE (g:FieldPulse:GoalPulse {id: $pulseId, title: 'Ship migration', status: 'ACTIVE', createdAt: datetime()})
+        CREATE (c)-[:HAS_PULSE]->(g)
+        CREATE (g)-[:EXTRACTED_FROM]->(d)
+        `,
+        { docId, ctxId: ids.fieldContext, personId, pulseId }
+      )
+    } finally {
+      await session.close()
+    }
+
+    await deleteDocument({ driver, blobStore, documentId: docId })
+
+    const verify = driver.session()
+    try {
+      const docGone = await verify.run(
+        `MATCH (d:Document {id: $docId}) RETURN d`,
+        { docId }
+      )
+      expect(docGone.records).toHaveLength(0)
+
+      const personSurvives = await verify.run(
+        `MATCH (p:Person {id: $personId}) RETURN p.firstName AS firstName`,
+        { personId }
+      )
+      expect(personSurvives.records).toHaveLength(1)
+      expect(personSurvives.records[0].get('firstName')).toBe('Sarah')
+
+      const pulseSurvives = await verify.run(
+        `MATCH (g:GoalPulse {id: $pulseId}) RETURN g.title AS title`,
+        { pulseId }
+      )
+      expect(pulseSurvives.records).toHaveLength(1)
+      expect(pulseSurvives.records[0].get('title')).toBe('Ship migration')
+    } finally {
+      await verify.close()
+    }
+  })
+
   itIf(true)('rejects upload when the targeted FieldContext does not exist (no orphaned blob)', async () => {
     if (!neo4jAvailable) return
     const blobStore = createMemoryBlobStore()

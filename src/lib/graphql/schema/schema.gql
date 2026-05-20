@@ -639,6 +639,14 @@ type IngestDocumentResponse {
   pendingApprovalCount: Int!
 }
 
+"""Response payload for `deleteDocument`. The Document node and its blob are
+removed; previously extracted Persons and FieldPulses are untouched (their
+EXTRACTED_FROM edges drop with the Document)."""
+type DeleteDocumentResponse {
+  documentId: ID!
+  deleted: Boolean!
+}
+
 """Input for `uploadDocument`. File contents are base64-encoded inline."""
 input UploadDocumentInput {
   fieldContextId: ID!
@@ -1344,6 +1352,17 @@ type Mutation {
   re-extract only proposes new tool calls.
   """
   reExtractDocument(documentId: ID!): IngestDocumentResponse!
+
+  """
+  Delete a Document and its backing blob. Caller must hold canEditContent
+  on the FieldContext's parent Space (same gate as `uploadDocument`).
+
+  Previously extracted entities (Persons, FieldPulses) survive — their
+  EXTRACTED_FROM edges drop with the Document but the entities remain in
+  the graph as user data (see PRD § Out of Scope — Documents never cascade
+  to their extractions).
+  """
+  deleteDocument(documentId: ID!): DeleteDocumentResponse!
 }
 
 # ============================================================================

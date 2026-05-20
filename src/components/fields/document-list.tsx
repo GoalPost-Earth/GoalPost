@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { RE_EXTRACT_DOCUMENT_MUTATION } from '@/app/graphql/mutations'
+import {
+  DELETE_DOCUMENT_MUTATION,
+  RE_EXTRACT_DOCUMENT_MUTATION,
+} from '@/app/graphql/mutations'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 
 /**
@@ -79,16 +82,20 @@ interface DocumentRowProps {
   document: DocumentRecord
   isExpanded: boolean
   isReExtracting: boolean
+  isDeleting: boolean
   onToggleExpand: () => void
   onReExtract: () => void
+  onDelete: () => void
 }
 
 function DocumentRow({
   document,
   isExpanded,
   isReExtracting,
+  isDeleting,
   onToggleExpand,
   onReExtract,
+  onDelete,
 }: DocumentRowProps) {
   const people = document.extractedPeople ?? []
   const pulses = document.extractedPulses ?? []
@@ -132,10 +139,23 @@ function DocumentRow({
               event.stopPropagation()
               onReExtract()
             }}
-            disabled={isReExtracting}
+            disabled={isReExtracting || isDeleting}
             className="rounded-full px-3 py-1 text-xs font-medium border border-amber-500/50 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isReExtracting ? 'Re-extracting…' : 'Re-extract'}
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete()
+            }}
+            disabled={isDeleting || isReExtracting}
+            aria-label={`Delete ${document.filename}`}
+            title="Delete document (extracted entities are kept)"
+            className="rounded-full px-3 py-1 text-xs font-medium border border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isDeleting ? 'Deleting…' : 'Delete'}
           </button>
         </div>
       </div>
@@ -247,7 +267,9 @@ function DocumentRow({
 export function DocumentList({ documents, onRefetch }: DocumentListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [reExtractingId, setReExtractingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [reExtractDocument] = useMutation(RE_EXTRACT_DOCUMENT_MUTATION)
+  const [deleteDocument] = useMutation(DELETE_DOCUMENT_MUTATION)
 
   if (documents.length === 0) return null
 
@@ -277,6 +299,29 @@ export function DocumentList({ documents, onRefetch }: DocumentListProps) {
     }
   }
 
+  const handleDelete = async (documentId: string, filename: string) => {
+    // Per PRD: extracted Persons and FieldPulses survive deletion. The
+    // confirmation copy makes that explicit so the user isn't surprised.
+    const ok = window.confirm(
+      `Delete "${filename}"? The file and provenance record will be removed. Any extracted people or pulses you've already approved will stay.`
+    )
+    if (!ok) return
+
+    setDeletingId(documentId)
+    try {
+      await deleteDocument({ variables: { documentId } })
+      toast.success('Document deleted.')
+      if (expandedId === documentId) setExpandedId(null)
+      await onRefetch()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Delete failed'
+      toast.error(message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="mb-10 rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 p-5">
       <div className="flex items-center gap-2 mb-3">
@@ -297,12 +342,14 @@ export function DocumentList({ documents, onRefetch }: DocumentListProps) {
             document={document}
             isExpanded={expandedId === document.id}
             isReExtracting={reExtractingId === document.id}
+            isDeleting={deletingId === document.id}
             onToggleExpand={() =>
               setExpandedId((current) =>
                 current === document.id ? null : document.id
               )
             }
             onReExtract={() => handleReExtract(document.id)}
+            onDelete={() => handleDelete(document.id, document.filename)}
           />
         ))}
       </ul>

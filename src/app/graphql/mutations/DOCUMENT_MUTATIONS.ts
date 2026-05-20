@@ -38,3 +38,17 @@ export const RE_EXTRACT_DOCUMENT_MUTATION = gql`
     }
   }
 `
+
+/**
+ * Delete a Document and its backing blob (PRD § Out of Scope keeps
+ * extracted entities — Persons + FieldPulses — alive after the Document
+ * goes away). Same permission gate as UploadDocument.
+ */
+export const DELETE_DOCUMENT_MUTATION = gql`
+  mutation DeleteDocument($documentId: ID!) {
+    deleteDocument(documentId: $documentId) {
+      documentId
+      deleted
+    }
+  }
+`

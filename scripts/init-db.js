@@ -91,6 +91,15 @@ async function initializeDatabase() {
       // node having an id uniqueness gate.
       `CREATE CONSTRAINT context_extraction_id IF NOT EXISTS
        FOR (n:ContextExtraction) REQUIRE n.id IS UNIQUE`,
+      // Document ingestion (GOAL-235) writes a `Document` node per upload
+      // anchored to a FieldContext via `HAS_DOCUMENT`. Every hot path
+      // (uploadDocument, reExtractDocument, deleteDocument, the
+      // documentsByFieldContext query) matches by `Document.id`. Without
+      // this constraint the planner falls back to `NodeByLabelScan` +
+      // Filter, which degrades linearly with the document count across
+      // all Spaces.
+      `CREATE CONSTRAINT document_id IF NOT EXISTS
+       FOR (n:Document) REQUIRE n.id IS UNIQUE`,
     ]
 
     for (const constraint of constraints) {

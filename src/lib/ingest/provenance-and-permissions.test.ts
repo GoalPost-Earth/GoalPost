@@ -5,6 +5,7 @@ import { handleIngestDocument } from './handle-ingest-document'
 import type { ExtractionModelClient } from './extraction-model-invoker'
 import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
 import { initGraph } from '@/modules/graph'
+import { documentMutations } from '@/lib/graphql/resolvers/document-resolver'
 
 /**
  * Slice 7 (GOAL-242) — integration tests for the polish slice:
@@ -32,6 +33,12 @@ const ids = {
 }
 
 beforeAll(async () => {
+  // Force the resolver-layer tests below to use the in-process blob store —
+  // the deleteDocument resolver picks the store via `resolveBlobStore()`
+  // (reads `INGEST_BLOB_BACKEND`). Without this, Vercel Blob is selected
+  // and `delete` throws on a missing `BLOB_READ_WRITE_TOKEN`.
+  process.env.INGEST_BLOB_BACKEND = 'memory'
+
   try {
     const s = driver.session()
     await s.run('RETURN 1')
@@ -445,4 +452,164 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
       }
     }
   )
+})
+
+describe('deleteDocument resolver — permission gate + cleanup', () => {
+  // Seed a fresh document per test case so cases stay independent. The
+  // owner has canEditContent (created via setup); guest + outsider should be
+  // rejected by the gate; admin should pass (ADMIN role on the WeSpace).
+
+  async function seedDocument(filename: string): Promise<string> {
+    const blobStore = createMemoryBlobStore()
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [],
+      assistantText: '',
+    })
+    const result = await handleIngestDocument(
+      { driver, blobStore, modelClient },
+      {
+        currentUserId: ids.owner,
+        fieldContextId: ids.fieldContext,
+        filename,
+        mimeType: 'text/plain',
+        buffer: Buffer.from('seed body'),
+        hint: null,
+      }
+    )
+    if (!result.ok) {
+      throw new Error(`seedDocument failed: ${result.error}`)
+    }
+    return result.documentId
+  }
+
+  itIf(true)('rejects a Guest member with FORBIDDEN', async () => {
+    if (!neo4jAvailable) return
+    const docId = await seedDocument('guest-delete-attempt.txt')
+
+    await expect(
+      documentMutations.deleteDocument(
+        null,
+        { documentId: docId },
+        { jwt: { user: { id: ids.guest } } }
+      )
+    ).rejects.toThrow(/permission/i)
+
+    // Document still in graph
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (d:Document {id: $docId}) RETURN d.id AS id`,
+        { docId }
+      )
+      expect(rows.records).toHaveLength(1)
+    } finally {
+      await session.close()
+    }
+  })
+
+  itIf(true)('rejects an outsider (non-member) with FORBIDDEN', async () => {
+    if (!neo4jAvailable) return
+    const docId = await seedDocument('outsider-delete-attempt.txt')
+
+    await expect(
+      documentMutations.deleteDocument(
+        null,
+        { documentId: docId },
+        { jwt: { user: { id: ids.outsider } } }
+      )
+    ).rejects.toThrow(/permission/i)
+  })
+
+  itIf(true)(
+    'collapses missing document into FORBIDDEN — does not leak existence to callers',
+    async () => {
+      if (!neo4jAvailable) return
+      // PRD § Security: a non-existent documentId must produce the same
+      // error shape as a forbidden access, so a non-member cannot probe
+      // existence. The orchestrator returns `reason: forbidden`.
+      await expect(
+        documentMutations.deleteDocument(
+          null,
+          { documentId: 'doc_does_not_exist_xyz' },
+          { jwt: { user: { id: ids.owner } } }
+        )
+      ).rejects.toThrow(/permission/i)
+    }
+  )
+
+  itIf(true)('owner can delete — Document and blob removed', async () => {
+    if (!neo4jAvailable) return
+    const docId = await seedDocument('owner-delete-success.txt')
+
+    const result = await documentMutations.deleteDocument(
+      null,
+      { documentId: docId },
+      { jwt: { user: { id: ids.owner } } }
+    )
+    expect(result).toEqual({ documentId: docId, deleted: true })
+
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (d:Document {id: $docId}) RETURN d.id AS id`,
+        { docId }
+      )
+      expect(rows.records).toHaveLength(0)
+    } finally {
+      await session.close()
+    }
+  })
+
+  itIf(true)('admin member can delete — same gate as upload', async () => {
+    if (!neo4jAvailable) return
+    const docId = await seedDocument('admin-delete-success.txt')
+
+    const result = await documentMutations.deleteDocument(
+      null,
+      { documentId: docId },
+      { jwt: { user: { id: ids.admin } } }
+    )
+    expect(result).toEqual({ documentId: docId, deleted: true })
+  })
+
+  itIf(true)('writes a Log row on successful delete', async () => {
+    if (!neo4jAvailable) return
+    const filename = 'logged-delete.txt'
+    const docId = await seedDocument(filename)
+
+    await documentMutations.deleteDocument(
+      null,
+      { documentId: docId },
+      { jwt: { user: { id: ids.owner } } }
+    )
+
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `
+        MATCH (log:Log)-[:CREATED_BY]->(u:Person {id: $ownerId})
+        WHERE log.description CONTAINS $filename
+        RETURN log.description AS description, log.metadata AS metadata
+        ORDER BY log.createdAt DESC
+        LIMIT 1
+        `,
+        { ownerId: ids.owner, filename }
+      )
+      expect(rows.records).toHaveLength(1)
+      const description = String(rows.records[0].get('description'))
+      // Description carries the filename in human-readable copy. Rule 1 of
+      // kb/07-ai-assistant-ux.md applies — no raw documentId in user-facing
+      // text.
+      expect(description).toMatch(new RegExp(`Deleted document.*${filename}`))
+      expect(description).not.toContain(docId)
+      // Audit metadata still carries the raw documentId for downstream
+      // analysis.
+      const metadata = JSON.parse(
+        String(rows.records[0].get('metadata') ?? '{}')
+      ) as { documentId?: string }
+      expect(metadata.documentId).toBe(docId)
+    } finally {
+      await session.close()
+    }
+  })
 })
