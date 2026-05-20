@@ -243,6 +243,9 @@ export const SpatialView: FC = () => {
       const container = containerCacheRef.current.get(desc.id)
       if (!container) return
       renderReactComponentToContainer(
+        // Interaction model (matches dashboard cards):
+        //   - Bubble body → opens the space (full warp navigation)
+        //   - Corner icon → opens the info drawer (side pane)
         <EntityBubble
           size={desc.size}
           shape={desc.shape}
@@ -325,14 +328,19 @@ export const SpatialView: FC = () => {
     }
   }, [])
 
+  // Deliberately NOT wiring NVL's `onNodeClick`. NVL listens at the native
+  // DOM level, so it would fire even when React's stopPropagation has
+  // intercepted a corner-button click — causing single-clicks on the icon
+  // to also trigger the bubble's body action. The EntityBubble's own
+  // React onClick covers body clicks, which is the one canonical pathway
+  // we want.
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
-      onNodeClick: (node) => handleOpen(String(node.id)),
       onDrag: true,
       onPan: true,
       onZoom: true,
     }),
-    [handleOpen]
+    []
   )
 
   // `layout: 'free'` makes NVL honor the (x, y) we computed via

@@ -355,12 +355,17 @@ export function EntityBubble({
         </button>
       )}
 
-      {/* Info Button — opens the right-side details drawer (ADR-011 / SpaceDetailsView). */}
+      {/* Info button — opens the right-side details drawer.
+          `e.nativeEvent.stopImmediatePropagation()` blocks NVL's native
+          click listener from also firing when this bubble lives inside
+          an NVL HTML container, so clicking the icon never also
+          triggers the bubble's body action. */}
       {onInfoClick && (
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation()
+            e.nativeEvent.stopImmediatePropagation()
             onInfoClick(e)
           }}
           className="pointer-events-auto absolute -top-2 -left-2 p-2 rounded-full bg-white/15 hover:bg-white/30 text-white transition-all opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-30 cursor-pointer"
