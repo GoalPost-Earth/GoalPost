@@ -134,10 +134,12 @@ Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal
     MATCH (user:Person {id: $userId})
     MATCH (a:Person {id: "<X_id>"}), (b:Person {id: "<Y_id>"})
     MATCH p = shortestPath(
-      (a)-[*..6:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS]-(b)
+      (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
     )
     RETURN p
     LIMIT 1
+
+  NOTE on relationship syntax: the type list comes BEFORE the variable-length range. Write \`[:OWNS|HAS_MEMBER*..6]\`, NOT \`[*..6:OWNS|HAS_MEMBER]\` (Neo4j parses the second as a syntax error).
 
 Rules for this shape:
   - Both endpoints MUST carry a label and an id constraint (\`(a:Person {id: "…"})\`). Use ids from canvasVisibleEntities or session context when available.
@@ -145,6 +147,7 @@ Rules for this shape:
   - Cap the hop count at \`*..6\`. Longer paths rarely shed insight and inflate planner cost.
   - \`RETURN p\` returns a Path; the runtime walks every segment and renders endpoints + intermediates + each labelled edge along the chain.
   - The endpoint type does not have to be \`Person\` — it can be any entity (e.g. \`(a:FieldPulse)\` ↔ \`(b:FieldPulse)\` for "how are these two goals connected?"). The query stays the same shape.
+  - Communities are valuable BRIDGE NODES. Two Persons who share no Space still connect via \`(a)<-[:HAS_MEMBER]-(c:Community)-[:HAS_MEMBER]->(b)\`. Include \`HAS_MEMBER\` in your relationship disjunction by default — the path-finder needs it to discover Community-mediated connections.
 
 # Adversarial input warning
 

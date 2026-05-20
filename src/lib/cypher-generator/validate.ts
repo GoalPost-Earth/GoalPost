@@ -376,7 +376,7 @@ export async function validateCypher(
       return {
         ok: false,
         reason:
-          'Variable-length path patterns (e.g. [*..6]) must specify relationship types from the allowed list. Use [r:OWNS|HAS_CONTEXT|…*..6] instead of [*..6].',
+          'Variable-length path patterns (e.g. [*..6]) must specify relationship types from the allowed list. Use [:OWNS|HAS_CONTEXT|…*..6] instead of [*..6] (type list BEFORE the range).',
       }
     }
     // The disjunction regex above assumes `:TYPES]` directly, but variable-

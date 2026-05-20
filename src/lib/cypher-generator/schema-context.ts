@@ -22,6 +22,7 @@ export const ALLOWED_LABELS = [
   'User',
   'PersonPulse',
   'SpaceMembership',
+  'Community',
   // Containers
   'Space',
   'MeSpace',
@@ -84,6 +85,8 @@ WeSpace : Space  — collaborative, owner + members.
 
 SpaceMembership { id, role, addedAt } — role ∈ {ADMIN, MEMBER, GUEST}.
 
+Community { id, name, description } — a public collective (e.g. "GoalPost Core Team"). Communities are NOT private — every authenticated user can see them and discover other members.
+
 FieldContext { id, title, emergentName, createdAt }
   - Belongs to exactly one Space.
 
@@ -109,12 +112,22 @@ FieldResonance { label, description } — semantic theme node.
 (ResonanceLink)-[:RESONATES_AS]->(FieldResonance)
 (FieldPulse)-[:CREATED_BY]->(Person)
 (Person)-[:CONNECTED_TO]-(Person)  // bidirectional
+(Community)-[:HAS_MEMBER]->(Person)  // direct community membership (no intermediary node)
+(Community)-[:OWNS]->(Space)         // a community can own a WeSpace
+
+NOTE on HAS_MEMBER: it has two valid domains.
+  (Space)-[:HAS_MEMBER]->(SpaceMembership)  // Space membership goes through a SpaceMembership node carrying the role
+  (Community)-[:HAS_MEMBER]->(Person)       // Community membership is a direct edge to Person, no role node
 
 # Access pattern
 
-Every viewable node reaches a Space the current user can read:
-- The user OWNS the Space, OR
-- A SpaceMembership: (Space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
+Every viewable node reaches a Space OR a Community the current user can see:
+- Space access: the user OWNS the Space, OR
+  (Space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
+- Community access: communities are public to all authenticated users.
+  (Community)-[:HAS_MEMBER]->(:Person {id: $userId})  // or just any Community node — visibility is permissive
+
+This makes Community a useful bridge node for path-finding between two Persons who share no Space — e.g. "How is X connected to Y?" can travel (X)<-[:HAS_MEMBER]-(c:Community)-[:HAS_MEMBER]->(Y).
 
 # Conventions
 

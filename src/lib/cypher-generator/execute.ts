@@ -34,6 +34,7 @@ const NODE_STYLE: Record<string, { color: string; size: number }> = {
   MeSpace: { color: '#86efac', size: 42 },
   WeSpace: { color: '#86efac', size: 42 },
   Space: { color: '#86efac', size: 42 },
+  Community: { color: '#fdba74', size: 38 }, // orange-300 — public collective
   FieldContext: { color: '#fde68a', size: 34 },
   GoalPulse: { color: '#93c5fd', size: 26 },
   ResourcePulse: { color: '#a7f3d0', size: 26 },
@@ -50,6 +51,22 @@ const NODE_STYLE: Record<string, { color: string; size: number }> = {
 }
 
 const SPACE_LABELS = new Set(['MeSpace', 'WeSpace', 'Space'])
+/**
+ * Labels that are universally visible to every authenticated user
+ * regardless of Space-based authorization. Used by the post-execute
+ * auth filter as a short-circuit — these nodes need no Space anchor.
+ * Communities (a public collective like "GoalPost Core Team") fit
+ * this model: the search_community tool already exposes them to any
+ * signed-in user, so showing them on the canvas is consistent.
+ */
+const PUBLIC_LABELS = new Set(['Community'])
+/**
+ * Synthetic anchor id used by mapNodesToEnclosingSpaces to mark a node
+ * as universally visible (no Space membership required). The post-
+ * filter accepts the node when this id is in its anchor set without
+ * having to look it up against the per-user allowedSpaces set.
+ */
+const PUBLIC_ANCHOR = '__public__'
 const CONTENT_VIA_SPACE = new Set([
   'FieldContext',
   'FieldPulse',
@@ -196,6 +213,16 @@ async function mapNodesToEnclosingSpaces(
     const labels = node.labels
     const anchors = new Set<string>()
 
+    // Public nodes (Community) need no Space anchor — they're visible
+    // to every authenticated user. Use the synthetic "__public__" id
+    // so the post-filter recognises them as always-allowed without
+    // having to scan the entire allowedSpaces set.
+    if (labels.some((l) => PUBLIC_LABELS.has(l))) {
+      anchors.add(PUBLIC_ANCHOR)
+      result.set(id, anchors)
+      continue
+    }
+
     if (labels.some((l) => SPACE_LABELS.has(l))) {
       anchors.add(id)
       result.set(id, anchors)
@@ -233,22 +260,28 @@ async function mapNodesToEnclosingSpaces(
 
     if (labels.includes('Person')) {
       // A Person is visible to the current user when they share any
-      // Space — collect every Space the Person is reachable from so the
-      // post-filter can accept the Person if ANY of those Spaces is
-      // viewable.
+      // Space OR any Community. Communities are public collectives
+      // (see PUBLIC_LABELS comment), so being a fellow Community member
+      // is sufficient anchor — the synthetic "__public__" anchor lets
+      // the post-filter accept the Person regardless of Space overlap.
       const r = await runRead(
         `
         MATCH (p:Person {id: $id})
         OPTIONAL MATCH (p)-[:OWNS]->(s1:Space)
         OPTIONAL MATCH (p)<-[:IS_MEMBER]-(:SpaceMembership)<-[:HAS_MEMBER]-(s2:Space)
         OPTIONAL MATCH (p)<-[:CREATED_BY]-(:FieldPulse)<-[:HAS_PULSE]-(:FieldContext)<-[:HAS_CONTEXT]-(s3:Space)
-        WITH collect(DISTINCT s1.id) + collect(DISTINCT s2.id) + collect(DISTINCT s3.id) AS sids
-        RETURN [sid IN sids WHERE sid IS NOT NULL] AS sids
+        OPTIONAL MATCH (p)<-[:HAS_MEMBER]-(c:Community)
+        WITH collect(DISTINCT s1.id) + collect(DISTINCT s2.id) + collect(DISTINCT s3.id) AS sids,
+             count(c) > 0 AS inAnyCommunity
+        RETURN [sid IN sids WHERE sid IS NOT NULL] AS sids, inAnyCommunity
         `,
         { id }
       )
       const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
       for (const sid of sids) anchors.add(sid)
+      if (r.records[0]?.get('inAnyCommunity') === true) {
+        anchors.add(PUBLIC_ANCHOR)
+      }
       result.set(id, anchors)
       continue
     }
@@ -398,6 +431,7 @@ export async function executeForBloom(
 
     const allowedSpaces = new Set<string>()
     for (const spaceId of allCandidateSpaces) {
+      if (spaceId === PUBLIC_ANCHOR) continue // resolved short-circuit, no canViewContent call needed
       // canViewContent opens its own read tx — safe to share the session.
       const allowed = await canViewContent(session, args.userId, spaceId)
       if (allowed) allowedSpaces.add(spaceId)
@@ -411,7 +445,8 @@ export async function executeForBloom(
       if (!candidates || candidates.size === 0) continue
       let ok = false
       for (const sid of candidates) {
-        if (allowedSpaces.has(sid)) {
+        // PUBLIC_ANCHOR means "node is always visible" (e.g. Community).
+        if (sid === PUBLIC_ANCHOR || allowedSpaces.has(sid)) {
           ok = true
           break
         }
