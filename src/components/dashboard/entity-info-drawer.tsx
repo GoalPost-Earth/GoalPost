@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ArrowRight, Layers, Lock, Sparkles, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { dispatchOpenSpaceWarp } from './space-warp-transition'
 
@@ -57,6 +58,8 @@ export const EntityInfoDrawer: FC = () => {
   const [entity, setEntity] = useState<InfoEntity | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
+  useFocusTrap(panelRef, entity !== null)
+
   // Listen for the open-drawer event globally.
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -104,12 +107,15 @@ export const EntityInfoDrawer: FC = () => {
       <aside
         ref={panelRef}
         role="dialog"
+        aria-modal="true"
         aria-label={`${entity.type} details`}
+        tabIndex={-1}
         className={cn(
           'fixed right-0 top-0 h-full w-full sm:w-[520px] z-50',
           'bg-gp-surface dark:bg-slate-950/95 backdrop-blur-2xl',
           'border-l border-gp-glass-border shadow-2xl',
-          'flex flex-col overflow-hidden'
+          'flex flex-col overflow-hidden',
+          'focus:outline-none'
         )}
       >
         <header className="flex items-center justify-between gap-2 px-6 py-4 border-b border-gp-glass-border shrink-0">

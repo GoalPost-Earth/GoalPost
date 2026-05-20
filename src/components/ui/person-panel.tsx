@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 export interface PersonInPanel {
   id: string
@@ -75,6 +76,18 @@ export function PersonPanel({
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
+  useFocusTrap(panelRef, isOpen && !!person)
+
+  // Esc closes — WAI-ARIA modal dialog pattern; parity with EntityInfoDrawer.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   useEffect(() => {
     if (panelRef.current) {
       if (isOpen) {
@@ -113,7 +126,11 @@ export function PersonPanel({
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed right-0 top-0 h-full w-96 bg-gp-glass-bg border-l border-gp-glass-border backdrop-blur-2xl z-50 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${person.name ?? `${person.firstName} ${person.lastName}`.trim()} details`}
+        tabIndex={-1}
+        className="fixed right-0 top-0 h-full w-96 bg-gp-glass-bg border-l border-gp-glass-border backdrop-blur-2xl z-50 shadow-2xl focus:outline-none"
         style={{ pointerEvents: 'auto' }}
       >
         <div className="flex flex-col h-full">

@@ -1,5 +1,6 @@
 export { default as useDebounce } from './useDebounce'
 export * from './useCreateField'
 export * from './useFieldsForSpace'
+export * from './useFocusTrap'
 export * from './useMeSpaceFields'
 export * from './use-space-permissions'

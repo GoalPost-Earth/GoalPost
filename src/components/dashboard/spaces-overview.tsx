@@ -244,7 +244,10 @@ function SpaceCard({ space }: SpaceCardProps) {
         className={cn(
           'absolute top-3 right-3 z-10 flex items-center justify-center size-7 rounded-full',
           'bg-white/10 dark:bg-white/5 border border-white/15 backdrop-blur-md',
-          'opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
+          // Touch devices: always visible (no hover state to discover it
+          // by). Hover-capable devices: invisible at rest, revealed on
+          // group-hover / focus-visible — same affordance as before.
+          'opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
           'hover:bg-white/20 dark:hover:bg-white/15 transition-all cursor-pointer'
         )}
       >

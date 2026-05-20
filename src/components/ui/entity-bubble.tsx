@@ -347,7 +347,7 @@ export function EntityBubble({
             e.stopPropagation()
             onEditClick(e)
           }}
-          className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-0 group-hover:opacity-100 z-30 cursor-pointer"
+          className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-30 cursor-pointer"
           title="Edit space"
           aria-label="Edit space"
         >
@@ -363,7 +363,7 @@ export function EntityBubble({
             e.stopPropagation()
             onInfoClick(e)
           }}
-          className="pointer-events-auto absolute -top-2 -left-2 p-2 rounded-full bg-white/15 hover:bg-white/30 text-white transition-all opacity-0 group-hover:opacity-100 z-30 cursor-pointer"
+          className="pointer-events-auto absolute -top-2 -left-2 p-2 rounded-full bg-white/15 hover:bg-white/30 text-white transition-all opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-30 cursor-pointer"
           title="View details"
           aria-label="View details"
         >
