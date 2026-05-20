@@ -165,6 +165,16 @@ export function buildSystemPromptWithSessionContext(
         'call search_* or query_for_bloom to re-discover it. Only fall back to a graph search ' +
         'when no canvas-visible entity matches.'
     )
+    lines.push('')
+    lines.push(
+      'BUT: an EXPANSION request rooted on a canvas-visible entity is NOT a duplicate. ' +
+        'When the user says "dive into X", "explore X", "X\'s relationships", "X\'s connections", ' +
+        '"what is X connected to", "expand X", or any phrasing that asks for MORE around an ' +
+        'entity already on screen — call query_for_bloom with an intent that names the focal ' +
+        'entity AND its id, and asks for an expansive sweep. Read the Cypher generator\'s Intent ' +
+        'Glossary for what "X\'s relationships" should mean (NOT just ResonanceLink nodes — ' +
+        'everything reachable in 1-2 hops the current user can see).'
+    )
   }
 
   lines.push('')

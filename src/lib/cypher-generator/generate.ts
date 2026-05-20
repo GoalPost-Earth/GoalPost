@@ -96,7 +96,37 @@ ${SCHEMA_DOC}
    That query renders as four nodes + three labelled edges in Bloom. If you omit \`owns\`, \`hc\`, or \`hp\` from the RETURN, the corresponding edges DISAPPEAR — the user sees disconnected nodes floating in space, which is a UX bug.
 6. Add a LIMIT clause (e.g. \`LIMIT 25\`). The runtime additionally wraps your query in \`CALL { … } RETURN * LIMIT $maxNodes\` for safety.
 7. Prefer matching by id (\`{id: $someId}\`) when an id is provided in the session context. Use CASE-INSENSITIVE substring for name/title fuzzing: \`toLower(ctx.title) CONTAINS toLower("care")\` — inline server-controlled literals (Space name, FieldContext title) safely quoted; do NOT introduce additional $parameters beyond $userId.
-8. Keep the query short and focused. Aim for ≤ 6 MATCH clauses.
+8. Keep the query short and focused. Aim for ≤ 6 MATCH clauses — but use OPTIONAL MATCH freely when an intent calls for an expansive sweep (see Intent Glossary below).
+
+# Intent Glossary — disambiguate the user's phrasing
+
+The user's natural-language intent rarely names entity types precisely. Read these mappings so you build a query that matches what they ACTUALLY want to see:
+
+- "X's relationships" / "X's connections" / "what is X connected to" / "dive into X" / "explore X" / "show me around X" / "expand X" → an EXPANSIVE sweep of every entity reachable from X in 1-2 hops that the runtime auth filter will allow. NOT just \`ResonanceLink\` nodes. For a Person, that means: spaces they own, spaces they are a member of, pulses they created, field contexts those pulses sit inside, other people they are CONNECTED_TO, and any ResonanceLinks involving their pulses. For a FieldContext or Space, that means: every child + sibling + adjacent entity.
+- "X's resonances" / "X's resonance links" → specifically \`ResonanceLink\` nodes incident to X via SOURCE/TARGET (or via HAS_RESONANCE from a FieldContext).
+- "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
+- "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
+- "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, or co-members of any shared Space.
+
+When the canvas already shows the focal entity (it appears in canvasVisibleEntities) and the user asks to expand / explore / dive into it, that is NOT a duplicate of the existing view — it is a request for MORE. Build an expansive query rooted at the entity's id; the runtime de-dupes returned nodes against what is already on the canvas.
+
+For an expansive sweep, raise your LIMIT toward 50 (the runtime cap is 60).
+
+# Expansive-sweep canonical shape (use this when the intent is "X's relationships" or similar)
+
+    MATCH (user:Person {id: $userId})
+    MATCH (focal:Person {id: "<id from canvasVisibleEntities or intent>"})
+    OPTIONAL MATCH (focal)-[owns:OWNS]->(sp:Space)
+    OPTIONAL MATCH (focal)<-[im:IS_MEMBER]-(sm:SpaceMembership)<-[hm:HAS_MEMBER]-(sp2:Space)
+    OPTIONAL MATCH (focal)<-[cb:CREATED_BY]-(p:FieldPulse)
+    OPTIONAL MATCH (ctx:FieldContext)-[hp:HAS_PULSE]->(p)
+    OPTIONAL MATCH (ctx)<-[hc:HAS_CONTEXT]-(sp3:Space)
+    OPTIONAL MATCH (focal)-[ct:CONNECTED_TO]-(other:Person)
+    OPTIONAL MATCH (p)<-[src:SOURCE]-(rl:ResonanceLink)-[tgt:TARGET]->(rp:FieldPulse)
+    RETURN focal, owns, sp, im, sm, hm, cb, p, hp, ctx, hc, sp3, ct, other, src, rl, tgt, rp
+    LIMIT 50
+
+Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal:FieldContext\`) when the intent is rooted on a different entity type. Drop OPTIONAL MATCH branches that are not relevant to the rooted type (e.g. a Space has no CREATED_BY incoming edges from itself, but it does have HAS_CONTEXT outgoing).
 
 # Adversarial input warning
 
