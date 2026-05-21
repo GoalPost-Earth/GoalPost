@@ -32,6 +32,11 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/': ['./node_modules/lightningcss/**/*'],
   },
+  // pdf-parse → pdfjs-dist loads pdf.worker.mjs via a relative dynamic import.
+  // Bundling them into .next chunks breaks that lookup ("Setting up fake worker
+  // failed"). Externalising forces server-side require from node_modules where
+  // the relative worker path resolves correctly.
+  serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
   async headers() {
     const corsOrigin =
       process.env.CORS_ORIGIN ||

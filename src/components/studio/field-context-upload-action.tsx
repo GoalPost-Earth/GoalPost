@@ -13,6 +13,7 @@ import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_Q
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 
 /**
  * Studio-shell entry point for document upload (GOAL-235).
@@ -58,11 +59,16 @@ export const FieldContextUploadAction: FC = () => {
     }
     setIsSubmitting(true)
     try {
+      // Fresh bearer token — cookies alone are not enough; the server route
+      // honours Authorization first and a stale cookie will 401 where a
+      // refreshed bearer succeeds. Mirrors the chat-thread fetch helpers.
+      const authHeaders = await chatApiAuthHeaders()
+
       // Step 1: ask the server for a presigned PUT URL.
       const presignRes = await fetch('/api/ingest/document/presign', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           fieldContextId: pinnedFieldContextId,
           filename: input.filename,
@@ -98,7 +104,7 @@ export const FieldContextUploadAction: FC = () => {
       const processRes = await fetch('/api/ingest/document/process', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           documentId: presign.documentId,
           blobKey: presign.blobKey,

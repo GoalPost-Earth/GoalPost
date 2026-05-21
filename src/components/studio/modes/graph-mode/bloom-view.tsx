@@ -8,8 +8,10 @@ import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { useFocalEntity } from '@/contexts'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
+import type { FocalEntityType } from '@/lib/focal-entity/types'
 import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { GraphLoadingState } from './graph-loading-state'
@@ -75,6 +77,23 @@ const FIELD_COLOR = {
 
 const FIELD_SIZE = 36
 
+// Pulse palette mirrors `--gp-{goal|resource|story|care|coreValue}` from
+// globals.css so Bloom nodes read with the same semantics as everywhere
+// else in the app. Hex values are duplicated here because NVL needs
+// resolved colors at node-render time — it cannot consume CSS variables.
+const PULSE_COLOR: Record<
+  'goal' | 'resource' | 'story' | 'care' | 'coreValue',
+  string
+> = {
+  goal: '#38bdf8',
+  resource: '#4ade80',
+  story: '#c084fc',
+  care: '#10b981',
+  coreValue: '#8b5cf6',
+}
+
+const PULSE_SIZE = 32
+
 interface SpaceRecord {
   id: string
   name: string
@@ -87,6 +106,20 @@ interface FieldContextRecord {
   spaceKind: 'MeSpace' | 'WeSpace'
 }
 
+interface PulseRecord {
+  id: string
+  name: string
+  pulseType: 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
+  focalType: FocalEntityType
+}
+
+interface ResonanceRecord {
+  id: string
+  sourceId: string
+  targetId: string
+  label: string
+}
+
 export const BloomView: FC = () => {
   const router = useRouter()
   const { setFocalEntity } = useFocalEntity()
@@ -95,21 +128,26 @@ export const BloomView: FC = () => {
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
 
-  // "In-space" is a URL concept, not a focal-entity concept. Reading
-  // `sessionContext.activeSpaceId` would conflate the user's *persisted*
-  // last-space with the *current route* — at the dashboard root that
-  // would render field contexts when we should be showing top-level
-  // spaces. Drive the scope strictly from the pathname. Overlay still
-  // takes priority over both modes.
+  // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
+  // Reading `sessionContext.activeSpaceId` would conflate the user's
+  // *persisted* last-space with the *current route* — at the dashboard
+  // root that would render field contexts when we should be showing
+  // top-level spaces. Drive the scope strictly from the pathname.
+  // Overlay still takes priority over both modes.
   const pathname = usePathname()
-  const activeSpaceId = useMemo(() => {
+  const { activeSpaceId, activeFieldId } = useMemo(() => {
     const match = focalEntityFromRoute(pathname)
-    if (!match) return null
-    return match.type === 'MeSpace' || match.type === 'WeSpace'
-      ? match.id
-      : null
+    if (!match) return { activeSpaceId: null, activeFieldId: null }
+    if (match.type === 'MeSpace' || match.type === 'WeSpace') {
+      return { activeSpaceId: match.id, activeFieldId: null }
+    }
+    if (match.type === 'FieldContext') {
+      return { activeSpaceId: null, activeFieldId: match.id }
+    }
+    return { activeSpaceId: null, activeFieldId: null }
   }, [pathname])
   const inSpace = !!activeSpaceId && !overlay
+  const inField = !!activeFieldId && !overlay
 
   // Identical Apollo queries to SpacesOverview + SpatialView. `cache-first`
   // hits the warm cache on every flip — zero network round-trip.
@@ -135,7 +173,25 @@ export const BloomView: FC = () => {
     }
   )
 
-  const loading = inSpace ? spaceDetailsLoading : meLoading || weLoading
+  // In-field details — `cache-first` mirrors the in-space rationale above.
+  // The FieldContext detail page already fires `GET_FIELD_CONTEXT_DETAILS`
+  // because `CanvasHost` keeps the route content mounted under
+  // `visibility:hidden` regardless of the active canvas view, so flipping
+  // into Bloom reads the cached result with no extra round-trip.
+  const { data: fieldDetailsData, loading: fieldDetailsLoading } = useQuery(
+    GET_FIELD_CONTEXT_DETAILS,
+    {
+      variables: { contextId: activeFieldId ?? '' },
+      skip: !activeFieldId,
+      fetchPolicy: 'cache-first',
+    }
+  )
+
+  const loading = inField
+    ? fieldDetailsLoading
+    : inSpace
+      ? spaceDetailsLoading
+      : meLoading || weLoading
 
   const spaces: SpaceRecord[] = useMemo(() => {
     const me = (meData?.meSpaces ?? []).map((s) => ({
@@ -165,6 +221,62 @@ export const BloomView: FC = () => {
     }))
   }, [inSpace, spaceDetailsData])
 
+  const pulses: PulseRecord[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return []
+    const make = (
+      list: Array<{ id: string; title?: string | null }> | undefined,
+      pulseType: PulseRecord['pulseType'],
+      focalType: FocalEntityType
+    ): PulseRecord[] =>
+      (list ?? []).map((pulse) => ({
+        id: pulse.id,
+        name: pulse.title || 'Untitled pulse',
+        pulseType,
+        focalType,
+      }))
+    return [
+      ...make(fieldDetailsData.goalPulses, 'goal', 'GoalPulse'),
+      ...make(fieldDetailsData.resourcePulses, 'resource', 'ResourcePulse'),
+      ...make(fieldDetailsData.storyPulses, 'story', 'StoryPulse'),
+      ...make(fieldDetailsData.carePulses, 'care', 'CarePulse'),
+      ...make(
+        fieldDetailsData.coreValuePulses,
+        'coreValue',
+        'CoreValuePulse'
+      ),
+    ]
+  }, [inField, fieldDetailsData])
+
+  // Resonance edges between pulses inside the active field. The Apollo
+  // payload only resolves `source`/`target` when both pulse subtype
+  // fragments matched (i.e. both endpoints are pulse entities), so we
+  // filter to entries with both ids present — that drops any edge whose
+  // endpoint is a non-pulse / inaccessible node without breaking the
+  // visualisation.
+  const resonances: ResonanceRecord[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0]
+    const links = (context?.resonancesInContext ?? []) as Array<{
+      id: string
+      label?: string | null
+      source?: Array<{ id?: string | null } | null> | null
+      target?: Array<{ id?: string | null } | null> | null
+    }>
+    return links.flatMap((link) => {
+      const sourceId = link.source?.[0]?.id
+      const targetId = link.target?.[0]?.id
+      if (!sourceId || !targetId) return []
+      return [
+        {
+          id: link.id,
+          sourceId,
+          targetId,
+          label: link.label ?? '',
+        },
+      ]
+    })
+  }, [inField, fieldDetailsData])
+
   // Native NVL nodes — caption / color / size only. NVL paints these
   // directly without any HTML container; that's the "minimal GoalPost
   // opinionation" the kb calls out.
@@ -172,8 +284,9 @@ export const BloomView: FC = () => {
   // Precedence:
   //   1. Overlay (chat-pushed subgraph) — always wins; cleared via the
   //      "Custom view from chat" chip in the canvas header.
-  //   2. In-space scope — the active Space's field contexts.
-  //   3. Default — the user's MeSpace + WeSpace cluster.
+  //   2. In-field scope — the active FieldContext's pulses.
+  //   3. In-space scope — the active Space's field contexts.
+  //   4. Default — the user's MeSpace + WeSpace cluster.
   const nodes: Node[] = useMemo(() => {
     if (overlay) {
       const positions = createClusteredFieldNodePositions(
@@ -189,6 +302,24 @@ export const BloomView: FC = () => {
           caption: n.caption ?? n.id,
           color: n.color ?? '#cbd5e1',
           size: n.size ?? 30,
+        } as Node
+      })
+    }
+    if (inField) {
+      if (pulses.length === 0) return []
+      const positions = createClusteredFieldNodePositions(
+        pulses.map((p) => ({ id: p.id, size: 'sm' })),
+        100
+      )
+      return positions.map((position, idx) => {
+        const pulse = pulses[idx]
+        return {
+          id: pulse.id,
+          x: position.x,
+          y: position.y,
+          caption: pulse.name,
+          color: PULSE_COLOR[pulse.pulseType],
+          size: PULSE_SIZE,
         } as Node
       })
     }
@@ -226,20 +357,42 @@ export const BloomView: FC = () => {
         size: SPACE_SIZE[space.type],
       } as Node
     })
-  }, [overlay, inSpace, fieldContexts, spaces])
+  }, [overlay, inField, pulses, inSpace, fieldContexts, spaces])
 
   const relationships: Relationship[] = useMemo(() => {
-    if (!overlay) return EMPTY_RELATIONSHIPS
-    return overlay.relationships.map(
-      (r) =>
-        ({
-          id: r.id,
-          from: r.from,
-          to: r.to,
-          caption: r.caption ?? '',
-        }) as Relationship
-    )
-  }, [overlay])
+    if (overlay) {
+      return overlay.relationships.map(
+        (r) =>
+          ({
+            id: r.id,
+            from: r.from,
+            to: r.to,
+            caption: r.caption ?? '',
+          }) as Relationship
+      )
+    }
+    if (inField && resonances.length > 0) {
+      // Filter to edges whose endpoints are actually rendered — keeps
+      // NVL from drawing dangling arrows to ghost nodes when a resonance
+      // points to a pulse that didn't load (e.g. permissions on a shared
+      // pulse).
+      const pulseIds = new Set(pulses.map((p) => p.id))
+      return resonances
+        .filter(
+          (r) => pulseIds.has(r.sourceId) && pulseIds.has(r.targetId)
+        )
+        .map(
+          (r) =>
+            ({
+              id: r.id,
+              from: r.sourceId,
+              to: r.targetId,
+              caption: r.label,
+            }) as Relationship
+        )
+    }
+    return EMPTY_RELATIONSHIPS
+  }, [overlay, inField, resonances, pulses])
 
   // Publish whatever Bloom is currently rendering so the assistant can
   // recognise entities by name (e.g. "show me what is in JD's Tech Lab"
@@ -247,6 +400,7 @@ export const BloomView: FC = () => {
   // Each precedence branch maps to a typed entity list:
   //   - overlay   → its own bag (type inferred from caption since the
   //                 overlay payload does not carry a GoalPost type)
+  //   - in-field  → the active FieldContext's pulses (typed by subtype)
   //   - in-space  → the active Space's field contexts
   //   - default   → the user's MeSpace + WeSpace cluster
   useEffect(() => {
@@ -258,6 +412,14 @@ export const BloomView: FC = () => {
           // Overlay payloads do not carry a typed label — surface as
           // "OverlayNode" so the model still has a hint.
           type: 'OverlayNode',
+          source: 'bloom' as const,
+        }))
+      }
+      if (inField) {
+        return pulses.map((p) => ({
+          id: p.id,
+          name: p.name,
+          type: p.focalType,
           source: 'bloom' as const,
         }))
       }
@@ -277,7 +439,15 @@ export const BloomView: FC = () => {
       }))
     })()
     publishVisibleEntities('bloom', bloomEntities)
-  }, [overlay, inSpace, fieldContexts, spaces, publishVisibleEntities])
+  }, [
+    overlay,
+    inField,
+    pulses,
+    inSpace,
+    fieldContexts,
+    spaces,
+    publishVisibleEntities,
+  ])
 
   const handleNodeClick = useCallback(
     (node: Node) => {
@@ -285,6 +455,18 @@ export const BloomView: FC = () => {
       // Overlay nodes are an opaque NVL bag whose type is not tracked
       // here — surface them in the side panel without mutating focal.
       if (overlay) return
+      if (inField) {
+        const pulse = pulses.find((p) => p.id === String(node.id))
+        if (pulse) {
+          setFocalEntity({
+            type: pulse.focalType,
+            id: pulse.id,
+            focusedAt: new Date().toISOString(),
+            source: 'manual',
+          })
+        }
+        return
+      }
       if (inSpace) {
         const ctx = fieldContexts.find((f) => f.id === String(node.id))
         if (ctx) {
@@ -307,7 +489,7 @@ export const BloomView: FC = () => {
         })
       }
     },
-    [overlay, inSpace, fieldContexts, spaces, setFocalEntity]
+    [overlay, inField, pulses, inSpace, fieldContexts, spaces, setFocalEntity]
   )
 
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
@@ -343,7 +525,13 @@ export const BloomView: FC = () => {
   // state during render" pattern (matches FocalEntityContext) to avoid
   // cascading renders. The fit uses a per-scope ref so it only fires
   // once per (scope, nodes-ready) pair without a setState round-trip.
-  const scopeKey = `${overlay?.generation ?? 'none'}|${activeSpaceId ?? 'root'}`
+  const scopeKey = `${overlay?.generation ?? 'none'}|${
+    activeFieldId
+      ? `field:${activeFieldId}`
+      : activeSpaceId
+        ? `space:${activeSpaceId}`
+        : 'root'
+  }`
   const [prevScopeKey, setPrevScopeKey] = useState(scopeKey)
   if (prevScopeKey !== scopeKey) {
     setPrevScopeKey(scopeKey)
@@ -405,7 +593,13 @@ export const BloomView: FC = () => {
   }, [])
 
   const isEmpty =
-    !overlay && !loading && (inSpace ? fieldContexts.length === 0 : spaces.length === 0)
+    !overlay &&
+    !loading &&
+    (inField
+      ? pulses.length === 0
+      : inSpace
+        ? fieldContexts.length === 0
+        : spaces.length === 0)
 
   return (
     <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
@@ -414,20 +608,24 @@ export const BloomView: FC = () => {
           <GraphLoadingState
             label="Bloom is gathering"
             subtitle={
-              inSpace
-                ? 'Native NVL view of this space’s field contexts.'
-                : 'Native NVL view of your spaces.'
+              inField
+                ? 'Native NVL view of this field’s pulses.'
+                : inSpace
+                  ? 'Native NVL view of this space’s field contexts.'
+                  : 'Native NVL view of your spaces.'
             }
           />
         ) : isEmpty ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
             <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
-              {inSpace ? 'category' : 'hub'}
+              {inField ? 'graphic_eq' : inSpace ? 'category' : 'hub'}
             </span>
             <p className="text-sm text-white/55 max-w-md">
-              {inSpace
-                ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a native NVL node.'
-                : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as native NVL nodes.'}
+              {inField
+                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here as a native NVL node.'
+                : inSpace
+                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a native NVL node.'
+                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as native NVL nodes.'}
             </p>
           </div>
         ) : (
@@ -446,7 +644,13 @@ export const BloomView: FC = () => {
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-                {overlay ? 'Node' : inSpace ? 'Field' : 'Space'}
+                {overlay
+                  ? 'Node'
+                  : inField
+                    ? 'Pulse'
+                    : inSpace
+                      ? 'Field'
+                      : 'Space'}
               </p>
               <h3 className="mt-1 text-xl font-bold text-white">
                 {selectedNode.caption}
@@ -471,10 +675,13 @@ export const BloomView: FC = () => {
             <span className="text-xs text-white/60 uppercase tracking-wider">
               {overlay
                 ? 'From chat'
-                : inSpace
-                  ? 'Field context'
-                  : (spaces.find((s) => s.id === String(selectedNode.id))?.type ??
-                    'Space')}
+                : inField
+                  ? (pulses.find((p) => p.id === String(selectedNode.id))
+                      ?.focalType ?? 'Pulse')
+                  : inSpace
+                    ? 'Field context'
+                    : (spaces.find((s) => s.id === String(selectedNode.id))
+                        ?.type ?? 'Space')}
             </span>
           </div>
 
@@ -484,14 +691,16 @@ export const BloomView: FC = () => {
               onClick={() => {
                 const id = String(selectedNode.id)
                 router.push(
-                  inSpace
-                    ? `/protected/dashboard/field-context/${id}`
-                    : `/protected/dashboard/space/${id}`
+                  inField
+                    ? `/protected/dashboard/pulses/${id}`
+                    : inSpace
+                      ? `/protected/dashboard/field-context/${id}`
+                      : `/protected/dashboard/space/${id}`
                 )
               }}
               className="w-full mt-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold py-2 transition-colors cursor-pointer"
             >
-              {inSpace ? 'Open field' : 'Open space'}
+              {inField ? 'Open pulse' : inSpace ? 'Open field' : 'Open space'}
             </button>
           )}
         </div>

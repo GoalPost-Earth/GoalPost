@@ -64,7 +64,21 @@ export type ExtractionModelClient = (
 ) => Promise<ExtractionModelOutput>
 
 export interface ExtractionModelInput {
+  /**
+   * Plain-text content of the document. Set for text/markdown uploads where
+   * the orchestrator decoded the bytes server-side. For binary documents
+   * (PDFs) routed through a multimodal model this is the empty string and
+   * the model reads from `documentUrl` instead.
+   */
   documentText: string
+  /**
+   * Short-lived URL (typically a presigned S3 GET) the multimodal extractor
+   * can fetch the file from. Set for the Gemini PDF path; unset for the
+   * OpenAI text path.
+   */
+  documentUrl?: string
+  /** MIME type of the document at `documentUrl`. */
+  documentMimeType?: string
   filename: string
   hint: string | null
   roster: FieldContextRoster

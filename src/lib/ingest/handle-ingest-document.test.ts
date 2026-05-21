@@ -1,17 +1,18 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
-import { handleIngestDocument } from './handle-ingest-document'
+import { seedAndIngest } from './__test-utils__/handle-ingest-document-helper'
 import type { ExtractionModelClient } from './extraction-model-invoker'
-import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
-import { initGraph } from '@/modules/graph'
 
 /**
  * Integration test for the doc-ingestion route orchestrator. Composes:
  * DocumentStorage → DocumentTextExtractor → FieldContextRoster →
- * ExtractionModelInvoker (mocked) → fresh ConversationThread + synthesized
- * assistant turn → optional executeAuthorizedWriteTool to simulate user
- * clicking Approve.
+ * ExtractionModelInvoker (mocked) → auto-execute via executeAuthorizedWriteTool
+ * → fresh ConversationThread + synthesized assistant turn.
+ *
+ * Auto-execute (new): the orchestrator runs each proposed tool call inline
+ * and stamps the execution result onto the synthesized assistant turn. No
+ * HITL approval step. Entities land in the graph during the upload mutation.
  */
 
 let neo4jAvailable = false
@@ -93,7 +94,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       assistantText: '',
     })
 
-    const result = await handleIngestDocument(
+    const result = await seedAndIngest(
       { driver, blobStore, modelClient },
       {
         currentUserId: ids.user,
@@ -109,8 +110,11 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
     if (!result.ok) throw new Error('unreachable')
     expect(result.documentId.length).toBeGreaterThan(0)
     expect(result.threadId.length).toBeGreaterThan(0)
-    expect(result.pendingApprovals).toHaveLength(1)
-    expect(result.pendingApprovals[0].tool).toBe('create_person')
+    // Auto-execute: the proposed tool call ran inline during the upload —
+    // result.executedToolCalls reflects what happened, not what's pending.
+    expect(result.executedToolCalls).toHaveLength(1)
+    expect(result.executedToolCalls[0].tool).toBe('create_person')
+    expect(result.executedToolCalls[0].result.success).not.toBe(false)
 
     const session = driver.session()
     try {
@@ -123,6 +127,18 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       expect(docRows.records).toHaveLength(1)
       expect(docRows.records[0].get('filename')).toBe('meeting-notes.txt')
 
+      // Auto-execute landed the PersonPulse with EXTRACTED_FROM directly —
+      // no separate approval step needed.
+      const personRows = await session.run(
+        `
+        MATCH (c:FieldContext {id: $ctxId})-[:HAS_PERSON]->(p:Person:PersonPulse {firstName: 'Sarah', lastName: 'Chen'})
+        MATCH (p)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
+        RETURN p.id AS personId
+        `,
+        { ctxId: ids.fieldContext, docId: result.documentId }
+      )
+      expect(personRows.records).toHaveLength(1)
+
       // Fresh thread titled "Ingest: <filename>"
       const threadRows = await session.run(
         `MATCH (u:Person {id: $userId})-[:HAS_THREAD]->(t:ConversationThread {id: $threadId})
@@ -132,7 +148,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       expect(threadRows.records).toHaveLength(1)
       expect(threadRows.records[0].get('title')).toBe('Ingest: meeting-notes.txt')
 
-      // Two turns: user (upload summary), assistant (synthesized)
+      // Two turns: user (upload summary), assistant (executed trace)
       const turnRows = await session.run(
         `MATCH (t:ConversationThread {id: $threadId})-[:HAS_TURN]->(turn:ConversationTurn)
          RETURN turn.role AS role, turn.content AS content, turn.parts AS parts, turn.order AS order
@@ -150,64 +166,17 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
         toolCallId?: string
         state?: string
         input?: unknown
-        output?: { approvalHash?: string; approvalRequired?: boolean; tool?: string }
+        output?: { approvalRequired?: boolean; success?: boolean; personId?: string }
       }>
-      // synthesized part is AI SDK v5 shape: tool-create_person, output-available
+      // Auto-execute shape: tool-create_person, state output-available, output
+      // carries the ToolExecutionResult — NOT approvalRequired.
       const toolPart = parts.find((p) => p.type === 'tool-create_person')
       expect(toolPart).toBeDefined()
       expect(toolPart!.state).toBe('output-available')
-      expect(toolPart!.output?.approvalRequired).toBe(true)
-      expect(typeof toolPart!.output?.approvalHash).toBe('string')
-    } finally {
-      await session.close()
-    }
-  })
-
-  itIf(true)('approving the synthesized tool call lands the PersonPulse with EXTRACTED_FROM to the Document', async () => {
-    if (!neo4jAvailable) return
-    const blobStore = createMemoryBlobStore()
-    const modelClient: ExtractionModelClient = async () => ({
-      persons: [{ firstName: 'Robert', lastName: 'Patel' }],
-      assistantText: '',
-    })
-
-    const result = await handleIngestDocument(
-      { driver, blobStore, modelClient },
-      {
-        currentUserId: ids.user,
-        fieldContextId: ids.fieldContext,
-        filename: 'roster.txt',
-        mimeType: 'text/plain',
-        buffer: Buffer.from('Robert Patel attended.'),
-        hint: null,
-      }
-    )
-    expect(result.ok).toBe(true)
-    if (!result.ok) throw new Error('unreachable')
-
-    // Simulate user clicking Approve — runtime would call executeAuthorizedWriteTool
-    // with the args carried by the pending approval.
-    const pending = result.pendingApprovals[0]
-    const graph = await initGraph()
-    const execResult = await executeAuthorizedWriteTool(
-      graph,
-      ids.user,
-      'create_person',
-      pending.args
-    )
-    expect(execResult.success).toBe(true)
-
-    const session = driver.session()
-    try {
-      const rows = await session.run(
-        `
-        MATCH (c:FieldContext {id: $ctxId})-[:HAS_PERSON]->(p:Person {firstName: 'Robert', lastName: 'Patel'})
-        MATCH (p)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
-        RETURN p.id AS personId
-        `,
-        { ctxId: ids.fieldContext, docId: result.documentId }
-      )
-      expect(rows.records).toHaveLength(1)
+      expect(toolPart!.output?.approvalRequired).toBeUndefined()
+      expect(toolPart!.output?.success).not.toBe(false)
+      // Execution result carries the created entity id.
+      expect(typeof toolPart!.output?.personId).toBe('string')
     } finally {
       await session.close()
     }
@@ -220,7 +189,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       throw new Error('rate limited')
     }
 
-    const result = await handleIngestDocument(
+    const result = await seedAndIngest(
       { driver, blobStore, modelClient },
       {
         currentUserId: ids.user,
@@ -233,7 +202,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
     )
     expect(result.ok).toBe(true)
     if (!result.ok) throw new Error('unreachable')
-    expect(result.pendingApprovals).toHaveLength(0)
+    expect(result.executedToolCalls).toHaveLength(0)
 
     const session = driver.session()
     try {
@@ -271,7 +240,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,
@@ -285,7 +254,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
 
       expect(result.ok).toBe(true)
       if (!result.ok) throw new Error('unreachable')
-      expect(result.pendingApprovals).toHaveLength(0)
+      expect(result.executedToolCalls).toHaveLength(0)
 
       const session = driver.session()
       try {
@@ -318,12 +287,107 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
     }
   )
 
+  itIf(true)(
+    'persists summary + concepts on the Document when a summarizer is supplied',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [],
+        assistantText: '',
+      })
+      const summarizerClient = async () => ({
+        summary: 'A planning note about the Q3 migration project.',
+        concepts: ['q3 migration', 'team planning', 'cutover risk'],
+      })
+
+      const result = await seedAndIngest(
+        { driver, blobStore, modelClient, summarizerClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'summary-test.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('Some plan text about Q3.'),
+          hint: null,
+        }
+      )
+      expect(result.ok).toBe(true)
+      if (!result.ok) throw new Error('unreachable')
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `MATCH (d:Document {id: $docId})
+           RETURN d.summary AS summary, d.concepts AS concepts`,
+          { docId: result.documentId }
+        )
+        expect(rows.records).toHaveLength(1)
+        expect(rows.records[0].get('summary')).toBe(
+          'A planning note about the Q3 migration project.'
+        )
+        expect(rows.records[0].get('concepts')).toEqual([
+          'q3 migration',
+          'team planning',
+          'cutover risk',
+        ])
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'summarizer failure is non-fatal — the Document still lands with null summary',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [],
+        assistantText: '',
+      })
+      const summarizerClient = async () => {
+        throw new Error('summarizer rate-limited')
+      }
+
+      const result = await seedAndIngest(
+        { driver, blobStore, modelClient, summarizerClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'summary-failure.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('Text.'),
+          hint: null,
+        }
+      )
+      expect(result.ok).toBe(true)
+      if (!result.ok) throw new Error('unreachable')
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `MATCH (d:Document {id: $docId})
+           RETURN d.summary AS summary, d.concepts AS concepts`,
+          { docId: result.documentId }
+        )
+        expect(rows.records).toHaveLength(1)
+        expect(rows.records[0].get('summary')).toBeNull()
+        expect(rows.records[0].get('concepts')).toEqual([])
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
   itIf(true)('rejects upload when uploader cannot edit the parent Space', async () => {
     if (!neo4jAvailable) return
     const blobStore = createMemoryBlobStore()
     const modelClient: ExtractionModelClient = async () => ({ persons: [], assistantText: '' })
 
-    const result = await handleIngestDocument(
+    const result = await seedAndIngest(
       { driver, blobStore, modelClient },
       {
         currentUserId: `test_outsider_${testRunId}`,
@@ -379,7 +443,7 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
         assistantText: '',
       })) as unknown as ExtractionModelClient
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,
@@ -397,9 +461,9 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       expect(result.ok).toBe(true)
       if (!result.ok) throw new Error('unreachable')
 
-      // 2 persons + 3 valid pulses; CarePulse was dropped server-side.
-      expect(result.pendingApprovals).toHaveLength(5)
-      const byTool = result.pendingApprovals.reduce<Record<string, number>>(
+      // 2 persons + 3 valid pulses auto-executed; CarePulse dropped server-side.
+      expect(result.executedToolCalls).toHaveLength(5)
+      const byTool = result.executedToolCalls.reduce<Record<string, number>>(
         (acc, c) => {
           acc[c.tool] = (acc[c.tool] ?? 0) + 1
           return acc
@@ -409,24 +473,17 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       expect(byTool.create_person).toBe(2)
       expect(byTool.create_pulse).toBe(3)
 
-      // None of the pre-staged tool calls carry the disallowed pulse type.
-      const pulseTypes = result.pendingApprovals
+      // None of the executed tool calls carry the disallowed pulse type.
+      const pulseTypes = result.executedToolCalls
         .filter((c) => c.tool === 'create_pulse')
         .map((c) => c.args.pulseType)
       expect(pulseTypes.sort()).toEqual(['GoalPulse', 'ResourcePulse', 'StoryPulse'])
       expect(pulseTypes).not.toContain('CarePulse')
 
-      // Simulate Approve all — runtime would call executeAuthorizedWriteTool
-      // once per pending approval.
-      const graph = await initGraph()
-      for (const pending of result.pendingApprovals) {
-        const execResult = await executeAuthorizedWriteTool(
-          graph,
-          ids.user,
-          pending.tool,
-          pending.args
-        )
-        expect(execResult.success).toBe(true)
+      // Auto-execute path: every proposed tool call ran inline. No need to
+      // simulate Approve — the orchestrator already called executeAuthorizedWriteTool.
+      for (const exec of result.executedToolCalls) {
+        expect(exec.result.success).not.toBe(false)
       }
 
       // Graph state: 2 PersonPulse + 3 FieldPulse with correct sub-labels,

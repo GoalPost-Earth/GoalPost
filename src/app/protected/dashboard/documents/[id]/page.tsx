@@ -33,6 +33,8 @@ const GET_DOCUMENT_BY_ID = gql`
       sizeBytes
       pageCount
       userHint
+      summary
+      concepts
       uploadedAt
       uploadedBy {
         id
@@ -70,6 +72,8 @@ interface DocumentDetail {
   sizeBytes: number
   pageCount: number | null
   userHint: string | null
+  summary: string | null
+  concepts: string[] | null
   uploadedAt: string
   uploadedBy?: {
     id: string
@@ -171,7 +175,7 @@ export default function DocumentDetailPage() {
       <ProfileBackground />
       <main className="relative">
         <ProfileLayout>
-          <div className="flex flex-col items-center text-center mb-12">
+          <div className="flex flex-col items-center text-center mb-8">
             <span className="text-[9px] uppercase font-semibold text-gp-primary mb-2">
               {document.mimeType.split('/')[1]?.toUpperCase() || 'Document'} •{' '}
               {field?.title ?? 'Field'}
@@ -183,6 +187,38 @@ export default function DocumentDetailPage() {
               Uploaded by {uploaderName} on {formatDate(document.uploadedAt)}
             </p>
           </div>
+
+          {(document.summary || (document.concepts && document.concepts.length > 0)) && (
+            <div className="mb-10 max-w-3xl mx-auto rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 px-6 py-5 space-y-4">
+              {document.summary && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest font-semibold text-gp-ink-muted mb-2">
+                    Summary
+                  </div>
+                  <p className="text-sm leading-relaxed text-gp-ink-strong dark:text-white">
+                    {document.summary}
+                  </p>
+                </div>
+              )}
+              {document.concepts && document.concepts.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest font-semibold text-gp-ink-muted mb-2">
+                    Concepts
+                  </div>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {document.concepts.map((concept) => (
+                      <li
+                        key={concept}
+                        className="rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs text-amber-700 dark:text-amber-300"
+                      >
+                        {concept}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <div className="flex flex-col gap-4">

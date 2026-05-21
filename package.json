@@ -24,6 +24,7 @@
     "workers": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx src/lib/jobs/workers.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.78",
     "@ai-sdk/openai": "^3.0.23",
     "@ai-sdk/react": "^3.0.64",
     "@apollo/client": "^4.0.11",
@@ -31,6 +32,8 @@
     "@assistant-ui/react": "^0.12.3",
     "@assistant-ui/react-ai-sdk": "^1.3.3",
     "@assistant-ui/react-markdown": "^0.11.5",
+    "@aws-sdk/client-s3": "^3.1051.0",
+    "@aws-sdk/s3-request-presigner": "^3.1051.0",
     "@graphql-codegen/cli": "^5.0.3",
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^3.9.1",
@@ -53,7 +56,6 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@types/papaparse": "^5.5.2",
     "@types/three": "^0.182.0",
-    "@vercel/blob": "^2.3.3",
     "@xyflow/react": "^12.10.0",
     "ai": "^6.0.62",
     "bcryptjs": "^3.0.2",

@@ -65,6 +65,7 @@ import {
   type DocumentRecord,
 } from '@/components/fields/document-list'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 
 export default function FieldContextDetailsPage() {
@@ -909,11 +910,12 @@ export default function FieldContextDetailsPage() {
   const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
     setIsUploadingDocument(true)
     try {
+      const authHeaders = await chatApiAuthHeaders()
       // Step 1: presign PUT URL.
       const presignRes = await fetch('/api/ingest/document/presign', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           fieldContextId: contextId,
           filename: input.filename,
@@ -946,7 +948,7 @@ export default function FieldContextDetailsPage() {
       const processRes = await fetch('/api/ingest/document/process', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           documentId: presign.documentId,
           blobKey: presign.blobKey,

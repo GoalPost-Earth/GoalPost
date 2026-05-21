@@ -8,8 +8,14 @@ import type { Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import { EntityBubble, type BubbleSize } from '@/components/ui/entity-bubble'
+import {
+  getConfigForType,
+  type NodeType as PulseNodeType,
+} from '@/lib/pulse-type-config'
+import type { FocalEntityType } from '@/lib/focal-entity/types'
 import {
   createNvlNodeElement,
   renderReactComponentToContainer,
@@ -72,6 +78,13 @@ interface FieldContextRecord {
   spaceKind: 'MeSpace' | 'WeSpace'
 }
 
+interface PulseRecord {
+  id: string
+  title: string
+  pulseType: PulseNodeType
+  focalType: FocalEntityType
+}
+
 type Descriptor =
   | {
       kind: 'space'
@@ -89,6 +102,18 @@ type Descriptor =
       id: string
       type: 'FieldContext'
       spaceKind: 'MeSpace' | 'WeSpace'
+      size: BubbleSize
+      shape: (typeof BUBBLE_SHAPES)[number]
+      icon: string
+      title: string
+      subtitle: string
+      badge?: { text: string; variant: 'accent' | 'primary' }
+    }
+  | {
+      kind: 'pulse'
+      id: string
+      type: FocalEntityType
+      pulseType: PulseNodeType
       size: BubbleSize
       shape: (typeof BUBBLE_SHAPES)[number]
       icon: string
@@ -156,20 +181,26 @@ export const SpatialView: FC = () => {
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const containerCacheRef = useRef<Map<string, HTMLElement>>(new Map())
 
-  // "In-space" is a URL concept, not a focal-entity concept. We must NOT
-  // read `sessionContext.activeSpaceId` here — that value also reflects
-  // *persisted* focal (the user's last space from a prior session), which
-  // would make the graph view falsely render field contexts at the
-  // dashboard root. Drive scope strictly from the current pathname.
+  // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
+  // We must NOT read `sessionContext.activeSpaceId` here — that value also
+  // reflects *persisted* focal (the user's last space from a prior
+  // session), which would make the graph view falsely render field
+  // contexts at the dashboard root. Drive scope strictly from the current
+  // pathname.
   const pathname = usePathname()
-  const activeSpaceId = useMemo(() => {
+  const { activeSpaceId, activeFieldId } = useMemo(() => {
     const match = focalEntityFromRoute(pathname)
-    if (!match) return null
-    return match.type === 'MeSpace' || match.type === 'WeSpace'
-      ? match.id
-      : null
+    if (!match) return { activeSpaceId: null, activeFieldId: null }
+    if (match.type === 'MeSpace' || match.type === 'WeSpace') {
+      return { activeSpaceId: match.id, activeFieldId: null }
+    }
+    if (match.type === 'FieldContext') {
+      return { activeSpaceId: null, activeFieldId: match.id }
+    }
+    return { activeSpaceId: null, activeFieldId: null }
   }, [pathname])
   const inSpace = !!activeSpaceId
+  const inField = !!activeFieldId
 
   // Same queries the dashboard cards use → Apollo cache is already warm.
   // `cache-first` keeps the toggle truly instant (no network round-trip).
@@ -196,7 +227,27 @@ export const SpatialView: FC = () => {
     }
   )
 
-  const loading = inSpace ? spaceDetailsLoading : meLoading || weLoading
+  // In-field details — `cache-first` mirrors the in-space rationale above.
+  // The FieldContext detail page (`/protected/dashboard/field-context/[id]`)
+  // already fires `GET_FIELD_CONTEXT_DETAILS` because `CanvasHost` keeps
+  // that route content mounted (under `visibility:hidden`) regardless of
+  // the active canvas view. Apollo dedupes against that in-flight query so
+  // flipping into Graph view yields the cached result the moment it
+  // resolves — no extra round-trip.
+  const { data: fieldDetailsData, loading: fieldDetailsLoading } = useQuery(
+    GET_FIELD_CONTEXT_DETAILS,
+    {
+      variables: { contextId: activeFieldId ?? '' },
+      skip: !activeFieldId,
+      fetchPolicy: 'cache-first',
+    }
+  )
+
+  const loading = inField
+    ? fieldDetailsLoading
+    : inSpace
+      ? spaceDetailsLoading
+      : meLoading || weLoading
 
   const spaces: SpaceRecord[] = useMemo(() => {
     const me = (meData?.meSpaces ?? []).map((s) => ({
@@ -226,10 +277,56 @@ export const SpatialView: FC = () => {
     }))
   }, [inSpace, spaceDetailsData])
 
-  // Stable descriptors. In-space mode produces field-context bubbles;
-  // top-level mode produces space bubbles. The downstream NVL + container
-  // pipeline is identical — `kind` only changes click behavior.
+  // In-field: surface the field's pulses (Goal / Resource / Story / Care /
+  // CoreValue) as bubbles. Each pulse keeps its config-driven icon so the
+  // type reads at a glance even before the title is parsed.
+  const pulses: PulseRecord[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return []
+    const make = (
+      list: Array<{ id: string; title?: string | null }> | undefined,
+      pulseType: PulseNodeType,
+      focalType: FocalEntityType
+    ): PulseRecord[] =>
+      (list ?? []).map((pulse) => ({
+        id: pulse.id,
+        title: pulse.title || 'Untitled pulse',
+        pulseType,
+        focalType,
+      }))
+    return [
+      ...make(fieldDetailsData.goalPulses, 'goal', 'GoalPulse'),
+      ...make(fieldDetailsData.resourcePulses, 'resource', 'ResourcePulse'),
+      ...make(fieldDetailsData.storyPulses, 'story', 'StoryPulse'),
+      ...make(fieldDetailsData.carePulses, 'care', 'CarePulse'),
+      ...make(
+        fieldDetailsData.coreValuePulses,
+        'coreValue',
+        'CoreValuePulse'
+      ),
+    ]
+  }, [inField, fieldDetailsData])
+
+  // Stable descriptors. In-field mode produces pulse bubbles; in-space
+  // mode produces field-context bubbles; top-level mode produces space
+  // bubbles. The downstream NVL + container pipeline is identical — `kind`
+  // only changes click behavior.
   const descriptors: Descriptor[] = useMemo(() => {
+    if (inField) {
+      return pulses.map((pulse, idx) => {
+        const config = getConfigForType(pulse.pulseType)
+        return {
+          kind: 'pulse',
+          id: pulse.id,
+          type: pulse.focalType,
+          pulseType: pulse.pulseType,
+          size: FIELD_BUBBLE_SIZES[idx % FIELD_BUBBLE_SIZES.length],
+          shape: BUBBLE_SHAPES[idx % BUBBLE_SHAPES.length],
+          icon: config.icon,
+          title: pulse.title,
+          subtitle: config.label,
+        }
+      })
+    }
     if (inSpace) {
       return fieldContexts.map((ctx, idx) => {
         const isMe = ctx.spaceKind === 'MeSpace'
@@ -284,7 +381,7 @@ export const SpatialView: FC = () => {
             : undefined,
       }
     })
-  }, [inSpace, fieldContexts, spaces])
+  }, [inField, pulses, inSpace, fieldContexts, spaces])
 
   // Purge cached containers for spaces that no longer exist.
   useEffect(() => {
@@ -334,6 +431,10 @@ export const SpatialView: FC = () => {
     (id: string) => {
       const desc = descriptors.find((d) => d.id === id)
       if (!desc) return
+      if (desc.kind === 'pulse') {
+        router.push(`/protected/dashboard/pulses/${id}`)
+        return
+      }
       if (desc.kind === 'field') {
         router.push(`/protected/dashboard/field-context/${id}`)
         return
@@ -364,7 +465,13 @@ export const SpatialView: FC = () => {
           animationDelay={idx * 0.08}
           onClick={() => handleOpen(desc.id)}
           onInfoClick={() =>
-            dispatchOpenInfoDrawer({ type: desc.type, id: desc.id })
+            dispatchOpenInfoDrawer({
+              // `InfoEntityType` collapses all pulse subtypes to the
+              // generic 'Pulse' key — the drawer resolves the precise
+              // typename from the entity itself.
+              type: desc.kind === 'pulse' ? 'Pulse' : desc.type,
+              id: desc.id,
+            })
           }
         />,
         container
@@ -372,12 +479,16 @@ export const SpatialView: FC = () => {
     })
   }, [descriptors, handleOpen])
 
-  // Auto-fit once per scope (top-level vs in-space-X). Tracking via a
-  // ref keyed off the scope string means we only re-fit when entering /
-  // leaving a space, not on every descriptor re-derivation.
+  // Auto-fit once per scope (top-level vs in-space-X vs in-field-X).
+  // Tracking via a ref keyed off the scope string means we only re-fit
+  // when entering / leaving a scope, not on every descriptor re-derivation.
   const lastFitScopeRef = useRef<string | null>(null)
   useEffect(() => {
-    const scope = activeSpaceId ?? 'root'
+    const scope = activeFieldId
+      ? `field:${activeFieldId}`
+      : activeSpaceId
+        ? `space:${activeSpaceId}`
+        : 'root'
     if (lastFitScopeRef.current === scope) return
     if (descriptors.length === 0) return
     // Defer one tick so NVL has time to lay nodes out before we measure.
@@ -396,7 +507,7 @@ export const SpatialView: FC = () => {
       )
     }, 120)
     return () => window.clearTimeout(timeout)
-  }, [descriptors, activeSpaceId])
+  }, [descriptors, activeSpaceId, activeFieldId])
 
   // Listen for zoom commands from the floating canvas action bar — same
   // contract BloomView honors so both NVL surfaces feel identical.
@@ -491,22 +602,32 @@ export const SpatialView: FC = () => {
 
       {loading && descriptors.length === 0 ? (
         <GraphLoadingState
-          label={inSpace ? 'Loading field contexts' : 'Loading spaces'}
+          label={
+            inField
+              ? 'Loading pulses'
+              : inSpace
+                ? 'Loading field contexts'
+                : 'Loading spaces'
+          }
           subtitle={
-            inSpace
-              ? 'Gathering this space’s field contexts.'
-              : 'Gathering your MeSpaces and WeSpaces.'
+            inField
+              ? 'Gathering this field’s pulses.'
+              : inSpace
+                ? 'Gathering this space’s field contexts.'
+                : 'Gathering your MeSpaces and WeSpaces.'
           }
         />
       ) : isEmpty ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
           <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
-            {inSpace ? 'category' : 'workspaces'}
+            {inField ? 'graphic_eq' : inSpace ? 'category' : 'workspaces'}
           </span>
           <p className="text-sm text-white/55 max-w-md">
-            {inSpace
-              ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a bubble.'
-              : 'No spaces to visualize yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as bubbles.'}
+            {inField
+              ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here as a bubble.'
+              : inSpace
+                ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a bubble.'
+                : 'No spaces to visualize yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as bubbles.'}
           </p>
         </div>
       ) : (

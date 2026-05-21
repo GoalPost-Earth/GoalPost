@@ -17,6 +17,8 @@ export const GET_DOCUMENTS_BY_FIELD_CONTEXT = gql`
       sizeBytes
       pageCount
       userHint
+      summary
+      concepts
       uploadedAt
       extractedPeople {
         id

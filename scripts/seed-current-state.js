@@ -614,7 +614,7 @@ async function createPeople() {
   console.log('\n👥 Creating people...')
   const query = `
     UNWIND $people as person
-    CREATE (p:Person:LifeSensor:RelationalEntity {
+    CREATE (p:Person:User:LifeSensor:RelationalEntity {
       id: person.id,
       firstName: person.firstName,
       lastName: person.lastName,

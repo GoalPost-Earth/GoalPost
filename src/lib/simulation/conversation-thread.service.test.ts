@@ -7,7 +7,7 @@ import {
   listConversationThreadsSummary,
   setLastViewedConversationThread,
 } from './conversation-thread.service'
-import { handleIngestDocument } from '@/lib/ingest/handle-ingest-document'
+import { seedAndIngest } from '@/lib/ingest/__test-utils__/handle-ingest-document-helper'
 import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
 import type { ExtractionModelClient } from '@/lib/ingest/extraction-model-invoker'
 
@@ -112,7 +112,7 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,
@@ -179,7 +179,7 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
       })
 
       // Create an OLDER ingest thread.
-      const older = await handleIngestDocument(
+      const older = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,
@@ -198,7 +198,7 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
 
       // Create a NEWER ingest thread — its createIngestThread overwrites
       // lastViewedThreadId to itself.
-      const newer = await handleIngestDocument(
+      const newer = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,

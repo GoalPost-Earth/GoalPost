@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
-import { uploadDocument } from './document-storage'
+import { anchorDocument, setDocumentSummary } from './document-storage'
 import {
   extractDocumentText,
   DocumentTextExtractionError,
@@ -12,9 +12,30 @@ import {
   type ExtractionModelClient,
   type ExtractionResult,
 } from './extraction-model-invoker'
-import type { SynthesizedToolCall } from './synthesized-turn-appender'
-import { buildSynthesizedAssistantTurnParts } from './synthesized-turn-appender'
+import {
+  summarizeDocument,
+  type DocumentSummarizerClient,
+} from './document-summarizer'
+import type {
+  ExecutedToolCallRecord,
+  ExecutedToolResult,
+  SynthesizedToolCall,
+} from './synthesized-turn-appender'
+import { buildExecutedAssistantTurnParts } from './synthesized-turn-appender'
 import { appendConversationTurn } from '@/lib/simulation/conversation-thread.service'
+import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
+import { initGraph } from '@/modules/graph'
+
+/**
+ * URLs Gemini fetches synchronously inside generateContent. A 15-minute TTL
+ * gives the call generous headroom while keeping the leaked-URL window
+ * narrow.
+ */
+const GEMINI_PRESIGN_TTL_SECONDS = 60 * 15
+
+function isPdfMime(mime: string): boolean {
+  return mime.toLowerCase().split(';')[0].trim() === 'application/pdf'
+}
 
 /**
  * Creates a fresh ConversationThread for this ingest run. Intentionally does
@@ -73,23 +94,31 @@ export async function createIngestThread(
 }
 
 /**
- * Writes both turns of the synthesized assistant trace into a thread the
- * caller has already created. Shared between the initial upload path and the
- * re-extract path so the turn shape (user "Uploaded X" / "Re-extracted X" +
- * synthesized assistant parts) stays identical across both surfaces.
+ * Auto-executes the proposed tool calls server-side and writes both turns
+ * of the synthesized assistant trace into a thread the caller has already
+ * created. Shared between the initial upload path and the re-extract path
+ * so the turn shape (user "Uploaded X" / "Re-extracted X" + executed
+ * assistant parts) stays identical across both surfaces.
  *
- * Slice 7 (GOAL-242): each tool call's args are enriched with
- * `conversationThreadId` BEFORE the synthesized parts are built so the
- * approval-hash already reflects the thread context. The per-entity Log row
- * written on approval can then stamp `metadata.conversationThreadId` without
- * a separate lookup — closing the audit loop end-to-end.
+ * Auto-approve rationale (see PRD § revised flow): doc ingestion historically
+ * pre-staged HITL tool calls and waited for the user to click Approve. That
+ * left "I uploaded a document but no pulses appeared" as the most common
+ * failure mode — the work was done but invisible. The upload itself already
+ * gates on `canEditContent`, so re-asking for approval was a UX wall, not a
+ * second security layer. Auto-execute closes the loop while keeping the
+ * audit trail (one `:Log` per created entity, written inline by the same
+ * `executeAuthorizedWriteTool` path manual creation uses).
+ *
+ * Each tool call's args are still enriched with `conversationThreadId` so
+ * the Log row's metadata can carry both `documentId` and the originating
+ * thread — closing the audit loop end-to-end.
  */
 export async function appendSynthesizedIngestTurns(
   userId: string,
   threadId: string,
   userTurnContent: string,
   extraction: ExtractionResult
-): Promise<SynthesizedToolCall[]> {
+): Promise<ExecutedToolCallRecord[]> {
   await appendConversationTurn(
     userId,
     {
@@ -100,16 +129,60 @@ export async function appendSynthesizedIngestTurns(
     threadId
   )
 
-  const assistantText = extraction.assistantText
-  const toolCalls =
+  const toolCalls: SynthesizedToolCall[] =
     extraction.kind === 'ok'
       ? extraction.toolCalls.map((call) => ({
           ...call,
           args: { ...call.args, conversationThreadId: threadId },
         }))
-      : ([] as SynthesizedToolCall[])
-  const parts = buildSynthesizedAssistantTurnParts({
-    toolCalls,
+      : []
+
+  // Execute each proposed tool call against the live graph. A failure on
+  // one entity does not abort the rest — partial success is recorded in
+  // the assistant turn so the user can see which entities landed and
+  // which need manual follow-up.
+  const executed: ExecutedToolCallRecord[] = []
+  if (toolCalls.length > 0) {
+    const graph = await initGraph()
+    for (const call of toolCalls) {
+      let result: ExecutedToolResult
+      try {
+        result = (await executeAuthorizedWriteTool(
+          graph,
+          userId,
+          call.tool,
+          call.args
+        )) as ExecutedToolResult
+      } catch (err) {
+        result = {
+          success: false,
+          message:
+            err instanceof Error
+              ? err.message
+              : 'Tool execution failed unexpectedly.',
+        }
+      }
+      executed.push({ tool: call.tool, args: call.args, result })
+    }
+  }
+
+  const succeeded = executed.filter((e) => e.result.success !== false).length
+  const failed = executed.length - succeeded
+  // The extractor emits a free-text reply explaining what it proposed.
+  // Prepend a one-line execution summary so the thread reads as a record
+  // of what happened, not a record of what was proposed.
+  const summaryLine =
+    executed.length === 0
+      ? ''
+      : failed === 0
+        ? `Created ${succeeded} ${succeeded === 1 ? 'entity' : 'entities'} from this document.`
+        : `Created ${succeeded} of ${executed.length} proposed entities. ${failed} failed — see details above.`
+  const assistantText = [summaryLine, extraction.assistantText]
+    .filter((s) => s.length > 0)
+    .join('\n\n')
+
+  const parts = buildExecutedAssistantTurnParts({
+    toolCalls: executed,
     assistantText,
   })
   await appendConversationTurn(
@@ -117,13 +190,28 @@ export async function appendSynthesizedIngestTurns(
     { role: 'assistant', content: assistantText, parts },
     threadId
   )
-  return toolCalls
+  return executed
 }
 
 export interface IngestDocumentDependencies {
   driver: Driver
   blobStore: BlobStore
-  modelClient: ExtractionModelClient
+  /**
+   * Multimodal extractor (Gemini) used for PDFs. Reads the file by
+   * presigned URL.
+   */
+  pdfExtractionClient: ExtractionModelClient
+  /**
+   * Text-only extractor (OpenAI) used for .txt/.md uploads. Reads the
+   * decoded document body.
+   */
+  textExtractionClient: ExtractionModelClient
+  /**
+   * Optional summarizers — one per modality. Failure is non-fatal.
+   * Tests can omit both to keep the entity-extraction surface in isolation.
+   */
+  pdfSummarizerClient?: DocumentSummarizerClient | null
+  textSummarizerClient?: DocumentSummarizerClient | null
 }
 
 export interface IngestDocumentInput {
@@ -131,7 +219,13 @@ export interface IngestDocumentInput {
   fieldContextId: string
   filename: string
   mimeType: string
-  buffer: Buffer
+  /**
+   * Key of the file the browser has already uploaded to S3 via a presigned
+   * PUT URL. The orchestrator never holds the bytes.
+   */
+  blobKey: string
+  /** Client-reported size (used to populate Document.sizeBytes). */
+  sizeBytes: number
   hint: string | null
 }
 
@@ -141,12 +235,18 @@ export type IngestFailureReason =
   | 'oversize_pages'
   | 'oversize_chars'
   | 'parse_failure'
+  | 'blob_missing'
 
 export interface IngestSuccess {
   ok: true
   documentId: string
   threadId: string
-  pendingApprovals: SynthesizedToolCall[]
+  /**
+   * The tool calls the extractor proposed and the orchestrator auto-
+   * executed. `result.success === true` means the entity landed in the
+   * graph; `false` means execution failed (permission, validation, etc.).
+   */
+  executedToolCalls: ExecutedToolCallRecord[]
 }
 export interface IngestFailure {
   ok: false
@@ -207,7 +307,7 @@ export async function handleIngestDocument(
   deps: IngestDocumentDependencies,
   input: IngestDocumentInput
 ): Promise<IngestDocumentResult> {
-  // Permission gate FIRST so a bad caller never causes a blob put.
+  // Permission gate FIRST so a bad caller never causes graph writes.
   const allowed = await userCanEditContext(
     deps.driver,
     input.currentUserId,
@@ -221,63 +321,129 @@ export async function handleIngestDocument(
     }
   }
 
-  // 1) Extract text FIRST so a bad mime / oversize doc never causes a blob
-  // put or a Document node creation. Per slice-3 AC: "No `Document` node
-  // persists" on rejection.
-  let extracted
-  try {
-    extracted = await extractDocumentText({
-      mimeType: input.mimeType,
-      buffer: input.buffer,
-      filename: input.filename,
-    })
-  } catch (err) {
-    if (err instanceof DocumentTextExtractionError) {
-      return { ok: false, reason: err.kind, error: err.message }
-    }
-    throw err
-  }
-
   const fieldContextTitle =
     (await getFieldContextTitle(deps.driver, input.fieldContextId)) ?? ''
 
-  // 2) DocumentStorage — graph anchor + blob (only AFTER extraction succeeds)
+  // The browser has already uploaded the file to S3. We prepare extractor
+  // inputs based on mime type: PDFs go to Gemini multimodal via a presigned
+  // GET URL; text/markdown is decoded server-side and sent to OpenAI as
+  // plain text.
+  let extractionModelInputExtras: {
+    documentText: string
+    documentUrl?: string
+    documentMimeType?: string
+  }
+  let summarizerExtras: {
+    documentText: string
+    documentUrl?: string
+    documentMimeType?: string
+  }
+  let pageCount: number | null = null
+  let modelClient: ExtractionModelClient
+  let summarizerClient: DocumentSummarizerClient | null
+
+  if (isPdfMime(input.mimeType)) {
+    const url = await deps.blobStore.presignGet({
+      key: input.blobKey,
+      ttlSeconds: GEMINI_PRESIGN_TTL_SECONDS,
+    })
+    extractionModelInputExtras = {
+      documentText: '',
+      documentUrl: url,
+      documentMimeType: input.mimeType,
+    }
+    summarizerExtras = {
+      documentText: '',
+      documentUrl: url,
+      documentMimeType: input.mimeType,
+    }
+    modelClient = deps.pdfExtractionClient
+    summarizerClient = deps.pdfSummarizerClient ?? null
+  } else {
+    // Text path: pull the bytes back from blob storage and decode. The
+    // existing extractor enforces MAX_TEXT_CHARS and rejects unsupported
+    // mimes.
+    const blob = await deps.blobStore.get(input.blobKey)
+    if (!blob) {
+      return {
+        ok: false,
+        reason: 'blob_missing',
+        error: 'The uploaded file could not be read back from storage.',
+      }
+    }
+    let extracted
+    try {
+      extracted = await extractDocumentText({
+        mimeType: input.mimeType,
+        buffer: blob.buffer,
+        filename: input.filename,
+      })
+    } catch (err) {
+      if (err instanceof DocumentTextExtractionError) {
+        return { ok: false, reason: err.kind, error: err.message }
+      }
+      throw err
+    }
+    pageCount = extracted.pageCount
+    extractionModelInputExtras = { documentText: extracted.text }
+    summarizerExtras = { documentText: extracted.text }
+    modelClient = deps.textExtractionClient
+    summarizerClient = deps.textSummarizerClient ?? null
+  }
+
+  // Anchor the Document node in the graph. The blob already lives at
+  // input.blobKey; we record both the key and a stable identifier URL.
   const documentId = `document_${randomUUID()}`
-  await uploadDocument({
+  await anchorDocument({
     driver: deps.driver,
-    blobStore: deps.blobStore,
     documentId,
     fieldContextId: input.fieldContextId,
     uploaderUserId: input.currentUserId,
     filename: input.filename,
     mimeType: input.mimeType,
-    buffer: input.buffer,
-    pageCount: extracted.pageCount,
+    sizeBytes: input.sizeBytes,
+    pageCount,
     userHint: input.hint,
+    blobKey: input.blobKey,
+    // The canonical blob locator is the key — presigned URLs are minted on
+    // demand and never persisted.
+    blobUrl: input.blobKey,
   })
 
-  // 3) Load the FieldContext roster so the extractor can emit update_*
-  //    for matches against existing persons/pulses (GOAL-239).
+  // Load roster + run extraction and summarizer concurrently.
   const roster = await loadFieldContextRoster({
     driver: deps.driver,
     fieldContextId: input.fieldContextId,
   })
 
-  // 4) Invoke extraction model
-  const extraction = await extractEntities(
-    {
-      documentText: extracted.text,
+  const [extraction, summary] = await Promise.all([
+    extractEntities(
+      {
+        ...extractionModelInputExtras,
+        filename: input.filename,
+        hint: input.hint,
+        roster,
+        fieldContextId: input.fieldContextId,
+        fieldContextTitle,
+        documentId,
+      },
+      modelClient
+    ),
+    summarizeDocument(summarizerClient, {
+      ...summarizerExtras,
       filename: input.filename,
       hint: input.hint,
-      roster,
-      fieldContextId: input.fieldContextId,
       fieldContextTitle,
-      documentId,
-    },
-    deps.modelClient
-  )
+    }),
+  ])
 
-  // 5) Fresh ConversationThread + synthesized assistant turn
+  await setDocumentSummary({
+    driver: deps.driver,
+    documentId,
+    summary: summary.summary,
+    concepts: summary.concepts,
+  })
+
   const threadId = await createIngestThread(
     deps.driver,
     input.currentUserId,
@@ -288,7 +454,7 @@ export async function handleIngestDocument(
   const userTurnContent = input.hint
     ? `Uploaded ${input.filename}. Hint: ${input.hint}`
     : `Uploaded ${input.filename}`
-  const toolCalls = await appendSynthesizedIngestTurns(
+  const executedToolCalls = await appendSynthesizedIngestTurns(
     input.currentUserId,
     threadId,
     userTurnContent,
@@ -299,6 +465,6 @@ export async function handleIngestDocument(
     ok: true,
     documentId,
     threadId,
-    pendingApprovals: toolCalls,
+    executedToolCalls,
   }
 }

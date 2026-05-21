@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
-import { handleIngestDocument } from './handle-ingest-document'
 import {
-  handleReExtractDocument,
-  type ReExtractDocumentDependencies,
-} from './handle-reextract-document'
+  reExtractWithSingleClient,
+  seedAndIngest,
+} from './__test-utils__/handle-ingest-document-helper'
 import type {
   ExtractionModelClient,
   ExtractionModelInput,
@@ -104,13 +103,15 @@ describe('handleReExtractDocument — slice 6', () => {
       if (!neo4jAvailable) return
       const blobStore = createMemoryBlobStore()
       let putCalls = 0
-      const trackingBlobStore = {
+      const trackingBlobStore: typeof blobStore = {
         put: async (...args: Parameters<typeof blobStore.put>) => {
           putCalls += 1
           return blobStore.put(...args)
         },
-        get: blobStore.get,
-        delete: blobStore.delete,
+        get: blobStore.get.bind(blobStore),
+        delete: blobStore.delete.bind(blobStore),
+        presignPut: blobStore.presignPut.bind(blobStore),
+        presignGet: blobStore.presignGet.bind(blobStore),
       }
 
       const firstClient: ExtractionModelClient = async () => ({
@@ -118,7 +119,7 @@ describe('handleReExtractDocument — slice 6', () => {
         assistantText: '',
       })
 
-      const upload = await handleIngestDocument(
+      const upload = await seedAndIngest(
         { driver, blobStore: trackingBlobStore, modelClient: firstClient },
         {
           currentUserId: ids.user,
@@ -146,12 +147,12 @@ describe('handleReExtractDocument — slice 6', () => {
         }
       }
 
-      const reExtract = await handleReExtractDocument(
+      const reExtract = await reExtractWithSingleClient(
         {
           driver,
           blobStore: trackingBlobStore,
           modelClient: reExtractClient,
-        } as ReExtractDocumentDependencies,
+        },
         { currentUserId: ids.user, documentId: upload.documentId }
       )
       expect(reExtract.ok).toBe(true)
@@ -165,11 +166,12 @@ describe('handleReExtractDocument — slice 6', () => {
       expect(putCalls).toBe(1)
       // The hint stored on the Document was reused for the re-extract prompt.
       expect(hintSeenByReExtractClient).toBe('team plan from Q3')
-      // Pending approvals reflect the re-extract model's output (Maya), not
-      // the original upload's (Sarah).
-      expect(reExtract.pendingApprovals).toHaveLength(1)
-      expect(reExtract.pendingApprovals[0].tool).toBe('create_person')
-      expect(reExtract.pendingApprovals[0].args.firstName).toBe('Maya')
+      // Auto-executed tool calls reflect the re-extract model's output
+      // (Maya), not the original upload's (Sarah).
+      expect(reExtract.executedToolCalls).toHaveLength(1)
+      expect(reExtract.executedToolCalls[0].tool).toBe('create_person')
+      expect(reExtract.executedToolCalls[0].args.firstName).toBe('Maya')
+      expect(reExtract.executedToolCalls[0].result.success).not.toBe(false)
 
       const session = driver.session()
       try {
@@ -236,7 +238,7 @@ describe('handleReExtractDocument — slice 6', () => {
       assistantText: '',
     })
 
-    const result = await handleReExtractDocument(
+    const result = await reExtractWithSingleClient(
       { driver, blobStore, modelClient },
       { currentUserId: ids.user, documentId: 'document_does_not_exist' }
     )
@@ -255,7 +257,7 @@ describe('handleReExtractDocument — slice 6', () => {
         assistantText: '',
       })
 
-      const upload = await handleIngestDocument(
+      const upload = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.user,
@@ -269,7 +271,7 @@ describe('handleReExtractDocument — slice 6', () => {
       expect(upload.ok).toBe(true)
       if (!upload.ok) throw new Error('unreachable')
 
-      const result = await handleReExtractDocument(
+      const result = await reExtractWithSingleClient(
         { driver, blobStore, modelClient },
         {
           currentUserId: `test_outsider_${testRunId}`,
@@ -292,7 +294,7 @@ describe('handleReExtractDocument — slice 6', () => {
         assistantText: '',
       })
 
-      const upload = await handleIngestDocument(
+      const upload = await seedAndIngest(
         { driver, blobStore, modelClient: goodClient },
         {
           currentUserId: ids.user,
@@ -310,13 +312,13 @@ describe('handleReExtractDocument — slice 6', () => {
         throw new Error('rate limited')
       }
 
-      const reExtract = await handleReExtractDocument(
+      const reExtract = await reExtractWithSingleClient(
         { driver, blobStore, modelClient: failingClient },
         { currentUserId: ids.user, documentId: upload.documentId }
       )
       expect(reExtract.ok).toBe(true)
       if (!reExtract.ok) throw new Error('unreachable')
-      expect(reExtract.pendingApprovals).toHaveLength(0)
+      expect(reExtract.executedToolCalls).toHaveLength(0)
 
       const session = driver.session()
       try {

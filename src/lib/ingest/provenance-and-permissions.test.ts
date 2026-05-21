@@ -1,10 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
-import { handleIngestDocument } from './handle-ingest-document'
+import { seedAndIngest } from './__test-utils__/handle-ingest-document-helper'
 import type { ExtractionModelClient } from './extraction-model-invoker'
-import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
-import { initGraph } from '@/modules/graph'
 import { documentMutations } from '@/lib/graphql/resolvers/document-resolver'
 
 /**
@@ -35,8 +33,8 @@ const ids = {
 beforeAll(async () => {
   // Force the resolver-layer tests below to use the in-process blob store —
   // the deleteDocument resolver picks the store via `resolveBlobStore()`
-  // (reads `INGEST_BLOB_BACKEND`). Without this, Vercel Blob is selected
-  // and `delete` throws on a missing `BLOB_READ_WRITE_TOKEN`.
+  // (reads `INGEST_BLOB_BACKEND`). Without this, the S3 store is selected
+  // and `delete` throws on a missing `AWS_REGION` / `S3_BUCKET`.
   process.env.INGEST_BLOB_BACKEND = 'memory'
 
   try {
@@ -146,7 +144,7 @@ describe('Slice 7 — upload permission gate (GOAL-242)', () => {
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.guest,
@@ -194,7 +192,7 @@ describe('Slice 7 — upload permission gate (GOAL-242)', () => {
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.outsider,
@@ -222,7 +220,7 @@ describe('Slice 7 — upload permission gate (GOAL-242)', () => {
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.admin,
@@ -253,7 +251,7 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.owner,
@@ -266,18 +264,11 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
       )
       expect(result.ok).toBe(true)
       if (!result.ok) throw new Error('unreachable')
-      expect(result.pendingApprovals).toHaveLength(3)
-
-      // Approve all
-      const graph = await initGraph()
-      for (const pending of result.pendingApprovals) {
-        const exec = await executeAuthorizedWriteTool(
-          graph,
-          ids.owner,
-          pending.tool,
-          pending.args
-        )
-        expect(exec.success).toBe(true)
+      // Auto-execute: three persons landed during the upload mutation. No
+      // separate approval loop needed.
+      expect(result.executedToolCalls).toHaveLength(3)
+      for (const exec of result.executedToolCalls) {
+        expect(exec.result.success).not.toBe(false)
       }
 
       const session = driver.session()
@@ -335,7 +326,7 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.owner,
@@ -348,23 +339,15 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
       )
       expect(result.ok).toBe(true)
       if (!result.ok) throw new Error('unreachable')
-      expect(result.pendingApprovals).toHaveLength(1)
+      expect(result.executedToolCalls).toHaveLength(1)
 
-      // The synthesized tool args MUST carry conversationThreadId so the
-      // approved Log row can stamp metadata.conversationThreadId without a
-      // separate lookup.
-      const pending = result.pendingApprovals[0]
-      expect(pending.args.conversationThreadId).toBe(result.threadId)
-      expect(pending.args.documentId).toBe(result.documentId)
-
-      const graph = await initGraph()
-      const exec = await executeAuthorizedWriteTool(
-        graph,
-        ids.owner,
-        pending.tool,
-        pending.args
-      )
-      expect(exec.success).toBe(true)
+      // The auto-executed tool args MUST carry conversationThreadId +
+      // documentId so the per-entity Log row stamps both as metadata
+      // (downstream audit query closes against either key).
+      const exec = result.executedToolCalls[0]
+      expect(exec.args.conversationThreadId).toBe(result.threadId)
+      expect(exec.args.documentId).toBe(result.documentId)
+      expect(exec.result.success).not.toBe(false)
 
       const session = driver.session()
       try {
@@ -411,7 +394,7 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
         assistantText: '',
       })
 
-      const result = await handleIngestDocument(
+      const result = await seedAndIngest(
         { driver, blobStore, modelClient },
         {
           currentUserId: ids.owner,
@@ -424,15 +407,10 @@ describe('Slice 7 — provenance + no auto-CONNECTED_TO + Log metadata (GOAL-242
       )
       expect(result.ok).toBe(true)
       if (!result.ok) throw new Error('unreachable')
-
-      const graph = await initGraph()
-      const exec = await executeAuthorizedWriteTool(
-        graph,
-        ids.owner,
-        result.pendingApprovals[0].tool,
-        result.pendingApprovals[0].args
-      )
-      expect(exec.success).toBe(true)
+      // Auto-execute landed the Person during the upload — no separate
+      // approval call.
+      expect(result.executedToolCalls).toHaveLength(1)
+      expect(result.executedToolCalls[0].result.success).not.toBe(false)
 
       const session = driver.session()
       try {
@@ -465,7 +443,7 @@ describe('deleteDocument resolver — permission gate + cleanup', () => {
       persons: [],
       assistantText: '',
     })
-    const result = await handleIngestDocument(
+    const result = await seedAndIngest(
       { driver, blobStore, modelClient },
       {
         currentUserId: ids.owner,

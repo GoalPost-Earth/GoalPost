@@ -164,28 +164,48 @@ See PRD `docs/prd/document-ingestion.md` for the full spec and
 `docs/adr/0001-doc-ingestion-dedicated-extraction-endpoint.md` /
 `docs/adr/0002-document-node-and-blob-provenance.md` for rationale.
 
-1. User uploads a `.txt` / `.md` / `.pdf` from the studio with a
-   FieldContext focused (`uploadDocument` mutation / `POST /api/ingest/document`).
-2. Server gates on `canEditContent`, extracts text, persists the blob,
-   creates a Document node anchored to the FieldContext via `HAS_DOCUMENT`
-   and to the uploader via `UPLOADED_BY`.
+1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
+   FieldContext focused. The browser POSTs to
+   `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
+   then uploads the file **directly to S3** (bytes never traverse our
+   server). It then POSTs `/api/ingest/document/process` to trigger
+   extraction. (The legacy GraphQL `uploadDocument` mutation has been
+   removed — see ADR-0002.)
+2. The process endpoint gates on `canEditContent`, anchors a Document
+   node to the FieldContext via `HAS_DOCUMENT` and to the uploader via
+   `UPLOADED_BY`, and stamps the S3 `blobKey`.
 3. A dedicated extraction model (independent of the chat assistant; may
-   be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the text
+   be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
    alongside the FieldContext roster and proposes Persons + FieldPulses.
+   PDFs route through Gemini multimodal via a freshly minted presigned
+   GET URL (`file_data.fileUri`); `.txt`/`.md` route through OpenAI
+   against the decoded body.
 4. A fresh ConversationThread titled `Ingest: <filename>` is created
    (`kind = 'ingest'`, `mode = 'default'`). The thread is linked back to
    the source Document via `HAS_INGEST_THREAD`.
-5. A synthesized assistant turn is appended carrying pre-staged HITL
-   write tool calls (matching the runtime HITL hash/shape). The chat
-   panel auto-switches to the new thread.
-6. User reviews the batch approval dialog and approves / edits / rejects.
-   Approved tool calls flow through `executeAuthorizedWriteTool` — same
-   path as manual creation, plus an `EXTRACTED_FROM` edge from each
-   approved Person/FieldPulse back to the Document, and a `Log` per entity
-   stamping `metadata.documentId` + `metadata.conversationThreadId`.
-7. Re-extract reuses the stored blob + original hint and creates a new
-   ingest thread. Delete removes the blob and Document node; extracted
-   entities survive (their `EXTRACTED_FROM` edges drop with the Document).
-8. Extracted pulses flow through the existing post-creation embedding and
+5. In parallel with the entity extractor, a separate **summarizer** model
+   call produces a 1-paragraph synopsis + up to 5 concept phrases. Both
+   are persisted on the Document node (`summary`, `concepts`). Failure is
+   non-fatal — the upload still lands with empty values.
+6. Every proposed tool call is **auto-executed** server-side via
+   `executeAuthorizedWriteTool` — the same path manual creation uses.
+   Auto-approve replaced the original HITL-gated flow because the upload
+   itself already gates on `canEditContent` and the "upload + nothing
+   happens until you click Approve" experience was the most common
+   confusion point. Each created entity gets:
+   - an `EXTRACTED_FROM` edge from the Person/FieldPulse to the Document,
+   - one `:Log` row attributed to the uploader via `CREATED_BY`,
+     stamping `metadata.documentId` + `metadata.conversationThreadId`.
+7. A synthesized assistant turn carries the **execution result** of each
+   tool call (not a pending-approval payload). The chat panel auto-
+   switches to the new ingest thread so the user sees a record of what
+   ran, plus a one-line "Created N entities" header. Partial failures
+   render per-row.
+8. Re-extract reuses the stored blob + original hint, creates a new
+   ingest thread, refreshes the summary + concepts, and auto-executes
+   the new proposals. Delete removes the blob and Document node;
+   extracted entities survive (their `EXTRACTED_FROM` edges drop with
+   the Document).
+9. Extracted pulses flow through the existing post-creation embedding and
    enrichment jobs (WF-05) and become eligible for daily resonance
    discovery (WF-06) without any ingest-specific pipeline.

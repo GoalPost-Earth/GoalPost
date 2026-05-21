@@ -409,10 +409,13 @@ existing exemption for `ConversationChunk` writes.
 **Neo4j Labels:** `["Document"]`
 
 Uploaded source document attached to a FieldContext. Created by the
-doc-ingestion flow (`uploadDocument` mutation / `POST /api/ingest/document`);
-the original file lives in blob storage (Vercel Blob or memory store for
-dev), the graph node carries metadata and provenance edges. See
-PRD `docs/prd/document-ingestion.md`, ADR-0001, and ADR-0002.
+direct-to-S3 ingestion flow: `POST /api/ingest/document/presign` mints a
+short-lived presigned PUT URL; the browser uploads straight to S3; `POST
+/api/ingest/document/process` then anchors the Document node and triggers
+extraction (Gemini multimodal for PDFs, OpenAI for text/markdown). The
+original file lives in AWS S3 (memory store for dev/tests); the graph node
+carries metadata and provenance edges. See PRD `docs/prd/document-ingestion.md`,
+ADR-0001, and ADR-0002.
 
 | Field      | Type     | Notes                                                                                  |
 | ---------- | -------- | -------------------------------------------------------------------------------------- |
@@ -424,6 +427,8 @@ PRD `docs/prd/document-ingestion.md`, ADR-0001, and ADR-0002.
 | blobKey    | string   | Internal — UI surfaces filename instead                                                |
 | blobUrl    | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
 | userHint   | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
+| summary    | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
+| concepts   | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
 | uploadedAt | datetime | Immutable, set on create                                                               |
 
 **Relationships:**
@@ -435,7 +440,7 @@ PRD `docs/prd/document-ingestion.md`, ADR-0001, and ADR-0002.
 - `HAS_INGEST_THREAD` → ConversationThread (one per upload + one per re-extract)
 
 **Authorization:** inherits read access from the parent Space — the same
-`@authorization` pattern as FieldContext. Writes (`uploadDocument`,
+`@authorization` pattern as FieldContext. Writes (`POST /api/ingest/document/{presign,process}`,
 `reExtractDocument`, `deleteDocument`) all gate on `canEditContent` against
 the parent Space (`kb/02-user-roles.md`).
 

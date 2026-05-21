@@ -1,8 +1,12 @@
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 import type { ExtractionModelClient } from './extraction-model-invoker'
-import type { SynthesizedToolCall } from './synthesized-turn-appender'
-import { loadDocumentRecord } from './document-storage'
+import type { ExecutedToolCallRecord } from './synthesized-turn-appender'
+import { loadDocumentRecord, setDocumentSummary } from './document-storage'
+import {
+  summarizeDocument,
+  type DocumentSummarizerClient,
+} from './document-summarizer'
 import {
   extractDocumentText,
   DocumentTextExtractionError,
@@ -13,6 +17,13 @@ import {
   appendSynthesizedIngestTurns,
   createIngestThread,
 } from './handle-ingest-document'
+
+/** Mirror of GEMINI_PRESIGN_TTL_SECONDS in handle-ingest-document.ts. */
+const GEMINI_PRESIGN_TTL_SECONDS = 60 * 15
+
+function isPdfMime(mime: string): boolean {
+  return mime.toLowerCase().split(';')[0].trim() === 'application/pdf'
+}
 
 /**
  * Slice 6 — Re-extract an existing Document.
@@ -32,7 +43,13 @@ import {
 export interface ReExtractDocumentDependencies {
   driver: Driver
   blobStore: BlobStore
-  modelClient: ExtractionModelClient
+  /** Multimodal extractor (Gemini) for PDFs. */
+  pdfExtractionClient: ExtractionModelClient
+  /** Text extractor (OpenAI) for .txt/.md. */
+  textExtractionClient: ExtractionModelClient
+  /** Optional summarizers — refreshes Document.summary + Document.concepts. */
+  pdfSummarizerClient?: DocumentSummarizerClient | null
+  textSummarizerClient?: DocumentSummarizerClient | null
 }
 
 export interface ReExtractDocumentInput {
@@ -53,7 +70,11 @@ export interface ReExtractSuccess {
   ok: true
   documentId: string
   threadId: string
-  pendingApprovals: SynthesizedToolCall[]
+  /**
+   * Same shape as `IngestSuccess.executedToolCalls`. Re-extract auto-
+   * executes the new proposals just like the initial upload path.
+   */
+  executedToolCalls: ExecutedToolCallRecord[]
 }
 export interface ReExtractFailure {
   ok: false
@@ -112,7 +133,7 @@ async function writeReExtractLog(
   filename: string,
   documentId: string,
   threadId: string,
-  pendingApprovalCount: number,
+  executedCount: number,
   outcome: 'success' | 'failure' | 'empty'
 ): Promise<void> {
   const session = driver.session()
@@ -121,7 +142,7 @@ async function writeReExtractLog(
     const metadata = JSON.stringify({
       documentId,
       conversationThreadId: threadId,
-      pendingApprovalCount,
+      executedCount,
       outcome,
     })
     await session.executeWrite(async (tx) =>
@@ -175,9 +196,9 @@ export async function handleReExtractDocument(
     }
   }
 
-  // 3) Read the original blob. A missing blob is a hard failure — we cannot
-  //    silently fall through to extraction. The Document persists; the user
-  //    will see the "blob_missing" message and can decide whether to re-upload.
+  // 3) Verify the original blob still exists. A missing blob is a hard
+  //    failure — the Document row persists; the user will see the
+  //    "blob_missing" message and can decide whether to re-upload.
   if (!record.blobKey) {
     return {
       ok: false,
@@ -185,31 +206,67 @@ export async function handleReExtractDocument(
       error: 'The original file for this document is no longer available.',
     }
   }
-  const blob = await deps.blobStore.get(record.blobKey)
-  if (!blob) {
-    return {
-      ok: false,
-      reason: 'blob_missing',
-      error: 'The original file for this document is no longer available.',
-    }
-  }
 
-  // 4) Re-run the same DocumentTextExtractor used at upload time. If the
-  //    mime type stored on the Document is one we no longer support (e.g. a
-  //    legacy upload from a different format set), this short-circuits with
-  //    a clear failure rather than feeding garbage to the model.
-  let extracted
-  try {
-    extracted = await extractDocumentText({
-      mimeType: record.mimeType,
-      buffer: blob.buffer,
-      filename: record.filename,
+  // 4) Prepare extractor + summarizer inputs by mime. PDFs go to Gemini via
+  //    a fresh presigned URL each call; text files are pulled back and
+  //    decoded server-side. Either path short-circuits on missing blob or
+  //    unsupported mime so the model never sees garbage.
+  let extractionExtras: {
+    documentText: string
+    documentUrl?: string
+    documentMimeType?: string
+  }
+  let summarizerExtras: {
+    documentText: string
+    documentUrl?: string
+    documentMimeType?: string
+  }
+  let modelClient: ExtractionModelClient
+  let summarizerClient: DocumentSummarizerClient | null
+
+  if (isPdfMime(record.mimeType)) {
+    const url = await deps.blobStore.presignGet({
+      key: record.blobKey,
+      ttlSeconds: GEMINI_PRESIGN_TTL_SECONDS,
     })
-  } catch (err) {
-    if (err instanceof DocumentTextExtractionError) {
-      return { ok: false, reason: err.kind, error: err.message }
+    extractionExtras = {
+      documentText: '',
+      documentUrl: url,
+      documentMimeType: record.mimeType,
     }
-    throw err
+    summarizerExtras = {
+      documentText: '',
+      documentUrl: url,
+      documentMimeType: record.mimeType,
+    }
+    modelClient = deps.pdfExtractionClient
+    summarizerClient = deps.pdfSummarizerClient ?? null
+  } else {
+    const blob = await deps.blobStore.get(record.blobKey)
+    if (!blob) {
+      return {
+        ok: false,
+        reason: 'blob_missing',
+        error: 'The original file for this document is no longer available.',
+      }
+    }
+    let extracted
+    try {
+      extracted = await extractDocumentText({
+        mimeType: record.mimeType,
+        buffer: blob.buffer,
+        filename: record.filename,
+      })
+    } catch (err) {
+      if (err instanceof DocumentTextExtractionError) {
+        return { ok: false, reason: err.kind, error: err.message }
+      }
+      throw err
+    }
+    extractionExtras = { documentText: extracted.text }
+    summarizerExtras = { documentText: extracted.text }
+    modelClient = deps.textExtractionClient
+    summarizerClient = deps.textSummarizerClient ?? null
   }
 
   const fieldContextTitle = await getFieldContextTitle(
@@ -222,18 +279,35 @@ export async function handleReExtractDocument(
     fieldContextId: record.fieldContextId,
   })
 
-  const extraction = await extractEntities(
-    {
-      documentText: extracted.text,
+  const [extraction, summary] = await Promise.all([
+    extractEntities(
+      {
+        ...extractionExtras,
+        filename: record.filename,
+        hint: record.userHint,
+        roster,
+        fieldContextId: record.fieldContextId,
+        fieldContextTitle,
+        documentId: record.id,
+      },
+      modelClient
+    ),
+    summarizeDocument(summarizerClient, {
+      ...summarizerExtras,
       filename: record.filename,
       hint: record.userHint,
-      roster,
-      fieldContextId: record.fieldContextId,
       fieldContextTitle,
-      documentId: record.id,
-    },
-    deps.modelClient
-  )
+    }),
+  ])
+
+  // Re-extract refreshes the summary too so the Document card always
+  // reflects the latest pass.
+  await setDocumentSummary({
+    driver: deps.driver,
+    documentId: record.id,
+    summary: summary.summary,
+    concepts: summary.concepts,
+  })
 
   // 5) Fresh ConversationThread + synthesized assistant turn. Title makes
   //    the re-extract origin obvious in the thread switcher.
@@ -247,7 +321,7 @@ export async function handleReExtractDocument(
   const userTurnContent = record.userHint
     ? `Re-extracted ${record.filename}. Hint: ${record.userHint}`
     : `Re-extracted ${record.filename}`
-  const toolCalls = await appendSynthesizedIngestTurns(
+  const executedToolCalls = await appendSynthesizedIngestTurns(
     input.currentUserId,
     threadId,
     userTurnContent,
@@ -257,7 +331,7 @@ export async function handleReExtractDocument(
   const outcome: 'success' | 'failure' | 'empty' =
     extraction.kind === 'failure'
       ? 'failure'
-      : toolCalls.length === 0
+      : executedToolCalls.length === 0
         ? 'empty'
         : 'success'
   await writeReExtractLog(
@@ -266,7 +340,7 @@ export async function handleReExtractDocument(
     record.filename,
     record.id,
     threadId,
-    toolCalls.length,
+    executedToolCalls.length,
     outcome
   )
 
@@ -274,6 +348,6 @@ export async function handleReExtractDocument(
     ok: true,
     documentId: record.id,
     threadId,
-    pendingApprovals: toolCalls,
+    executedToolCalls,
   }
 }

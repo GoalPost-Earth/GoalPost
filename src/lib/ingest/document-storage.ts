@@ -51,11 +51,68 @@ export interface UploadedDocument {
 export async function uploadDocument(
   input: UploadDocumentInput
 ): Promise<UploadedDocument> {
+  // Server-side upload path: PUT the blob, then anchor the graph node. Kept
+  // for tests and any caller that still streams bytes through this process.
+  // The browser-direct-upload flow does not use this — it calls `presignPut`
+  // on the BlobStore and then `anchorDocument` after the client has uploaded.
+  const blobKey = `documents/${input.documentId}/${input.filename}`
+  const ref = await input.blobStore.put({
+    key: blobKey,
+    contentType: input.mimeType,
+    buffer: input.buffer,
+  })
+  await anchorDocument({
+    driver: input.driver,
+    documentId: input.documentId,
+    fieldContextId: input.fieldContextId,
+    uploaderUserId: input.uploaderUserId,
+    filename: input.filename,
+    mimeType: input.mimeType,
+    sizeBytes: input.buffer.length,
+    pageCount: input.pageCount ?? null,
+    userHint: input.userHint ?? null,
+    blobKey: ref.key,
+    blobUrl: ref.url,
+  })
+  return {
+    id: input.documentId,
+    filename: input.filename,
+    mimeType: input.mimeType,
+    sizeBytes: input.buffer.length,
+    pageCount: input.pageCount ?? null,
+    blobKey: ref.key,
+    blobUrl: ref.url,
+    userHint: input.userHint?.trim() ? input.userHint.trim() : null,
+  }
+}
+
+export interface AnchorDocumentInput {
+  driver: Driver
+  documentId: string
+  fieldContextId: string
+  uploaderUserId: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  pageCount: number | null
+  userHint: string | null
+  blobKey: string
+  blobUrl: string
+}
+
+/**
+ * Graph-only anchor for a Document whose bytes already live in blob storage
+ * (browser-direct-to-S3 upload). Single CREATE — no follow-up SET, because
+ * the blob location is known up front.
+ *
+ * Throws if FieldContext or uploader are missing; the caller surfaces this
+ * as a 400/404 to the frontend so the user can retry. The blob is left in
+ * place — orphan cleanup is a separate concern handled by S3 lifecycle.
+ */
+export async function anchorDocument(input: AnchorDocumentInput): Promise<void> {
   const session = input.driver.session()
   try {
-    // Step 1: reserve the graph node up front. If FieldContext or uploader
-    // are missing, throws before any blob write.
-    const reserve = await session.executeWrite(async (tx) =>
+    const result = await session.executeWrite(async (tx) =>
       tx.run(
         `
         MATCH (c:FieldContext {id: $fieldContextId})
@@ -67,6 +124,8 @@ export async function uploadDocument(
           sizeBytes: $sizeBytes,
           pageCount: $pageCount,
           userHint: $userHint,
+          blobKey: $blobKey,
+          blobUrl: $blobUrl,
           uploadedAt: datetime()
         })
         CREATE (c)-[:HAS_DOCUMENT]->(d)
@@ -79,46 +138,18 @@ export async function uploadDocument(
           documentId: input.documentId,
           filename: input.filename,
           mimeType: input.mimeType,
-          sizeBytes: input.buffer.length,
-          pageCount: input.pageCount ?? null,
+          sizeBytes: input.sizeBytes,
+          pageCount: input.pageCount,
           userHint: input.userHint?.trim() ? input.userHint.trim() : null,
+          blobKey: input.blobKey,
+          blobUrl: input.blobUrl,
         }
       )
     )
-    if (reserve.records.length === 0) {
+    if (result.records.length === 0) {
       throw new Error(
-        `uploadDocument: could not anchor Document — FieldContext "${input.fieldContextId}" or uploader "${input.uploaderUserId}" not found.`
+        `anchorDocument: could not anchor Document — FieldContext "${input.fieldContextId}" or uploader "${input.uploaderUserId}" not found.`
       )
-    }
-
-    // Step 2: put the blob. Key namespace mirrors the graph hierarchy.
-    const blobKey = `documents/${input.documentId}/${input.filename}`
-    const ref = await input.blobStore.put({
-      key: blobKey,
-      contentType: input.mimeType,
-      buffer: input.buffer,
-    })
-
-    // Step 3: patch the Document with the resolved blob location.
-    await session.executeWrite(async (tx) =>
-      tx.run(
-        `
-        MATCH (d:Document {id: $documentId})
-        SET d.blobKey = $blobKey, d.blobUrl = $blobUrl
-        `,
-        { documentId: input.documentId, blobKey: ref.key, blobUrl: ref.url }
-      )
-    )
-
-    return {
-      id: input.documentId,
-      filename: input.filename,
-      mimeType: input.mimeType,
-      sizeBytes: input.buffer.length,
-      pageCount: input.pageCount ?? null,
-      blobKey: ref.key,
-      blobUrl: ref.url,
-      userHint: input.userHint?.trim() ? input.userHint.trim() : null,
     }
   } finally {
     await session.close()
@@ -189,6 +220,43 @@ export async function loadDocumentRecord(
       fieldContextId: record.get('fieldContextId') as string,
       uploaderUserId: (record.get('uploaderUserId') as string | null) ?? '',
     }
+  } finally {
+    await session.close()
+  }
+}
+
+export interface DocumentSummaryInput {
+  driver: Driver
+  documentId: string
+  summary: string | null
+  concepts: string[]
+}
+
+/**
+ * Persists AI-generated summary + concepts on the Document node. Called
+ * by the ingest orchestrator after the summarizer model returns. A failed
+ * summarizer call is non-fatal — we just skip this write and leave the
+ * properties null/empty so the UI degrades gracefully.
+ */
+export async function setDocumentSummary(
+  input: DocumentSummaryInput
+): Promise<void> {
+  const session = input.driver.session()
+  try {
+    await session.executeWrite((tx) =>
+      tx.run(
+        `
+        MATCH (d:Document {id: $documentId})
+        SET d.summary = $summary,
+            d.concepts = $concepts
+        `,
+        {
+          documentId: input.documentId,
+          summary: input.summary?.trim() || null,
+          concepts: input.concepts.filter((c) => c?.trim().length > 0),
+        }
+      )
+    )
   } finally {
     await session.close()
   }

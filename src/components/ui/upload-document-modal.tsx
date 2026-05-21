@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react'
 /**
  * Upload-document modal for slices 1–3 (GOAL-236 / GOAL-238).
  *
- * v1 constraints (mirrored in `src/lib/ingest/upload-document-input.ts` and
+ * v1 constraints (mirrored in `/api/ingest/document/presign/route.ts` and
  * `src/lib/ingest/document-text-extractor.ts`):
  *   - mimeType allow-list: text/plain, text/markdown, application/pdf
  *   - upload byte ceiling: 10 MB (defense-in-depth)
@@ -24,16 +24,15 @@ import { useCallback, useState } from 'react'
 const ALLOWED_MIME_TYPES = ['text/plain', 'text/markdown', 'application/pdf'] as const
 const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.pdf']
 const ACCEPT_ATTRIBUTE = `${ALLOWED_FILE_EXTENSIONS.join(',')},text/plain,text/markdown,application/pdf`
-const MAX_BYTES = 10 * 1024 * 1024
-const MAX_PAGES = 20
-const MAX_CHARS = 50_000
+const MAX_BYTES = 50 * 1024 * 1024
 
 type AllowedMime = (typeof ALLOWED_MIME_TYPES)[number]
 
 export interface UploadDocumentSubmitInput {
   filename: string
   mimeType: string
-  fileBase64: string
+  /** Raw File handed to the caller so it can PUT directly to S3. */
+  file: File
   hint?: string
 }
 
@@ -42,18 +41,6 @@ interface UploadDocumentModalProps {
   isSubmitting: boolean
   onClose: () => void
   onSubmit: (input: UploadDocumentSubmitInput) => Promise<void>
-}
-
-async function fileToBase64(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  const chunkSize = 0x8000
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize)
-    binary += String.fromCharCode(...chunk)
-  }
-  return btoa(binary)
 }
 
 function inferMimeType(file: File): string {
@@ -111,11 +98,10 @@ export function UploadDocumentModal({
 
     try {
       setError(null)
-      const fileBase64 = await fileToBase64(file)
       await onSubmit({
         filename: file.name,
         mimeType,
-        fileBase64,
+        file,
         hint: hint.trim() ? hint.trim() : undefined,
       })
       reset()
@@ -163,7 +149,7 @@ export function UploadDocumentModal({
           <span className="text-xs text-gp-ink-muted">
             {file
               ? formatBytes(file.size)
-              : `Accepts .txt, .md, .pdf — up to ~${MAX_PAGES} pages or ~${(MAX_CHARS / 1000).toFixed(0)}K characters`}
+              : `Accepts .txt, .md, .pdf — up to ${MAX_BYTES / (1024 * 1024)} MB`}
           </span>
           <input
             id="upload-document-file"

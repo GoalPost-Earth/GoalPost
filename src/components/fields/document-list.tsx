@@ -50,6 +50,8 @@ export type DocumentRecord = {
   sizeBytes: number
   pageCount?: number | null
   userHint?: string | null
+  summary?: string | null
+  concepts?: string[] | null
   uploadedAt: string
   extractedPeople?: DocumentExtractedPersonRecord[] | null
   extractedPulses?: DocumentExtractedPulseRecord[] | null
@@ -162,6 +164,35 @@ function DocumentRow({
 
       {isExpanded && (
         <div className="border-t border-gp-glass-border px-4 py-3 space-y-3 text-xs">
+          {document.summary && (
+            <div>
+              <div className="font-semibold uppercase tracking-wide text-gp-ink-muted mb-1">
+                Summary
+              </div>
+              <p className="text-sm leading-relaxed text-gp-ink-strong dark:text-white">
+                {document.summary}
+              </p>
+            </div>
+          )}
+
+          {document.concepts && document.concepts.length > 0 && (
+            <div>
+              <div className="font-semibold uppercase tracking-wide text-gp-ink-muted mb-1">
+                Concepts
+              </div>
+              <ul className="flex flex-wrap gap-1.5">
+                {document.concepts.map((concept) => (
+                  <li
+                    key={concept}
+                    className="rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-amber-700 dark:text-amber-300"
+                  >
+                    {concept}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {document.userHint && (
             <div>
               <div className="font-semibold uppercase tracking-wide text-gp-ink-muted mb-1">

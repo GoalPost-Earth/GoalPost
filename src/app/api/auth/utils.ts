@@ -11,11 +11,23 @@ export const hashPassword = async (password: string) =>
 export const comparePassword = async (raw: string, hash: string) =>
   await bcrypt.compare(raw + PEPPER, hash)
 
+// HMAC-SHA256 is the algorithm we use for all JWTs (the secret is a random
+// string, not a key pair). Stating it explicitly on BOTH sides is required:
+// jsonwebtoken v9+ refuses to verify a signature unless the caller passes an
+// `algorithms` allowlist (prevents algorithm-confusion attacks). Mirror it
+// on `sign` so the algorithm choice is documented in one place.
+const JWT_ALGORITHM = 'HS256' as const
+
 export const signJWT = (payload: Record<string, unknown>) =>
-  jwt.sign(payload, process.env.JWT_SECRET ?? '', { expiresIn: '30m' })
+  jwt.sign(payload, process.env.JWT_SECRET ?? '', {
+    expiresIn: '30m',
+    algorithm: JWT_ALGORITHM,
+  })
 
 export const verifyJWT = (token: string) =>
-  jwt.verify(token, process.env.JWT_SECRET ?? '')
+  jwt.verify(token, process.env.JWT_SECRET ?? '', {
+    algorithms: [JWT_ALGORITHM],
+  })
 
 /**
  * Resolve the authenticated user's id from a request. Tries both
