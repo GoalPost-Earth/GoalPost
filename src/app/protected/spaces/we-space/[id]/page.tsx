@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
 import { useApp, useFocalEntity, usePageContext } from '@/contexts'
+import { onOpenAddFieldContextModal } from '@/lib/simulation/pulse-creation-events'
 import { NvlCanvas } from '@/components/canvas/nvl-canvas'
 import { FieldBubble } from '@/components/ui/field-bubble'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
@@ -185,6 +186,17 @@ export default function WeSpaceFieldsPage() {
       setFocalLabel(weSpaceId, weSpace.name, 'WeSpace')
     }
   }, [weSpaceId, weSpace?.name, setFocalLabel])
+
+  // Studio-shell action bar fires this when the user clicks "Add field
+  // context" from outside this page subtree. The spaceId guard keeps
+  // sibling Space pages from each other's listeners.
+  useEffect(() => {
+    if (!weSpaceId) return
+    return onOpenAddFieldContextModal((detail) => {
+      if (detail.spaceId !== weSpaceId) return
+      setShowCreateModal(true)
+    })
+  }, [weSpaceId])
 
   const handleFieldClick = useCallback(
     (fieldId: string) => {

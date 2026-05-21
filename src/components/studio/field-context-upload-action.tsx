@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FC } from 'react'
-import { useMutation } from '@apollo/client/react'
+import { useApolloClient } from '@apollo/client/react'
 import { FileUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { useFocalEntity } from '@/contexts'
@@ -9,8 +9,9 @@ import {
   UploadDocumentModal,
   type UploadDocumentSubmitInput,
 } from '@/components/ui/upload-document-modal'
-import { UPLOAD_DOCUMENT_MUTATION } from '@/app/graphql/mutations/DOCUMENT_MUTATIONS'
 import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
+import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 
 /**
@@ -36,19 +37,17 @@ export const FieldContextUploadAction: FC = () => {
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Only treat the focal as a live FieldContext when it came from the
+  // current route. A 'persisted' source means the user navigated away to
+  // a neutral surface; their last FieldContext is still in focal-entity
+  // state for assistant context, but the upload button should not appear
+  // there — there's no surface mounted to refresh after upload.
   const focalFieldContextId =
-    focalEntity?.type === 'FieldContext' ? focalEntity.id : null
+    focalEntity?.type === 'FieldContext' && focalEntity.source === 'route'
+      ? focalEntity.id
+      : null
 
-  const [uploadDocument] = useMutation(UPLOAD_DOCUMENT_MUTATION, {
-    refetchQueries: pinnedFieldContextId
-      ? [
-          {
-            query: GET_DOCUMENTS_BY_FIELD_CONTEXT,
-            variables: { fieldContextId: pinnedFieldContextId },
-          },
-        ]
-      : undefined,
-  })
+  const apolloClient = useApolloClient()
 
   if (!focalFieldContextId && !pinnedFieldContextId) return null
 
@@ -59,29 +58,98 @@ export const FieldContextUploadAction: FC = () => {
     }
     setIsSubmitting(true)
     try {
-      const result = await uploadDocument({
-        variables: {
-          input: {
-            fieldContextId: pinnedFieldContextId,
-            filename: input.filename,
-            mimeType: input.mimeType,
-            fileBase64: input.fileBase64,
-            hint: input.hint,
-          },
-        },
+      // Step 1: ask the server for a presigned PUT URL.
+      const presignRes = await fetch('/api/ingest/document/presign', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldContextId: pinnedFieldContextId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.file.size,
+        }),
       })
-      const threadId = (
-        result.data as { uploadDocument?: { threadId?: string } } | null | undefined
-      )?.uploadDocument?.threadId
-      if (threadId) emitOpenAssistantThread(threadId)
-      toast.success(
-        'Document uploaded. Review the extracted entities in the assistant.'
-      )
+      if (!presignRes.ok) {
+        const errorBody = await presignRes.json().catch(() => ({}))
+        throw new Error(errorBody.error ?? `Presign failed (${presignRes.status})`)
+      }
+      const presign = (await presignRes.json()) as {
+        documentId: string
+        blobKey: string
+        uploadUrl: string
+        contentType: string
+      }
+
+      // Step 2: PUT the file straight to S3. The bytes never traverse our
+      // server. Content-Type MUST match the value used at presign time —
+      // S3 binds it into the signature.
+      const putRes = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        body: input.file,
+        headers: { 'Content-Type': presign.contentType },
+      })
+      if (!putRes.ok) {
+        throw new Error(`Upload to storage failed (${putRes.status}).`)
+      }
+
+      // Step 3: tell the server the file is in place; it anchors the
+      // Document node and kicks off extraction.
+      const processRes = await fetch('/api/ingest/document/process', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId: presign.documentId,
+          blobKey: presign.blobKey,
+          fieldContextId: pinnedFieldContextId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.file.size,
+          hint: input.hint ?? null,
+        }),
+      })
+      if (!processRes.ok) {
+        const errorBody = await processRes.json().catch(() => ({}))
+        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
+      }
+      const processResult = (await processRes.json()) as {
+        threadId?: string
+        createdEntityCount?: number
+        failedEntityCount?: number
+      }
+
+      if (processResult.threadId) {
+        emitOpenAssistantThread(processResult.threadId)
+      }
+
+      // Refetch the documents + the field's pulse + people views so the
+      // dashboard surfaces newly-created entities without a route change.
+      await Promise.all([
+        apolloClient.refetchQueries({
+          include: [
+            GET_DOCUMENTS_BY_FIELD_CONTEXT,
+            GET_FIELD_CONTEXT_DETAILS,
+            GET_FIELD_CONTEXT_PEOPLE,
+          ],
+        }),
+      ])
+
+      const created = processResult.createdEntityCount ?? 0
+      const failed = processResult.failedEntityCount ?? 0
+      if (created === 0 && failed === 0) {
+        toast.success('Document uploaded. No entities were extracted.')
+      } else if (failed === 0) {
+        toast.success(
+          `Document uploaded. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`
+        )
+      } else {
+        toast.success(
+          `Document uploaded. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`
+        )
+      }
       setPinnedFieldContextId(null)
     } catch (error) {
-      // Inline error rendering is handled by the modal (it catches and
-      // sets local error state). The toast is the secondary signal —
-      // matches the legacy field-context page handler.
       const message = error instanceof Error ? error.message : 'Upload failed'
       toast.error(message)
       throw error

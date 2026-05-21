@@ -49,7 +49,6 @@ import {
   DELETE_RESONANCE_LINK_MUTATION,
   SHARE_PULSE_WITH_CONTEXT_MUTATION,
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
-  UPLOAD_DOCUMENT_MUTATION,
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
@@ -66,6 +65,7 @@ import {
   type DocumentRecord,
 } from '@/components/fields/document-list'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 
 export default function FieldContextDetailsPage() {
   const params = useParams()
@@ -137,6 +137,19 @@ export default function FieldContextDetailsPage() {
     setPageTitle('Dashboard')
   }, [setPageTitle])
 
+  // The studio-shell action bar fires this event when the user clicks
+  // "Add pulse" from outside the dashboard subtree. The detail's
+  // `fieldContextId` must match this page's contextId so a stale
+  // listener (e.g. previously-visited field still mounted in another
+  // browser tab) doesn't steal the open request.
+  useEffect(() => {
+    if (!contextId) return
+    return onOpenAddPulseModal((detail) => {
+      if (detail.fieldContextId !== contextId) return
+      setIsCreatePulseModalOpen(true)
+    })
+  }, [contextId])
+
   const { data, loading, error, refetch } = useQuery(
     GET_FIELD_CONTEXT_DETAILS,
     {
@@ -201,7 +214,6 @@ export default function FieldContextDetailsPage() {
     REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
   )
   const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
-  const [uploadDocument] = useMutation(UPLOAD_DOCUMENT_MUTATION)
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
@@ -897,26 +909,66 @@ export default function FieldContextDetailsPage() {
   const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
     setIsUploadingDocument(true)
     try {
-      const result = await uploadDocument({
-        variables: {
-          input: {
-            fieldContextId: contextId,
-            filename: input.filename,
-            mimeType: input.mimeType,
-            fileBase64: input.fileBase64,
-            hint: input.hint,
-          },
-        },
+      // Step 1: presign PUT URL.
+      const presignRes = await fetch('/api/ingest/document/presign', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldContextId: contextId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.file.size,
+        }),
       })
+      if (!presignRes.ok) {
+        const errorBody = await presignRes.json().catch(() => ({}))
+        throw new Error(errorBody.error ?? `Presign failed (${presignRes.status})`)
+      }
+      const presign = (await presignRes.json()) as {
+        documentId: string
+        blobKey: string
+        uploadUrl: string
+        contentType: string
+      }
+
+      // Step 2: PUT the file straight to S3.
+      const putRes = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        body: input.file,
+        headers: { 'Content-Type': presign.contentType },
+      })
+      if (!putRes.ok) {
+        throw new Error(`Upload to storage failed (${putRes.status}).`)
+      }
+
+      // Step 3: trigger extraction.
+      const processRes = await fetch('/api/ingest/document/process', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId: presign.documentId,
+          blobKey: presign.blobKey,
+          fieldContextId: contextId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.file.size,
+          hint: input.hint ?? null,
+        }),
+      })
+      if (!processRes.ok) {
+        const errorBody = await processRes.json().catch(() => ({}))
+        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
+      }
+      const processResult = (await processRes.json()) as {
+        threadId?: string
+      }
+
       // Slice 5 (GOAL-240) — fire-and-forget signal so the assistant panel
       // auto-switches to the freshly created ingest thread. The studio shell
       // listens for the same event to open the panel if it's currently closed.
-      const newThreadId = (
-        result.data as {
-          uploadDocument?: { threadId?: string }
-        } | null | undefined
-      )?.uploadDocument?.threadId
-      if (newThreadId) emitOpenAssistantThread(newThreadId)
+      if (processResult.threadId) emitOpenAssistantThread(processResult.threadId)
       toast.success(
         'Document uploaded. Review the extracted entities in the assistant.'
       )

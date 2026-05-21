@@ -65,6 +65,7 @@ import {
   LOG_RESONANCE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { useApp, usePageContext } from '@/contexts'
+import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 import { usePreferences } from '@/contexts/preferences-context'
 import {
   type PulsePosition,
@@ -216,6 +217,17 @@ function FieldDetailPage() {
     },
     [router]
   )
+
+  // Studio-shell action bar fires this when the user clicks "Add pulse"
+  // from outside this page subtree. Guard against stale listeners by
+  // matching the event's fieldContextId against this page's fieldId.
+  useEffect(() => {
+    if (!fieldId) return
+    return onOpenAddPulseModal((detail) => {
+      if (detail.fieldContextId !== fieldId) return
+      setIsModalOpen(true)
+    })
+  }, [fieldId])
 
   const [
     fetchPulseDetails,

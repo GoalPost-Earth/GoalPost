@@ -3,42 +3,48 @@
 import { type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
-import { LayoutGrid, Network, PlusCircle, Workflow } from 'lucide-react'
+import { LayoutGrid, Network, Plus, PlusCircle, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
+import { useFocalEntity } from '@/contexts'
+import {
+  emitOpenAddFieldContextModal,
+  emitOpenAddPulseModal,
+} from '@/lib/simulation/pulse-creation-events'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
 import { FieldContextUploadAction } from './field-context-upload-action'
 
 /**
  * Floating action bar pinned to the bottom-center of the canvas pane.
  *
- * Mirrors the WeSpace page pattern: a horizontal cluster of pill-shaped
- * groups built with `gp-glass`. Persistently visible across canvas views
- * because canvas-host renders it as a sibling of both the route content
- * and the NVL graph mode.
+ * The right-hand "create" cluster is contextual — it surfaces the
+ * single action that makes sense at the user's current level:
+ *  - Inside a FieldContext → Upload document + Add pulse
+ *  - Inside a Space (MeSpace/WeSpace) → Add field context
+ *  - Anywhere else → Create MeSpace / WeSpace
  *
- * Groups:
- * - Zoom (only when in Graph view) — drives BloomView's NVL ref via window
- *   events (see `bloom-view.tsx`).
- * - View toggle — flips between dashboard cards and the NVL graph.
- * - Create — quick links to MeSpace/WeSpace creation routes.
+ * Context is read from focal-entity `source === 'route'` so a persisted
+ * focal (set in localStorage / server for assistant continuity) doesn't
+ * spill FieldContext-only actions onto neutral surfaces like the
+ * top-level dashboard.
  */
 export const StudioCanvasActionBar: FC = () => {
   const router = useRouter()
   const { canvasView, setCanvasView } = useStudioCanvas()
-
-  // One MeSpace per user is a domain invariant (see kb/03-workflows.md and
-  // kb/05-data-entities.md). Suppress the create-MeSpace shortcut once the
-  // user has one; the @authorization filter only returns the caller's own
-  // MeSpaces so this count is the right gate.
-  const { data: meSpacesData } = useQuery(GET_ALL_ME_SPACES, {
-    fetchPolicy: 'cache-and-network',
-  })
-  const canCreateMeSpace = (meSpacesData?.meSpaces?.length ?? 0) === 0
+  const { focalEntity } = useFocalEntity()
 
   // Zoom controls apply to both Graph View and Bloom Exploration — they
   // are sibling NVL surfaces per kb/01-glossary.md.
   const inGraphSurface = canvasView === 'graph' || canvasView === 'bloom'
+
+  // Route-sourced focal is the only signal we trust here. Manual /
+  // persisted focals are valid for assistant scope but don't imply the
+  // matching page is mounted to receive open-modal events.
+  const isRouteFocal = focalEntity?.source === 'route'
+  const inFieldContext = isRouteFocal && focalEntity?.type === 'FieldContext'
+  const inSpace =
+    isRouteFocal &&
+    (focalEntity?.type === 'MeSpace' || focalEntity?.type === 'WeSpace')
 
   const dispatchZoom = (action: 'in' | 'out' | 'fit') => {
     window.dispatchEvent(new CustomEvent(`goalpost:graph-zoom-${action}`))
@@ -71,39 +77,102 @@ export const StudioCanvasActionBar: FC = () => {
 
         <ViewToggle activeView={canvasView} onChange={setCanvasView} />
 
+        {/* Always mounted — the component self-gates on focal source and
+            also keeps its own `pinnedFieldContextId` so an in-flight upload
+            survives mid-flow navigation away from the FieldContext. */}
         <FieldContextUploadAction />
 
-        <div className="flex items-center gap-2 md:gap-3">
-          {canCreateMeSpace && (
-            <button
-              type="button"
-              onClick={() => router.push('/protected/spaces/me-space')}
-              className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
-              aria-label="Create MeSpace"
-            >
-              <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-              <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-                MeSpace
-              </span>
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => router.push('/protected/spaces/we-space')}
-            data-tour="create-wespace-button"
-            className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
-            aria-label="Create WeSpace"
-          >
-            <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
-            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-              WeSpace
-            </span>
-          </button>
-        </div>
+        {inFieldContext ? (
+          <div className="flex items-center gap-2 md:gap-3">
+            <PrimaryAddButton
+              label="Add pulse"
+              ariaLabel="Add pulse to this field context"
+              iconTint="text-teal-300 group-hover:text-teal-200"
+              onClick={() => emitOpenAddPulseModal(focalEntity!.id)}
+            />
+          </div>
+        ) : inSpace ? (
+          <SpaceActions spaceId={focalEntity!.id} />
+        ) : (
+          <DefaultActions router={router} />
+        )}
       </div>
     </div>
   )
 }
+
+const SpaceActions: FC<{ spaceId: string }> = ({ spaceId }) => (
+  <div className="flex items-center gap-2 md:gap-3">
+    <PrimaryAddButton
+      label="Add field context"
+      ariaLabel="Add field context to this space"
+      iconTint="text-teal-300 group-hover:text-teal-200"
+      onClick={() => emitOpenAddFieldContextModal(spaceId)}
+    />
+  </div>
+)
+
+const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
+  router,
+}) => {
+  // One MeSpace per user is a domain invariant (see kb/03-workflows.md and
+  // kb/05-data-entities.md). Suppress the create-MeSpace shortcut once the
+  // user has one; the @authorization filter only returns the caller's own
+  // MeSpaces so this count is the right gate.
+  const { data: meSpacesData } = useQuery(GET_ALL_ME_SPACES, {
+    fetchPolicy: 'cache-and-network',
+  })
+  const canCreateMeSpace = (meSpacesData?.meSpaces?.length ?? 0) === 0
+
+  return (
+    <div className="flex items-center gap-2 md:gap-3">
+      {canCreateMeSpace && (
+        <button
+          type="button"
+          onClick={() => router.push('/protected/spaces/me-space')}
+          className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+          aria-label="Create MeSpace"
+        >
+          <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+          <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+            MeSpace
+          </span>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => router.push('/protected/spaces/we-space')}
+        data-tour="create-wespace-button"
+        className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+        aria-label="Create WeSpace"
+      >
+        <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
+        <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+          WeSpace
+        </span>
+      </button>
+    </div>
+  )
+}
+
+const PrimaryAddButton: FC<{
+  label: string
+  ariaLabel: string
+  iconTint: string
+  onClick: () => void
+}> = ({ label, ariaLabel, iconTint, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+    aria-label={ariaLabel}
+  >
+    <Plus className={cn('w-5 h-5 transition-colors', iconTint)} />
+    <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+      {label}
+    </span>
+  </button>
+)
 
 const Divider: FC = () => (
   <div className="w-px h-4 bg-gp-ink-soft/20 dark:bg-white/10" />

@@ -65,6 +65,7 @@ import {
   LOG_RESONANCE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { useAnimations, useApp, usePageContext } from '@/contexts'
+import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 import { usePreferences } from '@/contexts/preferences-context'
 import { useResonanceDiscovery } from '@/hooks/useResonanceDiscovery'
 import { useResonanceSuggestions } from '@/hooks/useResonanceSuggestions'
@@ -222,6 +223,18 @@ function FieldDetailPage() {
     },
     [router]
   )
+
+  // Studio-shell action bar fires this when the user clicks "Add pulse"
+  // from outside this page subtree. The fieldContextId guard prevents a
+  // stale listener (e.g. a previously-visited field still mounted) from
+  // stealing the open request.
+  useEffect(() => {
+    if (!fieldId) return
+    return onOpenAddPulseModal((detail) => {
+      if (detail.fieldContextId !== fieldId) return
+      setIsModalOpen(true)
+    })
+  }, [fieldId])
 
   // Resonance discovery hooks - provide empty string as fallback for SSR safety
   const { triggerDiscovery, isLoading: isDiscoveringResonances } =
