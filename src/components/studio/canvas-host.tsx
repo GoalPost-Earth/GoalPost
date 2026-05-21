@@ -9,7 +9,6 @@ import { SpatialView } from './modes/graph-mode/spatial-view'
 import { BloomView } from './modes/graph-mode/bloom-view'
 import { StudioCanvasActionBar } from './canvas-action-bar'
 import { EntityInfoDrawer } from '@/components/dashboard/entity-info-drawer'
-import { SpaceWarpTransition } from '@/components/dashboard/space-warp-transition'
 
 interface CanvasHostProps {
   /** Route content rendered inside the canvas (Next.js `children`). */
@@ -137,12 +136,6 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
           even though it's `position: fixed`. Mounting it at the canvas-host
           level means the drawer works across all three views. */}
       <EntityInfoDrawer />
-
-      {/* Space → SpaceDashboardView "warp" animation. Mounts here so it
-          survives the `/protected/dashboard` → `/protected/dashboard/
-          space/[id]` route transition — the route children unmount, but
-          the overlay's GSAP timeline keeps running on top. */}
-      <SpaceWarpTransition />
     </section>
   )
 }

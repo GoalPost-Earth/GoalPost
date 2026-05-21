@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
-import { dispatchOpenSpaceWarp } from './space-warp-transition'
 
 export type InfoEntityType = 'MeSpace' | 'WeSpace' | 'FieldContext' | 'Pulse' | 'Person'
 
@@ -230,20 +229,9 @@ const SpaceDetailsBody: FC<{ spaceId: string; onClose: () => void }> = ({
       ? formatDistanceToNow(created, { addSuffix: true })
       : '—'
 
-  const goToSpace = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Drawer's "Open space" button → fire the same warp the cards and
-    // bubbles do, originating from the button itself. Closing the
-    // drawer first would unmount the source element before we could
-    // measure it; we close it AFTER capturing the rect.
-    const rect = e.currentTarget.getBoundingClientRect()
-    dispatchOpenSpaceWarp({
-      spaceId: space.id,
-      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-      type: isMe ? 'MeSpace' : 'WeSpace',
-      title: space.name || 'Space',
-      icon: isMe ? 'self_improvement' : 'groups',
-    })
+  const goToSpace = () => {
     onClose()
+    router.push(`/protected/dashboard/space/${space.id}`)
   }
 
   const goToContext = (ctxId: string) => {

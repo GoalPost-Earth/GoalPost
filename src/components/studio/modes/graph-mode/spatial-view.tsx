@@ -17,7 +17,6 @@ import {
 import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
-import { dispatchOpenSpaceWarp } from '@/components/dashboard/space-warp-transition'
 import { GraphLoadingState } from './graph-loading-state'
 
 /**
@@ -331,13 +330,6 @@ export const SpatialView: FC = () => {
   }, [descriptors])
   /* eslint-enable react-hooks/refs */
 
-  // Click behavior diverges by descriptor kind:
-  //   - Space bubble → dispatchOpenSpaceWarp animates a clone into the
-  //     SpaceDashboardView. We snapshot the bubble's actual on-screen rect
-  //     via its NVL container so the clone starts pixel-aligned.
-  //   - Field-context bubble → plain navigation to the field-context page.
-  //     No warp yet; the field-context route lives in a different design
-  //     surface that hasn't been wired into the warp overlay.
   const handleOpen = useCallback(
     (id: string) => {
       const desc = descriptors.find((d) => d.id === id)
@@ -346,26 +338,7 @@ export const SpatialView: FC = () => {
         router.push(`/protected/dashboard/field-context/${id}`)
         return
       }
-      const container = containerCacheRef.current.get(id)
-      // EntityBubble renders the actual visible circle as the first
-      // child inside the NVL container — measure that, not the
-      // container, since NVL clips to its own bounding box.
-      const visual =
-        (container?.firstElementChild as HTMLElement | null) ?? container ?? null
-      const rect = visual?.getBoundingClientRect()
-      if (!rect) return
-      dispatchOpenSpaceWarp({
-        spaceId: id,
-        rect: {
-          x: rect.x,
-          y: rect.y,
-          width: rect.width,
-          height: rect.height,
-        },
-        type: desc.type,
-        title: desc.title,
-        icon: desc.icon as 'self_improvement' | 'groups',
-      })
+      router.push(`/protected/dashboard/space/${id}`)
     },
     [descriptors, router]
   )

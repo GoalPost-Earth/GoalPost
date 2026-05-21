@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
 import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
-import { dispatchOpenSpaceWarp } from './space-warp-transition'
 
 type SpaceFilter = 'all' | 'me' | 'we'
 
@@ -169,6 +169,7 @@ interface SpaceCardProps {
 }
 
 function SpaceCard({ space }: SpaceCardProps) {
+  const router = useRouter()
   const isMe = space.type === 'MeSpace'
   const owner = space.owner?.[0]
   const ownerName =
@@ -181,22 +182,8 @@ function SpaceCard({ space }: SpaceCardProps) {
     addSuffix: true,
   })
 
-  // Snapshot the card's on-screen rect at click time so the warp
-  // overlay can grow a clone of THIS exact card into the destination
-  // view. Both Graph View bubbles and Dashboard cards funnel through
-  // the same `goalpost:open-space-warp` event — the destination is
-  // always the new in-space dashboard view.
-  const cardRef = useRef<HTMLDivElement>(null)
   const handleOpen = () => {
-    const rect = cardRef.current?.getBoundingClientRect()
-    if (!rect) return
-    dispatchOpenSpaceWarp({
-      spaceId: space.id,
-      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-      type: space.type,
-      title: space.name,
-      icon: isMe ? 'self_improvement' : 'groups',
-    })
+    router.push(`/protected/dashboard/space/${space.id}`)
   }
 
   // Outer is a div-as-button so the nested info button doesn't violate
@@ -204,7 +191,6 @@ function SpaceCard({ space }: SpaceCardProps) {
   // the (i) button opens the right-side details drawer.
   return (
     <div
-      ref={cardRef}
       role="button"
       tabIndex={0}
       onClick={handleOpen}
