@@ -18,6 +18,7 @@ import {
 import {
   isFocalEntityType,
   type FocalEntity,
+  type FocalEntityParent,
   type FocalEntityType,
   type SessionContext,
 } from '@/lib/focal-entity/types'
@@ -50,6 +51,7 @@ interface FocalEntityContextValue {
     label: string,
     refinedType?: FocalEntityType
   ) => void
+  setFocalParents: (id: string, parents: FocalEntityParent[]) => void
 }
 
 const EMPTY_SESSION_CONTEXT: SessionContext = {
@@ -66,6 +68,7 @@ const FALLBACK_VALUE: FocalEntityContextValue = {
   sessionContext: EMPTY_SESSION_CONTEXT,
   setFocalEntity: () => {},
   setFocalLabel: () => {},
+  setFocalParents: () => {},
 }
 
 const FocalEntityContext = createContext<FocalEntityContextValue | undefined>(
@@ -109,14 +112,17 @@ function buildHints(user: ReturnType<typeof useApp>['user']): FocalRouteHints {
 
 function enrichWithLabel(
   entity: FocalEntity,
-  cache: Record<string, { label: string; type?: FocalEntityType }>
+  cache: Record<string, { label: string; type?: FocalEntityType }>,
+  parentsCache: Record<string, FocalEntityParent[]>
 ): FocalEntity {
+  const parents = parentsCache[entity.id]
   const exact = cache[`${entity.type}:${entity.id}`]
   if (exact) {
     return {
       ...entity,
       type: exact.type ?? entity.type,
       label: exact.label,
+      parents,
     }
   }
   for (const key of Object.keys(cache)) {
@@ -125,10 +131,11 @@ function enrichWithLabel(
         ...entity,
         type: cache[key].type ?? entity.type,
         label: cache[key].label,
+        parents,
       }
     }
   }
-  return entity
+  return parents ? { ...entity, parents } : entity
 }
 
 export function FocalEntityProvider({ children }: { children: ReactNode }) {
@@ -166,6 +173,34 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
   const [labelCache, setLabelCache] = useState<
     Record<string, { label: string; type?: FocalEntityType }>
   >({})
+  const [parentsCache, setParentsCache] = useState<
+    Record<string, FocalEntityParent[]>
+  >({})
+
+  const setFocalParents = useCallback(
+    (id: string, parents: FocalEntityParent[]) => {
+      if (!id) return
+      setParentsCache((prev) => {
+        // Same identity = same array reference; skip the state update so
+        // consumers don't re-render when nothing changed.
+        const existing = prev[id]
+        if (
+          existing &&
+          existing.length === parents.length &&
+          existing.every(
+            (p, i) =>
+              p.id === parents[i].id &&
+              p.type === parents[i].type &&
+              p.label === parents[i].label
+          )
+        ) {
+          return prev
+        }
+        return { ...prev, [id]: parents }
+      })
+    },
+    []
+  )
 
   const setFocalLabel = useCallback(
     (id: string, label: string, refinedType?: FocalEntityType) => {
@@ -225,12 +260,12 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
     return null
   }, [manualFocal, pathname, hints, persistedSeed, serverSeed])
 
-  // Stage 2: enrich with the latest label from the cache without disturbing
-  // the focused-at timestamp. This is what consumers read.
+  // Stage 2: enrich with the latest label and parent chain from their caches,
+  // without disturbing the focused-at timestamp. This is what consumers read.
   const focalEntity = useMemo<FocalEntity | null>(() => {
     if (!focalIdentity) return null
-    return enrichWithLabel(focalIdentity, labelCache)
-  }, [focalIdentity, labelCache])
+    return enrichWithLabel(focalIdentity, labelCache, parentsCache)
+  }, [focalIdentity, labelCache, parentsCache])
 
   // Hydrate from the server once a user is in scope. The server is the
   // source of truth for "where the user last was" so a fresh browser /
@@ -360,8 +395,9 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       sessionContext,
       setFocalEntity,
       setFocalLabel,
+      setFocalParents,
     }),
-    [focalEntity, sessionContext, setFocalEntity, setFocalLabel]
+    [focalEntity, sessionContext, setFocalEntity, setFocalLabel, setFocalParents]
   )
 
   return (

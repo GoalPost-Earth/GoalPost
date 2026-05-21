@@ -64,7 +64,7 @@ import {
   LOG_PULSE_ACTIVITY,
   LOG_RESONANCE_ACTIVITY,
 } from '@/app/graphql/mutations'
-import { useApp, usePageContext } from '@/contexts'
+import { useApp, useFocalEntity, usePageContext } from '@/contexts'
 import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 import { usePreferences } from '@/contexts/preferences-context'
 import {
@@ -197,6 +197,7 @@ function FieldDetailPage() {
   const meSpaceId = params?.id as string
   const { user } = useApp()
   const { setPageTitle } = usePageContext()
+  const { setFocalLabel, setFocalParents } = useFocalEntity()
   const { resonanceLinkageEnabled } = usePreferences()
   const apolloClient = useApolloClient()
   const viewParam = searchParams.get('view') as SpaceViewMode | null
@@ -865,6 +866,29 @@ function FieldDetailPage() {
         day: 'numeric',
       })
     : 'Unknown'
+
+  // Supply the FieldContext label + parent MeSpace to the breadcrumb /
+  // assistant primitives.
+  const fieldContextTitle = fieldContext?.title ?? null
+  const fieldContextSpaceName = fieldContext?.space?.[0]?.name ?? null
+  useEffect(() => {
+    if (!fieldId) return
+    if (fieldContextTitle) {
+      setFocalLabel(fieldId, fieldContextTitle, 'FieldContext')
+    }
+    if (meSpaceId && fieldContextSpaceName) {
+      setFocalParents(fieldId, [
+        { type: 'MeSpace', id: meSpaceId, label: fieldContextSpaceName },
+      ])
+    }
+  }, [
+    fieldId,
+    fieldContextTitle,
+    meSpaceId,
+    fieldContextSpaceName,
+    setFocalLabel,
+    setFocalParents,
+  ])
 
   const handlePulseDetailsOpen = useCallback(
     (pulseId: string) => {

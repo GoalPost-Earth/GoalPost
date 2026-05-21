@@ -21,7 +21,10 @@ import {
 } from '@/app/graphql/mutations'
 import { cn } from '@/lib/utils'
 import { useAnimations, useFocalEntity, usePageContext } from '@/contexts'
-import type { FocalEntityType } from '@/lib/focal-entity/types'
+import type {
+  FocalEntityParent,
+  FocalEntityType,
+} from '@/lib/focal-entity/types'
 import { getConfigForType, type NodeType } from '@/lib/pulse-type-config'
 import {
   Select,
@@ -58,7 +61,7 @@ export default function PulseDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
-  const { setFocalLabel } = useFocalEntity()
+  const { setFocalLabel, setFocalParents } = useFocalEntity()
   const pulseId = params?.id as string
   const { animationsEnabled } = useAnimations()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -184,6 +187,34 @@ export default function PulseDetailsPage() {
         : undefined
     setFocalLabel(pulse.id, pulse.title, refined)
   }, [pulse?.id, pulse?.title, pulse?.__typename, setFocalLabel])
+
+  // Declare the pulse's structural parents (Space > FieldContext) so the
+  // breadcrumb can render Dashboard > Space > Field > Pulse.
+  useEffect(() => {
+    if (!pulse?.id) return
+    const parents: FocalEntityParent[] = []
+    if (space?.id && space?.name) {
+      const spaceType: FocalEntityType =
+        space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
+      parents.push({ type: spaceType, id: space.id, label: space.name })
+    }
+    if (context?.id && context?.title) {
+      parents.push({
+        type: 'FieldContext',
+        id: context.id,
+        label: context.title,
+      })
+    }
+    setFocalParents(pulse.id, parents)
+  }, [
+    pulse?.id,
+    space?.id,
+    space?.name,
+    space?.__typename,
+    context?.id,
+    context?.title,
+    setFocalParents,
+  ])
 
   const { data: contextPulseData } = useQuery(GET_PULSES_BY_CONTEXT, {
     variables: { contextId: context?.id || '' },

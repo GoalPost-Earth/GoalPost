@@ -72,7 +72,7 @@ export default function FieldContextDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
-  const { setFocalLabel } = useFocalEntity()
+  const { setFocalLabel, setFocalParents } = useFocalEntity()
   const { user } = useApp()
   const contextId = params?.id as string
   const { animationsEnabled } = useAnimations()
@@ -225,6 +225,25 @@ export default function FieldContextDetailsPage() {
     if (!context?.id || !context?.title) return
     setFocalLabel(context.id, context.title, 'FieldContext')
   }, [context?.id, context?.title, setFocalLabel])
+
+  // Declare the parent Space for the breadcrumb.
+  useEffect(() => {
+    if (!context?.id) return
+    if (!space?.id || !space?.name) {
+      setFocalParents(context.id, [])
+      return
+    }
+    const spaceType = space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
+    setFocalParents(context.id, [
+      { type: spaceType, id: space.id, label: space.name },
+    ])
+  }, [
+    context?.id,
+    space?.id,
+    space?.name,
+    space?.__typename,
+    setFocalParents,
+  ])
   const peopleContext = (
     fieldPeopleData as
       | {

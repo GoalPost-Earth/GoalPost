@@ -17,6 +17,17 @@ export type FocalEntityType =
 
 export type FocalEntitySource = 'route' | 'manual' | 'persisted'
 
+/**
+ * A structural parent of a focal entity, used to render hierarchical
+ * breadcrumbs (Dashboard > Space > FieldContext > Pulse). Pushed by
+ * detail pages once their query resolves the enclosing entities.
+ */
+export interface FocalEntityParent {
+  type: FocalEntityType
+  id: string
+  label: string
+}
+
 export interface FocalEntity {
   type: FocalEntityType
   id: string
@@ -24,6 +35,8 @@ export interface FocalEntity {
   label?: string
   focusedAt: string
   source: FocalEntitySource
+  /** Lazy — populated by setFocalParents once the detail page resolves the chain. */
+  parents?: FocalEntityParent[]
 }
 
 /**
