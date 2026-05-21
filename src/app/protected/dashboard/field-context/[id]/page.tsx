@@ -2,17 +2,10 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
-import { useEffect, useState, useMemo, useCallback, type FC } from 'react'
+import { useEffect, useState, useMemo, type FC } from 'react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
@@ -72,8 +65,6 @@ import {
   DocumentList,
   type DocumentRecord,
 } from '@/components/fields/document-list'
-import { SpaceViewToggle } from '@/components/spaces'
-import type { SpaceViewMode } from '@/components/spaces'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 
 export default function FieldContextDetailsPage() {
@@ -342,26 +333,6 @@ export default function FieldContextDetailsPage() {
       new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
   )
   const resonances = context?.resonancesInContext || []
-
-  const handleViewChange = useCallback(
-    (view: SpaceViewMode) => {
-      if (
-        view !== 'graph' ||
-        !space?.id ||
-        !space?.__typename ||
-        !context?.id
-      ) {
-        return
-      }
-
-      const spaceType = space.__typename === 'WeSpace' ? 'we-space' : 'me-space'
-
-      router.push(
-        `/protected/spaces/${spaceType}/${space.id}/fields/${context.id}`
-      )
-    },
-    [router, space?.__typename, space?.id, context?.id]
-  )
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -1193,13 +1164,17 @@ export default function FieldContextDetailsPage() {
         </div>
       )}
 
-      {/* Scrollable content */}
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
-        <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-          {/* Top bar — back to the owning Space on the left; persistent
-              page chrome (view toggle, details, edit, overflow) on the
-              right. Page-local actions live here rather than as a giant
-              footer button row. */}
+      {/* Scrollable content — pb-40 leaves a clear lane for the
+          floating StudioCanvasActionBar at the bottom of the canvas so
+          page content never sits directly under it at scroll end. */}
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
+        <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+          {/* Top bar — back to the owning Space on the left; page-local
+              actions on the right as pill buttons. On md+ the pills
+              expand to show their labels; on narrower screens they
+              compact to icon-only chips of the same height. Share lives
+              on the section itself (not up here), so this bar only
+              carries the always-applicable verbs. */}
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -1212,97 +1187,52 @@ export default function FieldContextDetailsPage() {
               {space?.name || 'Space'}
             </button>
             <div className="flex items-center gap-2">
-              <SpaceViewToggle
-                activeView="details"
-                onViewChange={handleViewChange}
-              />
-              <button
-                type="button"
+              <TopBarPill
+                icon="info"
+                label="Info"
                 onClick={() =>
                   dispatchOpenInfoDrawer({
                     type: 'FieldContext',
                     id: contextId,
                   })
                 }
-                aria-label="Open details drawer"
-                title="Details"
-                className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  info
-                </span>
-              </button>
-              <button
-                type="button"
+              />
+              <TopBarPill
+                icon="edit"
+                label="Edit"
                 onClick={handleEditStart}
-                aria-label="Edit field context"
-                title="Edit context"
-                className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  edit
-                </span>
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="More actions"
-                    title="More actions"
-                    className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      more_horiz
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem
-                    onClick={() => setIsBulkShareModalOpen(true)}
-                    disabled={pulses.length === 0}
-                  >
-                    <span className="material-symbols-outlined text-[18px] mr-2">
-                      share
-                    </span>
-                    Share pulses
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={loading}
-                    className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-                  >
-                    <span className="material-symbols-outlined text-[18px] mr-2">
-                      delete
-                    </span>
-                    Delete context
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              />
+              <TopBarPill
+                icon="delete"
+                label="Delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={loading}
+                variant="danger"
+              />
             </div>
           </div>
 
-          {/* Hero — bigger, more confident identity block. The page is
-              read-heavy below the fold (pulses, resonances, docs), so
-              the top earns its space by anchoring the field's identity
-              and surfacing the 4 key counts at a glance. */}
-          <header className="flex flex-col items-center text-center gap-5 pt-2 pb-2">
+          {/* Hero — identity block. Sized to anchor the page without
+              dominating it; the read-heavy sections below the fold
+              (pulses, resonances, docs) are where the user spends most
+              of their time. */}
+          <header className="flex flex-col items-center text-center gap-4 pt-1">
             <div
               className={cn(
-                'size-20 rounded-3xl border flex items-center justify-center shadow-xl backdrop-blur-sm',
+                'size-14 rounded-2xl border flex items-center justify-center shadow-lg backdrop-blur-sm',
                 isMe
                   ? 'bg-amber-500/20 border-amber-300/40 text-amber-600 dark:text-amber-200'
                   : 'bg-teal-500/20 border-teal-300/40 text-teal-600 dark:text-teal-200'
               )}
             >
-              <span className="material-symbols-outlined text-5xl">
+              <span className="material-symbols-outlined text-3xl">
                 category
               </span>
             </div>
-            <div className="space-y-3 max-w-3xl">
+            <div className="space-y-2 max-w-3xl">
               <span
                 className={cn(
-                  'inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
                   isMe
                     ? 'bg-amber-500/20 border-amber-400/40 text-amber-700 dark:text-amber-100'
                     : 'bg-teal-500/20 border-teal-400/40 text-teal-700 dark:text-teal-100'
@@ -1311,15 +1241,15 @@ export default function FieldContextDetailsPage() {
                 {spaceLabel}
                 {space?.name ? ` · ${space.name}` : ''}
               </span>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.05]">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
                 {context.title || 'Untitled field'}
               </h1>
               {context.emergentName && (
-                <p className="text-base sm:text-lg italic text-slate-600 dark:text-white/65 max-w-2xl mx-auto">
+                <p className="text-sm sm:text-base italic text-slate-600 dark:text-white/65 max-w-2xl mx-auto">
                   &quot;{context.emergentName}&quot;
                 </p>
               )}
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">
                 Created {createdLabel}
               </p>
             </div>
@@ -1327,7 +1257,7 @@ export default function FieldContextDetailsPage() {
             {/* At-a-glance counters — each tile gets its own accent so
                 the row reads as a quick visual scan rather than a
                 uniform stat block. */}
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl">
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl">
               <Stat
                 icon="graphic_eq"
                 label="Pulses"
@@ -1390,22 +1320,6 @@ export default function FieldContextDetailsPage() {
             }
           />
 
-          {/* Danger zone — destructive entry is quiet on purpose. The
-              overflow menu in the top bar is the primary path; this
-              text link is the explicit, "I scrolled to the bottom and
-              meant it" surface, matching SpaceDashboardView. */}
-          {pulses.length === 0 && (
-            <section className="pt-6 border-t border-white/10 dark:border-white/10 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={loading}
-                className="text-xs text-red-500/80 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Delete this field context
-              </button>
-            </section>
-          )}
         </div>
       </main>
 
@@ -1601,6 +1515,34 @@ export default function FieldContextDetailsPage() {
   )
 }
 
+const TopBarPill: FC<{
+  icon: string
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  variant?: 'default' | 'danger'
+}> = ({ icon, label, onClick, disabled, variant = 'default' }) => {
+  const isDanger = variant === 'danger'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className={cn(
+        'inline-flex items-center justify-center gap-1.5 h-9 px-3 md:px-3.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent',
+        isDanger
+          ? 'bg-red-500/10 dark:bg-red-500/15 border-red-400/30 dark:border-red-400/30 text-red-600 dark:text-red-300 hover:bg-red-500/20 dark:hover:bg-red-500/25 focus-visible:ring-red-400/60'
+          : 'bg-white/60 dark:bg-white/5 border-white/50 dark:border-white/15 text-slate-700 dark:text-white/75 hover:bg-white/80 dark:hover:bg-white/10 focus-visible:ring-gp-primary/60'
+      )}
+    >
+      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+      <span className="hidden md:inline">{label}</span>
+    </button>
+  )
+}
+
 type StatAccent = 'primary' | 'goal' | 'care' | 'story' | 'resource'
 
 const STAT_ACCENT: Record<StatAccent, string> = {
@@ -1617,21 +1559,21 @@ const Stat: FC<{
   value: string | number
   accent: StatAccent
 }> = ({ icon, label, value, accent }) => (
-  <div className="group rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] px-4 py-3 text-left backdrop-blur-sm shadow-sm hover:bg-white/70 dark:hover:bg-white/[0.06] transition-colors">
+  <div className="group rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] px-3 py-2.5 text-left backdrop-blur-sm shadow-sm hover:bg-white/70 dark:hover:bg-white/[0.06] transition-colors">
     <div className="flex items-center justify-between gap-2">
       <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500 dark:text-white/55">
         {label}
       </span>
       <span
         className={cn(
-          'inline-flex items-center justify-center size-7 rounded-lg border',
+          'inline-flex items-center justify-center size-6 rounded-lg border',
           STAT_ACCENT[accent]
         )}
       >
-        <span className="material-symbols-outlined text-[16px]">{icon}</span>
+        <span className="material-symbols-outlined text-[14px]">{icon}</span>
       </span>
     </div>
-    <p className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tabular-nums leading-none">
+    <p className="mt-1.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums leading-none">
       {value}
     </p>
   </div>
@@ -1663,22 +1605,26 @@ const FieldContextSkeleton: FC = () => (
         }}
       />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
+      <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
-          <div className="h-8 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-20 md:w-24 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+            <div className="h-9 w-20 md:w-24 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+            <div className="h-9 w-20 md:w-24 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-3 mt-2">
-          <div className="size-16 rounded-3xl bg-white/30 dark:bg-white/5 animate-pulse" />
-          <div className="h-5 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
-          <div className="h-9 w-72 rounded-md bg-white/30 dark:bg-white/5 animate-pulse" />
+        <div className="flex flex-col items-center gap-4 pt-1">
+          <div className="size-14 rounded-2xl bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
+          <div className="h-8 w-72 rounded-md bg-white/30 dark:bg-white/5 animate-pulse" />
           <div className="h-3 w-48 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full mt-2">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-14 rounded-xl bg-white/30 dark:bg-white/5 animate-pulse"
+                className="h-14 rounded-2xl bg-white/30 dark:bg-white/5 animate-pulse"
               />
             ))}
           </div>
