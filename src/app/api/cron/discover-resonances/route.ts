@@ -14,7 +14,13 @@ import { discoverGlobalResonances } from '@/lib/resonance/discovery/pattern-dete
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import { initGraph } from '@/modules/graph'
 
-export async function POST(request: NextRequest) {
+// Vercel cron invocations are always GET. The full sweep (embeddings + LLM
+// pattern analysis across every space × context) can run for minutes; 800s is
+// the Pro ceiling for serverless functions.
+export const dynamic = 'force-dynamic'
+export const maxDuration = 800
+
+export async function GET(request: NextRequest) {
   try {
     // Verify this is a Vercel cron request
     const authHeader = request.headers.get('authorization')
