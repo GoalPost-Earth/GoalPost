@@ -62,3 +62,6 @@ Thumbs.db
 
 # Claude Code worktrees (per-session ephemeral checkouts, never tracked)
 .claude/worktrees/
+
+# Ad-hoc agent scratch files (do not let Tailwind scan)
+.profile-tmp/
