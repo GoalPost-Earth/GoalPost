@@ -160,6 +160,7 @@ export default function WeSpaceFieldsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
+  const [isProcessingField, setIsProcessingField] = useState(false)
 
   // Transform fields to component props early so it's available for callbacks
   const transformedFields = transformFieldsToProps(fields)
@@ -216,6 +217,7 @@ export default function WeSpaceFieldsPage() {
       console.error('WeSpace ID not available')
       return
     }
+    setIsProcessingField(true)
     try {
       // Use name as the title, fallback to description if name not provided
       const title = name || description
@@ -251,10 +253,16 @@ export default function WeSpaceFieldsPage() {
         localStorage.setItem('weSpaceId', weSpaceId)
       }
 
+      try {
+        await refetch()
+      } catch (refetchErr) {
+        console.error('Error refetching after field creation:', refetchErr)
+      }
       setShowCreateModal(false)
-      await refetch()
     } catch (err) {
       console.error('Error creating field:', err)
+    } finally {
+      setIsProcessingField(false)
     }
   }
 
@@ -456,7 +464,7 @@ export default function WeSpaceFieldsPage() {
             setShowCreateModal(false)
           }}
           onCreateField={handleCreateField}
-          isLoading={isCreating}
+          isLoading={isCreating || isProcessingField}
         />
       )}
       {/* Edit Modal */}
@@ -498,9 +506,9 @@ export default function WeSpaceFieldsPage() {
                   toast.error('Failed to log field update')
                 })
             }
+            await refetch()
             setShowEditModal(false)
             setEditingFieldId(null)
-            await refetch()
           }}
           onDeleteSuccess={async () => {
             const editingField = transformedFields.find(
@@ -524,9 +532,9 @@ export default function WeSpaceFieldsPage() {
                   toast.error('Failed to log field deletion')
                 })
             }
+            await refetch()
             setShowEditModal(false)
             setEditingFieldId(null)
-            await refetch()
           }}
         />
       )}

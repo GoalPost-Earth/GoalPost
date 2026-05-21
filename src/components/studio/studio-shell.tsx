@@ -16,7 +16,11 @@ import {
   useChatRuntime,
 } from '@assistant-ui/react-ai-sdk'
 import type { UIMessage } from 'ai'
-import { useFocalEntity } from '@/contexts'
+import {
+  NavigationHistoryProvider,
+  useFocalEntity,
+  useNavigationHistory,
+} from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
 import type { FocalEntity } from '@/lib/focal-entity/types'
 import {
@@ -60,13 +64,15 @@ export interface StudioShellProps {
  */
 export const StudioShell: FC<StudioShellProps> = ({ children }) => {
   return (
-    <StudioCanvasProvider>
-      <BloomOverlayProvider>
-        <VisibleEntitiesProvider>
-          <StudioBody>{children}</StudioBody>
-        </VisibleEntitiesProvider>
-      </BloomOverlayProvider>
-    </StudioCanvasProvider>
+    <NavigationHistoryProvider>
+      <StudioCanvasProvider>
+        <BloomOverlayProvider>
+          <VisibleEntitiesProvider>
+            <StudioBody>{children}</StudioBody>
+          </VisibleEntitiesProvider>
+        </BloomOverlayProvider>
+      </StudioCanvasProvider>
+    </NavigationHistoryProvider>
   )
 }
 
@@ -267,6 +273,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   const { sessionContext } = useFocalEntity()
   const { canvasView } = useStudioCanvas()
   const { entities: visibleEntities } = useVisibleEntities()
+  const { history: navigationHistory } = useNavigationHistory()
 
   const sessionContextRef = useRef(sessionContext)
   useEffect(() => {
@@ -285,6 +292,10 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   useEffect(() => {
     visibleEntitiesRef.current = visibleEntities
   }, [visibleEntities])
+  const navigationHistoryRef = useRef(navigationHistory)
+  useEffect(() => {
+    navigationHistoryRef.current = navigationHistory
+  }, [navigationHistory])
 
   const lastSentFocalRef = useRef<FocalEntity | null>(null)
   const approvedActionsRef = useRef<ApprovedActionPayload[]>([])
@@ -320,6 +331,14 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
           : null,
       canvasView: canvasViewRef.current,
       canvasVisibleEntities: visibleEntitiesRef.current,
+      navigationHistory: navigationHistoryRef.current
+        .filter((entry) => Boolean(entry.label))
+        .map((entry) => ({
+          type: entry.type,
+          id: entry.id,
+          label: entry.label,
+          visitedAt: entry.visitedAt,
+        })),
       approvedActions: approvedActionsRef.current,
     }
   }, [aiMode, threadId])

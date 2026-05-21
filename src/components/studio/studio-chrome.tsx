@@ -23,7 +23,7 @@ import {
   NotificationPanel,
   useUnreadCount,
 } from '@/components/notifications/NotificationPanel'
-import { FocalContextBadge } from './focal-context-badge'
+import { StudioBreadcrumb } from './studio-breadcrumb'
 import { StudioSearchInput } from './studio-search-input'
 import { useStudioCanvas } from './studio-canvas-context'
 
@@ -113,7 +113,7 @@ export const StudioChrome: FC = () => {
                 {isMounted && <GoalPostLogo />}
               </span>
             </Link>
-            <FocalContextBadge />
+            <StudioBreadcrumb />
           </div>
 
           <div className="flex items-center gap-2 lg:gap-3 shrink-0">

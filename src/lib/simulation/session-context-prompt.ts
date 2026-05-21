@@ -50,6 +50,21 @@ export interface SessionContextPromptInput {
     type: string
     source: 'dashboard' | 'graph' | 'bloom'
   }>
+  /**
+   * Temporal trail of entities the user has focused this session, oldest
+   * first. The last entry is the current focal entity (also present as
+   * focalEntity above) — kept here so the model can see the sequence.
+   *
+   * Per Rule 2 (kb/07-ai-assistant-ux.md), every entry passed in MUST
+   * have a label resolved client-side. The caller is responsible for
+   * filtering out entries without labels before invoking this builder.
+   */
+  navigationHistory?: Array<{
+    type: FocalEntityType
+    id: string
+    label?: string
+    visitedAt: string
+  }>
 }
 
 /**
@@ -184,6 +199,35 @@ export function buildSystemPromptWithSessionContext(
         'in the user\'s visible graph — so the canvas shows X and Y side-by-side regardless. When ' +
         'no path is found, narrate "I can see both X and Y, but I can\'t see a connection between ' +
         'them in your graph"; do NOT claim a tool failure.'
+    )
+  }
+
+  // Navigation history — the temporal trail of focal entities the user has
+  // visited this session. Surfaces sequence ("you were just on X before
+  // this") so the model can answer "what was I just looking at?" or
+  // "compare this to the last pulse I clicked" without an extra round
+  // trip. Capped at 8 entries to keep the prompt small; the breadcrumb
+  // UI persists more.
+  const history = (ctx.navigationHistory ?? []).slice(-8)
+  if (history.length > 1) {
+    lines.push('')
+    lines.push('## NAVIGATION HISTORY')
+    lines.push(
+      `- The user has visited ${history.length} focal entities this session, oldest first:`
+    )
+    history.forEach((entry, idx) => {
+      const marker = idx === history.length - 1 ? ' (current)' : ''
+      lines.push(
+        `  ${idx + 1}. ${entry.label} — ${entry.type} [id=${entry.id}]${marker}`
+      )
+    })
+    lines.push('')
+    lines.push(
+      'NAVIGATION-HISTORY USE: When the user asks about a prior view ("what was I just on", ' +
+        '"the last pulse I clicked", "go back to that field", "the one before this"), resolve ' +
+        'against the trail above before asking for clarification. Refer to entries by their ' +
+        'human label (never the id). If the user asks for an action on a prior entity, you ' +
+        'still need the appropriate write tool — the trail is recall only, not a navigation tool.'
     )
   }
 

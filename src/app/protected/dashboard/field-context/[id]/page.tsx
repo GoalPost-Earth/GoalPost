@@ -6,6 +6,13 @@ import { useEffect, useState, useMemo, useCallback, type FC } from 'react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
@@ -991,6 +998,8 @@ export default function FieldContextDetailsPage() {
   if (error || !context) {
     return (
       <FieldContextError
+        error={error}
+        onRetry={error ? () => refetch() : undefined}
         onBack={() => router.push('/protected/dashboard')}
       />
     )
@@ -1187,7 +1196,10 @@ export default function FieldContextDetailsPage() {
       {/* Scrollable content */}
       <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
         <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-          {/* Top bar — back to the owning Space + view toggle + info */}
+          {/* Top bar — back to the owning Space on the left; persistent
+              page chrome (view toggle, details, edit, overflow) on the
+              right. Page-local actions live here rather than as a giant
+              footer button row. */}
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -1212,36 +1224,85 @@ export default function FieldContextDetailsPage() {
                     id: contextId,
                   })
                 }
-                className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+                aria-label="Open details drawer"
+                title="Details"
+                className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[16px]">
+                <span className="material-symbols-outlined text-[18px]">
                   info
                 </span>
-                Details
               </button>
+              <button
+                type="button"
+                onClick={handleEditStart}
+                aria-label="Edit field context"
+                title="Edit context"
+                className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  edit
+                </span>
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="More actions"
+                    title="More actions"
+                    className="inline-flex items-center justify-center size-9 rounded-full bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/15 hover:bg-white/60 dark:hover:bg-white/10 text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      more_horiz
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    onClick={() => setIsBulkShareModalOpen(true)}
+                    disabled={pulses.length === 0}
+                  >
+                    <span className="material-symbols-outlined text-[18px] mr-2">
+                      share
+                    </span>
+                    Share pulses
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={loading}
+                    className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                  >
+                    <span className="material-symbols-outlined text-[18px] mr-2">
+                      delete
+                    </span>
+                    Delete context
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
-          {/* Hero — field identity. Icon block + space badge + title +
-              emergent subtitle + created label, mirroring the in-space
-              dashboard hero. */}
-          <header className="flex flex-col items-center text-center gap-3">
+          {/* Hero — bigger, more confident identity block. The page is
+              read-heavy below the fold (pulses, resonances, docs), so
+              the top earns its space by anchoring the field's identity
+              and surfacing the 4 key counts at a glance. */}
+          <header className="flex flex-col items-center text-center gap-5 pt-2 pb-2">
             <div
               className={cn(
-                'size-16 rounded-3xl border flex items-center justify-center shadow-lg',
+                'size-20 rounded-3xl border flex items-center justify-center shadow-xl backdrop-blur-sm',
                 isMe
                   ? 'bg-amber-500/20 border-amber-300/40 text-amber-600 dark:text-amber-200'
                   : 'bg-teal-500/20 border-teal-300/40 text-teal-600 dark:text-teal-200'
               )}
             >
-              <span className="material-symbols-outlined text-4xl">
+              <span className="material-symbols-outlined text-5xl">
                 category
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3 max-w-3xl">
               <span
                 className={cn(
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
+                  'inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
                   isMe
                     ? 'bg-amber-500/20 border-amber-400/40 text-amber-700 dark:text-amber-100'
                     : 'bg-teal-500/20 border-teal-400/40 text-teal-700 dark:text-teal-100'
@@ -1250,40 +1311,46 @@ export default function FieldContextDetailsPage() {
                 {spaceLabel}
                 {space?.name ? ` · ${space.name}` : ''}
               </span>
-              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.05]">
                 {context.title || 'Untitled field'}
               </h1>
               {context.emergentName && (
-                <p className="text-sm italic text-slate-500 dark:text-white/55">
+                <p className="text-base sm:text-lg italic text-slate-600 dark:text-white/65 max-w-2xl mx-auto">
                   &quot;{context.emergentName}&quot;
                 </p>
               )}
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/45">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">
                 Created {createdLabel}
               </p>
             </div>
 
-            {/* At-a-glance counters */}
-            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full">
+            {/* At-a-glance counters — each tile gets its own accent so
+                the row reads as a quick visual scan rather than a
+                uniform stat block. */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl">
               <Stat
                 icon="graphic_eq"
                 label="Pulses"
                 value={pulses.length}
+                accent="goal"
               />
               <Stat
                 icon="hub"
                 label="Resonances"
                 value={resonances.length}
+                accent="primary"
               />
               <Stat
                 icon="groups"
                 label="People"
                 value={people.length}
+                accent="care"
               />
               <Stat
                 icon="description"
                 label="Documents"
                 value={documents.length}
+                accent="story"
               />
             </div>
           </header>
@@ -1302,6 +1369,16 @@ export default function FieldContextDetailsPage() {
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
             onAddPerson={() => setIsAddPersonModalOpen(true)}
             onAddResonance={() => setIsResonanceLinkModalOpen(true)}
+            onSharePulses={
+              pulses.length > 0
+                ? () => setIsBulkShareModalOpen(true)
+                : undefined
+            }
+            onUploadDocument={
+              canEditContent
+                ? () => setIsUploadDocumentModalOpen(true)
+                : undefined
+            }
             onEditPulse={handleEditPulse}
             onDeletePulse={handleDeletePulse}
             onPersonClick={handlePersonClick}
@@ -1313,58 +1390,22 @@ export default function FieldContextDetailsPage() {
             }
           />
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-3 w-full">
-            <button
-              onClick={() => setIsAddPersonModalOpen(true)}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/40 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-500/30 dark:hover:bg-emerald-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                person_add
-              </span>
-              Add Person
-            </button>
-            {canEditContent && (
+          {/* Danger zone — destructive entry is quiet on purpose. The
+              overflow menu in the top bar is the primary path; this
+              text link is the explicit, "I scrolled to the bottom and
+              meant it" surface, matching SpaceDashboardView. */}
+          {pulses.length === 0 && (
+            <section className="pt-6 border-t border-white/10 dark:border-white/10 flex justify-center">
               <button
-                onClick={() => setIsUploadDocumentModalOpen(true)}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/40 dark:border-amber-500/20 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-500/30 dark:hover:bg-amber-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={loading}
+                className="text-xs text-red-500/80 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  upload_file
-                </span>
-                Upload Document
+                Delete this field context
               </button>
-            )}
-            <button
-              onClick={handleEditStart}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/15 text-gp-ink-strong dark:text-white font-medium hover:bg-white/80 dark:hover:bg-white/10 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                edit
-              </span>
-              Edit Context
-            </button>
-            <button
-              onClick={() => setIsBulkShareModalOpen(true)}
-              disabled={pulses.length === 0}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/40 dark:border-blue-500/20 text-blue-700 dark:text-blue-300 font-medium hover:bg-blue-500/30 dark:hover:bg-blue-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                share
-              </span>
-              Share Pulses
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={loading}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-red-500/15 dark:bg-red-500/10 border border-red-500/40 dark:border-red-500/20 text-red-700 dark:text-red-300 font-medium hover:bg-red-500/25 dark:hover:bg-red-500/20 transition-all text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                delete
-              </span>
-              {loading ? 'Checking...' : 'Delete Context'}
-            </button>
-          </div>
+            </section>
+          )}
         </div>
       </main>
 
@@ -1560,19 +1601,37 @@ export default function FieldContextDetailsPage() {
   )
 }
 
+type StatAccent = 'primary' | 'goal' | 'care' | 'story' | 'resource'
+
+const STAT_ACCENT: Record<StatAccent, string> = {
+  primary: 'bg-gp-primary/15 text-gp-primary border-gp-primary/30',
+  goal: 'bg-gp-goal/15 text-gp-goal border-gp-goal/30',
+  care: 'bg-gp-care/15 text-gp-care border-gp-care/30',
+  story: 'bg-gp-story/15 text-gp-story border-gp-story/30',
+  resource: 'bg-gp-resource/15 text-gp-resource border-gp-resource/30',
+}
+
 const Stat: FC<{
   icon: string
   label: string
   value: string | number
-}> = ({ icon, label, value }) => (
-  <div className="rounded-xl border border-white/40 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] px-3 py-2.5 text-left backdrop-blur-sm">
-    <div className="flex items-center gap-1.5 text-slate-500 dark:text-white/45">
-      <span className="material-symbols-outlined text-[14px]">{icon}</span>
-      <span className="text-[10px] uppercase tracking-wider font-semibold">
+  accent: StatAccent
+}> = ({ icon, label, value, accent }) => (
+  <div className="group rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] px-4 py-3 text-left backdrop-blur-sm shadow-sm hover:bg-white/70 dark:hover:bg-white/[0.06] transition-colors">
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500 dark:text-white/55">
         {label}
       </span>
+      <span
+        className={cn(
+          'inline-flex items-center justify-center size-7 rounded-lg border',
+          STAT_ACCENT[accent]
+        )}
+      >
+        <span className="material-symbols-outlined text-[16px]">{icon}</span>
+      </span>
     </div>
-    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white tabular-nums">
+    <p className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tabular-nums leading-none">
       {value}
     </p>
   </div>
@@ -1643,26 +1702,98 @@ const FieldContextSkeleton: FC = () => (
   </div>
 )
 
-const FieldContextError: FC<{ onBack: () => void }> = ({ onBack }) => (
-  <div className="relative flex h-full w-full items-center justify-center">
-    <div className="text-center space-y-4 max-w-md px-6">
-      <div className="size-14 mx-auto rounded-2xl border border-red-300/40 bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-300">
-        <span className="material-symbols-outlined text-3xl">error</span>
+const FieldContextError: FC<{
+  /** When provided, renders the actual fetch error instead of the
+   *  generic "not found" copy. Distinguishing the two cases is the
+   *  whole point — empty-result and real-failure are different UX. */
+  error?: unknown
+  onRetry?: () => void
+  onBack: () => void
+}> = ({ error, onRetry, onBack }) => {
+  const errorMessage = extractErrorMessage(error)
+  const hasError = Boolean(error)
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center">
+      <div className="text-center space-y-4 max-w-lg px-6">
+        <div className="size-14 mx-auto rounded-2xl border border-red-300/40 bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-300">
+          <span className="material-symbols-outlined text-3xl">
+            {hasError ? 'cloud_off' : 'error'}
+          </span>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            {hasError
+              ? "We couldn't load this field context"
+              : 'This field context is no longer available'}
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-white/55">
+            {hasError
+              ? 'Something went wrong while fetching the data. The details below may help diagnose the cause.'
+              : 'It may have been deleted, or you no longer have access.'}
+          </p>
+        </div>
+        {hasError && errorMessage && (
+          <pre className="text-left text-[11px] leading-relaxed text-red-700 dark:text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
+            {errorMessage}
+          </pre>
+        )}
+        <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-gp-primary text-white text-xs font-semibold shadow-md shadow-gp-primary/20 hover:bg-gp-primary/90 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                refresh
+              </span>
+              Try again
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/15 text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-white/60 dark:hover:bg-white/20 transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              arrow_back
+            </span>
+            Back to dashboard
+          </button>
+        </div>
       </div>
-      <p className="text-sm text-slate-500 dark:text-white/55">
-        This field context is no longer available — it may have been deleted
-        or you lost access.
-      </p>
-      <button
-        type="button"
-        onClick={onBack}
-        className="inline-flex items-center gap-2 px-4 h-9 rounded-full bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/15 text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-white/60 dark:hover:bg-white/20 transition-colors cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-[16px]">
-          arrow_back
-        </span>
-        Back to dashboard
-      </button>
     </div>
-  </div>
-)
+  )
+}
+
+// Pull the most useful diagnostic string out of whatever Apollo/JS gives
+// us. ApolloError carries `graphQLErrors[].message` which is what makes
+// schema/network failures actionable (e.g. "Cannot return null for
+// non-nullable field ResonanceLink.label").
+function extractErrorMessage(error: unknown): string | null {
+  if (!error) return null
+  if (typeof error === 'string') return error
+
+  // ApolloError shape — graphQLErrors is the real signal.
+  if (typeof error === 'object' && error !== null) {
+    const apolloLike = error as {
+      graphQLErrors?: Array<{ message?: string }>
+      networkError?: { message?: string } | null
+      message?: string
+    }
+    const graphQLMessages = apolloLike.graphQLErrors
+      ?.map((gqlError) => gqlError.message)
+      .filter(Boolean)
+    if (graphQLMessages && graphQLMessages.length > 0) {
+      return graphQLMessages.join('\n')
+    }
+    if (apolloLike.networkError?.message) {
+      return apolloLike.networkError.message
+    }
+    if (apolloLike.message) return apolloLike.message
+  }
+
+  if (error instanceof Error) return error.message
+  return null
+}

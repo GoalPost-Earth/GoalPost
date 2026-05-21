@@ -150,6 +150,21 @@ export async function POST(req: Request) {
         type: string
         source: 'dashboard' | 'graph' | 'bloom'
       }>
+      /**
+       * Temporal trail of focal entities the user has visited in this
+       * session (oldest first). Drives the breadcrumb in the studio
+       * chrome and lets the assistant answer questions like "what was
+       * I just looking at?" or "go back to that pulse" without
+       * forcing the user to restate the entity. Client filters out
+       * entries without resolved labels (Rule 2 — no bare ids in
+       * SESSION CONTEXT).
+       */
+      navigationHistory?: Array<{
+        type: FocalEntityType
+        id: string
+        label?: string
+        visitedAt: string
+      }>
     }
     const {
       messages,
@@ -162,6 +177,7 @@ export async function POST(req: Request) {
       threadId,
       canvasView,
       canvasVisibleEntities,
+      navigationHistory,
     } = body
 
     const focalEntity =
@@ -254,6 +270,9 @@ export async function POST(req: Request) {
       previousFocalEntity,
       canvasView: canvasView ?? null,
       canvasVisibleEntities: canvasVisibleEntities ?? [],
+      navigationHistory: (navigationHistory ?? []).filter(
+        (entry) => isFocalEntityType(entry.type) && Boolean(entry.label)
+      ),
     })
 
     const lastUserMessage = getLastUserMessage(convertedMessages)

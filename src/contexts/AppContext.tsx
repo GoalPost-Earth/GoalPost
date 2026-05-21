@@ -5,6 +5,7 @@ import { GetLoggedInUserQuery } from '@/gql/graphql'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
+import { NAVIGATION_HISTORY_STORAGE_PREFIX } from './NavigationHistoryContext'
 
 type ContextUser = UserProfile & GetLoggedInUserQuery['people'][0]
 
@@ -91,6 +92,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('meSpaceId')
     localStorage.removeItem('goalpost.focalEntity.v1')
+    // Per-user navigation history keys (one per user that ever logged in
+    // on this browser). Sweep them all so the next login doesn't see
+    // anyone else's trail.
+    try {
+      const toRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(NAVIGATION_HISTORY_STORAGE_PREFIX)) {
+          toRemove.push(key)
+        }
+      }
+      for (const key of toRemove) localStorage.removeItem(key)
+    } catch {
+      /* non-fatal */
+    }
     document.cookie = 'accessToken=; path=/; max-age=0'
   }
 

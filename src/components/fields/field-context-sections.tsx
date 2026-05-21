@@ -56,6 +56,12 @@ type FieldContextSectionsProps = {
   onAddPulse: () => void
   onAddPerson?: () => void
   onAddResonance: () => void
+  /** Optional bulk-share entry attached to the Pulses section header.
+   *  Omit (or pass `undefined`) to hide — typically when `pulses` is empty. */
+  onSharePulses?: () => void
+  /** Optional upload entry attached to a Documents-related empty state.
+   *  Omit when the user lacks edit permission. */
+  onUploadDocument?: () => void
   onEditPulse: (
     e: React.MouseEvent,
     pulseId: string,
@@ -140,6 +146,8 @@ export function FieldContextSections({
   onAddPulse,
   onAddPerson,
   onAddResonance,
+  onSharePulses,
+  onUploadDocument,
   onEditPulse,
   onDeletePulse,
   onPulseClick,
@@ -199,10 +207,10 @@ export function FieldContextSections({
               </button>
             )}
           </div>
-          <ProfileCard>
-            <div className="space-y-3">
-              {people.length > 0 ? (
-                people.map((person, idx) => (
+          {people.length > 0 ? (
+            <ProfileCard>
+              <div className="space-y-3">
+                {people.map((person, idx) => (
                   <div
                     key={person.id}
                     onClick={() => onPersonClick?.(person.id)}
@@ -229,32 +237,68 @@ export function FieldContextSections({
                       )}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                  No people in this field context yet
-                </p>
-              )}
-            </div>
-          </ProfileCard>
+                ))}
+              </div>
+            </ProfileCard>
+          ) : (
+            <EmptySection
+              icon="groups"
+              title="No people yet"
+              body="People you add show up here with their role inside this field."
+              cta={
+                onAddPerson
+                  ? { label: 'Add a person', icon: 'person_add', onClick: onAddPerson }
+                  : undefined
+              }
+            />
+          )}
         </div>
       )}
 
       <div className="flex flex-col gap-4 md:col-span-2">
         <div className="flex items-center justify-between gap-3">
           <SectionHeader icon="waves" title="Pulses" />
-          <button
-            onClick={onAddPulse}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[16px]">add</span>
-            Add Pulse
-          </button>
+          <div className="flex items-center gap-2">
+            {onSharePulses && (
+              <button
+                onClick={onSharePulses}
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-gp-primary/10 dark:bg-gp-primary/15 border border-gp-primary/30 dark:border-gp-primary/40 text-gp-primary hover:bg-gp-primary/20 dark:hover:bg-gp-primary/25 transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  share
+                </span>
+                Share
+              </button>
+            )}
+            <button
+              onClick={onAddPulse}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">add</span>
+              Add Pulse
+            </button>
+          </div>
         </div>
-        <ProfileCard>
-          <div className="space-y-3">
-            {pulses.length > 0 ? (
-              pulses.map((pulse, idx) => {
+        {pulses.length === 0 ? (
+          <EmptySection
+            icon="waves"
+            title="No pulses yet"
+            body="A pulse is a Goal, Resource, Story, Care, or Core Value contributed into this field. Add the first one — or drop a document and let the assistant extract pulses from it."
+            cta={{ label: 'Add a pulse', icon: 'add', onClick: onAddPulse }}
+            secondaryCta={
+              onUploadDocument
+                ? {
+                    label: 'Upload a document',
+                    icon: 'upload_file',
+                    onClick: onUploadDocument,
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <ProfileCard>
+            <div className="space-y-3">
+              {pulses.map((pulse, idx) => {
                 const pulseType = getEditablePulseType(pulse.__typename)
                 const canEditPulse =
                   pulseType === 'goal' ||
@@ -344,14 +388,10 @@ export function FieldContextSections({
                     )}
                   </div>
                 )
-              })
-            ) : (
-              <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                No pulses yet
-              </p>
-            )}
-          </div>
-        </ProfileCard>
+              })}
+            </div>
+          </ProfileCard>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 md:col-span-2">
@@ -376,10 +416,29 @@ export function FieldContextSections({
             Link Pulses
           </button>
         </div>
-        <ProfileCard>
-          <div className="space-y-3">
-            {resonances.length > 0 ? (
-              resonances.map((resonance, idx) => {
+        {resonances.length === 0 ? (
+          <EmptySection
+            icon="hub"
+            title={
+              pulses.length < 2
+                ? 'No resonances yet'
+                : 'No resonances yet'
+            }
+            body={
+              pulses.length < 2
+                ? 'Resonances connect two pulses — add at least two pulses, then link the ones that resonate.'
+                : 'Resonances surface meaningful connections between pulses. Link two that go together, or let the assistant suggest some.'
+            }
+            cta={
+              pulses.length >= 2
+                ? { label: 'Link pulses', icon: 'add', onClick: onAddResonance }
+                : undefined
+            }
+          />
+        ) : (
+          <ProfileCard>
+            <div className="space-y-3">
+              {resonances.map((resonance, idx) => {
                 const source = resonance.source?.[0]
                 const target = resonance.target?.[0]
 
@@ -420,14 +479,10 @@ export function FieldContextSections({
                     )}
                   </div>
                 )
-              })
-            ) : (
-              <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                No resonances in this field context yet
-              </p>
-            )}
-          </div>
-        </ProfileCard>
+              })}
+            </div>
+          </ProfileCard>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 md:col-span-2">
@@ -453,6 +508,70 @@ export function FieldContextSections({
           </div>
         </ProfileCard>
       </div>
+    </div>
+  )
+}
+
+type EmptyCta = {
+  label: string
+  icon: string
+  onClick: () => void
+}
+
+function EmptySection({
+  icon,
+  title,
+  body,
+  cta,
+  secondaryCta,
+}: {
+  icon: string
+  title: string
+  body: string
+  cta?: EmptyCta
+  secondaryCta?: EmptyCta
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/40 dark:border-white/15 bg-white/30 dark:bg-white/[0.02] p-8 sm:p-10 text-center flex flex-col items-center gap-3">
+      <div className="size-12 rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] flex items-center justify-center text-slate-500 dark:text-white/55">
+        <span className="material-symbols-outlined text-2xl">{icon}</span>
+      </div>
+      <div className="space-y-1 max-w-md">
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+          {title}
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-white/55 leading-relaxed">
+          {body}
+        </p>
+      </div>
+      {(cta || secondaryCta) && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-1">
+          {cta && (
+            <button
+              type="button"
+              onClick={cta.onClick}
+              className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white text-xs font-semibold shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {cta.icon}
+              </span>
+              {cta.label}
+            </button>
+          )}
+          {secondaryCta && (
+            <button
+              type="button"
+              onClick={secondaryCta.onClick}
+              className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/15 text-gp-ink-strong dark:text-white text-xs font-semibold hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {secondaryCta.icon}
+              </span>
+              {secondaryCta.label}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

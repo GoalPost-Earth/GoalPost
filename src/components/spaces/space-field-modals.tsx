@@ -83,8 +83,12 @@ export function SpaceFieldModals({
             toast.error('Failed to log field creation')
           })
       }
+      try {
+        await onRefetch()
+      } catch (refetchErr) {
+        console.error('Error refetching after field creation:', refetchErr)
+      }
       onCloseCreate()
-      await onRefetch()
     } catch (err) {
       console.error('Error creating field:', err)
       toast.error('Failed to create field context')
@@ -143,8 +147,8 @@ export function SpaceFieldModals({
                   toast.error('Failed to log field update')
                 })
             }
-            onCloseEdit()
             await onRefetch()
+            onCloseEdit()
           }}
           onDeleteSuccess={async () => {
             const editingField = contexts.find(
@@ -169,8 +173,8 @@ export function SpaceFieldModals({
                   toast.error('Failed to log field deletion')
                 })
             }
-            onCloseEdit()
             await onRefetch()
+            onCloseEdit()
           }}
         />
       )}
