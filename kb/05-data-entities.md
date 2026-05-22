@@ -482,6 +482,9 @@ tools over time. Two write paths land here:
 | `cluster`              | `cluster_<id>` assigned by nearest-neighbor on `questionEmbedding`. |
 | `questionEmbedding`    | 1536-dim vector of the user question — drives clustering.         |
 | `goldenSet`            | Boolean — devs flag rows that should be replayed by the (future) eval harness. |
+| `status`               | Triage workflow: `'open'` (default) \| `'in_progress'` \| `'resolved'`. Rows predating this field coalesce to `'open'`. The dashboard hides `resolved` by default. |
+| `statusUpdatedAt`      | datetime — when the status last changed (null until first touched). |
+| `statusNote`           | Optional short note attached at the last status change (e.g. "fixed in 9d7bd9f"; "wontfix — accepted limitation"). |
 | `createdAt`            | datetime.                                                         |
 
 **Relationships:**
@@ -539,6 +542,7 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `chunk_order`                      | ConversationChunk.order         |
 | `assistant_feedback_createdAt`     | AssistantFeedback.createdAt     |
 | `assistant_feedback_classification` | AssistantFeedback.classification |
+| `assistant_feedback_status`        | AssistantFeedback.status        |
 
 ## ID Strategy
 

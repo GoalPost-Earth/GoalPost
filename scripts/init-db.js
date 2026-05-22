@@ -217,6 +217,11 @@ async function initializeDatabase() {
       // a per-row property check.
       `CREATE INDEX assistant_feedback_classification IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.classification)`,
+      // Default dashboard view filters `WHERE coalesce(f.status, 'open') IN
+      // ['open', 'in_progress']` — once the table has thousands of rows the
+      // unindexed property check becomes the long pole. Index it.
+      `CREATE INDEX assistant_feedback_status IF NOT EXISTS
+       FOR (f:AssistantFeedback) ON (f.status)`,
     ]
 
     for (const index of propertyIndexes) {

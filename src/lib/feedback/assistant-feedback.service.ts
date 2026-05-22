@@ -36,6 +36,19 @@ export type AssistantFeedbackSource =
   | 'auto_empty_text'
   | 'auto_rule_violation'
 
+/**
+ * Workflow state for a feedback row in the triage dashboard.
+ *
+ *   - `open`        — newly captured; no one has acted on it yet (default).
+ *   - `in_progress` — a dev is currently working on a fix.
+ *   - `resolved`    — fix shipped (or "wontfix" decision recorded); the
+ *                     dashboard hides these by default.
+ *
+ * Rows written before this field existed have no `status` property; the
+ * read query coalesces those to `'open'`.
+ */
+export type AssistantFeedbackStatus = 'open' | 'in_progress' | 'resolved'
+
 export interface CreateAssistantFeedbackInput {
   turnId: string
   rating: AssistantFeedbackRating
@@ -58,6 +71,9 @@ export interface AssistantFeedbackRecord {
   classificationReason: string | null
   cluster: string | null
   goldenSet: boolean
+  status: AssistantFeedbackStatus
+  statusUpdatedAt: string | null
+  statusNote: string | null
   createdAt: string
   turnId: string
   threadId: string | null
@@ -103,6 +119,9 @@ export async function createAssistantFeedback(
             classificationReason: null,
             cluster: null,
             goldenSet: false,
+            status: 'open',
+            statusUpdatedAt: null,
+            statusNote: null,
             createdAt: datetime()
           })
           CREATE (f)-[:FEEDBACK_ON]->(turn)
@@ -152,6 +171,9 @@ export async function createAssistantFeedback(
           classificationReason: null,
           cluster: null,
           goldenSet: false,
+          status: 'open',
+          statusUpdatedAt: null,
+          statusNote: null,
           createdAt: datetime()
         })
         CREATE (f)-[:FEEDBACK_ON]->(turn)
@@ -189,6 +211,13 @@ export interface ListAssistantFeedbackFilters {
   classification?: string
   rating?: AssistantFeedbackRating
   goldenSet?: boolean
+  /**
+   * One or more workflow statuses to include. When omitted, no status
+   * filter is applied (returns rows in every state). The dashboard
+   * defaults to `['open', 'in_progress']` so resolved rows drop out
+   * of the active triage view.
+   */
+  statuses?: AssistantFeedbackStatus[]
   limit?: number
 }
 
@@ -236,6 +265,7 @@ export async function listAssistantFeedback(
           AND ($classification IS NULL OR f.classification = $classification)
           AND ($rating IS NULL OR f.rating = $rating)
           AND ($goldenSet IS NULL OR f.goldenSet = $goldenSet)
+          AND ($statuses IS NULL OR coalesce(f.status, 'open') IN $statuses)
         WITH f, turn
         ORDER BY f.createdAt DESC
         LIMIT toInteger($limit)
@@ -257,6 +287,10 @@ export async function listAssistantFeedback(
           rating: filters.rating ?? null,
           goldenSet:
             typeof filters.goldenSet === 'boolean' ? filters.goldenSet : null,
+          statuses:
+            filters.statuses && filters.statuses.length > 0
+              ? filters.statuses
+              : null,
           limit,
         }
       )
@@ -291,6 +325,42 @@ export async function setAssistantFeedbackGoldenSet(
       tx.run(
         `MATCH (f:AssistantFeedback {id: $feedbackId}) SET f.goldenSet = $goldenSet`,
         { feedbackId, goldenSet }
+      )
+    )
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Move a feedback row through the triage workflow (open → in_progress →
+ * resolved). Stamps `statusUpdatedAt` so the dashboard can show "moved
+ * 3 hours ago". The optional `statusNote` is for short context like
+ * "fixed in 9d7bd9f" or "wontfix — model limitation".
+ *
+ * Idempotent: setting the same status twice just updates the timestamp,
+ * which is fine — the timestamp records the latest acknowledgement.
+ */
+export async function setAssistantFeedbackStatus(
+  feedbackId: string,
+  status: AssistantFeedbackStatus,
+  statusNote?: string | null
+): Promise<void> {
+  const session = driver.session()
+  try {
+    await session.executeWrite(async (tx) =>
+      tx.run(
+        `
+        MATCH (f:AssistantFeedback {id: $feedbackId})
+        SET f.status = $status,
+            f.statusUpdatedAt = datetime(),
+            f.statusNote = $statusNote
+        `,
+        {
+          feedbackId,
+          status,
+          statusNote: statusNote ?? null,
+        }
       )
     )
   } finally {
@@ -410,6 +480,11 @@ function shapeRecord(
   turnId: string,
   threadId: string | null
 ): AssistantFeedbackRecord {
+  const rawStatus = typeof props.status === 'string' ? props.status : 'open'
+  const status: AssistantFeedbackStatus =
+    rawStatus === 'in_progress' || rawStatus === 'resolved'
+      ? (rawStatus as AssistantFeedbackStatus)
+      : 'open'
   return {
     id: props.id as string,
     rating: props.rating as AssistantFeedbackRating,
@@ -422,6 +497,12 @@ function shapeRecord(
       (props.classificationReason as string | null) ?? null,
     cluster: (props.cluster as string | null) ?? null,
     goldenSet: Boolean(props.goldenSet),
+    status,
+    statusUpdatedAt:
+      props.statusUpdatedAt != null
+        ? stringifyDateTime(props.statusUpdatedAt)
+        : null,
+    statusNote: (props.statusNote as string | null) ?? null,
     createdAt: stringifyDateTime(props.createdAt),
     turnId,
     threadId,

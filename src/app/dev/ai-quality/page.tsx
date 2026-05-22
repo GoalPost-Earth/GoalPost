@@ -4,9 +4,11 @@ import {
   type AssistantFeedbackRow,
   type AssistantFeedbackSource,
   type AssistantFeedbackRating,
+  type AssistantFeedbackStatus,
 } from '@/lib/feedback/assistant-feedback.service'
 import { buildFixPrompt } from '@/lib/feedback/build-fix-prompt'
 import { FixPromptCopy } from '@/components/feedback/fix-prompt-copy'
+import { FeedbackStatusPicker } from '@/components/feedback/feedback-status-picker'
 
 interface PageProps {
   searchParams: Promise<{
@@ -14,7 +16,27 @@ interface PageProps {
     classification?: string
     rating?: string
     goldenSet?: string
+    /** `open` (default) | `in_progress` | `resolved` | `all`. */
+    status?: string
   }>
+}
+
+const STATUS_LABEL: Record<AssistantFeedbackStatus, string> = {
+  open: 'Open',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+}
+
+const STATUS_BADGE_CLASS: Record<AssistantFeedbackStatus, string> = {
+  open: 'bg-slate-200 text-slate-800 dark:bg-white/15 dark:text-white/80',
+  in_progress:
+    'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300',
+  resolved:
+    'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300',
+}
+
+function isStatus(value: unknown): value is AssistantFeedbackStatus {
+  return value === 'open' || value === 'in_progress' || value === 'resolved'
 }
 
 const SOURCE_LABEL: Record<AssistantFeedbackSource, string> = {
@@ -60,6 +82,22 @@ export default async function AiQualityDashboard({ searchParams }: PageProps) {
   }
 
   const params = await searchParams
+
+  // Status filter resolution:
+  //   no param / `open`  → ['open', 'in_progress']  (the active triage view)
+  //   `resolved`         → ['resolved']             (look back at what shipped)
+  //   `in_progress`      → ['in_progress']
+  //   `all`              → undefined                (no filter)
+  const statusParam = params.status ?? 'open'
+  const statuses: AssistantFeedbackStatus[] | undefined =
+    statusParam === 'all'
+      ? undefined
+      : statusParam === 'resolved'
+        ? ['resolved']
+        : statusParam === 'in_progress'
+          ? ['in_progress']
+          : ['open', 'in_progress']
+
   const filters = {
     source: isSource(params.source) ? params.source : undefined,
     classification:
@@ -73,6 +111,7 @@ export default async function AiQualityDashboard({ searchParams }: PageProps) {
         : params.goldenSet === 'false'
           ? false
           : undefined,
+    statuses,
     limit: 200,
   }
 
@@ -90,7 +129,7 @@ export default async function AiQualityDashboard({ searchParams }: PageProps) {
         </p>
       </header>
 
-      <FilterBar current={filters} counts={counts} />
+      <FilterBar current={filters} counts={counts} statusParam={statusParam} />
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 dark:border-white/10 px-6 py-12 text-center text-sm text-gp-ink-muted dark:text-white/60">
@@ -124,6 +163,7 @@ function aggregateCounts(rows: AssistantFeedbackRow[]) {
 function FilterBar({
   current,
   counts,
+  statusParam,
 }: {
   current: {
     source?: AssistantFeedbackSource
@@ -132,6 +172,7 @@ function FilterBar({
     goldenSet?: boolean
   }
   counts: { bySource: Record<string, number>; byClassification: Record<string, number> }
+  statusParam: string
 }) {
   const sourceOptions: { value: AssistantFeedbackSource | ''; label: string }[] = [
     { value: '', label: 'all sources' },
@@ -140,37 +181,81 @@ function FilterBar({
     { value: 'auto_empty_text', label: 'auto_empty_text' },
     { value: 'auto_rule_violation', label: 'auto_rule_violation' },
   ]
+  const statusOptions: { value: string; label: string }[] = [
+    { value: 'open', label: 'Open + in progress' },
+    { value: 'in_progress', label: 'In progress' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'all', label: 'All' },
+  ]
+  const buildHref = (overrides: Record<string, string | null>) => {
+    const params = new URLSearchParams()
+    if (current.source) params.set('source', current.source)
+    if (current.classification)
+      params.set('classification', current.classification)
+    if (current.rating) params.set('rating', current.rating)
+    if (typeof current.goldenSet === 'boolean')
+      params.set('goldenSet', String(current.goldenSet))
+    if (statusParam !== 'open') params.set('status', statusParam)
+    for (const [key, value] of Object.entries(overrides)) {
+      if (value === null) {
+        params.delete(key)
+      } else {
+        params.set(key, value)
+      }
+    }
+    const qs = params.toString()
+    return qs ? `?${qs}` : '?'
+  }
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
-      <span className="text-gp-ink-muted dark:text-white/50">Source:</span>
-      {sourceOptions.map((opt) => {
-        const isActive = (current.source ?? '') === opt.value
-        const params = new URLSearchParams()
-        if (opt.value) params.set('source', opt.value)
-        if (current.classification) params.set('classification', current.classification)
-        if (current.rating) params.set('rating', current.rating)
-        if (typeof current.goldenSet === 'boolean')
-          params.set('goldenSet', String(current.goldenSet))
-        const href = `?${params.toString()}`
-        const count = opt.value ? counts.bySource[opt.value] : undefined
-        return (
-          <a
-            key={opt.value || 'all'}
-            href={href}
-            className={
-              'px-2 py-1 rounded-md border transition-colors ' +
-              (isActive
-                ? 'bg-gp-primary/15 border-gp-primary/40 text-gp-primary'
-                : 'border-slate-200 dark:border-white/10 text-gp-ink-muted dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5')
-            }
-          >
-            {opt.label}
-            {typeof count === 'number' && (
-              <span className="ml-1 opacity-60">({count})</span>
-            )}
-          </a>
-        )
-      })}
+    <div className="space-y-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-gp-ink-muted dark:text-white/50">Status:</span>
+        {statusOptions.map((opt) => {
+          const isActive = statusParam === opt.value
+          const href = buildHref({
+            status: opt.value === 'open' ? null : opt.value,
+          })
+          return (
+            <a
+              key={opt.value}
+              href={href}
+              className={
+                'px-2 py-1 rounded-md border transition-colors ' +
+                (isActive
+                  ? 'bg-gp-primary/15 border-gp-primary/40 text-gp-primary'
+                  : 'border-slate-200 dark:border-white/10 text-gp-ink-muted dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5')
+              }
+            >
+              {opt.label}
+            </a>
+          )
+        })}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-gp-ink-muted dark:text-white/50">Source:</span>
+        {sourceOptions.map((opt) => {
+          const isActive = (current.source ?? '') === opt.value
+          const href = buildHref({ source: opt.value || null })
+          const count = opt.value ? counts.bySource[opt.value] : undefined
+          return (
+            <a
+              key={opt.value || 'all'}
+              href={href}
+              className={
+                'px-2 py-1 rounded-md border transition-colors ' +
+                (isActive
+                  ? 'bg-gp-primary/15 border-gp-primary/40 text-gp-primary'
+                  : 'border-slate-200 dark:border-white/10 text-gp-ink-muted dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5')
+              }
+            >
+              {opt.label}
+              {typeof count === 'number' && (
+                <span className="ml-1 opacity-60">({count})</span>
+              )}
+            </a>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -186,6 +271,14 @@ function FeedbackRow({ row }: { row: AssistantFeedbackRow }) {
     <li className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5">
       <details className="group">
         <summary className="cursor-pointer list-none px-4 py-3 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg">
+          <span
+            className={
+              'shrink-0 mt-0.5 inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wide ' +
+              STATUS_BADGE_CLASS[row.status]
+            }
+          >
+            {STATUS_LABEL[row.status]}
+          </span>
           <span
             className={
               'shrink-0 mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded uppercase tracking-wide ' +
@@ -257,6 +350,19 @@ function FeedbackRow({ row }: { row: AssistantFeedbackRow }) {
               <Pre>{row.classificationReason}</Pre>
             </Section>
           )}
+          <Section title="Triage status">
+            <FeedbackStatusPicker
+              feedbackId={row.id}
+              currentStatus={row.status}
+              currentNote={row.statusNote}
+            />
+            {row.statusUpdatedAt && (
+              <div className="text-[10px] text-gp-ink-soft dark:text-white/40 mt-1">
+                Last updated {formatDate(row.statusUpdatedAt)}
+                {row.statusNote ? ` — "${row.statusNote}"` : ''}
+              </div>
+            )}
+          </Section>
           <Section title="Fix this in Claude Code">
             <FixPromptCopy prompt={buildFixPrompt(row)} />
           </Section>
