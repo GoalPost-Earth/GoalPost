@@ -228,7 +228,7 @@ Same fields as MeSpace.
 
 ### StoryPulse
 
-**Neo4j Labels:** `["FieldPulse", "StoryPulse"]`
+**Neo4j Labels:** `["FieldPulse", "StoryPulse"]` (nodes migrated from production also retain `:CarePoint` or `:CoreValue` for traceability — see [kb/08-migration.md](08-migration.md)).
 
 Merges legacy CarePoint and CoreValue entities.
 

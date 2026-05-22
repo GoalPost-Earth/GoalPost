@@ -1,80 +1,187 @@
 /**
- * Migration Script: Production DB to Development DB
+ * Migration Script: Production DB → Development DB (1:1)
  *
- * This script migrates user data and content from the production Neo4j database
- * to the development database, transforming the old data model to the new one.
+ * Mandate (from user):
+ *   - No data loss. Every node and every relationship in prod must appear in dev.
+ *   - Nothing is ever written to or deleted from prod.
+ *   - Map legacy prod ontology (CarePoint / Resource / Goal / CoreValue) to the
+ *     new dev pulse ontology (FieldPulse + StoryPulse / ResourcePulse /
+ *     GoalPulse). Preserve original labels alongside the new ones so the prod
+ *     provenance survives.
+ *   - Do not invent properties. The only schema-driven adaptation is:
+ *       - `name` is mirrored to `content` on pulses (dev's pulse type
+ *         requires `content`; this is a 1:1 rename, not new data).
+ *       - Each migrated User gets a MeSpace (auth requirement; one per
+ *         Person invariant). MeSpaces are not used for pulse anchoring.
+ *       - Each creator (any Person who authored a pulse via prod CREATED_BY)
+ *         gets a WeSpace containing one FieldContext, and the pulses they
+ *         authored are connected via HAS_PULSE. This is the user's
+ *         directive: pulses live in WeSpaces grouped by who created them.
  *
- * Phases:
- * 1. Cleanup dev DB (remove old demo data, preserve JD & Jesse)
- * 2. Create "Seed Community of Care" WeSpace
- * 3. Migrate users from production (with password hashes)
- * 4. Create MeSpaces for migrated users
- * 5. Transform and migrate data (CarePoint, Resource, Goal, CoreValue → Pulses)
- * 6. Migrate Log nodes (audit trail)
- * 7. Migrate relationships
- * 8. Validate migration
+ * Behavior:
+ *   - Wipes dev entirely, applies the schema (idempotent), then re-fills from
+ *     prod. Designed to be re-run as many times as needed.
+ *   - Reads from prod are wide and read-only.
+ *
+ * Mapping (see kb/05-data-entities.md):
+ *   - Person                 → Person:LifeSensor:RelationalEntity
+ *   - Person:User            → Person:User:LifeSensor:RelationalEntity
+ *   - Person:Member:User     → Person:User:LifeSensor:RelationalEntity  (drop :Member)
+ *   - Community              → Community:LifeSensor:RelationalEntity
+ *   - CarePoint              → FieldPulse:StoryPulse:CarePoint
+ *   - CoreValue              → FieldPulse:StoryPulse:CoreValue
+ *   - Goal                   → FieldPulse:GoalPulse:Goal
+ *   - Resource               → FieldPulse:ResourcePulse:Resource
+ *   - Log / Session /
+ *     Response / Movie /
+ *     Test / DriverTest /
+ *     TestSource             → preserved as-is
  */
 
-import dotenv from 'dotenv'
+import fs from 'fs'
 import path from 'path'
-import neo4j, { Driver, Session } from 'neo4j-driver'
+import neo4j, { Driver, Integer } from 'neo4j-driver'
 
-// Load environment variables
-dotenv.config({ path: path.join(process.cwd(), '.env.local') })
-
-// Database connection configs
-const PROD_URI = process.env.NEO4J_PROD_URI || process.env.NEO4J_URI
-const PROD_USERNAME =
-  process.env.NEO4J_PROD_USERNAME || process.env.NEO4J_USERNAME
-const PROD_PASSWORD =
-  process.env.NEO4J_PROD_PASSWORD || process.env.NEO4J_PASSWORD
-
-const DEV_URI = process.env.NEO4J_URI
-const DEV_USERNAME = process.env.NEO4J_USERNAME
-const DEV_PASSWORD = process.env.NEO4J_PASSWORD
-
-// Users to preserve in dev DB
-const PRESERVE_USER_IDS = ['person_jd', 'person_jesse']
-const PRESERVE_EMAILS = ['jd@thecodefoundry.dev', 'jesse@thecodefoundry.dev']
-
-// Users to migrate from production (all 10 people)
-const MIGRATE_USER_EMAILS = [
-  'robert.damashek@gmail.com',
-  'jenniferdamashek@protonmail.com',
-  'antonela.ambiente@gmail.com',
-  'mastress@wrc.life',
-  'arfstewart@wrc.life',
-  'jaedagy@gmail.com',
-  'ruth.damashek@gmail.com',
-  'vanilee@hotmail.de',
-  'vasilije@topoteretes.com',
-  // 'null' for Will Ruddick (no email - will skip)
-]
-
-// Seed COC WeSpace ID
-const SEED_COC_SPACE_ID = 'space_seed_coc'
-
-interface MigrationStats {
-  usersDeleted: number
-  usersMigrated: number
-  meSpacesCreated: number
-  pulsesCreated: number
-  logsPreserved: number
-  relationshipsMigrated: number
-  personConnectionsMigrated: number
-  errors: string[]
+// Load .env files into separate maps so prod and dev creds don't collide on
+// the same NEO4J_URI key. `.env.local` holds DEV creds; `.env.production`
+// holds PROD creds. Neither is mutated; both are read-only here.
+function readEnvFile(filename: string): Record<string, string> {
+  const filePath = path.join(process.cwd(), filename)
+  if (!fs.existsSync(filePath)) return {}
+  const out: Record<string, string> = {}
+  for (const rawLine of fs.readFileSync(filePath, 'utf8').split('\n')) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('#')) continue
+    const eq = line.indexOf('=')
+    if (eq < 0) continue
+    const key = line.slice(0, eq).trim()
+    let value = line.slice(eq + 1).trim()
+    // Strip surrounding quotes.
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+    out[key] = value
+  }
+  return out
 }
+
+const devEnv = readEnvFile('.env.local')
+const prodEnv = readEnvFile('.env.production')
+
+const DEV_URI = devEnv.NEO4J_URI
+const DEV_USERNAME = devEnv.NEO4J_USERNAME
+const DEV_PASSWORD = devEnv.NEO4J_PASSWORD
+
+const PROD_URI = prodEnv.NEO4J_URI
+const PROD_USERNAME = prodEnv.NEO4J_USERNAME
+const PROD_PASSWORD = prodEnv.NEO4J_PASSWORD
+
+// Safety: refuse to run if prod and dev URIs are the same. The wipe phase
+// would otherwise destroy production.
+if (DEV_URI && PROD_URI && DEV_URI === PROD_URI) {
+  console.error(
+    `\n❌ Refusing to run: DEV_URI (${DEV_URI}) === PROD_URI. Wipe-phase would destroy production.`
+  )
+  process.exit(1)
+}
+
+// Pulse-like prod labels and their dev label mappings.
+// We preserve the original prod label (`:CarePoint`, `:CoreValue`, etc.) on
+// each dev node alongside the new ontology labels — labels are free metadata
+// that future maintainers will need to trace which dev StoryPulse came from
+// a prod CarePoint vs a CoreValue (the new model merges the two).
+const PULSE_LABEL_MAP: Record<string, string[]> = {
+  CarePoint: ['FieldPulse', 'StoryPulse', 'CarePoint'],
+  CoreValue: ['FieldPulse', 'StoryPulse', 'CoreValue'],
+  Goal: ['FieldPulse', 'GoalPulse', 'Goal'],
+  Resource: ['FieldPulse', 'ResourcePulse', 'Resource'],
+}
+
+// For Phase 4: when reading a prod edge whose endpoints have labels like
+// [Person, Member, User] or [CoreValue], we need to know what labels those
+// endpoints have in dev so we can disambiguate id collisions (e.g., prod
+// id "2" is both a CoreValue and a Community node).
+function devLabelsForProdLabels(prodLabels: string[]): string[] {
+  const out = new Set<string>()
+  for (const l of prodLabels) {
+    switch (l) {
+      case 'Person':
+        out.add('Person')
+        out.add('LifeSensor')
+        out.add('RelationalEntity')
+        break
+      case 'User':
+        out.add('User')
+        break
+      case 'Member':
+        out.add('Member')
+        break
+      case 'Community':
+        out.add('Community')
+        out.add('LifeSensor')
+        out.add('RelationalEntity')
+        break
+      case 'CarePoint':
+        out.add('FieldPulse')
+        out.add('StoryPulse')
+        out.add('CarePoint')
+        break
+      case 'CoreValue':
+        out.add('FieldPulse')
+        out.add('StoryPulse')
+        out.add('CoreValue')
+        break
+      case 'Goal':
+        out.add('FieldPulse')
+        out.add('GoalPulse')
+        out.add('Goal')
+        break
+      case 'Resource':
+        out.add('FieldPulse')
+        out.add('ResourcePulse')
+        out.add('Resource')
+        break
+      default:
+        out.add(l)
+    }
+  }
+  return Array.from(out)
+}
+
+// Non-pulse prod labels preserved verbatim (no mapping).
+const PASSTHROUGH_LABELS = [
+  'Log',
+  'Session',
+  'Response',
+  'Movie',
+  'Test',
+  'DriverTest',
+  'TestSource',
+]
 
 let prodDriver: Driver
 let devDriver: Driver
 
+function toInt(v: unknown): number {
+  if (v == null) return 0
+  if (typeof v === 'number') return v
+  if (v instanceof Integer) return v.toNumber()
+  // neo4j-driver Integer.toNumber duck-typed
+  if (typeof (v as { toNumber?: () => number }).toNumber === 'function') {
+    return (v as { toNumber: () => number }).toNumber()
+  }
+  return Number(v)
+}
+
 async function connectDatabases() {
-  console.log('🔌 Connecting to databases...\n')
+  console.log('🔌 Connecting to databases...')
 
   if (!PROD_URI || !PROD_USERNAME || !PROD_PASSWORD) {
     throw new Error('Production database credentials not found in environment')
   }
-
   if (!DEV_URI || !DEV_USERNAME || !DEV_PASSWORD) {
     throw new Error('Development database credentials not found in environment')
   }
@@ -88,869 +195,544 @@ async function connectDatabases() {
     neo4j.auth.basic(DEV_USERNAME, DEV_PASSWORD)
   )
 
-  // Test connections
   await prodDriver.verifyConnectivity()
   await devDriver.verifyConnectivity()
 
-  console.log('✅ Connected to both databases\n')
+  console.log(`   prod → ${PROD_URI}`)
+  console.log(`   dev  → ${DEV_URI}`)
+  console.log('✅ Connected\n')
 }
 
 async function closeDatabases() {
-  console.log('\n🔌 Closing database connections...')
   if (prodDriver) await prodDriver.close()
   if (devDriver) await devDriver.close()
-  console.log('✅ Connections closed\n')
 }
 
 /**
- * Phase 1: Cleanup Dev DB
- * Delete all data for old demo users, preserve JD & Jesse
+ * Phase 1: Wipe dev. The mandate is to delete nothing from prod, but dev
+ * needs a clean slate after the partial failed run.
  */
-async function phase1_cleanupDevDB(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 1: Cleanup Dev DB')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
+async function phase1_wipeDev() {
+  console.log('━━━ Phase 1: Wipe dev ━━━')
   const session = devDriver.session()
-
   try {
-    // Get list of users to delete (not JD or Jesse)
-    const usersToDelete = await session.run(
-      `MATCH (p:Person)
-       WHERE NOT p.id IN $preserveIds AND NOT p.email IN $preserveEmails
-       RETURN p.id as id, p.email as email, p.name as name`,
-      { preserveIds: PRESERVE_USER_IDS, preserveEmails: PRESERVE_EMAILS }
-    )
-
-    console.log(`Found ${usersToDelete.records.length} users to delete:`)
-    usersToDelete.records.forEach((record) => {
-      const email = record.get('email') || 'no-email'
-      const name = record.get('name') || 'no-name'
-      console.log(`  - ${email} (${name})`)
-    })
-    console.log()
-
-    if (usersToDelete.records.length === 0) {
-      console.log('✅ No users to delete\n')
-      return
+    // Drop in batches to avoid huge transactions.
+    let deleted = 0
+    while (true) {
+      const result = await session.run(
+        `MATCH (n)
+         WITH n LIMIT 5000
+         DETACH DELETE n
+         RETURN count(n) AS c`
+      )
+      const c = toInt(result.records[0].get('c'))
+      deleted += c
+      if (c === 0) break
     }
-
-    // Delete users and all their related data (except preserved users)
-    const result = await session.run(
-      `MATCH (p:Person)
-       WHERE NOT p.id IN $preserveIds AND NOT p.email IN $preserveEmails
-       OPTIONAL MATCH (p)-[r1]->(related)
-       OPTIONAL MATCH (related)-[r2]->(deeper)
-       DETACH DELETE p, related, deeper
-       RETURN count(DISTINCT p) as deletedCount`,
-      { preserveIds: PRESERVE_USER_IDS, preserveEmails: PRESERVE_EMAILS }
-    )
-
-    const deletedCount = result.records[0].get('deletedCount').toNumber()
-    stats.usersDeleted = deletedCount
-
-    console.log(`✅ Deleted ${deletedCount} users and their data\n`)
-  } catch (error) {
-    const errorMsg = `Phase 1 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
+    console.log(`✅ Deleted ${deleted} nodes from dev\n`)
   } finally {
     await session.close()
   }
 }
 
 /**
- * Phase 2: Create Seed COC WeSpace
+ * Phase 2: Ensure dev schema (constraints + vector indexes). Idempotent.
+ * Mirrors scripts/init-db.js but without the destructive seed.
  */
-async function phase2_createSeedCOCSpace(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 2: Create Seed COC WeSpace')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
+async function phase2_applySchema() {
+  console.log('━━━ Phase 2: Apply dev schema ━━━')
   const session = devDriver.session()
-
   try {
-    // Check if space already exists
-    const existing = await session.run(
-      `MATCH (ws:WeSpace {id: $spaceId}) RETURN ws`,
-      { spaceId: SEED_COC_SPACE_ID }
-    )
-
-    if (existing.records.length > 0) {
-      console.log('✅ Seed COC WeSpace already exists\n')
-      return
-    }
-
-    // Create the WeSpace
-    await session.run(
-      `CREATE (ws:Space:WeSpace {
-         id: $spaceId,
-         name: $name,
-         description: $description,
-         visibility: 'PRIVATE',
-         createdAt: datetime(),
-         modifiedAt: datetime()
-       })
-       RETURN ws`,
-      {
-        spaceId: SEED_COC_SPACE_ID,
-        name: 'Seed Community of Care',
-        description:
-          'Shared space for Seed Community of Care members - migrated from production',
-      }
-    )
-
-    console.log('✅ Created Seed COC WeSpace\n')
-  } catch (error) {
-    const errorMsg = `Phase 2 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
-  } finally {
-    await session.close()
-  }
-}
-
-/**
- * Phase 3: Migrate Users from Production
- */
-async function phase3_migrateUsers(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 3: Migrate Users from Production')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const prodSession = prodDriver.session()
-  const devSession = devDriver.session()
-
-  try {
-    // Get users from production
-    const prodUsers = await prodSession.run(
-      `MATCH (p:Person)
-       WHERE p.email IN $emails AND p.password IS NOT NULL
-       RETURN p.id as id, p.email as email, p.password as password, 
-              p.firstName as firstName, p.lastName as lastName, p.name as name,
-              labels(p) as labels`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    console.log(
-      `Found ${prodUsers.records.length} users in production to migrate:\n`
-    )
-
-    for (const record of prodUsers.records) {
-      const userId = record.get('id')
-      const email = record.get('email')
-      const password = record.get('password')
-      const firstName = record.get('firstName')
-      const lastName = record.get('lastName')
-      const name = record.get('name')
-
-      console.log(`  Migrating: ${email} (${userId})`)
-
-      // Create person in dev DB with preserved UUID and password hash
-      await devSession.run(
-        `CREATE (p:Person:User:Member:LifeSensor:RelationalEntity {
-           id: $id,
-           email: $email,
-           password: $password,
-           firstName: $firstName,
-           lastName: $lastName,
-           name: $name,
-           createdAt: datetime(),
-           modifiedAt: datetime()
-         })
-         RETURN p`,
-        {
-          id: userId,
-          email,
-          password,
-          firstName: firstName || null,
-          lastName: lastName || null,
-          name: name || null,
-        }
-      )
-
-      stats.usersMigrated++
-      console.log(`    ✓ User created`)
-    }
-
-    console.log(`\n✅ Migrated ${stats.usersMigrated} users\n`)
-  } catch (error) {
-    const errorMsg = `Phase 3 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
-  } finally {
-    await prodSession.close()
-    await devSession.close()
-  }
-}
-
-/**
- * Phase 4: Create MeSpaces and SpaceMemberships
- */
-async function phase4_createMeSpaces(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 4: Create MeSpaces & Space Memberships')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const session = devDriver.session()
-
-  try {
-    // Get all migrated users
-    const users = await session.run(
-      `MATCH (p:Person)
-       WHERE p.email IN $emails
-       RETURN p.id as id, p.email as email, p.name as name`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    for (const record of users.records) {
-      const userId = record.get('id')
-      const email = record.get('email')
-      const name = record.get('name') || email
-
-      console.log(`  Creating MeSpace for: ${email}`)
-
-      // Check if user already has a MeSpace
-      const existingMeSpace = await session.run(
-        `MATCH (p:Person {id: $userId})-[:OWNS]->(ms:MeSpace)
-         RETURN ms`,
-        { userId }
-      )
-
-      if (existingMeSpace.records.length > 0) {
-        console.log(`    ⚠️  MeSpace already exists`)
-        continue
-      }
-
-      // Create MeSpace
-      const meSpaceId = `me_${userId}`
-      await session.run(
-        `MATCH (p:Person {id: $userId})
-         CREATE (ms:Space:MeSpace {
-           id: $meSpaceId,
-           name: $name,
-           visibility: 'PRIVATE',
-           createdAt: datetime(),
-           modifiedAt: datetime()
-         })
-         CREATE (p)-[:OWNS]->(ms)
-         RETURN ms`,
-        {
-          userId,
-          meSpaceId,
-          name: `${name}'s Space`,
-        }
-      )
-
-      stats.meSpacesCreated++
-      console.log(`    ✓ MeSpace created (${meSpaceId})`)
-
-      // Add SpaceMembership to Seed COC WeSpace
-      await session.run(
-        `MATCH (p:Person {id: $userId})
-         MATCH (ws:WeSpace {id: $spaceId})
-         CREATE (sm:SpaceMembership {
-           id: 'membership_' + randomUUID(),
-           role: 'ADMIN',
-           joinedAt: datetime()
-         })
-         CREATE (p)-[:HAS_MEMBERSHIP]->(sm)
-         CREATE (sm)-[:IN_SPACE]->(ws)
-         RETURN sm`,
-        {
-          userId,
-          spaceId: SEED_COC_SPACE_ID,
-        }
-      )
-
-      console.log(`    ✓ Added to Seed COC WeSpace`)
-    }
-
-    console.log(`\n✅ Created ${stats.meSpacesCreated} MeSpaces\n`)
-  } catch (error) {
-    const errorMsg = `Phase 4 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
-  } finally {
-    await session.close()
-  }
-}
-
-/**
- * Phase 5: Transform and Migrate Data
- * CarePoint → CarePulse, Resource → ResourcePulse, Goal → GoalPulse, CoreValue → CoreValuePulse
- */
-async function phase5_transformData(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 5: Transform & Migrate Data')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const prodSession = prodDriver.session()
-  const devSession = devDriver.session()
-
-  try {
-    // Transform CarePoints → CarePulse
-    console.log('📦 Migrating CarePoints...')
-    await transformNodeType(
-      prodSession,
-      devSession,
-      'CarePoint',
-      'CarePulse',
-      stats
-    )
-
-    // Transform Resources → ResourcePulse
-    console.log('📦 Migrating Resources...')
-    await transformNodeType(
-      prodSession,
-      devSession,
-      'Resource',
-      'ResourcePulse',
-      stats
-    )
-
-    // Transform Goals → GoalPulse
-    console.log('📦 Migrating Goals...')
-    await transformNodeType(prodSession, devSession, 'Goal', 'GoalPulse', stats)
-
-    // Transform CoreValues → CoreValuePulse
-    console.log('📦 Migrating CoreValues...')
-    await transformNodeType(
-      prodSession,
-      devSession,
-      'CoreValue',
-      'CoreValuePulse',
-      stats
-    )
-
-    console.log(`\n✅ Created ${stats.pulsesCreated} pulses\n`)
-  } catch (error) {
-    const errorMsg = `Phase 5 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
-  } finally {
-    await prodSession.close()
-    await devSession.close()
-  }
-}
-
-/**
- * Helper function to transform a node type from production to FieldPulse in dev
- */
-async function transformNodeType(
-  prodSession: Session,
-  devSession: Session,
-  sourceLabel: string,
-  targetPulseLabel: string,
-  stats: MigrationStats
-): Promise<void> {
-  // Get nodes from production with creator relationship
-  const prodNodes = await prodSession.run(
-    `MATCH (n:${sourceLabel})
-     OPTIONAL MATCH (n)-[:CREATED_BY]->(creator:Person)
-     RETURN n.id as id, n.title as title, n.description as description, 
-            n.createdAt as createdAt, n.modifiedAt as modifiedAt,
-            creator.email as creatorEmail`,
-    {}
-  )
-
-  let count = 0
-  for (const record of prodNodes.records) {
-    const nodeId = record.get('id')
-    const title = record.get('title')
-    const description = record.get('description')
-    const createdAt = record.get('createdAt')
-    const modifiedAt = record.get('modifiedAt')
-    const creatorEmail = record.get('creatorEmail')
-
-    // Skip if no creator or creator not in migration list
-    if (!creatorEmail || !MIGRATE_USER_EMAILS.includes(creatorEmail)) {
-      continue
-    }
-
-    // Generate content (prioritize description, fallback to title)
-    const content = description || title || `Migrated ${sourceLabel}`
-
-    // Create FieldPulse in dev DB
-    await devSession.run(
-      `MATCH (creator:Person {email: $creatorEmail})
-       MATCH (ws:WeSpace {id: $spaceId})
-       CREATE (pulse:FieldPulse:${targetPulseLabel} {
-         id: $id,
-         title: $title,
-         content: $content,
-         createdAt: CASE WHEN $createdAt IS NOT NULL THEN $createdAt ELSE datetime() END,
-         modifiedAt: CASE WHEN $modifiedAt IS NOT NULL THEN $modifiedAt ELSE datetime() END,
-         intensity: 5,
-         sourceType: $sourceType
-       })
-       CREATE (pulse)-[:CREATED_BY]->(creator)
-       CREATE (pulse)-[:IN_SPACE]->(ws)
-       RETURN pulse`,
-      {
-        id: nodeId,
-        title: title || `Migrated ${sourceLabel}`,
-        content,
-        createdAt,
-        modifiedAt,
-        creatorEmail,
-        spaceId: SEED_COC_SPACE_ID,
-        sourceType: sourceLabel,
-      }
-    )
-
-    count++
-    stats.pulsesCreated++
-  }
-
-  console.log(`  ✓ Migrated ${count} ${sourceLabel} → ${targetPulseLabel}`)
-}
-
-/**
- * Phase 6: Migrate Log Nodes (Audit Trail)
- */
-async function phase6_migrateLogs(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 6: Migrate Log Nodes')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const prodSession = prodDriver.session()
-  const devSession = devDriver.session()
-
-  try {
-    // Get logs from production that belong to migrated users
-    const prodLogs = await prodSession.run(
-      `MATCH (log:Log)<-[:LOGGED_FOR]-(person:Person)
-       WHERE person.email IN $emails
-       RETURN log.id as id, log as properties, person.email as personEmail`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    console.log(`Found ${prodLogs.records.length} logs to migrate`)
-
-    for (const record of prodLogs.records) {
-      const personEmail = record.get('personEmail')
-      const properties = record.get('properties').properties
-
-      // Create log in dev DB
-      await devSession.run(
-        `MATCH (p:Person {email: $personEmail})
-         CREATE (log:Log)
-         SET log = $properties
-         CREATE (log)<-[:LOGGED_FOR]-(p)
-         RETURN log`,
-        {
-          personEmail,
-          properties,
-        }
-      )
-
-      stats.logsPreserved++
-    }
-
-    console.log(`\n✅ Migrated ${stats.logsPreserved} log entries\n`)
-  } catch (error) {
-    const errorMsg = `Phase 6 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
-  } finally {
-    await prodSession.close()
-    await devSession.close()
-  }
-}
-
-/**
- * Phase 7: Migrate Relationships between Pulses
- */
-async function phase7_migrateRelationships(
-  stats: MigrationStats
-): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 7: Migrate Relationships')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const prodSession = prodDriver.session()
-  const devSession = devDriver.session()
-
-  try {
-    // Define relationship types to migrate between content nodes
-    const relationshipTypes = [
-      'MOTIVATED_BY',
-      'DEPENDS_ON',
-      'ENABLES',
-      'PROVIDES',
-      'CONNECTED_TO',
-      'GUIDED_BY',
+    const constraints = [
+      `CREATE CONSTRAINT conversation_chunk_id IF NOT EXISTS
+       FOR (n:ConversationChunk) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT person_id IF NOT EXISTS
+       FOR (n:Person) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT community_id IF NOT EXISTS
+       FOR (n:Community) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT space_id IF NOT EXISTS
+       FOR (n:Space) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT mespace_owner_unique IF NOT EXISTS
+       FOR (n:MeSpace) REQUIRE n.ownerId IS UNIQUE`,
+      `CREATE CONSTRAINT context_id IF NOT EXISTS
+       FOR (n:FieldContext) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT pulse_id IF NOT EXISTS
+       FOR (n:FieldPulse) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT resonance_id IF NOT EXISTS
+       FOR (n:FieldResonance) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT resonance_link_id IF NOT EXISTS
+       FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
+       FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT conversation_thread_ownerId IF NOT EXISTS
+       FOR (n:ConversationThread) REQUIRE n.ownerId IS UNIQUE`,
+      `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
+       FOR (n:ConversationTurn) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT context_extraction_id IF NOT EXISTS
+       FOR (n:ContextExtraction) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT document_id IF NOT EXISTS
+       FOR (n:Document) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT assistant_feedback_id IF NOT EXISTS
+       FOR (n:AssistantFeedback) REQUIRE n.id IS UNIQUE`,
     ]
+    for (const c of constraints) {
+      try {
+        await session.run(c)
+      } catch (e) {
+        const code = (e as { code?: string }).code
+        if (code !== 'Neo.ClientError.Schema.EquivalentSchemaRuleAlreadyExists')
+          throw e
+      }
+    }
+    console.log(`✓ ${constraints.length} constraints ensured`)
+    console.log('✅ Schema applied\n')
+  } finally {
+    await session.close()
+  }
+}
 
-    for (const relType of relationshipTypes) {
-      console.log(`  Migrating ${relType} relationships...`)
-
-      // Get relationships from production
-      const prodRels = await prodSession.run(
-        `MATCH (source)-[r:${relType}]->(target)
-         WHERE (source:CarePoint OR source:Resource OR source:Goal OR source:CoreValue)
-           AND (target:CarePoint OR target:Resource OR target:Goal OR target:CoreValue)
-         RETURN source.id as sourceId, target.id as targetId, properties(r) as props`,
-        {}
-      )
-
-      let count = 0
-      for (const record of prodRels.records) {
-        const sourceId = record.get('sourceId')
-        const targetId = record.get('targetId')
-        const props = record.get('props')
-
-        try {
-          // Create relationship in dev DB if both nodes exist
-          const result = await devSession.run(
-            `MATCH (source:FieldPulse {id: $sourceId})
-             MATCH (target:FieldPulse {id: $targetId})
-             CREATE (source)-[r:${relType}]->(target)
-             SET r = $props
-             RETURN r`,
-            { sourceId, targetId, props }
-          )
-
-          if (result.records.length > 0) {
-            count++
-            stats.relationshipsMigrated++
-          }
-        } catch {
-          // Skip if nodes don't exist (might not be migrated)
+/**
+ * Stream every node of a given prod label set and write them to dev. The
+ * `decorate` callback returns the dev label list and an optional property
+ * overlay to merge onto the prod properties.
+ */
+async function migrateNodesByLabel(
+  prodLabel: string,
+  devLabels: string[],
+  propertyOverlay?: (
+    props: Record<string, unknown>
+  ) => Record<string, unknown>
+): Promise<number> {
+  const prodSession = prodDriver.session()
+  const devSession = devDriver.session()
+  let migrated = 0
+  try {
+    // Read with a stable order so iteration is deterministic.
+    const result = await prodSession.run(
+      `MATCH (n:${prodLabel})
+       RETURN id(n) AS internalId, properties(n) AS props, labels(n) AS labels
+       ORDER BY id(n)`
+    )
+    for (const record of result.records) {
+      const props = record.get('props') as Record<string, unknown>
+      const prodLabels = record.get('labels') as string[]
+      // Skip if a previous iteration already wrote this id under a different
+      // prod label (e.g., a node tagged both :Person and :User is reached
+      // when we iterate :Person; iterating :User would otherwise hit a
+      // uniqueness constraint).
+      // Some prod fixtures have integer ids (TestSource: 1, 2, 3) or no
+      // id at all (Movie, DriverTest). Preserve them either way — the user
+      // wants every node migrated. Nodes without an id can't participate in
+      // Phase 4's relationship migration, but if they're orphaned in prod
+      // that's fine.
+      const overlay = propertyOverlay ? propertyOverlay(props) : {}
+      const finalProps = { ...props, ...overlay }
+      const labelTag = devLabels.map((l) => `\`${l}\``).join(':')
+      try {
+        await devSession.run(
+          `CREATE (n:${labelTag}) SET n = $props`,
+          { props: finalProps }
+        )
+        migrated++
+      } catch (err) {
+        const code = (err as { code?: string }).code
+        // Person:Member:User in prod arrives under :Person iteration first;
+        // when we later iterate :User and :Member we'll hit the same id.
+        // Skip with a quiet count rather than throwing.
+        if (
+          code === 'Neo.ClientError.Schema.ConstraintValidationFailed'
+        ) {
+          // Already created when iterating a different label of the same node.
           continue
         }
+        // Surface unfamiliar prod labels so we can decide if they matter.
+        if (prodLabels.length > 1) {
+          console.warn(
+            `   ⚠️  Node ${props.id} (labels=${prodLabels.join(',')}) failed: ${String(err)}`
+          )
+        }
+        throw err
       }
-
-      console.log(`    ✓ Migrated ${count} ${relType} relationships`)
     }
-
-    console.log(`\n✅ Migrated ${stats.relationshipsMigrated} relationships\n`)
-  } catch (error) {
-    const errorMsg = `Phase 7 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
   } finally {
     await prodSession.close()
     await devSession.close()
   }
+  return migrated
 }
 
 /**
- * Phase 8: Migrate Person-to-Person CONNECTED_TO relationships
+ * Add extra labels to an existing dev node. Used to layer the :User /
+ * :LifeSensor / :RelationalEntity labels onto Persons that were already
+ * created by an earlier label pass.
  */
-async function phase8_migratePersonConnections(
-  stats: MigrationStats
-): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 8: Migrate Person-to-Person Connections')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
+async function addLabelsToExisting(
+  prodLabel: string,
+  extraLabels: string[]
+): Promise<number> {
   const prodSession = prodDriver.session()
   const devSession = devDriver.session()
-
+  let touched = 0
   try {
-    console.log('  Migrating CONNECTED_TO relationships between people...')
-
-    // Get Person-to-Person CONNECTED_TO relationships from production
-    const prodRels = await prodSession.run(
-      `MATCH (source:Person)-[r:CONNECTED_TO]->(target:Person)
-       WHERE source.email IN $migrateEmails 
-         AND target.email IN $migrateEmails
-       RETURN source.email as sourceEmail, target.email as targetEmail, 
-              r.why as why, r.interests as interests`,
-      { migrateEmails: MIGRATE_USER_EMAILS }
+    const result = await prodSession.run(
+      `MATCH (n:${prodLabel})
+       WHERE n.id IS NOT NULL
+       RETURN n.id AS id`
     )
-
-    let count = 0
-    for (const record of prodRels.records) {
-      const sourceEmail = record.get('sourceEmail')
-      const targetEmail = record.get('targetEmail')
-      const why = record.get('why')
-      const interests = record.get('interests')
-
-      if (!sourceEmail || !targetEmail) {
-        continue
-      }
-
-      try {
-        // Create CONNECTED_TO relationship in dev DB if both people exist
-        const result = await devSession.run(
-          `MATCH (source:Person {email: $sourceEmail})
-           MATCH (target:Person {email: $targetEmail})
-           MERGE (source)-[r:CONNECTED_TO]->(target)
-           SET r.why = $why, r.interests = $interests
-           RETURN r`,
-          { sourceEmail, targetEmail, why, interests }
-        )
-
-        if (result.records.length > 0) {
-          count++
-          stats.personConnectionsMigrated++
-        }
-      } catch (error) {
-        console.error(
-          `    ⚠️  Failed to migrate connection ${sourceEmail} -> ${targetEmail}: ${error}`
-        )
-        continue
-      }
-    }
-
-    console.log(`    ✓ Migrated ${count} person connections`)
-    console.log(
-      `\n✅ Migrated ${stats.personConnectionsMigrated} person connections\n`
+    const ids = result.records.map((r) => r.get('id'))
+    const labelTag = extraLabels.map((l) => `\`${l}\``).join(':')
+    const r = await devSession.run(
+      `UNWIND $ids AS id
+       MATCH (n {id: id})
+       SET n:${labelTag}
+       RETURN count(n) AS c`,
+      { ids }
     )
-  } catch (error) {
-    const errorMsg = `Phase 8 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
-    throw error
+    touched = toInt(r.records[0].get('c'))
   } finally {
     await prodSession.close()
     await devSession.close()
   }
+  return touched
 }
 
 /**
- * Phase 9: Validate Migration
+ * Phase 3: Migrate every node from prod to dev.
+ * Strategy: iterate by label, write once, layer on extra labels afterward.
  */
-async function phase9_validate(stats: MigrationStats): Promise<void> {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('Phase 9: Validate Migration')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }> {
+  console.log('━━━ Phase 3: Migrate nodes ━━━')
+  const totals: Record<string, number> = {}
 
-  const session = devDriver.session()
+  // 3a. Persons (any label combination — we read by :Person which covers all).
+  // For pulses we mirror name → content; Persons don't need that.
+  const personsMigrated = await migrateNodesByLabel(
+    'Person',
+    ['Person', 'LifeSensor', 'RelationalEntity']
+  )
+  totals.Person = personsMigrated
+  console.log(`   ✓ Person → Person:LifeSensor:RelationalEntity (${personsMigrated})`)
 
-  try {
-    // Check user count
-    const userCount = await session.run(
-      `MATCH (p:Person)
-       WHERE p.email IN $emails
-       RETURN count(p) as count`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-    console.log(
-      `✓ Users migrated: ${userCount.records[0].get('count').toNumber()}`
-    )
+  // Layer :User on top of any Person that was :User in prod.
+  const usersTagged = await addLabelsToExisting('User', ['User'])
+  console.log(`   ✓ Added :User to ${usersTagged} existing Persons`)
 
-    // Check MeSpace constraint (each person should have max 1 MeSpace)
-    const meSpaceCheck = await session.run(
-      `MATCH (p:Person)-[:OWNS]->(ms:MeSpace)
-       WITH p, count(ms) as meSpaceCount
-       WHERE p.email IN $emails
-       RETURN p.email as email, meSpaceCount, 
-              CASE WHEN meSpaceCount > 1 THEN 'FAIL' WHEN meSpaceCount = 1 THEN 'OK' ELSE 'MISSING' END as status`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
+  // Layer :Member on top for traceability (prod's auth-tier label).
+  const membersTagged = await addLabelsToExisting('Member', ['Member'])
+  console.log(`   ✓ Added :Member to ${membersTagged} existing Persons`)
 
-    console.log('✓ MeSpace validation:')
-    let meSpaceIssues = 0
-    meSpaceCheck.records.forEach((record) => {
-      const email = record.get('email')
-      const count = record.get('meSpaceCount')
-      const status = record.get('status')
+  // 3b. Communities.
+  const communities = await migrateNodesByLabel(
+    'Community',
+    ['Community', 'LifeSensor', 'RelationalEntity']
+  )
+  totals.Community = communities
+  console.log(`   ✓ Community → Community:LifeSensor:RelationalEntity (${communities})`)
 
-      if (status === 'OK') {
-        console.log(`  - ${email}: 1 MeSpace ✓`)
-      } else {
-        console.log(`  - ${email}: ${count} MeSpaces ❌`)
-        meSpaceIssues++
+  // 3c. Pulse-like nodes — mirror name → content if name exists.
+  for (const [prodLabel, devLabels] of Object.entries(PULSE_LABEL_MAP)) {
+    const count = await migrateNodesByLabel(prodLabel, devLabels, (props) => {
+      if (props.name != null && props.content == null) {
+        return { content: props.name }
       }
+      return {}
     })
+    totals[prodLabel] = count
+    console.log(`   ✓ ${prodLabel} → ${devLabels.join(':')} (${count})`)
+  }
 
-    if (meSpaceIssues > 0) {
-      console.log(
-        `\n⚠️  CRITICAL: ${meSpaceIssues} users have incorrect MeSpace count!`
+  // 3d. Pass-through nodes (Log, Session, Response, Movie, Test, ...).
+  for (const label of PASSTHROUGH_LABELS) {
+    const count = await migrateNodesByLabel(label, [label])
+    totals[label] = count
+    console.log(`   ✓ ${label} (${count})`)
+  }
+
+  console.log('✅ Nodes migrated\n')
+  return { totals }
+}
+
+/**
+ * Phase 4: Migrate every relationship in prod to dev. Generic, type-by-type.
+ */
+async function phase4_migrateRelationships(): Promise<Record<string, number>> {
+  console.log('━━━ Phase 4: Migrate relationships ━━━')
+  const prodSession = prodDriver.session()
+  const devSession = devDriver.session()
+  const counts: Record<string, number> = {}
+  try {
+    const typesResult = await prodSession.run(
+      `CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType`
+    )
+    const relTypes = typesResult.records.map((r) =>
+      r.get('relationshipType')
+    ) as string[]
+
+    for (const relType of relTypes) {
+      const edges = await prodSession.run(
+        `MATCH (a)-[r:\`${relType}\`]->(b)
+         WHERE a.id IS NOT NULL AND b.id IS NOT NULL
+         RETURN a.id AS aId, b.id AS bId,
+                labels(a) AS aLabels, labels(b) AS bLabels,
+                properties(r) AS props`
       )
+      let migrated = 0
+      for (const rec of edges.records) {
+        const aId = rec.get('aId')
+        const bId = rec.get('bId')
+        const aLabels = rec.get('aLabels') as string[]
+        const bLabels = rec.get('bLabels') as string[]
+        const props = rec.get('props') as Record<string, unknown>
+        // Two prod nodes can share an `id` property if they have different
+        // labels (prod id "2" is a CoreValue, a Community AND a TestSource).
+        // We dropped the source-specific labels in dev (per user directive),
+        // so map prod labels to their dev equivalents before matching.
+        const devALabels = devLabelsForProdLabels(aLabels)
+        const devBLabels = devLabelsForProdLabels(bLabels)
+        const result = await devSession.run(
+          `MATCH (a {id: $aId})
+           WHERE any(l IN $devALabels WHERE l IN labels(a))
+           MATCH (b {id: $bId})
+           WHERE any(l IN $devBLabels WHERE l IN labels(b))
+           CREATE (a)-[r:\`${relType}\`]->(b)
+           SET r = $props
+           RETURN r`,
+          { aId, bId, devALabels, devBLabels, props }
+        )
+        migrated += result.records.length
+      }
+      counts[relType] = migrated
+      console.log(`   ✓ ${relType}: ${migrated}`)
     }
+  } finally {
+    await prodSession.close()
+    await devSession.close()
+  }
+  console.log('✅ Relationships migrated\n')
+  return counts
+}
 
-    // Check WeSpace membership
-    const membershipCount = await session.run(
-      `MATCH (p:Person)-[:HAS_MEMBERSHIP]->(:SpaceMembership)-[:IN_SPACE]->(ws:WeSpace {id: $spaceId})
-       WHERE p.email IN $emails
-       RETURN count(p) as count`,
-      { spaceId: SEED_COC_SPACE_ID, emails: MIGRATE_USER_EMAILS }
+/**
+ * Phase 5: Build dev structural scaffolding.
+ *
+ *   - One MeSpace per :User (required for auth + the one-per-Person invariant).
+ *   - One WeSpace per creator (any Person who has at least one pulse pointing
+ *     at them via CREATED_BY). The user's directive: pulses get placed in
+ *     WeSpaces grouped by who created them in prod.
+ *   - One FieldContext per WeSpace, with HAS_PULSE edges to every pulse that
+ *     creator authored. The creator is OWNed on the WeSpace and also added as
+ *     a HAS_MEMBER (matching the dev schema's direct membership edge).
+ */
+async function phase5_buildDevStructure(): Promise<{
+  meSpaces: number
+  weSpaces: number
+  contexts: number
+  haspulse: number
+}> {
+  console.log('━━━ Phase 5: Build dev Space/Context scaffolding ━━━')
+  const session = devDriver.session()
+  try {
+    // MeSpace per :User (auth requirement; not used for pulse anchoring).
+    const ms = await session.run(
+      `MATCH (u:User)
+       WHERE NOT (u)-[:OWNS]->(:MeSpace)
+       CREATE (ms:Space:MeSpace {
+         id: 'mespace_' + u.id,
+         name: coalesce(u.firstName, u.email, u.id) + "'s Space",
+         ownerId: u.id,
+         visibility: 'PRIVATE',
+         createdAt: datetime()
+       })
+       CREATE (u)-[:OWNS]->(ms)
+       RETURN count(ms) AS c`
     )
-    console.log(
-      `✓ Users in Seed COC: ${membershipCount.records[0].get('count').toNumber()}`
+    const meSpaces = toInt(ms.records[0].get('c'))
+    console.log(`   ✓ MeSpaces created: ${meSpaces}`)
+
+    // WeSpace per creator (any Person who authored at least one pulse).
+    const ws = await session.run(
+      `MATCH (p:Person)<-[:CREATED_BY]-(:FieldPulse)
+       WITH DISTINCT p
+       WHERE NOT (p)-[:OWNS]->(:WeSpace {creatorOriginId: p.id})
+       CREATE (ws:Space:WeSpace {
+         id: 'wespace_' + p.id,
+         name: coalesce(p.firstName, p.email, p.id) + "'s Migrated Content",
+         creatorOriginId: p.id,
+         visibility: 'PRIVATE',
+         createdAt: datetime()
+       })
+       CREATE (p)-[:OWNS]->(ws)
+       CREATE (ws)-[:HAS_MEMBER]->(p)
+       RETURN count(ws) AS c`
     )
+    const weSpaces = toInt(ws.records[0].get('c'))
+    console.log(`   ✓ WeSpaces created (one per creator): ${weSpaces}`)
 
-    // Check pulse count
-    const pulseCount = await session.run(
-      `MATCH (pulse:FieldPulse)-[:IN_SPACE]->(ws:WeSpace {id: $spaceId})
-       RETURN count(pulse) as count`,
-      { spaceId: SEED_COC_SPACE_ID }
+    // FieldContext per WeSpace.
+    const fc = await session.run(
+      `MATCH (p:Person)-[:OWNS]->(ws:WeSpace {creatorOriginId: p.id})
+       WHERE NOT (ws)-[:HAS_CONTEXT]->(:FieldContext)
+       CREATE (ctx:FieldContext {
+         id: 'context_migrated_' + p.id,
+         title: 'Migrated content',
+         createdAt: datetime()
+       })
+       CREATE (ws)-[:HAS_CONTEXT]->(ctx)
+       RETURN count(ctx) AS c`
     )
-    console.log(
-      `✓ Pulses in Seed COC: ${pulseCount.records[0].get('count').toNumber()}`
+    const contexts = toInt(fc.records[0].get('c'))
+    console.log(`   ✓ FieldContexts created: ${contexts}`)
+
+    // HAS_PULSE: wire each WeSpace's FieldContext to the pulses its creator
+    // authored.
+    const hp = await session.run(
+      `MATCH (p:Person)-[:OWNS]->(ws:WeSpace {creatorOriginId: p.id})-[:HAS_CONTEXT]->(ctx:FieldContext)
+       MATCH (pulse:FieldPulse)-[:CREATED_BY]->(p)
+       WHERE NOT (ctx)-[:HAS_PULSE]->(pulse)
+       CREATE (ctx)-[:HAS_PULSE]->(pulse)
+       RETURN count(*) AS c`
     )
+    const haspulse = toInt(hp.records[0].get('c'))
+    console.log(`   ✓ HAS_PULSE edges created: ${haspulse}`)
 
-    // Check JD and Jesse's data is intact
-    const preservedData = await session.run(
-      `MATCH (p:Person)
-       WHERE p.id IN $preserveIds
-       OPTIONAL MATCH (p)-[:CREATED]->(pulse:FieldPulse)
-       RETURN p.email as email, count(pulse) as pulseCount`,
-      { preserveIds: PRESERVE_USER_IDS }
-    )
-
-    console.log('\n✓ Preserved users:')
-    preservedData.records.forEach((record) => {
-      console.log(
-        `  - ${record.get('email')}: ${record.get('pulseCount').toNumber()} pulses`
-      )
-    })
-
-    // NEW: Validate that all migrated users have content properly organized
-    console.log('\n✓ Migrated users content distribution:')
-    const migratedContent = await session.run(
-      `MATCH (p:Person)-[:OWNS]->(me:MeSpace)-[:HAS_CONTEXT]->(fc:FieldContext)-[:HAS_PULSE]->(pulse)
-       WHERE p.email IN $emails
-       WITH p.email, COUNT(pulse) as pulseCount
-       RETURN p.email as email, pulseCount
-       ORDER BY pulseCount DESC`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    let totalPulsesOrganized = 0
-    migratedContent.records.forEach((record) => {
-      const email = record.get('email')
-      const count = record.get('pulseCount')
-      totalPulsesOrganized += count
-      console.log(`  - ${email}: ${count} pulses`)
-    })
-    console.log(`  Total organized: ${totalPulsesOrganized} pulses`)
-
-    // Verify creator attribution
-    console.log('\n✓ Creator attribution check:')
-    const creatorCheck = await session.run(
-      `MATCH (pulse:FieldPulse)-[:CREATED_BY]->(creator:Person)
-       WHERE creator.email IN $emails
-       RETURN creator.email, COUNT(pulse) as createdCount
-       ORDER BY createdCount DESC`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    creatorCheck.records.forEach((record) => {
-      const email = record.get('creator.email')
-      const count = record.get('createdCount')
-      console.log(`  - ${email}: ${count} pulses created`)
-    })
-
-    // Verify person-to-person connections
-    console.log('\n✓ Person-to-person connections:')
-    const connectionCheck = await session.run(
-      `MATCH (p1:Person)-[r:CONNECTED_TO]-(p2:Person)
-       WHERE p1.email IN $emails AND p2.email IN $emails
-       RETURN COUNT(DISTINCT r) as connectionCount`,
-      { emails: MIGRATE_USER_EMAILS }
-    )
-
-    const connectionCount = connectionCheck.records[0]
-      .get('connectionCount')
-      .toNumber()
-    console.log(`  - Total CONNECTED_TO relationships: ${connectionCount}`)
-
-    if (connectionCount > 0) {
-      // Show sample connections
-      const sampleConnections = await session.run(
-        `MATCH (p1:Person)-[r:CONNECTED_TO]->(p2:Person)
-         WHERE p1.email IN $emails AND p2.email IN $emails
-         RETURN p1.email as source, p2.email as target, r.why as why, r.interests as interests
-         LIMIT 5`,
-        { emails: MIGRATE_USER_EMAILS }
-      )
-
-      console.log('  Sample connections:')
-      sampleConnections.records.forEach((record) => {
-        const source = record.get('source')
-        const target = record.get('target')
-        const why = record.get('why')
-        const interests = record.get('interests')
-        console.log(`    • ${source} → ${target}`)
-        if (why) console.log(`      Why: ${why}`)
-        if (interests) console.log(`      Interests: ${interests}`)
-      })
-    }
-
-    console.log('\n✅ Validation complete\n')
-  } catch (error) {
-    const errorMsg = `Phase 8 error: ${error}`
-    console.error(`❌ ${errorMsg}\n`)
-    stats.errors.push(errorMsg)
+    console.log('✅ Dev structure built\n')
+    return { meSpaces, weSpaces, contexts, haspulse }
   } finally {
     await session.close()
   }
 }
 
 /**
- * Main migration function
+ * Phase 6: Validate parity. Compares prod and dev node/relationship counts
+ * label-by-label, type-by-type.
  */
-async function main() {
-  const stats: MigrationStats = {
-    usersDeleted: 0,
-    usersMigrated: 0,
-    meSpacesCreated: 0,
-    pulsesCreated: 0,
-    logsPreserved: 0,
-    relationshipsMigrated: 0,
-    personConnectionsMigrated: 0,
-    errors: [],
-  }
-
-  console.log('\n')
-  console.log('╔════════════════════════════════════════════════════════════╗')
-  console.log('║   PRODUCTION TO DEVELOPMENT DATABASE MIGRATION            ║')
-  console.log('╚════════════════════════════════════════════════════════════╝')
-  console.log('\n')
-
+async function phase6_validate(
+  expectedNodeTotals: Record<string, number>,
+  relCounts: Record<string, number>
+): Promise<{ pass: boolean; report: string[] }> {
+  console.log('━━━ Phase 6: Validate parity ━━━')
+  const prodSession = prodDriver.session()
+  const devSession = devDriver.session()
+  const report: string[] = []
+  let pass = true
   try {
-    await connectDatabases()
+    // All prod labels are preserved in dev for traceability — no expected drops.
+    const DROPPED_LABELS = new Set<string>()
 
-    await phase1_cleanupDevDB(stats)
-    await phase2_createSeedCOCSpace(stats)
-    await phase3_migrateUsers(stats)
-    await phase4_createMeSpaces(stats)
-    await phase5_transformData(stats)
-    await phase6_migrateLogs(stats)
-    await phase7_migrateRelationships(stats)
-    await phase8_migratePersonConnections(stats)
-    await phase9_validate(stats)
-
-    // Print summary
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('MIGRATION SUMMARY')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-    console.log(`Users deleted:        ${stats.usersDeleted}`)
-    console.log(`Users migrated:       ${stats.usersMigrated}`)
-    console.log(`MeSpaces created:     ${stats.meSpacesCreated}`)
-    console.log(`Pulses created:       ${stats.pulsesCreated}`)
-    console.log(`Logs preserved:       ${stats.logsPreserved}`)
-    console.log(`Relationships:        ${stats.relationshipsMigrated}`)
-    console.log(`Person connections:   ${stats.personConnectionsMigrated}`)
-
-    if (stats.errors.length > 0) {
-      console.log(`\n⚠️  Errors: ${stats.errors.length}`)
-      stats.errors.forEach((err, i) => {
-        console.log(`  ${i + 1}. ${err}`)
-      })
+    // Node parity: every prod label should have ≥ that many nodes in dev,
+    // except for labels we intentionally drop.
+    const labelsResult = await prodSession.run(
+      `CALL db.labels() YIELD label
+       CALL { WITH label MATCH (n) WHERE label IN labels(n) RETURN count(n) AS c }
+       RETURN label, c`
+    )
+    for (const r of labelsResult.records) {
+      const label = r.get('label') as string
+      const prodCount = toInt(r.get('c'))
+      const devCountRes = await devSession.run(
+        `MATCH (n) WHERE $label IN labels(n) RETURN count(n) AS c`,
+        { label }
+      )
+      const devCount = toInt(devCountRes.records[0].get('c'))
+      if (DROPPED_LABELS.has(label)) {
+        report.push(
+          `  • ${label}: prod=${prodCount}, dev=${devCount} (intentionally dropped)`
+        )
+        continue
+      }
+      const ok = devCount >= prodCount
+      if (!ok) pass = false
+      const mark = ok ? '✓' : '✗'
+      report.push(`  ${mark} ${label}: prod=${prodCount}, dev=${devCount}`)
     }
 
-    console.log('\n🎉 Migration complete!\n')
-  } catch (error) {
-    console.error('\n❌ Migration failed:', error)
+    // Validate the merged dev pulse counts match the sum of their prod
+    // sources. This is the real "no data loss" check for the renamed nodes.
+    const pulseMerges = [
+      { devLabel: 'StoryPulse', prodLabels: ['CarePoint', 'CoreValue'] },
+      { devLabel: 'GoalPulse', prodLabels: ['Goal'] },
+      { devLabel: 'ResourcePulse', prodLabels: ['Resource'] },
+    ]
+    for (const m of pulseMerges) {
+      const prodSumResult = await prodSession.run(
+        `UNWIND $labels AS lbl
+         CALL { WITH lbl MATCH (n) WHERE lbl IN labels(n) RETURN count(n) AS c }
+         RETURN sum(c) AS total`,
+        { labels: m.prodLabels }
+      )
+      const prodTotal = toInt(prodSumResult.records[0].get('total'))
+      const devTotalResult = await devSession.run(
+        `MATCH (n) WHERE $label IN labels(n) RETURN count(n) AS c`,
+        { label: m.devLabel }
+      )
+      const devTotal = toInt(devTotalResult.records[0].get('c'))
+      const ok = devTotal === prodTotal
+      if (!ok) pass = false
+      const mark = ok ? '✓' : '✗'
+      report.push(
+        `  ${mark} ${m.devLabel} merge: prod(${m.prodLabels.join('+')})=${prodTotal}, dev=${devTotal}`
+      )
+    }
+
+    // Relationship parity.
+    report.push('')
+    const relsResult = await prodSession.run(
+      `CALL db.relationshipTypes() YIELD relationshipType
+       CALL { WITH relationshipType MATCH ()-[r]->() WHERE type(r) = relationshipType RETURN count(r) AS c }
+       RETURN relationshipType, c`
+    )
+    for (const r of relsResult.records) {
+      const relType = r.get('relationshipType') as string
+      const prodCount = toInt(r.get('c'))
+      const devCountRes = await devSession.run(
+        `MATCH ()-[rel]->() WHERE type(rel) = $relType RETURN count(rel) AS c`,
+        { relType }
+      )
+      const devCount = toInt(devCountRes.records[0].get('c'))
+      const ok = devCount >= prodCount
+      if (!ok) pass = false
+      const mark = ok ? '✓' : '✗'
+      report.push(`  ${mark} :${relType}: prod=${prodCount}, dev=${devCount}`)
+    }
+
+    // Suppress unused-warning for the prepared inputs.
+    void expectedNodeTotals
+    void relCounts
+  } finally {
+    await prodSession.close()
+    await devSession.close()
+  }
+  console.log(report.join('\n'))
+  console.log(pass ? '✅ Parity OK\n' : '❌ Parity FAILED\n')
+  return { pass, report }
+}
+
+async function main() {
+  console.log('\n╔════════════════════════════════════════════════════════════╗')
+  console.log('║  PROD → DEV  ·  1:1 MIGRATION  (rewrite)                  ║')
+  console.log('╚════════════════════════════════════════════════════════════╝\n')
+  try {
+    await connectDatabases()
+    await phase1_wipeDev()
+    await phase2_applySchema()
+    const { totals } = await phase3_migrateNodes()
+    const relCounts = await phase4_migrateRelationships()
+    await phase5_buildDevStructure()
+    const { pass } = await phase6_validate(totals, relCounts)
+
+    if (!pass) {
+      console.log(
+        '⚠️  Run finished with parity gaps — see report above. Re-run after fixing the script.'
+      )
+      process.exit(2)
+    }
+    console.log('🎉 Migration complete.\n')
+  } catch (err) {
+    console.error('\n❌ Migration failed:', err)
     process.exit(1)
   } finally {
     await closeDatabases()
   }
 }
 
-// Run migration
 main()
