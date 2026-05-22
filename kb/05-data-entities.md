@@ -38,6 +38,8 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 | `["Person", "User"]`        | Registered platform user — can log in, owns MeSpace, creates pulses        |
 | `["Person", "PersonPulse"]` | Non-user person — someone in a user's relational world, no platform access |
 
+**`User` is a label, not a separate node.** Signup creates (or matches) a `Person` and runs `SET person:User`; auth queries (login, JWT validation, `resolveAuthenticatedUserId`) match on `:User`. A `Person` without the `:User` label cannot authenticate even if it has an `email` and `password` set. Seeded contacts and imported relational entities therefore stay non-logged-in until they're explicitly promoted by adding the label and the auth/onboarding fields below (or by going through `/api/auth/signup`).
+
 | Field        | Type     | Notes                                  |
 | ------------ | -------- | -------------------------------------- |
 | id           | string   | Unique                                 |
@@ -414,8 +416,8 @@ short-lived presigned PUT URL; the browser uploads straight to S3; `POST
 /api/ingest/document/process` then anchors the Document node and triggers
 extraction (Gemini multimodal for PDFs, OpenAI for text/markdown). The
 original file lives in AWS S3 (memory store for dev/tests); the graph node
-carries metadata and provenance edges. See PRD `docs/prd/document-ingestion.md`,
-ADR-0001, and ADR-0002.
+carries metadata and provenance edges. See WF-10 in `kb/03-workflows.md`
+and ADR-014 / ADR-015 in `kb/06-adr.md`.
 
 | Field      | Type     | Notes                                                                                  |
 | ---------- | -------- | -------------------------------------------------------------------------------------- |
@@ -453,6 +455,56 @@ Document node with its own ingest thread.
 
 ---
 
+### AssistantFeedback
+
+Captures signal about a single assistant turn so devs can improve prompts and
+tools over time. Two write paths land here:
+
+- **`user_thumb`** — explicit thumbs-up / thumbs-down from the chat UI,
+  optionally with a "what would have been better" comment.
+- **`auto_*`** — server-side signals emitted from the chat route's
+  `onFinish` callback: tool errors, empty assistant text, Rule-1
+  violations (raw ids, `__typename`, internal graph labels — see
+  `kb/07-ai-assistant-ux.md`).
+
+**Properties:**
+
+| Field                  | Notes                                                             |
+| ---------------------- | ----------------------------------------------------------------- |
+| `id`                   | `feedback_<uuid>`                                                 |
+| `rating`               | `'positive' \| 'negative'`                                        |
+| `source`               | `'user_thumb' \| 'auto_tool_error' \| 'auto_empty_text' \| 'auto_rule_violation'` |
+| `userComment`          | Optional free-text from the user (thumbs-down comment).           |
+| `ruleViolated`         | For auto rule violations: `rule_1_raw_id_leak`, `rule_1_typename_leak`, `rule_1_graph_label_leak`, `rule_1_uuid_leak`. |
+| `autoSignal`           | Machine-readable code (e.g. `tool_error:get_my_spaces`).          |
+| `classification`       | LLM-assigned failure mode — see cron output for the enum.         |
+| `classificationReason` | One-sentence rationale from the classifier.                       |
+| `cluster`              | `cluster_<id>` assigned by nearest-neighbor on `questionEmbedding`. |
+| `questionEmbedding`    | 1536-dim vector of the user question — drives clustering.         |
+| `goldenSet`            | Boolean — devs flag rows that should be replayed by the (future) eval harness. |
+| `createdAt`            | datetime.                                                         |
+
+**Relationships:**
+
+- `(AssistantFeedback)-[:FEEDBACK_ON]->(ConversationTurn)` — the assistant
+  turn being rated.
+- `(AssistantFeedback)-[:FEEDBACK_FROM]->(:Person)` — submitter (present
+  for `user_thumb` only).
+- `(AssistantFeedback)-[:IN_CONTEXT_OF]->(:ConversationThread)` — query
+  convenience.
+
+**Privacy / activity log:** AssistantFeedback writes are NOT mirrored
+into the `Log` stream — the same exemption as `ConversationTurn` and
+`ConversationChunk`. The nodes themselves are the audit trail.
+
+**Where it's consumed:**
+
+- `src/lib/feedback/assistant-feedback.service.ts` — Neo4j CRUD.
+- `src/app/dev/ai-quality/page.tsx` — dev-gated triage dashboard.
+- `src/app/api/cron/classify-ai-feedback/route.ts` — daily classifier.
+
+---
+
 ## Neo4j Constraints
 
 | Constraint                | Target                        |
@@ -466,23 +518,27 @@ Document node with its own ingest thread.
 | `conversation_thread_id`       | ConversationThread.id UNIQUE       |
 | `conversation_thread_ownerId`  | ConversationThread.ownerId UNIQUE  |
 | `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
+| `assistant_feedback_id`        | AssistantFeedback.id UNIQUE        |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 
-| Index                          | Label             | Property  | Purpose                            |
-| ------------------------------ | ----------------- | --------- | ---------------------------------- |
-| `personBioVectorIndex`         | Person            | embedding | Find people by interests/themes    |
-| `pulseContentVectorIndex`      | FieldPulse        | embedding | Find similar pulses                |
-| `conversationChunkVectorIndex` | ConversationChunk | embedding | Find specific conversation moments |
+| Index                                | Label             | Property          | Purpose                                       |
+| ------------------------------------ | ----------------- | ----------------- | --------------------------------------------- |
+| `personBioVectorIndex`               | Person            | embedding         | Find people by interests/themes               |
+| `pulseContentVectorIndex`            | FieldPulse        | embedding         | Find similar pulses                           |
+| `conversationChunkVectorIndex`       | ConversationChunk | embedding         | Find specific conversation moments            |
+| `assistantFeedbackQuestionVectorIndex` | AssistantFeedback | questionEmbedding | Cluster bad-question patterns for triage     |
 
 ## Property Indexes
 
-| Index              | Target                  |
-| ------------------ | ----------------------- |
-| `resonance_label`  | FieldResonance.label    |
-| `pulse_createdAt`  | FieldPulse.createdAt    |
-| `pulse_modifiedAt` | FieldPulse.modifiedAt   |
-| `chunk_order`      | ConversationChunk.order |
+| Index                              | Target                          |
+| ---------------------------------- | ------------------------------- |
+| `resonance_label`                  | FieldResonance.label            |
+| `pulse_createdAt`                  | FieldPulse.createdAt            |
+| `pulse_modifiedAt`                 | FieldPulse.modifiedAt           |
+| `chunk_order`                      | ConversationChunk.order         |
+| `assistant_feedback_createdAt`     | AssistantFeedback.createdAt     |
+| `assistant_feedback_classification` | AssistantFeedback.classification |
 
 ## ID Strategy
 

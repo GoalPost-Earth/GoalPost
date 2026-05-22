@@ -100,6 +100,12 @@ async function initializeDatabase() {
       // all Spaces.
       `CREATE CONSTRAINT document_id IF NOT EXISTS
        FOR (n:Document) REQUIRE n.id IS UNIQUE`,
+      // AI self-improvement loop: AssistantFeedback nodes capture both
+      // explicit user thumb-ratings and server-side auto-signals (tool
+      // errors, empty responses, Rule-1 raw-id leaks). Powers the
+      // /dev/ai-quality triage dashboard and the daily classify cron.
+      `CREATE CONSTRAINT assistant_feedback_id IF NOT EXISTS
+       FOR (n:AssistantFeedback) REQUIRE n.id IS UNIQUE`,
     ]
 
     for (const constraint of constraints) {
@@ -138,6 +144,13 @@ async function initializeDatabase() {
         label: 'ConversationChunk',
         property: 'embedding',
         description: 'Individual conversation chunk embeddings',
+      },
+      {
+        name: 'assistantFeedbackQuestionVectorIndex',
+        label: 'AssistantFeedback',
+        property: 'questionEmbedding',
+        description:
+          'AssistantFeedback user-question embeddings for failure clustering',
       },
     ]
 
@@ -195,6 +208,15 @@ async function initializeDatabase() {
        FOR (t:ConversationTurn) ON (t.order)`,
       `CREATE INDEX conversation_thread_lastTurnAt IF NOT EXISTS
        FOR (t:ConversationThread) ON (t.lastTurnAt)`,
+      // Dashboard list query orders by createdAt DESC; without an index the
+      // planner falls back to a full label scan as the feedback table grows.
+      `CREATE INDEX assistant_feedback_createdAt IF NOT EXISTS
+       FOR (f:AssistantFeedback) ON (f.createdAt)`,
+      // Classification cron filters `WHERE classification IS NULL`; an index
+      // on the property lets that filter resolve via index seek rather than
+      // a per-row property check.
+      `CREATE INDEX assistant_feedback_classification IF NOT EXISTS
+       FOR (f:AssistantFeedback) ON (f.classification)`,
     ]
 
     for (const index of propertyIndexes) {

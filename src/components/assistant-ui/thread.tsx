@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { Headphones, Mic, Paperclip, SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnhancedTextPart } from './enhanced-message-text'
+import { MessageFeedback } from './message-feedback'
 import { VoiceProvider, useVoiceContext } from './voice-context'
 import { VoiceController } from './voice-controller'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
@@ -101,9 +102,35 @@ const AssistantMessage: FC = () => {
             is still streaming. Once any text/tool part arrives the indicator
             naturally disappears because hasContent becomes true. */}
         <AssistantMessageLoader />
+
+        {/* Thumbs-up / thumbs-down. Hidden until the assistant turn is
+            persisted server-side and the id has streamed back via
+            message metadata (see /api/chat/simulation/route.ts). */}
+        <AssistantMessageFeedbackFooter />
       </div>
     </div>
   )
+}
+
+/**
+ * Bridge between assistant-ui's per-message id and the MessageFeedback
+ * component. The chat route persists each assistant turn using the AI
+ * SDK message id (set on the client via the `start` UIMessageChunk
+ * before any content streams), so the client-visible `message.id` is
+ * the exact same value as `ConversationTurn.id` in Neo4j. No metadata
+ * roundtrip needed.
+ *
+ * Hidden while the message is still streaming so the user can't rate a
+ * mid-stream response.
+ */
+const AssistantMessageFeedbackFooter: FC = () => {
+  const turnId = useAssistantState(({ message }) =>
+    typeof message.id === 'string' && message.id.length > 0 ? message.id : null
+  )
+  const isRunning = useAssistantState(({ thread }) => thread.isRunning)
+  const isLast = useAssistantState(({ message }) => message.isLast)
+  if (isLast && isRunning) return null
+  return <MessageFeedback turnId={turnId} />
 }
 
 /**

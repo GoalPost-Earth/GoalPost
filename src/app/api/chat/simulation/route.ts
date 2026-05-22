@@ -49,6 +49,9 @@ import {
   appendConversationTurn,
   setConversationThreadTitle,
 } from '@/lib/simulation/conversation-thread.service'
+import { randomUUID } from 'node:crypto'
+import { detectAutoSignals } from '@/lib/feedback/auto-detect'
+import { createAssistantFeedback } from '@/lib/feedback/assistant-feedback.service'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -116,6 +119,37 @@ function convertToAISDKMessages(messages: IncomingMessage[]): ChatMessage[] {
       content: '',
     } as ChatMessage
   })
+}
+
+/**
+ * Run the pure auto-detectors against the persisted assistant turn and
+ * write one `AssistantFeedback` row per fired signal. Best-effort — any
+ * Neo4j hiccup is logged and swallowed; the chat UX must not block on
+ * feedback persistence.
+ */
+async function emitAutoSignals(
+  assistantTurnId: string,
+  parts: unknown
+): Promise<void> {
+  const signals = detectAutoSignals(parts)
+  if (signals.length === 0) return
+  await Promise.all(
+    signals.map((signal) =>
+      createAssistantFeedback({
+        turnId: assistantTurnId,
+        rating: signal.rating,
+        source: signal.source,
+        autoSignal: signal.autoSignal,
+        ruleViolated: signal.ruleViolated ?? null,
+      }).catch((error) => {
+        console.warn(
+          '[Chat Simulation] auto-signal write failed:',
+          signal.autoSignal,
+          error instanceof Error ? error.message : error
+        )
+      })
+    )
+  )
 }
 
 export async function POST(req: Request) {
@@ -343,12 +377,26 @@ export async function POST(req: Request) {
         headers: {
           'X-Simulation-Mode': assistantModeManager.getMode(),
         },
+        // Force the response message to carry an explicit id. Without
+        // `generateMessageId`, AI SDK omits the id on streamed assistant
+        // messages, which breaks the feedback pipeline — the chat UI
+        // uses the message.id (= ConversationTurn.id) to attach
+        // thumbs-up/down to a specific row.
+        generateMessageId: () => randomUUID(),
         onFinish: ({ messages: finalMessages }) => {
           if (!currentUserId) return
           const lastAssistant = [...finalMessages]
             .reverse()
             .find((m) => m.role === 'assistant')
           if (!lastAssistant) return
+          // Use the AI SDK message id (set above via generateMessageId)
+          // as the ConversationTurn id. The client sees the same id via
+          // the `start` UIMessageChunk before content streams, so
+          // feedback can attach to the right row with no roundtrip.
+          // Guard against the (theoretically impossible) empty-id case.
+          const assistantTurnId =
+            (typeof lastAssistant.id === 'string' && lastAssistant.id) ||
+            randomUUID()
           const parts = Array.isArray(lastAssistant.parts)
             ? lastAssistant.parts
             : []
@@ -359,16 +407,29 @@ export async function POST(req: Request) {
             )
             .map((part) => part.text)
             .join('')
-          void appendConversationTurn(currentUserId, {
-            role: 'assistant',
-            content: textContent,
-            parts,
-          }, threadId).catch((error) => {
-            console.warn(
-              '[Chat Simulation] Failed to persist assistant turn:',
-              error instanceof Error ? error.message : error
-            )
-          })
+          void appendConversationTurn(
+            currentUserId,
+            {
+              role: 'assistant',
+              content: textContent,
+              parts,
+            },
+            threadId,
+            assistantTurnId
+          )
+            .then(() => {
+              // Run auto-detect AFTER the turn is persisted so the
+              // feedback rows can FK to a real ConversationTurn node.
+              // Fire-and-forget: a Neo4j hiccup here must NOT propagate
+              // to the user; the chat UX has already returned.
+              void emitAutoSignals(assistantTurnId, parts)
+            })
+            .catch((error) => {
+              console.warn(
+                '[Chat Simulation] Failed to persist assistant turn:',
+                error instanceof Error ? error.message : error
+              )
+            })
 
           // After the first exchange, auto-generate a title so the sidebar
           // shows something meaningful. Use gpt-4o-mini — cheap and fast.

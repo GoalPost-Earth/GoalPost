@@ -684,6 +684,15 @@ interface FieldPulse {
   createdAt: DateTime!
   intensity: Float
   createdBy: [Person!]! @declareRelationship
+  """
+  Actual write-time creator edge. Persisted by every pulse-creation
+  path (`lib/chat/hitl.ts`, `api/pulse/create-from-conversation`, ...)
+  as `(:FieldPulse)-[:INITIATED_BY]->(:Person)`. `createdBy` is the
+  legacy alias still documented in kb/05-data-entities.md but never
+  written; consumers that need the real creator (Graph view edges,
+  RAG, person enrichment) read `initiatedBy`.
+  """
+  initiatedBy: [Person!]! @declareRelationship
   context: [FieldContext!]! @declareRelationship
   """
   Documents this pulse was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
@@ -745,6 +754,7 @@ type GoalPulse implements FieldPulse
   time: String
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  initiatedBy: [Person!]! @relationship(type: "INITIATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
@@ -799,6 +809,7 @@ type ResourcePulse implements FieldPulse
   time: String
   
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  initiatedBy: [Person!]! @relationship(type: "INITIATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
@@ -869,6 +880,7 @@ type StoryPulse implements FieldPulse
   sourceUploadedAt: DateTime
 
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  initiatedBy: [Person!]! @relationship(type: "INITIATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
@@ -912,6 +924,7 @@ type CarePulse implements FieldPulse
   intensity: Float
   sourceType: String
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  initiatedBy: [Person!]! @relationship(type: "INITIATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
@@ -954,6 +967,7 @@ type CoreValuePulse implements FieldPulse
   createdAt: DateTime!
   intensity: Float
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  initiatedBy: [Person!]! @relationship(type: "INITIATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_PULSE", direction: IN)
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
@@ -1360,6 +1374,55 @@ type Mutation {
   to their extractions).
   """
   deleteDocument(documentId: ID!): DeleteDocumentResponse!
+}
+
+# ============================================================================
+# AI ASSISTANT FEEDBACK (Self-Improvement Loop)
+# ============================================================================
+
+"""
+How the user rated an assistant response, or — for auto-detected signals —
+whether the system considers the response acceptable.
+"""
+enum AssistantFeedbackRating {
+  POSITIVE
+  NEGATIVE
+}
+
+"""
+Response shape for submitAssistantFeedback. Returns a sparse envelope —
+the dev dashboard reads detail directly from Neo4j; the chat UI only
+needs success confirmation.
+"""
+type SubmitAssistantFeedbackResponse {
+  success: Boolean!
+  message: String!
+  feedbackId: ID
+}
+
+extend type Mutation {
+  """
+  Persist a user-driven rating on a single assistant turn.
+
+  Authorization:
+    - The submitting user MUST own the ConversationThread containing the
+      turn (enforced server-side; mismatch returns success:false).
+
+  Inputs:
+    - turnId:      the `ConversationTurn.id` exposed to the UI via the
+                    AI SDK message metadata stream.
+    - rating:      POSITIVE for thumbs-up, NEGATIVE for thumbs-down.
+    - userComment: optional "what would have been better" text shown to
+                    devs in the /dev/ai-quality triage dashboard.
+
+  Auto-detected signals (tool errors, empty responses, Rule-1 leaks)
+  flow through a separate server-side write path — not this mutation.
+  """
+  submitAssistantFeedback(
+    turnId: ID!
+    rating: AssistantFeedbackRating!
+    userComment: String
+  ): SubmitAssistantFeedbackResponse!
 }
 
 # ============================================================================

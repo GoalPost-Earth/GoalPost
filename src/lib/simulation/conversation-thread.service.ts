@@ -99,10 +99,18 @@ function parseStoredParts(value: unknown): unknown[] | null {
 export async function appendConversationTurn(
   userId: string,
   turn: ConversationTurnInput,
-  threadId?: string
+  threadId?: string,
+  /**
+   * Optional pre-generated turn id. The chat route generates the
+   * assistant-turn id upfront so it can stream the same id back to the
+   * client (via `messageMetadata`) — letting the client attach feedback
+   * to the row this function will write a few milliseconds later. Pass
+   * undefined to keep the legacy behavior (randomly generated id).
+   */
+  presetTurnId?: string
 ): Promise<{ threadId: string; turnId: string; order: number }> {
   if (!userId) throw new Error('appendConversationTurn: userId is required')
-  const turnId = randomUUID()
+  const turnId = presetTurnId ?? randomUUID()
   const partsJson =
     turn.parts === undefined || turn.parts === null
       ? null
