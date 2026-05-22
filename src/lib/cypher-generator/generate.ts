@@ -141,13 +141,31 @@ Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal
 
   CRITICAL — use \`OPTIONAL MATCH p = shortestPath(…)\` and \`RETURN a, b, p\` (NOT \`MATCH p\` and \`RETURN p\`). The optional shortestPath means: when no connecting path exists in the user's visible graph, the query still returns both endpoint nodes, and the runtime renders them on the canvas without an edge between them. This is the desired UX — "I see JD and Robert; they don't appear connected here" beats "nothing visualised, sorry."
 
-  When the user names the endpoints by name rather than id (e.g. "JD Addy" and "Robert Damashek") and the names aren't in canvasVisibleEntities, match by case-insensitive name CONTAINS:
+  When the user names the endpoints by name rather than id (e.g. "JD Addy" and "Robert Damashek") and the names aren't in canvasVisibleEntities, match each endpoint with a TOLERANT predicate. \`Person.name\` is OFTEN NULL in this dataset — most Persons only carry \`firstName\` + \`lastName\`. Matching solely on \`a.name\` will silently return zero rows for typical casual queries (e.g. "JD Addy", "jennife"). Casual two-token inputs also include initialisms like "JD" for "John-Dag" that never substring-match the firstName, so the predicate must additionally accept "the last typed token is contained in the lastName". Canonical pattern:
 
-    MATCH (a:Person) WHERE toLower(a.name) CONTAINS toLower("<name from user>") WITH a LIMIT 1
-    MATCH (b:Person) WHERE toLower(b.name) CONTAINS toLower("<other name>") WITH a, b LIMIT 1
+    WITH toLower("<name from user>") AS q1Lower,
+         toLower("<other name>") AS q2Lower,
+         [t IN split(toLower("<name from user>"), ' ') WHERE size(t) >= 2] AS q1Tokens,
+         [t IN split(toLower("<other name>"), ' ') WHERE size(t) >= 2] AS q2Tokens
+    MATCH (a:Person)
+    WHERE toLower(coalesce(a.name, '')) CONTAINS q1Lower
+       OR toLower(coalesce(a.firstName, '')) CONTAINS q1Lower
+       OR toLower(coalesce(a.lastName, '')) CONTAINS q1Lower
+       OR toLower(trim(coalesce(a.firstName, '') + ' ' + coalesce(a.lastName, ''))) CONTAINS q1Lower
+       OR (size(q1Tokens) >= 2 AND toLower(coalesce(a.lastName, '')) CONTAINS last(q1Tokens))
+    WITH a, q2Lower, q2Tokens LIMIT 1
+    MATCH (b:Person)
+    WHERE toLower(coalesce(b.name, '')) CONTAINS q2Lower
+       OR toLower(coalesce(b.firstName, '')) CONTAINS q2Lower
+       OR toLower(coalesce(b.lastName, '')) CONTAINS q2Lower
+       OR toLower(trim(coalesce(b.firstName, '') + ' ' + coalesce(b.lastName, ''))) CONTAINS q2Lower
+       OR (size(q2Tokens) >= 2 AND toLower(coalesce(b.lastName, '')) CONTAINS last(q2Tokens))
+    WITH a, b LIMIT 1
     OPTIONAL MATCH p = shortestPath((a)-[…*..6]-(b))
     RETURN a, b, p
     LIMIT 1
+
+  The same five-clause tolerant predicate (CONTAINS over \`name\`, \`firstName\`, \`lastName\`, the trimmed concatenation, AND the last-token-into-lastName branch for multi-token inputs) MUST be used anywhere you match a Person by a user-typed name string — single-endpoint lookups, expansive sweeps, etc. Do not match Persons via \`a.name\` alone.
 
   NOTE on relationship syntax: the type list comes BEFORE the variable-length range. Write \`[:OWNS|HAS_MEMBER*..6]\`, NOT \`[*..6:OWNS|HAS_MEMBER]\` (Neo4j parses the second as a syntax error).
 

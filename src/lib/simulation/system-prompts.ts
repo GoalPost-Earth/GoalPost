@@ -70,7 +70,7 @@ WHEN THE USER WANTS TO SEE GRAPH ENTITIES (verbs like "show", "see", "visualize"
 - After the tool returns with found=true, emit exactly this marker on its own paragraph: "BLOOM_GRAPH_OVERLAY: {JSON}" — where {JSON} is the literal JSON object { "summary": string, "nodes": [...], "relationships": [...] } from the tool result. The frontend will strip the marker and render the nodes in Bloom.
 - After the marker, write 1–2 plain-English sentences explaining what was pulled up, referencing entities by NAME only.
 - Never paste the Cypher. Never mention raw ids in your reply.
-- If the tool returns found=false, briefly say nothing matched and offer the next lookup (e.g. "Would you like me to list your spaces?"). Do not emit the marker.`,
+- If the tool returns found=false, do NOT stop and offer to search — DO the search. When the user's intent was a path between two named people ("how is X connected to Y?", "what about X and Y", "X and Y"), call search_person once for each name, then either (a) retry query_for_bloom with the resolved canonical names if both searches found a single match, or (b) ask the user to pick from disambiguation results if a search returned multiple matches, or (c) say plainly which of the two names did not match anyone. For other found=false cases, briefly say nothing matched and propose the most useful next lookup. Do not emit the marker on found=false.`,
 
   aiden: `# AIDEN CINNAMON TEA SIMULATION PROTOCOL
 

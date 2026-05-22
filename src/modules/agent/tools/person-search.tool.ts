@@ -74,18 +74,28 @@ export function createPersonSearchTool(
       // - Partial matches: "Rob" matches "Robert"
       // - Case insensitive matching
       const query = `
+        WITH toLower($name) AS qLower,
+             [t IN split(toLower($name), ' ') WHERE size(t) >= 2] AS qTokens
         MATCH (p:Person)
-        WHERE 
+        WHERE
           // Match if search term is contained in first name
-          toLower(coalesce(p.firstName, '')) CONTAINS toLower($name)
+          toLower(coalesce(p.firstName, '')) CONTAINS qLower
           // Match if search term is contained in last name
-          OR toLower(coalesce(p.lastName, '')) CONTAINS toLower($name)
+          OR toLower(coalesce(p.lastName, '')) CONTAINS qLower
           // Match if search term matches full name
-          OR toLower(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, '')) CONTAINS toLower($name)
+          OR toLower(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, '')) CONTAINS qLower
           // Match if first name starts with search term (for "Rob" -> "Robert")
-          OR toLower(coalesce(p.firstName, '')) STARTS WITH toLower($name)
+          OR toLower(coalesce(p.firstName, '')) STARTS WITH qLower
           // Match if last name starts with search term
-          OR toLower(coalesce(p.lastName, '')) STARTS WITH toLower($name)
+          OR toLower(coalesce(p.lastName, '')) STARTS WITH qLower
+          // Casual multi-token names ("JD Addy", "Dr. Jane Doe"): accept the
+          // person when the LAST typed token is contained in their lastName.
+          // Handles initialisms in the first-name slot ("JD" for "John-Dag")
+          // which never substring-match the firstName.
+          OR (
+            size(qTokens) >= 2
+            AND toLower(coalesce(p.lastName, '')) CONTAINS last(qTokens)
+          )
         CALL {
           WITH p
           OPTIONAL MATCH (p)-[:BELONGS_TO]->(community:Community)

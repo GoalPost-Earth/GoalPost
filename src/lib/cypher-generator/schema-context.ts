@@ -132,8 +132,8 @@ This makes Community a useful bridge node for path-finding between two Persons w
 # Conventions
 
 - All ids are stored on the node as the property "id" (string).
-- Names: Space.name, FieldContext.title (fallback: emergentName), FieldPulse.title,
-  Person.name (or Person.firstName + ' ' + Person.lastName).
+- Names: Space.name, FieldContext.title (fallback: emergentName), FieldPulse.title.
+- Person names: \`Person.name\` is OFTEN NULL — most Persons only carry \`firstName\` + \`lastName\`. When matching a Person by a user-typed name, do NOT use \`a.name\` alone. Use the four-clause tolerant predicate (CONTAINS over \`name\`, \`firstName\`, \`lastName\`, and the trimmed \`firstName + ' ' + lastName\` concatenation) so single-token, partial, and full-name inputs all match.
 - Pulse subtypes share the FieldPulse base — match on FieldPulse for cross-type queries,
   match on the subtype label (e.g. GoalPulse) when filtering by type.
 `.trim()
