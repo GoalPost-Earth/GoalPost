@@ -1,12 +1,15 @@
 'use client'
 
-import { type FC } from 'react'
+import { useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { LayoutGrid, Network, Plus, PlusCircle, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
-import { useFocalEntity } from '@/contexts'
+import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { useApp, useFocalEntity } from '@/contexts'
+import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import {
   emitOpenAddFieldContextModal,
   emitOpenAddPulseModal,
@@ -124,34 +127,107 @@ const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
   })
   const canCreateMeSpace = (meSpacesData?.meSpaces?.length ?? 0) === 0
 
+  const { user } = useApp()
+  const apolloClient = useApolloClient()
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
+  const [showCreateWeSpaceModal, setShowCreateWeSpaceModal] = useState(false)
+  const [isCreatingWeSpace, setIsCreatingWeSpace] = useState(false)
+
+  const handleCreateWeSpace = async ({ name }: { name: string }) => {
+    const trimmed = name.trim()
+    if (!trimmed) {
+      toast.error('Space name is required')
+      return
+    }
+    if (!user?.id) {
+      toast.error('You must be signed in to create a WeSpace')
+      return
+    }
+
+    setIsCreatingWeSpace(true)
+    try {
+      const res = await fetch('/api/we-space/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed, userId: user.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to create WeSpace')
+        return
+      }
+
+      if (data.weSpace?.id) {
+        logSpaceActivity({
+          variables: {
+            input: {
+              action: 'created',
+              spaceId: data.weSpace.id,
+              spaceType: 'WeSpace',
+              spaceName: trimmed,
+            },
+          },
+        }).catch((err) => {
+          console.error('Error logging space creation:', err)
+        })
+      }
+
+      toast.success('WeSpace created')
+      setShowCreateWeSpaceModal(false)
+      // Refresh any active WeSpace lists (dashboard overview + WeSpace page).
+      await apolloClient.refetchQueries({
+        include: ['GetAllWeSpaces', 'GetUserWeSpaces'],
+      })
+    } catch (err) {
+      toast.error(
+        `Failed to create WeSpace${err instanceof Error ? `: ${err.message}` : ''}`
+      )
+    } finally {
+      setIsCreatingWeSpace(false)
+    }
+  }
+
   return (
-    <div className="flex items-center gap-2 md:gap-3">
-      {canCreateMeSpace && (
+    <>
+      <div className="flex items-center gap-2 md:gap-3">
+        {canCreateMeSpace && (
+          <button
+            type="button"
+            onClick={() => router.push('/protected/spaces/me-space')}
+            className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+            aria-label="Create MeSpace"
+          >
+            <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+              MeSpace
+            </span>
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => router.push('/protected/spaces/me-space')}
+          onClick={() => setShowCreateWeSpaceModal(true)}
+          data-tour="create-wespace-button"
           className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
-          aria-label="Create MeSpace"
+          aria-label="Create WeSpace"
         >
-          <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+          <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
           <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-            MeSpace
+            WeSpace
           </span>
         </button>
+      </div>
+
+      {showCreateWeSpaceModal && (
+        <CreateSpaceModal
+          isOpen={showCreateWeSpaceModal}
+          onClose={() => setShowCreateWeSpaceModal(false)}
+          onCreate={handleCreateWeSpace}
+          isLoading={isCreatingWeSpace}
+          title="Create New WeSpace"
+          subtitle="Start a collaborative space with your community"
+        />
       )}
-      <button
-        type="button"
-        onClick={() => router.push('/protected/spaces/we-space')}
-        data-tour="create-wespace-button"
-        className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
-        aria-label="Create WeSpace"
-      >
-        <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
-        <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-          WeSpace
-        </span>
-      </button>
-    </div>
+    </>
   )
 }
 
