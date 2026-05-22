@@ -8,6 +8,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
+      createdBy {
+        id
+      }
     }
     resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -15,6 +18,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
+      createdBy {
+        id
+      }
     }
     storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -22,6 +28,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
+      createdBy {
+        id
+      }
     }
     carePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -29,6 +38,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
+      createdBy {
+        id
+      }
     }
     coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -36,6 +48,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
+      createdBy {
+        id
+      }
     }
     fieldContexts(where: { id_EQ: $contextId }) {
       id

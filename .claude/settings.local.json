@@ -9,5 +9,15 @@
       "mcp__atlassian__getJiraIssue",
       "Bash(npx tsc *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "neo4j-dev",
+    "neo4j-prod",
+    "shadcn",
+    "assistant-ui",
+    "docs-langchain",
+    "chrome-devtools",
+    "context7",
+    "atlassian"
+  ]
 }

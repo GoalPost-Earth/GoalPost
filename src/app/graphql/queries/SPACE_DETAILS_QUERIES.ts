@@ -19,6 +19,7 @@ export const GET_SPACE_DETAILS = graphql(`
           lastName
           name
           email
+          photo
         }
         members {
           id
@@ -58,6 +59,7 @@ export const GET_SPACE_DETAILS = graphql(`
           lastName
           name
           email
+          photo
         }
         members {
           id

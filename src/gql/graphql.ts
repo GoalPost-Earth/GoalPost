@@ -114,6 +114,10 @@ export type CarePulse = FieldPulse & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<CarePulsePersonCreatedByAggregationSelection>
   createdByConnection: FieldPulseCreatedByConnection
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<CarePulseDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
   sourceType?: Maybe<Scalars['String']['output']>
@@ -178,6 +182,36 @@ export type CarePulseCreatedByConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Care or wellness-focused pulse.
+ * Multi-label: ["FieldPulse", "CarePulse"]
+ */
+export type CarePulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CarePulseAggregate = {
@@ -299,6 +333,7 @@ export type CarePulseCreateInput = {
   context?: InputMaybe<CarePulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<CarePulseCreatedByFieldInput>
+  extractedFrom?: InputMaybe<CarePulseExtractedFromFieldInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   sourceType?: InputMaybe<Scalars['String']['input']>
   title: Scalars['String']['input']
@@ -479,6 +514,61 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -669,12 +759,219 @@ export type CarePulseCreatedByUpdateFieldInput = {
 export type CarePulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+}
+
+export type CarePulseDocumentExtractedFromAggregationSelection = {
+  __typename?: 'CarePulseDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CarePulseDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type CarePulseDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'CarePulseDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type CarePulseEdge = {
   __typename?: 'CarePulseEdge'
   cursor: Scalars['String']['output']
   node: CarePulse
+}
+
+export type CarePulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<CarePulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<CarePulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<CarePulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CarePulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type CarePulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type CarePulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type CarePulseExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<CarePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseExtractedFromCreateFieldInput>>
+}
+
+export type CarePulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CarePulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CarePulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CarePulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CarePulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type CarePulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<CarePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<CarePulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<CarePulseExtractedFromUpdateConnectionInput>
 }
 
 export type CarePulseFieldContextContextAggregationSelection = {
@@ -712,6 +1009,10 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -741,6 +1042,7 @@ export type CarePulseUpdateInput = {
   context?: InputMaybe<Array<CarePulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<CarePulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<CarePulseExtractedFromUpdateFieldInput>>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -799,6 +1101,23 @@ export type CarePulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return CarePulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<CarePulseExtractedFromAggregateInput>
+  /** Return CarePulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CarePulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CarePulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CarePulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CarePulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return CarePulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return CarePulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return CarePulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -918,6 +1237,10 @@ export type CoreValuePulse = FieldPulse & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<CoreValuePulsePersonCreatedByAggregationSelection>
   createdByConnection: FieldPulseCreatedByConnection
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<CoreValuePulseDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
   title: Scalars['String']['output']
@@ -981,6 +1304,36 @@ export type CoreValuePulseCreatedByConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Core value or principle-focused pulse.
+ * Multi-label: ["FieldPulse", "CoreValuePulse"]
+ */
+export type CoreValuePulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CoreValuePulseAggregate = {
@@ -1100,6 +1453,7 @@ export type CoreValuePulseCreateInput = {
   context?: InputMaybe<CoreValuePulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<CoreValuePulseCreatedByFieldInput>
+  extractedFrom?: InputMaybe<CoreValuePulseExtractedFromFieldInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   title: Scalars['String']['input']
 }
@@ -1279,6 +1633,61 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1469,12 +1878,219 @@ export type CoreValuePulseCreatedByUpdateFieldInput = {
 export type CoreValuePulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+}
+
+export type CoreValuePulseDocumentExtractedFromAggregationSelection = {
+  __typename?: 'CoreValuePulseDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<CoreValuePulseDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type CoreValuePulseDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'CoreValuePulseDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type CoreValuePulseEdge = {
   __typename?: 'CoreValuePulseEdge'
   cursor: Scalars['String']['output']
   node: CoreValuePulse
+}
+
+export type CoreValuePulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<CoreValuePulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<CoreValuePulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<CoreValuePulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<CoreValuePulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type CoreValuePulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type CoreValuePulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type CoreValuePulseExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseExtractedFromCreateFieldInput>>
+}
+
+export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<CoreValuePulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<CoreValuePulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<CoreValuePulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type CoreValuePulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type CoreValuePulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<CoreValuePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<CoreValuePulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<CoreValuePulseExtractedFromUpdateConnectionInput>
 }
 
 export type CoreValuePulseFieldContextContextAggregationSelection = {
@@ -1512,6 +2128,10 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -1540,6 +2160,7 @@ export type CoreValuePulseUpdateInput = {
   context?: InputMaybe<Array<CoreValuePulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<CoreValuePulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<CoreValuePulseExtractedFromUpdateFieldInput>>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -1597,6 +2218,23 @@ export type CoreValuePulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return CoreValuePulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<CoreValuePulseExtractedFromAggregateInput>
+  /** Return CoreValuePulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CoreValuePulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CoreValuePulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CoreValuePulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return CoreValuePulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return CoreValuePulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return CoreValuePulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return CoreValuePulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -1670,9 +2308,27 @@ export type CreateCreatePersonConnectionResponsesMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateDeleteDocumentResponsesMutationResponse = {
+  __typename?: 'CreateDeleteDocumentResponsesMutationResponse'
+  deleteDocumentResponses: Array<DeleteDocumentResponse>
+  info: CreateInfo
+}
+
 export type CreateDeletePersonConnectionResponsesMutationResponse = {
   __typename?: 'CreateDeletePersonConnectionResponsesMutationResponse'
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
+  info: CreateInfo
+}
+
+export type CreateDocumentIngestThreadsMutationResponse = {
+  __typename?: 'CreateDocumentIngestThreadsMutationResponse'
+  documentIngestThreads: Array<DocumentIngestThread>
+  info: CreateInfo
+}
+
+export type CreateDocumentsMutationResponse = {
+  __typename?: 'CreateDocumentsMutationResponse'
+  documents: Array<Document>
   info: CreateInfo
 }
 
@@ -1693,6 +2349,12 @@ export type CreateInfo = {
   __typename?: 'CreateInfo'
   nodesCreated: Scalars['Int']['output']
   relationshipsCreated: Scalars['Int']['output']
+}
+
+export type CreateIngestDocumentResponsesMutationResponse = {
+  __typename?: 'CreateIngestDocumentResponsesMutationResponse'
+  info: CreateInfo
+  ingestDocumentResponses: Array<IngestDocumentResponse>
 }
 
 /** Response when creating an activity log. */
@@ -1766,12 +2428,6 @@ export type CreateLogsMutationResponse = {
   __typename?: 'CreateLogsMutationResponse'
   info: CreateInfo
   logs: Array<Log>
-}
-
-export type CreateMeSpacesMutationResponse = {
-  __typename?: 'CreateMeSpacesMutationResponse'
-  info: CreateInfo
-  meSpaces: Array<MeSpace>
 }
 
 export type CreatePeopleMutationResponse = {
@@ -1925,6 +2581,78 @@ export type DateTimeAggregateSelection = {
   min?: Maybe<Scalars['DateTime']['output']>
 }
 
+/**
+ * Response payload for `deleteDocument`. The Document node and its blob are
+ * removed; previously extracted Persons and FieldPulses are untouched (their
+ * EXTRACTED_FROM edges drop with the Document).
+ */
+export type DeleteDocumentResponse = {
+  __typename?: 'DeleteDocumentResponse'
+  deleted: Scalars['Boolean']['output']
+  documentId: Scalars['ID']['output']
+}
+
+export type DeleteDocumentResponseAggregate = {
+  __typename?: 'DeleteDocumentResponseAggregate'
+  count: Count
+  node: DeleteDocumentResponseAggregateNode
+}
+
+export type DeleteDocumentResponseAggregateNode = {
+  __typename?: 'DeleteDocumentResponseAggregateNode'
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  documentId: IdAggregateSelection
+}
+
+export type DeleteDocumentResponseAggregateSelection = {
+  __typename?: 'DeleteDocumentResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  documentId: IdAggregateSelection
+}
+
+export type DeleteDocumentResponseCreateInput = {
+  deleted: Scalars['Boolean']['input']
+  documentId: Scalars['ID']['input']
+}
+
+export type DeleteDocumentResponseEdge = {
+  __typename?: 'DeleteDocumentResponseEdge'
+  cursor: Scalars['String']['output']
+  node: DeleteDocumentResponse
+}
+
+/** Fields to sort DeleteDocumentResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one DeleteDocumentResponseSort object. */
+export type DeleteDocumentResponseSort = {
+  deleted?: InputMaybe<SortDirection>
+  documentId?: InputMaybe<SortDirection>
+}
+
+export type DeleteDocumentResponseUpdateInput = {
+  deleted_SET?: InputMaybe<Scalars['Boolean']['input']>
+  documentId_SET?: InputMaybe<Scalars['ID']['input']>
+}
+
+export type DeleteDocumentResponseWhere = {
+  AND?: InputMaybe<Array<DeleteDocumentResponseWhere>>
+  NOT?: InputMaybe<DeleteDocumentResponseWhere>
+  OR?: InputMaybe<Array<DeleteDocumentResponseWhere>>
+  deleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  documentId_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  documentId_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  documentId_EQ?: InputMaybe<Scalars['ID']['input']>
+  documentId_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  documentId_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+}
+
+export type DeleteDocumentResponsesConnection = {
+  __typename?: 'DeleteDocumentResponsesConnection'
+  aggregate: DeleteDocumentResponseAggregate
+  edges: Array<DeleteDocumentResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** Information about the number of nodes and relationships deleted during a delete mutation */
 export type DeleteInfo = {
   __typename?: 'DeleteInfo'
@@ -1999,6 +2727,1938 @@ export type DeletePersonConnectionResponsesConnection = {
 }
 
 /**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type Document = {
+  __typename?: 'Document'
+  /** Blob storage key. Internal — UI surfaces filename instead. */
+  blobKey?: Maybe<Scalars['String']['output']>
+  /** Provider-issued URL for the blob. May be expiring/private; treat as opaque. */
+  blobUrl?: Maybe<Scalars['String']['output']>
+  /**
+   * Up to ~5 short concept phrases the AI surfaced as the document's
+   * high-level themes. Rendered as chips on the Document card so the user can
+   * see what the doc is *about* before scanning extracted entities. Empty when
+   * the summarizer returned nothing or the call failed.
+   */
+  concepts?: Maybe<Array<Scalars['String']['output']>>
+  /** People extracted from this document (provenance — see EXTRACTED_FROM). */
+  extractedPeople: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "extractedPeopleConnection" instead */
+  extractedPeopleAggregate?: Maybe<DocumentPersonExtractedPeopleAggregationSelection>
+  extractedPeopleConnection: DocumentExtractedPeopleConnection
+  /** FieldPulses extracted from this document (provenance — see EXTRACTED_FROM). */
+  extractedPulses: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "extractedPulsesConnection" instead */
+  extractedPulsesAggregate?: Maybe<DocumentFieldPulseExtractedPulsesAggregationSelection>
+  extractedPulsesConnection: DocumentExtractedPulsesConnection
+  fieldContext: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "fieldContextConnection" instead */
+  fieldContextAggregate?: Maybe<DocumentFieldContextFieldContextAggregationSelection>
+  fieldContextConnection: DocumentFieldContextConnection
+  filename: Scalars['String']['output']
+  id: Scalars['ID']['output']
+  /** Ingest threads spawned from this document — initial upload + every Re-extract attempt. Ordered newest first. */
+  ingestThreads: Array<DocumentIngestThread>
+  mimeType: Scalars['String']['output']
+  /** Page count for paginated formats (.pdf). 1 for .txt/.md. Null when unknown (legacy uploads). */
+  pageCount?: Maybe<Scalars['Int']['output']>
+  sizeBytes: Scalars['Int']['output']
+  /**
+   * AI-generated 1-paragraph synopsis of the document content. Produced at
+   * ingest time by a dedicated summarization call (independent of the entity
+   * extraction model). Null if the call failed or was skipped — document still
+   * lands either way (failure is non-fatal). Refreshed on re-extract.
+   */
+  summary?: Maybe<Scalars['String']['output']>
+  uploadedAt: Scalars['DateTime']['output']
+  uploadedBy: Array<Person>
+  /** @deprecated Please use field "aggregate" inside "uploadedByConnection" instead */
+  uploadedByAggregate?: Maybe<DocumentPersonUploadedByAggregationSelection>
+  uploadedByConnection: DocumentUploadedByConnection
+  /** Optional one-line "What is this?" hint captured at upload. Reused on re-extract (slice 6). */
+  userHint?: Maybe<Scalars['String']['output']>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPeopleArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPeopleAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPeopleConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentExtractedPeopleConnectionSort>>
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPulsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPulsesAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentExtractedPulsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentExtractedPulsesConnectionSort>>
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentFieldContextArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentFieldContextAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentFieldContextConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentFieldContextConnectionSort>>
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentUploadedByArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonSort>>
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentUploadedByAggregateArgs = {
+  where?: InputMaybe<PersonWhere>
+}
+
+/**
+ * An uploaded source document attached to a FieldContext. Created by the
+ * direct-to-S3 ingestion flow: POST /api/ingest/document/presign mints a
+ * short-lived presigned PUT URL; the browser uploads straight to S3; POST
+ * /api/ingest/document/process then anchors the Document node and runs
+ * extraction. The original file lives in blob storage (`blobKey` / `blobUrl`);
+ * the graph node carries metadata + provenance edges.
+ *
+ * Authorization: inherits from the parent Space — same pattern as FieldContext.
+ * Documents are never auto-deleted; cleanup is user-driven (slice 6 ships the
+ * delete mutation).
+ */
+export type DocumentUploadedByConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentUploadedByConnectionSort>>
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
+}
+
+export type DocumentAggregate = {
+  __typename?: 'DocumentAggregate'
+  count: Count
+  node: DocumentAggregateNode
+}
+
+export type DocumentAggregateNode = {
+  __typename?: 'DocumentAggregateNode'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
+}
+
+export type DocumentAggregateSelection = {
+  __typename?: 'DocumentAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  count: Scalars['Int']['output']
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
+}
+
+export type DocumentConnectInput = {
+  extractedPeople?: InputMaybe<Array<DocumentExtractedPeopleConnectFieldInput>>
+  extractedPulses?: InputMaybe<Array<DocumentExtractedPulsesConnectFieldInput>>
+  fieldContext?: InputMaybe<Array<DocumentFieldContextConnectFieldInput>>
+  uploadedBy?: InputMaybe<Array<DocumentUploadedByConnectFieldInput>>
+}
+
+export type DocumentConnectWhere = {
+  node: DocumentWhere
+}
+
+export type DocumentCreateInput = {
+  blobKey?: InputMaybe<Scalars['String']['input']>
+  blobUrl?: InputMaybe<Scalars['String']['input']>
+  concepts?: InputMaybe<Array<Scalars['String']['input']>>
+  extractedPeople?: InputMaybe<DocumentExtractedPeopleFieldInput>
+  extractedPulses?: InputMaybe<DocumentExtractedPulsesFieldInput>
+  fieldContext?: InputMaybe<DocumentFieldContextFieldInput>
+  filename: Scalars['String']['input']
+  mimeType: Scalars['String']['input']
+  pageCount?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes: Scalars['Int']['input']
+  summary?: InputMaybe<Scalars['String']['input']>
+  uploadedAt: Scalars['DateTime']['input']
+  uploadedBy?: InputMaybe<DocumentUploadedByFieldInput>
+  userHint?: InputMaybe<Scalars['String']['input']>
+}
+
+export type DocumentDeleteInput = {
+  extractedPeople?: InputMaybe<Array<DocumentExtractedPeopleDeleteFieldInput>>
+  extractedPulses?: InputMaybe<Array<DocumentExtractedPulsesDeleteFieldInput>>
+  fieldContext?: InputMaybe<Array<DocumentFieldContextDeleteFieldInput>>
+  uploadedBy?: InputMaybe<Array<DocumentUploadedByDeleteFieldInput>>
+}
+
+export type DocumentDisconnectInput = {
+  extractedPeople?: InputMaybe<
+    Array<DocumentExtractedPeopleDisconnectFieldInput>
+  >
+  extractedPulses?: InputMaybe<
+    Array<DocumentExtractedPulsesDisconnectFieldInput>
+  >
+  fieldContext?: InputMaybe<Array<DocumentFieldContextDisconnectFieldInput>>
+  uploadedBy?: InputMaybe<Array<DocumentUploadedByDisconnectFieldInput>>
+}
+
+export type DocumentEdge = {
+  __typename?: 'DocumentEdge'
+  cursor: Scalars['String']['output']
+  node: Document
+}
+
+export type DocumentExtractedPeopleAggregateInput = {
+  AND?: InputMaybe<Array<DocumentExtractedPeopleAggregateInput>>
+  NOT?: InputMaybe<DocumentExtractedPeopleAggregateInput>
+  OR?: InputMaybe<Array<DocumentExtractedPeopleAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<DocumentExtractedPeopleNodeAggregationWhereInput>
+}
+
+export type DocumentExtractedPeopleConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type DocumentExtractedPeopleConnection = {
+  __typename?: 'DocumentExtractedPeopleConnection'
+  aggregate: DocumentPersonExtractedPeopleAggregateSelection
+  edges: Array<DocumentExtractedPeopleRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type DocumentExtractedPeopleConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type DocumentExtractedPeopleConnectionWhere = {
+  AND?: InputMaybe<Array<DocumentExtractedPeopleConnectionWhere>>
+  NOT?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+  OR?: InputMaybe<Array<DocumentExtractedPeopleConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type DocumentExtractedPeopleCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type DocumentExtractedPeopleDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+}
+
+export type DocumentExtractedPeopleDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+}
+
+export type DocumentExtractedPeopleFieldInput = {
+  connect?: InputMaybe<Array<DocumentExtractedPeopleConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentExtractedPeopleCreateFieldInput>>
+}
+
+export type DocumentExtractedPeopleNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<DocumentExtractedPeopleNodeAggregationWhereInput>>
+  NOT?: InputMaybe<DocumentExtractedPeopleNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<DocumentExtractedPeopleNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  phone_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type DocumentExtractedPeopleRelationship = {
+  __typename?: 'DocumentExtractedPeopleRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type DocumentExtractedPeopleUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+}
+
+export type DocumentExtractedPeopleUpdateFieldInput = {
+  connect?: InputMaybe<Array<DocumentExtractedPeopleConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentExtractedPeopleCreateFieldInput>>
+  delete?: InputMaybe<Array<DocumentExtractedPeopleDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<DocumentExtractedPeopleDisconnectFieldInput>>
+  update?: InputMaybe<DocumentExtractedPeopleUpdateConnectionInput>
+}
+
+export type DocumentExtractedPulsesAggregateInput = {
+  AND?: InputMaybe<Array<DocumentExtractedPulsesAggregateInput>>
+  NOT?: InputMaybe<DocumentExtractedPulsesAggregateInput>
+  OR?: InputMaybe<Array<DocumentExtractedPulsesAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<DocumentExtractedPulsesNodeAggregationWhereInput>
+}
+
+export type DocumentExtractedPulsesConnectFieldInput = {
+  connect?: InputMaybe<FieldPulseConnectInput>
+  where?: InputMaybe<FieldPulseConnectWhere>
+}
+
+export type DocumentExtractedPulsesConnection = {
+  __typename?: 'DocumentExtractedPulsesConnection'
+  aggregate: DocumentFieldPulseExtractedPulsesAggregateSelection
+  edges: Array<DocumentExtractedPulsesRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type DocumentExtractedPulsesConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type DocumentExtractedPulsesConnectionWhere = {
+  AND?: InputMaybe<Array<DocumentExtractedPulsesConnectionWhere>>
+  NOT?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+  OR?: InputMaybe<Array<DocumentExtractedPulsesConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type DocumentExtractedPulsesCreateFieldInput = {
+  node: FieldPulseCreateInput
+}
+
+export type DocumentExtractedPulsesDeleteFieldInput = {
+  delete?: InputMaybe<FieldPulseDeleteInput>
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+}
+
+export type DocumentExtractedPulsesDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+}
+
+export type DocumentExtractedPulsesFieldInput = {
+  connect?: InputMaybe<Array<DocumentExtractedPulsesConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentExtractedPulsesCreateFieldInput>>
+}
+
+export type DocumentExtractedPulsesNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<DocumentExtractedPulsesNodeAggregationWhereInput>>
+  NOT?: InputMaybe<DocumentExtractedPulsesNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<DocumentExtractedPulsesNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type DocumentExtractedPulsesRelationship = {
+  __typename?: 'DocumentExtractedPulsesRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type DocumentExtractedPulsesUpdateConnectionInput = {
+  node?: InputMaybe<FieldPulseUpdateInput>
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+}
+
+export type DocumentExtractedPulsesUpdateFieldInput = {
+  connect?: InputMaybe<Array<DocumentExtractedPulsesConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentExtractedPulsesCreateFieldInput>>
+  delete?: InputMaybe<Array<DocumentExtractedPulsesDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<DocumentExtractedPulsesDisconnectFieldInput>>
+  update?: InputMaybe<DocumentExtractedPulsesUpdateConnectionInput>
+}
+
+export type DocumentFieldContextAggregateInput = {
+  AND?: InputMaybe<Array<DocumentFieldContextAggregateInput>>
+  NOT?: InputMaybe<DocumentFieldContextAggregateInput>
+  OR?: InputMaybe<Array<DocumentFieldContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<DocumentFieldContextNodeAggregationWhereInput>
+}
+
+export type DocumentFieldContextConnectFieldInput = {
+  connect?: InputMaybe<Array<FieldContextConnectInput>>
+  where?: InputMaybe<FieldContextConnectWhere>
+}
+
+export type DocumentFieldContextConnection = {
+  __typename?: 'DocumentFieldContextConnection'
+  aggregate: DocumentFieldContextFieldContextAggregateSelection
+  edges: Array<DocumentFieldContextRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type DocumentFieldContextConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type DocumentFieldContextConnectionWhere = {
+  AND?: InputMaybe<Array<DocumentFieldContextConnectionWhere>>
+  NOT?: InputMaybe<DocumentFieldContextConnectionWhere>
+  OR?: InputMaybe<Array<DocumentFieldContextConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type DocumentFieldContextCreateFieldInput = {
+  node: FieldContextCreateInput
+}
+
+export type DocumentFieldContextDeleteFieldInput = {
+  delete?: InputMaybe<FieldContextDeleteInput>
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
+}
+
+export type DocumentFieldContextDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
+}
+
+export type DocumentFieldContextFieldContextAggregateSelection = {
+  __typename?: 'DocumentFieldContextFieldContextAggregateSelection'
+  count: CountConnection
+  node?: Maybe<DocumentFieldContextFieldContextNodeAggregateSelection>
+}
+
+export type DocumentFieldContextFieldContextAggregationSelection = {
+  __typename?: 'DocumentFieldContextFieldContextAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<DocumentFieldContextFieldContextNodeAggregateSelection>
+}
+
+export type DocumentFieldContextFieldContextNodeAggregateSelection = {
+  __typename?: 'DocumentFieldContextFieldContextNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type DocumentFieldContextFieldInput = {
+  connect?: InputMaybe<Array<DocumentFieldContextConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentFieldContextCreateFieldInput>>
+}
+
+export type DocumentFieldContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<DocumentFieldContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<DocumentFieldContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<DocumentFieldContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type DocumentFieldContextRelationship = {
+  __typename?: 'DocumentFieldContextRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type DocumentFieldContextUpdateConnectionInput = {
+  node?: InputMaybe<FieldContextUpdateInput>
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
+}
+
+export type DocumentFieldContextUpdateFieldInput = {
+  connect?: InputMaybe<Array<DocumentFieldContextConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentFieldContextCreateFieldInput>>
+  delete?: InputMaybe<Array<DocumentFieldContextDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<DocumentFieldContextDisconnectFieldInput>>
+  update?: InputMaybe<DocumentFieldContextUpdateConnectionInput>
+}
+
+export type DocumentFieldPulseExtractedPulsesAggregateSelection = {
+  __typename?: 'DocumentFieldPulseExtractedPulsesAggregateSelection'
+  count: CountConnection
+  node?: Maybe<DocumentFieldPulseExtractedPulsesNodeAggregateSelection>
+}
+
+export type DocumentFieldPulseExtractedPulsesAggregationSelection = {
+  __typename?: 'DocumentFieldPulseExtractedPulsesAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<DocumentFieldPulseExtractedPulsesNodeAggregateSelection>
+}
+
+export type DocumentFieldPulseExtractedPulsesNodeAggregateSelection = {
+  __typename?: 'DocumentFieldPulseExtractedPulsesNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+/**
+ * Lightweight projection of a ConversationThread spawned by document ingestion.
+ * We deliberately do not surface the underlying ConversationThread node as a
+ * GraphQL type — its lifecycle is owned by the assistant subsystem, not the
+ * graph schema.
+ */
+export type DocumentIngestThread = {
+  __typename?: 'DocumentIngestThread'
+  createdAt: Scalars['String']['output']
+  id: Scalars['ID']['output']
+  title: Scalars['String']['output']
+}
+
+export type DocumentIngestThreadAggregate = {
+  __typename?: 'DocumentIngestThreadAggregate'
+  count: Count
+  node: DocumentIngestThreadAggregateNode
+}
+
+export type DocumentIngestThreadAggregateNode = {
+  __typename?: 'DocumentIngestThreadAggregateNode'
+  createdAt: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type DocumentIngestThreadAggregateSelection = {
+  __typename?: 'DocumentIngestThreadAggregateSelection'
+  count: Scalars['Int']['output']
+  createdAt: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type DocumentIngestThreadCreateInput = {
+  createdAt: Scalars['String']['input']
+  id: Scalars['ID']['input']
+  title: Scalars['String']['input']
+}
+
+export type DocumentIngestThreadEdge = {
+  __typename?: 'DocumentIngestThreadEdge'
+  cursor: Scalars['String']['output']
+  node: DocumentIngestThread
+}
+
+/** Fields to sort DocumentIngestThreads by. The order in which sorts are applied is not guaranteed when specifying many fields in one DocumentIngestThreadSort object. */
+export type DocumentIngestThreadSort = {
+  createdAt?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  title?: InputMaybe<SortDirection>
+}
+
+export type DocumentIngestThreadUpdateInput = {
+  createdAt_SET?: InputMaybe<Scalars['String']['input']>
+  id_SET?: InputMaybe<Scalars['ID']['input']>
+  title_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type DocumentIngestThreadWhere = {
+  AND?: InputMaybe<Array<DocumentIngestThreadWhere>>
+  NOT?: InputMaybe<DocumentIngestThreadWhere>
+  OR?: InputMaybe<Array<DocumentIngestThreadWhere>>
+  createdAt_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  createdAt_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  createdAt_EQ?: InputMaybe<Scalars['String']['input']>
+  createdAt_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  createdAt_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  title_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  title_EQ?: InputMaybe<Scalars['String']['input']>
+  title_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type DocumentIngestThreadsConnection = {
+  __typename?: 'DocumentIngestThreadsConnection'
+  aggregate: DocumentIngestThreadAggregate
+  edges: Array<DocumentIngestThreadEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type DocumentPersonExtractedPeopleAggregateSelection = {
+  __typename?: 'DocumentPersonExtractedPeopleAggregateSelection'
+  count: CountConnection
+  node?: Maybe<DocumentPersonExtractedPeopleNodeAggregateSelection>
+}
+
+export type DocumentPersonExtractedPeopleAggregationSelection = {
+  __typename?: 'DocumentPersonExtractedPeopleAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<DocumentPersonExtractedPeopleNodeAggregateSelection>
+}
+
+export type DocumentPersonExtractedPeopleNodeAggregateSelection = {
+  __typename?: 'DocumentPersonExtractedPeopleNodeAggregateSelection'
+  authId: StringAggregateSelection
+  avatar: StringAggregateSelection
+  careManual: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  favorites: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  gender: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
+  passions: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
+  status: StringAggregateSelection
+  traits: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type DocumentPersonUploadedByAggregateSelection = {
+  __typename?: 'DocumentPersonUploadedByAggregateSelection'
+  count: CountConnection
+  node?: Maybe<DocumentPersonUploadedByNodeAggregateSelection>
+}
+
+export type DocumentPersonUploadedByAggregationSelection = {
+  __typename?: 'DocumentPersonUploadedByAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<DocumentPersonUploadedByNodeAggregateSelection>
+}
+
+export type DocumentPersonUploadedByNodeAggregateSelection = {
+  __typename?: 'DocumentPersonUploadedByNodeAggregateSelection'
+  authId: StringAggregateSelection
+  avatar: StringAggregateSelection
+  careManual: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  email: StringAggregateSelection
+  favorites: StringAggregateSelection
+  fieldsOfCare: StringAggregateSelection
+  firstName: StringAggregateSelection
+  gender: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
+  lastName: StringAggregateSelection
+  location: StringAggregateSelection
+  onboardingCurrentStepIndex: IntAggregateSelection
+  passions: StringAggregateSelection
+  phone: StringAggregateSelection
+  photo: StringAggregateSelection
+  pronouns: StringAggregateSelection
+  refreshTokenExp: DateTimeAggregateSelection
+  signupDate: DateTimeAggregateSelection
+  status: StringAggregateSelection
+  traits: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+/** Fields to sort Documents by. The order in which sorts are applied is not guaranteed when specifying many fields in one DocumentSort object. */
+export type DocumentSort = {
+  blobKey?: InputMaybe<SortDirection>
+  blobUrl?: InputMaybe<SortDirection>
+  filename?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  mimeType?: InputMaybe<SortDirection>
+  pageCount?: InputMaybe<SortDirection>
+  sizeBytes?: InputMaybe<SortDirection>
+  summary?: InputMaybe<SortDirection>
+  uploadedAt?: InputMaybe<SortDirection>
+  userHint?: InputMaybe<SortDirection>
+}
+
+export type DocumentUpdateInput = {
+  blobKey_SET?: InputMaybe<Scalars['String']['input']>
+  blobUrl_SET?: InputMaybe<Scalars['String']['input']>
+  concepts_POP?: InputMaybe<Scalars['Int']['input']>
+  concepts_PUSH?: InputMaybe<Array<Scalars['String']['input']>>
+  concepts_SET?: InputMaybe<Array<Scalars['String']['input']>>
+  extractedPeople?: InputMaybe<Array<DocumentExtractedPeopleUpdateFieldInput>>
+  extractedPulses?: InputMaybe<Array<DocumentExtractedPulsesUpdateFieldInput>>
+  fieldContext?: InputMaybe<Array<DocumentFieldContextUpdateFieldInput>>
+  filename_SET?: InputMaybe<Scalars['String']['input']>
+  mimeType_SET?: InputMaybe<Scalars['String']['input']>
+  pageCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SET?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SET?: InputMaybe<Scalars['Int']['input']>
+  summary_SET?: InputMaybe<Scalars['String']['input']>
+  uploadedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedBy?: InputMaybe<Array<DocumentUploadedByUpdateFieldInput>>
+  userHint_SET?: InputMaybe<Scalars['String']['input']>
+}
+
+export type DocumentUploadedByAggregateInput = {
+  AND?: InputMaybe<Array<DocumentUploadedByAggregateInput>>
+  NOT?: InputMaybe<DocumentUploadedByAggregateInput>
+  OR?: InputMaybe<Array<DocumentUploadedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<DocumentUploadedByNodeAggregationWhereInput>
+}
+
+export type DocumentUploadedByConnectFieldInput = {
+  connect?: InputMaybe<Array<PersonConnectInput>>
+  where?: InputMaybe<PersonConnectWhere>
+}
+
+export type DocumentUploadedByConnection = {
+  __typename?: 'DocumentUploadedByConnection'
+  aggregate: DocumentPersonUploadedByAggregateSelection
+  edges: Array<DocumentUploadedByRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type DocumentUploadedByConnectionSort = {
+  node?: InputMaybe<PersonSort>
+}
+
+export type DocumentUploadedByConnectionWhere = {
+  AND?: InputMaybe<Array<DocumentUploadedByConnectionWhere>>
+  NOT?: InputMaybe<DocumentUploadedByConnectionWhere>
+  OR?: InputMaybe<Array<DocumentUploadedByConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type DocumentUploadedByCreateFieldInput = {
+  node: PersonCreateInput
+}
+
+export type DocumentUploadedByDeleteFieldInput = {
+  delete?: InputMaybe<PersonDeleteInput>
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
+}
+
+export type DocumentUploadedByDisconnectFieldInput = {
+  disconnect?: InputMaybe<PersonDisconnectInput>
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
+}
+
+export type DocumentUploadedByFieldInput = {
+  connect?: InputMaybe<Array<DocumentUploadedByConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentUploadedByCreateFieldInput>>
+}
+
+export type DocumentUploadedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<DocumentUploadedByNodeAggregationWhereInput>>
+  NOT?: InputMaybe<DocumentUploadedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<DocumentUploadedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  careManual_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  careManual_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  careManual_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  favorites_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  favorites_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  favorites_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  fieldsOfCare_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  fieldsOfCare_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  gender_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  gender_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  interests_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  interests_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  passions_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  passions_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  passions_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  phone_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  phone_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  phone_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  pronouns_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  pronouns_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  pronouns_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  traits_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  traits_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  traits_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type DocumentUploadedByRelationship = {
+  __typename?: 'DocumentUploadedByRelationship'
+  cursor: Scalars['String']['output']
+  node: Person
+}
+
+export type DocumentUploadedByUpdateConnectionInput = {
+  node?: InputMaybe<PersonUpdateInput>
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
+}
+
+export type DocumentUploadedByUpdateFieldInput = {
+  connect?: InputMaybe<Array<DocumentUploadedByConnectFieldInput>>
+  create?: InputMaybe<Array<DocumentUploadedByCreateFieldInput>>
+  delete?: InputMaybe<Array<DocumentUploadedByDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<DocumentUploadedByDisconnectFieldInput>>
+  update?: InputMaybe<DocumentUploadedByUpdateConnectionInput>
+}
+
+export type DocumentWhere = {
+  AND?: InputMaybe<Array<DocumentWhere>>
+  NOT?: InputMaybe<DocumentWhere>
+  OR?: InputMaybe<Array<DocumentWhere>>
+  blobKey_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  blobKey_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  blobKey_EQ?: InputMaybe<Scalars['String']['input']>
+  blobKey_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  blobKey_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  blobUrl_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  blobUrl_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  blobUrl_EQ?: InputMaybe<Scalars['String']['input']>
+  blobUrl_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  blobUrl_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  concepts_EQ?: InputMaybe<Array<Scalars['String']['input']>>
+  concepts_INCLUDES?: InputMaybe<Scalars['String']['input']>
+  extractedPeopleAggregate?: InputMaybe<DocumentExtractedPeopleAggregateInput>
+  /** Return Documents where all of the related DocumentExtractedPeopleConnections match this filter */
+  extractedPeopleConnection_ALL?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+  /** Return Documents where none of the related DocumentExtractedPeopleConnections match this filter */
+  extractedPeopleConnection_NONE?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+  /** Return Documents where one of the related DocumentExtractedPeopleConnections match this filter */
+  extractedPeopleConnection_SINGLE?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+  /** Return Documents where some of the related DocumentExtractedPeopleConnections match this filter */
+  extractedPeopleConnection_SOME?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
+  /** Return Documents where all of the related People match this filter */
+  extractedPeople_ALL?: InputMaybe<PersonWhere>
+  /** Return Documents where none of the related People match this filter */
+  extractedPeople_NONE?: InputMaybe<PersonWhere>
+  /** Return Documents where one of the related People match this filter */
+  extractedPeople_SINGLE?: InputMaybe<PersonWhere>
+  /** Return Documents where some of the related People match this filter */
+  extractedPeople_SOME?: InputMaybe<PersonWhere>
+  extractedPulsesAggregate?: InputMaybe<DocumentExtractedPulsesAggregateInput>
+  /** Return Documents where all of the related DocumentExtractedPulsesConnections match this filter */
+  extractedPulsesConnection_ALL?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+  /** Return Documents where none of the related DocumentExtractedPulsesConnections match this filter */
+  extractedPulsesConnection_NONE?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+  /** Return Documents where one of the related DocumentExtractedPulsesConnections match this filter */
+  extractedPulsesConnection_SINGLE?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+  /** Return Documents where some of the related DocumentExtractedPulsesConnections match this filter */
+  extractedPulsesConnection_SOME?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
+  /** Return Documents where all of the related FieldPulses match this filter */
+  extractedPulses_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return Documents where none of the related FieldPulses match this filter */
+  extractedPulses_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return Documents where one of the related FieldPulses match this filter */
+  extractedPulses_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return Documents where some of the related FieldPulses match this filter */
+  extractedPulses_SOME?: InputMaybe<FieldPulseWhere>
+  fieldContextAggregate?: InputMaybe<DocumentFieldContextAggregateInput>
+  /** Return Documents where all of the related DocumentFieldContextConnections match this filter */
+  fieldContextConnection_ALL?: InputMaybe<DocumentFieldContextConnectionWhere>
+  /** Return Documents where none of the related DocumentFieldContextConnections match this filter */
+  fieldContextConnection_NONE?: InputMaybe<DocumentFieldContextConnectionWhere>
+  /** Return Documents where one of the related DocumentFieldContextConnections match this filter */
+  fieldContextConnection_SINGLE?: InputMaybe<DocumentFieldContextConnectionWhere>
+  /** Return Documents where some of the related DocumentFieldContextConnections match this filter */
+  fieldContextConnection_SOME?: InputMaybe<DocumentFieldContextConnectionWhere>
+  /** Return Documents where all of the related FieldContexts match this filter */
+  fieldContext_ALL?: InputMaybe<FieldContextWhere>
+  /** Return Documents where none of the related FieldContexts match this filter */
+  fieldContext_NONE?: InputMaybe<FieldContextWhere>
+  /** Return Documents where one of the related FieldContexts match this filter */
+  fieldContext_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return Documents where some of the related FieldContexts match this filter */
+  fieldContext_SOME?: InputMaybe<FieldContextWhere>
+  filename_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  filename_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  filename_EQ?: InputMaybe<Scalars['String']['input']>
+  filename_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  filename_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  ingestThreads?: InputMaybe<DocumentIngestThreadWhere>
+  ingestThreads_ALL?: InputMaybe<DocumentIngestThreadWhere>
+  ingestThreads_NONE?: InputMaybe<DocumentIngestThreadWhere>
+  ingestThreads_SINGLE?: InputMaybe<DocumentIngestThreadWhere>
+  ingestThreads_SOME?: InputMaybe<DocumentIngestThreadWhere>
+  mimeType_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  mimeType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  mimeType_EQ?: InputMaybe<Scalars['String']['input']>
+  mimeType_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  mimeType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  pageCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  pageCount_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_IN?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>
+  pageCount_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_EQ?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  sizeBytes_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  summary_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  summary_EQ?: InputMaybe<Scalars['String']['input']>
+  summary_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  summary_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  uploadedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
+  uploadedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedByAggregate?: InputMaybe<DocumentUploadedByAggregateInput>
+  /** Return Documents where all of the related DocumentUploadedByConnections match this filter */
+  uploadedByConnection_ALL?: InputMaybe<DocumentUploadedByConnectionWhere>
+  /** Return Documents where none of the related DocumentUploadedByConnections match this filter */
+  uploadedByConnection_NONE?: InputMaybe<DocumentUploadedByConnectionWhere>
+  /** Return Documents where one of the related DocumentUploadedByConnections match this filter */
+  uploadedByConnection_SINGLE?: InputMaybe<DocumentUploadedByConnectionWhere>
+  /** Return Documents where some of the related DocumentUploadedByConnections match this filter */
+  uploadedByConnection_SOME?: InputMaybe<DocumentUploadedByConnectionWhere>
+  /** Return Documents where all of the related People match this filter */
+  uploadedBy_ALL?: InputMaybe<PersonWhere>
+  /** Return Documents where none of the related People match this filter */
+  uploadedBy_NONE?: InputMaybe<PersonWhere>
+  /** Return Documents where one of the related People match this filter */
+  uploadedBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return Documents where some of the related People match this filter */
+  uploadedBy_SOME?: InputMaybe<PersonWhere>
+  userHint_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  userHint_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  userHint_EQ?: InputMaybe<Scalars['String']['input']>
+  userHint_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  userHint_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+}
+
+export type DocumentsConnection = {
+  __typename?: 'DocumentsConnection'
+  aggregate: DocumentAggregate
+  edges: Array<DocumentEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+/**
  * A thematic or temporal container inside a Space.
  * Groups related pulses together.
  * Label: ["FieldContext"]
@@ -2017,6 +4677,10 @@ export type FieldContext = {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<FieldContextPersonCreatedByAggregationSelection>
   createdByConnection: FieldContextCreatedByConnection
+  documents: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "documentsConnection" instead */
+  documentsAggregate?: Maybe<FieldContextDocumentDocumentsAggregationSelection>
+  documentsConnection: FieldContextDocumentsConnection
   emergentName?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   meSpace: Array<MeSpace>
@@ -2097,6 +4761,60 @@ export type FieldContextCreatedByConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldContextCreatedByConnectionSort>>
   where?: InputMaybe<FieldContextCreatedByConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextDocumentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextDocumentsAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextDocumentsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextDocumentsConnectionSort>>
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
 }
 
 /**
@@ -2396,6 +5114,7 @@ export type FieldContextAggregateSelection = {
 
 export type FieldContextConnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
+  documents?: InputMaybe<Array<FieldContextDocumentsConnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
   people?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
@@ -2410,6 +5129,7 @@ export type FieldContextConnectWhere = {
 export type FieldContextCreateInput = {
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<FieldContextCreatedByFieldInput>
+  documents?: InputMaybe<FieldContextDocumentsFieldInput>
   emergentName?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<FieldContextMeSpaceFieldInput>
   people?: InputMaybe<FieldContextPeopleFieldInput>
@@ -2623,6 +5343,61 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2818,6 +5593,7 @@ export type FieldContextCreatedByUpdateFieldInput = {
 
 export type FieldContextDeleteInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
+  documents?: InputMaybe<Array<FieldContextDocumentsDeleteFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   people?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
@@ -2827,11 +5603,259 @@ export type FieldContextDeleteInput = {
 
 export type FieldContextDisconnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
+  documents?: InputMaybe<Array<FieldContextDocumentsDisconnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   people?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
+}
+
+export type FieldContextDocumentDocumentsAggregateSelection = {
+  __typename?: 'FieldContextDocumentDocumentsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextDocumentDocumentsNodeAggregateSelection>
+}
+
+export type FieldContextDocumentDocumentsAggregationSelection = {
+  __typename?: 'FieldContextDocumentDocumentsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextDocumentDocumentsNodeAggregateSelection>
+}
+
+export type FieldContextDocumentDocumentsNodeAggregateSelection = {
+  __typename?: 'FieldContextDocumentDocumentsNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
+}
+
+export type FieldContextDocumentsAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextDocumentsAggregateInput>>
+  NOT?: InputMaybe<FieldContextDocumentsAggregateInput>
+  OR?: InputMaybe<Array<FieldContextDocumentsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextDocumentsNodeAggregationWhereInput>
+}
+
+export type FieldContextDocumentsConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type FieldContextDocumentsConnection = {
+  __typename?: 'FieldContextDocumentsConnection'
+  aggregate: FieldContextDocumentDocumentsAggregateSelection
+  edges: Array<FieldContextDocumentsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextDocumentsConnectionSort = {
+  node?: InputMaybe<DocumentSort>
+}
+
+export type FieldContextDocumentsConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextDocumentsConnectionWhere>>
+  NOT?: InputMaybe<FieldContextDocumentsConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextDocumentsConnectionWhere>>
+  node?: InputMaybe<DocumentWhere>
+}
+
+export type FieldContextDocumentsCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type FieldContextDocumentsDeleteFieldInput = {
+  delete?: InputMaybe<DocumentDeleteInput>
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
+}
+
+export type FieldContextDocumentsDisconnectFieldInput = {
+  disconnect?: InputMaybe<DocumentDisconnectInput>
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
+}
+
+export type FieldContextDocumentsFieldInput = {
+  connect?: InputMaybe<Array<FieldContextDocumentsConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextDocumentsCreateFieldInput>>
+}
+
+export type FieldContextDocumentsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextDocumentsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextDocumentsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextDocumentsNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextDocumentsRelationship = {
+  __typename?: 'FieldContextDocumentsRelationship'
+  cursor: Scalars['String']['output']
+  node: Document
+}
+
+export type FieldContextDocumentsUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
+}
+
+export type FieldContextDocumentsUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldContextDocumentsConnectFieldInput>>
+  create?: InputMaybe<Array<FieldContextDocumentsCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldContextDocumentsDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldContextDocumentsDisconnectFieldInput>>
+  update?: InputMaybe<FieldContextDocumentsUpdateConnectionInput>
 }
 
 export type FieldContextEdge = {
@@ -3303,6 +6327,61 @@ export type FieldContextPeopleNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3522,6 +6601,10 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -3562,6 +6645,10 @@ export type FieldContextPersonPeopleNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -3921,6 +7008,7 @@ export type FieldContextSort = {
 export type FieldContextUpdateInput = {
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<FieldContextCreatedByUpdateFieldInput>>
+  documents?: InputMaybe<Array<FieldContextDocumentsUpdateFieldInput>>
   emergentName_SET?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceUpdateFieldInput>>
   people?: InputMaybe<Array<FieldContextPeopleUpdateFieldInput>>
@@ -4194,6 +7282,23 @@ export type FieldContextWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return FieldContexts where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  documentsAggregate?: InputMaybe<FieldContextDocumentsAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextDocumentsConnections match this filter */
+  documentsConnection_ALL?: InputMaybe<FieldContextDocumentsConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextDocumentsConnections match this filter */
+  documentsConnection_NONE?: InputMaybe<FieldContextDocumentsConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextDocumentsConnections match this filter */
+  documentsConnection_SINGLE?: InputMaybe<FieldContextDocumentsConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextDocumentsConnections match this filter */
+  documentsConnection_SOME?: InputMaybe<FieldContextDocumentsConnectionWhere>
+  /** Return FieldContexts where all of the related Documents match this filter */
+  documents_ALL?: InputMaybe<DocumentWhere>
+  /** Return FieldContexts where none of the related Documents match this filter */
+  documents_NONE?: InputMaybe<DocumentWhere>
+  /** Return FieldContexts where one of the related Documents match this filter */
+  documents_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return FieldContexts where some of the related Documents match this filter */
+  documents_SOME?: InputMaybe<DocumentWhere>
   emergentName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   emergentName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   emergentName_EQ?: InputMaybe<Scalars['String']['input']>
@@ -4321,6 +7426,12 @@ export type FieldPulse = {
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
   createdByConnection: FieldPulseCreatedByConnection
+  /**
+   * Documents this pulse was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+   * Empty for manually-created pulses. Returned newest-uploaded first.
+   */
+  extractedFrom: Array<Document>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
   title: Scalars['String']['output']
@@ -4354,6 +7465,20 @@ export type FieldPulseCreatedByConnectionArgs = {
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
+export type FieldPulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+export type FieldPulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
 export type FieldPulseAggregate = {
   __typename?: 'FieldPulseAggregate'
   count: Count
@@ -4384,6 +7509,7 @@ export type FieldPulseAggregateSelection = {
 export type FieldPulseConnectInput = {
   context?: InputMaybe<Array<FieldPulseContextConnectFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByConnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromConnectFieldInput>>
 }
 
 export type FieldPulseConnectWhere = {
@@ -4710,6 +7836,61 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4906,17 +8087,233 @@ export type FieldPulseCreatedByUpdateFieldInput = {
 export type FieldPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
 }
 
 export type FieldPulseDisconnectInput = {
   context?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
 }
 
 export type FieldPulseEdge = {
   __typename?: 'FieldPulseEdge'
   cursor: Scalars['String']['output']
   node: FieldPulse
+}
+
+export type FieldPulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<FieldPulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<FieldPulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<FieldPulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldPulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type FieldPulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type FieldPulseExtractedFromConnection = {
+  __typename?: 'FieldPulseExtractedFromConnection'
+  edges: Array<FieldPulseExtractedFromRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldPulseExtractedFromConnectionSort = {
+  node?: InputMaybe<DocumentSort>
+}
+
+export type FieldPulseExtractedFromConnectionWhere = {
+  AND?: InputMaybe<Array<FieldPulseExtractedFromConnectionWhere>>
+  NOT?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  OR?: InputMaybe<Array<FieldPulseExtractedFromConnectionWhere>>
+  node?: InputMaybe<DocumentWhere>
+}
+
+export type FieldPulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type FieldPulseExtractedFromDeleteFieldInput = {
+  delete?: InputMaybe<DocumentDeleteInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type FieldPulseExtractedFromDisconnectFieldInput = {
+  disconnect?: InputMaybe<DocumentDisconnectInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type FieldPulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldPulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldPulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldPulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldPulseExtractedFromRelationship = {
+  __typename?: 'FieldPulseExtractedFromRelationship'
+  cursor: Scalars['String']['output']
+  node: Document
+}
+
+export type FieldPulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type FieldPulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<FieldPulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<FieldPulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<FieldPulseExtractedFromUpdateConnectionInput>
 }
 
 export enum FieldPulseImplementation {
@@ -4941,6 +8338,7 @@ export type FieldPulseUpdateInput = {
   context?: InputMaybe<Array<FieldPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromUpdateFieldInput>>
   id_SET?: InputMaybe<Scalars['ID']['input']>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
@@ -4999,6 +8397,23 @@ export type FieldPulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return FieldPulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<FieldPulseExtractedFromAggregateInput>
+  /** Return FieldPulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return FieldPulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return FieldPulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return FieldPulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return FieldPulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return FieldPulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return FieldPulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return FieldPulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -5058,6 +8473,10 @@ export type GoalPulse = FieldPulse & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<GoalPulsePersonCreatedByAggregationSelection>
   createdByConnection: FieldPulseCreatedByConnection
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<GoalPulseDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   horizon?: Maybe<GoalHorizon>
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
@@ -5137,6 +8556,39 @@ export type GoalPulseCreatedByConnectionArgs = {
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
+/**
+ * A pulse that functions as a goal in its context.
+ * Multi-label: ["FieldPulse", "GoalPulse"]
+ * Merged properties from legacy Goal entity.
+ */
+export type GoalPulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A pulse that functions as a goal in its context.
+ * Multi-label: ["FieldPulse", "GoalPulse"]
+ * Merged properties from legacy Goal entity.
+ */
+export type GoalPulseExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A pulse that functions as a goal in its context.
+ * Multi-label: ["FieldPulse", "GoalPulse"]
+ * Merged properties from legacy Goal entity.
+ */
+export type GoalPulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
 export type GoalPulseAggregate = {
   __typename?: 'GoalPulseAggregate'
   count: Count
@@ -5181,6 +8633,7 @@ export type GoalPulseAggregateSelection = {
 export type GoalPulseConnectInput = {
   context?: InputMaybe<Array<GoalPulseContextConnectFieldInput>>
   createdBy?: InputMaybe<Array<GoalPulseCreatedByConnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<GoalPulseExtractedFromConnectFieldInput>>
 }
 
 export type GoalPulseConnectWhere = {
@@ -5278,6 +8731,7 @@ export type GoalPulseCreateInput = {
   context?: InputMaybe<GoalPulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<GoalPulseCreatedByFieldInput>
+  extractedFrom?: InputMaybe<GoalPulseExtractedFromFieldInput>
   horizon?: InputMaybe<GoalHorizon>
   intensity?: InputMaybe<Scalars['Float']['input']>
   location?: InputMaybe<Scalars['String']['input']>
@@ -5465,6 +8919,61 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5655,17 +9164,225 @@ export type GoalPulseCreatedByUpdateFieldInput = {
 export type GoalPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
 }
 
 export type GoalPulseDisconnectInput = {
   context?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+}
+
+export type GoalPulseDocumentExtractedFromAggregationSelection = {
+  __typename?: 'GoalPulseDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<GoalPulseDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type GoalPulseDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'GoalPulseDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type GoalPulseEdge = {
   __typename?: 'GoalPulseEdge'
   cursor: Scalars['String']['output']
   node: GoalPulse
+}
+
+export type GoalPulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<GoalPulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<GoalPulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<GoalPulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<GoalPulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type GoalPulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type GoalPulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type GoalPulseExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<GoalPulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<GoalPulseExtractedFromCreateFieldInput>>
+}
+
+export type GoalPulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<GoalPulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<GoalPulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<GoalPulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type GoalPulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type GoalPulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<GoalPulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<GoalPulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<GoalPulseExtractedFromUpdateConnectionInput>
 }
 
 export type GoalPulseFieldContextContextAggregationSelection = {
@@ -5703,6 +9420,10 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -5741,6 +9462,7 @@ export type GoalPulseUpdateInput = {
   context?: InputMaybe<Array<GoalPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<GoalPulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<GoalPulseExtractedFromUpdateFieldInput>>
   horizon_SET?: InputMaybe<GoalHorizon>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
@@ -5811,6 +9533,23 @@ export type GoalPulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return GoalPulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<GoalPulseExtractedFromAggregateInput>
+  /** Return GoalPulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return GoalPulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return GoalPulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return GoalPulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return GoalPulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return GoalPulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return GoalPulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return GoalPulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   horizon_EQ?: InputMaybe<GoalHorizon>
   horizon_IN?: InputMaybe<Array<InputMaybe<GoalHorizon>>>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
@@ -5881,6 +9620,125 @@ export type IdAggregateSelection = {
   __typename?: 'IDAggregateSelection'
   longest?: Maybe<Scalars['ID']['output']>
   shortest?: Maybe<Scalars['ID']['output']>
+}
+
+/**
+ * Response payload for `reExtractDocument`. (The initial-upload mutation has
+ * been replaced by the REST direct-to-S3 flow; see
+ * `POST /api/ingest/document/presign` + `/process`.)
+ */
+export type IngestDocumentResponse = {
+  __typename?: 'IngestDocumentResponse'
+  /**
+   * Number of entities (Persons + FieldPulses) the extractor proposed AND
+   * the server auto-executed against the graph. Equivalent to the count of
+   * successful tool calls in the synthesized assistant turn.
+   * See PRD § revised flow — uploads no longer wait on HITL approval.
+   */
+  createdEntityCount: Scalars['Int']['output']
+  documentId: Scalars['ID']['output']
+  /**
+   * Number of proposed entities whose auto-execution failed (validation,
+   * permission, or runtime errors). Surfaced in the ingest thread per
+   * call. Zero on the happy path.
+   */
+  failedEntityCount: Scalars['Int']['output']
+  threadId: Scalars['ID']['output']
+}
+
+export type IngestDocumentResponseAggregate = {
+  __typename?: 'IngestDocumentResponseAggregate'
+  count: Count
+  node: IngestDocumentResponseAggregateNode
+}
+
+export type IngestDocumentResponseAggregateNode = {
+  __typename?: 'IngestDocumentResponseAggregateNode'
+  createdEntityCount: IntAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  documentId: IdAggregateSelection
+  failedEntityCount: IntAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  threadId: IdAggregateSelection
+}
+
+export type IngestDocumentResponseAggregateSelection = {
+  __typename?: 'IngestDocumentResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  createdEntityCount: IntAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  documentId: IdAggregateSelection
+  failedEntityCount: IntAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  threadId: IdAggregateSelection
+}
+
+export type IngestDocumentResponseCreateInput = {
+  createdEntityCount: Scalars['Int']['input']
+  documentId: Scalars['ID']['input']
+  failedEntityCount: Scalars['Int']['input']
+  threadId: Scalars['ID']['input']
+}
+
+export type IngestDocumentResponseEdge = {
+  __typename?: 'IngestDocumentResponseEdge'
+  cursor: Scalars['String']['output']
+  node: IngestDocumentResponse
+}
+
+/** Fields to sort IngestDocumentResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one IngestDocumentResponseSort object. */
+export type IngestDocumentResponseSort = {
+  createdEntityCount?: InputMaybe<SortDirection>
+  documentId?: InputMaybe<SortDirection>
+  failedEntityCount?: InputMaybe<SortDirection>
+  threadId?: InputMaybe<SortDirection>
+}
+
+export type IngestDocumentResponseUpdateInput = {
+  createdEntityCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_SET?: InputMaybe<Scalars['Int']['input']>
+  documentId_SET?: InputMaybe<Scalars['ID']['input']>
+  failedEntityCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_SET?: InputMaybe<Scalars['Int']['input']>
+  threadId_SET?: InputMaybe<Scalars['ID']['input']>
+}
+
+export type IngestDocumentResponseWhere = {
+  AND?: InputMaybe<Array<IngestDocumentResponseWhere>>
+  NOT?: InputMaybe<IngestDocumentResponseWhere>
+  OR?: InputMaybe<Array<IngestDocumentResponseWhere>>
+  createdEntityCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_GT?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  createdEntityCount_LT?: InputMaybe<Scalars['Int']['input']>
+  createdEntityCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  documentId_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  documentId_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  documentId_EQ?: InputMaybe<Scalars['ID']['input']>
+  documentId_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  documentId_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  failedEntityCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_GT?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  failedEntityCount_LT?: InputMaybe<Scalars['Int']['input']>
+  failedEntityCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  threadId_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  threadId_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  threadId_EQ?: InputMaybe<Scalars['ID']['input']>
+  threadId_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  threadId_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+}
+
+export type IngestDocumentResponsesConnection = {
+  __typename?: 'IngestDocumentResponsesConnection'
+  aggregate: IngestDocumentResponseAggregate
+  edges: Array<IngestDocumentResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
 }
 
 export type IntAggregateSelection = {
@@ -6365,6 +10223,61 @@ export type LogCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6915,6 +10828,10 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -8036,6 +11953,61 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8243,6 +12215,10 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -8437,11 +12413,14 @@ export type Mutation = {
   createCoreValuePulses: CreateCoreValuePulsesMutationResponse
   createCreateLogResponses: CreateCreateLogResponsesMutationResponse
   createCreatePersonConnectionResponses: CreateCreatePersonConnectionResponsesMutationResponse
+  createDeleteDocumentResponses: CreateDeleteDocumentResponsesMutationResponse
   createDeletePersonConnectionResponses: CreateDeletePersonConnectionResponsesMutationResponse
+  createDocumentIngestThreads: CreateDocumentIngestThreadsMutationResponse
+  createDocuments: CreateDocumentsMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
+  createIngestDocumentResponses: CreateIngestDocumentResponsesMutationResponse
   createLogs: CreateLogsMutationResponse
-  createMeSpaces: CreateMeSpacesMutationResponse
   createPeople: CreatePeopleMutationResponse
   /**
    * Create or update a direct person-to-person connection.
@@ -8466,9 +12445,23 @@ export type Mutation = {
   deleteCoreValuePulses: DeleteInfo
   deleteCreateLogResponses: DeleteInfo
   deleteCreatePersonConnectionResponses: DeleteInfo
+  deleteDeleteDocumentResponses: DeleteInfo
   deleteDeletePersonConnectionResponses: DeleteInfo
+  /**
+   * Delete a Document and its backing blob. Caller must hold canEditContent
+   * on the FieldContext's parent Space.
+   *
+   * Previously extracted entities (Persons, FieldPulses) survive — their
+   * EXTRACTED_FROM edges drop with the Document but the entities remain in
+   * the graph as user data (see PRD § Out of Scope — Documents never cascade
+   * to their extractions).
+   */
+  deleteDocument: DeleteDocumentResponse
+  deleteDocumentIngestThreads: DeleteInfo
+  deleteDocuments: DeleteInfo
   deleteFieldContexts: DeleteInfo
   deleteGoalPulses: DeleteInfo
+  deleteIngestDocumentResponses: DeleteInfo
   deleteLogs: DeleteInfo
   deleteMeSpaces: DeleteInfo
   deletePeople: DeleteInfo
@@ -8541,6 +12534,19 @@ export type Mutation = {
    */
   logSpaceActivity: CreateLogResponse
   /**
+   * Re-run the extraction model against an existing Document (slice 6 of
+   * GOAL-235). The original blob is reused; no new blob is written, no new
+   * Document node is created. A fresh ConversationThread titled
+   * `Ingest: <filename> (re-extracted)` is created and linked back to the
+   * Document via HAS_INGEST_THREAD so the Document detail view can list every
+   * attempt.
+   *
+   * Caller must hold canEditContent on the FieldContext's parent Space.
+   * Previously approved entities are untouched — re-extract only proposes
+   * new tool calls.
+   */
+  reExtractDocument: IngestDocumentResponse
+  /**
    * Remove a member from a space.
    * Only the space owner or members with ADMIN role can remove members.
    * Cannot remove the space owner.
@@ -8554,9 +12560,13 @@ export type Mutation = {
   updateCoreValuePulses: UpdateCoreValuePulsesMutationResponse
   updateCreateLogResponses: UpdateCreateLogResponsesMutationResponse
   updateCreatePersonConnectionResponses: UpdateCreatePersonConnectionResponsesMutationResponse
+  updateDeleteDocumentResponses: UpdateDeleteDocumentResponsesMutationResponse
   updateDeletePersonConnectionResponses: UpdateDeletePersonConnectionResponsesMutationResponse
+  updateDocumentIngestThreads: UpdateDocumentIngestThreadsMutationResponse
+  updateDocuments: UpdateDocumentsMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
+  updateIngestDocumentResponses: UpdateIngestDocumentResponsesMutationResponse
   updateLogs: UpdateLogsMutationResponse
   updateMeSpaces: UpdateMeSpacesMutationResponse
   updatePeople: UpdatePeopleMutationResponse
@@ -8623,8 +12633,20 @@ export type MutationCreateCreatePersonConnectionResponsesArgs = {
   input: Array<CreatePersonConnectionResponseCreateInput>
 }
 
+export type MutationCreateDeleteDocumentResponsesArgs = {
+  input: Array<DeleteDocumentResponseCreateInput>
+}
+
 export type MutationCreateDeletePersonConnectionResponsesArgs = {
   input: Array<DeletePersonConnectionResponseCreateInput>
+}
+
+export type MutationCreateDocumentIngestThreadsArgs = {
+  input: Array<DocumentIngestThreadCreateInput>
+}
+
+export type MutationCreateDocumentsArgs = {
+  input: Array<DocumentCreateInput>
 }
 
 export type MutationCreateFieldContextsArgs = {
@@ -8635,12 +12657,12 @@ export type MutationCreateGoalPulsesArgs = {
   input: Array<GoalPulseCreateInput>
 }
 
-export type MutationCreateLogsArgs = {
-  input: Array<LogCreateInput>
+export type MutationCreateIngestDocumentResponsesArgs = {
+  input: Array<IngestDocumentResponseCreateInput>
 }
 
-export type MutationCreateMeSpacesArgs = {
-  input: Array<MeSpaceCreateInput>
+export type MutationCreateLogsArgs = {
+  input: Array<LogCreateInput>
 }
 
 export type MutationCreatePeopleArgs = {
@@ -8728,8 +12750,25 @@ export type MutationDeleteCreatePersonConnectionResponsesArgs = {
   where?: InputMaybe<CreatePersonConnectionResponseWhere>
 }
 
+export type MutationDeleteDeleteDocumentResponsesArgs = {
+  where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
 export type MutationDeleteDeletePersonConnectionResponsesArgs = {
   where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
+export type MutationDeleteDocumentArgs = {
+  documentId: Scalars['ID']['input']
+}
+
+export type MutationDeleteDocumentIngestThreadsArgs = {
+  where?: InputMaybe<DocumentIngestThreadWhere>
+}
+
+export type MutationDeleteDocumentsArgs = {
+  delete?: InputMaybe<DocumentDeleteInput>
+  where?: InputMaybe<DocumentWhere>
 }
 
 export type MutationDeleteFieldContextsArgs = {
@@ -8740,6 +12779,10 @@ export type MutationDeleteFieldContextsArgs = {
 export type MutationDeleteGoalPulsesArgs = {
   delete?: InputMaybe<GoalPulseDeleteInput>
   where?: InputMaybe<GoalPulseWhere>
+}
+
+export type MutationDeleteIngestDocumentResponsesArgs = {
+  where?: InputMaybe<IngestDocumentResponseWhere>
 }
 
 export type MutationDeleteLogsArgs = {
@@ -8844,6 +12887,10 @@ export type MutationLogSpaceActivityArgs = {
   input: LogSpaceInput
 }
 
+export type MutationReExtractDocumentArgs = {
+  documentId: Scalars['ID']['input']
+}
+
 export type MutationRemoveSpaceMemberArgs = {
   memberId: Scalars['ID']['input']
   spaceId: Scalars['ID']['input']
@@ -8884,9 +12931,24 @@ export type MutationUpdateCreatePersonConnectionResponsesArgs = {
   where?: InputMaybe<CreatePersonConnectionResponseWhere>
 }
 
+export type MutationUpdateDeleteDocumentResponsesArgs = {
+  update?: InputMaybe<DeleteDocumentResponseUpdateInput>
+  where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
 export type MutationUpdateDeletePersonConnectionResponsesArgs = {
   update?: InputMaybe<DeletePersonConnectionResponseUpdateInput>
   where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
+export type MutationUpdateDocumentIngestThreadsArgs = {
+  update?: InputMaybe<DocumentIngestThreadUpdateInput>
+  where?: InputMaybe<DocumentIngestThreadWhere>
+}
+
+export type MutationUpdateDocumentsArgs = {
+  update?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<DocumentWhere>
 }
 
 export type MutationUpdateFieldContextsArgs = {
@@ -8897,6 +12959,11 @@ export type MutationUpdateFieldContextsArgs = {
 export type MutationUpdateGoalPulsesArgs = {
   update?: InputMaybe<GoalPulseUpdateInput>
   where?: InputMaybe<GoalPulseWhere>
+}
+
+export type MutationUpdateIngestDocumentResponsesArgs = {
+  update?: InputMaybe<IngestDocumentResponseUpdateInput>
+  where?: InputMaybe<IngestDocumentResponseWhere>
 }
 
 export type MutationUpdateLogsArgs = {
@@ -9034,6 +13101,16 @@ export type Person = PersonInterface & {
   createdByConnection: PersonCreatedByConnection
   email?: Maybe<Scalars['String']['output']>
   embedding?: Maybe<Array<Scalars['Float']['output']>>
+  /**
+   * Documents this person was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
+   * Empty for manually-created Person nodes. Each Document is auth-filtered via its own
+   * @authorization directive, so non-members of the parent Space see an empty list even if
+   * the underlying EXTRACTED_FROM edge exists.
+   */
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<PersonDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: PersonExtractedFromConnection
   favorites?: Maybe<Scalars['String']['output']>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
@@ -9042,6 +13119,10 @@ export type Person = PersonInterface & {
   interests?: Maybe<Scalars['String']['output']>
   inviteSent?: Maybe<Scalars['Boolean']['output']>
   isUser?: Maybe<Scalars['Boolean']['output']>
+  lastFocalAt?: Maybe<Scalars['DateTime']['output']>
+  lastFocalId?: Maybe<Scalars['String']['output']>
+  lastFocalLabel?: Maybe<Scalars['String']['output']>
+  lastFocalType?: Maybe<Scalars['String']['output']>
   lastName: Scalars['String']['output']
   location?: Maybe<Scalars['String']['output']>
   memberOf: Array<SpaceMembership>
@@ -9154,6 +13235,45 @@ export type PersonCreatedByConnectionArgs = {
  * Dashboard filtering is handled in queries, not authorization.
  * Merged properties from reference schema for backward compatibility.
  */
+export type PersonExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonExtractedFromConnectionSort>>
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
 export type PersonMemberOfArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -9245,6 +13365,10 @@ export type PersonAggregateNode = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -9274,6 +13398,10 @@ export type PersonAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -9291,6 +13419,7 @@ export type PersonAggregateSelection = {
 export type PersonConnectInput = {
   contexts?: InputMaybe<Array<PersonContextsConnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByConnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<PersonExtractedFromConnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfConnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesConnectFieldInput>>
 }
@@ -9513,12 +13642,17 @@ export type PersonCreateInput = {
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   email?: InputMaybe<Scalars['String']['input']>
   embedding?: InputMaybe<Array<Scalars['Float']['input']>>
+  extractedFrom?: InputMaybe<PersonExtractedFromFieldInput>
   favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
   firstName: Scalars['String']['input']
   gender?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
   inviteSent?: InputMaybe<Scalars['Boolean']['input']>
+  lastFocalAt?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel?: InputMaybe<Scalars['String']['input']>
+  lastFocalType?: InputMaybe<Scalars['String']['input']>
   lastName: Scalars['String']['input']
   location?: InputMaybe<Scalars['String']['input']>
   memberOf?: InputMaybe<PersonMemberOfFieldInput>
@@ -9742,6 +13876,61 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9938,6 +14127,7 @@ export type PersonCreatedByUpdateFieldInput = {
 export type PersonDeleteInput = {
   contexts?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
 }
@@ -9945,14 +14135,262 @@ export type PersonDeleteInput = {
 export type PersonDisconnectInput = {
   contexts?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<PersonExtractedFromDisconnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
+}
+
+export type PersonDocumentExtractedFromAggregateSelection = {
+  __typename?: 'PersonDocumentExtractedFromAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type PersonDocumentExtractedFromAggregationSelection = {
+  __typename?: 'PersonDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<PersonDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type PersonDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'PersonDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type PersonEdge = {
   __typename?: 'PersonEdge'
   cursor: Scalars['String']['output']
   node: Person
+}
+
+export type PersonExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<PersonExtractedFromAggregateInput>>
+  NOT?: InputMaybe<PersonExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<PersonExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonExtractedFromNodeAggregationWhereInput>
+}
+
+export type PersonExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type PersonExtractedFromConnection = {
+  __typename?: 'PersonExtractedFromConnection'
+  aggregate: PersonDocumentExtractedFromAggregateSelection
+  edges: Array<PersonExtractedFromRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type PersonExtractedFromConnectionSort = {
+  node?: InputMaybe<DocumentSort>
+}
+
+export type PersonExtractedFromConnectionWhere = {
+  AND?: InputMaybe<Array<PersonExtractedFromConnectionWhere>>
+  NOT?: InputMaybe<PersonExtractedFromConnectionWhere>
+  OR?: InputMaybe<Array<PersonExtractedFromConnectionWhere>>
+  node?: InputMaybe<DocumentWhere>
+}
+
+export type PersonExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type PersonExtractedFromDeleteFieldInput = {
+  delete?: InputMaybe<DocumentDeleteInput>
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
+}
+
+export type PersonExtractedFromDisconnectFieldInput = {
+  disconnect?: InputMaybe<DocumentDisconnectInput>
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
+}
+
+export type PersonExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<PersonExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<PersonExtractedFromCreateFieldInput>>
+}
+
+export type PersonExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type PersonExtractedFromRelationship = {
+  __typename?: 'PersonExtractedFromRelationship'
+  cursor: Scalars['String']['output']
+  node: Document
+}
+
+export type PersonExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
+}
+
+export type PersonExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<PersonExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<PersonExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<PersonExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<PersonExtractedFromUpdateConnectionInput>
 }
 
 export type PersonFieldContextContextsAggregateSelection = {
@@ -10453,6 +14891,10 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -10482,6 +14924,10 @@ export type PersonSort = {
   interests?: InputMaybe<SortDirection>
   inviteSent?: InputMaybe<SortDirection>
   isUser?: InputMaybe<SortDirection>
+  lastFocalAt?: InputMaybe<SortDirection>
+  lastFocalId?: InputMaybe<SortDirection>
+  lastFocalLabel?: InputMaybe<SortDirection>
+  lastFocalType?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
   location?: InputMaybe<SortDirection>
   onboardingCurrentStepIndex?: InputMaybe<SortDirection>
@@ -10555,12 +15001,17 @@ export type PersonUpdateInput = {
   embedding_POP?: InputMaybe<Scalars['Int']['input']>
   embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
   embedding_SET?: InputMaybe<Array<Scalars['Float']['input']>>
+  extractedFrom?: InputMaybe<Array<PersonExtractedFromUpdateFieldInput>>
   favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   gender_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
   inviteSent_SET?: InputMaybe<Scalars['Boolean']['input']>
+  lastFocalAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_SET?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel_SET?: InputMaybe<Scalars['String']['input']>
+  lastFocalType_SET?: InputMaybe<Scalars['String']['input']>
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
   memberOf?: InputMaybe<Array<PersonMemberOfUpdateFieldInput>>
@@ -10660,6 +15111,23 @@ export type PersonWhere = {
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   embedding_EQ?: InputMaybe<Array<Scalars['Float']['input']>>
   embedding_INCLUDES?: InputMaybe<Scalars['Float']['input']>
+  extractedFromAggregate?: InputMaybe<PersonExtractedFromAggregateInput>
+  /** Return People where all of the related PersonExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<PersonExtractedFromConnectionWhere>
+  /** Return People where none of the related PersonExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<PersonExtractedFromConnectionWhere>
+  /** Return People where one of the related PersonExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<PersonExtractedFromConnectionWhere>
+  /** Return People where some of the related PersonExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<PersonExtractedFromConnectionWhere>
+  /** Return People where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return People where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return People where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return People where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   favorites_CONTAINS?: InputMaybe<Scalars['String']['input']>
   favorites_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   favorites_EQ?: InputMaybe<Scalars['String']['input']>
@@ -10692,6 +15160,27 @@ export type PersonWhere = {
   interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   inviteSent_EQ?: InputMaybe<Scalars['Boolean']['input']>
   isUser_EQ?: InputMaybe<Scalars['Boolean']['input']>
+  lastFocalAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  lastFocalAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastFocalId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastFocalId_EQ?: InputMaybe<Scalars['String']['input']>
+  lastFocalId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  lastFocalId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel_EQ?: InputMaybe<Scalars['String']['input']>
+  lastFocalLabel_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  lastFocalLabel_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastFocalType_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  lastFocalType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  lastFocalType_EQ?: InputMaybe<Scalars['String']['input']>
+  lastFocalType_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  lastFocalType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
@@ -10837,10 +15326,27 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "createPersonConnectionResponsesConnection" instead */
   createPersonConnectionResponsesAggregate: CreatePersonConnectionResponseAggregateSelection
   createPersonConnectionResponsesConnection: CreatePersonConnectionResponsesConnection
+  deleteDocumentResponses: Array<DeleteDocumentResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "deleteDocumentResponsesConnection" instead */
+  deleteDocumentResponsesAggregate: DeleteDocumentResponseAggregateSelection
+  deleteDocumentResponsesConnection: DeleteDocumentResponsesConnection
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "deletePersonConnectionResponsesConnection" instead */
   deletePersonConnectionResponsesAggregate: DeletePersonConnectionResponseAggregateSelection
   deletePersonConnectionResponsesConnection: DeletePersonConnectionResponsesConnection
+  documentIngestThreads: Array<DocumentIngestThread>
+  /** @deprecated Please use the explicit field "aggregate" inside "documentIngestThreadsConnection" instead */
+  documentIngestThreadsAggregate: DocumentIngestThreadAggregateSelection
+  documentIngestThreadsConnection: DocumentIngestThreadsConnection
+  documents: Array<Document>
+  /** @deprecated Please use the explicit field "aggregate" inside "documentsConnection" instead */
+  documentsAggregate: DocumentAggregateSelection
+  /**
+   * List all documents attached to a FieldContext, newest first. Returns an
+   * empty array if the caller cannot view the parent Space.
+   */
+  documentsByFieldContext: Array<Document>
+  documentsConnection: DocumentsConnection
   fieldContexts: Array<FieldContext>
   /** @deprecated Please use the explicit field "aggregate" inside "fieldContextsConnection" instead */
   fieldContextsAggregate: FieldContextAggregateSelection
@@ -10901,6 +15407,10 @@ export type Query = {
    * LEGACY: Consider using searchAll for unified search experience.
    */
   goalSubstringSearch: Array<GoalPulse>
+  ingestDocumentResponses: Array<IngestDocumentResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "ingestDocumentResponsesConnection" instead */
+  ingestDocumentResponsesAggregate: IngestDocumentResponseAggregateSelection
+  ingestDocumentResponsesConnection: IngestDocumentResponsesConnection
   lifeSensors: Array<LifeSensor>
   logs: Array<Log>
   /** @deprecated Please use the explicit field "aggregate" inside "logsConnection" instead */
@@ -11134,6 +15644,24 @@ export type QueryCreatePersonConnectionResponsesConnectionArgs = {
   where?: InputMaybe<CreatePersonConnectionResponseWhere>
 }
 
+export type QueryDeleteDocumentResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeleteDocumentResponseSort>>
+  where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
+export type QueryDeleteDocumentResponsesAggregateArgs = {
+  where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
+export type QueryDeleteDocumentResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeleteDocumentResponseSort>>
+  where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
 export type QueryDeletePersonConnectionResponsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -11150,6 +15678,46 @@ export type QueryDeletePersonConnectionResponsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<DeletePersonConnectionResponseSort>>
   where?: InputMaybe<DeletePersonConnectionResponseWhere>
+}
+
+export type QueryDocumentIngestThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentIngestThreadSort>>
+  where?: InputMaybe<DocumentIngestThreadWhere>
+}
+
+export type QueryDocumentIngestThreadsAggregateArgs = {
+  where?: InputMaybe<DocumentIngestThreadWhere>
+}
+
+export type QueryDocumentIngestThreadsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentIngestThreadSort>>
+  where?: InputMaybe<DocumentIngestThreadWhere>
+}
+
+export type QueryDocumentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+export type QueryDocumentsAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+export type QueryDocumentsByFieldContextArgs = {
+  fieldContextId: Scalars['ID']['input']
+}
+
+export type QueryDocumentsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
 }
 
 export type QueryFieldContextsArgs = {
@@ -11226,6 +15794,24 @@ export type QueryGoalPulsesConnectionArgs = {
 
 export type QueryGoalSubstringSearchArgs = {
   key: Scalars['String']['input']
+}
+
+export type QueryIngestDocumentResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<IngestDocumentResponseSort>>
+  where?: InputMaybe<IngestDocumentResponseWhere>
+}
+
+export type QueryIngestDocumentResponsesAggregateArgs = {
+  where?: InputMaybe<IngestDocumentResponseWhere>
+}
+
+export type QueryIngestDocumentResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<IngestDocumentResponseSort>>
+  where?: InputMaybe<IngestDocumentResponseWhere>
 }
 
 export type QueryLifeSensorsArgs = {
@@ -12620,6 +17206,10 @@ export type ResourcePulse = FieldPulse & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<ResourcePulsePersonCreatedByAggregationSelection>
   createdByConnection: FieldPulseCreatedByConnection
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<ResourcePulseDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
   location?: Maybe<Scalars['String']['output']>
@@ -12696,6 +17286,39 @@ export type ResourcePulseCreatedByConnectionArgs = {
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
+/**
+ * A pulse that functions as a resource in its context.
+ * Multi-label: ["FieldPulse", "ResourcePulse"]
+ * Merged properties from legacy Resource entity.
+ */
+export type ResourcePulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A pulse that functions as a resource in its context.
+ * Multi-label: ["FieldPulse", "ResourcePulse"]
+ * Merged properties from legacy Resource entity.
+ */
+export type ResourcePulseExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * A pulse that functions as a resource in its context.
+ * Multi-label: ["FieldPulse", "ResourcePulse"]
+ * Merged properties from legacy Resource entity.
+ */
+export type ResourcePulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
 export type ResourcePulseAggregate = {
   __typename?: 'ResourcePulseAggregate'
   count: Count
@@ -12738,6 +17361,7 @@ export type ResourcePulseAggregateSelection = {
 export type ResourcePulseConnectInput = {
   context?: InputMaybe<Array<ResourcePulseContextConnectFieldInput>>
   createdBy?: InputMaybe<Array<ResourcePulseCreatedByConnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<ResourcePulseExtractedFromConnectFieldInput>>
 }
 
 export type ResourcePulseConnectWhere = {
@@ -12835,6 +17459,7 @@ export type ResourcePulseCreateInput = {
   context?: InputMaybe<ResourcePulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<ResourcePulseCreatedByFieldInput>
+  extractedFrom?: InputMaybe<ResourcePulseExtractedFromFieldInput>
   intensity?: InputMaybe<Scalars['Float']['input']>
   location?: InputMaybe<Scalars['String']['input']>
   resourceType: Scalars['String']['input']
@@ -13019,6 +17644,61 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13209,17 +17889,225 @@ export type ResourcePulseCreatedByUpdateFieldInput = {
 export type ResourcePulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
 }
 
 export type ResourcePulseDisconnectInput = {
   context?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+}
+
+export type ResourcePulseDocumentExtractedFromAggregationSelection = {
+  __typename?: 'ResourcePulseDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<ResourcePulseDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type ResourcePulseDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'ResourcePulseDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type ResourcePulseEdge = {
   __typename?: 'ResourcePulseEdge'
   cursor: Scalars['String']['output']
   node: ResourcePulse
+}
+
+export type ResourcePulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<ResourcePulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<ResourcePulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<ResourcePulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<ResourcePulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type ResourcePulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type ResourcePulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type ResourcePulseExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<ResourcePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<ResourcePulseExtractedFromCreateFieldInput>>
+}
+
+export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<ResourcePulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<ResourcePulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<ResourcePulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type ResourcePulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type ResourcePulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<ResourcePulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<ResourcePulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<ResourcePulseExtractedFromUpdateConnectionInput>
 }
 
 export type ResourcePulseFieldContextContextAggregationSelection = {
@@ -13257,6 +18145,10 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -13296,6 +18188,7 @@ export type ResourcePulseUpdateInput = {
   context?: InputMaybe<Array<ResourcePulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<ResourcePulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<ResourcePulseExtractedFromUpdateFieldInput>>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
   intensity_MULTIPLY?: InputMaybe<Scalars['Float']['input']>
@@ -13364,6 +18257,23 @@ export type ResourcePulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return ResourcePulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<ResourcePulseExtractedFromAggregateInput>
+  /** Return ResourcePulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return ResourcePulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return ResourcePulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return ResourcePulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return ResourcePulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return ResourcePulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return ResourcePulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return ResourcePulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
@@ -14158,6 +19068,61 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14377,6 +19342,10 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -14901,6 +19870,61 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15276,6 +20300,10 @@ export type StoryPulse = FieldPulse & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<StoryPulsePersonCreatedByAggregationSelection>
   createdByConnection: FieldPulseCreatedByConnection
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<StoryPulseDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: FieldPulseExtractedFromConnection
   fulfillmentDate?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   intensity?: Maybe<Scalars['Float']['output']>
@@ -15365,6 +20393,42 @@ export type StoryPulseCreatedByConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldPulseCreatedByConnectionSort>>
   where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
+}
+
+/**
+ * Narrative or reflective pulse.
+ * Multi-label: ["FieldPulse", "StoryPulse"]
+ * Merged properties from legacy CarePoint and CoreValue entities.
+ * All optional properties allow this type to represent stories, care points, or core values.
+ */
+export type StoryPulseExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Narrative or reflective pulse.
+ * Multi-label: ["FieldPulse", "StoryPulse"]
+ * Merged properties from legacy CarePoint and CoreValue entities.
+ * All optional properties allow this type to represent stories, care points, or core values.
+ */
+export type StoryPulseExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * Narrative or reflective pulse.
+ * Multi-label: ["FieldPulse", "StoryPulse"]
+ * Merged properties from legacy CarePoint and CoreValue entities.
+ * All optional properties allow this type to represent stories, care points, or core values.
+ */
+export type StoryPulseExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseExtractedFromConnectionSort>>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type StoryPulseAggregate = {
@@ -15518,6 +20582,7 @@ export type StoryPulseCreateInput = {
   context?: InputMaybe<StoryPulseContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<StoryPulseCreatedByFieldInput>
+  extractedFrom?: InputMaybe<StoryPulseExtractedFromFieldInput>
   fulfillmentDate?: InputMaybe<Scalars['String']['input']>
   intensity?: InputMaybe<Scalars['Float']['input']>
   issuesIdentified?: InputMaybe<Scalars['String']['input']>
@@ -15711,6 +20776,61 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15901,12 +21021,219 @@ export type StoryPulseCreatedByUpdateFieldInput = {
 export type StoryPulseDeleteInput = {
   context?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   createdBy?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
+  extractedFrom?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+}
+
+export type StoryPulseDocumentExtractedFromAggregationSelection = {
+  __typename?: 'StoryPulseDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<StoryPulseDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type StoryPulseDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'StoryPulseDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
 }
 
 export type StoryPulseEdge = {
   __typename?: 'StoryPulseEdge'
   cursor: Scalars['String']['output']
   node: StoryPulse
+}
+
+export type StoryPulseExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<StoryPulseExtractedFromAggregateInput>>
+  NOT?: InputMaybe<StoryPulseExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<StoryPulseExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<StoryPulseExtractedFromNodeAggregationWhereInput>
+}
+
+export type StoryPulseExtractedFromConnectFieldInput = {
+  connect?: InputMaybe<Array<DocumentConnectInput>>
+  where?: InputMaybe<DocumentConnectWhere>
+}
+
+export type StoryPulseExtractedFromCreateFieldInput = {
+  node: DocumentCreateInput
+}
+
+export type StoryPulseExtractedFromFieldInput = {
+  connect?: InputMaybe<Array<StoryPulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<StoryPulseExtractedFromCreateFieldInput>>
+}
+
+export type StoryPulseExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<StoryPulseExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<StoryPulseExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<StoryPulseExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type StoryPulseExtractedFromUpdateConnectionInput = {
+  node?: InputMaybe<DocumentUpdateInput>
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+}
+
+export type StoryPulseExtractedFromUpdateFieldInput = {
+  connect?: InputMaybe<Array<StoryPulseExtractedFromConnectFieldInput>>
+  create?: InputMaybe<Array<StoryPulseExtractedFromCreateFieldInput>>
+  delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
+  disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
+  update?: InputMaybe<StoryPulseExtractedFromUpdateConnectionInput>
 }
 
 export type StoryPulseFieldContextContextAggregationSelection = {
@@ -15944,6 +21271,10 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -15990,6 +21321,7 @@ export type StoryPulseUpdateInput = {
   context?: InputMaybe<Array<StoryPulseContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<StoryPulseCreatedByUpdateFieldInput>>
+  extractedFrom?: InputMaybe<Array<StoryPulseExtractedFromUpdateFieldInput>>
   fulfillmentDate_SET?: InputMaybe<Scalars['String']['input']>
   intensity_ADD?: InputMaybe<Scalars['Float']['input']>
   intensity_DIVIDE?: InputMaybe<Scalars['Float']['input']>
@@ -16075,6 +21407,23 @@ export type StoryPulseWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return StoryPulses where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  extractedFromAggregate?: InputMaybe<StoryPulseExtractedFromAggregateInput>
+  /** Return StoryPulses where all of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return StoryPulses where none of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return StoryPulses where one of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return StoryPulses where some of the related FieldPulseExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
+  /** Return StoryPulses where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return StoryPulses where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return StoryPulses where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return StoryPulses where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
   fulfillmentDate_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fulfillmentDate_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fulfillmentDate_EQ?: InputMaybe<Scalars['String']['input']>
@@ -16218,9 +21567,27 @@ export type UpdateCreatePersonConnectionResponsesMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateDeleteDocumentResponsesMutationResponse = {
+  __typename?: 'UpdateDeleteDocumentResponsesMutationResponse'
+  deleteDocumentResponses: Array<DeleteDocumentResponse>
+  info: UpdateInfo
+}
+
 export type UpdateDeletePersonConnectionResponsesMutationResponse = {
   __typename?: 'UpdateDeletePersonConnectionResponsesMutationResponse'
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
+  info: UpdateInfo
+}
+
+export type UpdateDocumentIngestThreadsMutationResponse = {
+  __typename?: 'UpdateDocumentIngestThreadsMutationResponse'
+  documentIngestThreads: Array<DocumentIngestThread>
+  info: UpdateInfo
+}
+
+export type UpdateDocumentsMutationResponse = {
+  __typename?: 'UpdateDocumentsMutationResponse'
+  documents: Array<Document>
   info: UpdateInfo
 }
 
@@ -16243,6 +21610,12 @@ export type UpdateInfo = {
   nodesDeleted: Scalars['Int']['output']
   relationshipsCreated: Scalars['Int']['output']
   relationshipsDeleted: Scalars['Int']['output']
+}
+
+export type UpdateIngestDocumentResponsesMutationResponse = {
+  __typename?: 'UpdateIngestDocumentResponsesMutationResponse'
+  info: UpdateInfo
+  ingestDocumentResponses: Array<IngestDocumentResponse>
 }
 
 export type UpdateLogsMutationResponse = {
@@ -17714,6 +23087,61 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   interests_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   interests_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17921,6 +23349,10 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
   interests: StringAggregateSelection
+  lastFocalAt: DateTimeAggregateSelection
+  lastFocalId: StringAggregateSelection
+  lastFocalLabel: StringAggregateSelection
+  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
@@ -18159,6 +23591,34 @@ export type LogResonanceActivityMutation = {
     __typename?: 'CreateLogResponse'
     success: boolean
     message: string
+  }
+}
+
+export type ReExtractDocumentMutationVariables = Exact<{
+  documentId: Scalars['ID']['input']
+}>
+
+export type ReExtractDocumentMutation = {
+  __typename?: 'Mutation'
+  reExtractDocument: {
+    __typename?: 'IngestDocumentResponse'
+    documentId: string
+    threadId: string
+    createdEntityCount: number
+    failedEntityCount: number
+  }
+}
+
+export type DeleteDocumentMutationVariables = Exact<{
+  documentId: Scalars['ID']['input']
+}>
+
+export type DeleteDocumentMutation = {
+  __typename?: 'Mutation'
+  deleteDocument: {
+    __typename?: 'DeleteDocumentResponse'
+    documentId: string
+    deleted: boolean
   }
 }
 
@@ -19386,6 +24846,45 @@ export type SearchPeopleQuery = {
   }>
 }
 
+export type DocumentsByFieldContextQueryVariables = Exact<{
+  fieldContextId: Scalars['ID']['input']
+}>
+
+export type DocumentsByFieldContextQuery = {
+  __typename?: 'Query'
+  documentsByFieldContext: Array<{
+    __typename?: 'Document'
+    id: string
+    filename: string
+    mimeType: string
+    sizeBytes: number
+    pageCount?: number | null
+    userHint?: string | null
+    summary?: string | null
+    concepts?: Array<string> | null
+    uploadedAt: any
+    extractedPeople: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+    }>
+    extractedPulses: Array<
+      | { __typename: 'CarePulse'; id: string; title: string }
+      | { __typename: 'CoreValuePulse'; id: string; title: string }
+      | { __typename: 'GoalPulse'; id: string; title: string }
+      | { __typename: 'ResourcePulse'; id: string; title: string }
+      | { __typename: 'StoryPulse'; id: string; title: string }
+    >
+    ingestThreads: Array<{
+      __typename?: 'DocumentIngestThread'
+      id: string
+      title: string
+      createdAt: string
+    }>
+  }>
+}
+
 export type GetFieldContextDetailsQueryVariables = Exact<{
   contextId: Scalars['ID']['input']
 }>
@@ -19398,6 +24897,7 @@ export type GetFieldContextDetailsQuery = {
     title: string
     content: string
     createdAt: any
+    createdBy: Array<{ __typename?: 'Person'; id: string }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -19405,6 +24905,7 @@ export type GetFieldContextDetailsQuery = {
     title: string
     content: string
     createdAt: any
+    createdBy: Array<{ __typename?: 'Person'; id: string }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -19412,6 +24913,7 @@ export type GetFieldContextDetailsQuery = {
     title: string
     content: string
     createdAt: any
+    createdBy: Array<{ __typename?: 'Person'; id: string }>
   }>
   carePulses: Array<{
     __typename: 'CarePulse'
@@ -19419,6 +24921,7 @@ export type GetFieldContextDetailsQuery = {
     title: string
     content: string
     createdAt: any
+    createdBy: Array<{ __typename?: 'Person'; id: string }>
   }>
   coreValuePulses: Array<{
     __typename: 'CoreValuePulse'
@@ -19426,6 +24929,7 @@ export type GetFieldContextDetailsQuery = {
     title: string
     content: string
     createdAt: any
+    createdBy: Array<{ __typename?: 'Person'; id: string }>
   }>
   fieldContexts: Array<{
     __typename?: 'FieldContext'
@@ -21247,6 +26751,106 @@ export type GetUserByIdQuery = {
   }>
 }
 
+export type PersonProvenanceQueryVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type PersonProvenanceQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    extractedFrom: Array<{
+      __typename?: 'Document'
+      id: string
+      filename: string
+      uploadedAt: any
+      uploadedBy: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+      }>
+    }>
+  }>
+}
+
+export type GoalPulseProvenanceQueryVariables = Exact<{
+  pulseId: Scalars['ID']['input']
+}>
+
+export type GoalPulseProvenanceQuery = {
+  __typename?: 'Query'
+  goalPulses: Array<{
+    __typename?: 'GoalPulse'
+    id: string
+    extractedFrom: Array<{
+      __typename?: 'Document'
+      id: string
+      filename: string
+      uploadedAt: any
+      uploadedBy: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+      }>
+    }>
+  }>
+}
+
+export type ResourcePulseProvenanceQueryVariables = Exact<{
+  pulseId: Scalars['ID']['input']
+}>
+
+export type ResourcePulseProvenanceQuery = {
+  __typename?: 'Query'
+  resourcePulses: Array<{
+    __typename?: 'ResourcePulse'
+    id: string
+    extractedFrom: Array<{
+      __typename?: 'Document'
+      id: string
+      filename: string
+      uploadedAt: any
+      uploadedBy: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+      }>
+    }>
+  }>
+}
+
+export type StoryPulseProvenanceQueryVariables = Exact<{
+  pulseId: Scalars['ID']['input']
+}>
+
+export type StoryPulseProvenanceQuery = {
+  __typename?: 'Query'
+  storyPulses: Array<{
+    __typename?: 'StoryPulse'
+    id: string
+    extractedFrom: Array<{
+      __typename?: 'Document'
+      id: string
+      filename: string
+      uploadedAt: any
+      uploadedBy: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+      }>
+    }>
+  }>
+}
+
 export type GetPulseDetailsWithContextQueryVariables = Exact<{
   pulseId: Scalars['ID']['input']
 }>
@@ -21868,6 +27472,7 @@ export type GetSpaceDetailsCompleteQuery = {
           lastName: string
           name: string
           email?: string | null
+          photo?: string | null
         }>
         members: Array<{
           __typename?: 'SpaceMembership'
@@ -21936,6 +27541,7 @@ export type GetSpaceDetailsCompleteQuery = {
           lastName: string
           name: string
           email?: string | null
+          photo?: string | null
         }>
         members: Array<{
           __typename?: 'SpaceMembership'
@@ -22498,6 +28104,118 @@ export const LogResonanceActivityDocument = {
 } as unknown as DocumentNode<
   LogResonanceActivityMutation,
   LogResonanceActivityMutationVariables
+>
+export const ReExtractDocumentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ReExtractDocument' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'documentId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'reExtractDocument' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'documentId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'documentId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'documentId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'threadId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdEntityCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'failedEntityCount' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ReExtractDocumentMutation,
+  ReExtractDocumentMutationVariables
+>
+export const DeleteDocumentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteDocument' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'documentId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteDocument' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'documentId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'documentId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'documentId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deleted' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteDocumentMutation,
+  DeleteDocumentMutationVariables
 >
 export const CreateFieldContextDocument = {
   kind: 'Document',
@@ -28138,6 +33856,113 @@ export const SearchPeopleDocument = {
     },
   ],
 } as unknown as DocumentNode<SearchPeopleQuery, SearchPeopleQueryVariables>
+export const DocumentsByFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DocumentsByFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fieldContextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'documentsByFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'fieldContextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'fieldContextId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mimeType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pageCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userHint' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'concepts' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'uploadedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedPeople' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedPulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestThreads' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DocumentsByFieldContextQuery,
+  DocumentsByFieldContextQueryVariables
+>
 export const GetFieldContextDetailsDocument = {
   kind: 'Document',
   definitions: [
@@ -28200,6 +34025,16 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -28242,6 +34077,16 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -28284,6 +34129,16 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -28326,6 +34181,16 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -28368,6 +34233,16 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -35280,6 +41155,418 @@ export const GetUserByIdDocument = {
     },
   ],
 } as unknown as DocumentNode<GetUserByIdQuery, GetUserByIdQueryVariables>
+export const PersonProvenanceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PersonProvenance' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'personId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedFrom' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filename' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PersonProvenanceQuery,
+  PersonProvenanceQueryVariables
+>
+export const GoalPulseProvenanceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GoalPulseProvenance' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'pulseId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'goalPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'pulseId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedFrom' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filename' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GoalPulseProvenanceQuery,
+  GoalPulseProvenanceQueryVariables
+>
+export const ResourcePulseProvenanceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ResourcePulseProvenance' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'pulseId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resourcePulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'pulseId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedFrom' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filename' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ResourcePulseProvenanceQuery,
+  ResourcePulseProvenanceQueryVariables
+>
+export const StoryPulseProvenanceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'StoryPulseProvenance' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'pulseId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'pulseId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedFrom' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filename' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadedBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  StoryPulseProvenanceQuery,
+  StoryPulseProvenanceQueryVariables
+>
 export const GetPulseDetailsWithContextDocument = {
   kind: 'Document',
   definitions: [
@@ -37571,6 +43858,10 @@ export const GetSpaceDetailsCompleteDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'email' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
                           ],
                         },
                       },
@@ -37729,6 +44020,10 @@ export const GetSpaceDetailsCompleteDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
                             },
                           ],
                         },

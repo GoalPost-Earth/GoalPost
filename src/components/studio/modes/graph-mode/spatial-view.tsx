@@ -9,6 +9,7 @@ import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import { EntityBubble, type BubbleSize } from '@/components/ui/entity-bubble'
 import {
@@ -24,6 +25,7 @@ import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 import { GraphLoadingState } from './graph-loading-state'
+import { PersonBubbleContent } from './person-bubble-content'
 
 /**
  * GoalPost Graph View — the curated NVL surface (see kb/01-glossary.md).
@@ -85,6 +87,22 @@ interface PulseRecord {
   focalType: FocalEntityType
 }
 
+interface PersonRecord {
+  id: string
+  name: string
+  firstName: string
+  lastName: string
+  photo: string | null
+  role: 'OWNER' | 'PERSON'
+  /**
+   * Discriminator for the info-drawer + focal context. The spatial view
+   * can't tell User vs PersonPulse from the GraphQL `Person` shape alone,
+   * so we tag the owner as 'User' (always a real account) and field
+   * people as 'PersonPulse' (the manual / doc-ingest add path).
+   */
+  focalType: 'User' | 'PersonPulse'
+}
+
 type Descriptor =
   | {
       kind: 'space'
@@ -120,6 +138,14 @@ type Descriptor =
       title: string
       subtitle: string
       badge?: { text: string; variant: 'accent' | 'primary' }
+    }
+  | {
+      kind: 'person'
+      id: string
+      type: 'User' | 'PersonPulse'
+      size: BubbleSize
+      shape: (typeof BUBBLE_SHAPES)[number]
+      person: PersonRecord
     }
 
 const NO_RELATIONSHIPS: Relationship[] = []
@@ -243,6 +269,17 @@ export const SpatialView: FC = () => {
     }
   )
 
+  // People in the active field — owner of the parent space + any
+  // PersonPulses (and Users) attached via HAS_PERSON. Same `cache-first`
+  // rationale as the field/space queries above: the FieldContext detail
+  // route already runs this query, so the cache is usually warm and the
+  // Apollo dedupe handles cold loads.
+  const { data: fieldPeopleData } = useQuery(GET_FIELD_CONTEXT_PEOPLE, {
+    variables: { contextId: activeFieldId ?? '' },
+    skip: !activeFieldId,
+    fetchPolicy: 'cache-first',
+  })
+
   const loading = inField
     ? fieldDetailsLoading
     : inSpace
@@ -277,6 +314,88 @@ export const SpatialView: FC = () => {
     }))
   }, [inSpace, spaceDetailsData])
 
+  // People to surface alongside the primary bubbles:
+  //   - In-field: the parent space's owner (always shown) + every Person
+  //     attached to the field via HAS_PERSON (PersonPulses created
+  //     manually or via doc ingest, plus any Users present in the field).
+  //   - In-space: the space's owner only — members are surfaced through
+  //     dedicated UI elsewhere; the spatial canvas keeps the space scope
+  //     focused on its field contexts.
+  // Owner is tagged `User`, field-attached people as `PersonPulse` so the
+  // info-drawer + focal-entity machinery branches correctly.
+  const persons: PersonRecord[] = useMemo(() => {
+    type RawPerson = {
+      id: string
+      name?: string | null
+      firstName?: string | null
+      lastName?: string | null
+      photo?: string | null
+    }
+    const toRecord = (
+      p: RawPerson,
+      role: 'OWNER' | 'PERSON',
+      focalType: 'User' | 'PersonPulse'
+    ): PersonRecord => {
+      const firstName = p.firstName ?? ''
+      const lastName = p.lastName ?? ''
+      const composed = `${firstName} ${lastName}`.trim()
+      const name = p.name?.trim() || composed || 'Unnamed'
+      return {
+        id: p.id,
+        name,
+        firstName,
+        lastName,
+        photo: p.photo ?? null,
+        role,
+        focalType,
+      }
+    }
+
+    if (inField) {
+      const fieldCtx = (
+        fieldPeopleData as
+          | {
+              fieldContexts?: Array<{
+                people?: RawPerson[]
+                meSpace?: Array<{ owner?: RawPerson[] }>
+                weSpace?: Array<{ owner?: RawPerson[] }>
+              }>
+            }
+          | undefined
+      )?.fieldContexts?.[0]
+      if (!fieldCtx) return []
+      const owner =
+        fieldCtx.meSpace?.[0]?.owner?.[0] ??
+        fieldCtx.weSpace?.[0]?.owner?.[0] ??
+        null
+      const seen = new Set<string>()
+      const records: PersonRecord[] = []
+      if (owner?.id) {
+        seen.add(owner.id)
+        records.push(toRecord(owner, 'OWNER', 'User'))
+      }
+      for (const p of fieldCtx.people ?? []) {
+        if (!p?.id || seen.has(p.id)) continue
+        seen.add(p.id)
+        records.push(toRecord(p, 'PERSON', 'PersonPulse'))
+      }
+      return records
+    }
+
+    if (inSpace) {
+      const space = spaceDetailsData?.spaces?.[0]
+      if (!space) return []
+      const owner =
+        'owner' in space && Array.isArray(space.owner)
+          ? (space.owner[0] as RawPerson | undefined)
+          : undefined
+      if (!owner?.id) return []
+      return [toRecord(owner, 'OWNER', 'User')]
+    }
+
+    return []
+  }, [inField, fieldPeopleData, inSpace, spaceDetailsData])
+
   // In-field: surface the field's pulses (Goal / Resource / Story / Care /
   // CoreValue) as bubbles. Each pulse keeps its config-driven icon so the
   // type reads at a glance even before the title is parsed.
@@ -308,11 +427,26 @@ export const SpatialView: FC = () => {
 
   // Stable descriptors. In-field mode produces pulse bubbles; in-space
   // mode produces field-context bubbles; top-level mode produces space
-  // bubbles. The downstream NVL + container pipeline is identical — `kind`
-  // only changes click behavior.
+  // bubbles. Person bubbles (owner + field people) ride alongside the
+  // primary bubbles in both in-field and in-space modes. The downstream
+  // NVL + container pipeline is identical — `kind` only changes click
+  // behavior.
   const descriptors: Descriptor[] = useMemo(() => {
+    const personDescriptors = (offset: number): Descriptor[] =>
+      persons.map((person, idx) => {
+        const slot = offset + idx
+        return {
+          kind: 'person',
+          id: person.id,
+          type: person.focalType,
+          size: FIELD_BUBBLE_SIZES[slot % FIELD_BUBBLE_SIZES.length],
+          shape: BUBBLE_SHAPES[slot % BUBBLE_SHAPES.length],
+          person,
+        }
+      })
+
     if (inField) {
-      return pulses.map((pulse, idx) => {
+      const pulseDescriptors: Descriptor[] = pulses.map((pulse, idx) => {
         const config = getConfigForType(pulse.pulseType)
         return {
           kind: 'pulse',
@@ -326,9 +460,10 @@ export const SpatialView: FC = () => {
           subtitle: config.label,
         }
       })
+      return [...pulseDescriptors, ...personDescriptors(pulses.length)]
     }
     if (inSpace) {
-      return fieldContexts.map((ctx, idx) => {
+      const fieldDescriptors: Descriptor[] = fieldContexts.map((ctx, idx) => {
         const isMe = ctx.spaceKind === 'MeSpace'
         const subtitle = ctx.emergentName
           ? `"${ctx.emergentName}"`
@@ -354,6 +489,7 @@ export const SpatialView: FC = () => {
               : undefined,
         }
       })
+      return [...fieldDescriptors, ...personDescriptors(fieldContexts.length)]
     }
     return spaces.map((space, idx) => {
       const isMe = space.type === 'MeSpace'
@@ -381,7 +517,7 @@ export const SpatialView: FC = () => {
             : undefined,
       }
     })
-  }, [inField, pulses, inSpace, fieldContexts, spaces])
+  }, [inField, pulses, inSpace, fieldContexts, spaces, persons])
 
   // Purge cached containers for spaces that no longer exist.
   useEffect(() => {
@@ -427,6 +563,68 @@ export const SpatialView: FC = () => {
   }, [descriptors])
   /* eslint-enable react-hooks/refs */
 
+  // One-hop edges among visible entities. Only in-field mode produces
+  // anything today — the field scope is the only place we render two
+  // entity types (pulses + people) and have first-class relationship
+  // data (ResonanceLinks via `resonancesInContext`, CREATED_BY via
+  // each pulse's `createdBy`). Edges to off-screen endpoints are
+  // dropped so NVL never draws dangling arrows.
+  const relationships: Relationship[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return NO_RELATIONSHIPS
+    const visibleIds = new Set(descriptors.map((d) => d.id))
+    const edges: Relationship[] = []
+
+    const links = (fieldDetailsData.fieldContexts?.[0]?.resonancesInContext ??
+      []) as Array<{
+      id: string
+      label?: string | null
+      source?: Array<{ id?: string | null } | null> | null
+      target?: Array<{ id?: string | null } | null> | null
+    }>
+    for (const link of links) {
+      const sourceId = link.source?.[0]?.id
+      const targetId = link.target?.[0]?.id
+      if (!sourceId || !targetId) continue
+      if (!visibleIds.has(sourceId) || !visibleIds.has(targetId)) continue
+      edges.push({
+        id: `resonance-${link.id}`,
+        from: sourceId,
+        to: targetId,
+        caption: link.label ?? 'resonance',
+        type: 'RESONATES_WITH',
+        color: 'rgba(167, 139, 250, 0.55)',
+        width: 2,
+      } as Relationship)
+    }
+
+    const allPulses: Array<{
+      id: string
+      createdBy?: Array<{ id: string }> | null
+    }> = [
+      ...(fieldDetailsData.goalPulses ?? []),
+      ...(fieldDetailsData.resourcePulses ?? []),
+      ...(fieldDetailsData.storyPulses ?? []),
+      ...(fieldDetailsData.carePulses ?? []),
+      ...(fieldDetailsData.coreValuePulses ?? []),
+    ]
+    for (const pulse of allPulses) {
+      if (!visibleIds.has(pulse.id)) continue
+      const creatorId = pulse.createdBy?.[0]?.id
+      if (!creatorId || !visibleIds.has(creatorId)) continue
+      edges.push({
+        id: `created-by-${pulse.id}-${creatorId}`,
+        from: pulse.id,
+        to: creatorId,
+        caption: 'created',
+        type: 'CREATED_BY',
+        color: 'rgba(255, 255, 255, 0.22)',
+        width: 1.5,
+      } as Relationship)
+    }
+
+    return edges
+  }, [inField, descriptors, fieldDetailsData])
+
   const handleOpen = useCallback(
     (id: string) => {
       const desc = descriptors.find((d) => d.id === id)
@@ -437,6 +635,10 @@ export const SpatialView: FC = () => {
       }
       if (desc.kind === 'field') {
         router.push(`/protected/dashboard/field-context/${id}`)
+        return
+      }
+      if (desc.kind === 'person') {
+        router.push(`/protected/dashboard/persons/${id}`)
         return
       }
       router.push(`/protected/dashboard/space/${id}`)
@@ -451,6 +653,46 @@ export const SpatialView: FC = () => {
     descriptors.forEach((desc, idx) => {
       const container = containerCacheRef.current.get(desc.id)
       if (!container) return
+      const animationDelay = idx * 0.08
+      const onClick = () => handleOpen(desc.id)
+      const onInfoClick = () =>
+        dispatchOpenInfoDrawer({
+          // `InfoEntityType` collapses all pulse subtypes to the
+          // generic 'Pulse' key, and both User + PersonPulse to
+          // 'Person' — the drawer resolves the precise typename
+          // from the entity itself.
+          type:
+            desc.kind === 'pulse'
+              ? 'Pulse'
+              : desc.kind === 'person'
+                ? 'Person'
+                : desc.type,
+          id: desc.id,
+        })
+
+      // Person nodes are rendered standalone — no EntityBubble shell.
+      // They read as PersonNode-style avatars (photo / initials in a
+      // role-coloured ring with a role pill and name underneath) so
+      // they're visually distinct from the floating pulse + field
+      // bubbles. The (i) drawer button is intentionally dropped — a
+      // click navigates straight to the person page, matching the
+      // legacy field pages' PersonNode behavior. The unused
+      // `onInfoClick` reference is harmless here; pulses + fields
+      // still wire it up below.
+      if (desc.kind === 'person') {
+        void onInfoClick
+        renderReactComponentToContainer(
+          <PersonBubbleContent
+            person={desc.person}
+            size={desc.size}
+            animationDelay={animationDelay}
+            onClick={onClick}
+          />,
+          container
+        )
+        return
+      }
+
       renderReactComponentToContainer(
         // Interaction model (matches dashboard cards):
         //   - Bubble body → opens the space (full warp navigation)
@@ -462,17 +704,9 @@ export const SpatialView: FC = () => {
           title={desc.title}
           subtitle={desc.subtitle}
           badge={desc.badge}
-          animationDelay={idx * 0.08}
-          onClick={() => handleOpen(desc.id)}
-          onInfoClick={() =>
-            dispatchOpenInfoDrawer({
-              // `InfoEntityType` collapses all pulse subtypes to the
-              // generic 'Pulse' key — the drawer resolves the precise
-              // typename from the entity itself.
-              type: desc.kind === 'pulse' ? 'Pulse' : desc.type,
-              id: desc.id,
-            })
-          }
+          animationDelay={animationDelay}
+          onClick={onClick}
+          onInfoClick={onInfoClick}
         />,
         container
       )
@@ -634,7 +868,7 @@ export const SpatialView: FC = () => {
         <GraphVisualizer
           ref={nvlRef}
           nodes={nodes}
-          relationships={NO_RELATIONSHIPS}
+          relationships={relationships}
           mouseEventCallbacks={mouseEventCallbacks}
           nvlOptions={nvlOptions}
         />

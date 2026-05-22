@@ -494,6 +494,89 @@ export async function buildSimulationChatTools(
       },
     }),
 
+    // Only useful when an active Space is in session — per Rule 4 in
+    // kb/07-ai-assistant-ux.md, don't register a tool whose only useful
+    // path needs session state that's absent. Keeps the model from
+    // calling this from the dashboard root and getting a no-op error.
+    ...(ctx.spaceId
+      ? {
+          list_field_contexts_in_active_space: tool({
+            description:
+              "List every Field Context in the user's active Space (activeSpaceId from SESSION CONTEXT) with pulse counts. Use this when the user asks an OVERVIEW question about what's inside the active Space — e.g. 'what's in this space', 'what are we looking at', 'what fields are here', 'list the field contexts', 'show me what's inside'. Prefer this over search_field_context when the user wants a list rather than a keyword search. Returns id, title, emergentName, and pulseCount for each Field Context.",
+            inputSchema: z.object({}),
+            execute: async () => {
+              logToolDispatch('list_field_contexts_in_active_space', ctx, {})
+              if (!ctx.spaceId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'No active Space in session. Call get_my_spaces first or ask the user which Space.',
+                }
+              }
+              const check = await assertCanViewSpace(ctx, ctx.spaceId)
+              if (check !== true) return check
+              try {
+                const graph = await initGraph()
+                const cypher = `
+                  MATCH (s:Space {id: $spaceId})
+                  OPTIONAL MATCH (s)-[:HAS_CONTEXT]->(c:FieldContext)
+                  OPTIONAL MATCH (c)-[:HAS_PULSE]->(p)
+                  WITH s, c, count(p) AS pulseCount
+                  ORDER BY c.createdAt DESC
+                  WITH s, collect(CASE WHEN c IS NULL THEN null ELSE {
+                    id: c.id,
+                    title: c.title,
+                    emergentName: c.emergentName,
+                    pulseCount: pulseCount
+                  } END) AS rows
+                  RETURN s.name AS spaceName,
+                    [r IN rows WHERE r IS NOT NULL] AS fieldContexts
+                `
+                const rows = await graph.query<{
+                  spaceName: string | null
+                  fieldContexts: Array<{
+                    id: string
+                    title: string | null
+                    emergentName: string | null
+                    // Neo4j returns count() as Integer {low, high}; we
+                    // coerce below so the model never sees that shape.
+                    pulseCount: number | { low: number; high: number }
+                  }>
+                }>(cypher, { spaceId: ctx.spaceId })
+                const row = rows?.[0]
+                const fieldContexts = (row?.fieldContexts ?? []).map((fc) => ({
+                  id: fc.id,
+                  title: fc.title,
+                  emergentName: fc.emergentName,
+                  pulseCount:
+                    typeof fc.pulseCount === 'number'
+                      ? fc.pulseCount
+                      : Number(fc.pulseCount?.low ?? 0),
+                }))
+                const spaceName =
+                  row?.spaceName ?? ctx.spaceName ?? null
+                return {
+                  status: 'ok' as const,
+                  spaceId: ctx.spaceId,
+                  spaceName,
+                  count: fieldContexts.length,
+                  fieldContexts,
+                  message:
+                    fieldContexts.length === 0
+                      ? `${spaceName ?? 'This space'} has no field contexts yet.`
+                      : undefined,
+                }
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to list field contexts in active space',
+                  error
+                )
+              }
+            },
+          }),
+        }
+      : {}),
+
     update_field_context: tool({
       description:
         'Update a field context title and/or emergent name. Prefer contextId to avoid ambiguity. This write is gated by user approval (HITL).',

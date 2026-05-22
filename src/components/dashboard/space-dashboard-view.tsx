@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FC } from 'react'
+import { useEffect, useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
@@ -17,6 +17,10 @@ import {
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
+import {
+  useVisibleEntities,
+  type VisibleEntity,
+} from '@/components/studio/visible-entities-context'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
 import { FieldContextCard } from './field-context-card'
 
@@ -62,17 +66,80 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
   const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
+  const { publish: publishVisibleEntities } = useVisibleEntities()
 
   type SpaceData = NonNullable<typeof data>['spaces'][number]
   const space = data?.spaces?.[0] as SpaceData | undefined
+  const spaceTypeLabel: 'MeSpace' | 'WeSpace' | null =
+    space?.__typename === 'MeSpace'
+      ? 'MeSpace'
+      : space?.__typename === 'WeSpace'
+        ? 'WeSpace'
+        : null
+  const contexts =
+    (space && 'contexts' in space ? space.contexts : undefined) ?? []
+
+  // Publish the Space + every Field Context card the user can see into
+  // VisibleEntitiesProvider. The chat assistant reads this snapshot via
+  // SESSION CONTEXT's `canvasVisibleEntities` and grounds questions like
+  // "what's in this space?" against entities already on screen instead
+  // of failing back to a fresh graph search (or, worse, claiming the
+  // space is empty when it isn't). Bloom does the equivalent for its
+  // own surface in bloom-view.tsx.
+  //
+  // Apollo returns a fresh `contexts` array reference on every cache
+  // refresh, so the effect deps key off content-stable primitives
+  // (ids + titles joined) rather than the array itself — otherwise
+  // every render would tear down the slice (cleanup → empty) and
+  // republish, briefly showing the assistant an empty canvas.
+  const activeSpaceId = space?.id ?? null
+  const activeSpaceName = space?.name ?? null
+  const contextsKey = contexts
+    .map((ctx) => `${ctx?.id ?? ''}::${ctx?.title ?? ''}`)
+    .join('|')
+  useEffect(() => {
+    if (!activeSpaceId || !spaceTypeLabel) {
+      publishVisibleEntities('dashboard', [])
+      return
+    }
+    const entities: VisibleEntity[] = [
+      {
+        id: activeSpaceId,
+        name: activeSpaceName ?? 'Untitled space',
+        type: spaceTypeLabel,
+        source: 'dashboard',
+      },
+      ...contexts
+        .filter((ctx): ctx is NonNullable<typeof ctx> => Boolean(ctx?.id))
+        .map((ctx) => ({
+          id: ctx.id,
+          name: ctx.title ?? 'Untitled field context',
+          type: 'FieldContext',
+          source: 'dashboard' as const,
+        })),
+    ]
+    publishVisibleEntities('dashboard', entities)
+    return () => {
+      publishVisibleEntities('dashboard', [])
+    }
+    // `contexts` intentionally omitted — `contextsKey` is its content-
+    // stable proxy. Including the raw array would re-fire on every
+    // Apollo cache refresh and churn the slice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activeSpaceId,
+    activeSpaceName,
+    spaceTypeLabel,
+    contextsKey,
+    publishVisibleEntities,
+  ])
 
   if (loading && !data) return <SpaceDashboardSkeleton />
   if (error || !space) return <SpaceDashboardError onBack={() => router.push('/protected/dashboard')} />
 
-  const isMe = space.__typename === 'MeSpace'
+  const isMe = spaceTypeLabel === 'MeSpace'
   const owner = ('owner' in space ? space.owner : undefined)?.[0]
   const members = ('members' in space ? space.members : undefined) ?? []
-  const contexts = ('contexts' in space ? space.contexts : undefined) ?? []
   const totalPulses = contexts.reduce(
     (acc, ctx) => acc + (ctx?.pulses?.length ?? 0),
     0
