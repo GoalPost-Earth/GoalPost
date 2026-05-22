@@ -5,6 +5,8 @@ import {
   type AssistantFeedbackSource,
   type AssistantFeedbackRating,
 } from '@/lib/feedback/assistant-feedback.service'
+import { buildFixPrompt } from '@/lib/feedback/build-fix-prompt'
+import { FixPromptCopy } from '@/components/feedback/fix-prompt-copy'
 
 interface PageProps {
   searchParams: Promise<{
@@ -255,6 +257,9 @@ function FeedbackRow({ row }: { row: AssistantFeedbackRow }) {
               <Pre>{row.classificationReason}</Pre>
             </Section>
           )}
+          <Section title="Fix this in Claude Code">
+            <FixPromptCopy prompt={buildFixPrompt(row)} />
+          </Section>
         </div>
       </details>
     </li>
