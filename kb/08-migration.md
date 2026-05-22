@@ -7,14 +7,26 @@ investigating any migration script.
 ## TL;DR
 
 ```bash
-npm run migrate:prod-to-dev   # wipes dev, re-fills from prod, validates parity
+# 1. Refresh dev from prod (wipes dev, re-fills from prod, validates parity)
+npm run migrate:prod-to-dev
+
+# 2. (Optional) Seed the GoalPost Build Space — adds a curated WeSpace
+#    with the 4 core team members and ~19 sample pulses + resonances.
+npm run seed:build-space
 ```
 
-The script (`scripts/migrate-prod-to-dev.ts`) is **idempotent**, **safe to
-re-run**, and **refuses to run if PROD and DEV point at the same URI**. It
-preserves every prod node and edge 1:1 (with the new ontology layered on
-top) and ends with a parity report that compares prod and dev counts
-label-by-label and relationship-by-relationship.
+The migration script (`scripts/migrate-prod-to-dev.ts`) is **idempotent**,
+**safe to re-run**, and **refuses to run if PROD and DEV point at the same
+URI**. It preserves every prod node and edge 1:1 (with the new ontology
+layered on top) and ends with a parity report that compares prod and dev
+counts label-by-label and relationship-by-relationship.
+
+The seed script (`scripts/seed-build-space.ts`) runs against dev only and
+must be run **after** the migration — it references the four migrated
+`:User` accounts by email (jaedagy, jesse, robert, jennifer). It's also
+idempotent: re-running wipes only its own seeded content (everything with
+ids prefixed `pulse_buildspace_`, `link_buildspace_`,
+`resonance_buildspace_`, plus the build space itself) and re-creates it.
 
 ## Why this exists
 
@@ -193,11 +205,40 @@ modes:
   create both as a single `:Person` (it shouldn't — each label is
   iterated independently). Check the `migrateNodesByLabel` error path.
 
+## GoalPost Build Space seed
+
+After a migration, you usually want a curated WeSpace to navigate against
+— a place where pulses, resonances, and a known set of members already
+exist, so the four-mode Studio has something interesting to render.
+
+`scripts/seed-build-space.ts` builds exactly that. It creates:
+
+- One WeSpace `space_buildspace` ("GoalPost Build Space"), owned by JD
+  (jaedagy@gmail.com) and with Jesse, Robert, Jennifer added via
+  `:HAS_MEMBER`.
+- One FieldContext `context_buildspace` ("Build & Roadmap") under that
+  space.
+- 19 sample pulses across `GoalPulse`, `StoryPulse`, and `ResourcePulse`,
+  written in the voices of the four members, about real work we've been
+  doing (Studio modes, mobile responsiveness, privacy defaults, the WRC
+  pilot, graph-vs-tables, the migration itself, etc.). Each pulse has
+  both `CREATED_BY` and `INITIATED_BY` edges to its author so any
+  resolver picks it up.
+- 5 `FieldResonance` nodes (Graph-first thinking, Mobile-first design,
+  Privacy and trust, Design system maturity, Real-world pilot
+  learnings) with 9 `ResonanceLink` edges connecting plausible pairs of
+  pulses to them.
+
+Editing the content: the pulse list, resonance list, and member roster
+are all declarative constants near the top of the script. Add a new
+entry to `PULSES` or `RESONANCES` and re-run.
+
 ## Quick reference: paths
 
 | Path | Purpose |
 |------|---------|
 | `scripts/migrate-prod-to-dev.ts` | Current migration. Run via `npm run migrate:prod-to-dev`. |
+| `scripts/seed-build-space.ts` | Curated WeSpace + sample pulses + resonances for the 4-person team. Run via `npm run seed:build-space` after migration. |
 | `scripts/migrate-reference-to-merged.ts` | Previous migration (transformative, doesn't preserve provenance). Kept for reference but not used. |
 | `scripts/init-db.js` | Schema + demo seed for fresh dev DBs. Destructive — do not chain after a migration. |
 | `docs/cypher/seed-dev.cypher` | Demo seed used by init-db. Not run during prod-to-dev migration. |
