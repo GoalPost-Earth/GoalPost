@@ -73,9 +73,9 @@ export async function initializeApolloServer() {
 
           console.log('✅ [YOGA CONTEXT] JWT decoded successfully:', {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sub: (jwt as any).sub,
+            userId: (jwt as any)?.user?.id,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            email: (jwt as any).email,
+            email: (jwt as any)?.user?.email,
           })
         } catch (error) {
           console.error(

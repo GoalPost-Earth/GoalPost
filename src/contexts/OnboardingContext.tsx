@@ -54,11 +54,28 @@ async function callOnboardingAPI(
     let tokenData = await tokenResponse.json()
 
     if (!tokenResponse.ok) {
-      // Try refreshing the token
-      const refreshResponse = await fetch('/api/auth/refresh-token')
+      // Try refreshing the token. The HttpOnly cookie auto-attaches; we also
+      // pass the localStorage copy as a fallback for sessions that lost it.
+      const localRefreshToken =
+        typeof window !== 'undefined'
+          ? window.localStorage.getItem('refreshToken')
+          : null
+      const refreshResponse = localRefreshToken
+        ? await fetch('/api/auth/refresh-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: localRefreshToken }),
+          })
+        : await fetch('/api/auth/refresh-token')
       const refreshData = await refreshResponse.json()
       if (refreshResponse.ok && refreshData.accessToken) {
         tokenData = refreshData
+        if (
+          typeof window !== 'undefined' &&
+          typeof refreshData.refreshToken === 'string'
+        ) {
+          window.localStorage.setItem('refreshToken', refreshData.refreshToken)
+        }
       } else {
         console.warn(
           'Failed to obtain access token, skipping API call',

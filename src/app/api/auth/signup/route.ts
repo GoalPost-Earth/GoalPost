@@ -141,8 +141,10 @@ export async function POST(req: NextRequest) {
         expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
       })
 
-      // Generate refresh token
-      const refreshToken = crypto.randomUUID()
+      // Compound format `${userId}.${secret}` — the refresh-token route uses
+      // the userId prefix to look up the Person by indexed id rather than
+      // bcrypt-scanning every user.
+      const refreshToken = `${personId}.${crypto.randomUUID()}`
       const hashedRefreshToken = await hashPassword(refreshToken)
 
       // Store refresh token in database

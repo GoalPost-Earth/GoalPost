@@ -95,8 +95,10 @@ export async function POST(req: NextRequest) {
       user: { id, ...rest },
       expiresAt: Math.floor(Date.now() / 1000) + 60 * 30,
     })
-    // Help me create an opaque refresh token
-    const refreshToken = crypto.randomUUID()
+    // Compound format `${userId}.${secret}` — the refresh-token route uses
+    // the userId prefix to look up the Person by indexed id rather than
+    // bcrypt-scanning every user.
+    const refreshToken = `${id}.${crypto.randomUUID()}`
     const hashedToken = await hashPassword(refreshToken)
 
     await session.run(
