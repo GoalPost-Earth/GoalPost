@@ -160,9 +160,7 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 
 **Actor:** Authenticated User with `canEditContent` on the parent Space.
 
-See PRD `docs/prd/document-ingestion.md` for the full spec and
-`docs/adr/0001-doc-ingestion-dedicated-extraction-endpoint.md` /
-`docs/adr/0002-document-node-and-blob-provenance.md` for rationale.
+See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale.
 
 1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
    FieldContext focused. The browser POSTs to
@@ -170,7 +168,7 @@ See PRD `docs/prd/document-ingestion.md` for the full spec and
    then uploads the file **directly to S3** (bytes never traverse our
    server). It then POSTs `/api/ingest/document/process` to trigger
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
-   removed — see ADR-0002.)
+   removed — see ADR-015.)
 2. The process endpoint gates on `canEditContent`, anchors a Document
    node to the FieldContext via `HAS_DOCUMENT` and to the uploader via
    `UPLOADED_BY`, and stamps the S3 `blobKey`.
@@ -209,3 +207,13 @@ See PRD `docs/prd/document-ingestion.md` for the full spec and
 9. Extracted pulses flow through the existing post-creation embedding and
    enrichment jobs (WF-05) and become eligible for daily resonance
    discovery (WF-06) without any ingest-specific pipeline.
+
+### WF-10 v1 implementation constraints
+
+- **Accepted formats.** `text/plain`, `text/markdown`, `application/pdf` only. Hard size cap ~20 pages / ~50K characters of extracted text. `.docx`, `.xlsx`, image OCR, and audio transcription are v2 candidates.
+- **Pulse types extracted.** `GoalPulse`, `ResourcePulse`, `StoryPulse` only. `CarePulse` and `CoreValuePulse` remain manual-only (StoryPulse absorbs the legacy Care + CoreValue concepts).
+- **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates.
+- **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up.
+- **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
+- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path.
+- **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.

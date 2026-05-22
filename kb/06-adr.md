@@ -206,3 +206,40 @@
 - Routes silently 401 after 30 minutes of activity. UI shows empty data, not an error chip, because the catch path swallows the 401.
 - Symptom: "It worked yesterday but now shows nothing" — the cookie went stale, refresh wasn't attempted, the API returned 401.
 - This bug has shown up at least twice (chat thread routes, Bloom neighborhood). Treat it as a recurring class.
+
+---
+
+## ADR-014: Doc Ingestion Uses a Dedicated Extraction Endpoint, Not the Chat Route
+
+**Decision:** Document ingestion runs through `POST /api/ingest/document/{presign,process}` — not through the existing `/api/chat/simulation` route. The process endpoint loads the blob + the FieldContext roster, invokes its own extraction model, and auto-executes the proposed write tool calls in a fresh ingest `ConversationThread`.
+
+**Why:**
+
+- **Model independence.** Extraction may use a reasoning model (Gemini multimodal for PDFs, OpenAI for text). The chat assistant is constrained to non-reasoning by Rule 6 (`kb/07-ai-assistant-ux.md`) and bounded by `stopWhen: stepCountIs(N)` (Rule 7). A separate route lets the extraction model evolve independently.
+- **Failure containment.** A malformed extraction surfaces as a plain-text assistant turn in the ingest thread; it cannot leave the chat stream half-written.
+- **Re-extraction.** "Re-extract on this Document" is a clean re-invocation of the same endpoint, not a re-injection of a synthesized user message into chat.
+
+**Consequences:**
+
+- The extraction model lives in its own factory entry, separate from `DEFAULT_ASSISTANT_MODEL` in `src/lib/llm/factory.ts`.
+- The ingestion endpoint pre-loads the FieldContext roster server-side; the extraction model receives it inlined in its prompt and does not need read tools to discover what's in the context.
+- The fresh ingest thread is forced to **default (Standard) mode** regardless of the user's prior assistant mode — Aiden and Braider are designed not to take action.
+
+---
+
+## ADR-015: Document Provenance via Document Node + Blob Storage + EXTRACTED_FROM Edges
+
+**Decision:** Document ingestion creates a first-class `Document` node attached to the FieldContext via `HAS_DOCUMENT`, with the original file persisted in blob storage (AWS S3 in prod, in-memory store for dev/tests). Each entity extracted from the document carries an `EXTRACTED_FROM` edge back to the Document.
+
+**Why:**
+
+- **Re-extractability.** "Re-extract on this Document" requires the original file to still exist. Throwing it away after the chat turn forecloses on retry, prompt tuning, and model upgrades.
+- **Audit answerable from the graph.** "Where did this Person come from?" is answered by following `EXTRACTED_FROM`, not by grepping chat threads or activity logs.
+- **Avoids overloading Log.** `Log` records mutations, not file storage. Stuffing `documentId` / `blobUrl` into `Log.metadata` would couple two unrelated concepts and make "list all entities from this doc" awkward.
+
+**Consequences:**
+
+- Blob storage is now a first-class dependency in an otherwise Neo4j-only stack: new env vars (`AWS_*`, `INGEST_BLOB_BACKEND`), new failure modes, user-driven cleanup.
+- `Document` has an `@authorization` directive that inherits from the parent Space — same pattern as `FieldContext`.
+- `EXTRACTED_FROM` is load-bearing: removing or renaming it is a graph migration.
+- Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document).

@@ -91,6 +91,21 @@ All types use `@authorization` directives that filter data based on `$jwt.user.i
 - **Person**: Readable by any authenticated user (no filter)
 - **Log**: Readable by any authenticated user
 
+### Cascading authorization — operation matrix
+
+Authorization cascades Space → FieldContext → FieldPulse. The `@authorization` directives split into `filter` (READ/AGGREGATE) and `validate` (CREATE/UPDATE/DELETE) blocks:
+
+| Entity         | READ/AGGREGATE                     | CREATE/UPDATE                       | DELETE                                  |
+| -------------- | ---------------------------------- | ----------------------------------- | --------------------------------------- |
+| MeSpace        | Owner only                         | Owner only                          | Owner only                              |
+| WeSpace        | Owner or any member                | Owner, ADMIN, or MEMBER             | Owner only                              |
+| FieldContext   | Inherits from parent Space         | Owner, ADMIN, or MEMBER             | Owner or ADMIN                          |
+| FieldPulse     | Inherits from parent FieldContext  | Owner, ADMIN, or MEMBER             | Creator (`createdBy`), ADMIN, or owner  |
+
+### MeSpace → WeSpace auto-conversion
+
+When the first non-owner member is added to a MeSpace via `addSpaceMember` (`src/lib/graphql/resolvers/space-membership-resolver.ts`), the resolver removes the `MeSpace` label and adds the `WeSpace` label in place. The owner relationship, contexts, pulses, and resonances are preserved — only the label set changes, which flips the `@authorization` filter from owner-only to owner-or-member. There is no separate "convert space" mutation; conversion is a side effect of the first member add.
+
 ---
 
 ## User Profile

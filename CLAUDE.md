@@ -12,7 +12,7 @@ The platform prioritizes user data sovereignty, deep interpersonal connection, a
 /
 ├── CLAUDE.md               # This file — project-wide context
 ├── kb/                     # Shared domain knowledge (read before working)
-├── docs/                   # Detailed documentation (70+ files)
+├── docs/                   # Cypher snippets, OWL ontology, example TSX
 ├── .claude/                # Claude Code tools (commands, agents, settings)
 │   ├── commands/           # /fix, /implement, /new-component, /commit
 │   ├── agents/             # security-reviewer, code-reviewer, e2e-tester
@@ -64,7 +64,7 @@ Domain knowledge lives in `kb/`. Read the relevant file before working on any fe
 | `kb/06-adr.md`            | Architecture decisions (graph-first, pulse-first, space-based privacy, etc.) |
 | `kb/07-ai-assistant-ux.md` | AI assistant UX conventions — raw-ID prohibition, SESSION CONTEXT shape, tool design, HITL gate, model choice |
 
-Additional documentation in `docs/` covers architecture diagrams, ontology, resonance system, assistant modes, and more.
+The `kb/` directory is the sole canonical knowledge base. There is no narrative `docs/` tree — that was retired. `docs/` now holds only support artifacts: Cypher seed snippets, the OWL ontology, and a few example TSX files.
 
 ## Claude Code Tools
 
