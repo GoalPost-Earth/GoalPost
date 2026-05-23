@@ -545,7 +545,7 @@ export const SpatialView: FC = () => {
       const desc = descriptors[idx]
       let container = cache.get(desc.id)
       if (!container) {
-        container = createNvlNodeElement(`space-${desc.id}`)
+        container = createNvlNodeElement(`${desc.kind}-${desc.id}`)
         cache.set(desc.id, container)
       }
       return {
@@ -597,9 +597,14 @@ export const SpatialView: FC = () => {
       } as Relationship)
     }
 
+    // INITIATED_BY is what every pulse-creation path actually writes
+    // (`lib/chat/hitl.ts`, `api/pulse/create-from-conversation`, etc.).
+    // The legacy `createdBy` field on the schema is aspirational and
+    // never populated, so we read `initiatedBy` to get edges with
+    // actual data behind them.
     const allPulses: Array<{
       id: string
-      createdBy?: Array<{ id: string }> | null
+      initiatedBy?: Array<{ id: string }> | null
     }> = [
       ...(fieldDetailsData.goalPulses ?? []),
       ...(fieldDetailsData.resourcePulses ?? []),
@@ -609,14 +614,14 @@ export const SpatialView: FC = () => {
     ]
     for (const pulse of allPulses) {
       if (!visibleIds.has(pulse.id)) continue
-      const creatorId = pulse.createdBy?.[0]?.id
-      if (!creatorId || !visibleIds.has(creatorId)) continue
+      const initiatorId = pulse.initiatedBy?.[0]?.id
+      if (!initiatorId || !visibleIds.has(initiatorId)) continue
       edges.push({
-        id: `created-by-${pulse.id}-${creatorId}`,
+        id: `initiated-by-${pulse.id}-${initiatorId}`,
         from: pulse.id,
-        to: creatorId,
-        caption: 'created',
-        type: 'CREATED_BY',
+        to: initiatorId,
+        caption: 'initiated',
+        type: 'INITIATED_BY',
         color: 'rgba(255, 255, 255, 0.22)',
         width: 1.5,
       } as Relationship)
@@ -654,13 +659,15 @@ export const SpatialView: FC = () => {
       const container = containerCacheRef.current.get(desc.id)
       if (!container) return
       const animationDelay = idx * 0.08
-      const onClick = () => handleOpen(desc.id)
+      // Body clicks go through NVL's `onNodeClick` callback rather
+      // than the bubble's React `onClick`. Wiring React on the body
+      // would intercept the native mousedown that NVL's drag handler
+      // listens for — which is what made the canvas feel
+      // pan-only / unmovable before this. Only the (i) corner button
+      // still uses React (with `stopImmediatePropagation`) so it can
+      // open the info drawer without bubbling into NVL.
       const onInfoClick = () =>
         dispatchOpenInfoDrawer({
-          // `InfoEntityType` collapses all pulse subtypes to the
-          // generic 'Pulse' key, and both User + PersonPulse to
-          // 'Person' — the drawer resolves the precise typename
-          // from the entity itself.
           type:
             desc.kind === 'pulse'
               ? 'Pulse'
@@ -670,23 +677,12 @@ export const SpatialView: FC = () => {
           id: desc.id,
         })
 
-      // Person nodes are rendered standalone — no EntityBubble shell.
-      // They read as PersonNode-style avatars (photo / initials in a
-      // role-coloured ring with a role pill and name underneath) so
-      // they're visually distinct from the floating pulse + field
-      // bubbles. The (i) drawer button is intentionally dropped — a
-      // click navigates straight to the person page, matching the
-      // legacy field pages' PersonNode behavior. The unused
-      // `onInfoClick` reference is harmless here; pulses + fields
-      // still wire it up below.
       if (desc.kind === 'person') {
-        void onInfoClick
         renderReactComponentToContainer(
           <PersonBubbleContent
             person={desc.person}
             size={desc.size}
             animationDelay={animationDelay}
-            onClick={onClick}
           />,
           container
         )
@@ -694,9 +690,6 @@ export const SpatialView: FC = () => {
       }
 
       renderReactComponentToContainer(
-        // Interaction model (matches dashboard cards):
-        //   - Bubble body → opens the space (full warp navigation)
-        //   - Corner icon → opens the info drawer (side pane)
         <EntityBubble
           size={desc.size}
           shape={desc.shape}
@@ -705,13 +698,12 @@ export const SpatialView: FC = () => {
           subtitle={desc.subtitle}
           badge={desc.badge}
           animationDelay={animationDelay}
-          onClick={onClick}
           onInfoClick={onInfoClick}
         />,
         container
       )
     })
-  }, [descriptors, handleOpen])
+  }, [descriptors])
 
   // Auto-fit once per scope (top-level vs in-space-X vs in-field-X).
   // Tracking via a ref keyed off the scope string means we only re-fit
@@ -782,29 +774,38 @@ export const SpatialView: FC = () => {
     }
   }, [])
 
-  // Deliberately NOT wiring NVL's `onNodeClick`. NVL listens at the native
-  // DOM level, so it would fire even when React's stopPropagation has
-  // intercepted a corner-button click — causing single-clicks on the icon
-  // to also trigger the bubble's body action. The EntityBubble's own
-  // React onClick covers body clicks, which is the one canonical pathway
-  // we want.
+  // NVL owns clicks + drag now. `onNodeClick` fires on a *real* click
+  // (NVL's DragNodeInteraction suppresses click-as-drag for us), so
+  // dragging a node moves it through space and a tap routes to the
+  // entity's page. The EntityBubble's `onClick` prop is intentionally
+  // not passed in render below; the (i) corner button still uses
+  // React `onClick` + `stopImmediatePropagation` so NVL doesn't also
+  // see the info-button click as a node click.
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
+      onNodeClick: (node) => handleOpen(node.id),
       onDrag: true,
       onPan: true,
       onZoom: true,
     }),
-    []
+    [handleOpen]
   )
 
-  // `layout: 'free'` makes NVL honor the (x, y) we computed via
-  // createClusteredFieldNodePositions. Without it, the default
-  // force-directed simulation ignores our positions and scatters the
-  // bubbles across an empty canvas — which is why the initial `fit()`
-  // was landing on whitespace.
+  // `layout: 'hierarchical'` runs the dagre tree algorithm. With our
+  // INITIATED_BY edges (`pulse → person`), pulses become sources and
+  // each creator becomes a sink — so a field initiated by one user
+  // reads as "six pulses fanning into JD Addy" instead of a floating
+  // cluster. `direction: 'down'` stacks layers top-to-bottom; nodes
+  // without any visible edge (a lone PersonPulse, an unconnected
+  // pulse) get parked alongside the main tree rather than being
+  // pulled into it.
   const nvlOptions = useMemo(
     () => ({
-      layout: 'free',
+      layout: 'hierarchical',
+      layoutOptions: {
+        direction: 'down' as const,
+        packing: 'bin' as const,
+      },
       initialZoom: 0.7,
       minScale: 0.2,
       maxScale: 3,

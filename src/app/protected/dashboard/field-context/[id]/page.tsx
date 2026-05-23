@@ -1386,7 +1386,7 @@ export default function FieldContextDetailsPage() {
             onDeletePulse={handleDeletePulse}
             onPersonClick={handlePersonClick}
             onPulseClick={(pulseId) =>
-              router.push(`/protected/dashboard/pulses/${pulseId}`)
+              dispatchOpenInfoDrawer({ type: 'Pulse', id: pulseId })
             }
             onResonanceClick={(resonanceId) =>
               router.push(`/protected/dashboard/resonances/${resonanceId}`)

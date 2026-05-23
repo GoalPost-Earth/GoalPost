@@ -17,6 +17,7 @@ import {
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
+import { SpacePermissionsModal } from '@/components/spaces/space-permissions-modal'
 import {
   useVisibleEntities,
   type VisibleEntity,
@@ -36,9 +37,10 @@ interface SpaceDashboardViewProps {
  * SpacesOverview language (radial-gradient backdrop, glass cards, top
  * accent strips, MeSpace/WeSpace palette).
  *
- * The page-level route still owns auth/edit modals and member
- * management — this view focuses on field-context navigation, which is
- * what most users come here to do.
+ * Owns field-context navigation, the "Details" info drawer trigger,
+ * and — for WeSpace owners — the member-management modal. The legacy
+ * `/protected/spaces/we-space/[id]` page is no longer reachable; this
+ * view is the page-level route.
  */
 export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   spaceId,
@@ -50,6 +52,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false)
 
   // `cache-and-network` — the dashboard cards and graph bubbles use
   // the same Apollo queries (GET_ALL_ME_SPACES / GET_ALL_WE_SPACES) so
@@ -145,6 +148,28 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     0
   )
   const isOwner = !!user?.id && owner?.id === user.id
+
+  // SpaceMembership.member is `[Person!]!` per the SDL, but
+  // SpacePermissionsModal expects a single object — flatten here
+  // (same shape the legacy WeSpace page produced).
+  const membersForPermissions = members.map((m) => {
+    const mp = m?.member?.[0]
+    const fullName =
+      mp?.name ||
+      `${mp?.firstName ?? ''} ${mp?.lastName ?? ''}`.trim() ||
+      'Member'
+    return {
+      id: m.id,
+      role: m.role as 'ADMIN' | 'MEMBER' | 'GUEST',
+      addedAt: m.addedAt ?? undefined,
+      member: {
+        __typename: mp?.__typename || 'Person',
+        id: mp?.id || '',
+        name: fullName,
+        email: mp?.email ?? undefined,
+      },
+    }
+  })
 
   const created = space.createdAt ? new Date(space.createdAt) : null
   const createdLabel =
@@ -253,19 +278,31 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               <ArrowLeft className="w-3.5 h-3.5" />
               Spaces
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                dispatchOpenInfoDrawer({
-                  type: isMe ? 'MeSpace' : 'WeSpace',
-                  id: spaceId,
-                })
-              }
-              className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/10 dark:bg-white/5 border border-white/15 hover:bg-white/20 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
-            >
-              <Info className="w-3.5 h-3.5" />
-              Details
-            </button>
+            <div className="flex items-center gap-2">
+              {!isMe && isOwner && (
+                <button
+                  type="button"
+                  onClick={() => setShowPermissionsModal(true)}
+                  className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/10 dark:bg-white/5 border border-white/15 hover:bg-white/20 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  Members
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  dispatchOpenInfoDrawer({
+                    type: isMe ? 'MeSpace' : 'WeSpace',
+                    id: spaceId,
+                  })
+                }
+                className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/10 dark:bg-white/5 border border-white/15 hover:bg-white/20 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+              >
+                <Info className="w-3.5 h-3.5" />
+                Details
+              </button>
+            </div>
           </div>
 
           {/* Hero — space identity */}
@@ -411,6 +448,19 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
           onDeleteSuccess={async () => {
             setShowEditFieldModal(false)
             setEditingFieldId(null)
+            await refetch()
+          }}
+        />
+      )}
+
+      {!isMe && isOwner && showPermissionsModal && (
+        <SpacePermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => setShowPermissionsModal(false)}
+          spaceId={spaceId}
+          spaceName={space.name || 'Untitled space'}
+          members={membersForPermissions}
+          onRefetch={async () => {
             await refetch()
           }}
         />

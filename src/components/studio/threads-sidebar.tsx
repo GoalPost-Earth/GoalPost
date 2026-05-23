@@ -7,6 +7,7 @@ import {
   fetchThreadList,
   type ThreadSummary,
 } from '@/lib/simulation/conversation-thread-client'
+import { onAssistantThreadUpdated } from '@/lib/simulation/assistant-panel-events'
 
 interface ThreadsSidebarProps {
   activeThreadId: string | null
@@ -67,6 +68,26 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
   }, [])
 
   useEffect(() => { void fetchThreads() }, [fetchThreads])
+
+  // Refetch when the assistant finishes a turn. The chat route persists the
+  // new turn + auto-generates the thread title fire-and-forget after the
+  // stream ends, so we refetch twice: once immediately to surface the thread
+  // and a second time after ~2s to catch the gpt-4o-mini title write.
+  useEffect(() => {
+    const timeouts = new Set<number>()
+    const unsubscribe = onAssistantThreadUpdated(() => {
+      void fetchThreads()
+      const id = window.setTimeout(() => {
+        timeouts.delete(id)
+        void fetchThreads()
+      }, 2500)
+      timeouts.add(id)
+    })
+    return () => {
+      unsubscribe()
+      timeouts.forEach((id) => window.clearTimeout(id))
+    }
+  }, [fetchThreads])
 
   const handleNewThread = async () => {
     setCreating(true)

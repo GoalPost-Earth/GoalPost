@@ -8,7 +8,7 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
-      createdBy {
+      initiatedBy {
         id
       }
     }
@@ -18,7 +18,7 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
-      createdBy {
+      initiatedBy {
         id
       }
     }
@@ -28,7 +28,7 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
-      createdBy {
+      initiatedBy {
         id
       }
     }
@@ -38,7 +38,7 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
-      createdBy {
+      initiatedBy {
         id
       }
     }
@@ -48,7 +48,7 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       content
       createdAt
-      createdBy {
+      initiatedBy {
         id
       }
     }

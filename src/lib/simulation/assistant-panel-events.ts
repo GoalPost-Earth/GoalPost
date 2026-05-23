@@ -22,6 +22,7 @@
  */
 
 const OPEN_THREAD_EVENT = 'gp:open-assistant-thread' as const
+const THREAD_UPDATED_EVENT = 'gp:assistant-thread-updated' as const
 
 export interface OpenAssistantThreadDetail {
   /** ConversationThread.id to switch to once the panel mounts. */
@@ -51,4 +52,23 @@ export function onOpenAssistantThread(
   }
   window.addEventListener(OPEN_THREAD_EVENT, wrapped)
   return () => window.removeEventListener(OPEN_THREAD_EVENT, wrapped)
+}
+
+/**
+ * Emit when an assistant turn has finished streaming. The chat route persists
+ * the turn (and, on the first exchange, auto-generates a title) fire-and-forget
+ * after the stream ends, so subscribers that show thread metadata (e.g. the
+ * threads sidebar) need to refetch to pick up the new thread / title.
+ */
+export function emitAssistantThreadUpdated(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(THREAD_UPDATED_EVENT))
+}
+
+/** Subscribe to assistant turn-finished notifications. */
+export function onAssistantThreadUpdated(handler: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = () => handler()
+  window.addEventListener(THREAD_UPDATED_EVENT, wrapped)
+  return () => window.removeEventListener(THREAD_UPDATED_EVENT, wrapped)
 }

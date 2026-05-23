@@ -549,7 +549,10 @@ async function phase5_buildDevStructure(): Promise<{
     const meSpaces = toInt(ms.records[0].get('c'))
     console.log(`   ✓ MeSpaces created: ${meSpaces}`)
 
-    // WeSpace per creator (any Person who authored at least one pulse).
+    // WeSpace per creator (any Person who authored at least one pulse). The
+    // creator is :OWNS the space and is wired as its sole member via the
+    // canonical Space -[:HAS_MEMBER]-> SpaceMembership -[:IS_MEMBER]-> Person
+    // pattern (see kb/05-data-entities.md).
     const ws = await session.run(
       `MATCH (p:Person)<-[:CREATED_BY]-(:FieldPulse)
        WITH DISTINCT p
@@ -562,7 +565,13 @@ async function phase5_buildDevStructure(): Promise<{
          createdAt: datetime()
        })
        CREATE (p)-[:OWNS]->(ws)
-       CREATE (ws)-[:HAS_MEMBER]->(p)
+       CREATE (sm:SpaceMembership {
+         id: 'sm_migrated_' + p.id,
+         role: 'ADMIN',
+         addedAt: datetime()
+       })
+       CREATE (ws)-[:HAS_MEMBER]->(sm)
+       CREATE (sm)-[:IS_MEMBER]->(p)
        RETURN count(ws) AS c`
     )
     const weSpaces = toInt(ws.records[0].get('c'))

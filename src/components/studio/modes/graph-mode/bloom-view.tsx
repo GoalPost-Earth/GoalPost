@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'reac
 import dynamic from 'next/dynamic'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
-import type { Node, Relationship } from '@neo4j-nvl/base'
+import type { ExternalCallbacks, Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
@@ -12,7 +12,6 @@ import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_D
 import { useFocalEntity } from '@/contexts'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
-import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { GraphLoadingState } from './graph-loading-state'
 import { useBloomOverlay } from '../../bloom-overlay-context'
@@ -281,6 +280,12 @@ export const BloomView: FC = () => {
   // directly without any HTML container; that's the "minimal GoalPost
   // opinionation" the kb calls out.
   //
+  // No x/y is set on any node: with `layout: 'forceDirected'`, supplying
+  // positions makes NVL treat the layout as already-settled and the
+  // simulation never runs until the user disturbs a node. Letting NVL
+  // place everything from scratch is what makes the force-directed shape
+  // appear on first load.
+  //
   // Precedence:
   //   1. Overlay (chat-pushed subgraph) — always wins; cleared via the
   //      "Custom view from chat" chip in the canvas header.
@@ -289,74 +294,47 @@ export const BloomView: FC = () => {
   //   4. Default — the user's MeSpace + WeSpace cluster.
   const nodes: Node[] = useMemo(() => {
     if (overlay) {
-      const positions = createClusteredFieldNodePositions(
-        overlay.nodes.map((n) => ({ id: n.id, size: 'lg' })),
-        130
+      return overlay.nodes.map(
+        (n) =>
+          ({
+            id: n.id,
+            caption: n.caption ?? n.id,
+            color: n.color ?? '#cbd5e1',
+            size: n.size ?? 30,
+          }) as Node
       )
-      return overlay.nodes.map((n, idx) => {
-        const position = positions[idx] ?? { x: 0, y: 0 }
-        return {
-          id: n.id,
-          x: position.x,
-          y: position.y,
-          caption: n.caption ?? n.id,
-          color: n.color ?? '#cbd5e1',
-          size: n.size ?? 30,
-        } as Node
-      })
     }
     if (inField) {
-      if (pulses.length === 0) return []
-      const positions = createClusteredFieldNodePositions(
-        pulses.map((p) => ({ id: p.id, size: 'sm' })),
-        100
+      return pulses.map(
+        (pulse) =>
+          ({
+            id: pulse.id,
+            caption: pulse.name,
+            color: PULSE_COLOR[pulse.pulseType],
+            size: PULSE_SIZE,
+          }) as Node
       )
-      return positions.map((position, idx) => {
-        const pulse = pulses[idx]
-        return {
-          id: pulse.id,
-          x: position.x,
-          y: position.y,
-          caption: pulse.name,
-          color: PULSE_COLOR[pulse.pulseType],
-          size: PULSE_SIZE,
-        } as Node
-      })
     }
     if (inSpace) {
-      if (fieldContexts.length === 0) return []
-      const positions = createClusteredFieldNodePositions(
-        fieldContexts.map((f) => ({ id: f.id, size: 'md' })),
-        110
+      return fieldContexts.map(
+        (ctx) =>
+          ({
+            id: ctx.id,
+            caption: ctx.name,
+            color: FIELD_COLOR[ctx.spaceKind],
+            size: FIELD_SIZE,
+          }) as Node
       )
-      return positions.map((position, idx) => {
-        const ctx = fieldContexts[idx]
-        return {
-          id: ctx.id,
-          x: position.x,
-          y: position.y,
-          caption: ctx.name,
-          color: FIELD_COLOR[ctx.spaceKind],
-          size: FIELD_SIZE,
-        } as Node
-      })
     }
-    if (spaces.length === 0) return []
-    const positions = createClusteredFieldNodePositions(
-      spaces.map((s) => ({ id: s.id, size: 'lg' })),
-      130
+    return spaces.map(
+      (space) =>
+        ({
+          id: space.id,
+          caption: space.name,
+          color: SPACE_COLOR[space.type],
+          size: SPACE_SIZE[space.type],
+        }) as Node
     )
-    return positions.map((position, idx) => {
-      const space = spaces[idx]
-      return {
-        id: space.id,
-        x: position.x,
-        y: position.y,
-        caption: space.name,
-        color: SPACE_COLOR[space.type],
-        size: SPACE_SIZE[space.type],
-      } as Node
-    })
   }, [overlay, inField, pulses, inSpace, fieldContexts, spaces])
 
   const relationships: Relationship[] = useMemo(() => {
@@ -503,16 +481,28 @@ export const BloomView: FC = () => {
     [handleNodeClick]
   )
 
-  // `layout: 'free'` makes NVL honor the (x, y) we computed. Without it,
-  // the default force-directed simulation would scatter unconnected nodes
-  // across an empty canvas and the post-mount `fit()` would land on
-  // whitespace.
+  // Bloom is a force-directed exploration surface. The pre-computed (x, y)
+  // values on each node act as seed positions for NVL's force simulation —
+  // it settles from there rather than starting cold, which keeps the
+  // post-mount `fit()` from landing on whitespace.
+  // `layoutOptions` is what actually drives the force simulation. Without
+  // these tuned values NVL's defaults produce a degenerate layout (nodes
+  // all collapsed near the gravity center) — that's why on first load you
+  // only saw one node and had to nudge to "wake up" the sim. These match
+  // the proven settings in `src/components/canvas/nvl-canvas.tsx:124-136`.
   const nvlOptions = useMemo(
     () => ({
-      layout: 'free',
+      layout: 'forceDirected',
       initialZoom: 0.7,
       minScale: 0.2,
       maxScale: 3,
+      layoutOptions: {
+        simulationIterations: 400,
+        gravity: 25,
+        linkDistance: 1,
+        charge: 0,
+        linkStrength: 1.0,
+      },
     }),
     []
   )
@@ -538,26 +528,77 @@ export const BloomView: FC = () => {
     setSelectedNode(null)
   }
 
+  // Fit once per scope. The force simulation calls `onLayoutDone` when it
+  // settles — that's when fit() lands on real positions instead of
+  // whitespace. A long fallback timeout covers the edge case where the
+  // callback never fires (e.g. single-node scope with no simulation).
   const lastFitScopeRef = useRef<string | null>(null)
+  const isInitialLayoutRef = useRef(true)
   useEffect(() => {
-    if (lastFitScopeRef.current === scopeKey) return
+    isInitialLayoutRef.current = true
+  }, [scopeKey])
+
+  // Kick the force simulation whenever the scope's node set is first
+  // populated. Without this, NVL's force layout can stay quiescent on a
+  // cold mount and the canvas shows a single overlapping cluster until
+  // the user drags a node — `restart()` is what that drag implicitly does.
+  const lastKickedScopeRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (lastKickedScopeRef.current === scopeKey) return
     if (nodes.length === 0) return
-    const timeout = window.setTimeout(() => {
-      const ref = nvlRef.current
-      if (!ref) return
-      lastFitScopeRef.current = scopeKey
-      if (nodes.length === 1) {
-        ref.setZoom?.(1)
-        return
+    const ref = nvlRef.current
+    if (!ref || typeof ref.restart !== 'function') return
+    lastKickedScopeRef.current = scopeKey
+    // A short delay lets the NVL wrapper finish wiring up the new nodes
+    // (`addAndUpdateElementsInGraph` happens in a separate effect) before
+    // we restart the simulation against them.
+    const timer = window.setTimeout(() => {
+      try {
+        nvlRef.current?.restart?.()
+      } catch {
+        // restart() can throw on a torn-down instance during fast nav;
+        // we intentionally swallow — the fit fallback still handles it.
       }
-      if (typeof ref.fit !== 'function') return
-      ref.fit(
-        nodes.map((n) => n.id),
-        { animated: false, maxZoom: 1.4 }
-      )
-    }, 120)
-    return () => window.clearTimeout(timeout)
+    }, 50)
+    return () => window.clearTimeout(timer)
   }, [nodes, scopeKey])
+
+  const fitToScope = useCallback(() => {
+    if (lastFitScopeRef.current === scopeKey) return
+    const ref = nvlRef.current
+    if (!ref) return
+    lastFitScopeRef.current = scopeKey
+    isInitialLayoutRef.current = false
+    if (nodes.length === 0) return
+    if (nodes.length === 1) {
+      ref.setZoom?.(1)
+      return
+    }
+    if (typeof ref.fit !== 'function') return
+    ref.fit(
+      nodes.map((n) => n.id),
+      { animated: false, maxZoom: 1.4 }
+    )
+  }, [nodes, scopeKey])
+
+  useEffect(() => {
+    if (nodes.length === 0) return
+    const fallback = window.setTimeout(() => {
+      if (!isInitialLayoutRef.current) return
+      fitToScope()
+    }, 2500)
+    return () => window.clearTimeout(fallback)
+  }, [nodes, scopeKey, fitToScope])
+
+  const nvlCallbacks: Partial<ExternalCallbacks> = useMemo(
+    () => ({
+      onLayoutDone: () => {
+        if (!isInitialLayoutRef.current) return
+        fitToScope()
+      },
+    }),
+    [fitToScope]
+  )
 
   // Listen for zoom commands from the floating canvas action bar — same
   // contract SpatialView honors.
@@ -635,6 +676,7 @@ export const BloomView: FC = () => {
             relationships={relationships}
             mouseEventCallbacks={mouseEventCallbacks}
             nvlOptions={nvlOptions}
+            nvlCallbacks={nvlCallbacks}
           />
         )}
       </div>

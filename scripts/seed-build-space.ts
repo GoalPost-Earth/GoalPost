@@ -402,11 +402,13 @@ async function resolveMemberIds(): Promise<Record<MemberKey, string>> {
 async function wipePriorSeed() {
   const session = driver.session()
   try {
-    // ResonanceLinks + FieldResonances we created.
+    // Everything this script writes uses prefixed ids; wipe by prefix so we
+    // don't touch other dev data.
     await session.run(
       `MATCH (n) WHERE n.id STARTS WITH 'link_${SEED_PREFIX}_'
                   OR n.id STARTS WITH 'resonance_${SEED_PREFIX}_'
                   OR n.id STARTS WITH 'pulse_${SEED_PREFIX}_'
+                  OR n.id STARTS WITH 'sm_${SEED_PREFIX}_'
                   OR n.id = $contextId
                   OR n.id = $spaceId
        DETACH DELETE n`,
@@ -421,6 +423,14 @@ async function wipePriorSeed() {
 async function createSpace(memberIds: Record<MemberKey, string>) {
   const session = driver.session()
   try {
+    // The dev model wires membership via an intermediate SpaceMembership node:
+    //   Space -[:HAS_MEMBER]-> SpaceMembership -[:IS_MEMBER]-> Person
+    // JD is the owner (ADMIN role); the others are MEMBER.
+    const memberships = Object.entries(memberIds).map(([key, id]) => ({
+      personId: id,
+      role: key === 'jd' ? 'ADMIN' : 'MEMBER',
+      smId: `sm_${SEED_PREFIX}_${key}`,
+    }))
     await session.run(
       `MATCH (owner:User {id: $ownerId})
        CREATE (ws:Space:WeSpace {
@@ -432,14 +442,20 @@ async function createSpace(memberIds: Record<MemberKey, string>) {
        })
        CREATE (owner)-[:OWNS]->(ws)
        WITH ws
-       UNWIND $memberIds AS memberId
-       MATCH (m:Person {id: memberId})
-       CREATE (ws)-[:HAS_MEMBER]->(m)
-       RETURN count(*) AS memberships`,
+       UNWIND $memberships AS row
+       MATCH (m:Person {id: row.personId})
+       CREATE (sm:SpaceMembership {
+         id: row.smId,
+         role: row.role,
+         addedAt: datetime()
+       })
+       CREATE (ws)-[:HAS_MEMBER]->(sm)
+       CREATE (sm)-[:IS_MEMBER]->(m)
+       RETURN count(sm) AS memberships`,
       {
         spaceId: SPACE_ID,
         ownerId: memberIds.jd,
-        memberIds: Object.values(memberIds),
+        memberships,
       }
     )
     await session.run(
@@ -566,8 +582,8 @@ async function summary() {
   try {
     const result = await session.run(
       `MATCH (ws:WeSpace {id: $spaceId})
-       OPTIONAL MATCH (ws)-[:HAS_MEMBER]->(m:Person)
-       WITH ws, count(m) AS members
+       OPTIONAL MATCH (ws)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(m:Person)
+       WITH ws, count(DISTINCT m) AS members
        OPTIONAL MATCH (ws)-[:HAS_CONTEXT]->(ctx:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
        WITH ws, members, count(p) AS pulses
        OPTIONAL MATCH (ws)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_RESONANCE]->(fr:FieldResonance)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type FC, type MouseEvent } from 'react'
+import { useRef, type FC } from 'react'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
@@ -15,10 +15,11 @@ import { useAnimations } from '@/contexts/animation-context'
  * than as another bubble, so they stand out against the field /
  * resource / story bubbles.
  *
- * Self-contained: handles its own click wrapper, drag suppression, and
- * entrance animation so the NVL container only has to mount one
- * React element per node (same contract as the `EntityBubble` render
- * path it replaced).
+ * Clicks + drag are owned by NVL (`onNodeClick` + `onDrag` on the
+ * spatial-view's `mouseEventCallbacks`); this component is render-only
+ * apart from its entrance animation. Adding React click / mousedown
+ * handlers here would re-introduce the bug that made the canvas feel
+ * pan-only — NVL's drag detector needs first crack at native mousedown.
  *
  * Role palette mirrors `PersonNode` on the legacy field pages — owner
  * = amber, PersonPulse = emerald.
@@ -80,12 +81,9 @@ export const PersonBubbleContent: FC<{
   person: PersonBubblePerson
   size: BubbleSize
   animationDelay?: number
-  onClick?: () => void
-}> = ({ person, size, animationDelay = 0, onClick }) => {
+}> = ({ person, size, animationDelay = 0 }) => {
   const { animationsEnabled } = useAnimations()
   const rootRef = useRef<HTMLDivElement>(null)
-  const isDraggingRef = useRef(false)
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const colors = ROLE_COLORS[person.role]
   const initials =
@@ -93,80 +91,41 @@ export const PersonBubbleContent: FC<{
     person.name.slice(0, 2).toUpperCase()
   const roleLabel = person.role === 'OWNER' ? 'Owner' : 'Person'
 
-  // Match EntityBubble's entrance + idle float so persons feel like
-  // first-class spatial nodes rather than static badges dropped on top.
+  // Entrance fade-in / scale-up so persons feel like first-class
+  // spatial nodes rather than static badges dropped on top. The
+  // idle float that `EntityBubble` does is intentionally dropped
+  // here — `forceDirected` is already animating positions and
+  // layering a second y-bob on top reads as jittery.
   useGSAP(
     () => {
       if (!rootRef.current) return
       if (!animationsEnabled) {
-        gsap.set(rootRef.current, { opacity: 1, scale: 1, y: 0 })
+        gsap.set(rootRef.current, { opacity: 1, scale: 1 })
         return
       }
       gsap.fromTo(
         rootRef.current,
-        { opacity: 0, scale: 0.85, y: 30 },
+        { opacity: 0, scale: 0.85 },
         {
           opacity: 1,
           scale: 1,
-          y: 0,
           duration: 1,
           delay: animationDelay,
           ease: 'power3.out',
           force3D: true,
         }
       )
-      gsap.to(rootRef.current, {
-        y: '-=12',
-        duration: 4 + animationDelay,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      })
     },
     { scope: rootRef, dependencies: [animationsEnabled, animationDelay] }
   )
-
-  // Drag suppression — NVL's pan/drag also fires native mouseup as a
-  // click on whichever DOM node was under the cursor. Mirror the
-  // EntityBubble guard so dragging the canvas across a person doesn't
-  // accidentally navigate.
-  const handleMouseDown = (e: MouseEvent) => {
-    isDraggingRef.current = false
-    dragStartRef.current = { x: e.clientX, y: e.clientY }
-  }
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!dragStartRef.current) return
-    const dx = e.clientX - dragStartRef.current.x
-    const dy = e.clientY - dragStartRef.current.y
-    if (Math.sqrt(dx * dx + dy * dy) > 5) {
-      isDraggingRef.current = true
-    }
-  }
-  const handleMouseUp = () => {
-    dragStartRef.current = null
-  }
-  const handleClick = (e: MouseEvent) => {
-    if (isDraggingRef.current) {
-      e.preventDefault()
-      e.stopPropagation()
-      isDraggingRef.current = false
-      return
-    }
-    onClick?.()
-  }
 
   return (
     <div
       ref={rootRef}
       className={cn(
-        'group flex flex-col items-center gap-3 select-none pointer-events-auto',
-        onClick && 'cursor-pointer'
+        'group flex flex-col items-center gap-3 select-none cursor-grab active:cursor-grabbing'
       )}
       style={{ willChange: 'transform' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onClick={handleClick}
     >
       <div
         className={cn(

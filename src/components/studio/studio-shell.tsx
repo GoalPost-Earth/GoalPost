@@ -27,7 +27,10 @@ import {
   fetchHydratedThread,
   type HydratedThread,
 } from '@/lib/simulation/conversation-thread-client'
-import { onOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import {
+  emitAssistantThreadUpdated,
+  onOpenAssistantThread,
+} from '@/lib/simulation/assistant-panel-events'
 import { TourController } from '@/components/onboarding/TourController'
 import { TourOverlay } from '@/components/onboarding/TourOverlay'
 import {
@@ -395,7 +398,11 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
     [resolveBody]
   )
 
-  const runtime = useChatRuntime({ transport, messages: initialMessages })
+  const runtime = useChatRuntime({
+    transport,
+    messages: initialMessages,
+    onFinish: () => emitAssistantThreadUpdated(),
+  })
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

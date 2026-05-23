@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef } from 'react'
-import type { Node, Relationship } from '@neo4j-nvl/base'
+import type { ExternalCallbacks, Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react'
 
@@ -10,6 +10,7 @@ interface GraphVisualizerProps {
   relationships: Relationship[]
   mouseEventCallbacks?: MouseEventCallbacks
   nvlOptions?: Record<string, unknown>
+  nvlCallbacks?: Partial<ExternalCallbacks>
 }
 
 /**
@@ -22,6 +23,10 @@ export interface NvlRefHandle {
   setZoom: (zoom: number) => void
   fit: (nodeIds: string[], opts?: Record<string, unknown>) => void
   getNodes: () => Node[]
+  /** Re-kicks the layout simulation. Required after mount because NVL's force layout doesn't always converge from a cold start without an explicit nudge. */
+  restart: (opts?: Record<string, unknown>, retainPositions?: boolean) => void
+  /** Updates layout-specific options (gravity, linkDistance, simulationIterations, etc.) on the live NVL instance. */
+  setLayoutOptions: (opts: Record<string, unknown>) => void
 }
 
 /**
@@ -33,7 +38,7 @@ export interface NvlRefHandle {
  */
 export const GraphVisualizer = forwardRef<NvlRefHandle, GraphVisualizerProps>(
   function GraphVisualizer(
-    { nodes, relationships, mouseEventCallbacks, nvlOptions },
+    { nodes, relationships, mouseEventCallbacks, nvlOptions, nvlCallbacks },
     ref
   ) {
     return (
@@ -46,6 +51,7 @@ export const GraphVisualizer = forwardRef<NvlRefHandle, GraphVisualizerProps>(
         rels={relationships}
         mouseEventCallbacks={mouseEventCallbacks}
         nvlOptions={nvlOptions}
+        nvlCallbacks={nvlCallbacks as never}
       />
     )
   }

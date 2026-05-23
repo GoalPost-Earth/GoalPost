@@ -32,7 +32,13 @@ const upsertSchema = z.object({
     message: 'Unsupported focal entity type.',
   }),
   id: z.string().min(1),
-  label: z.string().max(255).optional(),
+  // The client serialises an unresolved label as `null` (see
+  // FocalEntityContext.tsx — `label: focalEntity.label ?? null`),
+  // which `.optional()` alone rejects with a 400 "expected string,
+  // received null". `nullable().optional()` accepts string, null,
+  // and omitted; the row writer below normalises everything down to
+  // null before it hits Cypher.
+  label: z.string().max(255).nullable().optional(),
 })
 
 interface StoredFocal {

@@ -5,11 +5,28 @@ import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowRight, Layers, Lock, Sparkles, Users, X } from 'lucide-react'
+import {
+  ArrowRight,
+  Activity,
+  Calendar,
+  Layers,
+  Lock,
+  MapPin,
+  Sparkles,
+  Target,
+  Users,
+  X,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
+import { LinkifiedText } from '@/components/ui/linkified-text'
+import {
+  PULSE_TYPE_CONFIG,
+  type NodeType,
+} from '@/lib/pulse-type-config'
 
 export type InfoEntityType = 'MeSpace' | 'WeSpace' | 'FieldContext' | 'Pulse' | 'Person'
 
@@ -144,6 +161,8 @@ export const EntityInfoDrawer: FC = () => {
         <div className="flex-1 overflow-y-auto">
           {entity.type === 'MeSpace' || entity.type === 'WeSpace' ? (
             <SpaceDetailsBody spaceId={entity.id} onClose={close} />
+          ) : entity.type === 'Pulse' ? (
+            <PulseDetailsBody pulseId={entity.id} onClose={close} />
           ) : (
             <UnsupportedBody type={entity.type} />
           )}
@@ -442,6 +461,353 @@ const SpaceDetailsBody: FC<{ spaceId: string; onClose: () => void }> = ({
   )
 }
 
+/**
+ * Body for an individual Pulse (GoalPulse / ResourcePulse / StoryPulse).
+ * Matches the SpaceDetailsBody pattern — drawer summary + an "Open
+ * pulse" CTA in the footer that navigates to the full
+ * `/protected/dashboard/pulses/[id]` view for editing, related
+ * pulses, provenance, etc. CarePulse and CoreValuePulse aren't fetched
+ * by `GET_PULSE_DETAILS_WITH_CONTEXT` (the detail page is the same
+ * shape and behaves the same way), so they fall through to the
+ * not-found copy here.
+ */
+const PulseDetailsBody: FC<{ pulseId: string; onClose: () => void }> = ({
+  pulseId,
+  onClose,
+}) => {
+  const router = useRouter()
+  const { data, loading } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
+    variables: { pulseId },
+    fetchPolicy: 'cache-and-network',
+  })
+
+  if (loading && !data) {
+    return <PulseDetailsSkeleton />
+  }
+
+  // Pick whichever concrete pulse-type array resolved — same approach
+  // the full detail page uses (see pulses/[id]/page.tsx:170).
+  const pulse =
+    data?.goalPulses?.[0] ||
+    data?.resourcePulses?.[0] ||
+    data?.storyPulses?.[0]
+
+  if (!pulse) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-sm text-gp-ink-muted dark:text-white/55">
+          This pulse is no longer available — it may have been deleted or you
+          lost access.
+        </p>
+      </div>
+    )
+  }
+
+  const nodeType = typenameToNodeType(pulse.__typename)
+  const config = PULSE_TYPE_CONFIG[nodeType]
+  const context = pulse.context?.[0]
+  const space = context?.space?.[0]
+  const isMe = space?.__typename === 'MeSpace'
+
+  const created = pulse.createdAt ? new Date(pulse.createdAt) : null
+  const createdLabel =
+    created && !Number.isNaN(created.getTime())
+      ? formatDistanceToNow(created, { addSuffix: true })
+      : '—'
+
+  const goToPulse = () => {
+    onClose()
+    router.push(`/protected/dashboard/pulses/${pulse.id}`)
+  }
+
+  const goToContext = () => {
+    if (!context?.id) return
+    onClose()
+    router.push(`/protected/dashboard/field-context/${context.id}`)
+  }
+
+  // Narrow once so the type-specific renderer can read its discriminated fields
+  // without `as any`. Each pulse subtype carries its own field set per the SDL.
+  const goal = pulse.__typename === 'GoalPulse' ? pulse : null
+  const resource = pulse.__typename === 'ResourcePulse' ? pulse : null
+  const story = pulse.__typename === 'StoryPulse' ? pulse : null
+
+  const intensityPct =
+    typeof pulse.intensity === 'number'
+      ? Math.round(Math.max(0, Math.min(1, pulse.intensity)) * 100)
+      : null
+
+  return (
+    <div className="flex flex-col">
+      {/* Hero — pulse-type accent chip + title. The accent gradient is
+          driven off the pulse-type token's shadowColor so the hero
+          reads with subtle color in both light and dark mode (the
+          token already encodes the right opacity for each). */}
+      <section
+        className="relative px-6 pt-7 pb-7 border-b border-gp-glass-border"
+        style={{
+          backgroundImage: `linear-gradient(135deg, ${config.shadowColor}, transparent 70%)`,
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              'shrink-0 size-14 rounded-2xl border flex items-center justify-center shadow-md',
+              'bg-black/[0.04] dark:bg-white/5 border-black/10 dark:border-white/15',
+              config.color
+            )}
+          >
+            <span className="material-symbols-outlined text-3xl">
+              {config.icon}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
+              {pulse.title || 'Untitled pulse'}
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  'inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border',
+                  'bg-black/[0.04] dark:bg-white/5 border-black/10 dark:border-white/15',
+                  config.color
+                )}
+              >
+                {config.label}
+              </span>
+              {space?.name && (
+                <button
+                  type="button"
+                  onClick={goToContext}
+                  className="text-[11px] uppercase tracking-[0.16em] text-gp-ink-muted dark:text-white/50 hover:text-gp-ink-strong dark:hover:text-white/80 transition-colors cursor-pointer"
+                  title={`Open ${context?.title || 'field'}`}
+                >
+                  {isMe ? 'Me Space' : 'We Space'} · {space.name}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Type-specific at-a-glance */}
+      <section className="px-6 py-5 grid grid-cols-2 gap-3">
+        {goal && (
+          <>
+            <StatCell
+              icon={<Activity className="w-3.5 h-3.5" />}
+              label="Status"
+              value={String(goal.status || '—')}
+              valueClassName="uppercase tracking-wider text-[11px]"
+            />
+            <StatCell
+              icon={<Target className="w-3.5 h-3.5" />}
+              label="Horizon"
+              value={String(goal.horizon || '—')}
+              valueClassName="uppercase tracking-wider text-[11px]"
+            />
+          </>
+        )}
+        {resource && (
+          <>
+            <StatCell
+              icon={<Layers className="w-3.5 h-3.5" />}
+              label="Resource type"
+              value={String(resource.resourceType || '—')}
+              valueClassName="text-[12px]"
+            />
+            <StatCell
+              icon={<Activity className="w-3.5 h-3.5" />}
+              label="Availability"
+              value={
+                typeof resource.availability === 'number'
+                  ? `${Math.round(resource.availability * 100)}%`
+                  : '—'
+              }
+            />
+          </>
+        )}
+        {story && (
+          <>
+            <StatCell
+              icon={<Sparkles className="w-3.5 h-3.5" />}
+              label="Level fulfilled"
+              value={String(story.levelFulfilled || '—')}
+              valueClassName="text-[12px]"
+            />
+            <StatCell
+              icon={<Calendar className="w-3.5 h-3.5" />}
+              label="Fulfillment"
+              value={String(story.fulfillmentDate || '—')}
+              valueClassName="text-[12px]"
+            />
+          </>
+        )}
+        <StatCell
+          icon={<Sparkles className="w-3.5 h-3.5" />}
+          label="Intensity"
+          value={intensityPct !== null ? `${intensityPct}%` : '—'}
+        />
+        <StatCell
+          icon={<Calendar className="w-3.5 h-3.5" />}
+          label="Created"
+          value={createdLabel}
+          valueClassName="text-[12px]"
+        />
+      </section>
+
+      {/* Why */}
+      {pulse.why && (
+        <section className="px-6 pb-5">
+          <SectionHeader>Why</SectionHeader>
+          <p className="mt-2 text-sm italic text-gp-ink-muted dark:text-white/65 leading-relaxed">
+            &quot;{pulse.why}&quot;
+          </p>
+        </section>
+      )}
+
+      {/* Content */}
+      {pulse.content && (
+        <section className="px-6 pb-5">
+          <SectionHeader>Description</SectionHeader>
+          <div className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+            <LinkifiedText text={pulse.content} />
+          </div>
+        </section>
+      )}
+
+      {/* Optional facts — location / time */}
+      {(pulse.location || pulse.time) && (
+        <section className="px-6 pb-5 space-y-2">
+          {pulse.location && (
+            <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
+              <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span className="break-words">{pulse.location}</span>
+            </div>
+          )}
+          {pulse.time && (
+            <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
+              <Calendar className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span className="break-words">{pulse.time}</span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Goal-specific extras */}
+      {goal && (goal.successMeasures || goal.activities) && (
+        <section className="px-6 pb-5 space-y-4">
+          {goal.successMeasures && (
+            <div>
+              <SectionHeader>Success measures</SectionHeader>
+              <p className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+                {goal.successMeasures}
+              </p>
+            </div>
+          )}
+          {goal.activities && (
+            <div>
+              <SectionHeader>Activities</SectionHeader>
+              <p className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+                {goal.activities}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Field context lineage row — present even when title is missing */}
+      {context && (
+        <section className="px-6 pb-5">
+          <SectionHeader>Field context</SectionHeader>
+          <button
+            type="button"
+            onClick={goToContext}
+            className={cn(
+              'group mt-2 w-full text-left rounded-xl border border-gp-glass-border',
+              'bg-black/[0.03] dark:bg-white/[0.03]',
+              'hover:bg-black/[0.05] dark:hover:bg-white/[0.06] hover:border-black/15 dark:hover:border-white/20',
+              'px-4 py-3 transition-all cursor-pointer flex items-center gap-3'
+            )}
+          >
+            <div className="size-8 shrink-0 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center">
+              <Layers className="w-4 h-4 text-gp-ink-muted dark:text-white/60" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gp-ink-strong dark:text-white/90 truncate">
+                {context.title || context.emergentName || 'Untitled field'}
+              </p>
+              {space?.name && (
+                <p className="text-[11px] text-gp-ink-muted dark:text-white/45 truncate">
+                  in {space.name}
+                </p>
+              )}
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 dark:text-white/30 group-hover:text-slate-600 dark:group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
+          </button>
+        </section>
+      )}
+
+      {/* Footer — primary CTA + meta */}
+      <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
+        <button
+          type="button"
+          onClick={goToPulse}
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-5 h-11 rounded-xl',
+            'bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm',
+            'shadow-lg shadow-gp-primary/20 transition-all cursor-pointer',
+            'ring-2 ring-transparent focus-visible:ring-white/40'
+          )}
+        >
+          Open pulse
+          <ArrowRight className="w-4 h-4" />
+        </button>
+        <p className="text-center text-[11px] text-gp-ink-muted dark:text-white/45">
+          Created {createdLabel}
+        </p>
+      </footer>
+    </div>
+  )
+}
+
+function typenameToNodeType(typename?: string | null): NodeType {
+  switch (typename) {
+    case 'GoalPulse':
+      return 'goal'
+    case 'ResourcePulse':
+      return 'resource'
+    case 'StoryPulse':
+      return 'story'
+    case 'CarePulse':
+      return 'care'
+    case 'CoreValuePulse':
+      return 'coreValue'
+    default:
+      return 'goal'
+  }
+}
+
+const PulseDetailsSkeleton: FC = () => (
+  <div className="p-6 space-y-5">
+    <div className="flex items-start gap-4">
+      <div className="size-14 rounded-2xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+      <div className="flex-1 space-y-2 pt-1">
+        <div className="h-6 w-3/4 rounded-md bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+        <div className="h-3 w-1/3 rounded-md bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="h-20 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+      <div className="h-20 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+      <div className="h-20 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+      <div className="h-20 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+    </div>
+    <div className="h-24 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+    <div className="h-16 rounded-xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+  </div>
+)
+
 const SectionHeader: FC<{ children: React.ReactNode }> = ({ children }) => (
   <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-white/50">
     {children}
@@ -454,7 +820,7 @@ const StatCell: FC<{
   value: string
   valueClassName?: string
 }> = ({ icon, label, value, valueClassName }) => (
-  <div className="rounded-xl border border-gp-glass-border bg-white/[0.03] px-3.5 py-3">
+  <div className="rounded-xl border border-gp-glass-border bg-black/[0.03] dark:bg-white/[0.03] px-3.5 py-3">
     <div className="flex items-center gap-1.5 text-gp-ink-muted dark:text-white/45">
       {icon}
       <span className="text-[10px] uppercase tracking-wider font-semibold">
