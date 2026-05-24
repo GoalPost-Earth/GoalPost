@@ -56,8 +56,14 @@ export function SpacesOverview() {
     error: weSpacesError,
   } = useQuery(GET_ALL_WE_SPACES, { fetchPolicy: 'cache-and-network' })
 
-  const loading = meSpacesLoading || weSpacesLoading
   const error = meSpacesError || weSpacesError
+
+  // Per-query "still waiting for first response" flags. Apollo keeps
+  // `loading=true` during background `cache-and-network` refreshes too,
+  // which would leave skeletons showing forever — gate on `!data` so
+  // these flip false once each query has produced anything.
+  const meSpacesPending = meSpacesLoading && !meSpacesData
+  const weSpacesPending = weSpacesLoading && !weSpacesData
 
   const { meSpaces, weSpaces } = useMemo(() => {
     const me: UnifiedSpace[] =
@@ -74,6 +80,17 @@ export function SpacesOverview() {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
   }, [filter, meSpaces, weSpaces])
+
+  // Whether the current filter still has an outstanding first response.
+  // 'all' waits on both queries; the filtered tabs only care about their
+  // own — so e.g. switching to "Me Spaces" doesn't show skeletons just
+  // because WeSpaces is still loading in the background.
+  const showSkeletons =
+    filter === 'me'
+      ? meSpacesPending
+      : filter === 'we'
+        ? weSpacesPending
+        : meSpacesPending || weSpacesPending
 
   if (error) {
     return (
@@ -142,13 +159,10 @@ export function SpacesOverview() {
         </div>
       </header>
 
-      {loading && visibleSpaces.length === 0 ? (
+      {visibleSpaces.length === 0 && showSkeletons ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-44 rounded-2xl bg-gp-ink-strong/[0.04] dark:bg-white/5 border border-gp-glass-border animate-pulse"
-            />
+            <SkeletonCard key={i} />
           ))}
         </div>
       ) : visibleSpaces.length === 0 ? (
@@ -158,6 +172,12 @@ export function SpacesOverview() {
           {visibleSpaces.map((space) => (
             <SpaceCard key={space.id} space={space} />
           ))}
+          {/* Keep the loading affordance alive while the other query is
+              still in flight — e.g. MeSpaces returned but WeSpaces are
+              still loading. Without this the cards would render with
+              no signal that more is on the way. */}
+          {showSkeletons &&
+            [1, 2, 3].map((i) => <SkeletonCard key={`pending-${i}`} />)}
         </div>
       )}
     </section>
@@ -312,6 +332,15 @@ function SpaceCard({ space }: SpaceCardProps) {
         </span>
       </div>
     </div>
+  )
+}
+
+function SkeletonCard() {
+  return (
+    <div
+      aria-hidden="true"
+      className="h-44 rounded-2xl bg-gp-ink-strong/[0.04] dark:bg-white/5 border border-gp-glass-border animate-pulse"
+    />
   )
 }
 
