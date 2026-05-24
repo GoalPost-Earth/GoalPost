@@ -106,14 +106,19 @@ export const StudioChrome: FC = () => {
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <Link
               href="/protected"
-              className="flex items-center text-gp-primary shrink-0"
+              className="flex items-center gap-2 text-gp-primary shrink-0"
               aria-label="GoalPost home"
             >
               <span className="size-9 flex items-center justify-center">
                 {isMounted && <GoalPostLogo />}
               </span>
+              <span className="hidden sm:inline text-base font-semibold tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
+                GoalPost
+              </span>
             </Link>
-            <StudioBreadcrumb />
+            <div className="md:hidden min-w-0">
+              <StudioBreadcrumb />
+            </div>
           </div>
 
           <div className="flex items-center gap-2 lg:gap-3 shrink-0">

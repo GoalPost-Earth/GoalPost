@@ -8,6 +8,7 @@ import { useBloomOverlay } from './bloom-overlay-context'
 import { SpatialView } from './modes/graph-mode/spatial-view'
 import { BloomView } from './modes/graph-mode/bloom-view'
 import { StudioCanvasActionBar } from './canvas-action-bar'
+import { StudioBreadcrumb } from './studio-breadcrumb'
 import { EntityInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 interface CanvasHostProps {
@@ -51,6 +52,9 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
     >
       <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <div className="flex items-center gap-2 min-w-0">
+          <div className="hidden md:flex min-w-0">
+            <StudioBreadcrumb />
+          </div>
           {showOverlayChip && (
             <button
               type="button"
