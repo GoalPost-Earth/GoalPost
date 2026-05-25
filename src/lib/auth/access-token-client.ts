@@ -35,24 +35,53 @@ const CACHE_TTL_MS = 60_000
 let inflight: Promise<string | null> | null = null
 let cached: CachedToken | null = null
 
+/**
+ * Dispatched when `/api/auth/access-token` definitively reports the
+ * caller is unauthenticated (`ERR_UNAUTHENTICATED` — refresh also
+ * failed). `AppContext` listens via `onSessionExpired` and runs
+ * `handleLogout()` to clear local state + redirect to /auth/login, so a
+ * logged-in user whose refresh cookie expired/revoked gets logged out
+ * cleanly instead of seeing a stream of 401s.
+ *
+ * Uses a module-private `EventTarget` rather than `window` so other
+ * in-page scripts (including any future XSS) can't dispatch a forged
+ * `gp:session-expired` event to force-logout the user from any tab.
+ */
+const sessionEventBus =
+  typeof EventTarget !== 'undefined' ? new EventTarget() : null
+const SESSION_EXPIRED_EVENT = 'session-expired'
+
+function emitSessionExpired(): void {
+  sessionEventBus?.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+}
+
+export function onSessionExpired(handler: () => void): () => void {
+  if (!sessionEventBus) return () => {}
+  sessionEventBus.addEventListener(SESSION_EXPIRED_EVENT, handler)
+  return () =>
+    sessionEventBus.removeEventListener(SESSION_EXPIRED_EVENT, handler)
+}
+
 async function fetchTokenOnce(): Promise<string | null> {
   try {
-    const tokenRes = await fetch('/api/auth/access-token', {
+    // The access-token endpoint now auto-refreshes when the cookie is
+    // missing or expired, so a single call is enough — no client-side
+    // chaining to /api/auth/refresh-token. A 401 here means the session
+    // is genuinely over (refresh also failed) and we should log out.
+    const res = await fetch('/api/auth/access-token', {
       credentials: 'include',
     })
-    if (tokenRes.ok) {
-      const data = (await tokenRes.json()) as { accessToken?: string }
+    if (res.ok) {
+      const data = (await res.json()) as { accessToken?: string }
       if (typeof data.accessToken === 'string' && data.accessToken) {
         return data.accessToken
       }
+      return null
     }
-    const refreshRes = await fetch('/api/auth/refresh-token', {
-      credentials: 'include',
-    })
-    if (refreshRes.ok) {
-      const data = (await refreshRes.json()) as { accessToken?: string }
-      if (typeof data.accessToken === 'string' && data.accessToken) {
-        return data.accessToken
+    if (res.status === 401) {
+      const body = (await res.json().catch(() => ({}))) as { code?: string }
+      if (body.code === 'ERR_UNAUTHENTICATED') {
+        emitSessionExpired()
       }
     }
   } catch {

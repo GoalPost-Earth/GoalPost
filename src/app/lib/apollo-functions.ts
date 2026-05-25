@@ -51,32 +51,17 @@ export const errorLink = onError((error) => {
 /**
  * authLink delegates to the shared `getAccessToken` helper so every
  * GraphQL request reuses the same in-flight refresh as Apollo's siblings
- * (chat thread client, focal-entity, onboarding). Without this each
- * link instance fired its own `/api/auth/access-token` + `/refresh-token`
- * dance on every operation; on a page mount that spawned 5+ concurrent
- * GraphQL queries the rotating-refresh-token race would 401 most of them.
- *
- * On hard auth failure (token + refresh both unavailable) the user is
- * bounced to `/auth/login` so they don't sit stranded on a protected
- * route silently receiving null `@authorization`-gated responses.
+ * (chat thread client, focal-entity, onboarding). The helper itself
+ * dispatches a `gp:session-expired` event when the server confirms the
+ * session is gone (refresh also failed); `AppContext` listens for that
+ * event and runs the full logout + redirect, so this link just needs to
+ * attach the bearer when available and otherwise let the request go.
  */
 export const authLink = setContext(async (_, { headers }) => {
   try {
     const token = await getAccessToken()
     if (token) {
       return { headers: { ...headers, Authorization: `Bearer ${token}` } }
-    }
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname
-      const onProtectedRoute = path.startsWith('/protected')
-      const alreadyOnAuthRoute = path.startsWith('/auth')
-      if (onProtectedRoute && !alreadyOnAuthRoute) {
-        console.warn(
-          'Access token unavailable and refresh failed, redirecting to login...'
-        )
-        const returnTo = encodeURIComponent(path + window.location.search)
-        window.location.href = `/auth/login?returnTo=${returnTo}`
-      }
     }
     return { headers }
   } catch (error) {

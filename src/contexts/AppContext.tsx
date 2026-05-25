@@ -1,12 +1,15 @@
 'use client'
 
-import { ReactNode, createContext, useContext, useState } from 'react'
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { GetLoggedInUserQuery } from '@/gql/graphql'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
 import { NAVIGATION_HISTORY_STORAGE_PREFIX } from './NavigationHistoryContext'
-import { invalidateAccessTokenCache } from '@/lib/auth/access-token-client'
+import {
+  invalidateAccessTokenCache,
+  onSessionExpired,
+} from '@/lib/auth/access-token-client'
 
 type ContextUser = UserProfile & GetLoggedInUserQuery['people'][0]
 
@@ -120,6 +123,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     document.cookie = 'accessToken=; path=/; max-age=0'
   }
+
+  // The shared access-token helper emits `gp:session-expired` when the
+  // server returns ERR_UNAUTHENTICATED (refresh also failed). Clean up
+  // local state and bounce to /auth/login so a logged-in user whose
+  // refresh token was revoked / expired doesn't sit watching a stream
+  // of 401s in the network panel.
+  useEffect(() => {
+    return onSessionExpired(() => {
+      handleLogout()
+      if (typeof window === 'undefined') return
+      const path = window.location.pathname
+      if (path.startsWith('/auth')) return
+      const returnTo = encodeURIComponent(path + window.location.search)
+      window.location.href = `/auth/login?returnTo=${returnTo}`
+    })
+    // handleLogout closes over setUser only; it's effectively stable
+    // for the lifetime of the provider.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const value = {
     user,
