@@ -1,6 +1,6 @@
 'use client'
 
-import { type FC, useEffect, useState, useCallback } from 'react'
+import { type FC, useEffect, useRef, useState, useCallback } from 'react'
 import { PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -12,7 +12,13 @@ import { onAssistantThreadUpdated } from '@/lib/simulation/assistant-panel-event
 interface ThreadsSidebarProps {
   activeThreadId: string | null
   onSelectThread: (id: string) => void
-  onNewThread: () => Promise<void>
+  /**
+   * Create a new thread. Resolves to the new threadId on success, or
+   * `null` if the create failed — the auto-create useEffect checks the
+   * return value so a transient POST failure doesn't strand the user
+   * on the placeholder.
+   */
+  onNewThread: () => Promise<string | null>
 }
 
 const COLLAPSED_KEY = 'goalpost.studio.threadsSidebarCollapsed'
@@ -69,19 +75,25 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
 
   useEffect(() => { void fetchThreads() }, [fetchThreads])
 
-  // Refetch when the assistant finishes a turn. The chat route persists the
-  // new turn + auto-generates the thread title fire-and-forget after the
-  // stream ends, so we refetch twice: once immediately to surface the thread
-  // and a second time after ~2s to catch the gpt-4o-mini title write.
+  // Refetch on each assistant-thread-updated signal. The chat route persists
+  // the new turn + auto-generates the thread title fire-and-forget after the
+  // stream ends, so we refetch on a schedule: immediately (to surface the
+  // thread), +2.5s, and +6s. The gpt-4o-mini title call can take 1–4s after
+  // the stream completes, and a single 2.5s retry was missing the title
+  // write in the e2e measurements — the third refetch closes that window.
   useEffect(() => {
     const timeouts = new Set<number>()
-    const unsubscribe = onAssistantThreadUpdated(() => {
-      void fetchThreads()
+    const scheduleRefetch = (delay: number) => {
       const id = window.setTimeout(() => {
         timeouts.delete(id)
         void fetchThreads()
-      }, 2500)
+      }, delay)
       timeouts.add(id)
+    }
+    const unsubscribe = onAssistantThreadUpdated(() => {
+      void fetchThreads()
+      scheduleRefetch(2500)
+      scheduleRefetch(6000)
     })
     return () => {
       unsubscribe()
@@ -89,15 +101,35 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
     }
   }, [fetchThreads])
 
-  const handleNewThread = async () => {
+  const handleNewThread = useCallback(async (): Promise<string | null> => {
     setCreating(true)
     try {
-      await onNewThread()
+      const id = await onNewThread()
       await fetchThreads()
+      return id
     } finally {
       setCreating(false)
     }
-  }
+  }, [onNewThread, fetchThreads])
+
+  // First-time visitors should never stare at an empty "No conversations
+  // yet" sidebar — that reads as "the app didn't work". As soon as we
+  // confirm the user has zero threads, auto-create one so they have a
+  // tangible "New thread" row to type into. Guarded by a ref so a
+  // re-render after the create completes can't trigger a second create.
+  // On failure we reset the guard so the next render can retry — without
+  // this a transient network/auth failure would leave the placeholder
+  // pinned with no path forward.
+  const hasAutoCreatedRef = useRef(false)
+  useEffect(() => {
+    if (loading || creating) return
+    if (threads.length > 0) return
+    if (hasAutoCreatedRef.current) return
+    hasAutoCreatedRef.current = true
+    void handleNewThread().then((id) => {
+      if (!id) hasAutoCreatedRef.current = false
+    })
+  }, [loading, creating, threads.length, handleNewThread])
 
   if (collapsed) {
     return (
@@ -175,22 +207,23 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
           </div>
         )}
 
+        {/* Auto-create is in flight (or about to run) — render a "New thread"
+            placeholder so the sidebar never shows an empty state. Real
+            row swaps in once the create + refetch complete (~300–600ms). */}
         {!loading && threads.length === 0 && (
-          <div className="gp-dot-grid flex flex-col items-center justify-center gap-3 py-12 rounded-xl opacity-60">
-            <span className="material-symbols-outlined text-4xl text-gp-ink-soft">
-              forum
-            </span>
-            <p className="text-xs text-gp-ink-soft text-center leading-relaxed px-4">
-              No conversations yet.
-              <br />
-              Start chatting to create one.
+          <div
+            aria-current="true"
+            className="nav-item active w-full text-left rounded-lg px-3 py-2.5 bg-white/80 dark:bg-white/8 text-gp-ink-strong dark:text-white"
+          >
+            <p className="text-xs leading-snug line-clamp-2 font-medium">
+              New thread
             </p>
+            <p className="text-[10px] mt-1 opacity-60">Type to begin</p>
           </div>
         )}
 
-        {!loading && threads.map((t, i) => {
-          const isActive =
-            activeThreadId === t.id || (activeThreadId === null && i === 0)
+        {!loading && threads.map((t) => {
+          const isActive = activeThreadId === t.id
           return (
             <button
               key={t.id}
@@ -204,7 +237,10 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
               )}
             >
               <p className="text-xs leading-snug line-clamp-2 font-medium">
-                {t.title ?? t.snippet ?? 'New conversation'}
+                {/* `||` (not `??`) so an empty string snippet (auto-created
+                    thread, no turns yet) falls through to "New thread"
+                    instead of rendering a blank row. */}
+                {t.title?.trim() || t.snippet?.trim() || 'New thread'}
               </p>
               <p className="text-[10px] mt-1 opacity-60">
                 {formatDate(t.lastTurnAt ?? t.createdAt)}

@@ -21,9 +21,14 @@ export const ChatMode: FC<ChatModeProps> = ({
   onSelectThread,
   compact = false,
 }) => {
-  const handleNewThread = useCallback(async () => {
+  // Returns the new threadId on success, null on failure. The sidebar's
+  // auto-create useEffect uses the return value to decide whether to
+  // retry — without it a transient POST failure leaves the user stuck
+  // on the placeholder forever.
+  const handleNewThread = useCallback(async (): Promise<string | null> => {
     const threadId = await createConversationThread()
     if (threadId) onSelectThread(threadId)
+    return threadId
   }, [onSelectThread])
 
   return (
