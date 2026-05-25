@@ -27,6 +27,8 @@ import {
   PULSE_TYPE_CONFIG,
   type NodeType,
 } from '@/lib/pulse-type-config'
+import { SharePulseModal, type PulseDetails, type PulseKind } from '@/components/ui/pulse-panel'
+import { usePulseSharing } from '@/hooks/usePulseSharing'
 
 export type InfoEntityType = 'MeSpace' | 'WeSpace' | 'FieldContext' | 'Pulse' | 'Person'
 
@@ -476,7 +478,13 @@ const PulseDetailsBody: FC<{ pulseId: string; onClose: () => void }> = ({
   onClose,
 }) => {
   const router = useRouter()
-  const { data, loading } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
+  const [showShareModal, setShowShareModal] = useState(false)
+  const {
+    sharePulseWithContext,
+    removePulseFromContext,
+    loading: sharingLoading,
+  } = usePulseSharing()
+  const { data, loading, refetch } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
     variables: { pulseId },
     fetchPolicy: 'cache-and-network',
   })
@@ -748,27 +756,117 @@ const PulseDetailsBody: FC<{ pulseId: string; onClose: () => void }> = ({
         </section>
       )}
 
-      {/* Footer — primary CTA + meta */}
+      {/* Footer — primary CTA + meta. Share/Move is only offered for the
+          three sharable pulse kinds; Care + CoreValue don't have a
+          context-share workflow today. */}
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
-        <button
-          type="button"
-          onClick={goToPulse}
-          className={cn(
-            'w-full flex items-center justify-center gap-2 px-5 h-11 rounded-xl',
-            'bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm',
-            'shadow-lg shadow-gp-primary/20 transition-all cursor-pointer',
-            'ring-2 ring-transparent focus-visible:ring-white/40'
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goToPulse}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2 px-5 h-11 rounded-xl',
+              'bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm',
+              'shadow-lg shadow-gp-primary/20 transition-all cursor-pointer',
+              'ring-2 ring-transparent focus-visible:ring-white/40'
+            )}
+          >
+            Open pulse
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          {(goal || resource || story) && (
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              title="Share or move this pulse to another field context"
+              className={cn(
+                'flex items-center justify-center gap-2 px-4 h-11 rounded-xl',
+                'border border-gp-glass-border bg-white/40 hover:bg-white/60',
+                'dark:bg-white/5 dark:hover:bg-white/10',
+                'text-gp-ink-strong dark:text-white/85 text-sm font-medium',
+                'transition-all cursor-pointer'
+              )}
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                share
+              </span>
+              Share
+            </button>
           )}
-        >
-          Open pulse
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        </div>
         <p className="text-center text-[11px] text-gp-ink-muted dark:text-white/45">
           Created {createdLabel}
         </p>
       </footer>
+
+      {showShareModal && (
+        <SharePulseModal
+          pulse={buildSharablePulse(pulse, nodeType)}
+          currentContextId={context?.id}
+          onShare={sharePulseWithContext}
+          onRemove={removePulseFromContext}
+          onMoveSuccess={async () => {
+            await refetch()
+          }}
+          onClose={() => setShowShareModal(false)}
+          isLoading={sharingLoading}
+        />
+      )}
     </div>
   )
+}
+
+/**
+ * Minimal shape `buildSharablePulse` reads from the discriminated
+ * goal/resource/story union returned by `GET_PULSE_DETAILS_WITH_CONTEXT`.
+ * Inferring directly off the generated query type produces a `never`
+ * intersection here (the subtypes share only `__typename`), so we list
+ * the fields we actually project. Each is optional because they live on
+ * different subtypes.
+ */
+interface SharablePulseSource {
+  id: string
+  title?: string | null
+  content?: string | null
+  createdAt?: unknown
+  intensity?: number | null
+  status?: string | null
+  horizon?: string | null
+  resourceType?: string | null
+  context?: Array<{ id: string; title?: string | null } | null> | null
+}
+
+/**
+ * Project the info-drawer's pulse shape onto the `PulseDetails` shape
+ * the SharePulseModal consumes. The modal only reads `id` + `contexts`
+ * at runtime (see pulse-panel.tsx:524-668), so `createdBy` is left empty
+ * — the query doesn't fetch it and the share/move flow doesn't need it.
+ */
+function buildSharablePulse(
+  pulse: SharablePulseSource,
+  nodeType: NodeType
+): PulseDetails {
+  const kind: PulseKind =
+    nodeType === 'resource'
+      ? 'resource'
+      : nodeType === 'story'
+        ? 'story'
+        : 'goal'
+  const ctx = pulse.context?.[0]
+  return {
+    id: pulse.id,
+    type: kind,
+    title: pulse.title ?? null,
+    content: pulse.content ?? '',
+    createdAt:
+      typeof pulse.createdAt === 'string' ? pulse.createdAt : null,
+    intensity: pulse.intensity ?? null,
+    status: pulse.status ?? null,
+    horizon: pulse.horizon ?? null,
+    resourceType: pulse.resourceType ?? null,
+    createdBy: [],
+    contexts: ctx ? [{ id: ctx.id, title: ctx.title ?? null }] : [],
+  }
 }
 
 function typenameToNodeType(typename?: string | null): NodeType {

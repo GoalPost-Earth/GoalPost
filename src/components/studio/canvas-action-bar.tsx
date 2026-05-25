@@ -4,7 +4,14 @@ import { useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { toast } from 'sonner'
-import { LayoutGrid, Network, Plus, PlusCircle, Workflow } from 'lucide-react'
+import {
+  LayoutGrid,
+  Network,
+  Plus,
+  PlusCircle,
+  UserPlus,
+  Workflow,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
 import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
@@ -13,6 +20,7 @@ import { CreateSpaceModal } from '@/components/canvas/create-space-modal'
 import {
   emitOpenAddFieldContextModal,
   emitOpenAddPulseModal,
+  emitOpenAddSpaceMembersModal,
 } from '@/lib/simulation/pulse-creation-events'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
 import { FieldContextUploadAction } from './field-context-upload-action'
@@ -111,6 +119,15 @@ const SpaceActions: FC<{ spaceId: string }> = ({ spaceId }) => (
       ariaLabel="Add field context to this space"
       iconTint="text-teal-300 group-hover:text-teal-200"
       onClick={() => emitOpenAddFieldContextModal(spaceId)}
+    />
+    {/* MeSpace owners see this too — first member add auto-converts the
+        space to a WeSpace per the addSpaceMember resolver. The dashboard
+        view enforces the actual permission (owner-only) on mount. */}
+    <SecondaryActionButton
+      label="Add person"
+      ariaLabel="Add a person to this space"
+      icon={<UserPlus className="w-4 h-4" />}
+      onClick={() => emitOpenAddSpaceMembersModal(spaceId)}
     />
   </div>
 )
@@ -247,6 +264,24 @@ const PrimaryAddButton: FC<{
     <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
       {label}
     </span>
+  </button>
+)
+
+const SecondaryActionButton: FC<{
+  label: string
+  ariaLabel: string
+  icon: React.ReactNode
+  onClick: () => void
+}> = ({ label, ariaLabel, icon, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={ariaLabel}
+    title={label}
+    className="cursor-pointer flex items-center gap-2 px-3 md:px-4 h-10 md:h-11 rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-all"
+  >
+    {icon}
+    <span className="hidden sm:inline text-sm font-medium">{label}</span>
   </button>
 )
 

@@ -16,8 +16,17 @@
  *   - /protected/spaces/we-space/[id]/fields/[field]/page.tsx
  *
  * Add-field-context subscribers:
- *   - /protected/spaces/me-space/[id]/page.tsx
- *   - /protected/spaces/we-space/[id]/page.tsx
+ *   - components/dashboard/space-dashboard-view.tsx
+ *     (rendered by /protected/dashboard/space/[id] — the canonical
+ *     destination of every "open this space" interaction)
+ *   - /protected/spaces/me-space/[id]/page.tsx (legacy)
+ *   - /protected/spaces/we-space/[id]/page.tsx (legacy)
+ *
+ * Add-space-members subscribers:
+ *   - components/dashboard/space-dashboard-view.tsx
+ *     (opens the SpacePermissionsModal; for MeSpace, the first member
+ *     add auto-converts to a WeSpace per
+ *     src/lib/graphql/resolvers/space-membership-resolver.ts)
  *
  * Producers:
  *   - StudioCanvasActionBar — picks the appropriate event based on focal.
@@ -25,6 +34,7 @@
 
 const OPEN_ADD_PULSE_EVENT = 'gp:open-add-pulse-modal' as const
 const OPEN_ADD_FIELD_CONTEXT_EVENT = 'gp:open-add-field-context-modal' as const
+const OPEN_ADD_SPACE_MEMBERS_EVENT = 'gp:open-add-space-members-modal' as const
 
 export interface OpenAddPulseModalDetail {
   /** FieldContext.id the caller expects the modal to attach to. */
@@ -32,6 +42,11 @@ export interface OpenAddPulseModalDetail {
 }
 
 export interface OpenAddFieldContextModalDetail {
+  /** MeSpace.id or WeSpace.id the caller expects the modal to attach to. */
+  spaceId: string
+}
+
+export interface OpenAddSpaceMembersModalDetail {
   /** MeSpace.id or WeSpace.id the caller expects the modal to attach to. */
   spaceId: string
 }
@@ -86,4 +101,31 @@ export function onOpenAddFieldContextModal(
   window.addEventListener(OPEN_ADD_FIELD_CONTEXT_EVENT, wrapped)
   return () =>
     window.removeEventListener(OPEN_ADD_FIELD_CONTEXT_EVENT, wrapped)
+}
+
+/** Emit a request to open the add-members modal for `spaceId`. */
+export function emitOpenAddSpaceMembersModal(spaceId: string): void {
+  if (typeof window === 'undefined') return
+  if (!spaceId) return
+  window.dispatchEvent(
+    new CustomEvent<OpenAddSpaceMembersModalDetail>(
+      OPEN_ADD_SPACE_MEMBERS_EVENT,
+      { detail: { spaceId } }
+    )
+  )
+}
+
+/** Subscribe to add-members requests. Returns an unsubscribe function. */
+export function onOpenAddSpaceMembersModal(
+  handler: (detail: OpenAddSpaceMembersModalDetail) => void
+): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = (event: Event) => {
+    const detail = (event as CustomEvent<OpenAddSpaceMembersModalDetail>).detail
+    if (!detail || typeof detail.spaceId !== 'string') return
+    handler(detail)
+  }
+  window.addEventListener(OPEN_ADD_SPACE_MEMBERS_EVENT, wrapped)
+  return () =>
+    window.removeEventListener(OPEN_ADD_SPACE_MEMBERS_EVENT, wrapped)
 }

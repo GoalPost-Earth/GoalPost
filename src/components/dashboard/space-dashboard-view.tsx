@@ -22,6 +22,10 @@ import {
   useVisibleEntities,
   type VisibleEntity,
 } from '@/components/studio/visible-entities-context'
+import {
+  onOpenAddFieldContextModal,
+  onOpenAddSpaceMembersModal,
+} from '@/lib/simulation/pulse-creation-events'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
 import { FieldContextCard } from './field-context-card'
 
@@ -136,6 +140,29 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     contextsKey,
     publishVisibleEntities,
   ])
+
+  // Studio-shell action bar fires this when the user clicks
+  // "Add field context" from outside this page subtree (Graph View,
+  // Bloom Exploration). The spaceId guard keeps sibling Space pages
+  // from each other's listeners.
+  useEffect(() => {
+    if (!spaceId) return
+    return onOpenAddFieldContextModal((detail) => {
+      if (detail.spaceId !== spaceId) return
+      setShowCreateFieldModal(true)
+    })
+  }, [spaceId])
+
+  // Same pattern for "Add person" — opens the members modal. The owner
+  // permission check happens on render below, not on event receipt, so
+  // non-owners simply see nothing happen if they somehow trigger it.
+  useEffect(() => {
+    if (!spaceId) return
+    return onOpenAddSpaceMembersModal((detail) => {
+      if (detail.spaceId !== spaceId) return
+      setShowPermissionsModal(true)
+    })
+  }, [spaceId])
 
   if (loading && !data) return <SpaceDashboardSkeleton />
   if (error || !space) return <SpaceDashboardError onBack={() => router.push('/protected/dashboard')} />
@@ -279,14 +306,19 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               Spaces
             </button>
             <div className="flex items-center gap-2">
-              {!isMe && isOwner && (
+              {isOwner && (
                 <button
                   type="button"
                   onClick={() => setShowPermissionsModal(true)}
                   className="inline-flex items-center gap-2 px-3 h-8 rounded-full bg-white/10 dark:bg-white/5 border border-white/15 hover:bg-white/20 dark:hover:bg-white/10 text-xs font-medium text-slate-700 dark:text-white/75 transition-colors cursor-pointer"
+                  title={
+                    isMe
+                      ? 'Add a person — this will convert your MeSpace into a WeSpace'
+                      : 'Manage members'
+                  }
                 >
                   <Users className="w-3.5 h-3.5" />
-                  Members
+                  {isMe ? 'Add person' : 'Members'}
                 </button>
               )}
               <button
@@ -453,7 +485,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         />
       )}
 
-      {!isMe && isOwner && showPermissionsModal && (
+      {isOwner && showPermissionsModal && (
         <SpacePermissionsModal
           isOpen={showPermissionsModal}
           onClose={() => setShowPermissionsModal(false)}
