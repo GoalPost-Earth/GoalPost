@@ -23,7 +23,12 @@ const cases: Case[] = [
   {
     pathname: '/protected/dashboard/resonances/abc',
     expected: null,
-    description: 'resonance detail → null (v1)',
+    description: 'resonance detail → null (drawer-only)',
+  },
+  {
+    pathname: '/protected/dashboard/documents/d-1',
+    expected: null,
+    description: 'document detail → null (drawer-only)',
   },
   {
     pathname: '/protected/spaces',
@@ -56,7 +61,7 @@ const cases: Case[] = [
     description: 'settings → null',
   },
 
-  // Dashboard detail routes
+  // Dashboard detail routes (kept)
   {
     pathname: '/protected/dashboard/field-context/ctx-123',
     expected: { type: 'FieldContext', id: 'ctx-123' },

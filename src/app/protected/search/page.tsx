@@ -232,23 +232,14 @@ export default function SearchPage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // Handle entity click to set title and localStorage before navigation
   const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
     e.preventDefault()
-
-    // For spaces and fields, set title and localStorage before navigating
+    setPageTitle(entity.title)
     if (entity.type === 'meSpace' || entity.type === 'weSpace') {
-      setPageTitle(entity.title)
       localStorage.setItem(`space_${entity.id}`, entity.title)
     } else if (entity.type === 'context') {
-      // For field contexts, store as field
-      setPageTitle(entity.title)
       localStorage.setItem(`field_${entity.id}`, entity.title)
-    } else {
-      // For other entities, just set the title
-      setPageTitle(entity.title)
     }
-
     router.push(entity.href)
   }
 

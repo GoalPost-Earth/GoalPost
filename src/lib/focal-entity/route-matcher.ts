@@ -13,7 +13,8 @@ export interface FocalRouteHints {
  * Returns null for routes that don't encode a focal entity (lists, neutral
  * surfaces like /graph and /assistant). Pulse subtypes and User-vs-PersonPulse
  * use a provisional default — callers refine via setFocalLabel once the
- * entity's __typename is known.
+ * entity's __typename is known. Resonance and Document only live in the
+ * EntityInfoDrawer (no dedicated route), so they aren't matched here.
  */
 export function focalEntityFromRoute(
   pathname: string | null | undefined,
@@ -50,9 +51,6 @@ export function focalEntityFromRoute(
         const isMine = hints?.meSpaceIds?.includes(id) ?? false
         return { type: isMine ? 'MeSpace' : 'WeSpace', id }
       }
-      case 'resonances':
-        // v1 — resonance edges are not focal entities. See plan §7.
-        return null
       default:
         return null
     }

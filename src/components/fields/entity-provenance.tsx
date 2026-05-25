@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 /**
  * Slice 7 (GOAL-242) — provenance block rendered on extracted entity detail
@@ -12,7 +12,7 @@ import Link from 'next/link'
  *
  * Rule 1 (kb/07-ai-assistant-ux.md): no raw ids are surfaced — the filename
  * + uploader name + date are the only user-facing fields. Document ids are
- * only used as React keys + Link hrefs for the slice-6 Document detail view.
+ * only used as React keys + drawer-dispatch payloads.
  */
 
 export interface ProvenanceUploader {
@@ -92,13 +92,20 @@ export function EntityProvenance({ documents }: EntityProvenanceProps) {
               className="text-sm text-gp-ink-strong dark:text-gp-ink-strong leading-snug"
             >
               <span>Extracted from </span>
-              <Link
-                href={`/protected/dashboard/documents/${doc.id}`}
-                className="font-medium text-gp-primary hover:underline"
+              <button
+                type="button"
+                onClick={() =>
+                  dispatchOpenInfoDrawer({
+                    type: 'Document',
+                    id: doc.id,
+                    label: doc.filename,
+                  })
+                }
+                className="font-medium text-gp-primary hover:underline cursor-pointer"
                 title={doc.filename}
               >
                 {doc.filename}
-              </Link>
+              </button>
               <span className="text-gp-ink-muted">
                 {' '}— uploaded by {name}
                 {date ? ` on ${date}` : ''}

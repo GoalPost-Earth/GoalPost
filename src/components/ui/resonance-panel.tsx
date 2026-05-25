@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { getConfigForType } from '@/lib/pulse-type-config'
 import { formatResonanceLabel } from '@/utils/graph-utils'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 export interface PulseInResonance {
   id: string
@@ -81,7 +81,6 @@ export function ResonancePanel({
   pulses = [],
 }: ResonancePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   useEffect(() => {
     if (panelRef.current) {
@@ -282,8 +281,12 @@ export function ResonancePanel({
         <button
           onClick={() => {
             if (resonance?.id) {
-              router.push(`/protected/dashboard/resonances/${resonance.id}`)
               onClose()
+              dispatchOpenInfoDrawer({
+                type: 'ResonanceLink',
+                id: resonance.id,
+                label: resonance.label ?? undefined,
+              })
             }
           }}
           className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg transition-all"

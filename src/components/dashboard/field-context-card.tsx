@@ -32,6 +32,8 @@ export function FieldContextCard({
 }: FieldContextCardProps) {
   const router = useRouter()
   const isMe = spaceKind === 'MeSpace'
+  const openPage = () =>
+    router.push(`/protected/dashboard/field-context/${context.id}`)
   const pulseCount = context.pulses?.length ?? 0
   const timeAgo = (() => {
     const d = new Date(context.createdAt)
@@ -44,13 +46,11 @@ export function FieldContextCard({
     <div
       role="button"
       tabIndex={0}
-      onClick={() =>
-        router.push(`/protected/dashboard/field-context/${context.id}`)
-      }
+      onClick={openPage}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          router.push(`/protected/dashboard/field-context/${context.id}`)
+          openPage()
         }
       }}
       className={cn(
