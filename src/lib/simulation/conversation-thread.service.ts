@@ -85,10 +85,14 @@ function parseStoredParts(value: unknown): unknown[] | null {
  * it doesn't yet exist. Returns the new turn id and the parent thread id.
  *
  * Race-safety:
- *   1. `MERGE ... {ownerId: $userId}` is paired with a UNIQUE constraint on
- *      `ConversationThread.ownerId` (see `scripts/init-db.js`). Two
- *      concurrent first-writes can't both `CREATE` — one CREATE wins, the
- *      loser retries and falls into the MATCH branch.
+ *   1. The implicit (no-threadId) fallback MERGEs on a deterministic id
+ *      (`thread_default_<userId>`) and relies on the UNIQUE constraint on
+ *      `ConversationThread.id` for first-write atomicity. Two concurrent
+ *      first-writes can't both CREATE — one wins, the loser retries and
+ *      falls into the MATCH branch. The previous design MERGEd on
+ *      `ownerId` and required a separate UNIQUE constraint on that
+ *      property, which blocked every subsequent thread (sidebar "+",
+ *      ingest threads) from being created.
  *   2. We `SET t.turnCount = coalesce(t.turnCount, 0) + 1` BEFORE the
  *      OPTIONAL MATCH for next-order. The SET row-locks `t` for the rest
  *      of the transaction, serialising concurrent appends. `nextOrder`
@@ -96,6 +100,10 @@ function parseStoredParts(value: unknown): unknown[] | null {
  *      `max(order)` read, which avoids two writers picking the same
  *      ordinal under contention.
  */
+export function defaultConversationThreadId(userId: string): string {
+  return `thread_default_${userId}`
+}
+
 export async function appendConversationTurn(
   userId: string,
   turn: ConversationTurnInput,
@@ -324,7 +332,19 @@ export async function getConversationThread(
   }
 }
 
-/** Create a brand-new empty thread for the user. */
+/**
+ * Create a brand-new empty thread for the user.
+ *
+ * Intentionally does NOT set `ownerId`. The UNIQUE constraint on
+ * `ConversationThread.ownerId` (see `scripts/init-db.js`) is held by the
+ * user's implicit chat thread — the one MERGEd by `appendConversationTurn`
+ * when no `threadId` is supplied. Setting `ownerId` on additional threads
+ * would violate that constraint the moment a user already has any prior
+ * thread. Listing, fetching, and authorization all flow through the
+ * `HAS_THREAD` edge, so the missing property is invisible to callers.
+ * (Same trick the ingest thread creator uses — see
+ * `src/lib/ingest/handle-ingest-document.ts#createIngestThread`.)
+ */
 export async function createConversationThread(
   userId: string
 ): Promise<{ threadId: string }> {
@@ -338,7 +358,6 @@ export async function createConversationThread(
         MATCH (p:Person:User {id: $userId})
         CREATE (p)-[:HAS_THREAD]->(t:ConversationThread {
           id: $threadId,
-          ownerId: $userId,
           createdAt: datetime(),
           lastTurnAt: datetime(),
           turnCount: 0,

@@ -242,6 +242,62 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
   )
 
   itIf(true)(
+    'createConversationThread coexists with the implicit (ownerId-bearing) thread — the new thread must not carry ownerId',
+    async () => {
+      if (!neo4jAvailable) return
+
+      // Earlier specs already created the implicit thread via
+      // appendConversationTurn — it carries ownerId = userId, locked by the
+      // UNIQUE constraint on ConversationThread.ownerId.
+      const session = driver.session()
+      try {
+        const before = await session.run(
+          `MATCH (:Person {id: $userId})-[:HAS_THREAD]->(t:ConversationThread)
+           WHERE t.ownerId IS NOT NULL
+           RETURN count(t) AS c`,
+          { userId: ids.user }
+        )
+        expect(before.records[0].get('c').toNumber()).toBe(1)
+      } finally {
+        await session.close()
+      }
+
+      // The "+" button path. Before the fix this threw a constraint violation,
+      // the API returned 500, and the sidebar silently re-rendered with no new
+      // thread. The new thread must NOT set ownerId.
+      const { threadId } = await createConversationThread(ids.user)
+      expect(typeof threadId).toBe('string')
+
+      const session2 = driver.session()
+      try {
+        const after = await session2.run(
+          `MATCH (:Person {id: $userId})-[:HAS_THREAD]->(t:ConversationThread {id: $threadId})
+           RETURN t.ownerId AS ownerId, t.kind AS kind, t.mode AS mode`,
+          { userId: ids.user, threadId }
+        )
+        expect(after.records).toHaveLength(1)
+        expect(after.records[0].get('ownerId')).toBeNull()
+        expect(after.records[0].get('kind')).toBe('reflective')
+        expect(after.records[0].get('mode')).toBe('default')
+      } finally {
+        await session2.close()
+      }
+
+      // And a second "+" click in the same session must also succeed —
+      // proving the constraint can never fire on this path.
+      const { threadId: second } = await createConversationThread(ids.user)
+      expect(typeof second).toBe('string')
+      expect(second).not.toBe(threadId)
+
+      // Both new threads should appear in the summary list.
+      const list = await listConversationThreadsSummary(ids.user)
+      const ids2 = new Set(list.map((row) => row.id))
+      expect(ids2.has(threadId)).toBe(true)
+      expect(ids2.has(second)).toBe(true)
+    }
+  )
+
+  itIf(true)(
     'setLastViewedConversationThread is a no-op when the thread does not belong to the user (cross-user isolation)',
     async () => {
       if (!neo4jAvailable) return
