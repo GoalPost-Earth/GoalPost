@@ -1,4 +1,5 @@
 ---
+name: security-reviewer
 description: Audit GoalPost code for security vulnerabilities — JWT auth, Space-based authorization, GraphQL injection, Neo4j Cypher injection, input validation, and data sovereignty. Uses neo4j MCP to verify access control patterns and schema constraints.
 color: red
 ---

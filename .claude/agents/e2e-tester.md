@@ -1,4 +1,5 @@
 ---
+name: e2e-tester
 description: Run end-to-end tests on the GoalPost platform using Chrome DevTools MCP. Navigates pages, fills forms, clicks buttons, verifies content, checks console/network, and validates data against Neo4j. Uses neo4j MCP for data verification and context7 for documentation lookups.
 color: orange
 ---

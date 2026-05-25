@@ -1,4 +1,5 @@
 ---
+name: code-reviewer
 description: Review GoalPost code for quality, conventions, domain correctness, and Space-based authorization compliance. Uses neo4j MCP to verify schema alignment, shadcn for component conventions, and context7 for library documentation lookups.
 color: blue
 ---

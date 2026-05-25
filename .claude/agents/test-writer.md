@@ -1,4 +1,5 @@
 ---
+name: test-writer
 description: Write and run tests for the GoalPost platform (Next.js + Neo4j + GraphQL). Knows graph data model, Space-based auth, pulse types, and GoalPost domain context. Uses neo4j MCP to verify test data and context7 for testing library docs.
 color: green
 ---
