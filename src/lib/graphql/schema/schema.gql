@@ -394,6 +394,7 @@ Authorization: Owner and members can access. Non-members cannot.
 type WeSpace implements Space
   @node(labels: ["Space", "WeSpace"])
   @authorization(
+    # READ — owner or any member can see the space.
     filter: [
       {
         where: {
@@ -404,6 +405,23 @@ type WeSpace implements Space
             ]
           }
         }
+      }
+    ]
+    # WRITE — UPDATE and DELETE are owner-only per kb/02-user-roles.md
+    # (members manage content inside the space, not the space itself).
+    # CREATE requires the new owner to be the authenticated user — this
+    # blocks the attack where a caller posts `owner.connect` pointing at
+    # another Person's id to back-door themselves into someone else's
+    # space. Legit creators (REST /api/we-space/create + csv-import-service)
+    # already pass `user.id` as the owner, so this is invisible to them.
+    validate: [
+      {
+        operations: [CREATE]
+        where: { node: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+      }
+      {
+        operations: [UPDATE, DELETE]
+        where: { node: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
       }
     ]
   ) {
@@ -477,6 +495,8 @@ MIGRATION PATTERN:
 type FieldContext
   @node(labels: ["FieldContext"])
   @authorization(
+    # READ — anyone with access to the owning space (Me owner, or We
+    # owner + any member regardless of role) can see the FieldContext.
     filter: [
       {
         where: {
@@ -492,6 +512,53 @@ type FieldContext
               {
                 weSpace_SOME: {
                   members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+    # WRITE — split per kb/02-user-roles.md:
+    #   CREATE/UPDATE → owner, ADMIN, or MEMBER (GUESTs are view-only)
+    #   DELETE        → owner or ADMIN only (members can't drop fields)
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            OR: [
+              { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              {
+                weSpace_SOME: {
+                  members_SOME: {
+                    AND: [
+                      { member_SOME: { id_EQ: "$jwt.user.id" } }
+                      { role_IN: [ADMIN, MEMBER] }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+              {
+                weSpace_SOME: {
+                  members_SOME: {
+                    AND: [
+                      { member_SOME: { id_EQ: "$jwt.user.id" } }
+                      { role_EQ: ADMIN }
+                    ]
+                  }
                 }
               }
             ]
@@ -560,6 +627,7 @@ delete mutation).
 type Document
   @node(labels: ["Document"])
   @authorization(
+    # READ — inherits from the parent FieldContext / Space.
     filter: [
       {
         where: {
@@ -576,6 +644,33 @@ type Document
                 {
                   weSpace_SOME: {
                     members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+    # WRITE — upload/edit/delete require owner, ADMIN, or MEMBER on
+    # the owning space. GUESTs are excluded.
+    validate: [
+      {
+        operations: [CREATE, UPDATE, DELETE]
+        where: {
+          node: {
+            fieldContext_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
                   }
                 }
               ]
@@ -709,6 +804,7 @@ Merged properties from legacy Goal entity.
 type GoalPulse implements FieldPulse
   @node(labels: ["FieldPulse", "GoalPulse"])
   @authorization(
+    # READ — inherits from the parent FieldContext / Space.
     filter: [
       {
         where: {
@@ -729,6 +825,62 @@ type GoalPulse implements FieldPulse
                 }
               ]
             }
+          }
+        }
+      }
+    ]
+    # WRITE — split per kb/02-user-roles.md operation matrix:
+    #   CREATE/UPDATE → owner, ADMIN, or MEMBER on the owning space
+    #   DELETE        → creator, owner, or ADMIN
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                context_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    {
+                      weSpace_SOME: {
+                        members_SOME: {
+                          AND: [
+                            { member_SOME: { id_EQ: "$jwt.user.id" } }
+                            { role_EQ: ADMIN }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       }
@@ -767,6 +919,7 @@ Merged properties from legacy Resource entity.
 type ResourcePulse implements FieldPulse
   @node(labels: ["FieldPulse", "ResourcePulse"])
   @authorization(
+    # READ — inherits from the parent FieldContext / Space.
     filter: [
       {
         where: {
@@ -787,6 +940,60 @@ type ResourcePulse implements FieldPulse
                 }
               ]
             }
+          }
+        }
+      }
+    ]
+    # WRITE — see GoalPulse for the operation matrix; identical rules.
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                context_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    {
+                      weSpace_SOME: {
+                        members_SOME: {
+                          AND: [
+                            { member_SOME: { id_EQ: "$jwt.user.id" } }
+                            { role_EQ: ADMIN }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       }
@@ -823,6 +1030,7 @@ All optional properties allow this type to represent stories, care points, or co
 type StoryPulse implements FieldPulse
   @node(labels: ["FieldPulse", "StoryPulse"])
   @authorization(
+    # READ — inherits from the parent FieldContext / Space.
     filter: [
       {
         where: {
@@ -843,6 +1051,60 @@ type StoryPulse implements FieldPulse
                 }
               ]
             }
+          }
+        }
+      }
+    ]
+    # WRITE — see GoalPulse for the operation matrix; identical rules.
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                context_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    {
+                      weSpace_SOME: {
+                        members_SOME: {
+                          AND: [
+                            { member_SOME: { id_EQ: "$jwt.user.id" } }
+                            { role_EQ: ADMIN }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       }
@@ -996,7 +1258,63 @@ Example:
   Legacy: Goal "Launch App" -[:APPLIED_TO]-> Resource "Developer Time"
   Migrated: GoalPulse "Launch App" <-[:SOURCE]- ResonanceLink {label: "APPLIED_TO"} -[:TARGET]-> ResourcePulse "Developer Time"
 """
-type ResonanceLink @node(labels: ["ResonanceLink"]) {
+type ResonanceLink
+  @node(labels: ["ResonanceLink"])
+  @authorization(
+    # READ — anyone who can see the parent FieldContext (owner or any
+    # member of the owning Me/We space) can see the resonance.
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+    # WRITE — CREATE/UPDATE/DELETE require OWNER, ADMIN, or MEMBER on
+    # the owning Me/We space. GUESTs are excluded (kb/02-user-roles.md).
+    validate: [
+      {
+        operations: [CREATE, UPDATE, DELETE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   label: String!
   description: String
