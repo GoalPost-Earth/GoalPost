@@ -23,7 +23,7 @@ import {
   SectionHeader,
   StatCell,
 } from './shared'
-import { dispatchCloseInfoDrawer, dispatchOpenInfoDrawer } from './types'
+import { dispatchOpenInfoDrawer } from './types'
 
 /**
  * Field context inspection — pulse counts, recent pulses, resonances,
@@ -310,10 +310,9 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02]">
         <PrimaryCta
-          onClick={() => {
-            dispatchCloseInfoDrawer()
+          onClick={() =>
             router.push(`/protected/dashboard/field-context/${context.id}`)
-          }}
+          }
           className="w-full"
         >
           Open full page

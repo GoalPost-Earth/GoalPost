@@ -33,7 +33,7 @@ import {
   SectionHeader,
   StatCell,
 } from './shared'
-import { dispatchCloseInfoDrawer, dispatchOpenInfoDrawer } from './types'
+import { dispatchOpenInfoDrawer } from './types'
 
 export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const router = useRouter()
@@ -291,10 +291,9 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
         <div className="flex items-center gap-2">
           <PrimaryCta
-            onClick={() => {
-              dispatchCloseInfoDrawer()
+            onClick={() =>
               router.push(`/protected/dashboard/pulses/${pulse.id}`)
-            }}
+            }
             className="flex-1"
           >
             Open full page

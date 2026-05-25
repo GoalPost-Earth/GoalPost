@@ -24,7 +24,7 @@ import {
   SectionHeader,
   StatCell,
 } from './shared'
-import { dispatchCloseInfoDrawer, dispatchOpenInfoDrawer } from './types'
+import { dispatchOpenInfoDrawer } from './types'
 
 /**
  * Person/User/PersonPulse inspection. Heavy edit affordances (add /
@@ -336,10 +336,9 @@ export const PersonDetailsBody: FC<{
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-2">
         <PrimaryCta
-          onClick={() => {
-            dispatchCloseInfoDrawer()
+          onClick={() =>
             router.push(`/protected/dashboard/persons/${person.id}`)
-          }}
+          }
           className="w-full"
         >
           Open full profile
