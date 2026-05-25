@@ -13,6 +13,7 @@ import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -326,6 +327,17 @@ export function SpacePermissionsModal({
               Add a member to{' '}
               <span className="text-gp-accent-glow">{spaceName}</span>
             </DialogTitle>
+            <DialogDescription className="text-center text-xs sm:text-sm text-gp-ink-muted dark:text-gp-ink-soft space-y-1.5 pt-1">
+              <span className="block">
+                Members are invited by email to join GoalPost so they can
+                participate here.
+              </span>
+              <span className="block">
+                Looking to add someone to specific pulses? Open a field context
+                inside this space first — this dialog only manages
+                space-wide membership.
+              </span>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 sm:space-y-6">
