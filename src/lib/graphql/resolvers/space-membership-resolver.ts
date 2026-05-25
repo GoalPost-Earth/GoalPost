@@ -11,6 +11,7 @@ import {
   sendSpaceInviteEmail,
 } from '@/app/api/auth/utils'
 import { createLog } from '@/lib/activity-logs/create-log'
+import { hashAuthToken } from '@/lib/auth/token-hash'
 
 interface AddSpaceMemberInput {
   spaceId: string
@@ -276,14 +277,18 @@ export const spaceMembershipResolvers = {
           // the spaceId prefix is what the accept handler uses to redirect
           // the user to the right space, so two pending invites to the same
           // Person for different spaces don't silently land on whichever
-          // was minted last. The Person node still only carries one
-          // `inviteToken` at a time (latest write wins) — but each emailed
-          // link self-describes the space it's for, and the accept route
-          // will refuse a token whose decoded space doesn't match what's
-          // currently on the Person, so a stale link returns "Invalid
-          // invite" rather than misrouting. 48h expiry to limit blast
-          // radius of plaintext-storage parity with resetToken.
+          // was minted last. The Person node only ever carries one pending
+          // invite hash at a time (latest write wins) — each emailed link
+          // self-describes the space it's for via the prefix. 48h expiry.
+          //
+          // Storage shape: we persist sha256(rawToken) as inviteTokenHash,
+          // never the raw token. The raw token only lives in the outgoing
+          // email URL; on accept we re-hash the URL-bound token and look up
+          // by the indexed hash field. This defends against database-read
+          // compromise (leaked backup, misconfigured Browser, log channel)
+          // since the stored value alone can't be redeemed.
           const inviteToken = `${spaceId}.${crypto.randomUUID()}`
+          const inviteTokenHash = hashAuthToken(inviteToken)
           const inviteExpires = new Date(
             Date.now() + 48 * 60 * 60 * 1000
           ).toISOString()
@@ -292,10 +297,10 @@ export const spaceMembershipResolvers = {
             tx.run(
               `
               MATCH (p:Person {id: $memberId})
-              SET p.inviteToken = $inviteToken,
+              SET p.inviteTokenHash = $inviteTokenHash,
                   p.inviteTokenExpires = datetime($inviteExpires)
               `,
-              { memberId, inviteToken, inviteExpires }
+              { memberId, inviteTokenHash, inviteExpires }
             )
           )
 

@@ -141,7 +141,6 @@ type Person implements PersonInterface
   location: String
   avatar: String
   status: String
-  inviteSent: Boolean
   gender: String
   
   # Rich profile content
@@ -1526,18 +1525,6 @@ type Mutation {
   Send a message to the chatbot and receive a response.
   """
   sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse
-
-  """
-  Invite a person to join the platform.
-  Sends an invite email with a password reset link.
-  """
-  invitePerson(personId: String!): Person
-
-  """
-  Cancel an invitation for a person.
-  Removes the User label and invite-related properties.
-  """
-  cancelInvite(personId: String!): Person
 
   """
   Create or update a direct person-to-person connection.

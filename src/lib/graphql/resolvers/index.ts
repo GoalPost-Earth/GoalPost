@@ -1,6 +1,5 @@
 import { Person } from '@/gql/graphql'
 import { chatbotResolvers } from './chatbot-resolvers'
-import { inviteMutations } from './invite-resolver'
 import { relatedPeopleResolvers } from './related-people-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
@@ -451,7 +450,6 @@ const resolvers = {
 
   Mutation: {
     ...chatbotResolvers,
-    ...inviteMutations,
     ...connectionMutations,
     ...spaceMembershipResolvers,
     ...activityLogMutations,

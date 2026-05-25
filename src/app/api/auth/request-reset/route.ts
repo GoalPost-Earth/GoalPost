@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { parseRequestBody, sendMail } from '../utils'
 import { parseError } from '@/utils'
 import { getSession, initializeDB } from '../neo4j'
+import { hashAuthToken } from '@/lib/auth/token-hash'
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
@@ -31,15 +32,22 @@ export async function POST(req: NextRequest) {
   initializeDB()
   const session = getSession()
 
+  // The raw token is what we email; only sha256(token) is persisted, so
+  // a leak of the Person store alone cannot be used to reset accounts.
   const token = crypto.randomUUID()
+  const tokenHash = hashAuthToken(token)
   const expiration = new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 mins
 
   try {
+    // Scope to :User Persons only — a non-:User Person (e.g. a contact added
+    // via addSpaceMember who never accepted) shouldn't be password-resettable
+    // by anyone who can guess their email. The accept-invite flow is the
+    // correct path to give them credentials.
     const result = await session.run(
-      'MATCH (u:Person {email: $email}) ' +
-        'SET u.resetToken = $token, u.resetTokenExpires = datetime($expiration) ' +
+      'MATCH (u:Person:User {email: $email}) ' +
+        'SET u.resetTokenHash = $tokenHash, u.resetTokenExpires = datetime($expiration) ' +
         'RETURN u',
-      { email, token, expiration }
+      { email, tokenHash, expiration }
     )
 
     if (result.records.length > 0) {

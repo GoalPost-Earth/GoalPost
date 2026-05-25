@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { hashPassword, parseRequestBody } from '../utils'
 import { parseError } from '@/utils'
 import { getSession, initializeDB } from '../neo4j'
+import { hashAuthToken } from '@/lib/auth/token-hash'
 
 const resetPasswordSchema = z.object({
   token: z.string(),
@@ -33,11 +34,15 @@ export async function POST(req: NextRequest) {
 
   initializeDB()
   const session = getSession()
+  // Only sha256(token) is stored on Person.resetTokenHash; hash the
+  // submitted raw token and look up by the indexed hash so a database
+  // read alone can't be turned into a credential.
+  const tokenHash = hashAuthToken(token)
   try {
     // First check if token exists at all
     const tokenCheck = await session.run(
-      'MATCH (u:Person {resetToken: $token}) RETURN u.resetTokenExpires as expires',
-      { token }
+      'MATCH (u:Person:User {resetTokenHash: $tokenHash}) RETURN u.resetTokenExpires as expires',
+      { tokenHash }
     )
 
     if (tokenCheck.records.length === 0) {
@@ -46,26 +51,26 @@ export async function POST(req: NextRequest) {
 
     // Check if token is expired using Neo4j datetime comparison
     const expiryCheck = await session.run(
-      'MATCH (u:Person {resetToken: $token}) ' +
+      'MATCH (u:Person:User {resetTokenHash: $tokenHash}) ' +
         'RETURN u.resetTokenExpires > datetime() as isValid',
-      { token }
+      { tokenHash }
     )
 
     if (!expiryCheck.records[0].get('isValid')) {
       // Clean up expired token
       await session.run(
-        'MATCH (u:Person {resetToken: $token}) SET u.resetToken = NULL, u.resetTokenExpires = NULL',
-        { token }
+        'MATCH (u:Person:User {resetTokenHash: $tokenHash}) SET u.resetTokenHash = NULL, u.resetTokenExpires = NULL',
+        { tokenHash }
       )
       return NextResponse.json({ error: 'Token has expired' }, { status: 400 })
     }
 
     // Token is valid, proceed with password reset
     await session.run(
-      'MATCH (u:Person {resetToken: $token}) ' +
-        'SET u.password = $password, u.resetToken = NULL, u.resetTokenExpires = NULL ' +
+      'MATCH (u:Person:User {resetTokenHash: $tokenHash}) ' +
+        'SET u.password = $password, u.resetTokenHash = NULL, u.resetTokenExpires = NULL ' +
         'RETURN u',
-      { token, password: await hashPassword(newPassword) }
+      { tokenHash, password: await hashPassword(newPassword) }
     )
 
     return NextResponse.json(

@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
                     person.onboardingCompletedSteps = [],
                     person.onboardingIsCompleted = false,
                     person.onboardingSkipped = false,
-                    person.inviteToken = NULL,
+                    person.inviteTokenHash = NULL,
                     person.inviteTokenExpires = NULL
 
                 RETURN person.id as personId`,

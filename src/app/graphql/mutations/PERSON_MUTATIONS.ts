@@ -54,26 +54,6 @@ export const DELETE_PERSON_MUTATION = graphql(`
   }
 `)
 
-export const INVITE_PERSON_MUTATION = graphql(`
-  mutation InvitePerson($personId: String!) {
-    invitePerson(personId: $personId) {
-      id
-      name
-      email
-    }
-  }
-`)
-
-export const CANCEL_INVITE_MUTATION = graphql(`
-  mutation CancelInvite($personId: String!) {
-    cancelInvite(personId: $personId) {
-      id
-      name
-      email
-    }
-  }
-`)
-
 export const CREATE_PERSON_CONNECTION_MUTATION = graphql(`
   mutation CreatePersonConnection(
     $fromPersonId: ID!
