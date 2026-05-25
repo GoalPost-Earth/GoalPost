@@ -6,6 +6,7 @@ import { getSession, initializeDB } from '../neo4j'
 import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { createLog } from '@/lib/activity-logs/create-log'
 import { hashAuthToken } from '@/lib/auth/token-hash'
+import { clientIp, rateLimit } from '@/lib/auth/rate-limit'
 
 /**
  * Accept a space-invite token and provision the Person as a :User.
@@ -32,7 +33,30 @@ const acceptInviteSchema = z.object({
   lastName: z.string().optional(),
 })
 
+// Single string for every "this won't work" outcome — invalid / expired /
+// already-claimed / rate-limited / wrong-state — so the endpoint can't
+// be used as an enumeration oracle. Module-scoped so the rate-limit
+// branch at the very top of POST can reference it before the inner
+// const declarations are reached.
+const INVALID_INVITE = 'This invite is invalid or has expired.'
+
 export async function POST(req: NextRequest) {
+  // Per-IP burst limit — applied before parsing or DB I/O so a flood
+  // costs only a single Redis hit per request. Fail-open if Redis is
+  // unreachable (see POLICY_FAILURE_MODE). The rate-limited response
+  // intentionally uses the SAME `INVALID_INVITE` shape + 400 status as
+  // a normal failed redemption — the AC requires that a throttled
+  // client can't differentiate "rate limited" from "bad token" via
+  // status code, body shape, or response headers. We give up the
+  // RFC 7231 `Retry-After` honesty for this enumeration-defense.
+  const burst = await rateLimit({
+    policy: 'auth-burst',
+    key: `accept-invite:${clientIp(req)}`,
+  })
+  if (!burst.allowed) {
+    return NextResponse.json({ error: INVALID_INVITE }, { status: 400 })
+  }
+
   const parsedBody = await parseRequestBody(req)
   if (!parsedBody.ok) {
     return NextResponse.json(
@@ -53,11 +77,6 @@ export async function POST(req: NextRequest) {
 
   initializeDB()
   const session = getSession()
-
-  // Single string for every "this won't work" outcome — invalid /
-  // expired / already-claimed / wrong-state — so the endpoint can't
-  // be used as an enumeration oracle.
-  const INVALID_INVITE = 'This invite is invalid or has expired.'
 
   // Token format is `${spaceId}.${uuid}`. The spaceId is read from the
   // token (not from a separate mutable field on Person) so stale links

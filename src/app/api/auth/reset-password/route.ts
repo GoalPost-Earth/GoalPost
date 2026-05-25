@@ -4,6 +4,7 @@ import { hashPassword, parseRequestBody } from '../utils'
 import { parseError } from '@/utils'
 import { getSession, initializeDB } from '../neo4j'
 import { hashAuthToken } from '@/lib/auth/token-hash'
+import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 
 const resetPasswordSchema = z.object({
   token: z.string(),
@@ -12,6 +13,12 @@ const resetPasswordSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const burst = await rateLimit({
+    policy: 'auth-burst',
+    key: `reset-password:${clientIp(req)}`,
+  })
+  if (!burst.allowed) return rateLimited(burst.retryAfter)
+
   const parseResultBody = await parseRequestBody(req)
   if (!parseResultBody.ok) {
     return NextResponse.json(

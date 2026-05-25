@@ -12,6 +12,8 @@ import {
 } from '@/app/api/auth/utils'
 import { createLog } from '@/lib/activity-logs/create-log'
 import { hashAuthToken } from '@/lib/auth/token-hash'
+import { rateLimit } from '@/lib/auth/rate-limit'
+import { GraphQLError } from 'graphql'
 
 interface AddSpaceMemberInput {
   spaceId: string
@@ -78,6 +80,33 @@ export const spaceMembershipResolvers = {
         success: false,
         message: 'Authentication required. Please log in.',
       }
+    }
+
+    // Invite-blast rate limit (GOAL-249). Two cheap keys, both must
+    // allow: per-client-IP and per-target-space. IP-keying is the
+    // primary control (would key off context.jwt.user.id once GOAL-247
+    // lands and the id is trustworthy); per-space is a supplementary
+    // key that survives IP rotation, since an attacker can rotate
+    // proxies but not the space they're targeting. Fail-CLOSED on
+    // Redis outage: better to block legit admins for a few minutes
+    // than torch the info@goalpost.earth sender reputation. Thrown
+    // before the resolver opens a session so a rejected mutation
+    // doesn't write a SpaceMembership, mint a token, or log activity.
+    const ipKey = context.clientIp || 'unknown'
+    const [ipBlast, spaceBlast] = await Promise.all([
+      rateLimit({ policy: 'invite-blast', key: `invite-blast:ip:${ipKey}` }),
+      rateLimit({
+        policy: 'invite-blast',
+        key: `invite-blast:space:${spaceId}`,
+      }),
+    ])
+    const blast = ipBlast.allowed ? spaceBlast : ipBlast
+    if (!blast.allowed) {
+      const minutes = Math.ceil(blast.retryAfter / 60)
+      throw new GraphQLError(
+        `Invite limit reached — try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
+        { extensions: { code: 'RATE_LIMITED', retryAfter: blast.retryAfter } }
+      )
     }
 
     const session = context.executionContext.session()

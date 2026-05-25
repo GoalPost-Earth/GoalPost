@@ -57,6 +57,8 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@types/papaparse": "^5.5.2",
     "@types/three": "^0.182.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "@xyflow/react": "^12.10.0",
     "ai": "^6.0.62",
     "bcryptjs": "^3.0.2",

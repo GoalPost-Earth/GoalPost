@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, initializeDB } from '../neo4j'
 import { comparePassword, hashPassword, signJWT } from '../utils'
+import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 30
 const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30
@@ -21,6 +22,15 @@ function unauthorized(code: string, message: string) {
 // browser history, and Referer headers, which is unacceptable for a
 // 30-day credential.
 async function handleRefresh(request: NextRequest) {
+  // Per-IP burst — refresh is the credential-stuffing target after login
+  // because a leaked refresh token is a 30-day credential. Same limit as
+  // login so a flood pattern hits both endpoints at the same wall.
+  const burst = await rateLimit({
+    policy: 'auth-burst',
+    key: `refresh-token:${clientIp(request)}`,
+  })
+  if (!burst.allowed) return rateLimited(burst.retryAfter)
+
   const cookieToken = request.cookies.get('refreshToken')?.value
 
   let bodyToken: string | null = null

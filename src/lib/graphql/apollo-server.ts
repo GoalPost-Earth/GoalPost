@@ -5,6 +5,7 @@ import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
 import { jwtDecode } from 'jwt-decode'
 import logger from '@/lib/logger'
+import { clientIp } from '@/lib/auth/rate-limit'
 
 export async function initializeApolloServer() {
   logger.info('🚀 Initializing Apollo Server...')
@@ -87,8 +88,15 @@ export async function initializeApolloServer() {
         console.warn('⚠️ [YOGA CONTEXT] No Authorization header provided')
       }
 
+      // Best-effort client IP for resolver-level rate limiting (see
+      // src/lib/auth/rate-limit.ts + space-membership-resolver's
+      // invite-blast policy). Imported from the helper so the parsing
+      // rules (first x-forwarded-for hop is the only trustworthy one)
+      // don't drift between contexts.
+      const ip = clientIp({ headers: req.request.headers })
+
       // Neo4jGraphQL expects the jwt in the context for @authentication directive
-      return { jwt }
+      return { jwt, clientIp: ip }
     },
     graphqlEndpoint: '/api/graphql',
     cors: isDevelopment

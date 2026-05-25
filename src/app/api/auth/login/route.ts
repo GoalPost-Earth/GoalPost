@@ -8,6 +8,7 @@ import {
   parseRequestBody,
   signJWT,
 } from '../utils'
+import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -18,6 +19,15 @@ export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
     return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
   }
+
+  // Per-IP burst limit — applied before parsing the body so a flood
+  // can't even cost us the JSON deserialise. Fail-open if Redis is
+  // unreachable (see POLICY_FAILURE_MODE).
+  const burst = await rateLimit({
+    policy: 'auth-burst',
+    key: `login:${clientIp(req)}`,
+  })
+  if (!burst.allowed) return rateLimited(burst.retryAfter)
 
   const parseResultBody = await parseRequestBody(req)
   if (!parseResultBody.ok) {

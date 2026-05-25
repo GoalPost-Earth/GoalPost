@@ -4,6 +4,7 @@ import { hashPassword, parseRequestBody, signJWT } from '../utils'
 import { parseError } from '@/utils'
 import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { z } from 'zod'
+import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -17,6 +18,16 @@ export async function POST(req: NextRequest) {
     if (req.method !== 'POST') {
       return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405 })
     }
+
+    // Per-IP burst — signup is public + sends downstream email (welcome
+    // template + downstream features) so it's both an enumeration oracle
+    // (line ~50's "user already exists" leak) and a potential mail relay.
+    // Fail-OPEN to keep new-user flow working through brief Redis outages.
+    const burst = await rateLimit({
+      policy: 'auth-burst',
+      key: `signup:${clientIp(req)}`,
+    })
+    if (!burst.allowed) return rateLimited(burst.retryAfter)
 
     const parseResultBody = await parseRequestBody(req)
     if (!parseResultBody.ok) {

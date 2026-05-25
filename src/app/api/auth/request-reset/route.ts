@@ -4,12 +4,22 @@ import { parseRequestBody, sendMail } from '../utils'
 import { parseError } from '@/utils'
 import { getSession, initializeDB } from '../neo4j'
 import { hashAuthToken } from '@/lib/auth/token-hash'
+import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
 })
 
 export async function POST(req: NextRequest) {
+  // Per-IP burst on top of the per-email policy below — guards against a
+  // single attacker iterating through an email list from one IP. Both
+  // policies must allow for the request to proceed.
+  const burst = await rateLimit({
+    policy: 'auth-burst',
+    key: `request-reset:${clientIp(req)}`,
+  })
+  if (!burst.allowed) return rateLimited(burst.retryAfter)
+
   const parseResultBody = await parseRequestBody(req)
   if (!parseResultBody.ok) {
     return NextResponse.json(
@@ -28,6 +38,34 @@ export async function POST(req: NextRequest) {
     )
   }
   const { email } = parseResult.data
+
+  // Per-email reset-request policy — slows email-existence harvesting and
+  // bulk-blast through info@goalpost.earth. Normalise (lowercase + trim)
+  // so per-email keying isn't bypassed by casing tricks. Critically, this
+  // check returns the SAME shape as the success path (always returns a
+  // 201 envelope) so the rate-limit response itself isn't an oracle for
+  // "this email exists." Instead we just no-op the email send + return
+  // the normal success body.
+  const normalizedEmail = email.trim().toLowerCase()
+  const perEmail = await rateLimit({
+    policy: 'reset-request',
+    key: `reset-request:${normalizedEmail}`,
+  })
+  if (!perEmail.allowed) {
+    // Pad the response so its timing matches the DB-roundtrip path (the
+    // unindexed `:User` email scan is the dominant cost on the success
+    // path). Without this jitter the rate-limited branch returns in
+    // ~5ms while the success-but-no-such-email branch takes 20-80ms,
+    // re-introducing the email-existence side-channel the silent-201
+    // is meant to defeat.
+    await new Promise((r) =>
+      setTimeout(r, 30 + Math.floor(Math.random() * 30))
+    )
+    return NextResponse.json(
+      { message: 'If the account exists, a reset link has been generated' },
+      { status: 201 }
+    )
+  }
 
   initializeDB()
   const session = getSession()
