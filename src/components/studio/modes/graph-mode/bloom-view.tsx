@@ -338,15 +338,32 @@ export const BloomView: FC = () => {
   }, [overlay, inField, pulses, inSpace, fieldContexts, spaces])
 
   const relationships: Relationship[] = useMemo(() => {
+    // Dedupe defensively on `from|type|to` even when the backend should
+    // already be sending unique edges — both the cypher-generator overlay
+    // path and the Apollo resonance path have produced duplicates before,
+    // and a doubled edge is more visually misleading than a missing one.
+    const dedupe = (rels: Relationship[]): Relationship[] => {
+      const seen = new Set<string>()
+      const out: Relationship[] = []
+      for (const r of rels) {
+        const key = `${r.from}|${r.caption ?? ''}|${r.to}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push(r)
+      }
+      return out
+    }
     if (overlay) {
-      return overlay.relationships.map(
-        (r) =>
-          ({
-            id: r.id,
-            from: r.from,
-            to: r.to,
-            caption: r.caption ?? '',
-          }) as Relationship
+      return dedupe(
+        overlay.relationships.map(
+          (r) =>
+            ({
+              id: r.id,
+              from: r.from,
+              to: r.to,
+              caption: r.caption ?? '',
+            }) as Relationship
+        )
       )
     }
     if (inField && resonances.length > 0) {
@@ -355,19 +372,21 @@ export const BloomView: FC = () => {
       // points to a pulse that didn't load (e.g. permissions on a shared
       // pulse).
       const pulseIds = new Set(pulses.map((p) => p.id))
-      return resonances
-        .filter(
-          (r) => pulseIds.has(r.sourceId) && pulseIds.has(r.targetId)
-        )
-        .map(
-          (r) =>
-            ({
-              id: r.id,
-              from: r.sourceId,
-              to: r.targetId,
-              caption: r.label,
-            }) as Relationship
-        )
+      return dedupe(
+        resonances
+          .filter(
+            (r) => pulseIds.has(r.sourceId) && pulseIds.has(r.targetId)
+          )
+          .map(
+            (r) =>
+              ({
+                id: r.id,
+                from: r.sourceId,
+                to: r.targetId,
+                caption: r.label,
+              }) as Relationship
+          )
+      )
     }
     return EMPTY_RELATIONSHIPS
   }, [overlay, inField, resonances, pulses])

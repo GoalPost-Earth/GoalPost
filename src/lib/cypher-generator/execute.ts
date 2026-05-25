@@ -470,8 +470,14 @@ export async function executeForBloom(
       })
 
     const nvlRels: NVLRelationship[] = []
+    // `seenRelKeys` MUST share its key format with `fillInRelationships`,
+    // otherwise the fill-in step re-adds every structural edge (HAS_PULSE,
+    // HAS_CONTEXT, OWNS, HAS_MEMBER, CREATED_BY, …) that came back from the
+    // generator's own query and the canvas renders each edge twice.
+    // `collected.rels` was keyed by element-id (which fillIn has no access
+    // to), so we re-key here by the property-id format fillIn uses.
     const seenRelKeys = new Set<string>()
-    for (const [key, rel] of collected.rels.entries()) {
+    for (const rel of collected.rels.values()) {
       // Resolve from/to ids by walking element ids back to property ids.
       const fromNode = nodeArray.find(
         (n) => n.elementId === rel.startNodeElementId
@@ -483,9 +489,15 @@ export async function executeForBloom(
       const toId = toNode ? nodeId(toNode) : null
       if (!fromId || !toId) continue
       if (!keptNodeIds.has(fromId) || !keptNodeIds.has(toId)) continue
-      seenRelKeys.add(key)
+      const relPropId = (rel.properties as { id?: unknown }).id
+      const dedupKey =
+        typeof relPropId === 'string' && relPropId
+          ? relPropId
+          : `${fromId}-${rel.type}->${toId}`
+      if (seenRelKeys.has(dedupKey)) continue
+      seenRelKeys.add(dedupKey)
       nvlRels.push({
-        id: key,
+        id: dedupKey,
         from: fromId,
         to: toId,
         caption: rel.type,
