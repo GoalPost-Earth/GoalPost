@@ -986,14 +986,14 @@ export async function buildSimulationChatTools(
 
     graph_rag_search: tool({
       description:
-        'Semantic Graph RAG retrieval across people, pulses, and conversation chunks (specific moments from a pulse\'s source conversation). Uses vector indexes enriched with graph relationships. If activeFieldContextId is in session context, defaults the contextId filter to it.',
+        "Semantic Graph RAG retrieval across people, pulses, and conversation chunks. People and pulses are searched across the whole graph. Conversation chunks (sentence-level segments of the back-and-forth that produced a pulse) are PRIVATE to the user who created the parent pulse — the `chunks` and `all` scopes will only ever return the current user's own chunks. Never offer to search another person's conversation chunks. If activeFieldContextId is in session context, defaults the contextId filter to it.",
       inputSchema: z.object({
         query: z.string().describe('Natural language search query.'),
         scope: z
           .enum(['people', 'pulses', 'chunks', 'all'])
           .optional()
           .describe(
-            'Search scope. Use `chunks` when the user is asking about a specific moment or quote from a past conversation. Default: all.'
+            "Search scope. Use `chunks` when the user is asking about a specific moment or quote from THEIR OWN past conversation with the assistant — the chunk index is locked to the current user and never returns another user's conversations. Default: all."
           ),
         contextId: z
           .string()
@@ -1034,6 +1034,7 @@ export async function buildSimulationChatTools(
             scope,
             contextId: resolvedContextId,
             limit,
+            userId: ctx.currentUserId,
           })
         } catch (error) {
           return toErrorResult('Failed to run Graph RAG retrieval', error)

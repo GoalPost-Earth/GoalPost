@@ -40,6 +40,13 @@ export interface GraphRagSearchInput {
   scope?: GraphRagScope
   contextId?: string
   limit?: number
+  /**
+   * Authenticated user id. REQUIRED to retrieve ConversationChunks — chunks
+   * represent the user's private back-and-forth with the AI assistant and
+   * must only be searchable by the user who created the parent pulse.
+   * If omitted, chunk results are returned empty with a warning.
+   */
+  userId?: string | null
 }
 
 export interface GraphRagMatch {
@@ -128,9 +135,17 @@ async function searchPeopleByVector(
 /**
  * Chunk-level recall via `conversationChunkVectorIndex`. Used when the
  * user asks the agent to find a specific *moment* from a past pulse's
- * source conversation rather than the pulse as a whole. Returns the
- * matching chunk plus enough metadata to navigate back to the parent
- * pulse without exposing raw IDs in user-facing output (per
+ * source conversation rather than the pulse as a whole.
+ *
+ * ConversationChunks are the user's private back-and-forth with the AI
+ * assistant during pulse creation. They MUST stay locked to the user
+ * who created the parent pulse — even WeSpace co-members do not get to
+ * search someone else's chunks. The `MATCH ... -[:CREATED_BY|INITIATED_BY]->
+ * (:Person {id: $userId})` clause enforces this server-side, regardless
+ * of what the model decides to do in the chat surface.
+ *
+ * Returns the matching chunk plus enough metadata to navigate back to
+ * the parent pulse without exposing raw IDs in user-facing output (per
  * kb/07-ai-assistant-ux.md Rule 1 — the model gets the parent pulse's
  * title here, never just the chunk id).
  */
@@ -138,12 +153,14 @@ async function searchChunksByVector(
   graph: Neo4jGraph,
   embedding: number[],
   limit: number,
+  userId: string,
   contextId?: string
 ): Promise<GraphRagMatch[]> {
   const cypher = `
     CALL db.index.vector.queryNodes('conversationChunkVectorIndex', $limit, $embedding)
     YIELD node, score
     MATCH (pulse:FieldPulse)-[:HAS_CHUNK]->(node)
+    MATCH (pulse)-[:CREATED_BY|INITIATED_BY]->(:Person {id: $userId})
     WHERE
       $contextId IS NULL
       OR EXISTS {
@@ -176,6 +193,7 @@ async function searchChunksByVector(
     embedding,
     limit,
     contextId: contextId?.trim() || null,
+    userId,
   })
 
   return (rows || []).map(mapMatch)
@@ -322,17 +340,29 @@ export async function graphRagSearch(
   }
 
   if (scope === 'all' || scope === 'chunks') {
-    try {
-      chunkMatches = await searchChunksByVector(
-        graph,
-        embedding,
-        limit,
-        input.contextId
-      )
-    } catch (error) {
+    // ConversationChunks contain the user's private back-and-forth with
+    // the AI assistant during pulse creation. Without an authenticated
+    // userId we cannot scope to "only this user's chunks", so refuse —
+    // never return cross-user chunks. The `all` scope still returns
+    // people/pulses; only the chunks branch is skipped.
+    if (!input.userId) {
       warnings.push(
-        `Chunk vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        'Chunk vector search skipped: conversation chunks are private to the user who created the parent pulse and require an authenticated session.'
       )
+    } else {
+      try {
+        chunkMatches = await searchChunksByVector(
+          graph,
+          embedding,
+          limit,
+          input.userId,
+          input.contextId
+        )
+      } catch (error) {
+        warnings.push(
+          `Chunk vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      }
     }
   }
 
