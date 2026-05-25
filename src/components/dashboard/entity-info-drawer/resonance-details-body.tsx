@@ -2,6 +2,7 @@
 
 import { useState, type FC } from 'react'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { ArrowRight, Waves } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_RESONANCE_LINK_DETAILS } from '@/app/graphql/queries/RESONANCE_QUERIES'
@@ -9,6 +10,7 @@ import {
   UPDATE_RESONANCE_LINK_MUTATION,
   DELETE_RESONANCE_LINK_MUTATION,
 } from '@/app/graphql/mutations'
+import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { formatResonanceLabel } from '@/utils/graph-utils'
 import {
   getIconForType,
@@ -17,6 +19,10 @@ import {
 } from '@/lib/pulse-type-config'
 import {
   BodySkeleton,
+  EditCta,
+  EditFooter,
+  EditTextInput,
+  EditTextarea,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -43,6 +49,7 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
   const [editDescription, setEditDescription] = useState('')
   const [isEditLoading, setIsEditLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const { data, loading } = useQuery(GET_RESONANCE_LINK_DETAILS, {
     variables: { resonanceId },
@@ -51,6 +58,7 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
 
   const [updateResonance] = useMutation(UPDATE_RESONANCE_LINK_MUTATION)
   const [deleteResonance] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
+  const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
 
   if (loading && !data) return <BodySkeleton />
 
@@ -73,6 +81,7 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
       ['GoalPulse', 'ResourcePulse', 'StoryPulse'].includes(p.__typename)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any
+  const contextId = resonance.context?.[0]?.id
 
   const handleEditStart = () => {
     setEditLabel(resonance.label || '')
@@ -80,37 +89,96 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
     setIsEditMode(true)
   }
 
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditLabel('')
+    setEditDescription('')
+  }
+
   const handleEditSave = async () => {
+    const trimmedLabel = editLabel.trim()
+    if (!trimmedLabel) {
+      toast.error('Label is required.')
+      return
+    }
     try {
       setIsEditLoading(true)
-      const updateInput: Record<string, string | null> = {}
-      updateInput.label_SET = editLabel
-      updateInput.description_SET = editDescription || null
+      // confidence is AI-generated from resonance discovery; leave it alone here
+      // so user edits don't pollute the ranking signal.
+      const updateInput: Record<string, string | null> = {
+        label_SET: trimmedLabel,
+        description_SET: editDescription.trim() || null,
+      }
       await updateResonance({
         variables: { where: { id_EQ: resonanceId }, update: updateInput },
         refetchQueries: ['GetResonanceLinkDetails'],
       })
+      if (contextId && source?.id && target?.id) {
+        logResonanceActivity({
+          variables: {
+            input: {
+              action: 'updated',
+              resonanceId,
+              sourceId: source.id,
+              sourceName: source.title || 'Pulse',
+              targetId: target.id,
+              targetName: target.title || 'Pulse',
+              label: trimmedLabel,
+              contextId,
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log resonance update:', err)
+        )
+      }
+      toast.success('Resonance updated.')
       setIsEditMode(false)
     } catch (err) {
       console.error('Failed to update resonance:', err)
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not update resonance. Please try again.'
+      )
     } finally {
       setIsEditLoading(false)
     }
   }
 
   const handleDelete = async () => {
-    const ok = window.confirm(
-      'Delete this resonance? This action cannot be undone.'
-    )
-    if (!ok) return
     try {
       setIsDeleteLoading(true)
       await deleteResonance({ variables: { id: resonanceId } })
+      if (contextId && source?.id && target?.id) {
+        logResonanceActivity({
+          variables: {
+            input: {
+              action: 'deleted',
+              resonanceId,
+              sourceId: source.id,
+              sourceName: source.title || 'Pulse',
+              targetId: target.id,
+              targetName: target.title || 'Pulse',
+              label: resonance.label || 'resonance',
+              contextId,
+            },
+          },
+        }).catch((err) =>
+          console.warn('Failed to log resonance deletion:', err)
+        )
+      }
+      toast.success('Resonance deleted.')
       dispatchCloseInfoDrawer()
     } catch (err) {
       console.error('Failed to delete resonance:', err)
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not delete resonance. Please try again.'
+      )
     } finally {
       setIsDeleteLoading(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -122,9 +190,21 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
             <Waves className="w-7 h-7" />
           </div>
           <div className="min-w-0 flex-1 space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
-              {formatResonanceLabel(resonance.label ?? null)}
-            </h2>
+            {isEditMode ? (
+              <EditTextInput
+                id="resonance-edit-label"
+                label="Label"
+                value={editLabel}
+                onChange={setEditLabel}
+                placeholder="e.g. APPLIED_TO, REINFORCES"
+                autoFocus
+                disabled={isEditLoading}
+              />
+            ) : (
+              <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
+                {formatResonanceLabel(resonance.label ?? null)}
+              </h2>
+            )}
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border bg-gp-primary/20 border-gp-primary/40 text-gp-primary">
               Resonance
             </span>
@@ -132,13 +212,27 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
         </div>
       </section>
 
-      {resonance.description && (
+      {isEditMode ? (
         <section className="px-6 py-5 border-b border-gp-glass-border">
-          <SectionHeader>Insight</SectionHeader>
-          <p className="mt-2 text-sm text-gp-ink-muted dark:text-white/65 italic leading-relaxed">
-            &quot;{resonance.description}&quot;
-          </p>
+          <EditTextarea
+            id="resonance-edit-description"
+            label="Insight"
+            value={editDescription}
+            onChange={setEditDescription}
+            placeholder="What pattern does this resonance surface?"
+            rows={4}
+            disabled={isEditLoading}
+          />
         </section>
+      ) : (
+        resonance.description && (
+          <section className="px-6 py-5 border-b border-gp-glass-border">
+            <SectionHeader>Insight</SectionHeader>
+            <p className="mt-2 text-sm text-gp-ink-muted dark:text-white/65 italic leading-relaxed">
+              &quot;{resonance.description}&quot;
+            </p>
+          </section>
+        )
       )}
 
       <section className="px-6 py-5 space-y-3">
@@ -162,68 +256,57 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
       </section>
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
-        <div className="flex gap-2">
-          <PrimaryCta onClick={handleEditStart} className="flex-1">
-            Edit
-          </PrimaryCta>
-          <SecondaryCta
-            onClick={handleDelete}
-            disabled={isDeleteLoading}
-            variant="danger"
-            className="flex-1"
-          >
-            {isDeleteLoading ? 'Deleting…' : 'Delete'}
-          </SecondaryCta>
-        </div>
-      </footer>
-
-      {isEditMode && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 border border-gp-glass-border">
-            <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-white mb-4">
-              Edit resonance
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-gp-ink-strong dark:text-white mb-1">
-                  Label
-                </label>
-                <input
-                  type="text"
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gp-glass-border bg-gp-surface-light dark:bg-gp-surface-dark-light text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gp-ink-strong dark:text-white mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  rows={5}
-                  className="w-full px-3 py-2 rounded-lg border border-gp-glass-border bg-gp-surface-light dark:bg-gp-surface-dark-light text-gp-ink-strong dark:text-white focus:outline-none focus:ring-2 focus:ring-gp-primary resize-none text-sm"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
+        {isEditMode ? (
+          <EditFooter
+            onCancel={handleEditCancel}
+            onSave={handleEditSave}
+            saving={isEditLoading}
+          />
+        ) : showDeleteConfirm ? (
+          <div className="space-y-2">
+            <p className="text-xs text-red-600 dark:text-red-300">
+              Delete this resonance? This cannot be undone.
+            </p>
+            <div className="flex gap-2">
               <SecondaryCta
-                onClick={() => setIsEditMode(false)}
-                disabled={isEditLoading}
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleteLoading}
+                className="flex-1"
               >
                 Cancel
               </SecondaryCta>
-              <PrimaryCta onClick={handleEditSave} disabled={isEditLoading}>
-                {isEditLoading ? 'Saving…' : 'Save'}
-              </PrimaryCta>
+              <SecondaryCta
+                onClick={handleDelete}
+                disabled={isDeleteLoading}
+                variant="danger"
+                className="flex-1"
+              >
+                {isDeleteLoading ? 'Deleting…' : 'Confirm delete'}
+              </SecondaryCta>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex gap-2">
+            <PrimaryCta onClick={handleEditStart} className="flex-1">
+              <EditIcon /> Edit
+            </PrimaryCta>
+            <SecondaryCta
+              onClick={() => setShowDeleteConfirm(true)}
+              variant="danger"
+              className="flex-1"
+            >
+              Delete
+            </SecondaryCta>
+          </div>
+        )}
+      </footer>
     </div>
   )
 }
+
+const EditIcon: FC = () => (
+  <span className="material-symbols-outlined text-[18px]">edit</span>
+)
 
 const ResonancePulseCard: FC<{
   label: 'Source' | 'Target'

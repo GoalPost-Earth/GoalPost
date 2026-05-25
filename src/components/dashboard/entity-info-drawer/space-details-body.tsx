@@ -1,15 +1,25 @@
 'use client'
 
-import { type FC } from 'react'
+import { useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { ArrowRight, Layers, Lock, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import {
+  UPDATE_ME_SPACE_MUTATION,
+  UPDATE_WE_SPACE_MUTATION,
+} from '@/app/graphql/mutations'
+import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { SpaceVisibility } from '@/gql/graphql'
+import {
   BodySkeleton,
+  EditCta,
+  EditFooter,
+  EditTextInput,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -20,10 +30,20 @@ import { dispatchOpenInfoDrawer } from './types'
 export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
   const router = useRouter()
   const { user } = useApp()
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editVisibility, setEditVisibility] = useState<SpaceVisibility>(
+    SpaceVisibility.Private
+  )
+  const [isSaving, setIsSaving] = useState(false)
+
   const { data, loading } = useQuery(GET_SPACE_DETAILS, {
     variables: { spaceId },
     fetchPolicy: 'cache-and-network',
   })
+  const [updateMeSpace] = useMutation(UPDATE_ME_SPACE_MUTATION)
+  const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
+  const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
   if (loading && !data) return <BodySkeleton />
 
@@ -69,6 +89,66 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
       ? formatDistanceToNow(created, { addSuffix: true })
       : '—'
 
+  const handleEditStart = () => {
+    setEditName(space.name ?? '')
+    setEditVisibility(
+      space.visibility === 'SHARED'
+        ? SpaceVisibility.Shared
+        : SpaceVisibility.Private
+    )
+    setIsEditMode(true)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditName('')
+    setEditVisibility(SpaceVisibility.Private)
+  }
+
+  const handleEditSave = async () => {
+    const trimmedName = editName.trim()
+    if (!trimmedName) {
+      toast.error('Name is required.')
+      return
+    }
+    try {
+      setIsSaving(true)
+      const variables = {
+        where: { id_EQ: spaceId },
+        update: {
+          name_SET: trimmedName,
+          visibility_SET: editVisibility,
+        },
+      }
+      if (isMe) {
+        await updateMeSpace({ variables })
+      } else {
+        await updateWeSpace({ variables })
+      }
+      logSpaceActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            spaceId,
+            spaceName: trimmedName,
+            spaceType: isMe ? 'MeSpace' : 'WeSpace',
+          },
+        },
+      }).catch((err) => console.warn('Failed to log space update:', err))
+      toast.success('Space updated.')
+      setIsEditMode(false)
+    } catch (err) {
+      console.error('Failed to update space:', err)
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not update space. Please try again.'
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <section
@@ -90,9 +170,48 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
             </span>
           </div>
           <div className="min-w-0 flex-1 space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
-              {space.name || 'Untitled space'}
-            </h2>
+            {isEditMode ? (
+              <div className="space-y-3">
+                <EditTextInput
+                  id="space-edit-name"
+                  label="Name"
+                  value={editName}
+                  onChange={setEditName}
+                  placeholder="Space name"
+                  autoFocus
+                  disabled={isSaving}
+                />
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-white/50">
+                    Visibility
+                  </label>
+                  <div className="flex gap-2">
+                    <VisibilityChoice
+                      label="Private"
+                      hint="Only you and members"
+                      active={editVisibility === SpaceVisibility.Private}
+                      onClick={() =>
+                        setEditVisibility(SpaceVisibility.Private)
+                      }
+                      disabled={isSaving}
+                    />
+                    <VisibilityChoice
+                      label="Shared"
+                      hint="Discoverable"
+                      active={editVisibility === SpaceVisibility.Shared}
+                      onClick={() =>
+                        setEditVisibility(SpaceVisibility.Shared)
+                      }
+                      disabled={isSaving}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
+                {space.name || 'Untitled space'}
+              </h2>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={cn(
@@ -278,15 +397,26 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
       )}
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
-        <PrimaryCta
-          onClick={() =>
-            router.push(`/protected/dashboard/space/${space.id}`)
-          }
-          className="w-full"
-        >
-          Open full page
-          <ArrowRight className="w-4 h-4" />
-        </PrimaryCta>
+        {isEditMode ? (
+          <EditFooter
+            onCancel={handleEditCancel}
+            onSave={handleEditSave}
+            saving={isSaving}
+          />
+        ) : (
+          <div className="flex items-center gap-2">
+            <PrimaryCta
+              onClick={() =>
+                router.push(`/protected/dashboard/space/${space.id}`)
+              }
+              className="flex-1"
+            >
+              Open full page
+              <ArrowRight className="w-4 h-4" />
+            </PrimaryCta>
+            {isOwner && <EditCta onClick={handleEditStart} />}
+          </div>
+        )}
         <p className="text-center text-[11px] text-gp-ink-muted dark:text-white/45">
           Created {createdLabel}
         </p>
@@ -294,3 +424,31 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
     </div>
   )
 }
+
+const VisibilityChoice: FC<{
+  label: string
+  hint: string
+  active: boolean
+  onClick: () => void
+  disabled?: boolean
+}> = ({ label, hint, active, onClick, disabled }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className={cn(
+      'flex-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer',
+      'disabled:opacity-50 disabled:cursor-not-allowed',
+      active
+        ? 'border-gp-primary/60 bg-gp-primary/10 ring-1 ring-gp-primary/40'
+        : 'border-gp-glass-border bg-white/40 hover:bg-white/60 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]'
+    )}
+  >
+    <p className="text-xs font-semibold text-gp-ink-strong dark:text-white">
+      {label}
+    </p>
+    <p className="text-[10px] text-gp-ink-muted dark:text-white/50 mt-0.5">
+      {hint}
+    </p>
+  </button>
+)

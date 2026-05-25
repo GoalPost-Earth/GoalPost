@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, type FC } from 'react'
-import { useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import {
   ArrowRight,
@@ -15,6 +15,12 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
+import {
+  UPDATE_GOAL_PULSE_MUTATION,
+  UPDATE_RESOURCE_PULSE_MUTATION,
+  UPDATE_STORY_PULSE_MUTATION,
+  LOG_PULSE_ACTIVITY,
+} from '@/app/graphql/mutations'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import {
   PULSE_TYPE_CONFIG,
@@ -28,16 +34,23 @@ import {
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import {
   BodySkeleton,
+  EditCta,
+  EditFooter,
+  EditTextInput,
+  EditTextarea,
   NotFoundBody,
-  PrimaryCta,
   SectionHeader,
   StatCell,
 } from './shared'
 import { dispatchOpenInfoDrawer } from './types'
 
 export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
-  const router = useRouter()
   const [showShareModal, setShowShareModal] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [editWhy, setEditWhy] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const {
     sharePulseWithContext,
     removePulseFromContext,
@@ -47,6 +60,10 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     variables: { pulseId },
     fetchPolicy: 'cache-and-network',
   })
+  const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
+  const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
+  const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
+  const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
 
   if (loading && !data) return <BodySkeleton />
 
@@ -87,6 +104,70 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     })
   }
 
+  const handleEditStart = () => {
+    setEditTitle(pulse.title ?? '')
+    setEditContent(pulse.content ?? '')
+    setEditWhy((pulse.why as string | null | undefined) ?? '')
+    setIsEditMode(true)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditTitle('')
+    setEditContent('')
+    setEditWhy('')
+  }
+
+  const handleEditSave = async () => {
+    const trimmedTitle = editTitle.trim()
+    if (!trimmedTitle) {
+      toast.error('Title is required.')
+      return
+    }
+    try {
+      setIsSaving(true)
+      const update: Record<string, string | null> = {
+        title_SET: trimmedTitle,
+        content_SET: editContent,
+        why_SET: editWhy.trim() || null,
+      }
+      const variables = { where: { id_EQ: pulseId }, update }
+      const typename = pulse.__typename
+      if (typename === 'GoalPulse') {
+        await updateGoalPulse({ variables })
+      } else if (typename === 'ResourcePulse') {
+        await updateResourcePulse({ variables })
+      } else if (typename === 'StoryPulse') {
+        await updateStoryPulse({ variables })
+      } else {
+        throw new Error(`Editing ${String(typename)} is not supported here yet.`)
+      }
+      logPulseActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            pulseId,
+            pulseType: typename ?? 'Pulse',
+            pulseName: trimmedTitle,
+            contextId: context?.id,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log pulse update:', err))
+      await refetch()
+      toast.success('Pulse updated.')
+      setIsEditMode(false)
+    } catch (err) {
+      console.error('Failed to update pulse:', err)
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not update pulse. Please try again.'
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <section
@@ -108,9 +189,21 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
             </span>
           </div>
           <div className="min-w-0 flex-1 space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
-              {pulse.title || 'Untitled pulse'}
-            </h2>
+            {isEditMode ? (
+              <EditTextInput
+                id="pulse-edit-title"
+                label="Title"
+                value={editTitle}
+                onChange={setEditTitle}
+                placeholder="Pulse title"
+                autoFocus
+                disabled={isSaving}
+              />
+            ) : (
+              <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
+                {pulse.title || 'Untitled pulse'}
+              </h2>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={cn(
@@ -127,6 +220,7 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
                   onClick={openContext}
                   className="text-[11px] uppercase tracking-[0.16em] text-gp-ink-muted dark:text-white/50 hover:text-gp-ink-strong dark:hover:text-white/80 transition-colors cursor-pointer"
                   title={`Open ${context?.title || 'field'}`}
+                  disabled={isEditMode}
                 >
                   {isMe ? 'Me Space' : 'We Space'} · {space.name}
                 </button>
@@ -201,22 +295,47 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         />
       </section>
 
-      {pulse.why && (
-        <section className="px-6 pb-5">
-          <SectionHeader>Why</SectionHeader>
-          <p className="mt-2 text-sm italic text-gp-ink-muted dark:text-white/65 leading-relaxed">
-            &quot;{pulse.why}&quot;
-          </p>
+      {isEditMode ? (
+        <section className="px-6 pb-5 space-y-4">
+          <EditTextarea
+            id="pulse-edit-why"
+            label="Why"
+            value={editWhy}
+            onChange={setEditWhy}
+            placeholder="Why does this pulse matter?"
+            rows={3}
+            disabled={isSaving}
+          />
+          <EditTextarea
+            id="pulse-edit-content"
+            label="Description"
+            value={editContent}
+            onChange={setEditContent}
+            placeholder="Add detail, links, or context."
+            rows={6}
+            disabled={isSaving}
+          />
         </section>
-      )}
+      ) : (
+        <>
+          {pulse.why && (
+            <section className="px-6 pb-5">
+              <SectionHeader>Why</SectionHeader>
+              <p className="mt-2 text-sm italic text-gp-ink-muted dark:text-white/65 leading-relaxed">
+                &quot;{pulse.why}&quot;
+              </p>
+            </section>
+          )}
 
-      {pulse.content && (
-        <section className="px-6 pb-5">
-          <SectionHeader>Description</SectionHeader>
-          <div className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed whitespace-pre-wrap break-words">
-            <LinkifiedText text={pulse.content} />
-          </div>
-        </section>
+          {pulse.content && (
+            <section className="px-6 pb-5">
+              <SectionHeader>Description</SectionHeader>
+              <div className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+                <LinkifiedText text={pulse.content} />
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {(pulse.location || pulse.time) && (
@@ -289,35 +408,35 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
       )}
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02] space-y-3">
-        <div className="flex items-center gap-2">
-          <PrimaryCta
-            onClick={() =>
-              router.push(`/protected/dashboard/pulses/${pulse.id}`)
-            }
-            className="flex-1"
-          >
-            Open full page
-            <ArrowRight className="w-4 h-4" />
-          </PrimaryCta>
-          {(goal || resource || story) && (
-            <button
-              type="button"
-              onClick={() => setShowShareModal(true)}
-              title="Share or move this pulse to another field context"
-              className={cn(
-                'flex items-center justify-center gap-2 px-4 h-11 rounded-xl',
-                'border border-gp-glass-border bg-white/40 hover:bg-white/60',
-                'dark:bg-white/5 dark:hover:bg-white/10',
-                'text-gp-ink-strong dark:text-white/85 text-sm font-medium',
-                'transition-all cursor-pointer'
-              )}
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                share
-              </span>
-            </button>
-          )}
-        </div>
+        {isEditMode ? (
+          <EditFooter
+            onCancel={handleEditCancel}
+            onSave={handleEditSave}
+            saving={isSaving}
+          />
+        ) : (
+          <div className="flex items-center gap-2">
+            <EditCta onClick={handleEditStart} className="flex-1" />
+            {(goal || resource || story) && (
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                title="Share or move this pulse to another field context"
+                className={cn(
+                  'flex items-center justify-center gap-2 px-4 h-11 rounded-xl',
+                  'border border-gp-glass-border bg-white/40 hover:bg-white/60',
+                  'dark:bg-white/5 dark:hover:bg-white/10',
+                  'text-gp-ink-strong dark:text-white/85 text-sm font-medium',
+                  'transition-all cursor-pointer'
+                )}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  share
+                </span>
+              </button>
+            )}
+          </div>
+        )}
         <p className="text-center text-[11px] text-gp-ink-muted dark:text-white/45">
           Created {createdLabel}
         </p>

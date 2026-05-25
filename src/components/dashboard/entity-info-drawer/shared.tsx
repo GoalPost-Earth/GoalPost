@@ -1,6 +1,12 @@
 'use client'
 
-import { type FC, type ReactNode } from 'react'
+import {
+  forwardRef,
+  type ChangeEvent,
+  type FC,
+  type ReactNode,
+  type TextareaHTMLAttributes,
+} from 'react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -114,5 +120,186 @@ export const SecondaryCta: FC<{
     )}
   >
     {children}
+  </button>
+)
+
+/**
+ * Shared text input used by drawer edit modes. Matches the glass surface
+ * so an editable title doesn't jar against the read-mode chrome.
+ */
+export const EditTextInput: FC<{
+  value: string
+  onChange: (next: string) => void
+  placeholder?: string
+  label?: string
+  autoFocus?: boolean
+  disabled?: boolean
+  className?: string
+  id?: string
+}> = ({
+  value,
+  onChange,
+  placeholder,
+  label,
+  autoFocus,
+  disabled,
+  className,
+  id,
+}) => (
+  <div className={cn('space-y-1.5', className)}>
+    {label && (
+      <label
+        htmlFor={id}
+        className="block text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-white/50"
+      >
+        {label}
+      </label>
+    )}
+    <input
+      id={id}
+      type="text"
+      value={value}
+      onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      disabled={disabled}
+      className={cn(
+        'w-full px-3.5 py-2.5 rounded-xl border',
+        'border-gp-glass-border bg-white/60 dark:bg-white/[0.04]',
+        'text-gp-ink-strong dark:text-white',
+        'placeholder:text-gp-ink-muted/60 dark:placeholder:text-white/30',
+        'focus:outline-none focus:ring-2 focus:ring-gp-primary/50 focus:border-gp-primary/40',
+        'transition-all text-sm',
+        'disabled:opacity-50 disabled:cursor-not-allowed'
+      )}
+    />
+  </div>
+)
+
+/**
+ * Multi-line variant of {@link EditTextInput}. Defaults to 4 rows; pass
+ * `rows` to override.
+ */
+export const EditTextarea = forwardRef<
+  HTMLTextAreaElement,
+  {
+    value: string
+    onChange: (next: string) => void
+    placeholder?: string
+    label?: string
+    rows?: number
+    disabled?: boolean
+    className?: string
+    id?: string
+  } & Omit<
+    TextareaHTMLAttributes<HTMLTextAreaElement>,
+    'value' | 'onChange' | 'placeholder' | 'rows' | 'disabled' | 'className' | 'id'
+  >
+>(function EditTextarea(
+  {
+    value,
+    onChange,
+    placeholder,
+    label,
+    rows = 4,
+    disabled,
+    className,
+    id,
+    ...rest
+  },
+  ref
+) {
+  return (
+    <div className={cn('space-y-1.5', className)}>
+      {label && (
+        <label
+          htmlFor={id}
+          className="block text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-white/50"
+        >
+          {label}
+        </label>
+      )}
+      <textarea
+        ref={ref}
+        id={id}
+        value={value}
+        onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+          onChange(e.target.value)
+        }
+        placeholder={placeholder}
+        rows={rows}
+        disabled={disabled}
+        className={cn(
+          'w-full px-3.5 py-2.5 rounded-xl border',
+          'border-gp-glass-border bg-white/60 dark:bg-white/[0.04]',
+          'text-gp-ink-strong dark:text-white',
+          'placeholder:text-gp-ink-muted/60 dark:placeholder:text-white/30',
+          'focus:outline-none focus:ring-2 focus:ring-gp-primary/50 focus:border-gp-primary/40',
+          'transition-all text-sm leading-relaxed resize-y'
+        )}
+        {...rest}
+      />
+    </div>
+  )
+})
+
+/**
+ * Footer presented in edit mode — Cancel + Save sit at the bottom of the
+ * drawer body, mirroring the read-mode footer slot so the layout doesn't
+ * jump when the user toggles into edit mode.
+ */
+export const EditFooter: FC<{
+  onCancel: () => void
+  onSave: () => void
+  saving?: boolean
+  saveLabel?: string
+  disabled?: boolean
+}> = ({ onCancel, onSave, saving, saveLabel = 'Save changes', disabled }) => (
+  <div className="flex items-center gap-2">
+    <SecondaryCta
+      onClick={onCancel}
+      disabled={saving}
+      className="flex-1"
+    >
+      Cancel
+    </SecondaryCta>
+    <PrimaryCta
+      onClick={onSave}
+      disabled={saving || disabled}
+      className="flex-1"
+    >
+      {saving ? 'Saving…' : saveLabel}
+    </PrimaryCta>
+  </div>
+)
+
+/**
+ * "Edit" pill used in the drawer footer to enter edit mode. Visually
+ * coordinated with PrimaryCta but secondary in weight so the "Open full
+ * page" CTA remains the primary action.
+ */
+export const EditCta: FC<{
+  onClick: () => void
+  disabled?: boolean
+  className?: string
+  label?: string
+}> = ({ onClick, disabled, className, label = 'Edit' }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    title="Edit"
+    className={cn(
+      'flex items-center justify-center gap-2 px-4 h-11 rounded-xl',
+      'border border-gp-glass-border bg-white/40 hover:bg-white/60',
+      'dark:bg-white/5 dark:hover:bg-white/10',
+      'text-gp-ink-strong dark:text-white/85 text-sm font-medium',
+      'transition-all cursor-pointer',
+      'disabled:opacity-50 disabled:cursor-not-allowed',
+      className
+    )}
+  >
+    <span className="material-symbols-outlined text-[18px]">edit</span>
+    {label && <span>{label}</span>}
   </button>
 )

@@ -1389,7 +1389,10 @@ export default function FieldContextDetailsPage() {
               dispatchOpenInfoDrawer({ type: 'Pulse', id: pulseId })
             }
             onResonanceClick={(resonanceId) =>
-              router.push(`/protected/dashboard/resonances/${resonanceId}`)
+              dispatchOpenInfoDrawer({
+                type: 'ResonanceLink',
+                id: resonanceId,
+              })
             }
           />
 

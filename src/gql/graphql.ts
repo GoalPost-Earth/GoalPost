@@ -99,6 +99,15 @@ export type AddSpaceMemberResponsesConnection = {
 }
 
 /**
+ * How the user rated an assistant response, or — for auto-detected signals —
+ * whether the system considers the response acceptable.
+ */
+export enum AssistantFeedbackRating {
+  Negative = 'NEGATIVE',
+  Positive = 'POSITIVE',
+}
+
+/**
  * Care or wellness-focused pulse.
  * Multi-label: ["FieldPulse", "CarePulse"]
  */
@@ -3561,6 +3570,12 @@ export type CreateStoryPulsesMutationResponse = {
   __typename?: 'CreateStoryPulsesMutationResponse'
   info: CreateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type CreateSubmitAssistantFeedbackResponsesMutationResponse = {
+  __typename?: 'CreateSubmitAssistantFeedbackResponsesMutationResponse'
+  info: CreateInfo
+  submitAssistantFeedbackResponses: Array<SubmitAssistantFeedbackResponse>
 }
 
 export type CreateUpdatePersonConnectionResponsesMutationResponse = {
@@ -14457,6 +14472,7 @@ export type Mutation = {
   createSearchResults: CreateSearchResultsMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
+  createSubmitAssistantFeedbackResponses: CreateSubmitAssistantFeedbackResponsesMutationResponse
   createUpdatePersonConnectionResponses: CreateUpdatePersonConnectionResponsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
@@ -14500,6 +14516,7 @@ export type Mutation = {
   deleteSearchResults: DeleteInfo
   deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
+  deleteSubmitAssistantFeedbackResponses: DeleteInfo
   deleteUpdatePersonConnectionResponses: DeleteInfo
   deleteUpdateSpaceMemberRoleResponses: DeleteInfo
   deleteUpdateUserAiResponses: DeleteInfo
@@ -14577,6 +14594,24 @@ export type Mutation = {
   removeSpaceMember: RemoveSpaceMemberResponse
   /** Send a message to the chatbot and receive a response. */
   sendMessageToChatbot?: Maybe<ChatbotResponse>
+  /**
+   * Persist a user-driven rating on a single assistant turn.
+   *
+   * Authorization:
+   *   - The submitting user MUST own the ConversationThread containing the
+   *     turn (enforced server-side; mismatch returns success:false).
+   *
+   * Inputs:
+   *   - turnId:      the `ConversationTurn.id` exposed to the UI via the
+   *                   AI SDK message metadata stream.
+   *   - rating:      POSITIVE for thumbs-up, NEGATIVE for thumbs-down.
+   *   - userComment: optional "what would have been better" text shown to
+   *                   devs in the /dev/ai-quality triage dashboard.
+   *
+   * Auto-detected signals (tool errors, empty responses, Rule-1 leaks)
+   * flow through a separate server-side write path — not this mutation.
+   */
+  submitAssistantFeedback: SubmitAssistantFeedbackResponse
   updateAddSpaceMemberResponses: UpdateAddSpaceMemberResponsesMutationResponse
   updateCarePulses: UpdateCarePulsesMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
@@ -14610,6 +14645,7 @@ export type Mutation = {
   updateSpaceMemberRole: UpdateSpaceMemberRoleResponse
   updateSpaceMemberships: UpdateSpaceMembershipsMutationResponse
   updateStoryPulses: UpdateStoryPulsesMutationResponse
+  updateSubmitAssistantFeedbackResponses: UpdateSubmitAssistantFeedbackResponsesMutationResponse
   updateUpdatePersonConnectionResponses: UpdateUpdatePersonConnectionResponsesMutationResponse
   updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
   updateUpdateUserAiResponses: UpdateUpdateUserAiResponsesMutationResponse
@@ -14725,6 +14761,10 @@ export type MutationCreateSpaceMembershipsArgs = {
 
 export type MutationCreateStoryPulsesArgs = {
   input: Array<StoryPulseCreateInput>
+}
+
+export type MutationCreateSubmitAssistantFeedbackResponsesArgs = {
+  input: Array<SubmitAssistantFeedbackResponseCreateInput>
 }
 
 export type MutationCreateUpdatePersonConnectionResponsesArgs = {
@@ -14860,6 +14900,10 @@ export type MutationDeleteStoryPulsesArgs = {
   where?: InputMaybe<StoryPulseWhere>
 }
 
+export type MutationDeleteSubmitAssistantFeedbackResponsesArgs = {
+  where?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
+}
+
 export type MutationDeleteUpdatePersonConnectionResponsesArgs = {
   where?: InputMaybe<UpdatePersonConnectionResponseWhere>
 }
@@ -14922,6 +14966,12 @@ export type MutationRemoveSpaceMemberArgs = {
 export type MutationSendMessageToChatbotArgs = {
   message: Scalars['String']['input']
   sessionId?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationSubmitAssistantFeedbackArgs = {
+  rating: AssistantFeedbackRating
+  turnId: Scalars['ID']['input']
+  userComment?: InputMaybe<Scalars['String']['input']>
 }
 
 export type MutationUpdateAddSpaceMemberResponsesArgs = {
@@ -15050,6 +15100,11 @@ export type MutationUpdateSpaceMembershipsArgs = {
 export type MutationUpdateStoryPulsesArgs = {
   update?: InputMaybe<StoryPulseUpdateInput>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type MutationUpdateSubmitAssistantFeedbackResponsesArgs = {
+  update?: InputMaybe<SubmitAssistantFeedbackResponseUpdateInput>
+  where?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
 }
 
 export type MutationUpdateUpdatePersonConnectionResponsesArgs = {
@@ -17529,6 +17584,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "storyPulsesConnection" instead */
   storyPulsesAggregate: StoryPulseAggregateSelection
   storyPulsesConnection: StoryPulsesConnection
+  submitAssistantFeedbackResponses: Array<SubmitAssistantFeedbackResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "submitAssistantFeedbackResponsesConnection" instead */
+  submitAssistantFeedbackResponsesAggregate: SubmitAssistantFeedbackResponseAggregateSelection
+  submitAssistantFeedbackResponsesConnection: SubmitAssistantFeedbackResponsesConnection
   updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "updatePersonConnectionResponsesConnection" instead */
   updatePersonConnectionResponsesAggregate: UpdatePersonConnectionResponseAggregateSelection
@@ -18071,6 +18130,24 @@ export type QueryStoryPulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<StoryPulseSort>>
   where?: InputMaybe<StoryPulseWhere>
+}
+
+export type QuerySubmitAssistantFeedbackResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SubmitAssistantFeedbackResponseSort>>
+  where?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
+}
+
+export type QuerySubmitAssistantFeedbackResponsesAggregateArgs = {
+  where?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
+}
+
+export type QuerySubmitAssistantFeedbackResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<SubmitAssistantFeedbackResponseSort>>
+  where?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
 }
 
 export type QueryUpdatePersonConnectionResponsesArgs = {
@@ -24583,6 +24660,89 @@ export type StringAggregateSelection = {
   shortest?: Maybe<Scalars['String']['output']>
 }
 
+/**
+ * Response shape for submitAssistantFeedback. Returns a sparse envelope —
+ * the dev dashboard reads detail directly from Neo4j; the chat UI only
+ * needs success confirmation.
+ */
+export type SubmitAssistantFeedbackResponse = {
+  __typename?: 'SubmitAssistantFeedbackResponse'
+  feedbackId?: Maybe<Scalars['ID']['output']>
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
+}
+
+export type SubmitAssistantFeedbackResponseAggregate = {
+  __typename?: 'SubmitAssistantFeedbackResponseAggregate'
+  count: Count
+  node: SubmitAssistantFeedbackResponseAggregateNode
+}
+
+export type SubmitAssistantFeedbackResponseAggregateNode = {
+  __typename?: 'SubmitAssistantFeedbackResponseAggregateNode'
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  feedbackId: IdAggregateSelection
+  message: StringAggregateSelection
+}
+
+export type SubmitAssistantFeedbackResponseAggregateSelection = {
+  __typename?: 'SubmitAssistantFeedbackResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  feedbackId: IdAggregateSelection
+  message: StringAggregateSelection
+}
+
+export type SubmitAssistantFeedbackResponseCreateInput = {
+  feedbackId?: InputMaybe<Scalars['ID']['input']>
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type SubmitAssistantFeedbackResponseEdge = {
+  __typename?: 'SubmitAssistantFeedbackResponseEdge'
+  cursor: Scalars['String']['output']
+  node: SubmitAssistantFeedbackResponse
+}
+
+/** Fields to sort SubmitAssistantFeedbackResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one SubmitAssistantFeedbackResponseSort object. */
+export type SubmitAssistantFeedbackResponseSort = {
+  feedbackId?: InputMaybe<SortDirection>
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type SubmitAssistantFeedbackResponseUpdateInput = {
+  feedbackId_SET?: InputMaybe<Scalars['ID']['input']>
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type SubmitAssistantFeedbackResponseWhere = {
+  AND?: InputMaybe<Array<SubmitAssistantFeedbackResponseWhere>>
+  NOT?: InputMaybe<SubmitAssistantFeedbackResponseWhere>
+  OR?: InputMaybe<Array<SubmitAssistantFeedbackResponseWhere>>
+  feedbackId_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  feedbackId_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  feedbackId_EQ?: InputMaybe<Scalars['ID']['input']>
+  feedbackId_IN?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>
+  feedbackId_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type SubmitAssistantFeedbackResponsesConnection = {
+  __typename?: 'SubmitAssistantFeedbackResponsesConnection'
+  aggregate: SubmitAssistantFeedbackResponseAggregate
+  edges: Array<SubmitAssistantFeedbackResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 export type UpdateAddSpaceMemberResponsesMutationResponse = {
   __typename?: 'UpdateAddSpaceMemberResponsesMutationResponse'
   addSpaceMemberResponses: Array<AddSpaceMemberResponse>
@@ -24862,6 +25022,12 @@ export type UpdateStoryPulsesMutationResponse = {
   __typename?: 'UpdateStoryPulsesMutationResponse'
   info: UpdateInfo
   storyPulses: Array<StoryPulse>
+}
+
+export type UpdateSubmitAssistantFeedbackResponsesMutationResponse = {
+  __typename?: 'UpdateSubmitAssistantFeedbackResponsesMutationResponse'
+  info: UpdateInfo
+  submitAssistantFeedbackResponses: Array<SubmitAssistantFeedbackResponse>
 }
 
 export type UpdateUpdatePersonConnectionResponsesMutationResponse = {
@@ -26643,6 +26809,22 @@ export type LogResonanceActivityMutation = {
     __typename?: 'CreateLogResponse'
     success: boolean
     message: string
+  }
+}
+
+export type SubmitAssistantFeedbackMutationVariables = Exact<{
+  turnId: Scalars['ID']['input']
+  rating: AssistantFeedbackRating
+  userComment?: InputMaybe<Scalars['String']['input']>
+}>
+
+export type SubmitAssistantFeedbackMutation = {
+  __typename?: 'Mutation'
+  submitAssistantFeedback: {
+    __typename?: 'SubmitAssistantFeedbackResponse'
+    success: boolean
+    message: string
+    feedbackId?: string | null
   }
 }
 
@@ -30374,6 +30556,8 @@ export type GetResonanceLinkDetailsQuery = {
     id: string
     label: string
     description?: string | null
+    confidence?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string }>
     source: Array<
       | { __typename: 'CarePulse' }
       | { __typename: 'CoreValuePulse' }
@@ -31156,6 +31340,97 @@ export const LogResonanceActivityDocument = {
 } as unknown as DocumentNode<
   LogResonanceActivityMutation,
   LogResonanceActivityMutationVariables
+>
+export const SubmitAssistantFeedbackDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SubmitAssistantFeedback' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'turnId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'rating' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AssistantFeedbackRating' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'userComment' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'submitAssistantFeedback' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'turnId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'turnId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'rating' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'rating' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'userComment' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'userComment' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'feedbackId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SubmitAssistantFeedbackMutation,
+  SubmitAssistantFeedbackMutationVariables
 >
 export const ReExtractDocumentDocument = {
   kind: 'Document',
@@ -46309,6 +46584,17 @@ export const GetResonanceLinkDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'label' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'source' },

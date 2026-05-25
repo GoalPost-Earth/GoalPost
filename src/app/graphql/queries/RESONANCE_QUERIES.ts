@@ -9,6 +9,10 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
       id
       label
       description
+      confidence
+      context {
+        id
+      }
       source {
         __typename
         ... on GoalPulse {

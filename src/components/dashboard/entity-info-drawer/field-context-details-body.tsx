@@ -1,8 +1,9 @@
 'use client'
 
-import { type FC } from 'react'
+import { useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { toast } from 'sonner'
 import {
   ArrowRight,
   FileText,
@@ -15,9 +16,16 @@ import { cn } from '@/lib/utils'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
+import {
+  UPDATE_FIELD_CONTEXT_MUTATION,
+  LOG_FIELD_ACTIVITY,
+} from '@/app/graphql/mutations'
 import { formatResonanceLabel } from '@/utils/graph-utils'
 import {
   BodySkeleton,
+  EditCta,
+  EditFooter,
+  EditTextInput,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -36,10 +44,16 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
   contextId,
 }) => {
   const router = useRouter()
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
   const { data, loading } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
     variables: { contextId },
     fetchPolicy: 'cache-and-network',
   })
+  const [updateFieldContext] = useMutation(UPDATE_FIELD_CONTEXT_MUTATION)
+  const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
 
   const { data: peopleData } = useQuery<{
     fieldContexts?: {
@@ -91,19 +105,85 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
   const people = peopleData?.fieldContexts?.[0]?.people ?? []
   const documents = docsData?.documentsByFieldContext ?? []
 
+  const handleEditStart = () => {
+    setEditTitle(context.title ?? '')
+    setIsEditMode(true)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditMode(false)
+    setEditTitle('')
+  }
+
+  const handleEditSave = async () => {
+    const trimmedTitle = editTitle.trim()
+    if (!trimmedTitle) {
+      toast.error('Title is required.')
+      return
+    }
+    try {
+      setIsSaving(true)
+      // emergentName is AI-surfaced from resonance discovery — not user-editable
+      // here. Title is the human-owned label.
+      const update: Record<string, string | null> = {
+        title_SET: trimmedTitle,
+      }
+      await updateFieldContext({
+        variables: { where: { id_EQ: contextId }, update },
+        refetchQueries: [
+          { query: GET_FIELD_CONTEXT_DETAILS, variables: { contextId } },
+        ],
+      })
+      logFieldActivity({
+        variables: {
+          input: {
+            action: 'updated',
+            fieldId: contextId,
+            fieldName: trimmedTitle,
+            contextId,
+            spaceName: space?.name,
+          },
+        },
+      }).catch((err) => console.warn('Failed to log field update:', err))
+      toast.success('Field context updated.')
+      setIsEditMode(false)
+    } catch (err) {
+      console.error('Failed to update field context:', err)
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not update field context. Please try again.'
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <section className="relative px-6 pt-7 pb-7 border-b border-gp-glass-border bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent">
         <div className="flex items-start gap-4">
-          <div className="shrink-0 size-14 rounded-2xl border flex items-center justify-center shadow-md bg-indigo-500/20 border-indigo-300/40 text-indigo-200">
+          <div className="shrink-0 size-14 rounded-2xl border flex items-center justify-center shadow-md bg-indigo-500/20 border-indigo-300/40 text-indigo-700 dark:text-indigo-200">
             <Layers className="w-7 h-7" />
           </div>
           <div className="min-w-0 flex-1 space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
-              {context.title || context.emergentName || 'Untitled field'}
-            </h2>
+            {isEditMode ? (
+              <EditTextInput
+                id="fc-edit-title"
+                label="Title"
+                value={editTitle}
+                onChange={setEditTitle}
+                placeholder="Field context title"
+                autoFocus
+                disabled={isSaving}
+              />
+            ) : (
+              <h2 className="text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight">
+                {context.title || context.emergentName || 'Untitled field'}
+              </h2>
+            )}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border bg-indigo-500/20 border-indigo-400/40 text-indigo-100">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border bg-indigo-500/20 border-indigo-400/40 text-indigo-700 dark:text-indigo-100">
                 Field context
               </span>
               {space?.name && (
@@ -118,6 +198,7 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
                   }
                   className="text-[11px] uppercase tracking-[0.16em] text-gp-ink-muted dark:text-white/50 hover:text-gp-ink-strong dark:hover:text-white/80 transition-colors cursor-pointer"
                   title={`Open ${space.name}`}
+                  disabled={isEditMode}
                 >
                   {isMe ? 'Me Space' : 'We Space'} · {space.name}
                 </button>
@@ -309,15 +390,26 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
       )}
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-white/[0.02] dark:bg-white/[0.02]">
-        <PrimaryCta
-          onClick={() =>
-            router.push(`/protected/dashboard/field-context/${context.id}`)
-          }
-          className="w-full"
-        >
-          Open full page
-          <ArrowRight className="w-4 h-4" />
-        </PrimaryCta>
+        {isEditMode ? (
+          <EditFooter
+            onCancel={handleEditCancel}
+            onSave={handleEditSave}
+            saving={isSaving}
+          />
+        ) : (
+          <div className="flex items-center gap-2">
+            <PrimaryCta
+              onClick={() =>
+                router.push(`/protected/dashboard/field-context/${context.id}`)
+              }
+              className="flex-1"
+            >
+              Open full page
+              <ArrowRight className="w-4 h-4" />
+            </PrimaryCta>
+            <EditCta onClick={handleEditStart} />
+          </div>
+        )}
       </footer>
     </div>
   )
