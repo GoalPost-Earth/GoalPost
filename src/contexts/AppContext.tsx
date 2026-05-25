@@ -6,6 +6,7 @@ import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
 import { usePathname } from 'next/navigation'
 import { UserProfile } from '@/types'
 import { NAVIGATION_HISTORY_STORAGE_PREFIX } from './NavigationHistoryContext'
+import { invalidateAccessTokenCache } from '@/lib/auth/access-token-client'
 
 type ContextUser = UserProfile & GetLoggedInUserQuery['people'][0]
 
@@ -71,6 +72,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   })
 
   const setUserAndPersist = (user: ContextUser) => {
+    // Drop any cached bearer token first. Without this the module-scoped
+    // cache in `access-token-client.ts` could survive a login or session
+    // swap inside the same tab (cookie expiry → re-login as user B; the
+    // first `getAccessToken()` call would return user A's still-cached
+    // token before the 60s TTL elapses). Invalidating on every user-set
+    // closes the cross-session window.
+    invalidateAccessTokenCache()
     setUser(user)
     // Save to localStorage - this is our session source of truth
     localStorage.setItem('user', JSON.stringify(user))
@@ -86,6 +94,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const handleLogout = () => {
     setUser(undefined)
+    // Drop the in-memory access token cache so the next sign-in can't see
+    // the previous user's bearer.
+    invalidateAccessTokenCache()
     // Clear all session data
     localStorage.removeItem('user')
     localStorage.removeItem('token')

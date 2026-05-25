@@ -1,44 +1,16 @@
 'use client'
 
 import type { UIMessage } from 'ai'
+import { authorizationHeaders } from '@/lib/auth/access-token-client'
 
 /**
- * Resolve a fresh JWT for authenticated chat-thread API calls. Mirrors the
- * dance in `OnboardingContext.callOnboardingAPI`: hit /access-token first, fall
- * back to /refresh-token, then attach the result as `Authorization: Bearer`.
- *
- * Plain cookie-only fetches stopped being enough once the server route
- * started honouring `Authorization` first — a stale cookie now 401s where
- * a refreshed bearer would have succeeded.
+ * Auth headers for chat-thread API calls. Delegates to the shared
+ * `authorizationHeaders` helper so concurrent callers (Apollo, focal-entity,
+ * onboarding) all dedupe through the same in-flight refresh — without this
+ * a single page mount could fire 5+ parallel `/api/auth/refresh-token` calls
+ * and the rotating-token race would 401 most of them.
  */
-async function getAccessTokenForChatApi(): Promise<string | null> {
-  try {
-    const tokenRes = await fetch('/api/auth/access-token', {
-      credentials: 'include',
-    })
-    if (tokenRes.ok) {
-      const data = (await tokenRes.json()) as { accessToken?: string }
-      if (data.accessToken) return data.accessToken
-    }
-    const refreshRes = await fetch('/api/auth/refresh-token', {
-      credentials: 'include',
-    })
-    if (refreshRes.ok) {
-      const data = (await refreshRes.json()) as { accessToken?: string }
-      if (data.accessToken) return data.accessToken
-    }
-  } catch {
-    // fall through to null
-  }
-  return null
-}
-
-export async function chatApiAuthHeaders(): Promise<Record<string, string>> {
-  const token = await getAccessTokenForChatApi()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-// Internal alias so the in-module callers stay terse.
+export const chatApiAuthHeaders = authorizationHeaders
 const authHeaders = chatApiAuthHeaders
 
 /**

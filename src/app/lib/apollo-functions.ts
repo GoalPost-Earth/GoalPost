@@ -2,7 +2,7 @@ import { HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 import { RetryLink } from '@apollo/client/link/retry'
-import { jwtDecode } from 'jwt-decode'
+import { getAccessToken } from '@/lib/auth/access-token-client'
 
 export const ERROR_POLICY = 'all'
 
@@ -48,88 +48,34 @@ export const errorLink = onError((error) => {
   if (networkError) console.error(`[Network error]: ${networkError}`)
 })
 
-const REFRESH_ELIGIBLE_CODES = new Set([
-  'ERR_EXPIRED_ACCESS_TOKEN',
-  'ERR_NO_ACCESS_TOKEN',
-])
-
-async function tryRefresh(): Promise<{ accessToken: string } | null> {
-  // The refresh route reads the HttpOnly cookie automatically; the body is
-  // a fallback for browsers that lost the cookie but still have the token
-  // in localStorage from login.
-  const localToken =
-    typeof window !== 'undefined'
-      ? window.localStorage.getItem('refreshToken')
-      : null
-
-  const refreshResponse = localToken
-    ? await fetch('/api/auth/refresh-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: localToken }),
-      })
-    : await fetch('/api/auth/refresh-token')
-  const refreshJson = await refreshResponse.json().catch(() => ({}))
-
-  if (refreshResponse.ok && refreshJson.accessToken) {
-    if (typeof window !== 'undefined' && refreshJson.refreshToken) {
-      window.localStorage.setItem('refreshToken', refreshJson.refreshToken)
-    }
-    return { accessToken: refreshJson.accessToken }
-  }
-  return null
-}
-
+/**
+ * authLink delegates to the shared `getAccessToken` helper so every
+ * GraphQL request reuses the same in-flight refresh as Apollo's siblings
+ * (chat thread client, focal-entity, onboarding). Without this each
+ * link instance fired its own `/api/auth/access-token` + `/refresh-token`
+ * dance on every operation; on a page mount that spawned 5+ concurrent
+ * GraphQL queries the rotating-refresh-token race would 401 most of them.
+ *
+ * On hard auth failure (token + refresh both unavailable) the user is
+ * bounced to `/auth/login` so they don't sit stranded on a protected
+ * route silently receiving null `@authorization`-gated responses.
+ */
 export const authLink = setContext(async (_, { headers }) => {
   try {
-    const response = await fetch('/api/auth/access-token')
-    let resJson = await response.json()
-
-    if (!response.ok) {
-      const code: string | undefined = resJson?.code
-      if (code && REFRESH_ELIGIBLE_CODES.has(code)) {
-        const refreshed = await tryRefresh()
-        if (refreshed) {
-          resJson = refreshed
-        } else {
-          console.warn(
-            'Access token unavailable and refresh failed, redirecting to login...'
-          )
-          window.location.href = '/auth/login?returnTo=/'
-          return { headers }
-        }
-      } else {
-        return { headers }
-      }
+    const token = await getAccessToken()
+    if (token) {
+      return { headers: { ...headers, Authorization: `Bearer ${token}` } }
     }
-
-    if (resJson?.accessToken) {
-      const decoded = jwtDecode(resJson.accessToken) as { exp: number }
-      const expireDate = new Date(decoded.exp * 1000)
-      if (expireDate < new Date()) {
-        // Defensive: server vended an expired token (clock skew, stale cookie).
-        // Try refresh before bailing to login.
-        const refreshed = await tryRefresh()
-        if (refreshed) {
-          return {
-            headers: {
-              ...headers,
-              Authorization: `Bearer ${refreshed.accessToken}`,
-            },
-          }
-        }
-        console.debug(
-          '[GraphQL debug] Access token expired and refresh failed, redirecting:',
-          expireDate
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname
+      const onProtectedRoute = path.startsWith('/protected')
+      const alreadyOnAuthRoute = path.startsWith('/auth')
+      if (onProtectedRoute && !alreadyOnAuthRoute) {
+        console.warn(
+          'Access token unavailable and refresh failed, redirecting to login...'
         )
-        window.location.href = '/auth/login?returnTo=/'
-        return { headers }
-      }
-      return {
-        headers: {
-          ...headers,
-          Authorization: `Bearer ${resJson?.accessToken}`,
-        },
+        const returnTo = encodeURIComponent(path + window.location.search)
+        window.location.href = `/auth/login?returnTo=${returnTo}`
       }
     }
     return { headers }
