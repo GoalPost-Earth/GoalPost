@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 import { useQuery } from '@apollo/client/react'
 import type { ExternalCallbacks, Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
@@ -120,7 +121,6 @@ interface ResonanceRecord {
 }
 
 export const BloomView: FC = () => {
-  const router = useRouter()
   const { setFocalEntity } = useFocalEntity()
   const { overlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
@@ -429,12 +429,17 @@ export const BloomView: FC = () => {
 
   const handleNodeClick = useCallback(
     (node: Node) => {
-      setSelectedNode(node)
       // Overlay nodes are an opaque NVL bag whose type is not tracked
-      // here — surface them in the side panel without mutating focal.
-      if (overlay) return
+      // here — fall back to the inline minimal panel for these only.
+      if (overlay) {
+        setSelectedNode(node)
+        return
+      }
+      const id = String(node.id)
+      const label = typeof node.caption === 'string' ? node.caption : undefined
+
       if (inField) {
-        const pulse = pulses.find((p) => p.id === String(node.id))
+        const pulse = pulses.find((p) => p.id === id)
         if (pulse) {
           setFocalEntity({
             type: pulse.focalType,
@@ -442,11 +447,12 @@ export const BloomView: FC = () => {
             focusedAt: new Date().toISOString(),
             source: 'manual',
           })
+          dispatchOpenInfoDrawer({ type: 'Pulse', id: pulse.id, label })
         }
         return
       }
       if (inSpace) {
-        const ctx = fieldContexts.find((f) => f.id === String(node.id))
+        const ctx = fieldContexts.find((f) => f.id === id)
         if (ctx) {
           setFocalEntity({
             type: 'FieldContext',
@@ -454,10 +460,15 @@ export const BloomView: FC = () => {
             focusedAt: new Date().toISOString(),
             source: 'manual',
           })
+          dispatchOpenInfoDrawer({
+            type: 'FieldContext',
+            id: ctx.id,
+            label,
+          })
         }
         return
       }
-      const space = spaces.find((s) => s.id === String(node.id))
+      const space = spaces.find((s) => s.id === id)
       if (space) {
         setFocalEntity({
           type: space.type,
@@ -465,6 +476,7 @@ export const BloomView: FC = () => {
           focusedAt: new Date().toISOString(),
           source: 'manual',
         })
+        dispatchOpenInfoDrawer({ type: space.type, id: space.id, label })
       }
     },
     [overlay, inField, pulses, inSpace, fieldContexts, spaces, setFocalEntity]
@@ -681,18 +693,15 @@ export const BloomView: FC = () => {
         )}
       </div>
 
-      {selectedNode && (
+      {/* Inline panel only for overlay nodes (chat artifacts with no
+          persisted entity behind them). Real node clicks open the
+          unified EntityInfoDrawer mounted in CanvasHost. */}
+      {selectedNode && overlay && (
         <div className="w-80 h-full bg-slate-900/85 backdrop-blur-xl border-l border-white/10 overflow-y-auto z-20 p-5">
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-                {overlay
-                  ? 'Node'
-                  : inField
-                    ? 'Pulse'
-                    : inSpace
-                      ? 'Field'
-                      : 'Space'}
+                Node
               </p>
               <h3 className="mt-1 text-xl font-bold text-white">
                 {selectedNode.caption}
@@ -715,36 +724,9 @@ export const BloomView: FC = () => {
               aria-hidden="true"
             />
             <span className="text-xs text-white/60 uppercase tracking-wider">
-              {overlay
-                ? 'From chat'
-                : inField
-                  ? (pulses.find((p) => p.id === String(selectedNode.id))
-                      ?.focalType ?? 'Pulse')
-                  : inSpace
-                    ? 'Field context'
-                    : (spaces.find((s) => s.id === String(selectedNode.id))
-                        ?.type ?? 'Space')}
+              From chat
             </span>
           </div>
-
-          {!overlay && (
-            <button
-              type="button"
-              onClick={() => {
-                const id = String(selectedNode.id)
-                router.push(
-                  inField
-                    ? `/protected/dashboard/pulses/${id}`
-                    : inSpace
-                      ? `/protected/dashboard/field-context/${id}`
-                      : `/protected/dashboard/space/${id}`
-                )
-              }}
-              className="w-full mt-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold py-2 transition-colors cursor-pointer"
-            >
-              {inField ? 'Open pulse' : inSpace ? 'Open field' : 'Open space'}
-            </button>
-          )}
         </div>
       )}
     </div>
