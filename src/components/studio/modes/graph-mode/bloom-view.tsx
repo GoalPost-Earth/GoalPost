@@ -582,16 +582,33 @@ export const BloomView: FC = () => {
     lastKickedScopeRef.current = scopeKey
     // A short delay lets the NVL wrapper finish wiring up the new nodes
     // (`addAndUpdateElementsInGraph` happens in a separate effect) before
-    // we restart the simulation against them.
-    const timer = window.setTimeout(() => {
+    // we restart the simulation against them. We retry with a longer
+    // delay on failure because the first `restart()` can throw on a cold
+    // mount when the NVL instance is wired up but the simulation context
+    // isn't ready yet — the symptom is a chip showing "Custom view from
+    // chat" with a completely empty canvas because nodes never get a
+    // position. Logging the warning lets us tell that case apart from
+    // a torn-down-instance race during fast nav.
+    const timers: number[] = []
+    const tryRestart = (attempt: number) => {
       try {
         nvlRef.current?.restart?.()
-      } catch {
-        // restart() can throw on a torn-down instance during fast nav;
-        // we intentionally swallow — the fit fallback still handles it.
+      } catch (err) {
+        console.warn(
+          `[bloom-view] NVL restart() failed (attempt ${attempt})`,
+          err instanceof Error ? err.message : err
+        )
+        if (attempt < 2) {
+          timers.push(
+            window.setTimeout(() => tryRestart(attempt + 1), 400)
+          )
+        }
       }
-    }, 50)
-    return () => window.clearTimeout(timer)
+    }
+    timers.push(window.setTimeout(() => tryRestart(1), 50))
+    return () => {
+      for (const id of timers) window.clearTimeout(id)
+    }
   }, [nodes, scopeKey])
 
   const fitToScope = useCallback(() => {
