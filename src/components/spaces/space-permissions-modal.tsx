@@ -323,9 +323,8 @@ export function SpacePermissionsModal({
         <DialogContent className="max-w-2xl w-[95vw] sm:w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl font-semibold text-center">
-              Manage{' '}
-              <span className="text-gp-accent-glow"> {spaceName}&apos;s</span>{' '}
-              Permissions
+              Add a member to{' '}
+              <span className="text-gp-accent-glow">{spaceName}</span>
             </DialogTitle>
           </DialogHeader>
 
