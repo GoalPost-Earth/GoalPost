@@ -42,7 +42,28 @@ export function getInitials(name: string) {
     : firstName.charAt(0)
 }
 
+// ZodError.message is a JSON-stringified dump of all issues — useless in UIs.
+// Detect Zod-shaped errors (have an `issues` array) and surface a short,
+// human-readable summary instead.
+type ZodIssueLike = { path?: Array<string | number>; message?: string }
+const isZodErrorLike = (
+  error: unknown
+): error is { issues: ZodIssueLike[] } => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'issues' in error &&
+    Array.isArray((error as { issues: unknown }).issues)
+  )
+}
+
 export const parseError = (error: unknown) => {
+  if (isZodErrorLike(error)) {
+    const messages = error.issues
+      .map((issue) => issue.message)
+      .filter((m): m is string => Boolean(m))
+    if (messages.length > 0) return messages.join('. ')
+  }
   if (error instanceof Error) {
     return error.message
   } else if (typeof error === 'string') {

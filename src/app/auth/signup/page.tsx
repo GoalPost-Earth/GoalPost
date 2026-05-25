@@ -55,7 +55,6 @@ function SignupPage() {
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Sign up failed')
-        setFormError('email', { message: data.error || 'Sign up failed' })
       } else {
         // Log user in with returned user data and tokens
         if (data.user) {
