@@ -32,7 +32,34 @@ export interface EntityBubbleProps {
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
   onInfoClick?: (e: React.MouseEvent) => void
+  // Force the body to show a pointer cursor even when React `onClick`
+  // is not wired. Used in NVL surfaces where clicks/drag are handled
+  // by NVL natively (so the body has no React `onClick` to key off of)
+  // but the node is still interactive.
+  interactive?: boolean
   children?: ReactNode
+}
+
+// Stop pointer/mouse/touch *and* click events from reaching the NVL
+// container that wraps these bubbles. React's onClick fires too late —
+// NVL's drag interaction has already consumed pointerdown by then, so
+// the parent node also gets a click. Blocking at pointerdown level
+// prevents NVL from ever seeing the gesture.
+const swallowNvlGesture = (e: React.SyntheticEvent) => {
+  e.stopPropagation()
+  e.nativeEvent.stopPropagation()
+  if (typeof (e.nativeEvent as Event).stopImmediatePropagation === 'function') {
+    ;(e.nativeEvent as Event).stopImmediatePropagation()
+  }
+}
+
+const overlayButtonGestureProps = {
+  onPointerDown: swallowNvlGesture,
+  onPointerUp: swallowNvlGesture,
+  onMouseDown: swallowNvlGesture,
+  onMouseUp: swallowNvlGesture,
+  onTouchStart: swallowNvlGesture,
+  onTouchEnd: swallowNvlGesture,
 }
 
 const sizeClasses: Record<BubbleSize, string> = {
@@ -82,6 +109,7 @@ export function EntityBubble({
   onClick,
   onEditClick,
   onInfoClick,
+  interactive = false,
   children,
 }: EntityBubbleProps) {
   const { animationsEnabled } = useAnimations()
@@ -314,7 +342,7 @@ export function EntityBubble({
         animationsEnabled && 'transition-all duration-300',
         animationsEnabled &&
           'shadow-[0_0_26px_color-mix(in_srgb,var(--gp-primary)_24%,transparent)] hover:shadow-[0_0_34px_color-mix(in_srgb,var(--gp-primary)_36%,transparent)]',
-        onClick && 'cursor-pointer',
+        (onClick || interactive) && 'cursor-pointer',
         className
       )}
       onMouseEnter={handleMouseEnter}
@@ -343,8 +371,9 @@ export function EntityBubble({
       {onEditClick && (
         <button
           type="button"
+          {...overlayButtonGestureProps}
           onClick={(e) => {
-            e.stopPropagation()
+            swallowNvlGesture(e)
             onEditClick(e)
           }}
           className="pointer-events-auto absolute -top-2 -right-2 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/40 text-gp-primary transition-all opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-30 cursor-pointer"
@@ -355,17 +384,18 @@ export function EntityBubble({
         </button>
       )}
 
-      {/* Info button — opens the right-side details drawer.
-          `e.nativeEvent.stopImmediatePropagation()` blocks NVL's native
-          click listener from also firing when this bubble lives inside
-          an NVL HTML container, so clicking the icon never also
-          triggers the bubble's body action. */}
+      {/* Info button — opens the right-side details drawer. The
+          overlay-button gesture props block NVL's native pointer/mouse
+          listeners (attached to the parent NVL container) from ever
+          seeing the gesture, so the underlying node never also reacts.
+          Blocking only `click` would be too late: NVL's drag
+          interaction starts on pointerdown. */}
       {onInfoClick && (
         <button
           type="button"
+          {...overlayButtonGestureProps}
           onClick={(e) => {
-            e.stopPropagation()
-            e.nativeEvent.stopImmediatePropagation()
+            swallowNvlGesture(e)
             onInfoClick(e)
           }}
           className="pointer-events-auto absolute -top-2 -left-2 p-2 rounded-full bg-white/15 hover:bg-white/30 text-white transition-all opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-30 cursor-pointer"

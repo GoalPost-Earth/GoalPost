@@ -51,6 +51,18 @@ const sizeClasses: Record<string, string> = {
   xl: 'w-[440px] h-[440px]',
 }
 
+// Block pointer/mouse/touch + click from bubbling to NVL's drag
+// listeners on the parent NVL container. Mirrors the helper in
+// entity-bubble.tsx — kept local so field-bubble has no extra import
+// surface area.
+function swallowFieldBubbleGesture(e: React.SyntheticEvent) {
+  e.stopPropagation()
+  e.nativeEvent.stopPropagation()
+  if (typeof (e.nativeEvent as Event).stopImmediatePropagation === 'function') {
+    ;(e.nativeEvent as Event).stopImmediatePropagation()
+  }
+}
+
 const shapeClasses: Record<string, string> = {
   circle: 'rounded-full',
   'organic-1': 'rounded-[40%_60%_70%_30%_/_40%_50%_60%_50%]',
@@ -226,11 +238,20 @@ export function FieldBubble({
           <div className="absolute inset-8 rounded-full border border-dotted border-white/5 group-hover:border-white/10" />
         </div>
 
-        {/* Edit Button */}
+        {/* Edit Button — block pointer/mouse events too. NVL's drag
+            interaction starts on pointerdown; only stopping `click`
+            would let the parent NVL node also react to the gesture. */}
         {onEditClick && (
           <button
+            type="button"
+            onPointerDown={swallowFieldBubbleGesture}
+            onPointerUp={swallowFieldBubbleGesture}
+            onMouseDown={swallowFieldBubbleGesture}
+            onMouseUp={swallowFieldBubbleGesture}
+            onTouchStart={swallowFieldBubbleGesture}
+            onTouchEnd={swallowFieldBubbleGesture}
             onClick={(e) => {
-              e.stopPropagation()
+              swallowFieldBubbleGesture(e)
               onEditClick(e)
             }}
             className="absolute -top-3 -right-3 p-2 rounded-full bg-gp-primary/20 hover:bg-gp-primary/30 text-gp-primary transition-all duration-200 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 backdrop-blur-sm z-30"

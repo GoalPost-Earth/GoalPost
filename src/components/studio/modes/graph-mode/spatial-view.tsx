@@ -699,6 +699,10 @@ export const SpatialView: FC = () => {
           badge={desc.badge}
           animationDelay={animationDelay}
           onInfoClick={onInfoClick}
+          // NVL owns the click on the body; signal that to the user with
+          // a pointer cursor so the node reads as clickable + draggable
+          // rather than inert.
+          interactive
         />,
         container
       )

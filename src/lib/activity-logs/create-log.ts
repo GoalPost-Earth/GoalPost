@@ -138,10 +138,10 @@ export async function getContextLogs(
         log,
         person,
         trim(coalesce(person.firstName, '') + ' ' + coalesce(person.lastName, '')) AS fullName
-      RETURN 
+      RETURN
         log.id as id,
         log.description as description,
-        log.createdAt as createdAt,
+        toString(log.createdAt) as createdAt,
         person.id as createdById,
         coalesce(
           person.name,
@@ -228,10 +228,10 @@ export async function getUserLogs(
         creator,
         trim(coalesce(creator.firstName, '') + ' ' + coalesce(creator.lastName, '')) AS fullName
       
-      RETURN 
+      RETURN
         log.id as id,
         log.description as description,
-        log.createdAt as createdAt,
+        toString(log.createdAt) as createdAt,
         creator.id as createdById,
         coalesce(
           creator.name,
