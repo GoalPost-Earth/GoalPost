@@ -264,6 +264,21 @@ export function buildSystemPromptWithSessionContext(
       'search_field_context) to resolve the name BEFORE replying.'
   )
 
+  lines.push('')
+  lines.push(
+    'FORMAT REPLIES AS MARKDOWN. The chat renders GitHub-flavored markdown, ' +
+      'so use it to make replies scannable: ' +
+      '(a) use `- ` bullet lists when you enumerate 2+ items (resources, ' +
+      'people, spaces, options, next steps); ' +
+      '(b) use `1.` numbered lists when order matters or you offer choices; ' +
+      '(c) use `**bold**` for entity names and key phrases the user will scan for; ' +
+      '(d) separate paragraphs with a blank line, never a single newline — single ' +
+      'newlines collapse to spaces; ' +
+      '(e) keep paragraphs short (1–3 sentences). ' +
+      'Do NOT narrate failed tool calls or retries as part of the reply — surface ' +
+      'them only if the user-visible answer depends on the failure.'
+  )
+
   if (ctx.focalEntity) {
     lines.push('')
     lines.push(

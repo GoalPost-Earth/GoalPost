@@ -247,12 +247,16 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
           const txt = (element.content as string).trim()
           if (!txt) return null
           return (
-            <div
+            <TextMessagePartProvider
               key={`text-${index}`}
-              className="prose prose-sm dark:prose-invert max-w-none"
+              text={txt}
+              isRunning={isRunning}
             >
-              {txt}
-            </div>
+              <MarkdownTextPrimitive
+                remarkPlugins={[remarkGfm]}
+                className="aui-md"
+              />
+            </TextMessagePartProvider>
           )
         })}
       </div>
