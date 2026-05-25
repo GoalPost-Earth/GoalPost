@@ -6,6 +6,11 @@ import {
   isSpaceOwner,
   SpaceRole,
 } from '@/lib/permissions/space-permissions'
+import {
+  sendAddedToSpaceEmail,
+  sendSpaceInviteEmail,
+} from '@/app/api/auth/utils'
+import { createLog } from '@/lib/activity-logs/create-log'
 
 interface AddSpaceMemberInput {
   spaceId: string
@@ -104,6 +109,55 @@ export const spaceMembershipResolvers = {
         }
       }
 
+      // Pre-flight: fetch the Person's email + :User label status + space
+      // name + inviter name in one read so we can (a) block adds for people
+      // with no email on file (the UI promises an email invite goes out),
+      // and (b) have everything we need for the post-create email without
+      // a second round trip.
+      const preflight = await session.executeRead((tx) =>
+        tx.run(
+          `
+          MATCH (member:Person {id: $memberId})
+          MATCH (space:Space {id: $spaceId})
+          OPTIONAL MATCH (inviter:Person {id: $currentUserId})
+          RETURN
+            member.email AS memberEmail,
+            'User' IN labels(member) AS isExistingUser,
+            space.name AS spaceName,
+            coalesce(inviter.name, inviter.firstName, 'A GoalPost member')
+              AS inviterName
+          `,
+          { memberId, spaceId, currentUserId }
+        )
+      )
+
+      if (preflight.records.length === 0) {
+        return {
+          success: false,
+          message: 'Member or space not found.',
+        }
+      }
+
+      const memberEmail = preflight.records[0].get('memberEmail') as
+        | string
+        | null
+      const isExistingUser = preflight.records[0].get('isExistingUser') as
+        | boolean
+        | null
+      const spaceName =
+        (preflight.records[0].get('spaceName') as string | null) ?? 'this space'
+      const inviterName =
+        (preflight.records[0].get('inviterName') as string | null) ??
+        'A GoalPost member'
+
+      if (!memberEmail) {
+        return {
+          success: false,
+          message:
+            'Cannot add this person without an email on file. Update their profile first.',
+        }
+      }
+
       // Create the SpaceMembership node
       const membershipId = generateId()
       const addedAt = new Date().toISOString()
@@ -199,11 +253,101 @@ export const spaceMembershipResolvers = {
       const personLabels = record.get('personLabels')
       const isPersonType = personLabels.includes('Person')
 
+      // Best-effort: fire the appropriate email. If sending fails we still
+      // return success for the membership itself (the user can resend later
+      // by re-adding) but include a hint in the message so the UI can
+      // surface it. Token storage happens in the same try so a half-
+      // committed state doesn't strand a Person with a token and no email.
+      let emailMessageSuffix = ''
+      try {
+        if (isExistingUser) {
+          const result = await sendAddedToSpaceEmail({
+            to: memberEmail,
+            spaceId,
+            spaceName,
+            inviterName,
+          })
+          if (!result.ok) {
+            emailMessageSuffix =
+              ' Member added, but the notification email failed to send.'
+          }
+        } else {
+          // Mint a single-use invite token. Format is `${spaceId}.${uuid}`:
+          // the spaceId prefix is what the accept handler uses to redirect
+          // the user to the right space, so two pending invites to the same
+          // Person for different spaces don't silently land on whichever
+          // was minted last. The Person node still only carries one
+          // `inviteToken` at a time (latest write wins) — but each emailed
+          // link self-describes the space it's for, and the accept route
+          // will refuse a token whose decoded space doesn't match what's
+          // currently on the Person, so a stale link returns "Invalid
+          // invite" rather than misrouting. 48h expiry to limit blast
+          // radius of plaintext-storage parity with resetToken.
+          const inviteToken = `${spaceId}.${crypto.randomUUID()}`
+          const inviteExpires = new Date(
+            Date.now() + 48 * 60 * 60 * 1000
+          ).toISOString()
+
+          await session.executeWrite((tx) =>
+            tx.run(
+              `
+              MATCH (p:Person {id: $memberId})
+              SET p.inviteToken = $inviteToken,
+                  p.inviteTokenExpires = datetime($inviteExpires)
+              `,
+              { memberId, inviteToken, inviteExpires }
+            )
+          )
+
+          const result = await sendSpaceInviteEmail({
+            to: memberEmail,
+            inviteToken,
+            spaceName,
+            inviterName,
+          })
+          if (!result.ok) {
+            emailMessageSuffix =
+              ' Member added, but the invite email failed to send.'
+          }
+
+          // Server-side audit log for the invite, attributed to the
+          // inviter. The frontend already logs an 'added' event via
+          // logMemberActivity, but it doesn't distinguish "added an
+          // existing user" from "invited a new user" — this log
+          // captures the invite-specific signal for moderation/audit.
+          // memberEmail intentionally omitted from metadata since Logs
+          // are readable by every space member and would otherwise leak
+          // invitee emails to guests before the invitee accepts.
+          createLog({
+            userId: currentUserId,
+            description: `Invited ${record.get('name') || 'a new member'} to "${spaceName}" via email`,
+            spaceId,
+            metadata: {
+              event: 'space_invite_sent',
+              memberId,
+              role,
+            },
+          }).catch((err) =>
+            console.warn('Failed to log invite send:', err)
+          )
+        }
+      } catch (mailErr) {
+        console.error('❌ Error sending member email:', mailErr)
+        emailMessageSuffix =
+          ' Member added, but the notification email could not be sent.'
+      }
+
+      const conversionNote = isMeSpace
+        ? ' Space converted from MeSpace to WeSpace.'
+        : ''
+      const audience = isExistingUser ? 'existing user' : 'new invitee'
+
       return {
         success: true,
-        message: isMeSpace
-          ? `Successfully added member with ${role} role to space. Space converted from MeSpace to WeSpace.`
-          : `Successfully added member with ${role} role to space.`,
+        message:
+          `Successfully added ${audience} as ${role} to space.` +
+          conversionNote +
+          emailMessageSuffix,
         membership: {
           id: record.get('id'),
           role: record.get('role'),

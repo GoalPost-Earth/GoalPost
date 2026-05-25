@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       const result = await session.run(
         `MERGE (person:Person {email: $email})
                     SET person:User
-                    SET person.password = $password 
+                    SET person.password = $password
                     SET person.id = randomUUID(),
                     person.firstName = $firstName,
                     person.lastName = $lastName,
@@ -67,8 +67,10 @@ export async function POST(req: NextRequest) {
                     person.onboardingCurrentStepIndex = 0,
                     person.onboardingCompletedSteps = [],
                     person.onboardingIsCompleted = false,
-                    person.onboardingSkipped = false
-                
+                    person.onboardingSkipped = false,
+                    person.inviteToken = NULL,
+                    person.inviteTokenExpires = NULL
+
                 RETURN person.id as personId`,
         {
           email,
