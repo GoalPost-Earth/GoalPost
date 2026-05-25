@@ -404,6 +404,22 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
     onFinish: () => emitAssistantThreadUpdated(),
   })
 
+  // Wake the threads sidebar the moment the user clicks send / hits Enter.
+  // `composer.send` fires synchronously on submit — earlier than `runStart`
+  // (which only fires once assistant-ui has finished building the request),
+  // and far earlier than `onFinish` (which waits for the full stream to
+  // complete, leaving the sidebar stuck on "No conversations yet" for 5–10s
+  // while the user's message bubble is already visible). The chat route
+  // persists the user turn fire-and-forget at request-start, so 600ms is
+  // enough headroom for the Neo4j write to land before the refetch hits;
+  // the sidebar's existing +2.5s retry catches any final state.
+  useEffect(() => {
+    const unsubscribe = runtime.thread.composer.unstable_on('send', () => {
+      window.setTimeout(emitAssistantThreadUpdated, 600)
+    })
+    return () => unsubscribe()
+  }, [runtime])
+
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       {children}
