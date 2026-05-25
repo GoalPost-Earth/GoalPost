@@ -10,6 +10,7 @@ import { GET_ALL_USER_CONTEXTS } from '@/app/graphql/queries/FIELD_CONTEXT_QUERI
 import Select, { StylesConfig } from 'react-select'
 import { getConfigForType } from '@/lib/pulse-type-config'
 import { LinkifiedText } from '@/components/ui/linkified-text'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 export type PulseKind = 'goal' | 'resource' | 'story'
 
@@ -335,7 +336,8 @@ export function PulsePanel({
       <div className="p-6 border-t border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <button
           onClick={() =>
-            pulse?.id && router.push(`/protected/dashboard/pulses/${pulse.id}`)
+            pulse?.id &&
+            dispatchOpenInfoDrawer({ type: 'Pulse', id: pulse.id })
           }
           className="flex w-full cursor-pointer items-center justify-center rounded-xl h-10 px-4 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] shadow-lg transition-all"
           style={{

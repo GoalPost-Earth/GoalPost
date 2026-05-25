@@ -51,12 +51,13 @@ function hrefFor(type: FocalEntityType, id: string): string | null {
     case 'PersonPulse':
     case 'User':
       return `/protected/dashboard/persons/${id}`
+    // Pulses live in the EntityInfoDrawer — no dedicated route.
     case 'GoalPulse':
     case 'ResourcePulse':
     case 'StoryPulse':
     case 'CarePulse':
     case 'CoreValuePulse':
-      return `/protected/dashboard/pulses/${id}`
+      return null
     default:
       return null
   }

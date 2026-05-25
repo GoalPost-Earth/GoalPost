@@ -635,7 +635,7 @@ export const SpatialView: FC = () => {
       const desc = descriptors.find((d) => d.id === id)
       if (!desc) return
       if (desc.kind === 'pulse') {
-        router.push(`/protected/dashboard/pulses/${id}`)
+        dispatchOpenInfoDrawer({ type: 'Pulse', id })
         return
       }
       if (desc.kind === 'field') {

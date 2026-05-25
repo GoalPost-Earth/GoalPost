@@ -73,9 +73,10 @@ export function isFocalEntityType(value: unknown): value is FocalEntityType {
 }
 
 /**
- * Pulse subtypes for which the route `/protected/dashboard/pulses/[id]` is
- * provisionally treated as GoalPulse. After the query resolves, callers
- * refine via setFocalLabel(id, label, refinedType).
+ * Pulse subtypes. Pulses no longer have a dedicated route — they only live
+ * in the EntityInfoDrawer — but they remain valid focal entity types when
+ * set manually (e.g. when a pulse drawer opens). Callers refine via
+ * setFocalLabel(id, label, refinedType).
  */
 export const PULSE_FOCAL_TYPES: ReadonlyArray<FocalEntityType> = [
   'GoalPulse',

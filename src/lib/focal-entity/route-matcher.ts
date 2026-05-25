@@ -11,9 +11,9 @@ export interface FocalRouteHints {
  * Map a Next.js pathname to a provisional focal entity `{type, id}`.
  *
  * Returns null for routes that don't encode a focal entity (lists, neutral
- * surfaces like /graph and /assistant). Pulse subtypes and User-vs-PersonPulse
- * use a provisional default — callers refine via setFocalLabel once the
- * entity's __typename is known. Resonance and Document only live in the
+ * surfaces like /graph and /assistant). User-vs-PersonPulse uses a
+ * provisional default — callers refine via setFocalLabel once the entity's
+ * __typename is known. Pulse, Resonance, and Document only live in the
  * EntityInfoDrawer (no dedicated route), so they aren't matched here.
  */
 export function focalEntityFromRoute(
@@ -45,8 +45,6 @@ export function focalEntityFromRoute(
         return { type: 'FieldContext', id }
       case 'persons':
         return { type: 'PersonPulse', id }
-      case 'pulses':
-        return { type: 'GoalPulse', id }
       case 'space': {
         const isMine = hints?.meSpaceIds?.includes(id) ?? false
         return { type: isMine ? 'MeSpace' : 'WeSpace', id }

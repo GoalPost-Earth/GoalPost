@@ -8,6 +8,7 @@ import { usePageContext } from '@/contexts/PageContext'
 import { SEARCH_ALL } from '@/app/graphql/queries'
 import { useQuery } from '@apollo/client/react'
 import { capitalizeString } from '@/lib/utils'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 type EntityType =
   | 'person'
@@ -18,6 +19,16 @@ type EntityType =
   | 'resourcePulse'
   | 'storyPulse'
 
+const PULSE_ENTITY_TYPES: ReadonlySet<EntityType> = new Set([
+  'goalPulse',
+  'resourcePulse',
+  'storyPulse',
+])
+
+function isPulseEntityType(type: EntityType): boolean {
+  return PULSE_ENTITY_TYPES.has(type)
+}
+
 type SearchEntity = {
   id: string
   type: EntityType
@@ -25,7 +36,8 @@ type SearchEntity = {
   subtitle?: string
   description: string
   tags?: string[]
-  href: string
+  /** null when the entity has no dedicated route (e.g. pulses, which only live in the EntityInfoDrawer). */
+  href: string | null
 }
 
 interface GraphQLSearchResult {
@@ -139,7 +151,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
           (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Goal',
       description: pulse.content,
-      href: `/protected/dashboard/pulses/${pulse.id}`,
+      href: null,
     })
   })
 
@@ -155,7 +167,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       subtitle: pulse.resourceType,
       description: pulse.content,
       tags: [pulse.resourceType],
-      href: `/protected/dashboard/pulses/${pulse.id}`,
+      href: null,
     })
   })
 
@@ -170,7 +182,7 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
           (pulse.content.length > 50 ? '...' : ''),
       subtitle: 'Story',
       description: pulse.content,
-      href: `/protected/dashboard/pulses/${pulse.id}`,
+      href: null,
     })
   })
 
@@ -207,6 +219,33 @@ const typePillClass: Record<EntityType, string> = {
   storyPulse: 'bg-gp-story/10 text-gp-story border-gp-story/20',
 }
 
+function EntityCardWrapper({
+  entity,
+  onClick,
+  children,
+}: {
+  entity: SearchEntity
+  onClick: (e: React.MouseEvent) => void
+  children: React.ReactNode
+}) {
+  if (entity.href) {
+    return (
+      <Link href={entity.href} className="group" onClick={onClick}>
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group text-left cursor-pointer"
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function SearchPage() {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -240,7 +279,15 @@ export default function SearchPage() {
     } else if (entity.type === 'context') {
       localStorage.setItem(`field_${entity.id}`, entity.title)
     }
-    router.push(entity.href)
+    if (isPulseEntityType(entity.type)) {
+      dispatchOpenInfoDrawer({
+        type: 'Pulse',
+        id: entity.id,
+        label: entity.title,
+      })
+      return
+    }
+    if (entity.href) router.push(entity.href)
   }
 
   const filteredEntities = useMemo(() => {
@@ -357,10 +404,9 @@ export default function SearchPage() {
           )}
 
           {filteredEntities.map((entity) => (
-            <Link
+            <EntityCardWrapper
               key={entity.id}
-              href={entity.href}
-              className="group"
+              entity={entity}
               onClick={(e) => handleEntityClick(entity, e)}
             >
               <article
@@ -409,7 +455,7 @@ export default function SearchPage() {
                   </div>
                 )}
               </article>
-            </Link>
+            </EntityCardWrapper>
           ))}
         </section>
       </main>

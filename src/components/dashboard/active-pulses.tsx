@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
 import {
   GET_ALL_PULSES,
   GET_ALL_PULSES_BY_CONTEXT,
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { useQuery, useApolloClient } from '@apollo/client/react'
 import { getConfigForType } from '@/lib/pulse-type-config'
 import { useFocalEntity } from '@/contexts'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
 type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
 
@@ -51,7 +51,6 @@ export function ActivePulses({
   showAll = false,
   onViewAll,
 }: ActivePulsesProps) {
-  const router = useRouter()
   const client = useApolloClient()
   const { sessionContext } = useFocalEntity()
 
@@ -206,7 +205,7 @@ export function ActivePulses({
               <div
                 key={pulse.id}
                 onClick={() =>
-                  router.push(`/protected/dashboard/pulses/${pulse.id}`)
+                  dispatchOpenInfoDrawer({ type: 'Pulse', id: pulse.id })
                 }
                 className="chat-card rounded-xl p-4 cursor-pointer group"
               >

@@ -1,12 +1,26 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import type {
   CollectedEntity,
   PivotEntityType,
 } from '@/lib/simulation/entity-collector'
 import { loadFocusEntities } from '@/lib/simulation/focus-entities-storage'
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+
+const PULSE_PIVOT_TYPES: ReadonlySet<PivotEntityType> = new Set([
+  'GoalPulse',
+  'ResourcePulse',
+  'StoryPulse',
+  'CarePulse',
+  'CoreValuePulse',
+  'FieldPulse',
+])
+
+function isPulsePivotType(type: PivotEntityType): boolean {
+  return PULSE_PIVOT_TYPES.has(type)
+}
 
 /**
  * "Focused entities" view rendered when the dashboard receives a
@@ -65,7 +79,7 @@ const GROUP_ORDER: Array<{
   },
 ]
 
-function detailHref(type: PivotEntityType, id: string): string {
+function detailHref(type: PivotEntityType, id: string): string | null {
   if (type === 'MeSpace' || type === 'WeSpace' || type === 'Space') {
     return `/protected/dashboard/space/${id}`
   }
@@ -75,7 +89,45 @@ function detailHref(type: PivotEntityType, id: string): string {
   if (type === 'User' || type === 'PersonPulse' || type === 'Person') {
     return `/protected/dashboard/persons/${id}`
   }
-  return `/protected/dashboard/pulses/${id}`
+  // Pulses live only in the EntityInfoDrawer.
+  return null
+}
+
+function EntityRow({
+  type,
+  id,
+  label,
+  className,
+  children,
+}: {
+  type: PivotEntityType
+  id: string
+  label?: string
+  className: string
+  children: ReactNode
+}) {
+  const href = detailHref(type, id)
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    )
+  }
+  if (isPulsePivotType(type)) {
+    return (
+      <button
+        type="button"
+        onClick={() =>
+          dispatchOpenInfoDrawer({ type: 'Pulse', id, label })
+        }
+        className={className}
+      >
+        {children}
+      </button>
+    )
+  }
+  return <span className={className}>{children}</span>
 }
 
 export function FocusedEntities({ focus }: { focus: string }) {
@@ -135,15 +187,16 @@ export function FocusedEntities({ focus }: { focus: string }) {
         <ul className="space-y-2">
           {state.fallback.map(({ type, id }) => (
             <li key={`${type}:${id}`}>
-              <Link
-                href={detailHref(type, id)}
-                className="inline-flex items-center gap-2 text-sm text-gp-primary hover:underline"
+              <EntityRow
+                type={type}
+                id={id}
+                className="inline-flex items-center gap-2 text-sm text-gp-primary hover:underline cursor-pointer"
               >
                 <span className="text-xs uppercase tracking-wider text-slate-500 dark:text-white/40">
                   {TYPE_LABEL[type]}
                 </span>
                 <span>View entity</span>
-              </Link>
+              </EntityRow>
             </li>
           ))}
         </ul>
@@ -178,9 +231,11 @@ export function FocusedEntities({ focus }: { focus: string }) {
             <ul className="space-y-2">
               {items.map((entity) => (
                 <li key={`${entity.type}:${entity.id}`}>
-                  <Link
-                    href={detailHref(entity.type, entity.id)}
-                    className="group flex items-center justify-between rounded-lg px-3 py-2 hover:bg-slate-100/70 dark:hover:bg-white/5 transition-colors"
+                  <EntityRow
+                    type={entity.type}
+                    id={entity.id}
+                    label={entity.name}
+                    className="group w-full text-left flex items-center justify-between rounded-lg px-3 py-2 hover:bg-slate-100/70 dark:hover:bg-white/5 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/40 font-medium">
@@ -193,7 +248,7 @@ export function FocusedEntities({ focus }: { focus: string }) {
                     <span className="material-symbols-outlined text-[16px] text-slate-400 dark:text-white/30 group-hover:translate-x-0.5 transition-transform">
                       arrow_forward
                     </span>
-                  </Link>
+                  </EntityRow>
                 </li>
               ))}
             </ul>

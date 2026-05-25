@@ -74,8 +74,8 @@ const cases: Case[] = [
   },
   {
     pathname: '/protected/dashboard/pulses/p-789',
-    expected: { type: 'GoalPulse', id: 'p-789' },
-    description: 'pulses detail → provisional GoalPulse',
+    expected: null,
+    description: 'pulses detail → null (drawer-only, no dedicated route)',
   },
 
   // Ambiguous dashboard space route
