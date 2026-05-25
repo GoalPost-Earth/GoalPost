@@ -75,12 +75,6 @@ async function initializeDatabase() {
        FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
        FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
-      // ownerId UNIQUE is load-bearing for race safety: concurrent first-
-      // writes (user turn + assistant onFinish on a fresh account) would
-      // otherwise both MERGE-miss and CREATE separate thread nodes. With
-      // this constraint, one CREATE wins and the other re-runs the MATCH.
-      `CREATE CONSTRAINT conversation_thread_ownerId IF NOT EXISTS
-       FOR (n:ConversationThread) REQUIRE n.ownerId IS UNIQUE`,
       `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
        FOR (n:ConversationTurn) REQUIRE n.id IS UNIQUE`,
       // Context-scoped document ingest writes a `ContextExtraction` event
@@ -222,16 +216,20 @@ async function initializeDatabase() {
       // unindexed property check becomes the long pole. Index it.
       `CREATE INDEX assistant_feedback_status IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.status)`,
-      // Auth tokens stored as plaintext fields on Person are looked up by
-      // exact-match in /api/auth/accept-invite and /api/auth/reset-password
-      // respectively. Without these indexes those endpoints scan every
-      // non-:User / every :Person to validate one token, which is a
-      // probe-friendly hot path. Index seek collapses the lookup to ~1
-      // dbHit. Sparse range index — only set rows occupy index space.
-      `CREATE INDEX person_invite_token IF NOT EXISTS
-       FOR (p:Person) ON (p.inviteToken)`,
-      `CREATE INDEX person_reset_token IF NOT EXISTS
-       FOR (p:Person) ON (p.resetToken)`,
+      // Auth single-use tokens (invite + password reset) are stored as
+      // sha256 hashes — never plaintext — on Person.inviteTokenHash /
+      // Person.resetTokenHash. The accept-invite + reset-password routes
+      // re-hash the URL-bound raw token and look up by these indexed
+      // hash fields. Sparse RANGE index — only Persons with a pending
+      // token occupy index space. Storing the hash defends against
+      // database-read compromise; the index also collapses the lookup
+      // to ~1 dbHit so it can't be used as a timing-enumeration oracle.
+      // (Migrated from plaintext inviteToken/resetToken indexes via
+      // scripts/hash-person-tokens.ts — GOAL-248.)
+      `CREATE INDEX person_invite_token_hash IF NOT EXISTS
+       FOR (p:Person) ON (p.inviteTokenHash)`,
+      `CREATE INDEX person_reset_token_hash IF NOT EXISTS
+       FOR (p:Person) ON (p.resetTokenHash)`,
     ]
 
     for (const index of propertyIndexes) {

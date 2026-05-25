@@ -264,8 +264,6 @@ async function phase2_applySchema() {
        FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
        FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
-      `CREATE CONSTRAINT conversation_thread_ownerId IF NOT EXISTS
-       FOR (n:ConversationThread) REQUIRE n.ownerId IS UNIQUE`,
       `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
        FOR (n:ConversationTurn) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT context_extraction_id IF NOT EXISTS

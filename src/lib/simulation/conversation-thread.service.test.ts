@@ -242,13 +242,17 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
   )
 
   itIf(true)(
-    'createConversationThread coexists with the implicit (ownerId-bearing) thread — the new thread must not carry ownerId',
+    'createConversationThread coexists with the implicit (ownerId-bearing) thread — repeated "+" clicks all succeed',
     async () => {
       if (!neo4jAvailable) return
 
-      // Earlier specs already created the implicit thread via
-      // appendConversationTurn — it carries ownerId = userId, locked by the
-      // UNIQUE constraint on ConversationThread.ownerId.
+      // Ensure the implicit thread exists. Before the fix, the UNIQUE
+      // constraint on ConversationThread.ownerId made every subsequent
+      // createConversationThread call throw.
+      await appendConversationTurn(ids.user, {
+        role: 'user',
+        content: 'seed implicit thread for + button test',
+      })
       const session = driver.session()
       try {
         const before = await session.run(
@@ -262,9 +266,9 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
         await session.close()
       }
 
-      // The "+" button path. Before the fix this threw a constraint violation,
-      // the API returned 500, and the sidebar silently re-rendered with no new
-      // thread. The new thread must NOT set ownerId.
+      // The "+" button path. The new thread must NOT set ownerId — the
+      // ingest thread creator and this creator both rely on ownerId
+      // staying unique to the implicit chat thread.
       const { threadId } = await createConversationThread(ids.user)
       expect(typeof threadId).toBe('string')
 
@@ -283,13 +287,12 @@ describe('GOAL-240 Slice 5 — thread switcher + Standard-mode forcing', () => {
         await session2.close()
       }
 
-      // And a second "+" click in the same session must also succeed —
-      // proving the constraint can never fire on this path.
+      // A second "+" click in the same session must also succeed.
       const { threadId: second } = await createConversationThread(ids.user)
       expect(typeof second).toBe('string')
       expect(second).not.toBe(threadId)
 
-      // Both new threads should appear in the summary list.
+      // Both new threads appear in the summary list alongside the implicit one.
       const list = await listConversationThreadsSummary(ids.user)
       const ids2 = new Set(list.map((row) => row.id))
       expect(ids2.has(threadId)).toBe(true)

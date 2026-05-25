@@ -38,11 +38,10 @@ function isPdfMime(mime: string): boolean {
 }
 
 /**
- * Creates a fresh ConversationThread for this ingest run. Intentionally does
- * NOT set the `ownerId` property — the UNIQUE constraint on
- * ConversationThread.ownerId is held by the user's implicit chat thread, and
- * ingest threads must coexist alongside it. `appendConversationTurn(...,
- * threadId)` matches by id, not ownerId, so this is safe.
+ * Creates a fresh ConversationThread for this ingest run, plus a
+ * HAS_INGEST_THREAD edge from the source Document so slice 6's Document
+ * detail view can list every thread the document has been processed in.
+ * Both the original upload and every subsequent re-extract land here.
  *
  * Slice 5 (GOAL-240) — write-time invariant: every ingest thread is born with
  * `kind = 'ingest'` and `mode = 'default'`. Aiden / Braider are non-action
@@ -51,12 +50,6 @@ function isPdfMime(mime: string): boolean {
  * the thread route through the standard tool-execution path regardless of
  * the user's prior global mode. Also stamps `lastViewedThreadId` so a hard
  * refresh restores the user to the ingest thread the upload just opened.
- */
-/**
- * Creates the ingest thread and stamps a HAS_INGEST_THREAD edge from the
- * source Document so slice 6's Document detail view can list every thread
- * the document has been processed in. Both the original upload and every
- * subsequent re-extract land here.
  */
 export async function createIngestThread(
   driver: Driver,

@@ -85,14 +85,18 @@ function parseStoredParts(value: unknown): unknown[] | null {
  * it doesn't yet exist. Returns the new turn id and the parent thread id.
  *
  * Race-safety:
- *   1. The implicit (no-threadId) fallback MERGEs on a deterministic id
- *      (`thread_default_<userId>`) and relies on the UNIQUE constraint on
- *      `ConversationThread.id` for first-write atomicity. Two concurrent
- *      first-writes can't both CREATE — one wins, the loser retries and
- *      falls into the MATCH branch. The previous design MERGEd on
- *      `ownerId` and required a separate UNIQUE constraint on that
- *      property, which blocked every subsequent thread (sidebar "+",
- *      ingest threads) from being created.
+ *   1. The implicit (no-threadId) fallback MERGEs the user's chat thread
+ *      keyed on `ownerId`. The UNIQUE constraint that previously paired
+ *      with this MERGE was dropped because it also blocked every other
+ *      kind of thread (sidebar "+", ingest) from being created. The
+ *      residual race: the AI-SDK chat route writes the user turn at
+ *      request-start and the assistant turn from `onFinish`; both call
+ *      `appendConversationTurn(..., undefined)` and can be in flight
+ *      concurrently on the very first exchange (no implicit thread yet)
+ *      and both MERGE-miss then CREATE separate thread nodes. The
+ *      failure mode is "two implicit threads exist" — both surface in
+ *      the sidebar listing as siblings, the user can pick either, and
+ *      no downstream invariant breaks. Acceptable degeneracy.
  *   2. We `SET t.turnCount = coalesce(t.turnCount, 0) + 1` BEFORE the
  *      OPTIONAL MATCH for next-order. The SET row-locks `t` for the rest
  *      of the transaction, serialising concurrent appends. `nextOrder`
@@ -100,10 +104,6 @@ function parseStoredParts(value: unknown): unknown[] | null {
  *      `max(order)` read, which avoids two writers picking the same
  *      ordinal under contention.
  */
-export function defaultConversationThreadId(userId: string): string {
-  return `thread_default_${userId}`
-}
-
 export async function appendConversationTurn(
   userId: string,
   turn: ConversationTurnInput,
@@ -149,7 +149,7 @@ export async function appendConversationTurn(
           { userId, threadId, turnId, role: turn.role, content: turn.content, partsJson }
         )
       }
-      // Default: MERGE to the single implicit thread for the user (backward compat).
+      // Default: MERGE to the user's implicit thread (keyed on ownerId).
       return tx.run(
         `
         MATCH (p:Person:User {id: $userId})
@@ -225,12 +225,16 @@ export async function listConversationThreadsSummary(
       tx.run(
         `
         MATCH (p:Person:User {id: $userId})-[:HAS_THREAD]->(t:ConversationThread)
+        // collect()[0] returns the first user turn or null. The earlier
+        // "turn IS NOT NULL + LIMIT 1" form filtered the empty-thread row
+        // out of the subquery, and CALL row-join semantics then dropped
+        // the outer t — invisible while threads were always seeded with
+        // a turn, but every empty thread from the sidebar "+" vanished.
         CALL (t) {
           OPTIONAL MATCH (t)-[:HAS_TURN]->(turn:ConversationTurn {role: 'user'})
-          WITH turn WHERE turn IS NOT NULL
-          RETURN turn ORDER BY turn.order ASC LIMIT 1
+          WITH turn ORDER BY turn.order ASC
+          RETURN collect(turn)[0] AS firstTurn
         }
-        WITH t, turn AS firstTurn
         RETURN
           t.id AS id,
           toString(t.createdAt) AS createdAt,
@@ -276,20 +280,26 @@ export async function getConversationThread(
       tx.run(
         `
         MATCH (p:Person:User {id: $userId})-[:HAS_THREAD]->(t:ConversationThread {id: $threadId})
+        // Aggregate inside the subquery so a zero-turn thread still yields
+        // a row (collect over an empty input set returns [], not zero rows).
+        // The previous shape returned the outer t WITH collect(...) joined
+        // against a subquery that produced zero rows on empty threads, which
+        // row-join semantics turned into "thread not found" — indistinguishable
+        // from a real auth failure for the caller.
         CALL (t) {
           OPTIONAL MATCH (t)-[:HAS_TURN]->(turn:ConversationTurn)
           WITH turn WHERE turn IS NOT NULL
-          RETURN turn ORDER BY turn.order DESC, turn.createdAt DESC
+          WITH turn ORDER BY turn.order DESC, turn.createdAt DESC
           LIMIT toInteger($maxTurns)
+          RETURN collect({
+            id: turn.id,
+            role: turn.role,
+            content: turn.content,
+            parts: turn.parts,
+            order: turn.order,
+            createdAt: toString(turn.createdAt)
+          }) AS recentTurnsDesc
         }
-        WITH t, collect({
-          id: turn.id,
-          role: turn.role,
-          content: turn.content,
-          parts: turn.parts,
-          order: turn.order,
-          createdAt: toString(turn.createdAt)
-        }) AS recentTurnsDesc
         RETURN
           t.id AS threadId,
           toString(t.createdAt) AS createdAt,
@@ -335,15 +345,8 @@ export async function getConversationThread(
 /**
  * Create a brand-new empty thread for the user.
  *
- * Intentionally does NOT set `ownerId`. The UNIQUE constraint on
- * `ConversationThread.ownerId` (see `scripts/init-db.js`) is held by the
- * user's implicit chat thread — the one MERGEd by `appendConversationTurn`
- * when no `threadId` is supplied. Setting `ownerId` on additional threads
- * would violate that constraint the moment a user already has any prior
- * thread. Listing, fetching, and authorization all flow through the
- * `HAS_THREAD` edge, so the missing property is invisible to callers.
- * (Same trick the ingest thread creator uses — see
- * `src/lib/ingest/handle-ingest-document.ts#createIngestThread`.)
+ * Authorization + listing flow through the `HAS_THREAD` edge, not a
+ * property — every thread the user can see hangs off the user node.
  */
 export async function createConversationThread(
   userId: string
@@ -465,24 +468,26 @@ export async function getActiveConversationThread(
           CASE WHEN t.id = pinnedId THEN 0 ELSE 1 END,
           t.lastTurnAt DESC
         LIMIT 1
-        // Push LIMIT into a subquery so long threads don't materialise every
-        // turn before slicing. Returns the most recent N turns descending.
+        // Aggregate inside the subquery so a zero-turn thread still yields
+        // a row (collect over an empty input set returns [], not zero rows).
+        // Otherwise an empty "+"-created thread that wins the ORDER BY above
+        // would be silently dropped by row-join semantics and the panel
+        // would hydrate as if the user had no threads at all.
         CALL (t) {
           OPTIONAL MATCH (t)-[:HAS_TURN]->(turn:ConversationTurn)
-          WITH turn
-          WHERE turn IS NOT NULL
-          RETURN turn
-          ORDER BY turn.order DESC, turn.createdAt DESC
+          WITH turn WHERE turn IS NOT NULL
+          WITH turn ORDER BY turn.order DESC, turn.createdAt DESC
           LIMIT toInteger($maxTurns)
+          RETURN collect({
+            id: turn.id,
+            role: turn.role,
+            content: turn.content,
+            parts: turn.parts,
+            order: turn.order,
+            createdAt: toString(turn.createdAt)
+          }) AS recentTurnsDesc
         }
-        WITH t, collect({
-          id: turn.id,
-          role: turn.role,
-          content: turn.content,
-          parts: turn.parts,
-          order: turn.order,
-          createdAt: toString(turn.createdAt)
-        }) AS recentTurnsDesc
+        WITH t, recentTurnsDesc
         RETURN
           t.id AS threadId,
           toString(t.createdAt) AS createdAt,
