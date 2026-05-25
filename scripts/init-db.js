@@ -222,6 +222,16 @@ async function initializeDatabase() {
       // unindexed property check becomes the long pole. Index it.
       `CREATE INDEX assistant_feedback_status IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.status)`,
+      // Auth tokens stored as plaintext fields on Person are looked up by
+      // exact-match in /api/auth/accept-invite and /api/auth/reset-password
+      // respectively. Without these indexes those endpoints scan every
+      // non-:User / every :Person to validate one token, which is a
+      // probe-friendly hot path. Index seek collapses the lookup to ~1
+      // dbHit. Sparse range index — only set rows occupy index space.
+      `CREATE INDEX person_invite_token IF NOT EXISTS
+       FOR (p:Person) ON (p.inviteToken)`,
+      `CREATE INDEX person_reset_token IF NOT EXISTS
+       FOR (p:Person) ON (p.resetToken)`,
     ]
 
     for (const index of propertyIndexes) {

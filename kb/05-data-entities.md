@@ -543,6 +543,8 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `assistant_feedback_createdAt`     | AssistantFeedback.createdAt     |
 | `assistant_feedback_classification` | AssistantFeedback.classification |
 | `assistant_feedback_status`        | AssistantFeedback.status        |
+| `person_invite_token`              | Person.inviteToken              |
+| `person_reset_token`               | Person.resetToken               |
 
 ## ID Strategy
 
