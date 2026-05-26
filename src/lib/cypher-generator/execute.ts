@@ -466,6 +466,7 @@ export async function executeForBloom(
           caption: captionFor(n),
           color,
           size,
+          labels: n.labels,
         }
       })
 

@@ -11,6 +11,14 @@ export interface NVLNode {
   caption?: string
   size?: number
   color?: string
+  /**
+   * The Neo4j labels the node carried in the source graph. Optional and
+   * advisory — used by Bloom's overlay click handler to map a node back
+   * to an InfoEntityType so the unified drawer can open instead of the
+   * minimal inline panel. Drop this and the overlay falls back to the
+   * inline panel (current behaviour pre-2026-05-25).
+   */
+  labels?: string[]
 }
 
 export interface NVLRelationship {

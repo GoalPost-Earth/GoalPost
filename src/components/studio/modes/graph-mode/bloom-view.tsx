@@ -3,9 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
-import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import {
+  dispatchOpenInfoDrawer,
+  type InfoEntityType,
+} from '@/components/dashboard/entity-info-drawer'
 import { useQuery } from '@apollo/client/react'
-import type { ExternalCallbacks, Node, Relationship } from '@neo4j-nvl/base'
+import type {
+  ExternalCallbacks,
+  HitTargets,
+  Node,
+  Relationship,
+} from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
@@ -57,6 +65,121 @@ const GraphVisualizer = dynamic(() => visualizerChunk, {
 })
 
 const EMPTY_RELATIONSHIPS: Relationship[] = []
+
+/**
+ * Map a Neo4j label (as carried on `NVLNode.labels` from the cypher
+ * generator / neighborhood route) to the drawer's `InfoEntityType`.
+ *
+ * Every pulse subtype collapses to 'Pulse' — `PulseDetailsBody` resolves
+ * the concrete __typename itself. Person/User/PersonPulse collapse to
+ * 'Person' for the same reason. Anything we don't recognise (e.g. the
+ * `Community` anchor, or a label the generator started returning before
+ * this map caught up) returns null — Bloom falls back to its inline
+ * minimal panel for those, which is strictly safer than dispatching the
+ * drawer with a bogus type.
+ */
+const LABEL_TO_INFO_TYPE: Record<string, InfoEntityType> = {
+  MeSpace: 'MeSpace',
+  WeSpace: 'WeSpace',
+  FieldContext: 'FieldContext',
+  GoalPulse: 'Pulse',
+  ResourcePulse: 'Pulse',
+  StoryPulse: 'Pulse',
+  CarePulse: 'Pulse',
+  CoreValuePulse: 'Pulse',
+  FieldPulse: 'Pulse',
+  Pulse: 'Pulse',
+  Person: 'Person',
+  User: 'Person',
+  PersonPulse: 'Person',
+  Document: 'Document',
+  ResonanceLink: 'ResonanceLink',
+}
+
+function labelsToInfoEntityType(
+  labels: string[] | undefined
+): InfoEntityType | null {
+  if (!labels) return null
+  for (const l of labels) {
+    const mapped = LABEL_TO_INFO_TYPE[l]
+    if (mapped) return mapped
+  }
+  return null
+}
+
+/**
+ * Heuristic fallback when an overlay node arrives without `labels` (older
+ * chat threads cached from before the labels-on-NVLNode patch, or an
+ * occasional model emission that prunes the field from the BLOOM_GRAPH_OVERLAY
+ * JSON). GoalPost id prefixes are stable conventions written by the
+ * server-side creation paths:
+ *   - `me_`       lib/validation/space-validation.ts (MeSpace)
+ *   - `context_`  lib/chat/hitl.ts (FieldContext) — production path
+ *   - `ctx_`      legacy / fixture data only; kept as a safety net
+ *   - `pulse_`    api/pulse/create-from-conversation
+ *   - `rl_`       api/resonance/suggestions/[id]/accept (ResonanceLink)
+ *   - `doc_`      Document
+ *   - `person_`   lib/chat/hitl.ts (Person — HITL-created profiles)
+ *
+ * Ambiguity: legacy Persons and all WeSpaces use bare UUIDs (no prefix).
+ * For those, we return null and let the caller fall back to the inline
+ * minimal panel rather than guessing wrong and opening the drawer at
+ * the wrong entity. (`chunk_` and `log_` exist elsewhere in the codebase
+ * but are not exposed as Bloom entities, so they're intentionally
+ * absent from this table.)
+ */
+function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
+  if (id.startsWith('me_')) return 'MeSpace'
+  if (id.startsWith('ctx_') || id.startsWith('context_')) return 'FieldContext'
+  if (id.startsWith('pulse_')) return 'Pulse'
+  if (id.startsWith('rl_')) return 'ResonanceLink'
+  if (id.startsWith('doc_')) return 'Document'
+  if (id.startsWith('person_')) return 'Person'
+  return null
+}
+
+/**
+ * Final fallback: derive the entity type from the NVL node's color. The
+ * cypher generator's `styleFor` (lib/cypher-generator/execute.ts:81) and
+ * the neighborhood route's `NODE_STYLE` (api/graph/neighborhood/route.ts:49)
+ * both encode the entity type via a stable color palette — so even when
+ * `labels` is missing AND the id is a bare UUID (legacy Users, all
+ * WeSpaces), the color hint is still present on the overlay node.
+ *
+ * MeSpace vs WeSpace cannot be distinguished by color alone (both
+ * '#86efac'); we resolve that ambiguity by treating bare-UUID green
+ * nodes as WeSpaces (the only Space type that uses bare UUIDs in prod
+ * — MeSpaces are always `me_*` and would have been caught by the
+ * prefix table above).
+ *
+ * Pulse subtypes have distinct colors but all collapse to the 'Pulse'
+ * drawer type — `PulseDetailsBody` resolves the concrete __typename
+ * via its own GraphQL query.
+ */
+function colorToInfoEntityType(
+  color: string | undefined
+): InfoEntityType | null {
+  if (!color) return null
+  switch (color.toLowerCase()) {
+    case '#86efac':
+      return 'WeSpace'
+    case '#fde68a':
+      return 'FieldContext'
+    case '#f9a8d4':
+      return 'Person'
+    case '#93c5fd':
+    case '#a7f3d0':
+    case '#c4b5fd':
+    case '#fca5a5':
+    case '#fcd34d':
+      return 'Pulse'
+    case '#d8b4fe':
+    case '#e9d5ff':
+      return 'ResonanceLink'
+    default:
+      return null
+  }
+}
 
 const SPACE_COLOR = {
   MeSpace: '#f59e0b', // amber — matches the Me Space card accent
@@ -126,6 +249,14 @@ export const BloomView: FC = () => {
   const { publish: publishVisibleEntities } = useVisibleEntities()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  // Hover-driven cursor. NVL renders native canvas nodes, so there's no
+  // HTML element we can put `cursor: pointer` on the way we do for the
+  // EntityBubble in SpatialView. We bind a wrapper ref + an `onHover`
+  // callback and mutate `style.cursor` directly when the mouse is over
+  // a node — going through React state for every mousemove would
+  // re-render the canvas chunk on every pixel.
+  const canvasWrapperRef = useRef<HTMLDivElement | null>(null)
+  const isHoveringNodeRef = useRef(false)
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // Reading `sessionContext.activeSpaceId` would conflate the user's
@@ -448,14 +579,34 @@ export const BloomView: FC = () => {
 
   const handleNodeClick = useCallback(
     (node: Node) => {
-      // Overlay nodes are an opaque NVL bag whose type is not tracked
-      // here — fall back to the inline minimal panel for these only.
+      const id = String(node.id)
+      const label = typeof node.caption === 'string' ? node.caption : undefined
+      // Overlay nodes carry their Neo4j labels through from the cypher
+      // generator (NVLNode.labels). If we can map the primary label to
+      // an InfoEntityType, open the unified drawer just like a default
+      // Bloom node click. If not (e.g. `Community` anchor, or any label
+      // that's not in our entity vocabulary), fall back to the inline
+      // minimal panel — strictly safer than dispatching the drawer with
+      // a guessed type.
       if (overlay) {
+        const overlayNode = overlay.nodes.find((n) => n.id === id)
+        // Three-tier resolution: labels (precise) → id prefix (stable
+        // server-side convention) → color (last-resort visual encoding).
+        // Color works for legacy bare-UUID Persons + WeSpaces that
+        // arrived through chat overlays before the labels-on-NVLNode
+        // patch landed, so a chat user clicking an old node still gets
+        // the unified drawer instead of the minimal inline panel.
+        const drawerType =
+          labelsToInfoEntityType(overlayNode?.labels) ??
+          idPrefixToInfoEntityType(id) ??
+          colorToInfoEntityType(overlayNode?.color)
+        if (drawerType) {
+          dispatchOpenInfoDrawer({ type: drawerType, id, label })
+          return
+        }
         setSelectedNode(node)
         return
       }
-      const id = String(node.id)
-      const label = typeof node.caption === 'string' ? node.caption : undefined
 
       if (inField) {
         const pulse = pulses.find((p) => p.id === id)
@@ -505,6 +656,13 @@ export const BloomView: FC = () => {
     () => ({
       onNodeClick: (node) => handleNodeClick(node),
       onCanvasClick: () => setSelectedNode(null),
+      onHover: (_element, hitTargets: HitTargets) => {
+        const hoveringNode = hitTargets.nodes.length > 0
+        if (hoveringNode === isHoveringNodeRef.current) return
+        isHoveringNodeRef.current = hoveringNode
+        const wrapper = canvasWrapperRef.current
+        if (wrapper) wrapper.style.cursor = hoveringNode ? 'pointer' : ''
+      },
       onDrag: true,
       onPan: true,
       onZoom: true,
@@ -692,7 +850,7 @@ export const BloomView: FC = () => {
 
   return (
     <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
-      <div className="flex-1 relative">
+      <div ref={canvasWrapperRef} className="flex-1 relative">
         {!overlay && loading && nodes.length === 0 ? (
           <GraphLoadingState
             label="Bloom is gathering"

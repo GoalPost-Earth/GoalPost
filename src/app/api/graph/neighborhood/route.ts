@@ -37,6 +37,7 @@ interface NVLNode {
   caption?: string
   size?: number
   color?: string
+  labels?: string[]
 }
 
 interface NVLRelationship {
@@ -84,7 +85,13 @@ function toNVL(
   const nodes: NVLNode[] = rawNodes.map((n) => {
     const primaryLabel = n.labels.find((l) => NODE_STYLE[l]) ?? n.labels[0] ?? ''
     const { color, size } = styleFor(primaryLabel)
-    return { id: n.id, caption: n.caption || primaryLabel, size, color }
+    return {
+      id: n.id,
+      caption: n.caption || primaryLabel,
+      size,
+      color,
+      labels: n.labels,
+    }
   })
   const relationships: NVLRelationship[] = rawRels.map((r) => ({
     id: r.id,

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
-import type { Node, Relationship } from '@neo4j-nvl/base'
+import type { HitTargets, Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
@@ -40,7 +40,12 @@ import { PersonBubbleContent } from './person-bubble-content'
  * so flipping Dashboard ↔ Graph is a pure frontend toggle: no re-fetch,
  * no loading spinner, no network round-trip.
  *
- * Click a bubble to drill into `/protected/dashboard/space/[id]`.
+ * Click a bubble to open the unified EntityInfoDrawer for that entity
+ * (space, field context, pulse, or person). The drawer paints the
+ * pre-known label immediately from the bubble's descriptor and then
+ * loads the full details via the entity's own GraphQL query — so users
+ * can drill from a field bubble's drawer into one of its pulses
+ * without leaving the spatial canvas.
  *
  * Zoom is driven by the floating studio action bar via the
  * `goalpost:graph-zoom-*` events (matches BloomView's contract).
@@ -203,9 +208,15 @@ const SIZE_TO_HITBOX: Record<BubbleSize, number> = {
 }
 
 export const SpatialView: FC = () => {
-  const router = useRouter()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const containerCacheRef = useRef<Map<string, HTMLElement>>(new Map())
+  // EntityBubble's `interactive` prop already gives the bubble body a
+  // pointer cursor, but NVL's node hitbox is larger than the visible
+  // bubble — when the cursor is in the hitbox-but-outside-the-bubble
+  // halo it would otherwise read as default. Hover-driven cursor
+  // toggle covers that gap so the whole hitbox feels clickable.
+  const canvasWrapperRef = useRef<HTMLDivElement | null>(null)
+  const isHoveringNodeRef = useRef(false)
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // We must NOT read `sessionContext.activeSpaceId` here — that value also
@@ -630,25 +641,27 @@ export const SpatialView: FC = () => {
     return edges
   }, [inField, descriptors, fieldDetailsData])
 
+  // Every node click opens the unified EntityInfoDrawer. We pass through
+  // the label we already have in hand from the descriptor so the drawer
+  // can paint the title immediately; the drawer body then fetches the
+  // full entity details (members, fields, owner, pulses, resonances) so
+  // the user can navigate into adjacent entities from within the drawer.
+  // The "Open full page" CTA in the drawer is how users still reach the
+  // dedicated dashboard route when they want it.
   const handleOpen = useCallback(
     (id: string) => {
       const desc = descriptors.find((d) => d.id === id)
       if (!desc) return
-      if (desc.kind === 'pulse') {
-        dispatchOpenInfoDrawer({ type: 'Pulse', id })
-        return
-      }
-      if (desc.kind === 'field') {
-        router.push(`/protected/dashboard/field-context/${id}`)
-        return
-      }
-      if (desc.kind === 'person') {
-        router.push(`/protected/dashboard/persons/${id}`)
-        return
-      }
-      router.push(`/protected/dashboard/space/${id}`)
+      const type =
+        desc.kind === 'pulse'
+          ? 'Pulse'
+          : desc.kind === 'person'
+            ? 'Person'
+            : desc.type
+      const label = desc.kind === 'person' ? desc.person.name : desc.title
+      dispatchOpenInfoDrawer({ type, id, label })
     },
-    [descriptors, router]
+    [descriptors]
   )
 
   // Mount React EntityBubbles into their NVL containers. Bubble body
@@ -666,16 +679,7 @@ export const SpatialView: FC = () => {
       // pan-only / unmovable before this. Only the (i) corner button
       // still uses React (with `stopImmediatePropagation`) so it can
       // open the info drawer without bubbling into NVL.
-      const onInfoClick = () =>
-        dispatchOpenInfoDrawer({
-          type:
-            desc.kind === 'pulse'
-              ? 'Pulse'
-              : desc.kind === 'person'
-                ? 'Person'
-                : desc.type,
-          id: desc.id,
-        })
+      const onInfoClick = () => handleOpen(desc.id)
 
       if (desc.kind === 'person') {
         renderReactComponentToContainer(
@@ -707,7 +711,7 @@ export const SpatialView: FC = () => {
         container
       )
     })
-  }, [descriptors])
+  }, [descriptors, handleOpen])
 
   // Auto-fit once per scope (top-level vs in-space-X vs in-field-X).
   // Tracking via a ref keyed off the scope string means we only re-fit
@@ -780,14 +784,21 @@ export const SpatialView: FC = () => {
 
   // NVL owns clicks + drag now. `onNodeClick` fires on a *real* click
   // (NVL's DragNodeInteraction suppresses click-as-drag for us), so
-  // dragging a node moves it through space and a tap routes to the
-  // entity's page. The EntityBubble's `onClick` prop is intentionally
-  // not passed in render below; the (i) corner button still uses
-  // React `onClick` + `stopImmediatePropagation` so NVL doesn't also
-  // see the info-button click as a node click.
+  // dragging a node moves it through space and a tap opens the
+  // EntityInfoDrawer for that entity. The EntityBubble's `onClick`
+  // prop is intentionally not passed in render below; the (i) corner
+  // button still uses React `onClick` + `stopImmediatePropagation` so
+  // NVL doesn't also see the info-button click as a node click.
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
       onNodeClick: (node) => handleOpen(node.id),
+      onHover: (_element, hitTargets: HitTargets) => {
+        const hoveringNode = hitTargets.nodes.length > 0
+        if (hoveringNode === isHoveringNodeRef.current) return
+        isHoveringNodeRef.current = hoveringNode
+        const wrapper = canvasWrapperRef.current
+        if (wrapper) wrapper.style.cursor = hoveringNode ? 'pointer' : ''
+      },
       onDrag: true,
       onPan: true,
       onZoom: true,
@@ -820,7 +831,10 @@ export const SpatialView: FC = () => {
   const isEmpty = !loading && descriptors.length === 0
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div
+      ref={canvasWrapperRef}
+      className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
+    >
       {/* Soft GoalPost backdrop — matches the rest of the studio */}
       <div className="absolute inset-0 pointer-events-none">
         <div
