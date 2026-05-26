@@ -7,7 +7,10 @@ import Image from 'next/image'
 import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFocalEntity } from '@/contexts'
-import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
+import {
+  GET_PERSON_OWNED_PULSES,
+  GET_PERSON_PROFILE,
+} from '@/app/graphql/queries/PERSON_QUERIES'
 import { GET_PERSON_PROVENANCE } from '@/app/graphql/queries/PROVENANCE_QUERIES'
 import {
   EntityProvenance,
@@ -39,10 +42,24 @@ export const PersonDetailsBody: FC<{
   const router = useRouter()
   const { setFocalLabel } = useFocalEntity()
 
-  const { data, loading } = useQuery(GET_PERSON_PROFILE, {
+  const { data, loading, error } = useQuery(GET_PERSON_PROFILE, {
     variables: { personId },
     fetchPolicy: 'cache-and-network',
   })
+
+  // Pulses live in a separate query so any data-integrity issue inside
+  // them (a NULL title on a non-nullable schema field, etc.) crashes
+  // only the pulses section, not the whole drawer. With the global
+  // `errorPolicy: 'all'`, `data` is `null` on error here — the
+  // pulses-derived UI below treats that as "no pulses to render."
+  const { data: pulsesData, error: pulsesError } = useQuery(
+    GET_PERSON_OWNED_PULSES,
+    {
+      variables: { personId },
+      fetchPolicy: 'cache-and-network',
+    }
+  )
+  const pulsesFailed = !!pulsesError
 
   const { data: provenanceData } = useQuery<{
     people?: { id: string; extractedFrom?: ProvenanceDocument[] }[]
@@ -52,6 +69,7 @@ export const PersonDetailsBody: FC<{
   const provenanceDocuments = provenanceData?.people?.[0]?.extractedFrom ?? null
 
   const person = data?.people?.[0]
+  const pulsesPerson = pulsesData?.people?.[0]
 
   useEffect(() => {
     if (!person?.id || !person?.name) return
@@ -66,12 +84,23 @@ export const PersonDetailsBody: FC<{
   }, [person?.id, person?.name, person, setFocalLabel])
 
   if (loading && !data) return <BodySkeleton />
-  if (!person) return <NotFoundBody />
+  if (!person) {
+    // Log the underlying GraphQL error so a data-integrity cascade (a
+    // NULL on a non-nullable scalar somewhere in the person tree) is
+    // visible during dev instead of silently showing "not available."
+    if (error) {
+      console.warn(
+        `[entity-info-drawer] Person ${personId} failed to load:`,
+        error.message
+      )
+    }
+    return <NotFoundBody />
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allPulses: any[] = []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(person.ownsSpaces ?? []).forEach((space: any) => {
+  ;(pulsesPerson?.ownsSpaces ?? []).forEach((space: any) => {
     if (space.__typename !== 'WeSpace') return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(space.contexts ?? []).forEach((context: any) => {
@@ -144,7 +173,7 @@ export const PersonDetailsBody: FC<{
         <StatCell
           icon={<Sparkles className="w-3.5 h-3.5" />}
           label="Pulses"
-          value={String(allPulses.length)}
+          value={pulsesFailed ? '—' : String(allPulses.length)}
         />
         <StatCell
           icon={<Layers className="w-3.5 h-3.5" />}

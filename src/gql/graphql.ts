@@ -14440,11 +14440,6 @@ export type Mutation = {
    * Only the space owner or members with ADMIN role can add new members.
    */
   addSpaceMember: AddSpaceMemberResponse
-  /**
-   * Cancel an invitation for a person.
-   * Removes the User label and invite-related properties.
-   */
-  cancelInvite?: Maybe<Person>
   createAddSpaceMemberResponses: CreateAddSpaceMemberResponsesMutationResponse
   createCarePulses: CreateCarePulsesMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
@@ -14527,11 +14522,6 @@ export type Mutation = {
    * Legacy mutation preserved for compatibility.
    */
   generatePersonEmbeddings: Scalars['Boolean']['output']
-  /**
-   * Invite a person to join the platform.
-   * Sends an invite email with a password reset link.
-   */
-  invitePerson?: Maybe<Person>
   /**
    * Log a field context-related activity (create, update, delete).
    * Tracks field context operations within spaces.
@@ -14662,10 +14652,6 @@ export type MutationAddSpaceMemberArgs = {
   memberId: Scalars['ID']['input']
   role: SpaceRole
   spaceId: Scalars['ID']['input']
-}
-
-export type MutationCancelInviteArgs = {
-  personId: Scalars['String']['input']
 }
 
 export type MutationCreateAddSpaceMemberResponsesArgs = {
@@ -14930,10 +14916,6 @@ export type MutationGeneratePersonEmbeddingsArgs = {
   personId: Scalars['ID']['input']
 }
 
-export type MutationInvitePersonArgs = {
-  personId: Scalars['String']['input']
-}
-
 export type MutationLogFieldActivityArgs = {
   input: LogFieldInput
 }
@@ -15195,7 +15177,6 @@ export type Person = PersonInterface & {
   gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   interests?: Maybe<Scalars['String']['output']>
-  inviteSent?: Maybe<Scalars['Boolean']['output']>
   isUser?: Maybe<Scalars['Boolean']['output']>
   lastFocalAt?: Maybe<Scalars['DateTime']['output']>
   lastFocalId?: Maybe<Scalars['String']['output']>
@@ -15726,7 +15707,6 @@ export type PersonCreateInput = {
   firstName: Scalars['String']['input']
   gender?: InputMaybe<Scalars['String']['input']>
   interests?: InputMaybe<Scalars['String']['input']>
-  inviteSent?: InputMaybe<Scalars['Boolean']['input']>
   lastFocalAt?: InputMaybe<Scalars['DateTime']['input']>
   lastFocalId?: InputMaybe<Scalars['String']['input']>
   lastFocalLabel?: InputMaybe<Scalars['String']['input']>
@@ -17000,7 +16980,6 @@ export type PersonSort = {
   gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   interests?: InputMaybe<SortDirection>
-  inviteSent?: InputMaybe<SortDirection>
   isUser?: InputMaybe<SortDirection>
   lastFocalAt?: InputMaybe<SortDirection>
   lastFocalId?: InputMaybe<SortDirection>
@@ -17085,7 +17064,6 @@ export type PersonUpdateInput = {
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   gender_SET?: InputMaybe<Scalars['String']['input']>
   interests_SET?: InputMaybe<Scalars['String']['input']>
-  inviteSent_SET?: InputMaybe<Scalars['Boolean']['input']>
   lastFocalAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   lastFocalId_SET?: InputMaybe<Scalars['String']['input']>
   lastFocalLabel_SET?: InputMaybe<Scalars['String']['input']>
@@ -17236,7 +17214,6 @@ export type PersonWhere = {
   interests_EQ?: InputMaybe<Scalars['String']['input']>
   interests_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   interests_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  inviteSent_EQ?: InputMaybe<Scalars['Boolean']['input']>
   isUser_EQ?: InputMaybe<Scalars['Boolean']['input']>
   lastFocalAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   lastFocalAt_GT?: InputMaybe<Scalars['DateTime']['input']>
@@ -27142,34 +27119,6 @@ export type DeletePersonMutation = {
   deletePeople: { __typename?: 'DeleteInfo'; nodesDeleted: number }
 }
 
-export type InvitePersonMutationVariables = Exact<{
-  personId: Scalars['String']['input']
-}>
-
-export type InvitePersonMutation = {
-  __typename?: 'Mutation'
-  invitePerson?: {
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-  } | null
-}
-
-export type CancelInviteMutationVariables = Exact<{
-  personId: Scalars['String']['input']
-}>
-
-export type CancelInviteMutation = {
-  __typename?: 'Mutation'
-  cancelInvite?: {
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-  } | null
-}
-
 export type CreatePersonConnectionMutationVariables = Exact<{
   fromPersonId: Scalars['ID']['input']
   toPersonId: Scalars['ID']['input']
@@ -29789,6 +29738,52 @@ export type GetPersonProfileQuery = {
             __typename?: 'FieldContext'
             id: string
             title: string
+          }>
+        }
+    >
+    memberOf: Array<{
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      space: Array<
+        | {
+            __typename?: 'MeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+        | {
+            __typename?: 'WeSpace'
+            id: string
+            name: string
+            visibility: SpaceVisibility
+            createdAt: any
+          }
+      >
+    }>
+  }>
+}
+
+export type GetPersonOwnedPulsesQueryVariables = Exact<{
+  personId: Scalars['ID']['input']
+}>
+
+export type GetPersonOwnedPulsesQuery = {
+  __typename?: 'Query'
+  people: Array<{
+    __typename?: 'Person'
+    id: string
+    ownsSpaces: Array<
+      | { __typename?: 'MeSpace' }
+      | {
+          __typename?: 'WeSpace'
+          id: string
+          name: string
+          contexts: Array<{
+            __typename?: 'FieldContext'
+            id: string
+            title: string
             pulses: Array<
               | {
                   __typename?: 'CarePulse'
@@ -29824,27 +29819,6 @@ export type GetPersonProfileQuery = {
           }>
         }
     >
-    memberOf: Array<{
-      __typename?: 'SpaceMembership'
-      id: string
-      role: SpaceRole
-      space: Array<
-        | {
-            __typename?: 'MeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-            createdAt: any
-          }
-        | {
-            __typename?: 'WeSpace'
-            id: string
-            name: string
-            visibility: SpaceVisibility
-            createdAt: any
-          }
-      >
-    }>
   }>
 }
 
@@ -32959,118 +32933,6 @@ export const DeletePersonDocument = {
 } as unknown as DocumentNode<
   DeletePersonMutation,
   DeletePersonMutationVariables
->
-export const InvitePersonDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'InvitePerson' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'personId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'invitePerson' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'personId' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'personId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  InvitePersonMutation,
-  InvitePersonMutationVariables
->
-export const CancelInviteDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'CancelInvite' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'personId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'cancelInvite' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'personId' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'personId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  CancelInviteMutation,
-  CancelInviteMutationVariables
 >
 export const CreatePersonConnectionDocument = {
   kind: 'Document',
@@ -43973,70 +43835,6 @@ export const GetPersonProfileDocument = {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'title' },
                                   },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'pulses' },
-                                    arguments: [
-                                      {
-                                        kind: 'Argument',
-                                        name: { kind: 'Name', value: 'where' },
-                                        value: {
-                                          kind: 'ObjectValue',
-                                          fields: [
-                                            {
-                                              kind: 'ObjectField',
-                                              name: {
-                                                kind: 'Name',
-                                                value: 'createdBy_SOME',
-                                              },
-                                              value: {
-                                                kind: 'ObjectValue',
-                                                fields: [
-                                                  {
-                                                    kind: 'ObjectField',
-                                                    name: {
-                                                      kind: 'Name',
-                                                      value: 'id_EQ',
-                                                    },
-                                                    value: {
-                                                      kind: 'Variable',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'personId',
-                                                      },
-                                                    },
-                                                  },
-                                                ],
-                                              },
-                                            },
-                                          ],
-                                        },
-                                      },
-                                    ],
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'title',
-                                          },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'intensity',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
                                 ],
                               },
                             },
@@ -44132,6 +43930,176 @@ export const GetPersonProfileDocument = {
 } as unknown as DocumentNode<
   GetPersonProfileQuery,
   GetPersonProfileQueryVariables
+>
+export const GetPersonOwnedPulsesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPersonOwnedPulses' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'people' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'personId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ownsSpaces' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'WeSpace' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'contexts' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'pulses' },
+                                    arguments: [
+                                      {
+                                        kind: 'Argument',
+                                        name: { kind: 'Name', value: 'where' },
+                                        value: {
+                                          kind: 'ObjectValue',
+                                          fields: [
+                                            {
+                                              kind: 'ObjectField',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'createdBy_SOME',
+                                              },
+                                              value: {
+                                                kind: 'ObjectValue',
+                                                fields: [
+                                                  {
+                                                    kind: 'ObjectField',
+                                                    name: {
+                                                      kind: 'Name',
+                                                      value: 'id_EQ',
+                                                    },
+                                                    value: {
+                                                      kind: 'Variable',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'personId',
+                                                      },
+                                                    },
+                                                  },
+                                                ],
+                                              },
+                                            },
+                                          ],
+                                        },
+                                      },
+                                    ],
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'title',
+                                          },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'intensity',
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPersonOwnedPulsesQuery,
+  GetPersonOwnedPulsesQueryVariables
 >
 export const GetAllPeopleDocument = {
   kind: 'Document',

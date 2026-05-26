@@ -68,11 +68,6 @@ export const GET_PERSON_PROFILE = graphql(`
           contexts {
             id
             title
-            pulses(where: { createdBy_SOME: { id_EQ: $personId } }) {
-              id
-              title
-              intensity
-            }
           }
         }
       }
@@ -91,6 +86,38 @@ export const GET_PERSON_PROFILE = graphql(`
             name
             visibility
             createdAt
+          }
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Fetched separately from GET_PERSON_PROFILE so a data-integrity issue in
+ * a single pulse (e.g. a GoalPulse with a NULL title — schema says
+ * String!, so the non-null cascade would otherwise null the entire
+ * Person and surface as "entity no longer available" in the drawer) can
+ * fail in isolation. The person drawer hides the pulses section
+ * gracefully when this query errors out, instead of blanking the whole
+ * drawer.
+ */
+export const GET_PERSON_OWNED_PULSES = graphql(`
+  query getPersonOwnedPulses($personId: ID!) {
+    people(where: { id_EQ: $personId }) {
+      id
+      ownsSpaces {
+        ... on WeSpace {
+          id
+          name
+          contexts {
+            id
+            title
+            pulses(where: { createdBy_SOME: { id_EQ: $personId } }) {
+              id
+              title
+              intensity
+            }
           }
         }
       }
