@@ -6,7 +6,8 @@ import {
 } from '@assistant-ui/react'
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { PersonCard, PersonProfileData } from './person-card'
-import { memo, useEffect, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Workflow } from 'lucide-react'
 import remarkGfm from 'remark-gfm'
 import { useBloomOverlay } from '@/components/studio/bloom-overlay-context'
 import { useStudioCanvas } from '@/components/studio/studio-canvas-context'
@@ -190,6 +191,14 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
   const { setOverlay } = useBloomOverlay()
   const { setCanvasView, setCanvasOpen } = useStudioCanvas()
   const appliedBloomPayloadsRef = useRef<Set<string>>(new Set())
+  // Remember every overlay this message ever carried so the user can
+  // re-open it later — the global BloomOverlay context only holds the
+  // most recent overlay, which is cleared either by another message or
+  // by the "Custom view from chat" chip. Keyed by the raw JSON to dedupe
+  // streaming re-renders without re-parsing.
+  const [storedOverlays, setStoredOverlays] = useState<BloomOverlayPayload[]>(
+    []
+  )
 
   // Strip both marker types from the visible text. Person markers are
   // still split out below so PersonCard can render inline.
@@ -205,15 +214,19 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
   // Bloom-overlay side effect — runs whenever a fresh BLOOM_GRAPH_OVERLAY
   // payload appears. Dedup via a ref-tracked set keyed on the raw JSON
   // string so re-renders during streaming don't push the same overlay
-  // twice.
+  // twice. Each freshly-seen payload is also pushed onto `storedOverlays`
+  // so the message can render a re-open button for it after the global
+  // context has moved on.
   useEffect(() => {
     if (!rawTextContent.includes(BLOOM_MARKER)) return
     const payloads = collectPayloads(rawTextContent, BLOOM_MARKER)
+    const fresh: BloomOverlayPayload[] = []
     for (const raw of payloads) {
       if (appliedBloomPayloadsRef.current.has(raw)) continue
       appliedBloomPayloadsRef.current.add(raw)
       const parsed = parseBloomPayload(raw)
       if (!parsed) continue
+      fresh.push(parsed)
       setOverlay({
         summary: parsed.summary,
         nodes: parsed.nodes,
@@ -222,7 +235,23 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
       setCanvasOpen(true)
       setCanvasView('bloom')
     }
+    if (fresh.length > 0) {
+      setStoredOverlays((prev) => [...prev, ...fresh])
+    }
   }, [rawTextContent, setOverlay, setCanvasView, setCanvasOpen])
+
+  const reopenOverlay = useCallback(
+    (payload: BloomOverlayPayload) => {
+      setOverlay({
+        summary: payload.summary,
+        nodes: payload.nodes,
+        relationships: payload.relationships,
+      })
+      setCanvasOpen(true)
+      setCanvasView('bloom')
+    },
+    [setOverlay, setCanvasOpen, setCanvasView]
+  )
 
   const parsedContent = useMemo(
     () => parsePersonElements(personStripped, textContent),
@@ -259,13 +288,63 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
             </TextMessagePartProvider>
           )
         })}
+        <BloomOverlayButtons overlays={storedOverlays} onOpen={reopenOverlay} />
       </div>
     )
   }
 
   return (
-    <TextMessagePartProvider text={textContent} isRunning={isRunning}>
-      <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" />
-    </TextMessagePartProvider>
+    <>
+      <TextMessagePartProvider text={textContent} isRunning={isRunning}>
+        <MarkdownTextPrimitive
+          remarkPlugins={[remarkGfm]}
+          className="aui-md"
+        />
+      </TextMessagePartProvider>
+      <BloomOverlayButtons overlays={storedOverlays} onOpen={reopenOverlay} />
+    </>
   )
 })
+
+/**
+ * Renders a small pill per overlay this message produced. The button
+ * re-applies the saved payload (same three actions auto-apply takes
+ * during streaming) so the user can return to that specific graph
+ * answer even after the global Bloom overlay was cleared or replaced.
+ */
+function BloomOverlayButtons({
+  overlays,
+  onOpen,
+}: {
+  overlays: BloomOverlayPayload[]
+  onOpen: (overlay: BloomOverlayPayload) => void
+}) {
+  if (overlays.length === 0) return null
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {overlays.map((overlay, idx) => {
+        const summary = overlay.summary?.trim()
+        const nodeCount = overlay.nodes.length
+        const relCount = overlay.relationships.length
+        const label = summary || 'Open graph view'
+        const counts =
+          nodeCount > 0 || relCount > 0
+            ? ` (${nodeCount} node${nodeCount === 1 ? '' : 's'}, ${relCount} edge${relCount === 1 ? '' : 's'})`
+            : ''
+        return (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => onOpen(overlay)}
+            title={`Open this graph in Bloom${counts}`}
+            aria-label={`Open graph: ${label}${counts}`}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gp-primary/10 hover:bg-gp-primary/20 border border-gp-primary/30 text-xs font-medium text-gp-primary transition-colors cursor-pointer max-w-full"
+          >
+            <Workflow className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate max-w-[220px]">{label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
