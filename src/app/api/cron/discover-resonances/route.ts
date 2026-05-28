@@ -15,10 +15,11 @@ import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedd
 import { initGraph } from '@/modules/graph'
 
 // Vercel cron invocations are always GET. The full sweep (embeddings + LLM
-// pattern analysis across every space × context) can run for minutes; 800s is
-// the Pro ceiling for serverless functions.
+// pattern analysis across every space × context) can run for minutes; 300s is
+// the Pro plan ceiling for serverless functions (raising it requires Fluid
+// Compute, which is a project-level setting, not a code change).
 export const dynamic = 'force-dynamic'
-export const maxDuration = 800
+export const maxDuration = 300
 
 export async function GET(request: NextRequest) {
   try {
