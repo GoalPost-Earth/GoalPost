@@ -28,7 +28,7 @@
     "@ai-sdk/google": "^3.0.78",
     "@ai-sdk/openai": "^3.0.23",
     "@ai-sdk/react": "^3.0.64",
-    "@apollo/client": "^4.0.11",
+    "@apollo/client": "~4.1.6",
     "@as-integrations/next": "^3.2.0",
     "@assistant-ui/react": "^0.12.3",
     "@assistant-ui/react-ai-sdk": "^1.3.3",
