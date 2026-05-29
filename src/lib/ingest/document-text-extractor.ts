@@ -11,7 +11,15 @@
  * `DocumentTextExtractionError` so the route layer can map cleanly to 400s.
  */
 
-import { PDFParse } from 'pdf-parse'
+// Type-only import: `pdf-parse` (and the pdfjs-dist it wraps) references
+// browser globals like `DOMMatrix` at module-evaluation time, which crash on
+// the serverless Node runtime. This module is pulled into the GraphQL resolver
+// graph (document-resolver → here), so eagerly importing the value would crash
+// schema construction and 500 every /api/graphql request. We `import type` here
+// and `await import('pdf-parse')` lazily inside the PDF branch so the heavy lib
+// only evaluates when a PDF is actually parsed. The runtime globals it needs
+// are polyfilled in `instrumentation.ts`.
+import type { PDFParse } from 'pdf-parse'
 
 export const MAX_TEXT_CHARS = 50_000
 export const MAX_PDF_PAGES = 20
@@ -103,6 +111,7 @@ async function extractPdf(buffer: Buffer): Promise<ExtractedDocumentText> {
   const data = new Uint8Array(buffer.byteLength)
   data.set(buffer)
 
+  const { PDFParse } = await import('pdf-parse')
   let parser: PDFParse | null = null
   try {
     parser = new PDFParse({ data, disableFontFace: true })

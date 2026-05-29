@@ -39,8 +39,11 @@ const nextConfig: NextConfig = {
   // pdf-parse → pdfjs-dist loads pdf.worker.mjs via a relative dynamic import.
   // Bundling them into .next chunks breaks that lookup ("Setting up fake worker
   // failed"). Externalising forces server-side require from node_modules where
-  // the relative worker path resolves correctly.
-  serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
+  // the relative worker path resolves correctly. @napi-rs/canvas ships a
+  // platform-native .node binary and supplies the browser globals (DOMMatrix
+  // etc.) polyfilled in instrumentation.ts — keep it external for the same
+  // reason so the native binary resolves from node_modules.
+  serverExternalPackages: ['pdf-parse', 'pdfjs-dist', '@napi-rs/canvas'],
   async headers() {
     const corsOrigin =
       process.env.CORS_ORIGIN ||

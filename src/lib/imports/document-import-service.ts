@@ -30,7 +30,6 @@
 
 import { randomUUID } from 'node:crypto'
 import type { Session } from 'neo4j-driver'
-import { PDFParse } from 'pdf-parse'
 import { canEditContent } from '@/lib/permissions/space-permissions'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import { createLog } from '@/lib/activity-logs/create-log'
@@ -237,11 +236,19 @@ async function resolveSourceContent(
         )} KB. Trim or split into separate ingests.`
       )
     }
-    // pdf-parse v2 is class-based: construct with the buffer, call
-    // getText(), then dispose. The constructor converts Node `Buffer` to
-    // `Uint8Array` internally; we still pass `Buffer` for clarity.
+    // pdf-parse v2 is class-based: construct with the data, call getText(),
+    // then dispose. Copy into a fresh Uint8Array so pdfjs can't transfer the
+    // caller's underlying ArrayBuffer out from under us, and disable font-face
+    // loading — mirrors document-text-extractor.ts's extractPdf().
     let extracted: string
-    const parser = new PDFParse({ data: buffer })
+    const data = new Uint8Array(buffer.byteLength)
+    data.set(buffer)
+    // Lazy import: `pdf-parse` evaluates pdfjs-dist, which touches browser
+    // globals (DOMMatrix etc.) on load. Keep it out of this module's eager
+    // graph so importers don't crash on the serverless runtime; the globals
+    // are polyfilled in `instrumentation.ts`. See document-text-extractor.ts.
+    const { PDFParse } = await import('pdf-parse')
+    const parser = new PDFParse({ data, disableFontFace: true })
     try {
       const result = await parser.getText()
       extracted = result.text
