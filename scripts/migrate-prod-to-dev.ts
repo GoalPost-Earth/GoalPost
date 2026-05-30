@@ -25,7 +25,8 @@
  *             EMBRACES / MOTIVATED_BY / PROVIDES / HAS_ACCESS_TO in prod.
  *           · Pulses with no creator and no community (orphans) are placed
  *             in a single system fallback WeSpace ("Migrated (unattributed)")
- *             so they remain visible in the app.
+ *             owned by and shared (ADMIN) with the migration stewards
+ *             (FALLBACK_STEWARD_EMAILS) so they remain visible and movable.
  *
  * Behavior:
  *   - Wipes dev entirely, applies the schema (idempotent), then re-fills from
@@ -122,6 +123,17 @@ const COMMUNITY_PULSE_RELS = [
   'MOTIVATED_BY',
   'PROVIDES',
   'HAS_ACCESS_TO',
+]
+
+// Stewards of the fallback ("Migrated (unattributed)") WeSpace. Orphaned pulses
+// land here, and these users get ADMIN access so they can triage and move the
+// content into the right spaces. Matched by email (these accounts have no
+// `name` property). The first one present (in this order) owns the space; the
+// rest are added as ADMIN members. If none exist in the dataset, ownership
+// falls back to the first :User by id.
+const FALLBACK_STEWARD_EMAILS = [
+  'jaedagy@gmail.com', // JD Addy
+  'robert.damashek@gmail.com', // Robert Damashek
 ]
 
 // For Phase 4: when reading a prod edge whose endpoints have labels like
@@ -723,10 +735,26 @@ async function phase5_buildDevStructure(): Promise<{
     console.log(`   ✓ HAS_PULSE (MeSpace pulses): ${hpMe}`)
 
     // 5h. Fallback WeSpace for orphans (no creator-with-MeSpace, no community).
-    // Owned by a deterministic first :User so the space renders in the app.
-    const fb = await session.run(
+    // Owned by and shared with the migration stewards (FALLBACK_STEWARD_EMAILS)
+    // so they have ADMIN access to triage and move orphaned content into the
+    // right spaces. Ownership goes to the first present steward (by priority);
+    // if none exist in the dataset, it falls back to the first :User by id.
+    const ownerRes = await session.run(
       `MATCH (u:User)
-       WITH u ORDER BY u.id LIMIT 1
+       WITH u ORDER BY u.id
+       WITH collect(u) AS users
+       RETURN [e IN $emails WHERE e IN [x IN users | x.email]][0] AS ownerEmail,
+              users[0].id AS firstUserId`,
+      { emails: FALLBACK_STEWARD_EMAILS }
+    )
+    const ownerEmail = ownerRes.records[0]?.get('ownerEmail') ?? null
+    const firstUserId = ownerRes.records[0]?.get('firstUserId') ?? null
+
+    const fb = await session.run(
+      `MATCH (owner:User)
+       WHERE ($ownerEmail IS NOT NULL AND owner.email = $ownerEmail)
+          OR ($ownerEmail IS NULL AND owner.id = $firstUserId)
+       WITH owner LIMIT 1
        WHERE NOT EXISTS { MATCH (:WeSpace {id: 'wespace_migrated_unattributed'}) }
        CREATE (ws:Space:WeSpace {
          id: 'wespace_migrated_unattributed',
@@ -734,27 +762,42 @@ async function phase5_buildDevStructure(): Promise<{
          visibility: 'SHARED',
          createdAt: datetime()
        })
-       CREATE (u)-[:OWNS]->(ws)
-       CREATE (sm:SpaceMembership {
-         id: 'membership_' + u.id + '_migrated_unattributed',
-         role: 'ADMIN',
-         addedAt: datetime()
-       })
-       CREATE (ws)-[:HAS_MEMBER]->(sm)
-       CREATE (sm)-[:IS_MEMBER]->(u)
+       CREATE (owner)-[:OWNS]->(ws)
        CREATE (ctx:FieldContext {
          id: 'context_migrated_unattributed',
          title: 'Unattributed migrated content',
          createdAt: datetime()
        })
        CREATE (ws)-[:HAS_CONTEXT]->(ctx)
-       RETURN count(ws) AS c`
+       RETURN count(ws) AS c`,
+      { ownerEmail, firstUserId }
     )
     const fallbackCreated = toInt(fb.records[0].get('c'))
     weSpaces += fallbackCreated
     contexts += fallbackCreated
     if (fallbackCreated > 0) {
       console.log(`   ✓ Fallback WeSpace created for orphans`)
+    }
+
+    // Grant ADMIN to the owner plus every present steward, so each can move
+    // orphaned pulses out of the fallback space. Idempotent: SpaceMembership is
+    // MERGEd on its unique id, so a re-run (or owner == steward) never dupes.
+    if (fallbackCreated > 0) {
+      const adminRes = await session.run(
+        `MATCH (ws:WeSpace {id: 'wespace_migrated_unattributed'})
+         MATCH (owner:User)-[:OWNS]->(ws)
+         MATCH (u:User)
+         WHERE u = owner OR u.email IN $emails
+         MERGE (ws)-[:HAS_MEMBER]->(sm:SpaceMembership {
+           id: 'membership_' + u.id + '_migrated_unattributed'
+         })
+           ON CREATE SET sm.role = 'ADMIN', sm.addedAt = datetime()
+         MERGE (sm)-[:IS_MEMBER]->(u)
+         RETURN count(DISTINCT u) AS c`,
+        { emails: FALLBACK_STEWARD_EMAILS }
+      )
+      const admins = toInt(adminRes.records[0].get('c'))
+      console.log(`   ✓ Fallback WeSpace ADMINs (stewards): ${admins}`)
     }
 
     // Anchor every still-unanchored pulse (the 42 true orphans + any pulse

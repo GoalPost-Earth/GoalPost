@@ -10,8 +10,9 @@ investigating any migration script.
 # 1. Refresh dev from prod (wipes dev, re-fills from prod, validates parity)
 npm run migrate:prod-to-dev
 
-# 2. (Optional) Seed the GoalPost Build Space — adds a curated WeSpace
-#    with the 4 core team members and ~19 sample pulses + resonances.
+# 2. (Optional) Seed the sample space — adds a curated WeSpace ("Maple
+#    Street Mutual Aid", wholly fictional) with the 4 member accounts and
+#    ~19 sample pulses + resonances.
 npm run seed:build-space
 ```
 
@@ -148,11 +149,17 @@ The structures, in order:
    - non-community pulses created by a user → that creator's MeSpace
      FieldContext (a pulse with multiple creators lands in each).
 6. **Fallback WeSpace** (`id = 'wespace_migrated_unattributed'`,
-   "Migrated (unattributed)") owned by a deterministic first `:User`.
-   Every pulse still unanchored after the steps above (true orphans with
-   no creator and no community, plus any pulse whose only creator has no
-   MeSpace) is wired into its FieldContext so nothing disappears from the
-   app.
+   "Migrated (unattributed)") owned by and shared with the **migration
+   stewards** (`FALLBACK_STEWARD_EMAILS` in the script — currently JD Addy
+   `jaedagy@gmail.com` and Robert Damashek `robert.damashek@gmail.com`).
+   The first present steward (by list priority) owns the space; every
+   present steward — owner included — gets an `ADMIN` `SpaceMembership` so
+   they can triage and **move orphaned content into the right spaces**. If
+   no steward exists in the dataset, ownership falls back to the first
+   `:User` by id. Every pulse still unanchored after the steps above (true
+   orphans with no creator and no community, plus any pulse whose only
+   creator has no MeSpace) is wired into its FieldContext so nothing
+   disappears from the app.
 
 The MeSpace is required for auth even when the user has no pulses
 (otherwise they can't log in cleanly).
@@ -234,40 +241,45 @@ modes:
   create both as a single `:Person` (it shouldn't — each label is
   iterated independently). Check the `migrateNodesByLabel` error path.
 
-## GoalPost Build Space seed
+## Sample space seed (Maple Street Mutual Aid)
 
 After a migration, you usually want a curated WeSpace to navigate against
 — a place where pulses, resonances, and a known set of members already
 exist, so the four-mode Studio has something interesting to render.
 
-`scripts/seed-build-space.ts` builds exactly that. It creates:
+`scripts/seed-build-space.ts` builds exactly that. **The seeded content is
+wholly fictional** — a made-up neighborhood mutual-aid network, with no
+real people, organizations, or pilots named in the pulse text. Authorship
+is attached to the four migrated `:User` accounts (by email) only so the
+space is reachable when they log in; the content does not depict their
+real work. It creates:
 
-- One WeSpace `space_buildspace` ("GoalPost Build Space"), owned by JD
+- One WeSpace `space_buildspace` ("Maple Street Mutual Aid"), owned by JD
   (jaedagy@gmail.com) and with Jesse, Robert, Jennifer added via
-  `:HAS_MEMBER`.
-- One FieldContext `context_buildspace` ("Build & Roadmap") under that
+  `:HAS_MEMBER`. (Ids keep the `buildspace` prefix so the seed stays
+  cleanly removable; only the display names are fictional.)
+- One FieldContext `context_buildspace` ("Neighborhood Board") under that
   space.
 - 19 sample pulses across `GoalPulse`, `StoryPulse`, and `ResourcePulse`,
-  written in the voices of the four members, about real work we've been
-  doing (Studio modes, mobile responsiveness, privacy defaults, the WRC
-  pilot, graph-vs-tables, the migration itself, etc.). Each pulse has
-  both `CREATED_BY` and `INITIATED_BY` edges to its author so any
-  resolver picks it up.
-- 5 `FieldResonance` nodes (Graph-first thinking, Mobile-first design,
-  Privacy and trust, Design system maturity, Real-world pilot
-  learnings) with 9 `ResonanceLink` edges connecting plausible pairs of
-  pulses to them.
+  about invented neighborhood mutual aid (a tool-lending shed, a meal-share
+  rotation, a repair café, a ride board, a skills directory, a phone tree,
+  etc.). Each pulse has both `CREATED_BY` and `INITIATED_BY` edges to its
+  author so any resolver picks it up.
+- 5 `FieldResonance` nodes (Sharing over owning, Staying reachable, Trust
+  and welcome, A block's shared identity, What cadence teaches us) with 9
+  `ResonanceLink` edges connecting plausible pairs of pulses to them.
 
 Editing the content: the pulse list, resonance list, and member roster
-are all declarative constants near the top of the script. Add a new
-entry to `PULSES` or `RESONANCES` and re-run.
+are all declarative constants near the top of the script. Keep new content
+fictional — do not reintroduce real names, orgs, or internal project
+specifics. Add a new entry to `PULSES` or `RESONANCES` and re-run.
 
 ## Quick reference: paths
 
 | Path | Purpose |
 |------|---------|
 | `scripts/migrate-prod-to-dev.ts` | Current migration. Run via `npm run migrate:prod-to-dev`. |
-| `scripts/seed-build-space.ts` | Curated WeSpace + sample pulses + resonances for the 4-person team. Run via `npm run seed:build-space` after migration. |
+| `scripts/seed-build-space.ts` | Curated fictional WeSpace ("Maple Street Mutual Aid") + sample pulses + resonances, attached to the 4 member accounts. Run via `npm run seed:build-space` after migration. |
 | `scripts/migrate-reference-to-merged.ts` | Previous migration (transformative, doesn't preserve provenance). Kept for reference but not used. |
 | `scripts/init-db.js` | Schema + demo seed for fresh dev DBs. Destructive — do not chain after a migration. |
 | `docs/cypher/seed-dev.cypher` | Demo seed used by init-db. Not run during prod-to-dev migration. |

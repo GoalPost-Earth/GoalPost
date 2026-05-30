@@ -1,14 +1,19 @@
 /**
- * Seed Script: GoalPost Build Space
+ * Seed Script: Maple Street Mutual Aid (sample build space)
  *
- * Creates a WeSpace named "GoalPost Build Space" with the four core team
- * members and fills it with plausible sample data — goal pulses, story
- * pulses, resource pulses, and resonance links — that reflect the work
- * the team has actually been doing.
+ * Creates a WeSpace named "Maple Street Mutual Aid" — a wholly fictional
+ * neighborhood mutual-aid network — and fills it with sample data: goal
+ * pulses, story pulses, resource pulses, and resonance links. The content
+ * is invented (no real people, orgs, or pilots); it exists only to give the
+ * Studio something realistic to render and navigate against.
+ *
+ * Authorship is attached to the four migrated :User accounts (JD, Jesse,
+ * Robert, Jennifer) by email so the space is reachable when they log in —
+ * but the pulse content does not depict their real work.
  *
  * Intended to be run AFTER `npm run migrate:prod-to-dev`, which provides
- * the four Persons (JD, Jesse, Robert, Jennifer) the WeSpace references.
- * Idempotent: deletes any prior build-space content before re-seeding.
+ * those four Persons. Idempotent: deletes any prior build-space content
+ * before re-seeding.
  *
  * Usage: npm run seed:build-space
  */
@@ -73,178 +78,178 @@ type PulseSeed = {
 const PULSES: PulseSeed[] = [
   // Goals
   {
-    slug: 'goal-four-mode-v1',
+    slug: 'goal-tool-library',
     pulseType: 'GoalPulse',
     author: 'jd',
-    title: 'Ship four-mode Studio v1 by end of May',
+    title: 'Open a shared tool library by spring',
     content:
-      'Get the four Studio modes (Graph, Map, Timeline, List) into a shippable state with consistent navigation, persisted view state, and golden-path tests passing.',
-    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'It unblocks every downstream feature pitch we want to make this quarter.' },
+      'Stand up a lending shed where neighbors can borrow drills, ladders, a wheelbarrow, and yard tools instead of each buying their own. Needs a checkout log, a host for the shed, and a simple way to flag what is out and what is overdue.',
+    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'Nobody needs to own a tool they use twice a year — sharing frees up money and space for everyone.' },
   },
   {
-    slug: 'goal-mobile-dashboard',
+    slug: 'goal-meal-share',
     pulseType: 'GoalPulse',
     author: 'jesse',
-    title: 'Full mobile responsiveness for the dashboard',
+    title: 'Launch a weekly meal-share rotation',
     content:
-      'Every dashboard surface — entity drawer, person bubbles, spatial view, mode switcher — needs to feel native on mobile, not a desktop layout shoved into a smaller viewport.',
-    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'Half of pilot users open the app on their phone first.' },
+      'Five households cook one extra portion on their assigned night so a neighbor recovering from surgery, a new parent, or anyone having a hard week gets a hot meal without having to ask. Rotate the cooking, keep dietary notes on file.',
+    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'A hot meal on a bad day is the most direct mutual aid we can offer.' },
   },
   {
-    slug: 'goal-onboard-families',
+    slug: 'goal-onboard-neighbors',
     pulseType: 'GoalPulse',
     author: 'robert',
-    title: 'Onboard 10 families to active daily use',
+    title: 'Get 15 households onto the care roster',
     content:
-      'Move past the demo-account phase. Get 10 real households logging pulses, finding resonances, and asking the assistant questions on a daily cadence.',
-    extra: { status: 'ACTIVE', horizon: 'MID', why: 'Without sustained real use, we can\'t honestly say resonance discovery works.' },
+      'Move past the handful of founding neighbors. Get 15 households actually signed up, with a contact on file and at least one thing they can offer and one thing they could use, so the network has enough density to be useful.',
+    extra: { status: 'ACTIVE', horizon: 'MID', why: 'Below a critical mass of households, requests go unanswered and people stop bothering to ask.' },
   },
   {
-    slug: 'goal-onboarding-flow',
+    slug: 'goal-welcome-process',
     pulseType: 'GoalPulse',
     author: 'jennifer',
-    title: 'Launch invite-based onboarding with privacy-first defaults',
+    title: 'Invite-based welcome process for new neighbors',
     content:
-      'No public sign-up. Every new account arrives via an invite from an existing user, lands in a Person:User node with private MeSpace defaults, and is walked through care-manual capture before they ever see a pulse.',
-    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'Privacy and trust are the load-bearing promises of the product.' },
+      'No open posting. A new household joins because an existing neighbor walks over and invites them, then a welcome buddy helps them fill in what they can offer and what they need before they ever post a request.',
+    extra: { status: 'ACTIVE', horizon: 'SHORT', why: 'Trust on the block is built door to door, not through a sign-up form.' },
   },
   {
-    slug: 'goal-llm-latency',
+    slug: 'goal-ride-share',
     pulseType: 'GoalPulse',
     author: 'jd',
-    title: 'Reduce assistant response latency below 2s p95',
+    title: 'Stand up a reliable ride board for appointments',
     content:
-      'Profile every call in the chat route, identify which steps dominate (tool dispatch, embedding lookup, model call), and cut the p95 from ~4.5s to under 2s without sacrificing answer quality.',
-    extra: { status: 'PAUSED', horizon: 'MID', why: 'Latency above 3s breaks the conversational feel that makes the assistant useful.' },
+      'A simple board where a neighbor without a car can request a ride to a clinic, the grocery store, or the pharmacy, and a driver can claim it. Needs enough drivers that requests do not sit unanswered.',
+    extra: { status: 'PAUSED', horizon: 'MID', why: 'Missed medical appointments are one of the most common quiet hardships on the block.' },
   },
   {
-    slug: 'goal-resonance-v2',
+    slug: 'goal-skills-directory',
     pulseType: 'GoalPulse',
     author: 'robert',
-    title: 'Define the resonance discovery v2 spec',
+    title: 'Build a neighborhood skills directory',
     content:
-      'Capture what v1 got right (vector similarity surfacing latent connections) and where it fails (low precision on short pulses, missing the relational layer between authors).',
-    extra: { status: 'ACTIVE', horizon: 'MID', why: 'V1 is good enough to validate the thesis but not good enough to defend as the product.' },
+      'Capture who can fix a bike, who speaks which languages, who can sit with kids in a pinch, who knows plumbing. A living list so when someone has a need we can point them at a neighbor instead of a paid service.',
+    extra: { status: 'ACTIVE', horizon: 'MID', why: 'Most of what people need is already on the block — we just have no way to find it.' },
   },
 
   // Stories
   {
-    slug: 'story-graph-vs-tables',
+    slug: 'story-why-we-share',
     pulseType: 'StoryPulse',
     author: 'robert',
-    title: 'Why graph databases beat tables for resonance',
+    title: 'Why a lending shed beats everyone owning a drill',
     content:
-      'In a tabular world, "Robert\'s goals" and "Robert\'s resources" sit in separate tables joined by a foreign key. In a graph, they are nodes that share a creator and live next to each other through traversal. Resonance is fundamentally about traversal — about asking "what else is near this?" — which is why we picked Neo4j on day one.',
-    extra: { intensity: 0.8, why: 'Refresher for the team and a thing to point new collaborators at.' },
+      'There are forty households on this block and probably thirty drills, each used about ten minutes a year. The point of the shed is not just saving money — it is that borrowing the drill means knocking on a door, and knocking on a door is how strangers slowly become neighbors. The tool is an excuse for the contact.',
+    extra: { intensity: 0.8, why: 'A reminder that the sharing is the means, not the end — connection is the end.' },
   },
   {
-    slug: 'story-trust-defaults',
+    slug: 'story-trust-first',
     pulseType: 'StoryPulse',
     author: 'jennifer',
-    title: 'Building trust through privacy-first defaults',
+    title: 'Trust comes before tools',
     content:
-      'We don\'t ask users to opt into privacy; we make it the floor. MeSpaces are private by default. Pulses don\'t leak past their FieldContext. Sharing requires an explicit move. Every default we choose either deepens or erodes that compact.',
-    extra: { intensity: 0.9, why: 'A grounding doc when a feature pitch tempts us to share more by default.' },
+      'We almost led with an app and a request board. Then a neighbor said she would never post that she needed help with groceries where the whole block could see it. So we flipped it: you only see requests from people you have actually met, and help is offered quietly, one household to another. Privacy is not a feature here — it is the floor that lets anyone ask at all.',
+    extra: { intensity: 0.9, why: 'A grounding story for any time we are tempted to make needs more public than they should be.' },
   },
   {
-    slug: 'story-glass-morphism',
+    slug: 'story-repair-cafe',
     pulseType: 'StoryPulse',
     author: 'jesse',
-    title: 'Glass morphism in service of focus',
+    title: 'What our first repair café taught us',
     content:
-      'The glass treatment isn\'t decoration. It lets the surface behind a panel stay legible while the panel itself is the thing you\'re acting on. It implies layered context — exactly the mental model we want users to have when a pulse drawer opens over their spatial view.',
-    extra: { intensity: 0.6, why: 'Capture the design rationale before someone PRs it away.' },
+      'We set up two tables in the community room one Saturday — bring a broken thing, a neighbor helps you fix it. A lamp, a wobbly chair, a kid\'s bike, a sweater with a hole. Half the value was the repairs. The other half was three hours of people who had nodded at each other for years finally talking over a soldering iron.',
+    extra: { intensity: 0.6, why: 'Capture why the repair café is worth repeating, beyond the things that got fixed.' },
   },
   {
-    slug: 'story-wrc-pilot',
+    slug: 'story-harvest-rotation',
     pulseType: 'StoryPulse',
     author: 'robert',
-    title: 'What the WRC pilot taught us about pulse cardinality',
+    title: 'What the harvest-share rotation taught us about cadence',
     content:
-      'Users don\'t want to log "a goal" once per goal. They want to log small, frequent observations that accrete into a goal over time. The cardinality the product encourages should match the cardinality of how people actually think about their lives.',
-    extra: { intensity: 0.85, why: 'Pilot insight that should be louder in every PRD we write.' },
+      'When the garden plots came in we tried a big monthly produce swap. It flopped — too much at once, half of it spoiled. What worked was small and frequent: whoever had extra tomatoes that day left them on the shared porch shelf, and word went out the same evening. People do not coordinate their lives in big monthly batches; the network has to match the rhythm of how surplus actually shows up.',
+    extra: { intensity: 0.85, why: 'A cadence lesson that should shape every rotation we design, not just the garden.' },
   },
   {
-    slug: 'story-migration-lessons',
+    slug: 'story-phone-tree-lessons',
     pulseType: 'StoryPulse',
     author: 'jd',
-    title: 'Three rounds of prod-to-dev: lessons in label preservation',
+    title: 'Three rounds of the phone tree: lessons in staying reachable',
     content:
-      'First run: missed half the users (silently filtered on password presence). Second run: lost label provenance during ontology rewrite. Third run: preserved every label, every property, every relationship. The lesson: a migration is data archaeology, not data transformation. Keep what you can — you don\'t know which detail future-you will need.',
-    extra: { intensity: 0.7, why: 'So nobody on the team has to rediscover this the hard way.' },
+      'First version: one long list, and the one person at the top got every call and burned out. Second version: branches, but nobody knew who their branch lead was. Third version: small pods of five households who actually know each other, each pod with two contacts so no single person is the bottleneck. The lesson — a contact list is not a network. People answer for people they know.',
+    extra: { intensity: 0.7, why: 'So the next block that copies us does not relearn this the hard way.' },
   },
   {
-    slug: 'story-care-manuals',
+    slug: 'story-care-rounds',
     pulseType: 'StoryPulse',
     author: 'jennifer',
-    title: 'Care manuals are the underrated UX of relationship modeling',
+    title: 'Care rounds are the underrated glue of the block',
     content:
-      'A "care manual" sounds soft. In practice it\'s a structured, queryable expression of how a person wants to be cared for — what makes them feel seen, what doesn\'t, what they need more or less of right now. It\'s exactly the kind of relational metadata the graph is built to hold.',
-    extra: { intensity: 0.75, why: 'A frame to bring up when someone asks "what\'s the killer feature?"' },
+      'Once a week two neighbors just walk the block and check in — especially on the older folks and anyone who has gone quiet. It sounds soft. In practice it is how we catch the burst pipe, the missed prescription, the person who has not left the house in days. Most needs never get posted anywhere; somebody has to go find them.',
+    extra: { intensity: 0.75, why: 'A frame for when someone asks what actually holds the network together.' },
   },
   {
-    slug: 'story-radix-tailwind',
+    slug: 'story-potluck-over-app',
     pulseType: 'StoryPulse',
     author: 'jesse',
-    title: 'Why we chose Radix + Tailwind over a single design system',
+    title: 'Why we kept the potluck and skipped the group chat',
     content:
-      'A single design system locks you into someone else\'s taste. Radix gives us accessible primitives that don\'t presume aesthetics; Tailwind gives us the velocity to express our own. The cost is more discipline; the win is identity.',
-    extra: { intensity: 0.55, why: 'In case we ever have a "should we adopt Material" conversation again.' },
+      'We tried a block group chat. It went quiet in a week and loud with arguments in two. The monthly potluck, by contrast, has run for a year. A shared table does something a thread cannot: it puts faces to names, it is low-stakes, and you leave knowing one more person you can knock on. Not every coordination problem is solved by more messaging.',
+    extra: { intensity: 0.55, why: 'In case we are ever tempted to replace the in-person rituals with another app.' },
   },
 
   // Resources
   {
-    slug: 'resource-embeddings-best-practices',
+    slug: 'resource-tool-inventory',
     pulseType: 'ResourcePulse',
     author: 'jd',
-    title: 'Vector embedding best practices for resonance discovery',
+    title: 'Shared tool inventory and checkout log',
     content:
-      'Use text-embedding-3-small (1536-dim) by default. Chunk long pulses before embedding; vectors of paragraph-level chunks beat document-level vectors for finding latent connections. Keep the chunks linked back to the parent pulse.',
+      'Running list of what is in the lending shed, who hosts it, and a simple borrow log — item, who has it, when it is due back. Includes the few rules we agreed on: clean it, return it on time, report anything broken so we can repair or replace.',
     extra: { resourceType: 'doc' },
   },
   {
-    slug: 'resource-shadcn-patterns',
+    slug: 'resource-flyer-templates',
     pulseType: 'ResourcePulse',
     author: 'jesse',
-    title: 'shadcn component patterns library',
+    title: 'Flyer and door-hanger templates',
     content:
-      'Living doc of the shadcn primitives we use and how we customize them for the GoalPost surface — entity drawers, person bubbles, mode toolbars, drawer triggers, and the focal-entity locator strip.',
-    extra: { resourceType: 'doc' },
-  },
-  {
-    slug: 'resource-onboarding-script',
-    pulseType: 'ResourcePulse',
-    author: 'jennifer',
-    title: 'Onboarding video script v3',
-    content:
-      'Three-minute walkthrough: invite arrives, account creation, care manual capture, first pulse, first resonance suggestion. Emphasizes "this is for you" over "this is what we built."',
-    extra: { resourceType: 'script' },
-  },
-  {
-    slug: 'resource-cypher-cookbook',
-    pulseType: 'ResourcePulse',
-    author: 'jd',
-    title: 'Cypher cookbook for FieldContext-aware queries',
-    content:
-      'Common query patterns: pulses-in-context with auth filtering, resonance-link traversal from a focal pulse, person-to-person resonance via shared FieldContexts, and the canonical MeSpace ownership check.',
-    extra: { resourceType: 'doc' },
-  },
-  {
-    slug: 'resource-brand-palette',
-    pulseType: 'ResourcePulse',
-    author: 'jesse',
-    title: 'Brand identity and color palette',
-    content:
-      'Light and dark mode tokens, semantic color slots (focal, supporting, background, glass), and the rationale for our muted-with-one-accent approach. Includes Figma link and Tailwind config snippets.',
+      'Print-ready templates for the things we put on doors — meal-share sign-up, repair café announcement, potluck reminder, welcome card for new households. Consistent look so neighbors recognize them as ours at a glance.',
     extra: { resourceType: 'design' },
   },
   {
-    slug: 'resource-wrc-interviews',
+    slug: 'resource-welcome-script',
+    pulseType: 'ResourcePulse',
+    author: 'jennifer',
+    title: 'New-neighbor welcome script',
+    content:
+      'What a welcome buddy actually says at the door: who we are, that joining is voluntary and private, the one thing you might offer and the one thing you might need, and how to reach your pod contacts. Warm, short, and never a pitch.',
+    extra: { resourceType: 'script' },
+  },
+  {
+    slug: 'resource-contact-tree',
+    pulseType: 'ResourcePulse',
+    author: 'jd',
+    title: 'Emergency contact tree and snow-day plan',
+    content:
+      'The pod structure written down — who calls whom, the two contacts per pod, and the cold-weather plan: who checks on the elders when the power goes out, who has a generator, who can shovel which walks. Reviewed every fall before the first storm.',
+    extra: { resourceType: 'doc' },
+  },
+  {
+    slug: 'resource-palette-signage',
+    pulseType: 'ResourcePulse',
+    author: 'jesse',
+    title: 'Signage style and color palette',
+    content:
+      'The look of our shared spaces — the shed, the porch produce shelf, the community-room board. Color choices, a friendly hand-lettered feel, and large readable type so a sign reads clearly from the sidewalk in any weather.',
+    extra: { resourceType: 'design' },
+  },
+  {
+    slug: 'resource-harvest-interviews',
     pulseType: 'ResourcePulse',
     author: 'robert',
-    title: 'WRC pilot interview notes',
+    title: 'Harvest-share neighbor interview notes',
     content:
-      'Twelve interviews, anonymized. Common themes: people use the app most heavily on Sunday evenings; the "why" field is the part they think about longest; sharing happens primarily between two specific people, rarely group-wide.',
+      'A dozen short porch conversations about the produce rotation, names left out. Common threads: people share most on weekend mornings; they give more freely when it is left out anonymously than when they have to hand it over; surplus moves best between two households who already chat.',
     extra: { resourceType: 'research' },
   },
 ]
@@ -259,90 +264,90 @@ type ResonanceSeed = {
 
 const RESONANCES: ResonanceSeed[] = [
   {
-    fieldResonanceSlug: 'res-graph-first',
-    label: 'Graph-first thinking',
-    description: 'Pulses that argue for or rely on graph-shaped data as the substrate of GoalPost.',
+    fieldResonanceSlug: 'res-sharing-over-owning',
+    label: 'Sharing over owning',
+    description: 'Pulses built on the idea that pooled resources beat private ownership for a block.',
     links: [
       {
-        source: 'story-graph-vs-tables',
-        target: 'resource-cypher-cookbook',
-        evidence: 'Both make the case that traversal is the unit of value; the cookbook is the operational form of the story.',
+        source: 'story-why-we-share',
+        target: 'resource-tool-inventory',
+        evidence: 'The story makes the case for sharing; the inventory is the operational form of it.',
         confidence: 0.9,
       },
       {
-        source: 'resource-embeddings-best-practices',
-        target: 'goal-resonance-v2',
-        evidence: 'V2 of resonance discovery hinges on the embedding choices captured in the doc.',
+        source: 'resource-harvest-interviews',
+        target: 'goal-skills-directory',
+        evidence: 'The interviews show surplus moves best between neighbors who know each other — the same premise behind a skills directory.',
         confidence: 0.85,
       },
     ],
   },
   {
-    fieldResonanceSlug: 'res-mobile-first',
-    label: 'Mobile-first design',
-    description: 'Recognizing that pilot usage is phone-first and surfaces must be designed that way.',
+    fieldResonanceSlug: 'res-reachability',
+    label: 'Staying reachable',
+    description: 'Recognizing that the network only works if requests reliably reach a person who can answer.',
     links: [
       {
-        source: 'goal-mobile-dashboard',
-        target: 'story-glass-morphism',
-        evidence: 'The glass treatment was designed to layer well on small screens; the goal is to ship that everywhere.',
+        source: 'goal-ride-share',
+        target: 'story-phone-tree-lessons',
+        evidence: 'A ride board only works on top of a phone tree where requests actually reach a willing driver.',
         confidence: 0.75,
       },
     ],
   },
   {
-    fieldResonanceSlug: 'res-privacy-trust',
-    label: 'Privacy and trust',
-    description: 'The compact between the product and its users; the floor we never violate.',
+    fieldResonanceSlug: 'res-trust-welcome',
+    label: 'Trust and welcome',
+    description: 'The compact that lets a neighbor feel safe enough to ask for help at all.',
     links: [
       {
-        source: 'goal-onboarding-flow',
-        target: 'story-trust-defaults',
-        evidence: 'Invite-only onboarding is the operational form of the trust-defaults story.',
+        source: 'goal-welcome-process',
+        target: 'story-trust-first',
+        evidence: 'Invite-based welcome is the operational form of the trust-first story.',
         confidence: 0.95,
       },
       {
-        source: 'goal-onboard-families',
-        target: 'story-trust-defaults',
-        evidence: 'Scaling families requires defending the privacy story at every step.',
+        source: 'goal-onboard-neighbors',
+        target: 'story-trust-first',
+        evidence: 'Growing the roster requires defending that trust at every door.',
         confidence: 0.7,
       },
     ],
   },
   {
-    fieldResonanceSlug: 'res-design-system',
-    label: 'Design system maturity',
-    description: 'The slow accretion of a coherent visual language.',
+    fieldResonanceSlug: 'res-block-identity',
+    label: "A block's shared identity",
+    description: 'The slow accretion of shared rituals and a recognizable look that make the block feel like one place.',
     links: [
       {
-        source: 'resource-brand-palette',
-        target: 'story-glass-morphism',
-        evidence: 'Glass requires deliberate color contrast — the palette is the upstream constraint.',
+        source: 'resource-palette-signage',
+        target: 'story-repair-cafe',
+        evidence: 'Consistent signage is what makes a one-off repair café read as part of something ongoing.',
         confidence: 0.8,
       },
       {
-        source: 'resource-shadcn-patterns',
-        target: 'story-radix-tailwind',
-        evidence: 'The patterns library is the practical output of the Radix+Tailwind decision.',
+        source: 'resource-flyer-templates',
+        target: 'story-potluck-over-app',
+        evidence: 'The recurring potluck depends on the door flyers that keep drawing people back in person.',
         confidence: 0.85,
       },
     ],
   },
   {
-    fieldResonanceSlug: 'res-pilot-learnings',
-    label: 'Real-world pilot learnings',
-    description: 'Insights from actual usage that should reshape the roadmap.',
+    fieldResonanceSlug: 'res-cadence-learnings',
+    label: 'What cadence teaches us',
+    description: 'Insights from actual use about the rhythm at which mutual aid actually flows.',
     links: [
       {
-        source: 'story-wrc-pilot',
-        target: 'resource-wrc-interviews',
-        evidence: 'The story is the synthesis; the interviews are the raw evidence.',
+        source: 'story-harvest-rotation',
+        target: 'resource-harvest-interviews',
+        evidence: 'The story is the synthesis; the porch interviews are the raw evidence.',
         confidence: 0.95,
       },
       {
-        source: 'story-migration-lessons',
-        target: 'story-wrc-pilot',
-        evidence: 'Both pulses are reflections on hard-won operational knowledge.',
+        source: 'story-phone-tree-lessons',
+        target: 'story-harvest-rotation',
+        evidence: 'Both are reflections on matching the network to the rhythm of how people actually live.',
         confidence: 0.5,
       },
     ],
@@ -435,8 +440,8 @@ async function createSpace(memberIds: Record<MemberKey, string>) {
       `MATCH (owner:User {id: $ownerId})
        CREATE (ws:Space:WeSpace {
          id: $spaceId,
-         name: 'GoalPost Build Space',
-         description: 'Working space for the GoalPost core team — goals, stories, and resources for what we are building.',
+         name: 'Maple Street Mutual Aid',
+         description: 'A neighborhood mutual-aid network — goals, stories, and shared resources for helping each other out on the block.',
          visibility: 'PRIVATE',
          createdAt: datetime()
        })
@@ -462,8 +467,8 @@ async function createSpace(memberIds: Record<MemberKey, string>) {
       `MATCH (ws:WeSpace {id: $spaceId})
        CREATE (ctx:FieldContext {
          id: $contextId,
-         title: 'Build & Roadmap',
-         emergentName: 'GoalPost Build',
+         title: 'Neighborhood Board',
+         emergentName: 'Maple Street',
          createdAt: datetime()
        })
        CREATE (ws)-[:HAS_CONTEXT]->(ctx)`,
@@ -593,7 +598,7 @@ async function summary() {
       { spaceId: SPACE_ID }
     )
     const r = result.records[0]
-    console.log('━━━ Build Space Summary ━━━')
+    console.log('━━━ Sample Space Summary ━━━')
     console.log(`  Space:     ${r.get('name')}`)
     console.log(`  Members:   ${r.get('members')}`)
     console.log(`  Pulses:    ${r.get('pulses')}`)
@@ -606,7 +611,7 @@ async function summary() {
 
 async function main() {
   console.log('\n╔════════════════════════════════════════════════════════════╗')
-  console.log('║  SEED · GoalPost Build Space                              ║')
+  console.log('║  SEED · Maple Street Mutual Aid (sample space)            ║')
   console.log('╚════════════════════════════════════════════════════════════╝\n')
   try {
     await connect()
