@@ -1240,8 +1240,8 @@ export default function FieldContextDetailsPage() {
       {/* Scrollable content — pb-40 leaves a clear lane for the
           floating StudioCanvasActionBar at the bottom of the canvas so
           page content never sits directly under it at scroll end. */}
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
-        <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40">
+        <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 animate-fade-in">
           {/* Top bar — back to the owning Space on the left; page-local
               actions on the right as pill buttons. On md+ the pills
               expand to show their labels; on narrower screens they
@@ -1289,20 +1289,20 @@ export default function FieldContextDetailsPage() {
               dominating it; the read-heavy sections below the fold
               (pulses, resonances, docs) are where the user spends most
               of their time. */}
-          <header className="flex flex-col items-center text-center gap-4 pt-1">
+          <header className="flex flex-col items-center text-center gap-3 sm:gap-4 pt-1">
             <div
               className={cn(
-                'size-14 rounded-2xl border flex items-center justify-center shadow-lg backdrop-blur-sm',
+                'size-12 sm:size-14 rounded-2xl border flex items-center justify-center shadow-lg backdrop-blur-sm',
                 isMe
                   ? 'bg-amber-500/20 border-amber-300/40 text-amber-600 dark:text-amber-200'
                   : 'bg-teal-500/20 border-teal-300/40 text-teal-600 dark:text-teal-200'
               )}
             >
-              <span className="material-symbols-outlined text-3xl">
+              <span className="material-symbols-outlined text-2xl sm:text-3xl">
                 category
               </span>
             </div>
-            <div className="space-y-2 max-w-3xl">
+            <div className="space-y-1.5 sm:space-y-2 max-w-3xl">
               <span
                 className={cn(
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
@@ -1314,7 +1314,7 @@ export default function FieldContextDetailsPage() {
                 {spaceLabel}
                 {space?.name ? ` · ${space.name}` : ''}
               </span>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
                 {context.title || 'Untitled field'}
               </h1>
               {context.emergentName && (
@@ -1330,7 +1330,7 @@ export default function FieldContextDetailsPage() {
             {/* At-a-glance counters — each tile gets its own accent so
                 the row reads as a quick visual scan rather than a
                 uniform stat block. */}
-            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl">
+            <div className="mt-1 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full max-w-3xl">
               <Stat
                 icon="graphic_eq"
                 label="Pulses"
@@ -1635,23 +1635,23 @@ const Stat: FC<{
   value: string | number
   accent: StatAccent
 }> = ({ icon, label, value, accent }) => (
-  <div className="group rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] px-3 py-2.5 text-left backdrop-blur-sm shadow-sm hover:bg-white/70 dark:hover:bg-white/[0.06] transition-colors">
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500 dark:text-white/55">
+  <div className="group flex items-center gap-2.5 rounded-xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] px-2.5 py-2 text-left backdrop-blur-sm shadow-sm hover:bg-white/70 dark:hover:bg-white/[0.06] transition-colors">
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center size-7 rounded-lg border',
+        STAT_ACCENT[accent]
+      )}
+    >
+      <span className="material-symbols-outlined text-[15px]">{icon}</span>
+    </span>
+    <div className="min-w-0">
+      <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tabular-nums leading-none">
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-slate-500 dark:text-white/55 truncate">
         {label}
-      </span>
-      <span
-        className={cn(
-          'inline-flex items-center justify-center size-6 rounded-lg border',
-          STAT_ACCENT[accent]
-        )}
-      >
-        <span className="material-symbols-outlined text-[14px]">{icon}</span>
-      </span>
+      </p>
     </div>
-    <p className="mt-1.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums leading-none">
-      {value}
-    </p>
   </div>
 )
 
@@ -1696,11 +1696,11 @@ const FieldContextSkeleton: FC = () => (
           <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
           <div className="h-8 w-72 rounded-md bg-white/30 dark:bg-white/5 animate-pulse" />
           <div className="h-3 w-48 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-3xl w-full mt-1">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-14 rounded-2xl bg-white/30 dark:bg-white/5 animate-pulse"
+                className="h-12 rounded-xl bg-white/30 dark:bg-white/5 animate-pulse"
               />
             ))}
           </div>

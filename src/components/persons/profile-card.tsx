@@ -18,7 +18,7 @@ export function ProfileCard({
   return (
     <div
       onClick={onClick}
-      className={`h-full rounded-3xl p-5 transition-all duration-300 border
+      className={`h-full rounded-3xl p-4 sm:p-5 transition-all duration-300 border
         bg-gp-glass-bg border-gp-glass-border 
         backdrop-blur-2xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)]
         dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]

@@ -102,10 +102,32 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 | Assistant prompts, tools, chat routes, or anything the model emits to a user | `kb/07-ai-assistant-ux.md`              |
 | Re-running prod-to-dev DB migration, changing the script, or debugging it    | `kb/08-migration.md`                    |
 
+### Design — You MUST engage the design skill before ANY UI work
+
+**No UI work may be done without engaging the `design` skill first.** This is
+non-negotiable, exactly like the KB rule above. Before you create, edit, or
+restyle **any** user-facing surface — a page, component, layout, modal, chip,
+icon, spacing, color, or responsive tweak — invoke the `design` skill (via the
+Skill tool, or by reading `.claude/skills/design/SKILL.md`) and follow it as the
+source of truth.
+
+The skill carries the two parity rules that every UI change is judged against:
+
+- **Light & dark mode parity** — every surface must work in light, dark, and at
+  least one non-default theme. Verify in the running app before declaring done.
+- **Mobile & responsive** — every surface must look intentional at **390px wide**
+  with no horizontal overflow, no chrome overlap, and compact density. Verify at
+  390 × 844 in both light and dark before declaring done.
+
+For any browser-reachable UI change, dispatch the `e2e-tester` agent at mobile
+width (390 × 844) in both modes as the verification step. A UI change that hasn't
+been checked on mobile + dark is not done, and reviewers will block on it.
+
 ### Commands — You MUST use the right command for the task
 
 | If you are asked to...      | You MUST use                                       |
 | --------------------------- | -------------------------------------------------- |
+| Build or change ANY UI      | `design` skill first — never style UI without it   |
 | Fix a bug                   | `/fix` — never skip root cause analysis            |
 | Implement a feature         | `/implement` — never skip requirements gathering   |
 | Create a frontend component | `/new-component` — never scaffold manually         |
@@ -211,6 +233,7 @@ Board flow: `(Any) → In Progress → Review → Verified By QA → Done`.
 
 ### Things you MUST NOT do
 
+- Do NOT do ANY UI work without first engaging the `design` skill — and do NOT declare a UI change done until it is verified at 390px-wide mobile in both light and dark mode
 - Do NOT invent terminology — use `kb/01-glossary.md` terms exactly
 - Do NOT guess state transitions — check `kb/04-state-machines.md`
 - Do NOT bypass Space-based authorization — all content access flows through Spaces

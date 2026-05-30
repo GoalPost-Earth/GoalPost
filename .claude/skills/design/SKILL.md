@@ -41,6 +41,27 @@ GoalPost ships **light and dark** simultaneously. Light mode is the default and 
 
 **Before declaring any UI change complete:** toggle the theme in the running app (or `/run`) and confirm the change reads correctly in **light, dark, and at least one non-default theme** (warm or purple). If you haven't done this, the change is not done. Code reviewers will block on missing parity.
 
+## Mobile & responsive (non-negotiable)
+
+GoalPost is used on phones. **Mobile is a first-class target, not a desktop layout that happens to shrink.** Every surface must look intentional at a narrow viewport — no overflow, no oversized chrome, no wasted space.
+
+**The rule:** if a surface overflows, clips into another element, or wastes vertical space at **390px wide** (iPhone-class), it isn't done.
+
+**The reference width is 390 × 844.** Design and verify at that size first, then let `sm:` / `md:` / `lg:` *scale up*. Author Tailwind mobile-first: the **base (unprefixed) class is the phone value**; breakpoint prefixes add desktop affordances, never the other way around. Writing `text-2xl sm:text-base` (big on phone, small on desktop) is backwards and almost always a bug.
+
+**No horizontal overflow, ever.** At 390px, `document.documentElement.scrollWidth` must equal `window.innerWidth`. The usual culprits and their fixes:
+- A flex row whose children won't shrink → the row needs `min-w-0` and the shrinkable children need `min-w-0` too (flex items default to `min-width:auto` and refuse to shrink below content). `min-w-0` must be threaded down **every** wrapper between the flex container and the truncating text — a single wrapper missing it breaks truncation.
+- Long text that should ellipsize → `truncate` (or `max-w-[Nch] truncate`) on the text, `shrink-0` on the fixed siblings (icons, chevrons, dots, badges), and `overflow-hidden` on the clipping container so nothing escapes.
+- A horizontal bar (header, breadcrumb, toolbar) where one region must yield space to another → give the flexible region `flex-1 min-w-0` and the fixed region (avatar, action cluster) `shrink-0`. Decorative blurred blobs may sit off-viewport only inside a `pointer-events-none` container that doesn't extend document scroll.
+
+**Compact density on mobile.** Status/stat tiles, counters, and metadata chips must be *small* on phones. Prefer a short **horizontal** tile (accent icon on the left, value + small uppercase label beside it) over a tall padded box with a large number. Keep numerals around `text-base`/`text-lg` on mobile and scale up with `sm:`; keep labels at `text-[10px]` uppercase and `truncate` so they never wrap or clip.
+
+**Scale padding and gaps with the viewport.** Page/scroll containers: `p-4 sm:p-8` (not a flat `p-6`/`p-8`). Section gaps: `gap-4 sm:gap-6`, `space-y-5 sm:space-y-6`. Card interiors: `p-4 sm:p-5`. Heroes: shrink the icon (`size-12 sm:size-14`), the title (`text-xl sm:text-3xl`), and the vertical rhythm on mobile. Empty-state padding: `p-6 sm:p-10`. The goal is to reclaim vertical real estate on phones without touching the desktop look.
+
+**Drop or collapse non-essential chrome on mobile.** Redundant type labels next to an icon/color (e.g. a "FIELD" tag beside a colored breadcrumb dot) should be `hidden sm:inline`. Tighten per-crumb / per-chip `max-w-[Nch]` values on the base size and widen them at `sm:`.
+
+**Before declaring any UI change complete:** view the surface at **390 × 844 in both light and dark mode** in the running app, confirm there is no horizontal scroll (`scrollWidth === innerWidth`), confirm nothing overflows or overlaps the chrome, and confirm stat/metadata density reads as compact. The `e2e-tester` agent does exactly this — dispatch it for any browser-reachable change. If you haven't checked mobile, the change is not done; reviewers will block on it.
+
 ## Foundations
 
 ### Typography

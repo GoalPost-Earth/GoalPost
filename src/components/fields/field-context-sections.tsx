@@ -155,7 +155,7 @@ export function FieldContextSections({
   onPersonClick,
 }: FieldContextSectionsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
       <div className="flex flex-col gap-4">
         <SectionHeader icon="location_on" title="Space" />
         <ProfileCard>
@@ -532,7 +532,7 @@ function EmptySection({
   secondaryCta?: EmptyCta
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/40 dark:border-white/15 bg-white/30 dark:bg-white/[0.02] p-8 sm:p-10 text-center flex flex-col items-center gap-3">
+    <div className="rounded-2xl border border-dashed border-white/40 dark:border-white/15 bg-white/30 dark:bg-white/[0.02] p-6 sm:p-10 text-center flex flex-col items-center gap-3">
       <div className="size-12 rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] flex items-center justify-center text-slate-500 dark:text-white/55">
         <span className="material-symbols-outlined text-2xl">{icon}</span>
       </div>

@@ -146,7 +146,7 @@ export const StudioBreadcrumb: FC = () => {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex items-center gap-1 rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/10 px-2 py-1 backdrop-blur-xl shadow-md"
+      className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/10 px-2 py-1 backdrop-blur-xl shadow-md"
     >
       {crumbs.map((crumb, idx) => {
         const isFirst = idx === 0
@@ -157,10 +157,10 @@ export const StudioBreadcrumb: FC = () => {
             : styleFor(crumb.type as FocalEntityType)
 
         const chipInner = (
-          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full">
+          <span className="flex min-w-0 items-center gap-1.5 px-2 py-1 rounded-full">
             {isFirst ? (
               <span
-                className="material-symbols-outlined text-[14px] leading-none text-gp-ink-muted dark:text-gp-ink-soft"
+                className="material-symbols-outlined shrink-0 text-[14px] leading-none text-gp-ink-muted dark:text-gp-ink-soft"
                 aria-hidden="true"
               >
                 home
@@ -176,18 +176,18 @@ export const StudioBreadcrumb: FC = () => {
             {isLast ? (
               <>
                 {style && (
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
+                  <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:inline">
                     {style.label}
                   </span>
                 )}
-                <span className="max-w-[14ch] sm:max-w-[22ch] truncate text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+                <span className="max-w-[12ch] truncate text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong sm:max-w-[22ch]">
                   {crumb.label}
                 </span>
               </>
             ) : (
               <span
                 className={cn(
-                  'max-w-[12ch] sm:max-w-[16ch] truncate font-medium',
+                  'max-w-[10ch] sm:max-w-[16ch] truncate font-medium',
                   isFirst
                     ? 'text-sm text-gp-ink-strong dark:text-gp-ink-strong'
                     : 'text-xs text-gp-ink-muted dark:text-gp-ink-soft'
@@ -200,12 +200,15 @@ export const StudioBreadcrumb: FC = () => {
         )
 
         return (
-          <span key={crumb.key} className="flex items-center">
+          <span
+            key={crumb.key}
+            className={cn('flex min-w-0 items-center', isLast && 'shrink')}
+          >
             {isLast ? (
               <span
                 aria-current="page"
                 title={crumb.label}
-                className="bg-gp-ink-strong/10 dark:bg-white/15 rounded-full"
+                className="min-w-0 bg-gp-ink-strong/10 dark:bg-white/15 rounded-full"
               >
                 {chipInner}
               </span>
@@ -214,16 +217,18 @@ export const StudioBreadcrumb: FC = () => {
                 type="button"
                 onClick={() => crumb.href && router.push(crumb.href)}
                 title={`Go to ${crumb.label}`}
-                className="rounded-full hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-colors cursor-pointer"
+                className="min-w-0 rounded-full hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-colors cursor-pointer"
               >
                 {chipInner}
               </button>
             ) : (
-              <span title={crumb.label}>{chipInner}</span>
+              <span title={crumb.label} className="min-w-0">
+                {chipInner}
+              </span>
             )}
             {!isLast && (
               <span
-                className="material-symbols-outlined text-[14px] leading-none text-gp-ink-muted/60 dark:text-gp-ink-soft/60"
+                className="material-symbols-outlined shrink-0 text-[14px] leading-none text-gp-ink-muted/60 dark:text-gp-ink-soft/60"
                 aria-hidden="true"
               >
                 chevron_right
