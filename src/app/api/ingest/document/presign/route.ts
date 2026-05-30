@@ -44,6 +44,17 @@ function badRequest(message: string, reason?: string) {
   })
 }
 
+function storageUnavailable() {
+  return Response.json(
+    {
+      error:
+        'Document uploads are temporarily unavailable. Please try again later.',
+      reason: 'storage_unavailable',
+    },
+    { status: 503 }
+  )
+}
+
 function resolveBlobStore() {
   if (process.env.INGEST_BLOB_BACKEND === 'memory') {
     return createMemoryBlobStore()
@@ -149,12 +160,21 @@ export async function POST(req: Request) {
   const documentId = `document_${randomUUID()}`
   const blobKey = `documents/${documentId}/${sanitizeFilename(filename)}`
 
-  const store = resolveBlobStore()
-  const uploadUrl = await store.presignPut({
-    key: blobKey,
-    contentType: mimeType,
-    ttlSeconds: PRESIGN_TTL_SECONDS,
-  })
+  // The presign mint depends on blob-storage configuration (S3 bucket /
+  // region / credentials). A missing or malformed config throws here — surface
+  // it as a clean 503 rather than leaking a raw 500 with the internal error.
+  let uploadUrl: string
+  try {
+    const store = resolveBlobStore()
+    uploadUrl = await store.presignPut({
+      key: blobKey,
+      contentType: mimeType,
+      ttlSeconds: PRESIGN_TTL_SECONDS,
+    })
+  } catch (err) {
+    console.error('[ingest/presign] failed to mint upload URL:', err)
+    return storageUnavailable()
+  }
 
   return Response.json({
     documentId,
