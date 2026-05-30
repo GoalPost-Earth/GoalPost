@@ -12,11 +12,20 @@
  *       - `name` is mirrored to `content` on pulses (dev's pulse type
  *         requires `content`; this is a 1:1 rename, not new data).
  *       - Each migrated User gets a MeSpace (auth requirement; one per
- *         Person invariant). MeSpaces are not used for pulse anchoring.
- *       - Each creator (any Person who authored a pulse via prod CREATED_BY)
- *         gets a WeSpace containing one FieldContext, and the pulses they
- *         authored are connected via HAS_PULSE. This is the user's
- *         directive: pulses live in WeSpaces grouped by who created them.
+ *         Person invariant), now with a FieldContext for pulse anchoring.
+ *       - Each prod Community becomes a WeSpace (one per Community),
+ *         owned by the community's creator and with its members wired in.
+ *       - Pulse placement follows the user's directive:
+ *           · A pulse created by a Person that does NOT belong to a
+ *             community is placed in that creator's MeSpace.
+ *           · A pulse created by a Person that DOES belong to a community
+ *             is placed in that community's WeSpace; its provenance to the
+ *             person is preserved by the migrated CREATED_BY edge.
+ *           · "Belongs to a community" = a Community points at the pulse via
+ *             EMBRACES / MOTIVATED_BY / PROVIDES / HAS_ACCESS_TO in prod.
+ *           · Pulses with no creator and no community (orphans) are placed
+ *             in a single system fallback WeSpace ("Migrated (unattributed)")
+ *             so they remain visible in the app.
  *
  * Behavior:
  *   - Wipes dev entirely, applies the schema (idempotent), then re-fills from
@@ -99,6 +108,21 @@ const PULSE_LABEL_MAP: Record<string, string[]> = {
   Goal: ['FieldPulse', 'GoalPulse', 'Goal'],
   Resource: ['FieldPulse', 'ResourcePulse', 'Resource'],
 }
+
+// A prod pulse "belongs to a community" when a Community points at it via one
+// of these relationship types (verified against live prod data):
+//   Community -[:EMBRACES]->      CoreValue
+//   Community -[:MOTIVATED_BY]->  Goal
+//   Community -[:PROVIDES]->      Resource
+//   Community -[:HAS_ACCESS_TO]-> Resource
+// These edges are migrated 1:1 in Phase 4, so Phase 5 detects community
+// membership directly in dev rather than re-reading prod.
+const COMMUNITY_PULSE_RELS = [
+  'EMBRACES',
+  'MOTIVATED_BY',
+  'PROVIDES',
+  'HAS_ACCESS_TO',
+]
 
 // For Phase 4: when reading a prod edge whose endpoints have labels like
 // [Person, Member, User] or [CoreValue], we need to know what labels those
@@ -254,6 +278,8 @@ async function phase2_applySchema() {
        FOR (n:Space) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT mespace_owner_unique IF NOT EXISTS
        FOR (n:MeSpace) REQUIRE n.ownerId IS UNIQUE`,
+      `CREATE CONSTRAINT space_membership_id IF NOT EXISTS
+       FOR (n:SpaceMembership) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT context_id IF NOT EXISTS
        FOR (n:FieldContext) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT pulse_id IF NOT EXISTS
@@ -513,13 +539,23 @@ async function phase4_migrateRelationships(): Promise<Record<string, number>> {
 /**
  * Phase 5: Build dev structural scaffolding.
  *
- *   - One MeSpace per :User (required for auth + the one-per-Person invariant).
- *   - One WeSpace per creator (any Person who has at least one pulse pointing
- *     at them via CREATED_BY). The user's directive: pulses get placed in
- *     WeSpaces grouped by who created them in prod.
- *   - One FieldContext per WeSpace, with HAS_PULSE edges to every pulse that
- *     creator authored. The creator is OWNed on the WeSpace and also added as
- *     a HAS_MEMBER (matching the dev schema's direct membership edge).
+ * Pulse placement (user directive):
+ *   - A pulse created by a Person that does NOT belong to a community →
+ *     anchored in that creator's MeSpace.
+ *   - A pulse that belongs to a community → anchored in that community's
+ *     WeSpace. Its CREATED_BY edge (migrated in Phase 4) preserves the link
+ *     back to the authoring Person.
+ *   - Orphan pulses (no creator and no community) → anchored in a single
+ *     system fallback WeSpace so they stay visible in the app.
+ *
+ * Structures built:
+ *   - One MeSpace per :User (auth + one-per-Person invariant), each with a
+ *     FieldContext to anchor the user's non-community pulses.
+ *   - One WeSpace per Community (id `wespace_<communityId>`), owned by the
+ *     community's creator, with members wired via the canonical
+ *     Space -[:HAS_MEMBER]-> SpaceMembership -[:IS_MEMBER]-> Person pattern,
+ *     and a FieldContext anchoring the community's pulses.
+ *   - One fallback WeSpace (`wespace_migrated_unattributed`) for orphans.
  */
 async function phase5_buildDevStructure(): Promise<{
   meSpaces: number
@@ -529,8 +565,9 @@ async function phase5_buildDevStructure(): Promise<{
 }> {
   console.log('━━━ Phase 5: Build dev Space/Context scaffolding ━━━')
   const session = devDriver.session()
+  const rels = COMMUNITY_PULSE_RELS
   try {
-    // MeSpace per :User (auth requirement; not used for pulse anchoring).
+    // 5a. MeSpace per :User (auth requirement + one-per-Person invariant).
     const ms = await session.run(
       `MATCH (u:User)
        WHERE NOT (u)-[:OWNS]->(:MeSpace)
@@ -547,60 +584,210 @@ async function phase5_buildDevStructure(): Promise<{
     const meSpaces = toInt(ms.records[0].get('c'))
     console.log(`   ✓ MeSpaces created: ${meSpaces}`)
 
-    // WeSpace per creator (any Person who authored at least one pulse). The
-    // creator is :OWNS the space and is wired as its sole member via the
-    // canonical Space -[:HAS_MEMBER]-> SpaceMembership -[:IS_MEMBER]-> Person
-    // pattern (see kb/05-data-entities.md).
-    const ws = await session.run(
-      `MATCH (p:Person)<-[:CREATED_BY]-(:FieldPulse)
-       WITH DISTINCT p
-       WHERE NOT (p)-[:OWNS]->(:WeSpace {creatorOriginId: p.id})
-       CREATE (ws:Space:WeSpace {
-         id: 'wespace_' + p.id,
-         name: coalesce(p.firstName, p.email, p.id) + "'s Migrated Content",
-         creatorOriginId: p.id,
-         visibility: 'PRIVATE',
+    // 5b. FieldContext per MeSpace (anchors the owner's non-community pulses).
+    const msCtx = await session.run(
+      `MATCH (u:User)-[:OWNS]->(ms:MeSpace)
+       WHERE NOT (ms)-[:HAS_CONTEXT]->(:FieldContext)
+       CREATE (ctx:FieldContext {
+         id: 'context_mespace_' + u.id,
+         title: 'My migrated content',
          createdAt: datetime()
        })
-       CREATE (p)-[:OWNS]->(ws)
+       CREATE (ms)-[:HAS_CONTEXT]->(ctx)
+       RETURN count(ctx) AS c`
+    )
+    let contexts = toInt(msCtx.records[0].get('c'))
+    console.log(`   ✓ MeSpace FieldContexts created: ${contexts}`)
+
+    // 5c. WeSpace per Community (id `wespace_<communityId>`), owned by the
+    // community's creator. head(collect(...)) collapses any (rare) duplicate
+    // CREATED_BY so we never try to create the same WeSpace id twice.
+    const ws = await session.run(
+      `MATCH (c:Community)
+       WHERE NOT EXISTS { MATCH (:WeSpace {id: 'wespace_' + c.id}) }
+       OPTIONAL MATCH (c)-[:CREATED_BY]->(cr:Person)
+       WITH c, head(collect(cr)) AS creator
+       CREATE (ws:Space:WeSpace {
+         id: 'wespace_' + c.id,
+         name: coalesce(c.name, 'Community ' + c.id),
+         communityOriginId: c.id,
+         creatorOriginId: creator.id,
+         visibility: 'SHARED',
+         createdAt: datetime()
+       })
+       FOREACH (_ IN CASE WHEN creator IS NULL THEN [] ELSE [1] END |
+         CREATE (creator)-[:OWNS]->(ws)
+       )
+       RETURN count(ws) AS c`
+    )
+    let weSpaces = toInt(ws.records[0].get('c'))
+    console.log(`   ✓ WeSpaces created (one per community): ${weSpaces}`)
+
+    // 5d. Community WeSpace memberships. The owner (the single creator chosen
+    // in 5c, recorded as creatorOriginId) joins first as ADMIN — deriving it
+    // from creatorOriginId keeps admin selection identical to ownership even if
+    // a community had co-creators. Then every BELONGS_TO / MEMBER_OF person
+    // joins as MEMBER, skipping anyone already wired (e.g. the owner).
+    const adminMembers = await session.run(
+      `MATCH (ws:WeSpace)
+       WHERE ws.creatorOriginId IS NOT NULL AND ws.communityOriginId IS NOT NULL
+       MATCH (p:Person {id: ws.creatorOriginId})
+       WHERE NOT EXISTS {
+         MATCH (ws)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(p)
+       }
        CREATE (sm:SpaceMembership {
-         id: 'sm_migrated_' + p.id,
+         id: 'membership_' + p.id + '_' + ws.communityOriginId,
          role: 'ADMIN',
          addedAt: datetime()
        })
        CREATE (ws)-[:HAS_MEMBER]->(sm)
        CREATE (sm)-[:IS_MEMBER]->(p)
-       RETURN count(ws) AS c`
+       RETURN count(sm) AS c`
     )
-    const weSpaces = toInt(ws.records[0].get('c'))
-    console.log(`   ✓ WeSpaces created (one per creator): ${weSpaces}`)
+    // WITH DISTINCT collapses a Person who has BOTH BELONGS_TO and MEMBER_OF to
+    // the same community into a single row — otherwise the two edges stream two
+    // rows and (with no SpaceMembership.id constraint historically) create two
+    // duplicate-id memberships. This case is real in prod data.
+    const members = await session.run(
+      `MATCH (c:Community)
+       MATCH (ws:WeSpace {id: 'wespace_' + c.id})
+       MATCH (p:Person)-[:BELONGS_TO|MEMBER_OF]->(c)
+       WITH DISTINCT c, ws, p
+       WHERE NOT EXISTS {
+         MATCH (ws)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(p)
+       }
+       CREATE (sm:SpaceMembership {
+         id: 'membership_' + p.id + '_' + c.id,
+         role: 'MEMBER',
+         addedAt: datetime()
+       })
+       CREATE (ws)-[:HAS_MEMBER]->(sm)
+       CREATE (sm)-[:IS_MEMBER]->(p)
+       RETURN count(sm) AS c`
+    )
+    console.log(
+      `   ✓ Community memberships created: ${toInt(
+        adminMembers.records[0].get('c')
+      )} admin, ${toInt(members.records[0].get('c'))} member`
+    )
 
-    // FieldContext per WeSpace.
-    const fc = await session.run(
-      `MATCH (p:Person)-[:OWNS]->(ws:WeSpace {creatorOriginId: p.id})
+    // 5e. FieldContext per community WeSpace.
+    const wsCtx = await session.run(
+      `MATCH (c:Community)
+       MATCH (ws:WeSpace {id: 'wespace_' + c.id})
        WHERE NOT (ws)-[:HAS_CONTEXT]->(:FieldContext)
        CREATE (ctx:FieldContext {
-         id: 'context_migrated_' + p.id,
-         title: 'Migrated content',
+         id: 'context_' + c.id + '_field',
+         title: coalesce(c.name, 'Community') + ' Field',
          createdAt: datetime()
        })
        CREATE (ws)-[:HAS_CONTEXT]->(ctx)
        RETURN count(ctx) AS c`
     )
-    const contexts = toInt(fc.records[0].get('c'))
-    console.log(`   ✓ FieldContexts created: ${contexts}`)
+    contexts += toInt(wsCtx.records[0].get('c'))
+    console.log(`   ✓ Community FieldContexts created: ${toInt(wsCtx.records[0].get('c'))}`)
 
-    // HAS_PULSE: wire each WeSpace's FieldContext to the pulses its creator
-    // authored.
-    const hp = await session.run(
-      `MATCH (p:Person)-[:OWNS]->(ws:WeSpace {creatorOriginId: p.id})-[:HAS_CONTEXT]->(ctx:FieldContext)
-       MATCH (pulse:FieldPulse)-[:CREATED_BY]->(p)
-       WHERE NOT (ctx)-[:HAS_PULSE]->(pulse)
-       CREATE (ctx)-[:HAS_PULSE]->(pulse)
+    // 5f. HAS_PULSE: community pulses → their community's FieldContext. Covers
+    // pulses with and without a creator, and dual-community pulses (anchored
+    // in both communities' contexts).
+    // MERGE (not CREATE): a pulse can be tied to one community by more than one
+    // rel type (e.g. Resource via PROVIDES and HAS_ACCESS_TO), which streams
+    // duplicate (ctx, pulse) rows. MERGE collapses them into one edge.
+    const hpCommunity = await session.run(
+      `MATCH (c:Community)-[r]->(pulse:FieldPulse)
+       WHERE type(r) IN $rels
+       MATCH (ws:WeSpace {id: 'wespace_' + c.id})-[:HAS_CONTEXT]->(ctx:FieldContext)
+       WITH DISTINCT ctx, pulse
+       MERGE (ctx)-[:HAS_PULSE]->(pulse)
+       RETURN count(*) AS c`,
+      { rels }
+    )
+    let haspulse = toInt(hpCommunity.records[0].get('c'))
+    console.log(`   ✓ HAS_PULSE (community pulses): ${haspulse}`)
+
+    // 5g. HAS_PULSE: non-community pulses created by a user → that creator's
+    // MeSpace FieldContext. A pulse with multiple creators lands in each
+    // creator's MeSpace.
+    const hpMeSpace = await session.run(
+      `MATCH (pulse:FieldPulse)-[:CREATED_BY]->(p:Person)-[:OWNS]->(:MeSpace)-[:HAS_CONTEXT]->(ctx:FieldContext)
+       WHERE NOT EXISTS {
+         MATCH (cc:Community)-[r]->(pulse) WHERE type(r) IN $rels
+       }
+       WITH DISTINCT ctx, pulse
+       MERGE (ctx)-[:HAS_PULSE]->(pulse)
+       RETURN count(*) AS c`,
+      { rels }
+    )
+    const hpMe = toInt(hpMeSpace.records[0].get('c'))
+    haspulse += hpMe
+    console.log(`   ✓ HAS_PULSE (MeSpace pulses): ${hpMe}`)
+
+    // 5h. Fallback WeSpace for orphans (no creator-with-MeSpace, no community).
+    // Owned by a deterministic first :User so the space renders in the app.
+    const fb = await session.run(
+      `MATCH (u:User)
+       WITH u ORDER BY u.id LIMIT 1
+       WHERE NOT EXISTS { MATCH (:WeSpace {id: 'wespace_migrated_unattributed'}) }
+       CREATE (ws:Space:WeSpace {
+         id: 'wespace_migrated_unattributed',
+         name: 'Migrated (unattributed)',
+         visibility: 'SHARED',
+         createdAt: datetime()
+       })
+       CREATE (u)-[:OWNS]->(ws)
+       CREATE (sm:SpaceMembership {
+         id: 'membership_' + u.id + '_migrated_unattributed',
+         role: 'ADMIN',
+         addedAt: datetime()
+       })
+       CREATE (ws)-[:HAS_MEMBER]->(sm)
+       CREATE (sm)-[:IS_MEMBER]->(u)
+       CREATE (ctx:FieldContext {
+         id: 'context_migrated_unattributed',
+         title: 'Unattributed migrated content',
+         createdAt: datetime()
+       })
+       CREATE (ws)-[:HAS_CONTEXT]->(ctx)
+       RETURN count(ws) AS c`
+    )
+    const fallbackCreated = toInt(fb.records[0].get('c'))
+    weSpaces += fallbackCreated
+    contexts += fallbackCreated
+    if (fallbackCreated > 0) {
+      console.log(`   ✓ Fallback WeSpace created for orphans`)
+    }
+
+    // Anchor every still-unanchored pulse (the 42 true orphans + any pulse
+    // whose only creator has no MeSpace) into the fallback context.
+    const hpOrphan = await session.run(
+      `MATCH (ctx:FieldContext {id: 'context_migrated_unattributed'})
+       MATCH (pulse:FieldPulse)
+       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_PULSE]->(pulse) }
+       MERGE (ctx)-[:HAS_PULSE]->(pulse)
        RETURN count(*) AS c`
     )
-    const haspulse = toInt(hp.records[0].get('c'))
-    console.log(`   ✓ HAS_PULSE edges created: ${haspulse}`)
+    const hpOrphans = toInt(hpOrphan.records[0].get('c'))
+    haspulse += hpOrphans
+    console.log(`   ✓ HAS_PULSE (orphan pulses → fallback): ${hpOrphans}`)
+
+    // Invariant: after fallback anchoring, NO pulse may be left unanchored.
+    // The only way to reach here with stragglers is a degenerate prod with no
+    // :User (so the fallback space was never created). Fail loudly rather than
+    // let pulses silently disappear from the app — the migration's contract is
+    // "no data loss".
+    const unanchored = await session.run(
+      `MATCH (pulse:FieldPulse)
+       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_PULSE]->(pulse) }
+       RETURN count(pulse) AS c`
+    )
+    const stragglers = toInt(unanchored.records[0].get('c'))
+    if (stragglers > 0) {
+      throw new Error(
+        `Phase 5 left ${stragglers} FieldPulse(s) unanchored (no HAS_PULSE). ` +
+          `The fallback WeSpace requires at least one :User to exist. Aborting ` +
+          `to avoid silently dropping pulses.`
+      )
+    }
 
     console.log('✅ Dev structure built\n')
     return { meSpaces, weSpaces, contexts, haspulse }

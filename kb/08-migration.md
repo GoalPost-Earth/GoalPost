@@ -113,24 +113,53 @@ on the next run. Edge properties are preserved.
 ### Structural additions in dev
 
 The new ontology requires anchor structures that don't exist in prod.
-The script creates them deterministically from prod data:
+Phase 5 creates them deterministically from prod data, following the
+**pulse-placement rule**:
+
+> A pulse created by a Person that does **not** belong to a community
+> lives in that creator's **MeSpace**. A pulse that **belongs to a
+> community** lives in that community's **WeSpace**; the link back to the
+> author is preserved by the migrated `CREATED_BY` edge.
+
+"Belongs to a community" means a `Community` points at the pulse in prod
+via one of `EMBRACES`, `MOTIVATED_BY`, `PROVIDES`, or `HAS_ACCESS_TO`
+(`COMMUNITY_PULSE_RELS` in the script). These edges migrate 1:1 in Phase
+4, so Phase 5 detects community membership directly in dev.
+
+The structures, in order:
 
 1. **MeSpace per `:User`** (`id = 'mespace_' + person.id`), with
    `ownerId = person.id`. Owned by the User via `:OWNS`. Required by the
    `mespace_owner_unique` constraint and the one-MeSpace-per-Person
    invariant (see `kb/05-data-entities.md`).
-2. **WeSpace per pulse-creator** (`id = 'wespace_' + person.id`,
-   `creatorOriginId = person.id`). One WeSpace per Person who authored
-   at least one pulse in prod. Owned by the creator and `:HAS_MEMBER`
-   pointing at them. **Per user directive: pulses live in WeSpaces
-   grouped by who created them.**
-3. **FieldContext per WeSpace** (`id = 'context_migrated_' + person.id`),
-   titled "Migrated content".
-4. **`HAS_PULSE` edges** from each FieldContext to every pulse the
-   creator authored (via the prod `CREATED_BY` relationship).
+2. **FieldContext per MeSpace** (`id = 'context_mespace_' + person.id`),
+   titled "My migrated content". Anchors the owner's non-community pulses.
+3. **WeSpace per `Community`** (`id = 'wespace_' + community.id`,
+   `communityOriginId = community.id`, `creatorOriginId = creator.id`),
+   `visibility: 'SHARED'`. Owned by the community's creator
+   (`Community -[:CREATED_BY]-> Person`). The creator joins as an `ADMIN`
+   `SpaceMembership`; every `BELONGS_TO` / `MEMBER_OF` person joins as a
+   `MEMBER` (membership id `membership_<personId>_<communityId>`).
+4. **FieldContext per community WeSpace**
+   (`id = 'context_' + community.id + '_field'`), titled "<Community> Field".
+5. **`HAS_PULSE` edges**:
+   - community pulses → their community's FieldContext (a pulse in two
+     communities is anchored in both);
+   - non-community pulses created by a user → that creator's MeSpace
+     FieldContext (a pulse with multiple creators lands in each).
+6. **Fallback WeSpace** (`id = 'wespace_migrated_unattributed'`,
+   "Migrated (unattributed)") owned by a deterministic first `:User`.
+   Every pulse still unanchored after the steps above (true orphans with
+   no creator and no community, plus any pulse whose only creator has no
+   MeSpace) is wired into its FieldContext so nothing disappears from the
+   app.
 
 The MeSpace is required for auth even when the user has no pulses
 (otherwise they can't log in cleanly).
+
+Current prod distribution (sanity check for the parity of Phase 5):
+~104 pulses → creators' MeSpaces, ~18 community pulses → 2 community
+WeSpaces, ~42 orphans → the fallback WeSpace.
 
 ## Known gotchas
 
