@@ -1252,7 +1252,7 @@ export default function FieldContextDetailsPage() {
             <button
               type="button"
               onClick={() => router.push(spaceBackHref)}
-              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gp-ink-muted hover:text-gp-ink-strong transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">
                 arrow_back
@@ -1314,15 +1314,15 @@ export default function FieldContextDetailsPage() {
                 {spaceLabel}
                 {space?.name ? ` · ${space.name}` : ''}
               </span>
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gp-ink-strong leading-tight">
                 {context.title || 'Untitled field'}
               </h1>
               {context.emergentName && (
-                <p className="text-sm sm:text-base italic text-slate-600 dark:text-white/65 max-w-2xl mx-auto">
+                <p className="text-sm sm:text-base italic text-gp-ink-muted max-w-2xl mx-auto">
                   &quot;{context.emergentName}&quot;
                 </p>
               )}
-              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-gp-ink-muted">
                 Created {createdLabel}
               </p>
             </div>
@@ -1610,7 +1610,7 @@ const TopBarPill: FC<{
         'inline-flex items-center justify-center gap-1.5 h-9 px-3 md:px-3.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent',
         isDanger
           ? 'bg-red-500/10 dark:bg-red-500/15 border-red-400/30 dark:border-red-400/30 text-red-600 dark:text-red-300 hover:bg-red-500/20 dark:hover:bg-red-500/25 focus-visible:ring-red-400/60'
-          : 'bg-white/60 dark:bg-white/5 border-white/50 dark:border-white/15 text-slate-700 dark:text-white/75 hover:bg-white/80 dark:hover:bg-white/10 focus-visible:ring-gp-primary/60'
+          : 'bg-white/60 dark:bg-white/5 border-white/50 dark:border-white/15 text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 focus-visible:ring-gp-primary/60'
       )}
     >
       <span className="material-symbols-outlined text-[16px]">{icon}</span>
@@ -1645,10 +1645,10 @@ const Stat: FC<{
       <span className="material-symbols-outlined text-[15px]">{icon}</span>
     </span>
     <div className="min-w-0">
-      <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tabular-nums leading-none">
+      <p className="text-base sm:text-lg font-bold text-gp-ink-strong tabular-nums leading-none">
         {value}
       </p>
-      <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-slate-500 dark:text-white/55 truncate">
+      <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-gp-ink-muted truncate">
         {label}
       </p>
     </div>
@@ -1744,12 +1744,12 @@ const FieldContextError: FC<{
           </span>
         </div>
         <div className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          <h2 className="text-base font-bold text-gp-ink-strong">
             {hasError
               ? "We couldn't load this field context"
               : 'This field context is no longer available'}
           </h2>
-          <p className="text-sm text-slate-500 dark:text-white/55">
+          <p className="text-sm text-gp-ink-muted">
             {hasError
               ? 'Something went wrong while fetching the data. The details below may help diagnose the cause.'
               : 'It may have been deleted, or you no longer have access.'}
@@ -1776,7 +1776,7 @@ const FieldContextError: FC<{
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/15 text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-white/60 dark:hover:bg-white/20 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-full bg-white/40 dark:bg-white/10 border border-white/40 dark:border-white/15 text-xs font-semibold text-gp-ink-strong hover:bg-white/60 dark:hover:bg-white/20 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px]">
               arrow_back
