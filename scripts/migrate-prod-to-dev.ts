@@ -32,6 +32,10 @@
  *   - Wipes dev entirely, applies the schema (idempotent), then re-fills from
  *     prod. Designed to be re-run as many times as needed.
  *   - Reads from prod are wide and read-only.
+ *   - After the structural build, forces a known dev password for the account
+ *     named by DEV_LOGIN_EMAIL/DEV_LOGIN_PASSWORD (.env.local) so the team can
+ *     always log into the refreshed dev DB. DEV-ONLY — guarded by the
+ *     DEV_URI === PROD_URI refusal above; skipped if those vars are unset.
  *
  * Mapping (see kb/05-data-entities.md):
  *   - Person                 → Person:LifeSensor:RelationalEntity
@@ -48,6 +52,7 @@
  *     TestSource             → preserved as-is
  */
 
+import bcrypt from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
 import neo4j, { Driver, Integer } from 'neo4j-driver'
@@ -88,6 +93,25 @@ const DEV_PASSWORD = devEnv.NEO4J_PASSWORD
 const PROD_URI = prodEnv.NEO4J_URI
 const PROD_USERNAME = prodEnv.NEO4J_USERNAME
 const PROD_PASSWORD = prodEnv.NEO4J_PASSWORD
+
+// Server-side password pepper, read from the DEV env so the hash we write
+// matches what the dev app's login route verifies against (it hashes
+// `password + PEPPER` with bcrypt). Must mirror the dev app's PEPPER value.
+const PEPPER = devEnv.PEPPER || ''
+
+// After migration, force a known password for the primary dev account so the
+// team can always log into the freshly-migrated dev DB. DEV-ONLY: the whole
+// migration refuses to run against prod (URI-equality guard above), so this can
+// never reach a production account.
+//
+// Both the target email and the password are read from the gitignored
+// `.env.local` (NOT hardcoded here) so a weak dev password and a personal email
+// never enter git history. If either is absent, Phase 5b skips with a notice.
+// For the current dev DB these are set to jaedagy@gmail.com / "password".
+const DEV_LOGIN_RESET = {
+  email: devEnv.DEV_LOGIN_EMAIL || '',
+  password: devEnv.DEV_LOGIN_PASSWORD || '',
+}
 
 // Safety: refuse to run if prod and dev URIs are the same. The wipe phase
 // would otherwise destroy production.
@@ -840,6 +864,53 @@ async function phase5_buildDevStructure(): Promise<{
 }
 
 /**
+ * Phase 5b: Set a known dev login password for the primary account.
+ *
+ * Prod auth stores `Person.password` as a bcrypt hash of `password + PEPPER`
+ * (cost 12 — see src/app/api/auth/utils.ts `hashPassword`). We mirror that
+ * exactly so the dev login route verifies the hash. DEV-ONLY and safe: the
+ * migration aborts when DEV_URI === PROD_URI, so a production account can never
+ * be rewritten here. If PEPPER is absent from .env.local the resulting hash
+ * won't match the dev app, so we warn loudly rather than write a dud silently.
+ */
+async function phase5b_setDevLoginPassword() {
+  console.log('━━━ Phase 5b: Set dev login password ━━━')
+  const { email, password } = DEV_LOGIN_RESET
+  if (!email || !password) {
+    console.log(
+      '   ⏭️  DEV_LOGIN_EMAIL / DEV_LOGIN_PASSWORD not set in .env.local — skipping.'
+    )
+    console.log('✅ Dev login password step skipped\n')
+    return
+  }
+  if (!PEPPER) {
+    console.log(
+      '   ⚠️  PEPPER missing from .env.local — the hash will NOT match the dev app. ' +
+        'Add PEPPER to .env.local and re-run if login fails.'
+    )
+  }
+  const hash = await bcrypt.hash(password + PEPPER, 12)
+  const session = devDriver.session()
+  try {
+    const res = await session.run(
+      `MATCH (u:User {email: $email})
+       SET u.password = $hash
+       RETURN count(u) AS c`,
+      { email, hash }
+    )
+    const c = toInt(res.records[0].get('c'))
+    if (c === 0) {
+      console.log(`   ⚠️  No :User with email ${email} — password not set`)
+    } else {
+      console.log(`   ✓ Password for ${email} set to the dev default`)
+    }
+  } finally {
+    await session.close()
+  }
+  console.log('✅ Dev login password set\n')
+}
+
+/**
  * Phase 6: Validate parity. Compares prod and dev node/relationship counts
  * label-by-label, type-by-type.
  */
@@ -955,6 +1026,7 @@ async function main() {
     const { totals } = await phase3_migrateNodes()
     const relCounts = await phase4_migrateRelationships()
     await phase5_buildDevStructure()
+    await phase5b_setDevLoginPassword()
     const { pass } = await phase6_validate(totals, relCounts)
 
     if (!pass) {

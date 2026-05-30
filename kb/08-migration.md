@@ -56,8 +56,14 @@ The script reads from **two separate env files**:
 
 | File | Used for | Required vars |
 |------|----------|----------------|
-| `.env.local` | DEV Neo4j | `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` |
+| `.env.local` | DEV Neo4j + dev password hash | `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `PEPPER`, `DEV_LOGIN_EMAIL`, `DEV_LOGIN_PASSWORD` |
 | `.env.production` | PROD Neo4j | `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` |
+
+`PEPPER` (in `.env.local`) must match the dev app's `PEPPER` so the Phase 5b
+dev-password reset produces a hash the login route accepts. `DEV_LOGIN_EMAIL`
+and `DEV_LOGIN_PASSWORD` name the account Phase 5b resets (omit them to skip
+the step). All three are dev-only and live solely in the gitignored
+`.env.local`.
 
 Both files use the same variable names; the script parses them
 separately so they don't collide on `process.env`. If only `.env.local`
@@ -167,6 +173,24 @@ The MeSpace is required for auth even when the user has no pulses
 Current prod distribution (sanity check for the parity of Phase 5):
 ~104 pulses → creators' MeSpaces, ~18 community pulses → 2 community
 WeSpaces, ~42 orphans → the fallback WeSpace.
+
+### Phase 5b — known dev login password
+
+After the structural build, the migration forces a known password for one
+dev account so the team can always log into the freshly-migrated dev DB
+without a reset flow. The target account and password come from **`.env.local`**
+(`DEV_LOGIN_EMAIL`, `DEV_LOGIN_PASSWORD`) — currently `jaedagy@gmail.com` /
+`password`. They are deliberately kept out of the committed script so a weak
+dev password and a personal email never enter git history; if either var is
+unset, Phase 5b is skipped.
+
+It writes `Person.password` as a bcrypt hash of `password + PEPPER` (cost 12),
+exactly matching `hashPassword` in `src/app/api/auth/utils.ts`, so the dev
+login route verifies it. This also requires **`PEPPER` in `.env.local`** to
+match the dev app's `PEPPER` — otherwise the hash won't verify and the script
+warns loudly. The step is **dev-only**: the migration aborts when
+`DEV_URI === PROD_URI`, so a production account can never be rewritten. To
+reset a different account, change `DEV_LOGIN_EMAIL`/`DEV_LOGIN_PASSWORD`.
 
 ## Known gotchas
 
