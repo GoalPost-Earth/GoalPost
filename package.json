@@ -39,7 +39,7 @@
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^3.9.1",
     "@langchain/community": "^1.1.0",
-    "@langchain/core": "^1.1.6",
+    "@langchain/core": "^1.1.48",
     "@langchain/openai": "^1.2.0",
     "@napi-rs/canvas": "0.1.80",
     "@neo4j-nvl/base": "^1.0.0",
