@@ -27955,6 +27955,9 @@ export type GetLoggedInUserQuery = {
     traits?: string | null
     photo?: string | null
     fieldsOfCare?: string | null
+    interests?: string | null
+    careManual?: string | null
+    favorites?: string | null
     onboardingCurrentStepIndex?: number | null
     onboardingCompletedSteps?: Array<string> | null
     onboardingIsCompleted?: boolean | null
@@ -36719,6 +36722,9 @@ export const GetLoggedInUserDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'fieldsOfCare' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'favorites' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'onboardingCurrentStepIndex' },

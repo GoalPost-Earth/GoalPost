@@ -15,6 +15,9 @@ export const GET_LOGGED_IN_USER = graphql(`
       traits
       photo
       fieldsOfCare
+      interests
+      careManual
+      favorites
       onboardingCurrentStepIndex
       onboardingCompletedSteps
       onboardingIsCompleted
