@@ -26,6 +26,7 @@ import {
 import { StudioBreadcrumb } from './studio-breadcrumb'
 import { StudioSearchInput } from './studio-search-input'
 import { useStudioCanvas } from './studio-canvas-context'
+import { SettingsDialog } from '@/components/settings/settings-dialog'
 
 const NOOP_SUBSCRIBE = () => () => {}
 const GET_TRUE_SNAPSHOT = () => true
@@ -50,6 +51,7 @@ export const StudioChrome: FC = () => {
   )
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
@@ -206,16 +208,19 @@ export const StudioChrome: FC = () => {
                       </span>
                       <span>Profile</span>
                     </Link>
-                    <Link
-                      href="/protected/settings"
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
-                      onClick={() => setShowUserMenu(false)}
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
+                      onClick={() => {
+                        setShowUserMenu(false)
+                        setShowSettings(true)
+                      }}
                     >
                       <span className="material-symbols-outlined text-lg">
                         settings
                       </span>
                       <span>Settings</span>
-                    </Link>
+                    </button>
                   </div>
                   <div className="border-t border-gp-glass-border pt-1">
                     <button
@@ -237,6 +242,8 @@ export const StudioChrome: FC = () => {
           </div>
         </div>
       </header>
+
+      <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <DialogContent className="sm:max-w-md">

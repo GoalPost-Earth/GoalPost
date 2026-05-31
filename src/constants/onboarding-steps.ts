@@ -73,46 +73,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'settings-access',
     title: 'Access Your Settings',
     description:
-      'Click on your avatar in the top right corner to access your user menu, where you can adjust your preferences and personalize your experience.',
+      'Click on your avatar in the top right corner to open your user menu. From there, Settings lets you adjust your theme, animations, AI assistant mode, and resonance preferences — and Profile lets you view and edit your details.',
     page: '/protected',
     position: 'top',
     selector: 'button[aria-label="User menu"]',
-  },
-  {
-    id: 'settings-appearance',
-    title: 'Appearance Settings',
-    description:
-      'Customize your theme color to match your essence. Choose from default, warm, forest, purple, or emerald colors to personalize your atmosphere.',
-    page: '/protected/settings',
-    position: 'bottom',
-    selector: '[data-tour="settings-appearance"]',
-  },
-  {
-    id: 'settings-animations',
-    title: 'Enable Animations',
-    description:
-      'Toggle fluid UI transitions and field drifts on or off. Animations add fluidity to your interactions while you can disable them for a more static experience.',
-    page: '/protected/settings',
-    position: 'bottom',
-    selector: '[data-tour="settings-animations"]',
-  },
-  {
-    id: 'settings-ai-mode',
-    title: 'Choose Your AI Assistant Mode',
-    description:
-      'Select how you want to interact with the AI: Aiden (conversational), ReAct (structured thinking), or Disabled (no AI assistance). Each mode offers different interaction styles.',
-    page: '/protected/settings',
-    position: 'bottom',
-    selector: '[data-tour="settings-ai-mode"]',
-  },
-  {
-    id: 'settings-resonance',
-    title: 'Resonance Linkage',
-    description:
-      'Enable this to see patterns and connections within your fields. This AI-powered feature discovers semantic relationships across your pulses and shows you related insights.',
-    page: '/protected/settings',
-    position: 'bottom',
-    selector: '[data-tour="settings-resonance"]',
   },
   {
     id: 'complete',

@@ -9,6 +9,7 @@ import {
   type FC,
   type ReactNode,
 } from 'react'
+import { usePathname } from 'next/navigation'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import {
@@ -91,8 +92,24 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     exitFullscreen,
     toggleFloatingChat,
     setFloatingChatOpen,
+    setCanvasView,
   } = useStudioCanvas()
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const pathname = usePathname()
+
+  // Content routes other than the dashboard root (profile, settings, search,
+  // and the space/field detail pages) only ever render through the dashboard
+  // canvas surface. When the user navigates to one, make sure the canvas is
+  // open, un-fullscreened, and showing that content — otherwise the page is
+  // hidden behind a closed canvas or the graph/bloom overlay and the route
+  // appears to do nothing. The dashboard root is excluded so switching to
+  // graph/bloom (which routes here) keeps its selected view.
+  useEffect(() => {
+    if (pathname === '/protected/dashboard') return
+    setCanvasOpen(true)
+    exitFullscreen()
+    setCanvasView('dashboard')
+  }, [pathname, setCanvasOpen, exitFullscreen, setCanvasView])
 
   // Below this breakpoint the studio shows only one surface at a time. The
   // canvas takes priority when open; the user closes it to access chat.
