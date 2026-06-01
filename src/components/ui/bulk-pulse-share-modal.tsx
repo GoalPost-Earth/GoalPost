@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@apollo/client/react'
 import Select, { StylesConfig } from 'react-select'
 import { cn } from '@/lib/utils'
@@ -33,6 +33,12 @@ interface BulkPulseShareModalProps {
   onClose: () => void
   currentContextId: string
   pulses: PulseSummary[]
+  /** Pulse ids to pre-select when the modal opens (e.g. from the Pulses
+   *  section's per-pulse share or multi-select). Applied on the open
+   *  transition only, so it never clobbers selections made inside the modal. */
+  initialSelectedPulseIds?: string[]
+  /** Which tab the modal opens on. Defaults to 'share'. */
+  initialMode?: 'share' | 'move'
   onOperationComplete?: (
     details: BulkPulseOperationDetails
   ) => void | Promise<void>
@@ -130,12 +136,43 @@ export function BulkPulseShareModal({
   onClose,
   currentContextId,
   pulses,
+  initialSelectedPulseIds,
+  initialMode,
   onOperationComplete,
 }: BulkPulseShareModalProps) {
   const [mode, setMode] = useState<'share' | 'move'>('share')
   const [selectedPulses, setSelectedPulses] = useState<PulseOption[]>([])
   const [selectedContexts, setSelectedContexts] = useState<ContextOption[]>([])
   const [feedbackMessage, setFeedbackMessage] = useState('')
+
+  // Apply the caller's pre-selection (and tab) only on the open transition.
+  // Re-renders while open must not reset selections the user makes in the modal
+  // — the `pulses` prop is re-mapped to a new array on every parent render, so
+  // we gate on the rising edge of `isOpen` rather than on prop identity.
+  const wasOpenRef = useRef(false)
+  useEffect(() => {
+    const justOpened = isOpen && !wasOpenRef.current
+    wasOpenRef.current = isOpen
+    if (!justOpened) return
+    setMode(initialMode ?? 'share')
+    // Reset transient state so a prior session's destination contexts / feedback
+    // don't bleed into a fresh open (esp. important for 'move').
+    setSelectedContexts([])
+    setFeedbackMessage('')
+    const ids = new Set(initialSelectedPulseIds ?? [])
+    setSelectedPulses(
+      ids.size
+        ? pulses
+            .filter((pulse) => ids.has(pulse.id))
+            .map((pulse) => ({
+              value: pulse.id,
+              label:
+                pulse.title?.trim() || pulse.content?.trim() || 'Untitled Pulse',
+              type: pulse.type,
+            }))
+        : []
+    )
+  }, [isOpen, initialMode, initialSelectedPulseIds, pulses])
 
   const {
     sharePulseWithContext,

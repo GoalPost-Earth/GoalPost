@@ -115,6 +115,10 @@ export default function FieldContextDetailsPage() {
     string | null
   >(null)
   const [isBulkShareModalOpen, setIsBulkShareModalOpen] = useState(false)
+  const [bulkInitialPulseIds, setBulkInitialPulseIds] = useState<string[]>([])
+  const [bulkInitialMode, setBulkInitialMode] = useState<'share' | 'move'>(
+    'share'
+  )
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false)
   const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
   const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
@@ -1372,11 +1376,11 @@ export default function FieldContextDetailsPage() {
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
             onAddPerson={() => setIsAddPersonModalOpen(true)}
             onAddResonance={() => setIsResonanceLinkModalOpen(true)}
-            onSharePulses={
-              pulses.length > 0
-                ? () => setIsBulkShareModalOpen(true)
-                : undefined
-            }
+            onOpenShare={(pulseIds, mode) => {
+              setBulkInitialPulseIds(pulseIds)
+              setBulkInitialMode(mode)
+              setIsBulkShareModalOpen(true)
+            }}
             onUploadDocument={
               canEditContent
                 ? () => setIsUploadDocumentModalOpen(true)
@@ -1546,6 +1550,8 @@ export default function FieldContextDetailsPage() {
           setIsBulkShareModalOpen(false)
         }}
         currentContextId={contextId}
+        initialSelectedPulseIds={bulkInitialPulseIds}
+        initialMode={bulkInitialMode}
         pulses={pulses.map((pulse) => ({
           id: pulse.id,
           title: pulse.title || '',
