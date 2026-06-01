@@ -220,3 +220,25 @@ export function setAuthCookies(
     path: '/',
   })
 }
+
+/**
+ * Expire both auth cookies on a response. Used when a session is
+ * definitively over (refresh failed) so the browser stops re-sending an
+ * access token that can never verify — the dominant cause of the 401
+ * request storm a wedged client would otherwise generate. These are
+ * HttpOnly, so client-side `document.cookie` clearing cannot reach them;
+ * the server must expire them here. Attributes mirror `setAuthCookies` so
+ * the browser matches and removes the right cookies. `/api/auth/logout`
+ * also delegates here so cookie attributes have a single source of truth.
+ */
+export function clearAuthCookies(response: NextResponse): void {
+  for (const name of ['accessToken', 'refreshToken'] as const) {
+    response.cookies.set(name, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    })
+  }
+}

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSession, initializeDB } from '../neo4j'
 import { parseRequestBody } from '../utils'
+import { clearAuthCookies } from '../refresh'
 
 const logoutSchema = z.object({
   email: z.string().min(1, 'Email required'),
@@ -50,18 +51,10 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     )
 
-    // Clear auth cookies
-    response.cookies.set('accessToken', '', {
-      httpOnly: true,
-      maxAge: 0,
-      path: '/',
-    })
-
-    response.cookies.set('refreshToken', '', {
-      httpOnly: true,
-      maxAge: 0,
-      path: '/',
-    })
+    // Clear auth cookies (shared helper — single source of truth for the
+    // cookie attributes so logout and the access-token terminal-401 path
+    // expire identical cookies).
+    clearAuthCookies(response)
 
     return response
   } catch (err) {

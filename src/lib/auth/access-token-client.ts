@@ -31,9 +31,19 @@ interface CachedToken {
 }
 
 const CACHE_TTL_MS = 60_000
+// Short negative-cache window. When a fetch resolves to "no token"
+// (unauthenticated / network blip), back-to-back callers return null
+// immediately for this long instead of each re-hitting the endpoint.
+// This is what stops a dead session from snowballing into a request
+// storm: Apollo's RetryLink + simultaneous re-renders would otherwise
+// fire dozens of /api/auth/access-token calls per second while the
+// session-expired redirect is still in flight. Kept short so a genuine
+// transient blip recovers within a couple seconds.
+const NEGATIVE_CACHE_TTL_MS = 3_000
 
 let inflight: Promise<string | null> | null = null
 let cached: CachedToken | null = null
+let denyUntil = 0
 
 /**
  * Dispatched when `/api/auth/access-token` definitively reports the
@@ -45,7 +55,7 @@ let cached: CachedToken | null = null
  *
  * Uses a module-private `EventTarget` rather than `window` so other
  * in-page scripts (including any future XSS) can't dispatch a forged
- * `gp:session-expired` event to force-logout the user from any tab.
+ * `session-expired` event to force-logout the user from any tab.
  */
 const sessionEventBus =
   typeof EventTarget !== 'undefined' ? new EventTarget() : null
@@ -65,9 +75,10 @@ export function onSessionExpired(handler: () => void): () => void {
 async function fetchTokenOnce(): Promise<string | null> {
   try {
     // The access-token endpoint now auto-refreshes when the cookie is
-    // missing or expired, so a single call is enough — no client-side
-    // chaining to /api/auth/refresh-token. A 401 here means the session
-    // is genuinely over (refresh also failed) and we should log out.
+    // missing, expired, OR unverifiable (wrong-signature / malformed), so
+    // a single call is enough — no client-side chaining to
+    // /api/auth/refresh-token. Any 401 here is therefore terminal: the
+    // server already tried to refresh and the session is genuinely over.
     const res = await fetch('/api/auth/access-token', {
       credentials: 'include',
     })
@@ -79,10 +90,13 @@ async function fetchTokenOnce(): Promise<string | null> {
       return null
     }
     if (res.status === 401) {
-      const body = (await res.json().catch(() => ({}))) as { code?: string }
-      if (body.code === 'ERR_UNAUTHENTICATED') {
-        emitSessionExpired()
-      }
+      // Terminal — log out + redirect. Emit on ANY 401 (not just
+      // ERR_UNAUTHENTICATED): the endpoint is authoritative now, so a 401
+      // always means "session over." Emitting unconditionally also closes
+      // the loop that produced the runaway 401 storm — without it, a
+      // non-ERR_UNAUTHENTICATED 401 (e.g. a stale-secret cookie) left the
+      // client spinning forever instead of bouncing to /auth/login.
+      emitSessionExpired()
     }
   } catch {
     // network blip — caller treats null as "unauthenticated for now"
@@ -98,6 +112,7 @@ async function fetchTokenOnce(): Promise<string | null> {
 export async function getAccessToken(): Promise<string | null> {
   const now = Date.now()
   if (cached && cached.expiresAt > now) return cached.token
+  if (now < denyUntil) return null
   if (inflight) return inflight
 
   const promise = fetchTokenOnce()
@@ -106,8 +121,10 @@ export async function getAccessToken(): Promise<string | null> {
     const token = await promise
     if (token) {
       cached = { token, expiresAt: now + CACHE_TTL_MS }
+      denyUntil = 0
     } else {
       cached = null
+      denyUntil = now + NEGATIVE_CACHE_TTL_MS
     }
     return token
   } finally {
@@ -118,6 +135,7 @@ export async function getAccessToken(): Promise<string | null> {
 /** Drop the cached token. Call from login/logout flows. */
 export function invalidateAccessTokenCache(): void {
   cached = null
+  denyUntil = 0
 }
 
 /** Build an `Authorization: Bearer` header (or {} if unauthenticated). */

@@ -124,7 +124,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     document.cookie = 'accessToken=; path=/; max-age=0'
   }
 
-  // The shared access-token helper emits `gp:session-expired` when the
+  // The shared access-token helper emits `session-expired` when the
   // server returns ERR_UNAUTHENTICATED (refresh also failed). Clean up
   // local state and bounce to /auth/login so a logged-in user whose
   // refresh token was revoked / expired doesn't sit watching a stream
