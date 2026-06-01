@@ -8,7 +8,11 @@
       "mcp__atlassian__createJiraIssue",
       "mcp__atlassian__getJiraIssue",
       "Bash(npx tsc *)",
-      "mcp__neo4j-dev__neo4j-read_neo4j_cypher"
+      "mcp__neo4j-dev__neo4j-read_neo4j_cypher",
+      "Bash(pkill -9 -f \"user-data-dir=/Users/jd/.cache/chrome-devtools-mcp/chrome-profile\")",
+      "Bash(rm -f /Users/jd/.cache/chrome-devtools-mcp/chrome-profile/Singleton*)",
+      "Bash(rm -f \"/Users/jd/.cache/chrome-devtools-mcp/chrome-profile/Default/Sessions/\"*)",
+      "Read(//Users/jd/.cache/chrome-devtools-mcp/chrome-profile/**)"
     ]
   },
   "enabledMcpjsonServers": [
