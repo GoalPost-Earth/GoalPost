@@ -117,7 +117,22 @@ Dashboard filtering is handled in queries, not authorization.
 Merged properties from reference schema for backward compatibility.
 """
 type Person implements PersonInterface
-  @node(labels: ["Person"]) {
+  @node(labels: ["Person"])
+  @authorization(
+    # WRITE — a Person may only be updated or deleted by the user it
+    # represents. This closes the IDOR where any authenticated caller could
+    # updatePeople(where: { id_EQ: <victim> }) / deletePeople and overwrite
+    # another person's profile. READ stays open: any authenticated user can
+    # look up a Person (directory lookup, per kb/02-user-roles.md). CREATE is
+    # intentionally not gated — Person nodes are created by the trusted
+    # server-side auth routes via direct Cypher, never this mutation.
+    validate: [
+      {
+        operations: [UPDATE, DELETE]
+        where: { node: { id_EQ: "$jwt.user.id" } }
+      }
+    ]
+  ) {
   id: ID! @id
   isUser: Boolean
     @cypher(
@@ -235,7 +250,20 @@ Multi-label: ["Person", "User"]
 Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
 """
 type User implements PersonInterface
-  @node(labels: ["Person", "User"]) {
+  @node(labels: ["Person", "User"])
+  @authorization(
+    # Same owner-scoping as Person. The User type additionally exposes auth
+    # fields (password / refreshToken are @private), so gating updateUsers /
+    # deleteUsers to the authenticated user is critical — otherwise any token
+    # holder could rewrite another account. Auth routes mutate these via
+    # direct Cypher, not GraphQL, so they are unaffected.
+    validate: [
+      {
+        operations: [UPDATE, DELETE]
+        where: { node: { id_EQ: "$jwt.user.id" } }
+      }
+    ]
+  ) {
   id: ID! @id
   firstName: String!
   lastName: String!

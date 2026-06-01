@@ -3,7 +3,7 @@ import resolvers from '@/lib/graphql/resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
-import { jwtDecode } from 'jwt-decode'
+import { verifyJWT } from '@/app/api/auth/utils'
 import logger from '@/lib/logger'
 import { clientIp } from '@/lib/auth/rate-limit'
 
@@ -51,41 +51,32 @@ export async function initializeApolloServer() {
   const yogaServer = createYoga({
     schema,
     context: async (req) => {
-      // Extract and decode JWT token from Authorization header
+      // Extract and VERIFY the JWT from the Authorization header. We must
+      // verify the signature (not merely decode it) — Neo4jGraphQL trusts a
+      // pre-supplied `jwt` object in context and does not re-verify it, so
+      // every `$jwt.user.id` authorization filter is only as trustworthy as
+      // this step. `verifyJWT` checks the HS256 signature against JWT_SECRET
+      // and throws on a forged/expired token, in which case `jwt` stays null
+      // and the request is treated as unauthenticated.
       const authHeader = req.request.headers.get('authorization')
 
-      console.log(
-        '🔍 [YOGA CONTEXT] Authorization header:',
-        authHeader ? '✓ Present' : '✗ Missing'
-      )
-
       let jwt = null
-      let jwtString = null
 
       if (authHeader) {
         try {
           // Strip "Bearer " prefix if present
-          jwtString = authHeader.startsWith('Bearer ')
+          const jwtString = authHeader.startsWith('Bearer ')
             ? authHeader.substring(7)
             : authHeader
 
-          // Decode to validate and extract claims
-          jwt = jwtDecode(jwtString)
-
-          console.log('✅ [YOGA CONTEXT] JWT decoded successfully:', {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            userId: (jwt as any)?.user?.id,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            email: (jwt as any)?.user?.email,
-          })
+          jwt = verifyJWT(jwtString)
         } catch (error) {
-          console.error(
-            '❌ [YOGA CONTEXT] Invalid JWT token:',
-            error instanceof Error ? error.message : String(error)
-          )
+          // Invalid signature, malformed token, or expiry — log without the
+          // token contents (no PII) and fall through as unauthenticated.
+          logger.warn('[YOGA CONTEXT] JWT verification failed', {
+            error: error instanceof Error ? error.message : String(error),
+          })
         }
-      } else {
-        console.warn('⚠️ [YOGA CONTEXT] No Authorization header provided')
       }
 
       // Best-effort client IP for resolver-level rate limiting (see

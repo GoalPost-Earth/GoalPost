@@ -1,59 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtDecode } from 'jwt-decode'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { initGraph } from '@/modules/graph'
 
 export async function GET(request: NextRequest) {
   try {
-    // Extract JWT token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Missing or invalid authorization header' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    let decoded: Record<string, unknown>
-    try {
-      decoded = jwtDecode(token)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error('JWT decoding error:', e)
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Try to get user ID from standard JWT claims (sub, user_id, id, or user.id)
-    let userId: string | undefined
-
-    // Check standard claims first
-    if (decoded.sub) {
-      userId = decoded.sub as string
-    } else if (decoded.user_id) {
-      userId = decoded.user_id as string
-    } else if (decoded.id) {
-      userId = decoded.id as string
-    } else if (decoded.user && typeof decoded.user === 'object') {
-      // Handle nested user object (e.g., {user: {id: '....'}}
-      const user = decoded.user as Record<string, unknown>
-      userId = (user.id || user.userId || user.sub) as string | undefined
-    }
-
+    // Verify the JWT signature and resolve the caller's own id. Previously this
+    // route only *decoded* the token (no signature check), so a forged token
+    // could read any user's onboarding state. resolveAuthenticatedUserId
+    // verifies via verifyJWT and returns null on any failure.
+    const userId = resolveAuthenticatedUserId(request)
     if (!userId) {
-      console.error(
-        'Token decoded but missing user ID. Available claims:',
-        Object.keys(decoded)
-      )
-      if (decoded.user && typeof decoded.user === 'object') {
-        console.error(
-          'User object keys:',
-          Object.keys(decoded.user as Record<string, unknown>)
-        )
-      }
-      return NextResponse.json(
-        { error: 'Token missing user ID claim' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Query Neo4j for user's onboarding progress
@@ -102,56 +59,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Extract JWT token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Missing or invalid authorization header' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    let decoded: Record<string, unknown>
-    try {
-      decoded = jwtDecode(token)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error('JWT decoding error:', e)
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Try to get user ID from standard JWT claims (sub, user_id, id, or user.id)
-    let userId: string | undefined
-
-    // Check standard claims first
-    if (decoded.sub) {
-      userId = decoded.sub as string
-    } else if (decoded.user_id) {
-      userId = decoded.user_id as string
-    } else if (decoded.id) {
-      userId = decoded.id as string
-    } else if (decoded.user && typeof decoded.user === 'object') {
-      // Handle nested user object (e.g., {user: {id: '....'}})
-      const user = decoded.user as Record<string, unknown>
-      userId = (user.id || user.userId || user.sub) as string | undefined
-    }
-
+    // Verify the JWT signature and resolve the caller's own id (see GET). This
+    // route WRITES onboarding state, so an unverified token here let a forged
+    // `user.id` overwrite any account's onboarding — now closed.
+    const userId = resolveAuthenticatedUserId(request)
     if (!userId) {
-      console.error(
-        'Token decoded but missing user ID. Available claims:',
-        Object.keys(decoded)
-      )
-      if (decoded.user && typeof decoded.user === 'object') {
-        console.error(
-          'User object keys:',
-          Object.keys(decoded.user as Record<string, unknown>)
-        )
-      }
-      return NextResponse.json(
-        { error: 'Token missing user ID claim' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { currentStepIndex, completedSteps, isCompleted, skipped } =

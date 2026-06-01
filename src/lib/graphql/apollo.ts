@@ -3,7 +3,7 @@ import resolvers from './resolvers'
 import { auth, driver as neoDriver } from 'neo4j-driver'
 import { Neo4jGraphQL } from '@neo4j/graphql'
 import { createYoga } from 'graphql-yoga'
-import { jwtDecode } from 'jwt-decode'
+import { verifyJWT } from '@/app/api/auth/utils'
 import logger from '@/lib/logger'
 
 export default async function initializeApolloServer() {
@@ -55,13 +55,17 @@ export default async function initializeApolloServer() {
   const yogaServer = createYoga({
     schema,
     context: async (req) => {
-      // decode JWT token
+      // Verify (not just decode) the JWT signature — see apollo-server.ts for
+      // why this is load-bearing for every $jwt authorization filter.
       const token = req.request.headers.get('authorization')
       let jwt = null
 
       if (token) {
         try {
-          jwt = jwtDecode(token)
+          const jwtString = token.startsWith('Bearer ')
+            ? token.substring(7)
+            : token
+          jwt = verifyJWT(jwtString)
         } catch (error) {
           logger.warn('Invalid JWT token', {
             error: error instanceof Error ? error.message : String(error),
