@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FC } from 'react'
+import { useEffect, useRef, useState, type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
@@ -164,8 +164,45 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     })
   }, [spaceId])
 
+  // Surface query failures instead of swallowing them. The old code
+  // showed "this space is no longer available" for ANY error, which hid
+  // real server failures (e.g. a non-null schema field resolving to null).
+  // Now genuine errors fire a toast and render a distinct error state,
+  // while a clean empty result keeps the "not available" copy. Dedupe on
+  // message so a single failure toasts once, not on every re-render.
+  const lastToastedError = useRef<string | null>(null)
+  useEffect(() => {
+    if (!error) {
+      lastToastedError.current = null
+      return
+    }
+    if (lastToastedError.current === error.message) return
+    lastToastedError.current = error.message
+    toast.error('Couldn’t load this space', { description: error.message })
+  }, [error])
+
   if (loading && !data) return <SpaceDashboardSkeleton />
-  if (error || !space) return <SpaceDashboardError onBack={() => router.push('/protected/dashboard')} />
+  // Only block the whole view when there is genuinely no space to show.
+  // A `cache-and-network` background error while a cached space is present
+  // should NOT yank the user to an error screen — the toast effect above
+  // already informs them the refresh failed.
+  if (!space) {
+    return error ? (
+      <SpaceDashboardError
+        variant="error"
+        message={error.message}
+        onRetry={() => {
+          void refetch().catch(() => {})
+        }}
+        onBack={() => router.push('/protected/dashboard')}
+      />
+    ) : (
+      <SpaceDashboardError
+        variant="notFound"
+        onBack={() => router.push('/protected/dashboard')}
+      />
+    )
+  }
 
   const isMe = spaceTypeLabel === 'MeSpace'
   const owner = ('owner' in space ? space.owner : undefined)?.[0]
@@ -615,21 +652,64 @@ const SpaceDashboardSkeleton: FC = () => (
   </div>
 )
 
-const SpaceDashboardError: FC<{ onBack: () => void }> = ({ onBack }) => (
-  <div className="relative flex h-full w-full items-center justify-center">
-    <div className="text-center space-y-4">
-      <p className="text-sm text-slate-500 dark:text-white/55">
-        This space is no longer available — it may have been deleted or you
-        lost access.
-      </p>
-      <button
-        type="button"
-        onClick={onBack}
-        className="inline-flex items-center gap-2 px-4 h-9 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-white/20 transition-colors cursor-pointer"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Back to spaces
-      </button>
+const SpaceDashboardError: FC<{
+  variant: 'error' | 'notFound'
+  message?: string
+  onBack: () => void
+  onRetry?: () => void
+}> = ({ variant, message, onBack, onRetry }) => {
+  const isError = variant === 'error'
+  return (
+    <div className="relative flex h-full w-full items-center justify-center p-6">
+      <div className="max-w-md w-full text-center space-y-4">
+        <span
+          className={cn(
+            'material-symbols-outlined text-5xl',
+            isError ? 'text-destructive' : 'text-slate-400 dark:text-white/30'
+          )}
+        >
+          {isError ? 'error' : 'search_off'}
+        </span>
+        <div className="space-y-1.5">
+          <p className="text-base font-semibold text-slate-800 dark:text-white/85">
+            {isError
+              ? 'Couldn’t load this space'
+              : 'This space is no longer available'}
+          </p>
+          <p className="text-sm text-slate-500 dark:text-white/55">
+            {isError
+              ? 'Something went wrong while loading it. The details are below — try again, and if it keeps happening, share this message.'
+              : 'It may have been deleted, or you no longer have access.'}
+          </p>
+        </div>
+        {isError && message && (
+          <p className="mx-auto max-w-md break-words rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-left font-mono text-xs text-destructive">
+            {message}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {isError && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-2 px-4 h-9 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                refresh
+              </span>
+              Try again
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 h-9 rounded-full bg-foreground/5 dark:bg-white/5 border border-border text-xs font-semibold text-slate-700 dark:text-white/75 hover:bg-foreground/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to spaces
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-)
+  )
+}

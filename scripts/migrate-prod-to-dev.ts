@@ -9,8 +9,9 @@
  *     GoalPulse). Preserve original labels alongside the new ones so the prod
  *     provenance survives.
  *   - Do not invent properties. The only schema-driven adaptation is:
- *       - `name` is mirrored to `content` on pulses (dev's pulse type
- *         requires `content`; this is a 1:1 rename, not new data).
+ *       - `name` is mirrored to both `content` and `title` on pulses (dev's
+ *         pulse types require both as non-null; this is a 1:1 rename, not new
+ *         data).
  *       - Each migrated User gets a MeSpace (auth requirement; one per
  *         Person invariant), now with a FieldContext for pulse anchoring.
  *       - Each prod Community becomes a WeSpace (one per Community),
@@ -489,13 +490,17 @@ async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }
   totals.Community = communities
   console.log(`   ✓ Community → Community:LifeSensor:RelationalEntity (${communities})`)
 
-  // 3c. Pulse-like nodes — mirror name → content if name exists.
+  // 3c. Pulse-like nodes — mirror name → content AND title if name exists.
+  // The dev pulse types (GoalPulse/ResourcePulse/StoryPulse) require BOTH
+  // `content: String!` and `title: String!`; legacy nodes only carry `name`,
+  // so it seeds both. Without `title`, any GraphQL query selecting it throws
+  // INTERNAL_SERVER_ERROR (a non-null field resolving to null).
   for (const [prodLabel, devLabels] of Object.entries(PULSE_LABEL_MAP)) {
     const count = await migrateNodesByLabel(prodLabel, devLabels, (props) => {
-      if (props.name != null && props.content == null) {
-        return { content: props.name }
-      }
-      return {}
+      const patch: Record<string, unknown> = {}
+      if (props.name != null && props.content == null) patch.content = props.name
+      if (props.name != null && props.title == null) patch.title = props.name
+      return patch
     })
     totals[prodLabel] = count
     console.log(`   ✓ ${prodLabel} → ${devLabels.join(':')} (${count})`)
