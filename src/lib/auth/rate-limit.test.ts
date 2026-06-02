@@ -50,21 +50,22 @@ describe('rateLimit() — no Redis configured (fail-mode contract)', () => {
     expect(result.retryAfter).toBe(0)
   })
 
-  it('invite-blast: fails CLOSED — a broken limiter must not let invites flood', async () => {
-    // The whole point of fail-closed here: if Redis is unreachable, we'd
-    // rather block legit admins for a few minutes than torch the
-    // info@goalpost.earth sender reputation by letting a compromised
-    // admin blast unlimited emails through the SMTP gateway.
+  it('invite-blast: BYPASSES (allows) when no Redis is configured — interim, see TODO in rate-limit.ts', async () => {
+    // INTERIM behavior (deliberate, TODO to revert): a never-configured
+    // limiter would otherwise fail-CLOSED and deny 100% of invites, making
+    // invite-by-email / member-add unusable in any env without Upstash
+    // Redis. So the no-Redis-configured case now allows for every policy.
+    // NOTE: this is the "env vars absent" path only — a configured-but-
+    // erroring Redis still fails CLOSED for invite-blast (POLICY_FAILURE_MODE,
+    // exercised in the catch branch), preserving the prod-outage guarantee
+    // once Redis is provisioned. Restore fail-closed here when that lands.
     const { rateLimit } = await import('./rate-limit')
     const result = await rateLimit({
       policy: 'invite-blast',
       key: 'invite-blast:1.2.3.4',
     })
-    expect(result.allowed).toBe(false)
-    // Caller uses this to set Retry-After; must be a sane positive int,
-    // not 0 (which would render as "Retry-After: 0" and let a polling
-    // client hammer immediately).
-    expect(result.retryAfter).toBeGreaterThan(0)
+    expect(result.allowed).toBe(true)
+    expect(result.retryAfter).toBe(0)
   })
 
   it('reset-request: fails OPEN — request-reset surface stays responsive', async () => {

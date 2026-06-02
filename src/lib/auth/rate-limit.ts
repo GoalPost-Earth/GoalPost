@@ -119,17 +119,39 @@ export async function rateLimit({
 }: RateLimitArgs): Promise<RateLimitResult> {
   const limiter = getLimiter(policy)
   if (!limiter) {
-    // No Redis configured. Treat per the policy's failure mode.
-    const allowed = POLICY_FAILURE_MODE[policy] === 'allow'
-    // Log once at info level so we can see whether the limiter is
-    // wired up in a given env. Key prefix only — never the raw value
-    // (would leak IPs / emails into the log stream).
-    console.info(
+    // Hard guard: the bypass below must NEVER reach the production target.
+    // On Vercel, localhost has VERCEL_ENV undefined and the dev.goalpost.earth
+    // preview is VERCEL_ENV='preview' — both keep working. A real prod deploy
+    // missing KV_REST_API_* fails fast here rather than silently running an
+    // unenforced invite-blast limiter (email-blast via info@goalpost.earth).
+    if (process.env.VERCEL_ENV === 'production') {
+      throw new Error(
+        '[rate-limit] FATAL: no Upstash Redis configured (KV_REST_API_URL/' +
+          'KV_REST_API_TOKEN) in production — invite-blast would be unenforced. ' +
+          'Provision Upstash KV before deploying to production.'
+      )
+    }
+    // TODO(rate-limit): provision Upstash Redis (KV_REST_API_URL /
+    // KV_REST_API_TOKEN) in dev + on Vercel (incl. the dev.goalpost.earth
+    // preview) so invite-blast et al. actually enforce, then restore the
+    // fail-CLOSED behavior for invite-blast on missing config (revert this
+    // branch to honor POLICY_FAILURE_MODE).
+    //
+    // INTERIM (deliberate): when NO Redis is configured we BYPASS the
+    // limiter and ALLOW for every policy — including invite-blast, which is
+    // normally fail-CLOSED. Without this, an unconfigured limiter denied
+    // 100% of invites/member-adds (the "Invite limit reached, retry in 1
+    // minute" wall), making the feature unusable in any env without Redis.
+    // This only affects the never-configured case; a configured-but-erroring
+    // Redis still fails per POLICY_FAILURE_MODE in the catch block below, so
+    // invite-blast remains fail-closed on a genuine prod outage once Redis
+    // is wired up.
+    console.warn(
       `[rate-limit] no redis configured; policy=${policy} key=${redactKey(
         key
-      )} → ${allowed ? 'allow' : 'deny'}`
+      )} → BYPASS (allow). TODO: provision Upstash Redis to enforce.`
     )
-    return { allowed, retryAfter: allowed ? 0 : 60 }
+    return { allowed: true, retryAfter: 0 }
   }
 
   try {
