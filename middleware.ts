@@ -58,6 +58,21 @@ export function middleware(request: NextRequest) {
     return response
   }
 
+  // Public sign up is hidden (invite-only onboarding). Block the page route so
+  // it can't be reached by typing the URL directly. Toggle with
+  // NEXT_PUBLIC_DISABLE_SIGNUP — keep in sync with the SIGNUP_DISABLED constant.
+  if (
+    process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true' &&
+    pathname.startsWith('/auth/signup')
+  ) {
+    const response = NextResponse.redirect(
+      new URL('/auth/login', request.url)
+    )
+    response.headers.set('Content-Security-Policy', cspHeader)
+    response.headers.set('x-nonce', nonce)
+    return response
+  }
+
   // Protected routes without token → redirect to login
   // if (isProtectedRoute && !token) {
   //   const response = NextResponse.redirect(new URL('/auth/login', request.url))

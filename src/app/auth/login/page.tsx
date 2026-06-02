@@ -4,6 +4,7 @@ import { useApp } from '@/contexts'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { SIGNUP_DISABLED } from '@/constants'
 
 function LoginPage() {
   const { setUser } = useApp()
@@ -197,19 +198,21 @@ function LoginPage() {
         </div>
 
         {/* Sign Up Link */}
-        <div className="mt-12 text-center z-20">
-          <Link
-            href="/auth/signup"
-            className="group flex flex-col items-center"
-          >
-            <span className="text-slate-500 dark:text-white/60 text-sm font-light">
-              New to the community?
-            </span>
-            <span className="text-gp-primary dark:text-gp-primary font-medium text-sm mt-1 border-b border-gp-primary/20 group-hover:border-gp-primary transition-all">
-              Create an account
-            </span>
-          </Link>
-        </div>
+        {!SIGNUP_DISABLED && (
+          <div className="mt-12 text-center z-20">
+            <Link
+              href="/auth/signup"
+              className="group flex flex-col items-center"
+            >
+              <span className="text-slate-500 dark:text-white/60 text-sm font-light">
+                New to the community?
+              </span>
+              <span className="text-gp-primary dark:text-gp-primary font-medium text-sm mt-1 border-b border-gp-primary/20 group-hover:border-gp-primary transition-all">
+                Create an account
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
