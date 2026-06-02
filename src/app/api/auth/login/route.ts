@@ -9,6 +9,7 @@ import {
   signJWT,
 } from '../utils'
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
+import { normalizeEmail } from '@/lib/auth/normalize-email'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -46,7 +47,11 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
   }
-  const { email, password } = parseResult.data
+  const { password } = parseResult.data
+  // Normalize so a user who signed up as "Me@X.com" can log in as "me@x.com".
+  // Stored emails are normalized at signup + backfilled (see
+  // scripts/normalize-person-emails.ts), so an exact match is correct.
+  const email = normalizeEmail(parseResult.data.email)
 
   initializeDB()
   const session = getSession()

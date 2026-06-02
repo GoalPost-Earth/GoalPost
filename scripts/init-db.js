@@ -52,6 +52,19 @@ async function initializeDatabase() {
        FOR (n:ConversationChunk) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT person_id IF NOT EXISTS
        FOR (n:Person) REQUIRE n.id IS UNIQUE`,
+      // One Person per email — the structural guarantee behind login,
+      // signup's duplicate-user guard, findUserByEmail, and
+      // inviteToSpaceByEmail's resolve-or-create. Emails are normalized
+      // (trim + lowercase, see src/lib/auth/normalize-email.ts) at every
+      // write + match boundary, so this case-sensitive constraint actually
+      // enforces one-account-per-inbox rather than letting casing fork
+      // duplicates. The constraint provides its own backing index, so no
+      // separate RANGE index on email is needed. NOTE: bringing this online
+      // requires no duplicate non-null emails — run
+      // scripts/normalize-person-emails.ts first (it lowercases existing
+      // rows and aborts if any case-insensitive collision exists).
+      `CREATE CONSTRAINT person_email_unique IF NOT EXISTS
+       FOR (n:Person) REQUIRE n.email IS UNIQUE`,
       `CREATE CONSTRAINT community_id IF NOT EXISTS
        FOR (n:Community) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT space_id IF NOT EXISTS
@@ -101,6 +114,19 @@ async function initializeDatabase() {
       `CREATE CONSTRAINT assistant_feedback_id IF NOT EXISTS
        FOR (n:AssistantFeedback) REQUIRE n.id IS UNIQUE`,
     ]
+
+    // Drop deprecated standalone indexes that now conflict with a constraint.
+    // person_email was a plain RANGE index in an earlier revision; the
+    // person_email_unique constraint below owns its own backing index, and
+    // Neo4j refuses to create the constraint while the standalone index still
+    // exists (Neo.ClientError.Schema.IndexAlreadyExists). DROP ... IF EXISTS
+    // is a no-op on a fresh DB, so this is safe to run every init.
+    console.log('Dropping deprecated indexes...')
+    const deprecatedIndexes = ['DROP INDEX person_email IF EXISTS']
+    for (const drop of deprecatedIndexes) {
+      await session.run(drop)
+      console.log(`✓ Deprecated index dropped (if present)`)
+    }
 
     for (const constraint of constraints) {
       try {
@@ -230,16 +256,9 @@ async function initializeDatabase() {
        FOR (p:Person) ON (p.inviteTokenHash)`,
       `CREATE INDEX person_reset_token_hash IF NOT EXISTS
        FOR (p:Person) ON (p.resetTokenHash)`,
-      // Email is the lookup key for login, signup's duplicate-user guard,
-      // findUserByEmail, and inviteToSpaceByEmail's resolve-or-create. Without
-      // an index every one of those does a NodeByLabelScan over all Persons
-      // (the highest-cardinality label). RANGE index backs the exact-match
-      // seeks. NOTE: this is intentionally NOT a uniqueness constraint —
-      // emails are stored as entered (no normalization) across signup/login,
-      // so a UNIQUE constraint would need a coordinated dedupe migration
-      // first. Tracked as a follow-up.
-      `CREATE INDEX person_email IF NOT EXISTS
-       FOR (p:Person) ON (p.email)`,
+      // NOTE: no separate index on Person.email — the person_email_unique
+      // constraint above provides its own backing index for the exact-match
+      // email lookups (login, signup guard, findUserByEmail, invite).
     ]
 
     for (const index of propertyIndexes) {

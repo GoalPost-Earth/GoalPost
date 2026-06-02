@@ -5,6 +5,7 @@ import { parseError } from '@/utils'
 import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { z } from 'zod'
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
+import { normalizeEmail } from '@/lib/auth/normalize-email'
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -46,15 +47,22 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    const { email, password, firstName, lastName } = parseResult.data
+    const { password, firstName, lastName } = parseResult.data
+    // Normalize before the dup-check + MERGE so casing can't fork a second
+    // account for the same inbox and so the Person.email uniqueness constraint
+    // holds. Login normalizes identically.
+    const email = normalizeEmail(parseResult.data.email)
 
     initializeDB()
     const session = getSession()
 
     try {
-      // Check if user already exists
+      // Check if user already exists. Anchor on the indexed Person.email
+      // (the person_email_unique constraint backs an exact-match seek) and
+      // post-filter the :User label, rather than anchoring on :User which has
+      // no email index and forces a full label scan on every signup.
       const existingUser = await session.run(
-        `MATCH (u:User {email: $email}) RETURN u LIMIT 1`,
+        `MATCH (u:Person {email: $email}) WHERE u:User RETURN u.id AS id LIMIT 1`,
         { email }
       )
       if (existingUser.records.length > 0) {
@@ -67,13 +75,18 @@ export async function POST(req: NextRequest) {
       const hashed = await hashPassword(password)
 
       const result = await session.run(
+        // coalesce id + createdAt so signing up over a pre-existing
+        // placeholder Person (one created by an invite-by-email that was
+        // never accepted via the token link) ADOPTS that node instead of
+        // re-keying it — re-keying would orphan the SpaceMembership that
+        // points at the placeholder's id via IS_MEMBER.
         `MERGE (person:Person {email: $email})
                     SET person:User
                     SET person.password = $password
-                    SET person.id = randomUUID(),
+                    SET person.id = coalesce(person.id, randomUUID()),
                     person.firstName = $firstName,
                     person.lastName = $lastName,
-                    person.createdAt = datetime(),
+                    person.createdAt = coalesce(person.createdAt, datetime()),
                     person.updatedAt = datetime(),
                     person.onboardingCurrentStepIndex = 0,
                     person.onboardingCompletedSteps = [],

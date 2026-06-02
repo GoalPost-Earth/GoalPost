@@ -251,6 +251,14 @@ Authorization: Any authenticated user can query any User (bypasses Person restri
 """
 type User implements PersonInterface
   @node(labels: ["Person", "User"])
+  # Drop the auto-generated `createUsers` mutation entirely. A :User carries
+  # auth state (password, refreshToken) and is the login identity, so an
+  # ungated create let any authenticated token holder mint an arbitrary
+  # account with a chosen email + password outside the normalized signup
+  # path. :User nodes are only ever created by the trusted auth routes
+  # (signup / accept-invite) via direct Cypher. UPDATE/DELETE stay (still
+  # owner-scoped by the @authorization below). Mirrors the MeSpace pattern.
+  @mutation(operations: [UPDATE, DELETE])
   @authorization(
     # Same owner-scoping as Person. The User type additionally exposes auth
     # fields (password / refreshToken are @private), so gating updateUsers /

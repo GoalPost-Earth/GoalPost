@@ -1,5 +1,6 @@
 import { driver as neoDriver, auth } from 'neo4j-driver'
 import logger from '@/lib/logger'
+import { normalizeEmail } from '@/lib/auth/normalize-email'
 
 /**
  * Custom resolver to find users by email, bypassing authorization restrictions.
@@ -34,13 +35,13 @@ export const userLookupResolvers = {
         `
         MATCH (u:Person)
         WHERE u.email = $email
-        RETURN u.id as id, 
+        RETURN u.id as id,
                u.firstName + ' ' + u.lastName as name,
                u.email as email,
                'Person' as __typename
         LIMIT 1
         `,
-        { email: args.email }
+        { email: normalizeEmail(args.email) }
       )
 
       if (result.records.length === 0) {

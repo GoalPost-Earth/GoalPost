@@ -1,6 +1,7 @@
 import { Session } from 'neo4j-driver'
 import { Context } from '@/config/types'
 import { generateId } from '@/utils/id-generator'
+import { normalizeEmail } from '@/lib/auth/normalize-email'
 import {
   canManageMembers,
   memberExistsInSpace,
@@ -65,13 +66,11 @@ type RemoveSpaceMemberResponse = MutationResponse
 /**
  * Conservative email shape check for invite-by-email. Not RFC-complete — the
  * single source of truth for "is this a real inbox" is the deliverability of
- * the invite mail. This just rejects obvious garbage so we don't MERGE a junk
+ * the invite mail. This just rejects obvious garbage so we don't create a junk
  * Person node (e.g. a bare name the admin fat-fingered into the field).
+ * Normalization (trim + lowercase) is the shared `normalizeEmail` from
+ * @/lib/auth/normalize-email so stored values match login/signup lookups.
  */
-function normalizeEmail(raw: string): string {
-  return raw.trim()
-}
-
 function isValidEmail(email: string): boolean {
   // Mirrors the permissiveness of zod's .email() closely enough for a guard:
   // one @, non-empty local + domain, a dot in the domain, no whitespace.
@@ -81,28 +80,33 @@ function isValidEmail(email: string): boolean {
 }
 
 /**
- * Invite-blast rate limit (GOAL-249). Two cheap keys, both must allow:
- * per-client-IP and per-target-space. IP-keying is the primary control;
- * per-space is supplementary and survives IP rotation, since an attacker can
- * rotate proxies but not the space they're targeting. Fail-CLOSED on Redis
- * outage. Throws a GraphQLError BEFORE the caller opens a session / writes
- * anything, so a rejected mutation doesn't create a Person, a SpaceMembership,
- * mint a token, or log activity.
+ * Invite-blast rate limit (GOAL-249). Three cheap keys, ALL must allow:
+ * per-client-IP, per-target-space, and per-inviting-user. IP-keying is the
+ * primary control; per-space is supplementary and survives IP rotation (an
+ * attacker can rotate proxies but not the space they're targeting); per-user
+ * caps a single (possibly compromised) admin from blasting invites across the
+ * many spaces they own/administer, which the per-space key alone can't bound.
+ * Fail-CLOSED on Redis outage. Throws a GraphQLError BEFORE the caller opens a
+ * session / writes anything, so a rejected mutation doesn't create a Person, a
+ * SpaceMembership, mint a token, or log activity.
  */
 async function enforceInviteBlastLimit(
   clientIp: string | undefined,
-  spaceId: string
+  spaceId: string,
+  userId: string
 ): Promise<void> {
   const ipKey = clientIp || 'unknown'
-  const [ipBlast, spaceBlast] = await Promise.all([
+  const [ipBlast, spaceBlast, userBlast] = await Promise.all([
     rateLimit({ policy: 'invite-blast', key: `invite-blast:ip:${ipKey}` }),
     rateLimit({
       policy: 'invite-blast',
       key: `invite-blast:space:${spaceId}`,
     }),
+    rateLimit({ policy: 'invite-blast', key: `invite-blast:user:${userId}` }),
   ])
-  const blast = ipBlast.allowed ? spaceBlast : ipBlast
-  if (!blast.allowed) {
+  // Any key denying blocks the request; surface the first denial's retryAfter.
+  const blast = [ipBlast, spaceBlast, userBlast].find((b) => !b.allowed)
+  if (blast) {
     const minutes = Math.ceil(blast.retryAfter / 60)
     throw new GraphQLError(
       `Invite limit reached — try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
@@ -413,7 +417,7 @@ export const spaceMembershipResolvers = {
 
     // Rate-limit before opening a session so a flood can't cost the DB pool
     // a connection or write any side effects. Throws on denial.
-    await enforceInviteBlastLimit(context.clientIp, spaceId)
+    await enforceInviteBlastLimit(context.clientIp, spaceId, currentUserId)
 
     const session = context.executionContext.session()
 
@@ -485,8 +489,8 @@ export const spaceMembershipResolvers = {
     }
 
     // Same invite-blast gate as addSpaceMember. Crucially this runs BEFORE the
-    // MERGE below, so a blasted invite never creates a placeholder Person.
-    await enforceInviteBlastLimit(context.clientIp, spaceId)
+    // Person create below, so a blasted invite never creates a placeholder.
+    await enforceInviteBlastLimit(context.clientIp, spaceId, currentUserId)
 
     const session = context.executionContext.session()
 
@@ -507,22 +511,17 @@ export const spaceMembershipResolvers = {
       }
 
       // Resolve the email to a Person, creating a placeholder only if none
-      // exists. We deliberately do NOT use `MERGE (p:Person {email})`: there
-      // is no uniqueness constraint on Person.email, so MERGE on a duplicated
-      // email (which the model permits — imports, as-entered casing) would
-      // bind multiple nodes and return a non-deterministic row. Instead we
-      // look up case-insensitively first so we never fork a duplicate of a
-      // person already in the graph regardless of stored casing, then CREATE
-      // a placeholder carrying just the email. firstName/lastName fill in when
-      // the invitee accepts and completes onboarding. (A constraint on
-      // Person.email is the real fix for the residual create-create race —
-      // tracked as a follow-up since signup/login store emails as entered and
-      // would need a coordinated dedupe migration first.)
+      // exists. The email is already normalized (trim + lowercase) and stored
+      // emails are normalized too (login/signup write lowercase + the
+      // Person.email uniqueness constraint), so an exact match is correct and
+      // resolves via the constraint's backing index. The CREATE below is
+      // guarded by the uniqueness constraint, so a create-create race between
+      // two concurrent invites for the same new email surfaces as a clean
+      // constraint error on the loser rather than a silent duplicate Person.
       const existing = await session.executeRead((tx) =>
         tx.run(
           `
-          MATCH (p:Person)
-          WHERE toLower(p.email) = toLower($email)
+          MATCH (p:Person { email: $email })
           RETURN p.id AS id
           ORDER BY p.createdAt ASC
           LIMIT 1

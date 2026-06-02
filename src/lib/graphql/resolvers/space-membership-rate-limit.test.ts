@@ -161,12 +161,13 @@ describe('addSpaceMember — invite-blast rate-limit wiring (GOAL-249)', () => {
     expect(sendAddedToSpaceEmail).not.toHaveBeenCalled()
     expect(createLog).not.toHaveBeenCalled()
 
-    // The limiter is consulted with TWO supplementary keys (per-IP and
-    // per-target-space). Both must allow for the request to proceed;
-    // either one denying is sufficient to block. The per-space key
-    // survives IP rotation by an attacker armed with residential
-    // proxies — they can rotate where they're calling from, but not
-    // which space they're targeting.
+    // The limiter is consulted with THREE keys (per-IP, per-target-space,
+    // and per-inviting-user). ALL must allow for the request to proceed;
+    // any one denying is sufficient to block. The per-space key survives IP
+    // rotation by an attacker armed with residential proxies — they can
+    // rotate where they're calling from, but not which space they're
+    // targeting; the per-user key caps a single account across every space
+    // it can manage.
     expect(rateLimit).toHaveBeenCalledWith({
       policy: 'invite-blast',
       key: 'invite-blast:ip:203.0.113.99',
@@ -174,6 +175,13 @@ describe('addSpaceMember — invite-blast rate-limit wiring (GOAL-249)', () => {
     expect(rateLimit).toHaveBeenCalledWith({
       policy: 'invite-blast',
       key: 'invite-blast:space:space-1',
+    })
+    // Third supplementary key: per-inviting-user. Caps a single (possibly
+    // compromised) admin from blasting invites across every space they
+    // own/administer, which the per-space key alone can't bound.
+    expect(rateLimit).toHaveBeenCalledWith({
+      policy: 'invite-blast',
+      key: 'invite-blast:user:u1',
     })
   })
 
@@ -282,8 +290,9 @@ describe('addSpaceMember — invite-blast rate-limit wiring (GOAL-249)', () => {
     // intercepted.
     expect(calls.executeRead).toHaveBeenCalled()
     expect(result.success).toBe(false)
-    // Two parallel limiter calls per addSpaceMember invocation: per-IP
-    // and per-target-space. See "throws GraphQLError" test for rationale.
-    expect(rateLimit).toHaveBeenCalledTimes(2)
+    // Three parallel limiter calls per addSpaceMember invocation: per-IP,
+    // per-target-space, and per-inviting-user. See "throws GraphQLError"
+    // test for rationale.
+    expect(rateLimit).toHaveBeenCalledTimes(3)
   })
 })

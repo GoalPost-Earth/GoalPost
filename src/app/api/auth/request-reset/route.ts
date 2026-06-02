@@ -5,6 +5,7 @@ import { parseError } from '@/utils'
 import { getSession, initializeDB } from '../neo4j'
 import { hashAuthToken } from '@/lib/auth/token-hash'
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
+import { normalizeEmail } from '@/lib/auth/normalize-email'
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
   // 201 envelope) so the rate-limit response itself isn't an oracle for
   // "this email exists." Instead we just no-op the email send + return
   // the normal success body.
-  const normalizedEmail = email.trim().toLowerCase()
+  const normalizedEmail = normalizeEmail(email)
   const perEmail = await rateLimit({
     policy: 'reset-request',
     key: `reset-request:${normalizedEmail}`,
@@ -85,12 +86,12 @@ export async function POST(req: NextRequest) {
       'MATCH (u:Person:User {email: $email}) ' +
         'SET u.resetTokenHash = $tokenHash, u.resetTokenExpires = datetime($expiration) ' +
         'RETURN u',
-      { email, tokenHash, expiration }
+      { email: normalizedEmail, tokenHash, expiration }
     )
 
     if (result.records.length > 0) {
       // Send email with reset link
-      const encodedEmail = encodeURIComponent(email)
+      const encodedEmail = encodeURIComponent(normalizedEmail)
       const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodedEmail}`
 
       if (process.env.NODE_ENV === 'development') {
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
         from:
           process.env.NEXT_PUBLIC_EMAIL_FROM ||
           'Goalpost <info@goalpost.earth>',
-        to: email,
+        to: normalizedEmail,
         subject: '🌻 Password Reset Request',
         html: `
         <div style="background: linear-gradient(135deg, #fdf6e3 0%, #ffe0ec 100%); padding: 40px 0;">
