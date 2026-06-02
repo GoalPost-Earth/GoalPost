@@ -1,3 +1,4 @@
+import { gql } from '@apollo/client'
 import { graphql } from '@/gql'
 
 /**
@@ -38,6 +39,32 @@ export const ADD_SPACE_MEMBER_MUTATION = graphql(`
     }
   }
 `)
+
+/**
+ * Invite someone to a space by email — works even when the email does not yet
+ * belong to a GoalPost member. The server creates a placeholder Person and
+ * sends a single-use invite email so they can set a password and join.
+ */
+export const INVITE_TO_SPACE_BY_EMAIL_MUTATION = gql`
+  mutation InviteToSpaceByEmail($spaceId: ID!, $email: String!, $role: SpaceRole!) {
+    inviteToSpaceByEmail(spaceId: $spaceId, email: $email, role: $role) {
+      success
+      message
+      membership {
+        id
+        role
+        addedAt
+        member {
+          id
+          firstName
+          lastName
+          name
+          email
+        }
+      }
+    }
+  }
+`
 
 /**
  * Update a member's role in a space

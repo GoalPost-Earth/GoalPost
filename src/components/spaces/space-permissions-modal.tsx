@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useLazyQuery, useMutation } from '@apollo/client/react'
-import ReactSelect from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 import {
   ADD_SPACE_MEMBER_MUTATION,
+  INVITE_TO_SPACE_BY_EMAIL_MUTATION,
   UPDATE_SPACE_MEMBER_ROLE_MUTATION,
   REMOVE_SPACE_MEMBER_MUTATION,
   LOG_MEMBER_ACTIVITY,
@@ -31,7 +32,16 @@ interface PersonSelectOption {
   value: string
   label: string
   email: string
+  // True for an email typed in that matches no existing GoalPost person —
+  // adding it routes through inviteToSpaceByEmail rather than addSpaceMember.
+  isNew?: boolean
 }
+
+// Permissive shape guard, mirrors the server-side check in
+// space-membership-resolver.ts. Used to decide whether an unmatched search
+// term can be offered as an "Invite <email>" option.
+const isValidEmail = (value: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 
 interface SpaceMember {
   id: string
@@ -87,6 +97,11 @@ export function SpacePermissionsModal({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [addSpaceMember] = useMutation<any>(ADD_SPACE_MEMBER_MUTATION)
+
+  const [inviteToSpaceByEmail] = useMutation<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any
+  >(INVITE_TO_SPACE_BY_EMAIL_MUTATION)
 
   const [updateSpaceMemberRole] = useMutation(
     UPDATE_SPACE_MEMBER_ROLE_MUTATION,
@@ -173,33 +188,59 @@ export function SpacePermissionsModal({
       let addedCount = 0
 
       for (const person of selectedPeopleOptions) {
-        const result = await addSpaceMember({
-          variables: {
-            spaceId,
-            memberId: person.value,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            role: selectedRole as any,
-          },
-        })
+        // A "new" option is an email that matched no existing person — route
+        // it through inviteToSpaceByEmail, which creates a placeholder Person
+        // and emails a single-use invite. Everyone else is an existing Person
+        // added by id via addSpaceMember.
+        const response = person.isNew
+          ? await inviteToSpaceByEmail({
+              variables: {
+                spaceId,
+                email: person.email,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                role: selectedRole as any,
+              },
+            })
+          : await addSpaceMember({
+              variables: {
+                spaceId,
+                memberId: person.value,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                role: selectedRole as any,
+              },
+            })
 
-        if (result.data?.addSpaceMember?.success) {
+        const payload = person.isNew
+          ? response.data?.inviteToSpaceByEmail
+          : response.data?.addSpaceMember
+
+        if (payload?.success) {
           addedCount += 1
 
+          // Activity-feed entry. For an email invite the member id/name come
+          // back on the membership payload (the placeholder Person we just
+          // created); fall back to the email when the name is still blank.
+          const member = payload?.membership?.member
           logMemberActivity({
             variables: {
               input: {
                 action: 'added',
                 spaceId,
                 spaceName,
-                memberId: person.value,
-                memberName: person.label || person.email || 'Unknown',
+                memberId: member?.id || person.value,
+                memberName:
+                  member?.name?.trim() ||
+                  person.label ||
+                  person.email ||
+                  'Unknown',
                 role: selectedRole,
               },
             },
           }).catch((err) => console.warn('Failed to log member addition:', err))
         } else {
+          const label = person.isNew ? person.email : person.label
           failedAdds.push(
-            `${person.label}: ${result.data?.addSpaceMember?.message || 'Failed to add member'}`
+            `${label}: ${payload?.message || 'Failed to add member'}`
           )
         }
       }
@@ -356,20 +397,43 @@ export function SpacePermissionsModal({
                 Add New Member
               </h3>
               <div className="space-y-2">
-                <ReactSelect<PersonSelectOption, true>
+                <CreatableSelect<PersonSelectOption, true>
                   value={selectedPeopleOptions}
                   options={personOptions}
                   isMulti
                   isSearchable
                   isDisabled={loading}
-                  placeholder="Search by name or email to add members..."
+                  placeholder="Search by name, or type an email to invite someone new..."
+                  // Only offer "Invite <x>" when the typed value is a valid
+                  // email AND no existing (searchable) person already has it —
+                  // otherwise the admin would be nudged into an email invite
+                  // for someone they could just add directly, and could even
+                  // select both the person and the invite for the same email.
+                  isValidNewOption={(inputValue) => {
+                    if (!isValidEmail(inputValue)) return false
+                    const typed = inputValue.trim().toLowerCase()
+                    return !personOptions.some(
+                      (option) => option.email.toLowerCase() === typed
+                    )
+                  }}
+                  formatCreateLabel={(inputValue) =>
+                    `Invite ${inputValue.trim()}`
+                  }
+                  getNewOptionData={(inputValue) => ({
+                    value: `new:${inputValue.trim()}`,
+                    label: inputValue.trim(),
+                    email: inputValue.trim(),
+                    isNew: true,
+                  })}
                   noOptionsMessage={() =>
                     searchInput.trim().length < 2
                       ? 'Type at least 2 characters'
-                      : 'No matching people found'
+                      : 'No matching people found — type a full email to invite'
                   }
                   getOptionLabel={(option) =>
-                    `${option.label} (${option.email})`
+                    option.isNew || !option.email
+                      ? option.label
+                      : `${option.label} (${option.email})`
                   }
                   onInputChange={(value, actionMeta) => {
                     if (actionMeta.action === 'input-change') {
@@ -473,7 +537,7 @@ export function SpacePermissionsModal({
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm font-medium text-gp-ink-strong dark:text-white truncate">
-                          {member.member.name}
+                          {member.member.name?.trim() || 'Pending invite'}
                         </p>
                         {member.member.email && (
                           <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft truncate">

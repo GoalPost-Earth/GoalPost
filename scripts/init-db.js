@@ -230,6 +230,16 @@ async function initializeDatabase() {
        FOR (p:Person) ON (p.inviteTokenHash)`,
       `CREATE INDEX person_reset_token_hash IF NOT EXISTS
        FOR (p:Person) ON (p.resetTokenHash)`,
+      // Email is the lookup key for login, signup's duplicate-user guard,
+      // findUserByEmail, and inviteToSpaceByEmail's resolve-or-create. Without
+      // an index every one of those does a NodeByLabelScan over all Persons
+      // (the highest-cardinality label). RANGE index backs the exact-match
+      // seeks. NOTE: this is intentionally NOT a uniqueness constraint —
+      // emails are stored as entered (no normalization) across signup/login,
+      // so a UNIQUE constraint would need a coordinated dedupe migration
+      // first. Tracked as a follow-up.
+      `CREATE INDEX person_email IF NOT EXISTS
+       FOR (p:Person) ON (p.email)`,
     ]
 
     for (const index of propertyIndexes) {

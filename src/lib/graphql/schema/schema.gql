@@ -1596,6 +1596,19 @@ type Mutation {
   ): AddSpaceMemberResponse!
 
   """
+  Invite someone to a space by email address, even if they are not yet a
+  GoalPost member. If no Person with that email exists, a placeholder Person
+  is created and a single-use invite email is sent so they can set a password
+  and join. If the email already belongs to a Person/User, they are added like
+  addSpaceMember. Only the space owner or members with ADMIN role can invite.
+  """
+  inviteToSpaceByEmail(
+    spaceId: ID!
+    email: String!
+    role: SpaceRole!
+  ): AddSpaceMemberResponse!
+
+  """
   Update a space member's role.
   Only the space owner or members with ADMIN role can change roles.
   """
