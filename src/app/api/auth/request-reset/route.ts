@@ -98,7 +98,14 @@ export async function POST(req: NextRequest) {
         console.log('Reset link:', resetLink)
       }
 
-      await sendMail({
+      // sendMail never throws — it returns { ok, error }. Inspect it: a
+      // Resend rejection (unverified `from` domain, missing/invalid
+      // RESEND_API_KEY in the deployed env, etc.) is otherwise indistinguishable
+      // from success and leaves no trace, which is exactly how a reset email can
+      // silently never arrive while the user still sees the success message
+      // (GOAL-250). Log server-side only — the HTTP response stays a constant
+      // 201 so the outcome can't be used to enumerate accounts.
+      const mailResult = await sendMail({
         from:
           process.env.NEXT_PUBLIC_EMAIL_FROM ||
           'Goalpost <info@goalpost.earth>',
@@ -129,9 +136,30 @@ export async function POST(req: NextRequest) {
         </div>
         `,
       })
+
+      if (!mailResult.ok) {
+        // Log the message only, not the raw error object — Resend SDK errors
+        // can embed the request payload (incl. the recipient email / PII).
+        const e = mailResult.error
+        console.error(
+          '[request-reset] reset email failed to send via Resend:',
+          e instanceof Error ? e.message : 'unknown send error'
+        )
+      }
+    } else if (process.env.NODE_ENV !== 'production') {
+      // No :User matched this email. We still return the constant 201 to avoid
+      // enumeration, but log it off-production so a dev/QA hitting GOAL-250 can
+      // tell "no account for this email" apart from "send failed" above.
+      console.info('[request-reset] no :User matched; no reset email sent')
     }
-  } catch {
-    // Swallow errors to avoid user enumeration
+  } catch (err) {
+    // Keep the response constant (no enumeration), but don't swallow silently —
+    // an unexpected DB/send error must be visible in the server logs. Log the
+    // message only to avoid writing PII embedded in a raw error object.
+    console.error(
+      '[request-reset] unexpected error generating reset:',
+      err instanceof Error ? err.message : 'unknown error'
+    )
   } finally {
     await session.close()
   }
