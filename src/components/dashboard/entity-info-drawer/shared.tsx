@@ -73,6 +73,46 @@ export const NotFoundBody: FC<{ message?: string }> = ({ message }) => (
   </div>
 )
 
+/**
+ * Shown when the underlying GraphQL query *errors* — distinct from
+ * {@link NotFoundBody}, which means the query succeeded but returned nothing
+ * (deleted / no access). Surfacing the real failure (instead of the misleading
+ * "no longer available") is the difference between "I lost access" and "the
+ * request blew up". The detail line is intentionally honest — it's the server
+ * message — so testers can see what actually broke; a Retry refetches.
+ */
+export const ErrorBody: FC<{
+  detail?: string
+  onRetry?: () => void
+}> = ({ detail, onRetry }) => (
+  <div className="p-6 sm:p-8 flex flex-col items-center text-center gap-3">
+    <div className="size-12 shrink-0 rounded-2xl bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/15 flex items-center justify-center">
+      <span className="material-symbols-outlined text-2xl text-gp-ink-muted dark:text-white/55">
+        sync_problem
+      </span>
+    </div>
+    <div className="space-y-1.5 min-w-0">
+      <p className="text-sm font-semibold text-gp-ink-strong dark:text-white">
+        Couldn&apos;t load this
+      </p>
+      <p className="text-xs text-gp-ink-muted dark:text-white/55 leading-relaxed">
+        Something went wrong fetching this from the server.
+      </p>
+      {detail && (
+        <p className="mt-2 text-[11px] font-mono text-gp-ink-muted/80 dark:text-white/45 leading-relaxed break-words whitespace-pre-wrap">
+          {detail}
+        </p>
+      )}
+    </div>
+    {onRetry && (
+      <SecondaryCta onClick={onRetry} className="mt-1">
+        <span className="material-symbols-outlined text-[18px]">refresh</span>
+        Try again
+      </SecondaryCta>
+    )}
+  </div>
+)
+
 export const PrimaryCta: FC<{
   onClick: () => void
   children: ReactNode

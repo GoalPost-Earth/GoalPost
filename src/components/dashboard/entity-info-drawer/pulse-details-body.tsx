@@ -38,6 +38,7 @@ import {
   EditFooter,
   EditTextInput,
   EditTextarea,
+  ErrorBody,
   NotFoundBody,
   SectionHeader,
   StatCell,
@@ -56,10 +57,13 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     removePulseFromContext,
     loading: sharingLoading,
   } = usePulseSharing()
-  const { data, loading, refetch } = useQuery(GET_PULSE_DETAILS_WITH_CONTEXT, {
-    variables: { pulseId },
-    fetchPolicy: 'cache-and-network',
-  })
+  const { data, loading, error, refetch } = useQuery(
+    GET_PULSE_DETAILS_WITH_CONTEXT,
+    {
+      variables: { pulseId },
+      fetchPolicy: 'cache-and-network',
+    }
+  )
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
   const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
   const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
@@ -72,7 +76,10 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     data?.resourcePulses?.[0] ||
     data?.storyPulses?.[0]
 
-  if (!pulse) return <NotFoundBody />
+  if (!pulse) {
+    if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
+    return <NotFoundBody />
+  }
 
   const nodeType = typenameToNodeType(pulse.__typename)
   const config = PULSE_TYPE_CONFIG[nodeType]

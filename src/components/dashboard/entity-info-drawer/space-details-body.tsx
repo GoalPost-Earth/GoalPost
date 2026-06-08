@@ -20,6 +20,7 @@ import {
   EditCta,
   EditFooter,
   EditTextInput,
+  ErrorBody,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -37,7 +38,7 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
   )
   const [isSaving, setIsSaving] = useState(false)
 
-  const { data, loading } = useQuery(GET_SPACE_DETAILS, {
+  const { data, loading, error, refetch } = useQuery(GET_SPACE_DETAILS, {
     variables: { spaceId },
     fetchPolicy: 'cache-and-network',
   })
@@ -49,7 +50,10 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
 
   type SpaceData = NonNullable<typeof data>['spaces'][number]
   const space = data?.spaces?.[0] as SpaceData | undefined
-  if (!space) return <NotFoundBody />
+  if (!space) {
+    if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
+    return <NotFoundBody />
+  }
 
   const isMe = space.__typename === 'MeSpace'
   const accent = isMe

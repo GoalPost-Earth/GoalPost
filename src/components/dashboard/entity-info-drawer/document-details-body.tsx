@@ -17,6 +17,7 @@ import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events
 import { DELETE_DOCUMENT_MUTATION } from '@/app/graphql/mutations'
 import {
   BodySkeleton,
+  ErrorBody,
   NotFoundBody,
   SectionHeader,
   SecondaryCta,
@@ -128,17 +129,22 @@ function pulseLabel(typename: string | null | undefined): string {
 export const DocumentDetailsBody: FC<{ documentId: string }> = ({
   documentId,
 }) => {
-  const { data, loading } = useQuery<{ documents?: DocumentDetail[] }>(
-    GET_DOCUMENT_BY_ID,
-    { variables: { documentId }, fetchPolicy: 'cache-and-network' }
-  )
+  const { data, loading, error, refetch } = useQuery<{
+    documents?: DocumentDetail[]
+  }>(GET_DOCUMENT_BY_ID, {
+    variables: { documentId },
+    fetchPolicy: 'cache-and-network',
+  })
   const [deleteDocument] = useMutation(DELETE_DOCUMENT_MUTATION)
   const [isDeleting, setIsDeleting] = useState(false)
 
   if (loading && !data) return <BodySkeleton />
 
   const document = data?.documents?.[0]
-  if (!document) return <NotFoundBody />
+  if (!document) {
+    if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
+    return <NotFoundBody />
+  }
 
   const uploader = document.uploadedBy?.[0]
   const uploaderName =

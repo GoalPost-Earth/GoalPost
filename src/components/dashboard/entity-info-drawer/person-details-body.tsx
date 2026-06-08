@@ -21,6 +21,7 @@ import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
 import type { PivotEntityType } from '@/lib/simulation/entity-collector'
 import {
   BodySkeleton,
+  ErrorBody,
   NotFoundBody,
   PrimaryCta,
   SecondaryCta,
@@ -42,7 +43,7 @@ export const PersonDetailsBody: FC<{
   const router = useRouter()
   const { setFocalLabel } = useFocalEntity()
 
-  const { data, loading, error } = useQuery(GET_PERSON_PROFILE, {
+  const { data, loading, error, refetch } = useQuery(GET_PERSON_PROFILE, {
     variables: { personId },
     fetchPolicy: 'cache-and-network',
   })
@@ -93,6 +94,7 @@ export const PersonDetailsBody: FC<{
         `[entity-info-drawer] Person ${personId} failed to load:`,
         error.message
       )
+      return <ErrorBody detail={error.message} onRetry={() => refetch()} />
     }
     return <NotFoundBody />
   }

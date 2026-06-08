@@ -3596,12 +3596,6 @@ export type CreateUpdateUserAiResponsesMutationResponse = {
   updateUserAiResponses: Array<UpdateUserAiResponse>
 }
 
-export type CreateUsersMutationResponse = {
-  __typename?: 'CreateUsersMutationResponse'
-  info: CreateInfo
-  users: Array<User>
-}
-
 export type CreateWeSpacesMutationResponse = {
   __typename?: 'CreateWeSpacesMutationResponse'
   info: CreateInfo
@@ -14471,7 +14465,6 @@ export type Mutation = {
   createUpdatePersonConnectionResponses: CreateUpdatePersonConnectionResponsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
-  createUsers: CreateUsersMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
   deleteAddSpaceMemberResponses: DeleteInfo
   deleteCarePulses: DeleteInfo
@@ -14522,6 +14515,14 @@ export type Mutation = {
    * Legacy mutation preserved for compatibility.
    */
   generatePersonEmbeddings: Scalars['Boolean']['output']
+  /**
+   * Invite someone to a space by email address, even if they are not yet a
+   * GoalPost member. If no Person with that email exists, a placeholder Person
+   * is created and a single-use invite email is sent so they can set a password
+   * and join. If the email already belongs to a Person/User, they are added like
+   * addSpaceMember. Only the space owner or members with ADMIN role can invite.
+   */
+  inviteToSpaceByEmail: AddSpaceMemberResponse
   /**
    * Log a field context-related activity (create, update, delete).
    * Tracks field context operations within spaces.
@@ -14765,10 +14766,6 @@ export type MutationCreateUpdateUserAiResponsesArgs = {
   input: Array<UpdateUserAiResponseCreateInput>
 }
 
-export type MutationCreateUsersArgs = {
-  input: Array<UserCreateInput>
-}
-
 export type MutationCreateWeSpacesArgs = {
   input: Array<WeSpaceCreateInput>
 }
@@ -14914,6 +14911,12 @@ export type MutationDeleteWeSpacesArgs = {
 
 export type MutationGeneratePersonEmbeddingsArgs = {
   personId: Scalars['ID']['input']
+}
+
+export type MutationInviteToSpaceByEmailArgs = {
+  email: Scalars['String']['input']
+  role: SpaceRole
+  spaceId: Scalars['ID']['input']
 }
 
 export type MutationLogFieldActivityArgs = {
@@ -25241,34 +25244,6 @@ export type UserAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
-export type UserCreateInput = {
-  aiEnabled: Scalars['Boolean']['input']
-  authId?: InputMaybe<Scalars['String']['input']>
-  avatar?: InputMaybe<Scalars['String']['input']>
-  email?: InputMaybe<Scalars['String']['input']>
-  embedding?: InputMaybe<Array<Scalars['Float']['input']>>
-  fieldsOfCare?: InputMaybe<Scalars['String']['input']>
-  firstName: Scalars['String']['input']
-  gender?: InputMaybe<Scalars['String']['input']>
-  interests?: InputMaybe<Scalars['String']['input']>
-  lastName: Scalars['String']['input']
-  location?: InputMaybe<Scalars['String']['input']>
-  onboardingCompletedSteps: Array<Scalars['String']['input']>
-  onboardingCurrentStepIndex: Scalars['Int']['input']
-  onboardingIsCompleted: Scalars['Boolean']['input']
-  onboardingSkipped: Scalars['Boolean']['input']
-  ownsSpaces?: InputMaybe<UserOwnsSpacesFieldInput>
-  passions?: InputMaybe<Scalars['String']['input']>
-  phone?: InputMaybe<Scalars['String']['input']>
-  photo?: InputMaybe<Scalars['String']['input']>
-  pronouns?: InputMaybe<Scalars['String']['input']>
-  refreshTokenExp?: InputMaybe<Scalars['DateTime']['input']>
-  refreshTokenRevoked?: InputMaybe<Scalars['Boolean']['input']>
-  signupDate?: InputMaybe<Scalars['DateTime']['input']>
-  status?: InputMaybe<Scalars['String']['input']>
-  traits?: InputMaybe<Scalars['String']['input']>
-}
-
 export type UserDeleteInput = {
   ownsSpaces?: InputMaybe<Array<UserOwnsSpacesDeleteFieldInput>>
 }
@@ -25327,11 +25302,6 @@ export type UserOwnsSpacesDeleteFieldInput = {
 export type UserOwnsSpacesDisconnectFieldInput = {
   disconnect?: InputMaybe<SpaceDisconnectInput>
   where?: InputMaybe<UserOwnsSpacesConnectionWhere>
-}
-
-export type UserOwnsSpacesFieldInput = {
-  connect?: InputMaybe<Array<UserOwnsSpacesConnectFieldInput>>
-  create?: InputMaybe<Array<UserOwnsSpacesCreateFieldInput>>
 }
 
 export type UserOwnsSpacesNodeAggregationWhereInput = {
@@ -27753,6 +27723,35 @@ export type AddSpaceMemberMutation = {
   }
 }
 
+export type InviteToSpaceByEmailMutationVariables = Exact<{
+  spaceId: Scalars['ID']['input']
+  email: Scalars['String']['input']
+  role: SpaceRole
+}>
+
+export type InviteToSpaceByEmailMutation = {
+  __typename?: 'Mutation'
+  inviteToSpaceByEmail: {
+    __typename?: 'AddSpaceMemberResponse'
+    success: boolean
+    message: string
+    membership?: {
+      __typename?: 'SpaceMembership'
+      id: string
+      role: SpaceRole
+      addedAt: any
+      member: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        email?: string | null
+      }>
+    } | null
+  }
+}
+
 export type UpdateSpaceMemberRoleMutationVariables = Exact<{
   spaceId: Scalars['ID']['input']
   memberId: Scalars['ID']['input']
@@ -30136,50 +30135,6 @@ export type GetPulseDetailsWithContextQuery = {
       title: string
       emergentName?: string | null
       createdAt: any
-      pulses: Array<
-        | {
-            __typename: 'CarePulse'
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'CoreValuePulse'
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'GoalPulse'
-            status: GoalStatus
-            horizon?: GoalHorizon | null
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'ResourcePulse'
-            resourceType: string
-            availability?: number | null
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'StoryPulse'
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-      >
       space: Array<
         | {
             __typename: 'MeSpace'
@@ -30233,50 +30188,6 @@ export type GetPulseDetailsWithContextQuery = {
       title: string
       emergentName?: string | null
       createdAt: any
-      pulses: Array<
-        | {
-            __typename: 'CarePulse'
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'CoreValuePulse'
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'GoalPulse'
-            status: GoalStatus
-            horizon?: GoalHorizon | null
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'ResourcePulse'
-            resourceType: string
-            availability?: number | null
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-        | {
-            __typename: 'StoryPulse'
-            intensity?: number | null
-            id: string
-            title: string
-            content: string
-            createdAt: any
-          }
-      >
       space: Array<
         | {
             __typename: 'MeSpace'
@@ -35850,6 +35761,143 @@ export const AddSpaceMemberDocument = {
 } as unknown as DocumentNode<
   AddSpaceMemberMutation,
   AddSpaceMemberMutationVariables
+>
+export const InviteToSpaceByEmailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'InviteToSpaceByEmail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'spaceId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'email' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'role' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SpaceRole' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inviteToSpaceByEmail' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'spaceId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'spaceId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'email' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'email' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'role' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'role' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'membership' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'addedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'member' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  InviteToSpaceByEmailMutation,
+  InviteToSpaceByEmailMutationVariables
 >
 export const UpdateSpaceMemberRoleDocument = {
   kind: 'Document',
@@ -45091,105 +45139,6 @@ export const GetPulseDetailsWithContextDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'pulses' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'title' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: '__typename' },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'GoalPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'status' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'horizon' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'ResourcePulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'resourceType',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'availability',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'StoryPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
                         name: { kind: 'Name', value: 'space' },
                         selectionSet: {
                           kind: 'SelectionSet',
@@ -45348,105 +45297,6 @@ export const GetPulseDetailsWithContextDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pulses' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'title' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'content' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: '__typename' },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'GoalPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'status' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'horizon' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'ResourcePulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'resourceType',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'availability',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'InlineFragment',
-                              typeCondition: {
-                                kind: 'NamedType',
-                                name: { kind: 'Name', value: 'StoryPulse' },
-                              },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'intensity' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
                       },
                       {
                         kind: 'Field',

@@ -23,6 +23,7 @@ import {
   EditFooter,
   EditTextInput,
   EditTextarea,
+  ErrorBody,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -51,10 +52,13 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const { data, loading } = useQuery(GET_RESONANCE_LINK_DETAILS, {
-    variables: { resonanceId },
-    fetchPolicy: 'cache-and-network',
-  })
+  const { data, loading, error, refetch } = useQuery(
+    GET_RESONANCE_LINK_DETAILS,
+    {
+      variables: { resonanceId },
+      fetchPolicy: 'cache-and-network',
+    }
+  )
 
   const [updateResonance] = useMutation(UPDATE_RESONANCE_LINK_MUTATION)
   const [deleteResonance] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
@@ -63,7 +67,10 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
   if (loading && !data) return <BodySkeleton />
 
   const resonance = data?.resonanceLinks?.[0]
-  if (!resonance) return <NotFoundBody />
+  if (!resonance) {
+    if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
+    return <NotFoundBody />
+  }
 
   // Filter out CarePulse / CoreValuePulse — the query only resolves the
   // three pulse subtypes that carry the fields this view renders.

@@ -26,6 +26,7 @@ import {
   EditCta,
   EditFooter,
   EditTextInput,
+  ErrorBody,
   NotFoundBody,
   PrimaryCta,
   SectionHeader,
@@ -48,7 +49,7 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
   const [editTitle, setEditTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  const { data, loading } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
+  const { data, loading, error, refetch } = useQuery(GET_FIELD_CONTEXT_DETAILS, {
     variables: { contextId },
     fetchPolicy: 'cache-and-network',
   })
@@ -86,7 +87,10 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
   if (loading && !data) return <BodySkeleton />
 
   const context = data?.fieldContexts?.[0]
-  if (!context) return <NotFoundBody />
+  if (!context) {
+    if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
+    return <NotFoundBody />
+  }
 
   const goal = data?.goalPulses ?? []
   const resource = data?.resourcePulses ?? []
