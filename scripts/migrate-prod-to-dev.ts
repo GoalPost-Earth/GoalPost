@@ -662,6 +662,7 @@ async function phase5_buildDevStructure(): Promise<{
   weSpaces: number
   contexts: number
   haspulse: number
+  cloneCountsByLabel: Record<string, number>
 }> {
   console.log('━━━ Phase 5: Build dev Space/Context scaffolding ━━━')
   const session = devDriver.session()
@@ -865,6 +866,96 @@ async function phase5_buildDevStructure(): Promise<{
     haspulse += hpMe
     console.log(`   ✓ HAS_PULSE (MeSpace pulses): ${hpMe}`)
 
+    // 5g2. Split shared personal pulses into independent per-owner copies.
+    // A MeSpace is a private/personal space, so a pulse that 5g anchored in
+    // MORE THAN ONE MeSpace (a core value created/embraced by several users —
+    // e.g. "Love") is currently a single node shared across owners: deleting it
+    // from one MeSpace would delete it from the others. Per the directive, each
+    // owner must get their own copy. We keep the original for the first owner
+    // (lowest id, deterministic) and clone it for each additional owner, MOVING
+    // that owner's person↔pulse edges (CREATED_BY/INITIATED_BY/EMBRACES/
+    // GUIDED_BY) and their MeSpace HAS_PULSE onto the clone — so the two copies
+    // share no relationships and can be edited/deleted independently. Edges that
+    // don't belong to a specific owner (e.g. a Goal's ALIGNED_TO) stay on the
+    // original (the first owner's copy). Only MeSpace (personal) pulses are
+    // split; WeSpace (community) pulses are shared by design.
+    const sharedRes = await session.run(
+      `MATCH (p:FieldPulse)
+       WHERE NOT EXISTS {
+         MATCH (c:Community)-[r]->(p) WHERE type(r) IN $rels
+       }
+       MATCH (ctx:FieldContext)-[:HAS_PULSE]->(p)
+       WHERE ctx.id STARTS WITH 'context_mespace_'
+       MATCH (owner:Person)-[:OWNS]->(:MeSpace)-[:HAS_CONTEXT]->(ctx)
+       WITH p, collect(DISTINCT {ownerId: owner.id, ctxId: ctx.id}) AS owners
+       WHERE size(owners) > 1
+       RETURN p.id AS pulseId, labels(p) AS labels, owners`,
+      { rels }
+    )
+    const cloneCountsByLabel: Record<string, number> = {}
+    let clonesCreated = 0
+    for (const rec of sharedRes.records) {
+      const pulseId = rec.get('pulseId') as string
+      const labels = rec.get('labels') as string[]
+      const owners = (
+        rec.get('owners') as { ownerId: string; ctxId: string }[]
+      )
+        .slice()
+        .sort((a, b) => (a.ownerId < b.ownerId ? -1 : a.ownerId > b.ownerId ? 1 : 0))
+      // owners[0] keeps the original; clone for each additional owner.
+      for (const extra of owners.slice(1)) {
+        const cloneId = `${pulseId}__ms_${extra.ownerId}`
+        await session.run(
+          `MATCH (orig:FieldPulse {id: $pulseId})
+           MATCH (owner:Person {id: $ownerId})
+           MATCH (ctx:FieldContext {id: $ctxId})
+           // clone the node with identical labels + properties, new id
+           CALL apoc.create.node(
+             labels(orig),
+             apoc.map.setKey(properties(orig), 'id', $cloneId)
+           ) YIELD node AS clone
+           CREATE (ctx)-[:HAS_PULSE]->(clone)
+           // move this owner's outgoing pulse→owner edges (CREATED_BY,
+           // INITIATED_BY) onto the clone
+           WITH orig, owner, ctx, clone
+           CALL {
+             WITH orig, owner, clone
+             MATCH (orig)-[e:CREATED_BY|INITIATED_BY]->(owner)
+             CALL apoc.create.relationship(clone, type(e), properties(e), owner)
+               YIELD rel
+             DELETE e
+             RETURN count(*) AS outMoved
+           }
+           // move this owner's incoming owner→pulse edges (EMBRACES, GUIDED_BY)
+           CALL {
+             WITH orig, owner, clone
+             MATCH (owner)-[e:EMBRACES|GUIDED_BY]->(orig)
+             CALL apoc.create.relationship(owner, type(e), properties(e), clone)
+               YIELD rel
+             DELETE e
+             RETURN count(*) AS inMoved
+           }
+           // detach the original from this owner's MeSpace context
+           CALL {
+             WITH orig, ctx
+             MATCH (ctx)-[hp:HAS_PULSE]->(orig)
+             DELETE hp
+             RETURN count(*) AS hpRemoved
+           }
+           RETURN clone.id AS cloneId`,
+          { pulseId, ownerId: extra.ownerId, ctxId: extra.ctxId, cloneId }
+        )
+        clonesCreated++
+        for (const l of labels) {
+          cloneCountsByLabel[l] = (cloneCountsByLabel[l] ?? 0) + 1
+        }
+      }
+    }
+    haspulse += clonesCreated
+    console.log(
+      `   ✓ Shared MeSpace pulses split into per-owner copies: ${clonesCreated} clone(s)`
+    )
+
     // 5h. Fallback WeSpace for orphans (no creator-with-MeSpace, no community).
     // Owned by and shared with the migration stewards (FALLBACK_STEWARD_EMAILS)
     // so they have ADMIN access to triage and move orphaned content into the
@@ -964,7 +1055,7 @@ async function phase5_buildDevStructure(): Promise<{
     }
 
     console.log('✅ Dev structure built\n')
-    return { meSpaces, weSpaces, contexts, haspulse }
+    return { meSpaces, weSpaces, contexts, haspulse, cloneCountsByLabel }
   } finally {
     await session.close()
   }
@@ -1023,7 +1114,8 @@ async function phase5b_setDevLoginPassword() {
  */
 async function phase6_validate(
   expectedNodeTotals: Record<string, number>,
-  relCounts: Record<string, number>
+  relCounts: Record<string, number>,
+  cloneCountsByLabel: Record<string, number> = {}
 ): Promise<{ pass: boolean; report: string[] }> {
   console.log('━━━ Phase 6: Validate parity ━━━')
   const prodSession = prodDriver.session()
@@ -1081,11 +1173,17 @@ async function phase6_validate(
         { label: m.devLabel }
       )
       const devTotal = toInt(devTotalResult.records[0].get('c'))
-      const ok = devTotal === prodTotal
+      // Phase 5g2 intentionally clones shared personal pulses (one copy per
+      // MeSpace owner), so dev legitimately exceeds the prod source count by
+      // the number of clones carrying this label.
+      const clones = cloneCountsByLabel[m.devLabel] ?? 0
+      const expected = prodTotal + clones
+      const ok = devTotal === expected
       if (!ok) pass = false
       const mark = ok ? '✓' : '✗'
+      const cloneNote = clones > 0 ? ` (+${clones} per-owner clone(s))` : ''
       report.push(
-        `  ${mark} ${m.devLabel} merge: prod(${m.prodLabels.join('+')})=${prodTotal}, dev=${devTotal}`
+        `  ${mark} ${m.devLabel} merge: prod(${m.prodLabels.join('+')})=${prodTotal}, dev=${devTotal}${cloneNote}`
       )
     }
 
@@ -1132,9 +1230,9 @@ async function main() {
     await phase2_applySchema()
     const { totals } = await phase3_migrateNodes()
     const relCounts = await phase4_migrateRelationships()
-    await phase5_buildDevStructure()
+    const { cloneCountsByLabel } = await phase5_buildDevStructure()
     await phase5b_setDevLoginPassword()
-    const { pass } = await phase6_validate(totals, relCounts)
+    const { pass } = await phase6_validate(totals, relCounts, cloneCountsByLabel)
 
     if (!pass) {
       console.log(

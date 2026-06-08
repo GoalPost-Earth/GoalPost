@@ -179,6 +179,27 @@ WeSpace (community precedence preserved).
 seeded content behave identically. Neither 5e2 nor 5e3 breaks Phase 6
 parity (they only *add* edges; dev counts stay ≥ prod).
 
+**Shared-pulse split (Phase 5e2 placement + Phase 5g2).** A MeSpace is a
+*personal* space, so a pulse must not be a single node shared across several
+MeSpaces — otherwise one owner deleting it would delete it for the others. A
+core value created/embraced by multiple users (e.g. "Love" — multiple
+`CREATED_BY`, or multiple person-`EMBRACES`) would otherwise land in each
+owner's MeSpace as one shared node. After placement, **Phase 5g2** finds every
+personal (non-community) pulse anchored in more than one MeSpace, keeps the
+original for the first owner (lowest id, deterministic), and **clones it once
+per additional owner** (`<id>__ms_<ownerId>`, via `apoc.create.node` copying
+all labels + props). Each owner's person↔pulse edges
+(`CREATED_BY`/`INITIATED_BY`/`EMBRACES`/`GUIDED_BY`) and their MeSpace
+`HAS_PULSE` are **moved** onto that owner's copy, so the copies share no
+relationships and are independently editable/deletable. Edges not tied to a
+specific owner (e.g. a Goal's `ALIGNED_TO`) stay on the original. WeSpace
+(community) pulses are intentionally shared and are never split.
+
+Because cloning *adds* nodes, the Phase 6 merge check (`StoryPulse`/`GoalPulse`/
+`ResourcePulse` exact-equality) is told the per-label clone count and asserts
+`dev === prod + clones` (the moved edges are count-neutral, so relationship
+parity is unaffected).
+
 The structures, in order:
 
 1. **MeSpace per `:User`** (`id = 'mespace_' + person.id`), with
