@@ -96,10 +96,36 @@ do not paste them in chat or commit them.
 | `Resource` | `FieldPulse:ResourcePulse:Resource` | |
 
 For every pulse node, the prod `name` property is **mirrored** to
-`content` (the dev pulse type requires `content`). This is a 1:1
-schema-driven rename — no new data is invented. All other properties
-(`description`, `why`, `status`, `location`, `time`, `createdAt`,
+`content` and `title` (the dev pulse type requires both as non-null).
+This is a 1:1 schema-driven rename — no new data is invented. All other
+properties (`description`, `why`, `location`, `time`, `createdAt`,
 `updatedAt`, etc.) are preserved verbatim.
+
+**Non-null schema reconciliation (Phase 3c overlay).** A few dev fields
+are declared non-null but have no faithful prod equivalent. Leaving them
+null/invalid is silently fatal: the single-pulse detail query selects
+them, and because the root list types are `[GoalPulse!]!` etc., one bad
+non-null field nullifies the *entire* GraphQL response (non-null
+propagation) → the drawer shows "This entity is no longer available". The
+field-context **list** query avoids this only because it selects a minimal
+field set. The overlay therefore normalizes, at node-create time:
+
+- **`status` → `GoalStatus`-valid on *every* pulse.** `GoalPulse.status` is
+  `GoalStatus!` (`ACTIVE | PAUSED | COMPLETED`); `Resource`/`Story` status is a
+  free `String`. But the GraphQL layer cross-reads `status` against the
+  `GoalStatus` enum whenever a `FieldPulse` **interface** list is queried with a
+  `... on GoalPulse { status }` fragment — so a sibling Resource/Story holding
+  the legacy `"Active"`/`"Inactive"` fails enum coercion and nulls the whole
+  response. Therefore `normalizeGoalStatus` is applied to **all** pulses:
+  `Active→ACTIVE`, `Inactive→PAUSED`, valid values pass through; Goal also
+  defaults missing/unknown → `ACTIVE`. (Detail queries should also avoid
+  selecting GoalPulse-only enum fields across a heterogeneous `context.pulses`
+  list — see `PULSE_DETAILS_QUERIES.ts`, which no longer fans out to siblings.)
+- **`ResourcePulse.resourceType` → `String!`.** Prod `Resource` has no
+  resource-type concept, so a neutral default (`'general'`,
+  `DEFAULT_RESOURCE_TYPE`) is backfilled. Stewards refine later.
+- **`modifiedAt`** is mirrored from `createdAt` (read by several dev
+  surfaces; legacy nodes lack it — matches the seed).
 
 ### Passthrough nodes
 
@@ -132,6 +158,26 @@ Phase 5 creates them deterministically from prod data, following the
 via one of `EMBRACES`, `MOTIVATED_BY`, `PROVIDES`, or `HAS_ACCESS_TO`
 (`COMMUNITY_PULSE_RELS` in the script). These edges migrate 1:1 in Phase
 4, so Phase 5 detects community membership directly in dev.
+
+**Personal-authorship attribution (Phase 5e2).** Pulse placement keys off
+`CREATED_BY`, but in prod a person's own pulses are not always linked that
+way — **core values especially are linked by
+`(Person)-[:EMBRACES|GUIDED_BY]->(CoreValue)`**, not `CREATED_BY`. Left
+unattributed, those pulses have no recognized creator and fall through to
+the *"Migrated (unattributed)"* fallback WeSpace instead of the owner's
+MeSpace. Phase 5e2 fixes this: for any creator-less, non-community pulse
+that an auth-capable `:User` embraces or is guided by, it wires
+`CREATED_BY` **and** `INITIATED_BY` from that user, so the standard
+MeSpace placement (5g) anchors it in their MeSpace. Community-owned pulses
+are excluded, so community `EMBRACES` still routes to the community
+WeSpace (community precedence preserved).
+
+**`INITIATED_BY` mirror (Phase 5e3).** Migrated pulses carry only the prod
+`CREATED_BY` edge, but dev surfaces (e.g. "my pulses", resonance) read
+`INITIATED_BY` — the seed deliberately wires both. Phase 5e3 mirrors
+`CREATED_BY → INITIATED_BY` for every pulse missing it, so migrated and
+seeded content behave identically. Neither 5e2 nor 5e3 breaks Phase 6
+parity (they only *add* edges; dev counts stay ≥ prod).
 
 The structures, in order:
 

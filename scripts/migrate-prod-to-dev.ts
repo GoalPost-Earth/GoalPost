@@ -8,10 +8,19 @@
  *     new dev pulse ontology (FieldPulse + StoryPulse / ResourcePulse /
  *     GoalPulse). Preserve original labels alongside the new ones so the prod
  *     provenance survives.
- *   - Do not invent properties. The only schema-driven adaptation is:
+ *   - Do not invent data. The schema-driven adaptations are:
  *       - `name` is mirrored to both `content` and `title` on pulses (dev's
  *         pulse types require both as non-null; this is a 1:1 rename, not new
  *         data).
+ *       - Non-null reconciliation for fields prod has no faithful value for
+ *         (see Phase 3c overlay + kb/08-migration.md): GoalPulse.status is
+ *         coerced to the GoalStatus enum, ResourcePulse.resourceType is
+ *         backfilled to a neutral default, and modifiedAt mirrors createdAt.
+ *         Without these the detail drawer query nulls out (non-null
+ *         propagation) and shows "entity no longer available".
+ *       - Personal-authorship attribution (Phase 5e2): person-embraced /
+ *         guided core values gain CREATED_BY + INITIATED_BY so they anchor in
+ *         the owner's MeSpace instead of the unattributed fallback.
  *       - Each migrated User gets a MeSpace (auth requirement; one per
  *         Person invariant), now with a FieldContext for pulse anchoring.
  *       - Each prod Community becomes a WeSpace (one per Community),
@@ -133,6 +142,35 @@ const PULSE_LABEL_MAP: Record<string, string[]> = {
   CoreValue: ['FieldPulse', 'StoryPulse', 'CoreValue'],
   Goal: ['FieldPulse', 'GoalPulse', 'Goal'],
   Resource: ['FieldPulse', 'ResourcePulse', 'Resource'],
+}
+
+// Default for ResourcePulse.resourceType — prod `Resource` nodes carry no
+// resource-type concept, but dev's schema declares `resourceType: String!`
+// (non-null). Any detail query selecting it on a null value nulls the whole
+// response via GraphQL non-null propagation → the "entity no longer available"
+// drawer error. Backfill a neutral default so the contract holds; stewards can
+// refine later.
+const DEFAULT_RESOURCE_TYPE = 'general'
+
+// Map a legacy prod Goal.status to a valid dev `GoalStatus` enum member.
+// Dev's `GoalPulse.status` is `GoalStatus!` (enum = ACTIVE | PAUSED | COMPLETED,
+// non-null). Prod stores free strings ("Active" / "Inactive"); an invalid enum
+// value fails coercion on the non-null field and nulls the entire detail query.
+// Mapping (per migration decision): Active→ACTIVE, Inactive→PAUSED,
+// already-valid values pass through, everything else (incl. missing) → ACTIVE.
+function normalizeGoalStatus(raw: unknown): string {
+  const v = typeof raw === 'string' ? raw.trim().toUpperCase() : ''
+  switch (v) {
+    case 'ACTIVE':
+      return 'ACTIVE'
+    case 'INACTIVE':
+    case 'PAUSED':
+      return 'PAUSED'
+    case 'COMPLETED':
+      return 'COMPLETED'
+    default:
+      return 'ACTIVE'
+  }
 }
 
 // A prod pulse "belongs to a community" when a Community points at it via one
@@ -500,6 +538,27 @@ async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }
       const patch: Record<string, unknown> = {}
       if (props.name != null && props.content == null) patch.content = props.name
       if (props.name != null && props.title == null) patch.title = props.name
+      // modifiedAt is read by several dev surfaces; legacy nodes lack it.
+      // Mirror createdAt so the property is always present (matches the seed).
+      if (props.modifiedAt == null && props.createdAt != null)
+        patch.modifiedAt = props.createdAt
+      // status normalization. GoalPulse.status is a non-null GoalStatus enum;
+      // ResourcePulse/StoryPulse.status are free Strings. BUT the GraphQL layer
+      // cross-reads `status` against the GoalStatus enum whenever a FieldPulse
+      // *interface* list is queried (e.g. context.pulses with a
+      // `... on GoalPulse { status }` fragment): a sibling Resource/Story whose
+      // status is the legacy "Active"/"Inactive" then fails enum coercion and
+      // nulls the whole response. So normalize status to a valid GoalStatus
+      // member on *every* pulse: Goal always (required, fills missing), and
+      // Resource/Story whenever a legacy status is present.
+      if (prodLabel === 'Goal') {
+        patch.status = normalizeGoalStatus(props.status)
+      } else if (props.status != null) {
+        patch.status = normalizeGoalStatus(props.status)
+      }
+      // ResourcePulse.resourceType: backfill the non-null default when absent.
+      if (prodLabel === 'Resource' && props.resourceType == null)
+        patch.resourceType = DEFAULT_RESOURCE_TYPE
       return patch
     })
     totals[prodLabel] = count
@@ -727,6 +786,49 @@ async function phase5_buildDevStructure(): Promise<{
     )
     contexts += toInt(wsCtx.records[0].get('c'))
     console.log(`   ✓ Community FieldContexts created: ${toInt(wsCtx.records[0].get('c'))}`)
+
+    // 5e2. Personal-authorship attribution. In prod, a person's own pulses are
+    // not always linked by CREATED_BY — core values especially are linked by
+    // (Person)-[:EMBRACES|GUIDED_BY]->(CoreValue). Without a recognized creator,
+    // 5g can't place them in the owner's MeSpace and they fall through to the
+    // "Migrated (unattributed)" fallback. Wire CREATED_BY + INITIATED_BY from the
+    // authoring :User so the existing 5g placement anchors them in that user's
+    // MeSpace. Only :User persons (auth-capable, guaranteed a MeSpace via 5a)
+    // qualify. Community-owned pulses are excluded so community EMBRACES still
+    // routes to the community WeSpace (5f) — i.e. community precedence is kept.
+    const attributed = await session.run(
+      `MATCH (person:Person:User)-[:EMBRACES|GUIDED_BY]->(pulse:FieldPulse)
+       WHERE NOT (pulse)-[:CREATED_BY]->(:Person)
+         AND NOT EXISTS {
+           MATCH (c:Community)-[r]->(pulse) WHERE type(r) IN $rels
+         }
+       WITH DISTINCT pulse, person
+       MERGE (pulse)-[:CREATED_BY]->(person)
+       MERGE (pulse)-[:INITIATED_BY]->(person)
+       RETURN count(*) AS c`,
+      { rels }
+    )
+    console.log(
+      `   ✓ Personal-authorship attributions (EMBRACES/GUIDED_BY → CREATED_BY): ${toInt(
+        attributed.records[0].get('c')
+      )}`
+    )
+
+    // 5e3. INITIATED_BY mirror. Dev surfaces (e.g. "my pulses", resonance) read
+    // INITIATED_BY, and the seed script wires both CREATED_BY and INITIATED_BY
+    // "so any resolver picks it up". Migrated pulses only have the prod
+    // CREATED_BY edge — mirror it so behaviour matches seeded content.
+    const initiated = await session.run(
+      `MATCH (pulse:FieldPulse)-[:CREATED_BY]->(person:Person)
+       WHERE NOT (pulse)-[:INITIATED_BY]->(person)
+       MERGE (pulse)-[:INITIATED_BY]->(person)
+       RETURN count(*) AS c`
+    )
+    console.log(
+      `   ✓ INITIATED_BY mirrored from CREATED_BY: ${toInt(
+        initiated.records[0].get('c')
+      )}`
+    )
 
     // 5f. HAS_PULSE: community pulses → their community's FieldContext. Covers
     // pulses with and without a creator, and dual-community pulses (anchored
