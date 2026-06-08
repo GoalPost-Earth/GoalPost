@@ -102,6 +102,33 @@ export function OnboardingProvider({
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    // When the tour activates, the active step may be anchored to an element
+    // on a page the user isn't currently on (e.g. a fresh login lands on
+    // /protected/dashboard, but step 1 lives on /protected/spaces). Without
+    // this, TourOverlay can't find its anchor element and silently renders
+    // nothing — the tour "doesn't trigger". Route to the step's page so the
+    // overlay has somewhere to mount. No-op when already on the right page.
+    const routeToActiveStep = (index: number) => {
+      const stepObj = steps[index]
+      if (!stepObj) return
+      let target = stepObj.page
+      if (target.includes('[id]')) {
+        const meSpaceId = localStorage.getItem('meSpaceId')
+        // meSpaceId is hydrated asynchronously by UserDataProvider, which
+        // mounts inside this provider — on a cold login it may not be set
+        // yet. Rather than leave the user stranded on a page where a
+        // selector-anchored step can't render, fall back to the spaces
+        // landing page (matches markComplete/restartTour navigation).
+        target = meSpaceId ? target.replace('[id]', meSpaceId) : '/protected/spaces'
+      }
+      // Compare against window.location.pathname (not the usePathname() value)
+      // on purpose: it keeps this init effect from depending on `pathname`,
+      // which would make it re-run on every navigation and risk a redirect loop.
+      if (window.location.pathname !== target) {
+        router.push(target)
+      }
+    }
+
     const initializeOnboarding = async () => {
       try {
         const progress = await callOnboardingAPI('GET')
@@ -136,13 +163,18 @@ export function OnboardingProvider({
           const nextIndex = steps.findIndex(
             (step) => !progress.onboardingCompletedSteps.includes(step.id)
           )
-          setCurrentStepIndex(nextIndex >= 0 ? nextIndex : 0)
+          const resumeIndex = nextIndex >= 0 ? nextIndex : 0
+          setCurrentStepIndex(resumeIndex)
           setIsOnboarding(!progress.onboardingIsCompleted)
+          if (!progress.onboardingIsCompleted) {
+            routeToActiveStep(resumeIndex)
+          }
         } else {
           // Brand new user - start onboarding
           setIsOnboarding(true)
           setCurrentStepIndex(0)
           setCompletedSteps([])
+          routeToActiveStep(0)
         }
       } catch (error) {
         console.warn('Error loading onboarding progress from API:', error)
@@ -165,23 +197,28 @@ export function OnboardingProvider({
               const nextIndex = steps.findIndex(
                 (step) => !progress.completedSteps.includes(step.id)
               )
-              setCurrentStepIndex(nextIndex >= 0 ? nextIndex : 0)
+              const resumeIndex = nextIndex >= 0 ? nextIndex : 0
+              setCurrentStepIndex(resumeIndex)
               setIsOnboarding(true)
+              routeToActiveStep(resumeIndex)
             } else {
               setIsOnboarding(true)
+              routeToActiveStep(0)
             }
           } else {
             setIsOnboarding(true)
+            routeToActiveStep(0)
           }
         } catch (fallbackError) {
           console.warn('Fallback localStorage loading failed:', fallbackError)
           setIsOnboarding(true)
+          routeToActiveStep(0)
         }
       }
     }
 
     initializeOnboarding()
-  }, [steps])
+  }, [steps, router])
 
   // Save progress to database whenever state changes
   const saveProgress = useCallback(
