@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import type { HitTargets, Node, Relationship } from '@neo4j-nvl/base'
 import type { MouseEventCallbacks } from '@neo4j-nvl/react'
@@ -23,7 +23,10 @@ import {
 } from '@/lib/nvl-utils'
 import { createClusteredFieldNodePositions } from '@/lib/field-cluster-layout'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
-import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import {
+  dispatchOpenInfoDrawer,
+  dispatchCloseInfoDrawer,
+} from '@/components/dashboard/entity-info-drawer'
 import { GraphLoadingState } from './graph-loading-state'
 import { PersonBubbleContent } from './person-bubble-content'
 
@@ -40,11 +43,13 @@ import { PersonBubbleContent } from './person-bubble-content'
  * so flipping Dashboard ↔ Graph is a pure frontend toggle: no re-fetch,
  * no loading spinner, no network round-trip.
  *
- * Click a bubble to open the unified EntityInfoDrawer for that entity
- * (space, field context, pulse, or person). The drawer paints the
- * pre-known label immediately from the bubble's descriptor and then
- * loads the full details via the entity's own GraphQL query — so users
- * can drill from a field bubble's drawer into one of its pulses
+ * Click a bubble's body to drill *into* that entity — a route change
+ * re-scopes the canvas (space → its field contexts, field → its pulses).
+ * The bubble's (i) info button instead opens the unified EntityInfoDrawer
+ * for that entity (space, field context, pulse, or person). The drawer
+ * paints the pre-known label immediately from the bubble's descriptor and
+ * then loads the full details via the entity's own GraphQL query — so
+ * users can drill from a field bubble's drawer into one of its pulses
  * without leaving the spatial canvas.
  *
  * Zoom is driven by the floating studio action bar via the
@@ -217,6 +222,7 @@ export const SpatialView: FC = () => {
   // toggle covers that gap so the whole hitbox feels clickable.
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null)
   const isHoveringNodeRef = useRef(false)
+  const router = useRouter()
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // We must NOT read `sessionContext.activeSpaceId` here — that value also
@@ -641,13 +647,12 @@ export const SpatialView: FC = () => {
     return edges
   }, [inField, descriptors, fieldDetailsData])
 
-  // Every node click opens the unified EntityInfoDrawer. We pass through
+  // The (i) info button opens the unified EntityInfoDrawer. We pass through
   // the label we already have in hand from the descriptor so the drawer
   // can paint the title immediately; the drawer body then fetches the
   // full entity details (members, fields, owner, pulses, resonances) so
   // the user can navigate into adjacent entities from within the drawer.
-  // The "Open full page" CTA in the drawer is how users still reach the
-  // dedicated dashboard route when they want it.
+  // Clicking the node body itself navigates instead (see handleNavigate).
   const handleOpen = useCallback(
     (id: string) => {
       const desc = descriptors.find((d) => d.id === id)
@@ -662,6 +667,39 @@ export const SpatialView: FC = () => {
       dispatchOpenInfoDrawer({ type, id, label })
     },
     [descriptors]
+  )
+
+  // A node-body click drills *into* the entity by changing the route, which
+  // re-scopes the canvas (scope is derived strictly from the pathname via
+  // focalEntityFromRoute): space → its field contexts, field → its pulses.
+  // These are the same dashboard routes the drawer's "Open full page" CTA
+  // uses, so the studio canvas stays mounted and simply re-scopes inward.
+  // Pulses have no dedicated page route, so a click on one falls back to
+  // opening the drawer — the same surface the (i) info button opens. We
+  // close any open drawer first for the navigating cases so it doesn't
+  // linger over the freshly drilled-in scope.
+  const handleNavigate = useCallback(
+    (id: string) => {
+      const desc = descriptors.find((d) => d.id === id)
+      if (!desc) return
+      switch (desc.kind) {
+        case 'space':
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/space/${id}`)
+          return
+        case 'field':
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/field-context/${id}`)
+          return
+        case 'person':
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/persons/${id}`)
+          return
+        default:
+          handleOpen(id)
+      }
+    },
+    [descriptors, router, handleOpen]
   )
 
   // Mount React EntityBubbles into their NVL containers. Bubble body
@@ -784,14 +822,16 @@ export const SpatialView: FC = () => {
 
   // NVL owns clicks + drag now. `onNodeClick` fires on a *real* click
   // (NVL's DragNodeInteraction suppresses click-as-drag for us), so
-  // dragging a node moves it through space and a tap opens the
-  // EntityInfoDrawer for that entity. The EntityBubble's `onClick`
-  // prop is intentionally not passed in render below; the (i) corner
-  // button still uses React `onClick` + `stopImmediatePropagation` so
-  // NVL doesn't also see the info-button click as a node click.
+  // dragging a node moves it through space and a tap navigates *into* the
+  // entity (re-scoping the canvas via a route change) — the visual
+  // space → field → pulse drill-down. To open the EntityInfoDrawer
+  // instead, the user taps the (i) corner button, which uses React
+  // `onClick` + `stopImmediatePropagation` so NVL doesn't also see the
+  // info-button click as a node click. The EntityBubble's `onClick` prop
+  // is intentionally not passed in render below.
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
-      onNodeClick: (node) => handleOpen(node.id),
+      onNodeClick: (node) => handleNavigate(node.id),
       onHover: (_element, hitTargets: HitTargets) => {
         const hoveringNode = hitTargets.nodes.length > 0
         if (hoveringNode === isHoveringNodeRef.current) return
@@ -803,7 +843,7 @@ export const SpatialView: FC = () => {
       onPan: true,
       onZoom: true,
     }),
-    [handleOpen]
+    [handleNavigate]
   )
 
   // `layout: 'hierarchical'` runs the dagre tree algorithm. With our
@@ -822,8 +862,10 @@ export const SpatialView: FC = () => {
         packing: 'bin' as const,
       },
       initialZoom: 0.7,
-      minScale: 0.2,
-      maxScale: 3,
+      // NVL's real clamp keys are minZoom/maxZoom — minScale/maxScale are
+      // silently ignored, leaving the permissive 0.075–10 defaults in force.
+      minZoom: 0.2,
+      maxZoom: 3,
     }),
     []
   )

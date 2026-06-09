@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import dynamic from 'next/dynamic'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   dispatchOpenInfoDrawer,
+  dispatchCloseInfoDrawer,
   type InfoEntityType,
 } from '@/components/dashboard/entity-info-drawer'
 import { useQuery } from '@apollo/client/react'
@@ -257,6 +258,7 @@ export const BloomView: FC = () => {
   // re-render the canvas chunk on every pixel.
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null)
   const isHoveringNodeRef = useRef(false)
+  const router = useRouter()
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // Reading `sessionContext.activeSpaceId` would conflate the user's
@@ -652,9 +654,44 @@ export const BloomView: FC = () => {
     [overlay, inField, pulses, inSpace, fieldContexts, spaces, setFocalEntity]
   )
 
+  // A double click drills *into* the entity by changing the route, which
+  // re-scopes the canvas (scope is derived strictly from the pathname via
+  // focalEntityFromRoute): a top-level space → its field contexts, an
+  // in-space field → its pulses. These are the same dashboard routes the
+  // drawer's "Open full page" CTA uses, so the studio canvas stays mounted
+  // and re-scopes inward. Overlay nodes and pulses have no page route, so a
+  // double click on them falls back to the single-click drawer behavior.
+  // NVL fires the single-click `onNodeClick` (which opens the drawer)
+  // *before* this handler, so for the navigating cases we close that drawer
+  // first — otherwise it lingers open over the freshly drilled-in scope.
+  const handleNodeNavigate = useCallback(
+    (node: Node) => {
+      const id = String(node.id)
+      if (overlay || inField) {
+        handleNodeClick(node)
+        return
+      }
+      if (inSpace) {
+        const ctx = fieldContexts.find((f) => f.id === id)
+        if (ctx) {
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/field-context/${ctx.id}`)
+        }
+        return
+      }
+      const space = spaces.find((s) => s.id === id)
+      if (space) {
+        dispatchCloseInfoDrawer()
+        router.push(`/protected/dashboard/space/${space.id}`)
+      }
+    },
+    [overlay, inField, inSpace, fieldContexts, spaces, router, handleNodeClick]
+  )
+
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
       onNodeClick: (node) => handleNodeClick(node),
+      onNodeDoubleClick: (node) => handleNodeNavigate(node),
       onCanvasClick: () => setSelectedNode(null),
       onHover: (_element, hitTargets: HitTargets) => {
         const hoveringNode = hitTargets.nodes.length > 0
@@ -667,7 +704,7 @@ export const BloomView: FC = () => {
       onPan: true,
       onZoom: true,
     }),
-    [handleNodeClick]
+    [handleNodeClick, handleNodeNavigate]
   )
 
   // Bloom is a force-directed exploration surface. The pre-computed (x, y)
@@ -683,8 +720,10 @@ export const BloomView: FC = () => {
     () => ({
       layout: 'forceDirected',
       initialZoom: 0.7,
-      minScale: 0.2,
-      maxScale: 3,
+      // NVL's real clamp keys are minZoom/maxZoom — minScale/maxScale are
+      // silently ignored, leaving the permissive 0.075–10 defaults in force.
+      minZoom: 0.2,
+      maxZoom: 3,
       layoutOptions: {
         simulationIterations: 400,
         gravity: 25,
