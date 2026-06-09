@@ -44,6 +44,15 @@ interface ServerFocalResponse {
 
 interface FocalEntityContextValue {
   focalEntity: FocalEntity | null
+  /**
+   * The focal derived purely from the current route, ignoring manual /
+   * persisted overrides. This is the user's *location* in the app tree —
+   * what the breadcrumb must reflect. Tapping a node in Bloom/Graph sets a
+   * `manual` focal (for assistant scope), which must NOT change where the
+   * breadcrumb says the user is. Null on neutral surfaces (dashboard root,
+   * /graph, /assistant) that don't encode a focal entity.
+   */
+  routeFocalEntity: FocalEntity | null
   sessionContext: SessionContext
   setFocalEntity: (entity: FocalEntity | null) => void
   setFocalLabel: (
@@ -65,6 +74,7 @@ const EMPTY_SESSION_CONTEXT: SessionContext = {
 // hook is called outside a provider.
 const FALLBACK_VALUE: FocalEntityContextValue = {
   focalEntity: null,
+  routeFocalEntity: null,
   sessionContext: EMPTY_SESSION_CONTEXT,
   setFocalEntity: () => {},
   setFocalLabel: () => {},
@@ -267,6 +277,23 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
     return enrichWithLabel(focalIdentity, labelCache, parentsCache)
   }, [focalIdentity, labelCache, parentsCache])
 
+  // Route-only focal — deliberately ignores `manualFocal` and the persisted
+  // seed so the breadcrumb tracks the user's *location*, not the last node
+  // they tapped in Bloom/Graph (which sets a `manual` focal). Enriched from
+  // the same label/parent caches the detail pages populate, so the full
+  // `Dashboard › Space › Field` chain survives node selection.
+  const routeFocalEntity = useMemo<FocalEntity | null>(() => {
+    const routeMatch = focalEntityFromRoute(pathname, hints)
+    if (!routeMatch) return null
+    const identity: FocalEntity = {
+      type: routeMatch.type,
+      id: routeMatch.id,
+      focusedAt: focalIdentity?.focusedAt ?? '',
+      source: 'route',
+    }
+    return enrichWithLabel(identity, labelCache, parentsCache)
+  }, [pathname, hints, focalIdentity?.focusedAt, labelCache, parentsCache])
+
   // Hydrate from the server once a user is in scope. The server is the
   // source of truth for "where the user last was" so a fresh browser /
   // device picks up their focal from their previous session. If the
@@ -392,12 +419,20 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
   const value = useMemo<FocalEntityContextValue>(
     () => ({
       focalEntity,
+      routeFocalEntity,
       sessionContext,
       setFocalEntity,
       setFocalLabel,
       setFocalParents,
     }),
-    [focalEntity, sessionContext, setFocalEntity, setFocalLabel, setFocalParents]
+    [
+      focalEntity,
+      routeFocalEntity,
+      sessionContext,
+      setFocalEntity,
+      setFocalLabel,
+      setFocalParents,
+    ]
   )
 
   return (

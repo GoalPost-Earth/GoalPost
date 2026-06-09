@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { useFocalEntity } from '@/contexts'
 import type {
   FocalEntity,
-  FocalEntityParent,
   FocalEntityType,
 } from '@/lib/focal-entity/types'
 
@@ -71,13 +70,11 @@ interface Crumb {
   isCurrent: boolean
 }
 
-function buildCrumbs(focal: FocalEntity | null): Crumb[] {
-  // Only the route-derived focal positions the user inside the app tree.
-  // Persisted/manual focals are "what the user last/currently inspected" —
-  // useful to the assistant, but not where the user *is*. The breadcrumb
-  // should not lie about location.
-  const routeFocal = focal?.source === 'route' ? focal : null
-
+function buildCrumbs(routeFocal: FocalEntity | null): Crumb[] {
+  // `routeFocal` is the route-derived focal (see
+  // FocalEntityContext.routeFocalEntity) — the user's *location*, not the
+  // manual/persisted focal that node taps in Bloom/Graph mutate. The
+  // breadcrumb must not lie about location, so it tracks the route alone.
   const crumbs: Crumb[] = [
     {
       key: 'dashboard',
@@ -124,7 +121,7 @@ function buildCrumbs(focal: FocalEntity | null): Crumb[] {
  */
 export const StudioBreadcrumb: FC = () => {
   const isMounted = useSyncExternalStore(NOOP_SUBSCRIBE, GET_TRUE, GET_FALSE)
-  const { focalEntity } = useFocalEntity()
+  const { routeFocalEntity } = useFocalEntity()
   const router = useRouter()
 
   if (!isMounted) {
@@ -141,7 +138,7 @@ export const StudioBreadcrumb: FC = () => {
     )
   }
 
-  const crumbs = buildCrumbs(focalEntity)
+  const crumbs = buildCrumbs(routeFocalEntity)
 
   return (
     <nav
