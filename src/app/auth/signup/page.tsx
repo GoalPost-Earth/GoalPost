@@ -67,8 +67,8 @@ function SignupPage() {
         if (data.refreshToken) {
           localStorage.setItem('refreshToken', data.refreshToken)
         }
-        // Redirect to spaces page
-        router.push('/protected/spaces')
+        // Redirect to the canvas Dashboard — the first page after signup.
+        router.push('/protected/dashboard')
       }
     } catch {
       setError('An unexpected error occurred')

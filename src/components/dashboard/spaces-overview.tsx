@@ -136,6 +136,7 @@ export function SpacesOverview() {
                 type="button"
                 role="tab"
                 aria-selected={active}
+                data-tour={f.id === 'me' ? 'me-spaces-filter' : undefined}
                 onClick={() => setFilter(f.id)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide transition-all cursor-pointer',

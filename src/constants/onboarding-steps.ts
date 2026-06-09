@@ -5,19 +5,19 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'welcome',
     title: 'Welcome to GoalPost',
     description:
-      "GoalPost is a community platform for discovering patterns across people's aspirations, resources, and stories. Let's explore how it works.",
-    page: '/protected/spaces',
+      "GoalPost is a community platform for discovering patterns across people's aspirations, resources, and stories. This is your Dashboard — your home base. Let's explore how it works.",
+    page: '/protected/dashboard',
     position: 'bottom',
-    selector: '[data-tour="spaces-container"]',
+    selector: '[data-tour="dashboard-overview"]',
   },
   {
     id: 'spaces-intro',
     title: 'Understanding Spaces',
     description:
-      "MeSpace is your personal sanctuary for self-reflection and growth. WeSpace is for community collaboration. Let's start with your MeSpace.",
-    page: '/protected/spaces',
-    position: 'right',
-    selector: '[data-tour="me-space-button"]',
+      "Your spaces live right here. MeSpace is your personal sanctuary for self-reflection and growth; WeSpace is for community collaboration. Let's start with your MeSpace.",
+    page: '/protected/dashboard',
+    position: 'bottom',
+    selector: '[data-tour="me-spaces-filter"]',
   },
   {
     id: 'fields-intro',
@@ -65,7 +65,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Your Dashboard',
     description:
       "Here you can see your recent activity, fields, spaces, and the people you're connected with. Everything in one place.",
-    page: '/protected',
+    page: '/protected/dashboard',
     position: 'left',
     selector: '[data-tour="dashboard-overview"]',
   },
@@ -74,7 +74,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Access Your Settings',
     description:
       'Click on your avatar in the top right corner to open your user menu. From there, Settings lets you adjust your theme, animations, AI assistant mode, and resonance preferences — and Profile lets you view and edit your details.',
-    page: '/protected',
+    page: '/protected/dashboard',
     position: 'top',
     selector: 'button[aria-label="User menu"]',
   },
@@ -83,7 +83,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "You're All Set!",
     description:
       'You now understand the basics. Feel free to explore, create fields and pulses, and discover resonances with others. Welcome to GoalPost!',
-    page: '/protected/spaces',
+    page: '/protected/dashboard',
     position: 'center',
     actionLabel: 'Start Exploring',
   },

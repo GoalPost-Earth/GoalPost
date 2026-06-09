@@ -103,11 +103,10 @@ export function OnboardingProvider({
     if (typeof window === 'undefined') return
 
     // When the tour activates, the active step may be anchored to an element
-    // on a page the user isn't currently on (e.g. a fresh login lands on
-    // /protected/dashboard, but step 1 lives on /protected/spaces). Without
-    // this, TourOverlay can't find its anchor element and silently renders
-    // nothing — the tour "doesn't trigger". Route to the step's page so the
-    // overlay has somewhere to mount. No-op when already on the right page.
+    // on a page the user isn't currently on. Without this, TourOverlay can't
+    // find its anchor element and silently renders nothing — the tour
+    // "doesn't trigger". Route to the step's page so the overlay has somewhere
+    // to mount. No-op when already on the right page.
     const routeToActiveStep = (index: number) => {
       const stepObj = steps[index]
       if (!stepObj) return
@@ -117,9 +116,9 @@ export function OnboardingProvider({
         // meSpaceId is hydrated asynchronously by UserDataProvider, which
         // mounts inside this provider — on a cold login it may not be set
         // yet. Rather than leave the user stranded on a page where a
-        // selector-anchored step can't render, fall back to the spaces
-        // landing page (matches markComplete/restartTour navigation).
-        target = meSpaceId ? target.replace('[id]', meSpaceId) : '/protected/spaces'
+        // selector-anchored step can't render, fall back to the canvas
+        // Dashboard (matches markComplete/restartTour navigation).
+        target = meSpaceId ? target.replace('[id]', meSpaceId) : '/protected/dashboard'
       }
       // Compare against window.location.pathname (not the usePathname() value)
       // on purpose: it keeps this init effect from depending on `pathname`,
@@ -365,8 +364,8 @@ export function OnboardingProvider({
       false
     )
 
-    // Navigate to spaces page after completion
-    router.push('/protected/spaces')
+    // Navigate to the canvas Dashboard after completion
+    router.push('/protected/dashboard')
   }, [steps, currentStepIndex, saveProgress, router])
 
   // Helper function to resolve page paths with placeholders
@@ -630,8 +629,8 @@ export function OnboardingProvider({
     // Clear from database (async)
     saveProgress(0, [], false, false)
 
-    // Navigate to spaces page
-    router.push('/protected/spaces')
+    // Navigate to the canvas Dashboard
+    router.push('/protected/dashboard')
   }, [saveProgress, router])
 
   return (

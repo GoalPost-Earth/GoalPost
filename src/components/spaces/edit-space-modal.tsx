@@ -135,7 +135,7 @@ export function EditSpaceModal({
 
       toast.success('Space deleted successfully')
       onClose()
-      router.push('/protected/spaces')
+      router.push('/protected/dashboard')
     } catch (error) {
       console.error('Error deleting space:', error)
       toast.error('Failed to delete space')
