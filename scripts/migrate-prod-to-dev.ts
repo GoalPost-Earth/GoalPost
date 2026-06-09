@@ -199,6 +199,22 @@ const FALLBACK_STEWARD_EMAILS = [
   'robert.damashek@gmail.com', // Robert Damashek
 ]
 
+// Dedicated, single-member test WeSpace rebuilt on every migration run (Phase
+// 5c). Owned SOLELY by JD — no other members — so the team can exercise the
+// invite-by-email flow against a clean, isolated space. GoalPost visibility
+// flows exclusively through shared Space membership, so a person invited here
+// is visible ONLY to JD, never to other migrated users (e.g. Robert), who are
+// not members of this space. Stable ids make it predictable across runs; Phase
+// 1 wipes dev, so each migration re-creates it fresh.
+const JD_TEST_SPACE = {
+  ownerEmail: 'jaedagy@gmail.com', // JD Addy — sole owner/member
+  spaceId: 'wespace_jd_test',
+  spaceName: 'JD Test Space',
+  contextId: 'context_jd_test_field',
+  contextTitle: 'Test Field',
+  membershipId: 'membership_jd_test',
+}
+
 // For Phase 4: when reading a prod edge whose endpoints have labels like
 // [Person, Member, User] or [CoreValue], we need to know what labels those
 // endpoints have in dev so we can disambiguate id collisions (e.g., prod
@@ -1109,6 +1125,94 @@ async function phase5b_setDevLoginPassword() {
 }
 
 /**
+ * Phase 5c: Dedicated single-member test WeSpace for JD.
+ *
+ * Rebuilds a clean WeSpace owned SOLELY by JD on every migration run so the
+ * invite-by-email flow can be exercised against an isolated space. GoalPost
+ * visibility flows exclusively through shared Space membership, so a person
+ * invited into this space is visible ONLY to JD — never to other migrated
+ * users (e.g. Robert), who are not members. JD joins as ADMIN so
+ * `canManageMembers` (OWNS or ADMIN) lets the invite mutation through.
+ * DEV-ONLY (same URI guard as the rest of the migration). Idempotent: guarded
+ * CREATE + MERGEd membership, so a re-run never dupes. Parity-safe: only adds
+ * non-prod-label nodes/edges, so Phase 6's `dev >= prod` checks still hold.
+ */
+async function phase5c_buildJdTestSpace() {
+  console.log('━━━ Phase 5c: Build JD test WeSpace ━━━')
+  const {
+    ownerEmail,
+    spaceId,
+    spaceName,
+    contextId,
+    contextTitle,
+    membershipId,
+  } = JD_TEST_SPACE
+  const session = devDriver.session()
+  try {
+    const created = await session.run(
+      `MATCH (owner:User {email: $ownerEmail})
+       WITH owner LIMIT 1
+       WHERE NOT EXISTS { MATCH (:WeSpace {id: $spaceId}) }
+       CREATE (ws:Space:WeSpace {
+         id: $spaceId,
+         name: $spaceName,
+         visibility: 'SHARED',
+         createdAt: datetime()
+       })
+       CREATE (owner)-[:OWNS]->(ws)
+       CREATE (ctx:FieldContext {
+         id: $contextId,
+         title: $contextTitle,
+         createdAt: datetime()
+       })
+       CREATE (ws)-[:HAS_CONTEXT]->(ctx)
+       RETURN count(ws) AS c`,
+      { ownerEmail, spaceId, spaceName, contextId, contextTitle }
+    )
+    const c = toInt(created.records[0]?.get('c') ?? 0)
+    if (c === 0) {
+      // The guarded CREATE produced nothing: either JD isn't in this dataset,
+      // or the space already exists. Both are non-fatal — warn and continue
+      // rather than abort the whole migration.
+      const exists = await session.run(
+        `RETURN EXISTS { MATCH (:WeSpace {id: $spaceId}) } AS e`,
+        { spaceId }
+      )
+      if (!exists.records[0]?.get('e')) {
+        console.log(
+          `   ⚠️  No :User with email ${ownerEmail} — JD test WeSpace not created`
+        )
+        console.log('✅ JD test WeSpace step skipped\n')
+        return
+      }
+      // Phase 1 wipes dev every run and main() calls this once, so in normal
+      // operation the space is never pre-existing — this branch only matters
+      // for a hypothetical partial/re-entrant run. Kept for safe idempotency.
+      console.log(`   ✓ JD test WeSpace already present (${spaceId})`)
+    } else {
+      console.log(
+        `   ✓ JD test WeSpace created (${spaceId}, owner ${ownerEmail})`
+      )
+    }
+
+    // Owner joins as ADMIN so canManageMembers() lets JD invite into the space.
+    // MERGE on the stable membership id keeps it idempotent across re-runs.
+    await session.run(
+      `MATCH (ws:WeSpace {id: $spaceId})
+       MATCH (owner:User {email: $ownerEmail})-[:OWNS]->(ws)
+       MERGE (ws)-[:HAS_MEMBER]->(sm:SpaceMembership { id: $membershipId })
+         ON CREATE SET sm.role = 'ADMIN', sm.addedAt = datetime()
+       MERGE (sm)-[:IS_MEMBER]->(owner)`,
+      { spaceId, ownerEmail, membershipId }
+    )
+    console.log(`   ✓ JD added as ADMIN of the test WeSpace`)
+  } finally {
+    await session.close()
+  }
+  console.log('✅ JD test WeSpace built\n')
+}
+
+/**
  * Phase 6: Validate parity. Compares prod and dev node/relationship counts
  * label-by-label, type-by-type.
  */
@@ -1232,6 +1336,7 @@ async function main() {
     const relCounts = await phase4_migrateRelationships()
     const { cloneCountsByLabel } = await phase5_buildDevStructure()
     await phase5b_setDevLoginPassword()
+    await phase5c_buildJdTestSpace()
     const { pass } = await phase6_validate(totals, relCounts, cloneCountsByLabel)
 
     if (!pass) {

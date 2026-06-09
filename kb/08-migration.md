@@ -259,6 +259,29 @@ warns loudly. The step is **dev-only**: the migration aborts when
 `DEV_URI === PROD_URI`, so a production account can never be rewritten. To
 reset a different account, change `DEV_LOGIN_EMAIL`/`DEV_LOGIN_PASSWORD`.
 
+### Phase 5c — JD test WeSpace
+
+After the password step, the migration rebuilds a dedicated, **single-member
+test WeSpace owned solely by JD** (`jaedagy@gmail.com`): id `wespace_jd_test`,
+name "JD Test Space", with a `FieldContext` (`context_jd_test_field`, "Test
+Field") so it renders, and JD wired as both `:OWNS` and an `ADMIN`
+`SpaceMembership` (`membership_jd_test`). Single-member **at build time** — JD
+then invites a tester into it.
+
+Its purpose is to give JD a **clean, isolated space to exercise the
+invite-by-email flow**. Because GoalPost visibility flows exclusively through
+shared Space membership, anyone JD invites here is visible **only to JD** —
+never to other migrated users (e.g. Robert), who are not members. This is
+distinct from the `seed-build-space` "Maple Street" WeSpace, which adds Robert
+and Jennifer as members and therefore can't be used for isolation testing.
+
+The step is idempotent (guarded `CREATE` + MERGEd membership), DEV-only (same
+URI guard as the rest of the migration), and parity-safe — it only adds
+non-prod-label nodes/edges, so Phase 6's `dev >= prod` checks still hold. The
+constants live in `JD_TEST_SPACE` near the top of the script. If JD isn't in
+the dataset the step warns and skips rather than aborting. To invite a tester,
+log in as JD and use invite-by-email on this space.
+
 ## Known gotchas
 
 ### `id` is not globally unique in prod
