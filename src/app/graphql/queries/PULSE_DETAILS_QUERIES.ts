@@ -124,5 +124,70 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
         }
       }
     }
+    carePulses(where: { id_EQ: $pulseId }) {
+      id
+      title
+      content
+      createdAt
+      __typename
+      intensity
+      sourceType
+      context {
+        id
+        title
+        emergentName
+        createdAt
+        space {
+          __typename
+          id
+          name
+          visibility
+        }
+        meSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+        weSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+      }
+    }
+    coreValuePulses(where: { id_EQ: $pulseId }) {
+      id
+      title
+      content
+      createdAt
+      __typename
+      intensity
+      context {
+        id
+        title
+        emergentName
+        createdAt
+        space {
+          __typename
+          id
+          name
+          visibility
+        }
+        meSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+        weSpace {
+          __typename
+          id
+          name
+          visibility
+        }
+      }
+    }
   }
 `)

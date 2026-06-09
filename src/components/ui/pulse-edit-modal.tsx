@@ -33,7 +33,12 @@ export function PulseEditModal({
   }
 
   return (
-    <OfferingModal isOpen={isOpen} onClose={onClose} position="center">
+    <OfferingModal
+      isOpen={isOpen}
+      onClose={onClose}
+      position="center"
+      title="Edit pulse"
+    >
       <div className="w-full">
         {error && (
           <div className="mb-4 p-4 rounded-xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm">
@@ -41,7 +46,6 @@ export function PulseEditModal({
           </div>
         )}
         <PulseTypeSuggestion
-          input={initialContent}
           isOpen={true}
           onSelect={handleSelect}
           onClose={onClose}

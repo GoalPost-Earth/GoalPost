@@ -33,12 +33,18 @@ import {
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
+  CREATE_CARE_PULSE_MUTATION,
+  CREATE_CORE_VALUE_PULSE_MUTATION,
   UPDATE_GOAL_PULSE_MUTATION,
   UPDATE_RESOURCE_PULSE_MUTATION,
   UPDATE_STORY_PULSE_MUTATION,
+  UPDATE_CARE_PULSE_MUTATION,
+  UPDATE_CORE_VALUE_PULSE_MUTATION,
   DELETE_GOAL_PULSE_MUTATION,
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
+  DELETE_CARE_PULSE_MUTATION,
+  DELETE_CORE_VALUE_PULSE_MUTATION,
   DELETE_RESONANCES_BY_PULSE_MUTATION,
   UPDATE_FIELD_CONTEXT_MUTATION,
   DELETE_FIELD_CONTEXT_MUTATION,
@@ -191,12 +197,18 @@ export default function FieldContextDetailsPage() {
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION)
   const [createResourcePulse] = useMutation(CREATE_RESOURCE_PULSE_MUTATION)
   const [createStoryPulse] = useMutation(CREATE_STORY_PULSE_MUTATION)
+  const [createCarePulse] = useMutation(CREATE_CARE_PULSE_MUTATION)
+  const [createCoreValuePulse] = useMutation(CREATE_CORE_VALUE_PULSE_MUTATION)
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
   const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
   const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
+  const [updateCarePulse] = useMutation(UPDATE_CARE_PULSE_MUTATION)
+  const [updateCoreValuePulse] = useMutation(UPDATE_CORE_VALUE_PULSE_MUTATION)
   const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION)
   const [deleteResourcePulse] = useMutation(DELETE_RESOURCE_PULSE_MUTATION)
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION)
+  const [deleteCarePulse] = useMutation(DELETE_CARE_PULSE_MUTATION)
+  const [deleteCoreValuePulse] = useMutation(DELETE_CORE_VALUE_PULSE_MUTATION)
   const [deleteResonancesByPulse] = useMutation(
     DELETE_RESONANCES_BY_PULSE_MUTATION
   )
@@ -486,42 +498,31 @@ export default function FieldContextDetailsPage() {
         goal: 'goal',
         resource: 'resource',
         story: 'story',
+        care: 'care',
+        coreValue: 'coreValue',
       } as const
 
       const pulseType =
         pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
 
       if (editingPulseId) {
+        const editUpdate = {
+          where: { id_EQ: editingPulseId },
+          update: {
+            title_SET: name,
+            content_SET: value,
+          },
+        }
         if (pulseType === 'goal') {
-          await updateGoalPulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateGoalPulse({ variables: editUpdate })
         } else if (pulseType === 'resource') {
-          await updateResourcePulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateResourcePulse({ variables: editUpdate })
+        } else if (pulseType === 'care') {
+          await updateCarePulse({ variables: editUpdate })
+        } else if (pulseType === 'coreValue') {
+          await updateCoreValuePulse({ variables: editUpdate })
         } else {
-          await updateStoryPulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateStoryPulse({ variables: editUpdate })
         }
 
         const currentPulse = pulses.find((pulse) => pulse.id === editingPulseId)
@@ -586,6 +587,21 @@ export default function FieldContextDetailsPage() {
           })
           createdPulseId =
             response?.createResourcePulses?.resourcePulses?.[0]?.id
+        } else if (pulseType === 'care') {
+          const { data: response } = await createCarePulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+          createdPulseId = response?.createCarePulses?.carePulses?.[0]?.id
+        } else if (pulseType === 'coreValue') {
+          const { data: response } = await createCoreValuePulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+          createdPulseId =
+            response?.createCoreValuePulses?.coreValuePulses?.[0]?.id
         } else {
           const { data: response } = await createStoryPulse({
             variables: {
@@ -686,6 +702,10 @@ export default function FieldContextDetailsPage() {
         await deleteGoalPulse({ variables: { where: { id_EQ: pulseId } } })
       } else if (type === 'resource') {
         await deleteResourcePulse({ variables: { where: { id_EQ: pulseId } } })
+      } else if (type === 'care') {
+        await deleteCarePulse({ variables: { where: { id_EQ: pulseId } } })
+      } else if (type === 'coreValue') {
+        await deleteCoreValuePulse({ variables: { where: { id_EQ: pulseId } } })
       } else {
         await deleteStoryPulse({ variables: { where: { id_EQ: pulseId } } })
       }
@@ -1412,7 +1432,7 @@ export default function FieldContextDetailsPage() {
           setEditingPulseId(null)
           setEditingPulseData(null)
         }}
-        position="bottom"
+        position="center"
       >
         <div className="w-full max-w-160">
           {pulseSubmitError && (

@@ -220,5 +220,43 @@ export const GET_PULSE_DETAILS = graphql(`
         email
       }
     }
+    carePulses(where: { id_EQ: $pulseId }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+      intensity
+      context {
+        id
+        title
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
+    }
+    coreValuePulses(where: { id_EQ: $pulseId }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+      intensity
+      context {
+        id
+        title
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
+    }
   }
 `)

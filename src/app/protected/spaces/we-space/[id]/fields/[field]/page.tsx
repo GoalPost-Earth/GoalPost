@@ -54,12 +54,18 @@ import {
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
   CREATE_STORY_PULSE_MUTATION,
+  CREATE_CARE_PULSE_MUTATION,
+  CREATE_CORE_VALUE_PULSE_MUTATION,
   UPDATE_GOAL_PULSE_MUTATION,
   UPDATE_RESOURCE_PULSE_MUTATION,
   UPDATE_STORY_PULSE_MUTATION,
+  UPDATE_CARE_PULSE_MUTATION,
+  UPDATE_CORE_VALUE_PULSE_MUTATION,
   DELETE_GOAL_PULSE_MUTATION,
   DELETE_RESOURCE_PULSE_MUTATION,
   DELETE_STORY_PULSE_MUTATION,
+  DELETE_CARE_PULSE_MUTATION,
+  DELETE_CORE_VALUE_PULSE_MUTATION,
   DELETE_RESONANCES_BY_PULSE_MUTATION,
   LOG_PULSE_ACTIVITY,
   LOG_RESONANCE_ACTIVITY,
@@ -309,6 +315,12 @@ function FieldDetailPage() {
   const [createStoryPulse] = useMutation(CREATE_STORY_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
   })
+  const [createCarePulse] = useMutation(CREATE_CARE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [createCoreValuePulse] = useMutation(CREATE_CORE_VALUE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
 
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
@@ -329,6 +341,12 @@ function FieldDetailPage() {
   const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
   })
+  const [updateCarePulse] = useMutation(UPDATE_CARE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
+  const [updateCoreValuePulse] = useMutation(UPDATE_CORE_VALUE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+  })
 
   const [deleteGoalPulse] = useMutation(DELETE_GOAL_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
@@ -339,6 +357,14 @@ function FieldDetailPage() {
     awaitRefetchQueries: true,
   })
   const [deleteStoryPulse] = useMutation(DELETE_STORY_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+    awaitRefetchQueries: true,
+  })
+  const [deleteCarePulse] = useMutation(DELETE_CARE_PULSE_MUTATION, {
+    refetchQueries: ['GetPulsesByContext'],
+    awaitRefetchQueries: true,
+  })
+  const [deleteCoreValuePulse] = useMutation(DELETE_CORE_VALUE_PULSE_MUTATION, {
     refetchQueries: ['GetPulsesByContext'],
     awaitRefetchQueries: true,
   })
@@ -912,11 +938,21 @@ function FieldDetailPage() {
     const goal = pulseDetailsData?.goalPulses?.[0]
     const resource = pulseDetailsData?.resourcePulses?.[0]
     const story = pulseDetailsData?.storyPulses?.[0]
-    const entry = goal ?? resource ?? story
+    const care = pulseDetailsData?.carePulses?.[0]
+    const coreValue = pulseDetailsData?.coreValuePulses?.[0]
+    const entry = goal ?? resource ?? story ?? care ?? coreValue
 
     if (!entry) return null
 
-    const type = goal ? 'goal' : resource ? 'resource' : 'story'
+    const type = goal
+      ? 'goal'
+      : resource
+        ? 'resource'
+        : story
+          ? 'story'
+          : care
+            ? 'care'
+            : 'coreValue'
 
     return {
       id: entry.id,
@@ -1025,13 +1061,25 @@ function FieldDetailPage() {
         const goal = data?.goalPulses?.[0]
         const resource = data?.resourcePulses?.[0]
         const story = data?.storyPulses?.[0]
-        const entry = goal ?? resource ?? story
+        const care = data?.carePulses?.[0]
+        const coreValue = data?.coreValuePulses?.[0]
+        const entry = goal ?? resource ?? story ?? care ?? coreValue
 
         if (!entry) return null
 
+        const type = goal
+          ? 'goal'
+          : resource
+            ? 'resource'
+            : story
+              ? 'story'
+              : care
+                ? 'care'
+                : ('coreValue' as const)
+
         return {
           id: entry.id,
-          type: goal ? 'goal' : resource ? 'resource' : ('story' as const),
+          type,
           title: entry.title ?? null,
         }
       } catch (error) {
@@ -1270,42 +1318,31 @@ function FieldDetailPage() {
           goal: 'goal',
           resource: 'resource',
           story: 'story',
+          care: 'care',
+          coreValue: 'coreValue',
         } as const
 
         const pulseType =
           pulseTypeMap[type as keyof typeof pulseTypeMap] || 'goal'
 
         // Call appropriate update mutation based on type
+        const editUpdate = {
+          where: { id_EQ: editingPulseId },
+          update: {
+            title_SET: name,
+            content_SET: value,
+          },
+        }
         if (pulseType === 'goal') {
-          await updateGoalPulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateGoalPulse({ variables: editUpdate })
         } else if (pulseType === 'resource') {
-          await updateResourcePulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateResourcePulse({ variables: editUpdate })
+        } else if (pulseType === 'care') {
+          await updateCarePulse({ variables: editUpdate })
+        } else if (pulseType === 'coreValue') {
+          await updateCoreValuePulse({ variables: editUpdate })
         } else {
-          await updateStoryPulse({
-            variables: {
-              where: { id_EQ: editingPulseId },
-              update: {
-                title_SET: name,
-                content_SET: value,
-              },
-            },
-          })
+          await updateStoryPulse({ variables: editUpdate })
         }
 
         console.log('✅ Pulse updated successfully')
@@ -1345,6 +1382,8 @@ function FieldDetailPage() {
           goal: 'goal',
           resource: 'resource',
           story: 'story',
+          care: 'care',
+          coreValue: 'coreValue',
         } as const
 
         const pulseType =
@@ -1401,6 +1440,21 @@ function FieldDetailPage() {
           })
           createdPulseId =
             response?.createResourcePulses?.resourcePulses?.[0]?.id
+        } else if (pulseType === 'care') {
+          const { data: response } = await createCarePulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+          createdPulseId = response?.createCarePulses?.carePulses?.[0]?.id
+        } else if (pulseType === 'coreValue') {
+          const { data: response } = await createCoreValuePulse({
+            variables: {
+              input: [baseInput],
+            },
+          })
+          createdPulseId =
+            response?.createCoreValuePulses?.coreValuePulses?.[0]?.id
         } else {
           const { data: response } = await createStoryPulse({
             variables: {
@@ -1506,6 +1560,18 @@ function FieldDetailPage() {
         })
       } else if (type === 'resource') {
         await deleteResourcePulse({
+          variables: {
+            where: { id_EQ: pulseId },
+          },
+        })
+      } else if (type === 'care') {
+        await deleteCarePulse({
+          variables: {
+            where: { id_EQ: pulseId },
+          },
+        })
+      } else if (type === 'coreValue') {
+        await deleteCoreValuePulse({
           variables: {
             where: { id_EQ: pulseId },
           },
@@ -2186,7 +2252,7 @@ function FieldDetailPage() {
           setSubmitError(null)
           setSubmitSuccess(false)
         }}
-        position="bottom"
+        position="center"
       >
         <div className="w-full max-w-160">
           {submitError && (

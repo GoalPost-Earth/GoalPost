@@ -12,7 +12,7 @@ import { getConfigForType } from '@/lib/pulse-type-config'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
-export type PulseKind = 'goal' | 'resource' | 'story'
+export type PulseKind = 'goal' | 'resource' | 'story' | 'care' | 'coreValue'
 
 export interface PulseDetails {
   id: string
@@ -73,6 +73,20 @@ const typeConfig: Record<
     accent: 'text-gp-story',
     badge: 'bg-gp-story/15 text-gp-story',
     chip: 'bg-gp-story/10 text-gp-story border border-gp-story/30',
+  },
+  care: {
+    label: 'Care Pulse',
+    icon: getConfigForType('care').icon,
+    accent: 'text-gp-care',
+    badge: 'bg-gp-care/15 text-gp-care',
+    chip: 'bg-gp-care/10 text-gp-care border border-gp-care/30',
+  },
+  coreValue: {
+    label: 'Core Value Pulse',
+    icon: getConfigForType('coreValue').icon,
+    accent: 'text-gp-coreValue',
+    badge: 'bg-gp-coreValue/15 text-gp-coreValue',
+    chip: 'bg-gp-coreValue/10 text-gp-coreValue border border-gp-coreValue/30',
   },
 }
 

@@ -92,6 +92,64 @@ export const CREATE_STORY_PULSE_MUTATION = graphql(`
 `)
 
 /**
+ * Create a new CarePulse
+ */
+export const CREATE_CARE_PULSE_MUTATION = graphql(`
+  mutation CreateCarePulse($input: [CarePulseCreateInput!]!) {
+    createCarePulses(input: $input) {
+      carePulses {
+        id
+        title
+        content
+        intensity
+        createdAt
+        createdBy {
+          id
+          name
+        }
+        context {
+          id
+          title
+        }
+      }
+      info {
+        nodesCreated
+        relationshipsCreated
+      }
+    }
+  }
+`)
+
+/**
+ * Create a new CoreValuePulse
+ */
+export const CREATE_CORE_VALUE_PULSE_MUTATION = graphql(`
+  mutation CreateCoreValuePulse($input: [CoreValuePulseCreateInput!]!) {
+    createCoreValuePulses(input: $input) {
+      coreValuePulses {
+        id
+        title
+        content
+        intensity
+        createdAt
+        createdBy {
+          id
+          name
+        }
+        context {
+          id
+          title
+        }
+      }
+      info {
+        nodesCreated
+        relationshipsCreated
+      }
+    }
+  }
+`)
+
+/**
  * Update a GoalPulse
  */
 export const UPDATE_GOAL_PULSE_MUTATION = graphql(`
@@ -202,6 +260,63 @@ export const UPDATE_STORY_PULSE_MUTATION = graphql(`
 `)
 
 /**
+ * Update a CarePulse
+ */
+export const UPDATE_CARE_PULSE_MUTATION = graphql(`
+  mutation UpdateCarePulse(
+    $where: CarePulseWhere!
+    $update: CarePulseUpdateInput!
+  ) {
+    updateCarePulses(where: $where, update: $update) {
+      carePulses {
+        id
+        title
+        content
+        intensity
+        sourceType
+        createdAt
+        createdBy {
+          id
+          name
+        }
+        context {
+          id
+          title
+        }
+      }
+    }
+  }
+`)
+
+/**
+ * Update a CoreValuePulse
+ */
+export const UPDATE_CORE_VALUE_PULSE_MUTATION = graphql(`
+  mutation UpdateCoreValuePulse(
+    $where: CoreValuePulseWhere!
+    $update: CoreValuePulseUpdateInput!
+  ) {
+    updateCoreValuePulses(where: $where, update: $update) {
+      coreValuePulses {
+        id
+        title
+        content
+        intensity
+        createdAt
+        createdBy {
+          id
+          name
+        }
+        context {
+          id
+          title
+        }
+      }
+    }
+  }
+`)
+
+/**
  * Delete a GoalPulse (orphaned ResonanceLinks will be cleaned up separately)
  */
 export const DELETE_GOAL_PULSE_MUTATION = graphql(`
@@ -250,6 +365,30 @@ export const DELETE_RESOURCE_PULSE_MUTATION = graphql(`
 export const DELETE_STORY_PULSE_MUTATION = graphql(`
   mutation DeleteStoryPulse($where: StoryPulseWhere!) {
     deleteStoryPulses(where: $where) {
+      nodesDeleted
+      relationshipsDeleted
+    }
+  }
+`)
+
+/**
+ * Delete a CarePulse (orphaned ResonanceLinks will be cleaned up separately)
+ */
+export const DELETE_CARE_PULSE_MUTATION = graphql(`
+  mutation DeleteCarePulse($where: CarePulseWhere!) {
+    deleteCarePulses(where: $where) {
+      nodesDeleted
+      relationshipsDeleted
+    }
+  }
+`)
+
+/**
+ * Delete a CoreValuePulse (orphaned ResonanceLinks will be cleaned up separately)
+ */
+export const DELETE_CORE_VALUE_PULSE_MUTATION = graphql(`
+  mutation DeleteCoreValuePulse($where: CoreValuePulseWhere!) {
+    deleteCoreValuePulses(where: $where) {
       nodesDeleted
       relationshipsDeleted
     }

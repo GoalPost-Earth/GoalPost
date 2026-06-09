@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { PULSE_TYPE_CONFIG, type NodeType } from '@/lib/pulse-type-config'
+import { inferPulseType } from '@/lib/pulse-inference'
 import { cn } from '@/lib/utils'
 import { OfferingModal } from './offering-modal'
+import { PulseTypeSelector } from './pulse-type-selector'
 
 interface PulseTypeSuggestionProps {
-  input: string
   onSelect: (type: NodeType, name: string, content: string) => void
   onClose: () => void
   isOpen: boolean
@@ -19,128 +20,7 @@ interface PulseTypeSuggestionProps {
   isLoading?: boolean
 }
 
-// Dummy AI inference - simple heuristics based on keywords
-function inferPulseType(input: string): {
-  type: NodeType
-  interpretation: string
-  suggestedName: string
-} {
-  const lowerInput = input.toLowerCase()
-
-  // Goal indicators
-  const goalKeywords = [
-    'achieve',
-    'complete',
-    'finish',
-    'accomplish',
-    'target',
-    'aim',
-    'goal',
-    'want to',
-    'need to',
-    'should',
-    'expand',
-    'improve',
-    'increase',
-    'grow',
-    'build',
-    'create',
-    'develop',
-    'learn',
-    'master',
-  ]
-
-  // Resource indicators
-  const resourceKeywords = [
-    'tool',
-    'resource',
-    'material',
-    'data',
-    'dataset',
-    'database',
-    'file',
-    'document',
-    'template',
-    'library',
-    'framework',
-    'code',
-    'software',
-    'application',
-    'platform',
-    'service',
-    'api',
-  ]
-
-  // Story indicators
-  const storyKeywords = [
-    'journey',
-    'experience',
-    'story',
-    'narrative',
-    'lesson',
-    'insight',
-    'learning',
-    'reflection',
-    'memory',
-    'moment',
-    'event',
-    'happened',
-    'discovered',
-    'realized',
-    'found',
-    'understand',
-  ]
-
-  const goalScore = goalKeywords.filter((kw) => lowerInput.includes(kw)).length
-  const resourceScore = resourceKeywords.filter((kw) =>
-    lowerInput.includes(kw)
-  ).length
-  const storyScore = storyKeywords.filter((kw) =>
-    lowerInput.includes(kw)
-  ).length
-
-  let type: NodeType = 'goal'
-  let interpretation = ''
-
-  if (
-    storyScore >= goalScore &&
-    storyScore >= resourceScore &&
-    storyScore > 0
-  ) {
-    type = 'story'
-    interpretation =
-      'This sounds like an experience or insight you want to capture and share.'
-  } else if (resourceScore > goalScore && resourceScore > storyScore) {
-    type = 'resource'
-    interpretation =
-      'This appears to be a tool, material, or knowledge asset that could be valuable.'
-  } else {
-    type = 'goal'
-    interpretation =
-      'This looks like an objective or outcome you want to work towards.'
-  }
-
-  // Generate a suggested name from input (capitalize and clean up)
-  const suggestedName =
-    input
-      .trim()
-      .split(' ')
-      .slice(0, 4)
-      .join(' ')
-      .replace(/^(i want to|i need to|i should|i want|i have|a|an|the)\s+/i, '')
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') || 'Untitled Pulse'
-
-  return {
-    type,
-    interpretation,
-    suggestedName,
-  }
-}
-
 export function PulseTypeSuggestion({
-  input,
   onSelect,
   onClose,
   isOpen,
@@ -152,72 +32,52 @@ export function PulseTypeSuggestion({
   isLoading = false,
 }: PulseTypeSuggestionProps) {
   const [selectedType, setSelectedType] = useState<NodeType>(initialType)
-  const [pulseData, setPulseData] = useState({
-    type: initialType,
-    interpretation: '',
-    suggestedName: initialName,
-  })
+  const [suggestedType, setSuggestedType] = useState<NodeType | null>(null)
+  const [userPickedType, setUserPickedType] = useState(false)
   const [editedName, setEditedName] = useState(initialName)
+  const [nameTouched, setNameTouched] = useState(isEditing)
   const [editedContent, setEditedContent] = useState(initialContent)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Infer pulse type when input changes (only for create mode)
+  // Create mode: re-run the heuristic as the user writes, pre-selecting a
+  // suggested type until they explicitly pick one. In edit mode the type is
+  // fixed (a pulse's label can't change), so inference is skipped.
   useEffect(() => {
-    if (!isEditing && input.trim()) {
-      const inference = inferPulseType(input)
-      setPulseData(inference)
-      setSelectedType(inference.type)
-      setEditedName(inference.suggestedName)
-      setEditedContent(input)
+    if (isEditing) return
+    const trimmed = editedContent.trim()
+    if (!trimmed) {
+      setSuggestedType(null)
+      return
     }
-  }, [input, isEditing])
+    const inference = inferPulseType(trimmed)
+    setSuggestedType(inference.type)
+    if (!userPickedType) setSelectedType(inference.type)
+    if (!nameTouched) setEditedName(inference.suggestedName)
+  }, [editedContent, isEditing, userPickedType, nameTouched])
 
   // Animate in
   useEffect(() => {
     if (isOpen && containerRef.current) {
       gsap.fromTo(
         containerRef.current,
-        {
-          opacity: 0,
-          scale: 0.95,
-          y: 20,
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.4,
-          ease: 'power3.out',
-        }
+        { opacity: 0, scale: 0.95, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power3.out' }
       )
     }
   }, [isOpen])
 
-  const handleRegenerateType = () => {
-    if (isLoading) return // Don't allow changes while saving
-    const newType =
-      selectedType === 'goal'
-        ? 'resource'
-        : selectedType === 'resource'
-          ? 'story'
-          : 'goal'
-    setSelectedType(newType)
+  const handlePickType = (type: NodeType) => {
+    if (isLoading || isEditing) return
+    setSelectedType(type)
+    setUserPickedType(true)
   }
 
+  const canSubmit = !isLoading && editedContent.trim().length > 0
+
   const handleConfirm = () => {
-    if (isLoading) return // Prevent multiple submissions
-    console.log('🎯 handleConfirm called:', {
-      selectedType,
-      editedName,
-      editedContent,
-    })
-    console.log('📤 Calling onSelect with:', {
-      selectedType,
-      editedName,
-      editedContent,
-    })
-    onSelect(selectedType, editedName, editedContent)
+    if (!canSubmit) return
+    onSelect(selectedType, editedName.trim() || 'Untitled Pulse', editedContent)
     // Don't close immediately - let parent handle closing after async operation
   }
 
@@ -242,56 +102,37 @@ export function PulseTypeSuggestion({
       <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#9fd6ff]/35 dark:bg-gp-primary/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#b6cffc]/30 dark:bg-gp-accent-glow/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative w-full p-8 flex flex-col items-center">
-        {/* Icon Section */}
-        <div
-          className={cn(
-            'relative mb-8 group',
-            isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-          )}
-          onClick={handleRegenerateType}
-        >
-          <div className="absolute inset-0 bg-gp-primary/20 dark:bg-gp-primary/20 rounded-full blur-xl scale-150 animate-pulse-slow" />
-          <div className="relative size-24 flex items-center justify-center rounded-2xl bg-linear-to-br from-white/90 to-[#e3f1ff] dark:from-white/10 dark:to-white/5 border border-white/70 dark:border-white/20 shadow-[0_25px_45px_-18px_rgba(19,164,236,0.45)] dark:shadow-md ring-1 ring-white/70 dark:ring-white/20 group-hover:scale-105 transition-transform duration-500">
-            <span
-              className={cn(
-                'material-symbols-outlined text-[48px] drop-shadow-[0_0_15px_rgba(19,164,236,0.6)]',
-                config.color
-              )}
-            >
-              {config.icon}
-            </span>
-          </div>
-          <div className="absolute -bottom-2 -right-2 bg-white dark:bg-black border border-slate-200 dark:border-white/20 p-1.5 rounded-full text-gp-primary shadow-lg transition-opacity opacity-0 group-hover:opacity-100">
-            <span className="material-symbols-outlined text-[18px] animate-spin-slow">
-              auto_awesome
-            </span>
-          </div>
-        </div>
-
+      <div className="relative w-full p-6 sm:p-8 flex flex-col items-center">
         {/* Header */}
-        <div className="text-center mb-8 space-y-2">
-          <div
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 shadow-sm bg-[#d7ecff] dark:bg-gp-primary/20 text-[#1187e8] dark:text-gp-primary border border-white/70 dark:border-gp-primary/30'
-            )}
-          >
+        <div className="text-center mb-6 space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-1 shadow-sm bg-[#d7ecff] dark:bg-gp-primary/20 text-[#1187e8] dark:text-gp-primary border border-white/70 dark:border-gp-primary/30">
             <span className="material-symbols-outlined text-sm">
               {isEditing ? 'edit' : 'auto_awesome'}
             </span>
-            {isEditing ? 'Edit Mode' : 'AI Classified'}
+            {isEditing ? 'Edit Mode' : 'New Pulse'}
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             {isEditing ? 'Edit' : 'Create'} {config.label} Pulse
           </h1>
           <p className="text-sm text-slate-500 dark:text-gp-ink-soft font-medium">
             {isEditing
               ? 'Update your pulse details below.'
-              : 'GoalPost AI has analyzed your input.'}
+              : 'Choose a type and describe what you want to share.'}
           </p>
         </div>
 
-        {/* Input and Interpretation */}
+        {/* Type selector — always-visible, directly selectable */}
+        <div className="w-full mb-6">
+          <PulseTypeSelector
+            selected={selectedType}
+            onSelect={handlePickType}
+            suggested={suggestedType}
+            showSuggestionHint={!isEditing && !userPickedType}
+            disabled={isEditing || isLoading}
+          />
+        </div>
+
+        {/* Content + title fields */}
         <div className="w-full space-y-4 mb-8">
           {/* Content Field */}
           <div className="group relative rounded-xl overflow-hidden bg-[#e6edf5] dark:bg-black/40 border border-transparent dark:border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_25px_-18px_rgba(0,0,0,0.45)] dark:shadow-md">
@@ -301,6 +142,7 @@ export function PulseTypeSuggestion({
               </span>
             </div>
             <textarea
+              autoFocus={!isEditing}
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
               disabled={isLoading}
@@ -309,7 +151,7 @@ export function PulseTypeSuggestion({
                 'w-full bg-transparent border-none py-4 pl-12 pr-4 text-base text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20 resize-none',
                 isLoading && 'opacity-60 cursor-not-allowed'
               )}
-              placeholder="Describe your pulse in detail..."
+              placeholder="Speak your intention..."
             />
           </div>
 
@@ -321,8 +163,12 @@ export function PulseTypeSuggestion({
             <input
               type="text"
               value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
+              onChange={(e) => {
+                setEditedName(e.target.value)
+                setNameTouched(true)
+              }}
               disabled={isLoading}
+              placeholder="Title or headline"
               className={cn(
                 'w-full bg-transparent border-none py-4 pl-12 pr-12 text-center text-lg font-semibold text-[#1f2a36] dark:text-white placeholder-[#7b8895] dark:placeholder-white/20 focus:ring-0 focus:outline-none selection:bg-gp-primary/20',
                 isLoading && 'opacity-60 cursor-not-allowed'
@@ -330,7 +176,10 @@ export function PulseTypeSuggestion({
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <button
-                onClick={() => setEditedName('')}
+                onClick={() => {
+                  setEditedName('')
+                  setNameTouched(true)
+                }}
                 disabled={isLoading}
                 className={cn(
                   'p-1.5 rounded-full hover:bg-white/80 dark:hover:bg-white/10 text-[#9aa6b2] dark:text-gp-ink-soft hover:text-[#1f2a36] dark:hover:text-white transition-colors',
@@ -363,10 +212,10 @@ export function PulseTypeSuggestion({
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={isLoading}
+                disabled={!canSubmit}
                 className={cn(
                   'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50 transition-all flex items-center justify-center gap-2 transform',
-                  isLoading
+                  !canSubmit
                     ? 'bg-gp-primary/70 cursor-not-allowed'
                     : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
                 )}
@@ -383,41 +232,26 @@ export function PulseTypeSuggestion({
               </button>
             </>
           ) : (
-            <>
-              <button
-                onClick={handleRegenerateType}
-                disabled={isLoading}
+            <button
+              onClick={handleConfirm}
+              disabled={!canSubmit}
+              className={cn(
+                'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50 transition-all flex items-center justify-center gap-2 transform',
+                !canSubmit
+                  ? 'bg-gp-primary/70 cursor-not-allowed'
+                  : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
+              )}
+            >
+              <span
                 className={cn(
-                  'flex-1 h-12 rounded-xl border border-gp-ink-muted/20 dark:border-[#2c3a46] bg-white/50 dark:bg-[#101820] text-gp-ink-muted dark:text-[#8fa9bf] text-sm font-semibold transition-all flex items-center justify-center gap-2 group hover:border-gp-ink-strong/30 dark:hover:border-[#1f8bff] hover:text-gp-ink-strong dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#162230] active:scale-95',
-                  isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  'material-symbols-outlined text-lg',
+                  isLoading && 'animate-spin'
                 )}
               >
-                <span className="material-symbols-outlined text-lg group-hover:-rotate-12 transition-transform">
-                  tune
-                </span>
-                Refine Type
-              </button>
-              <button
-                onClick={handleConfirm}
-                disabled={isLoading}
-                className={cn(
-                  'flex-1 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-gp-primary/30 dark:shadow-gp-primary/50 transition-all flex items-center justify-center gap-2 transform',
-                  isLoading
-                    ? 'bg-gp-primary/70 cursor-not-allowed'
-                    : 'bg-gp-primary hover:bg-gp-primary/90 cursor-pointer active:scale-95'
-                )}
-              >
-                <span
-                  className={cn(
-                    'material-symbols-outlined text-lg',
-                    isLoading && 'animate-spin'
-                  )}
-                >
-                  {isLoading ? 'hourglass_bottom' : 'check'}
-                </span>
-                {isLoading ? 'Creating...' : 'Create Pulse'}
-              </button>
-            </>
+                {isLoading ? 'hourglass_bottom' : 'check'}
+              </span>
+              {isLoading ? 'Creating...' : 'Create Pulse'}
+            </button>
           )}
         </div>
       </div>

@@ -19,6 +19,8 @@ import {
   UPDATE_GOAL_PULSE_MUTATION,
   UPDATE_RESOURCE_PULSE_MUTATION,
   UPDATE_STORY_PULSE_MUTATION,
+  UPDATE_CARE_PULSE_MUTATION,
+  UPDATE_CORE_VALUE_PULSE_MUTATION,
   LOG_PULSE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import { LinkifiedText } from '@/components/ui/linkified-text'
@@ -67,6 +69,8 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const [updateGoalPulse] = useMutation(UPDATE_GOAL_PULSE_MUTATION)
   const [updateResourcePulse] = useMutation(UPDATE_RESOURCE_PULSE_MUTATION)
   const [updateStoryPulse] = useMutation(UPDATE_STORY_PULSE_MUTATION)
+  const [updateCarePulse] = useMutation(UPDATE_CARE_PULSE_MUTATION)
+  const [updateCoreValuePulse] = useMutation(UPDATE_CORE_VALUE_PULSE_MUTATION)
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
 
   if (loading && !data) return <BodySkeleton />
@@ -74,7 +78,9 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const pulse =
     data?.goalPulses?.[0] ||
     data?.resourcePulses?.[0] ||
-    data?.storyPulses?.[0]
+    data?.storyPulses?.[0] ||
+    data?.carePulses?.[0] ||
+    data?.coreValuePulses?.[0]
 
   if (!pulse) {
     if (error) return <ErrorBody detail={error.message} onRetry={() => refetch()} />
@@ -86,6 +92,18 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const context = pulse.context?.[0]
   const space = context?.space?.[0]
   const isMe = space?.__typename === 'MeSpace'
+
+  // why / location / time exist on Goal/Resource/Story but not on Care/CoreValue.
+  // Read them defensively so the shared layout works across all five types.
+  const optional = pulse as {
+    why?: string | null
+    location?: string | null
+    time?: string | null
+  }
+  const supportsWhy =
+    pulse.__typename === 'GoalPulse' ||
+    pulse.__typename === 'ResourcePulse' ||
+    pulse.__typename === 'StoryPulse'
 
   const created = pulse.createdAt ? new Date(pulse.createdAt) : null
   const createdLabel =
@@ -114,7 +132,7 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const handleEditStart = () => {
     setEditTitle(pulse.title ?? '')
     setEditContent(pulse.content ?? '')
-    setEditWhy((pulse.why as string | null | undefined) ?? '')
+    setEditWhy(optional.why ?? '')
     setIsEditMode(true)
   }
 
@@ -136,7 +154,10 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
       const update: Record<string, string | null> = {
         title_SET: trimmedTitle,
         content_SET: editContent,
-        why_SET: editWhy.trim() || null,
+      }
+      // `why` only exists on Goal/Resource/Story update inputs.
+      if (supportsWhy) {
+        update.why_SET = editWhy.trim() || null
       }
       const variables = { where: { id_EQ: pulseId }, update }
       const typename = pulse.__typename
@@ -146,6 +167,10 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         await updateResourcePulse({ variables })
       } else if (typename === 'StoryPulse') {
         await updateStoryPulse({ variables })
+      } else if (typename === 'CarePulse') {
+        await updateCarePulse({ variables })
+      } else if (typename === 'CoreValuePulse') {
+        await updateCoreValuePulse({ variables })
       } else {
         throw new Error(`Editing ${String(typename)} is not supported here yet.`)
       }
@@ -304,15 +329,17 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
 
       {isEditMode ? (
         <section className="px-6 pb-5 space-y-4">
-          <EditTextarea
-            id="pulse-edit-why"
-            label="Why"
-            value={editWhy}
-            onChange={setEditWhy}
-            placeholder="Why does this pulse matter?"
-            rows={3}
-            disabled={isSaving}
-          />
+          {supportsWhy && (
+            <EditTextarea
+              id="pulse-edit-why"
+              label="Why"
+              value={editWhy}
+              onChange={setEditWhy}
+              placeholder="Why does this pulse matter?"
+              rows={3}
+              disabled={isSaving}
+            />
+          )}
           <EditTextarea
             id="pulse-edit-content"
             label="Description"
@@ -325,11 +352,11 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         </section>
       ) : (
         <>
-          {pulse.why && (
+          {optional.why && (
             <section className="px-6 pb-5">
               <SectionHeader>Why</SectionHeader>
               <p className="mt-2 text-sm italic text-gp-ink-muted dark:text-white/65 leading-relaxed">
-                &quot;{pulse.why}&quot;
+                &quot;{optional.why}&quot;
               </p>
             </section>
           )}
@@ -345,18 +372,18 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         </>
       )}
 
-      {(pulse.location || pulse.time) && (
+      {(optional.location || optional.time) && (
         <section className="px-6 pb-5 space-y-2">
-          {pulse.location && (
+          {optional.location && (
             <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
               <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <span className="break-words">{pulse.location}</span>
+              <span className="break-words">{optional.location}</span>
             </div>
           )}
-          {pulse.time && (
+          {optional.time && (
             <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
               <Calendar className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <span className="break-words">{pulse.time}</span>
+              <span className="break-words">{optional.time}</span>
             </div>
           )}
         </section>

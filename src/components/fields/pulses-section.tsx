@@ -209,10 +209,9 @@ export function PulsesSection({
           <div className="space-y-3">
             {pulses.map((pulse, idx) => {
               const pulseType = getEditablePulseType(pulse.__typename)
-              const canEditPulse =
-                pulseType === 'goal' ||
-                pulseType === 'resource' ||
-                pulseType === 'story'
+              // Every recognized pulse type (Goal, Resource, Story, Care,
+              // Core Value) is editable/deletable — see GOAL-252.
+              const canEditPulse = pulseType !== null
               const selected = selectedIds.has(pulse.id)
 
               return (
