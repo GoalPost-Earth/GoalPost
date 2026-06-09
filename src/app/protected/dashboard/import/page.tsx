@@ -523,7 +523,7 @@ export default function DashboardImportPage() {
         <div className="absolute bottom-[-8%] right-[-8%] h-128 aspect-square rounded-full bg-gp-accent-glow/10 blur-[140px]" />
       </div>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 pb-12 lg:px-10 py-8">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-10 px-4 sm:px-6 lg:px-10 py-6 sm:py-8 pb-12">
         <section className="grid gap-10 lg:grid-cols-[minmax(280px,360px),1fr]">
           <div className="space-y-6 rounded-4xl border border-white/40 bg-white/55 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
             <div className="space-y-3">

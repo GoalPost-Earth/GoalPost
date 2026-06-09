@@ -53,7 +53,7 @@ export default function DashboardPage() {
       </div>
 
       <main
-        className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24"
+        className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-24"
         data-tour="dashboard-overview"
       >
         <div className="max-w-6xl mx-auto">

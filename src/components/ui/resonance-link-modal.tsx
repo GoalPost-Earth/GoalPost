@@ -486,7 +486,7 @@ export function ResonanceLinkModal({
             }}
           >
             <div
-              className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl pointer-events-auto"
+              className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 max-w-sm mx-4 shadow-2xl pointer-events-auto"
               style={{ position: 'relative', zIndex: 10000 }}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}

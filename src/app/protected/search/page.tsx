@@ -315,7 +315,7 @@ export default function SearchPage() {
         <div className="absolute -bottom-40 -right-40 w-[320px] h-80 rounded-full bg-gp-accent-glow/10 blur-[120px]" />
       </div>
 
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 py-16 md:py-20 flex flex-col gap-10">
+      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 py-10 sm:py-16 md:py-20 flex flex-col gap-6 sm:gap-10">
         <header className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl md:text-5xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
@@ -328,7 +328,7 @@ export default function SearchPage() {
           </div>
         </header>
 
-        <div className="sticky top-10 z-20 flex flex-col gap-4 md:gap-6 rounded-3xl p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] ">
+        <div className="sticky top-10 z-20 flex flex-col gap-4 md:gap-6 rounded-3xl p-4 sm:p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] ">
           <div className="flex flex-col gap-3">
             <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
               Search query
@@ -380,25 +380,25 @@ export default function SearchPage() {
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading && debouncedQuery.length > 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
               Searching...
             </div>
           )}
 
           {error && (
-            <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 dark:bg-red-900/20 backdrop-blur-xl p-10 text-center text-red-600 dark:text-red-400">
+            <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 dark:bg-red-900/20 backdrop-blur-xl p-6 sm:p-10 text-center text-red-600 dark:text-red-400">
               Error searching: {error.message}
             </div>
           )}
 
           {query.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
               Enter a search term to explore people, spaces, and pulses.
             </div>
           )}
 
           {filteredEntities.length === 0 && query.length > 0 && !loading && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
               No results found. Try another query or filter.
             </div>
           )}

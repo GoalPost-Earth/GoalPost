@@ -780,7 +780,7 @@ export default function PersonProfilePage() {
       {/* Add Connection Modal */}
       {isAddingConnection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white/80 dark:bg-black/80 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+          <div className="bg-white/80 dark:bg-black/80 rounded-2xl p-5 sm:p-8 max-w-md w-full mx-4 relative">
             <button
               onClick={() => setIsAddingConnection(false)}
               className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
@@ -935,7 +935,7 @@ export default function PersonProfilePage() {
       {/* Edit Connection Modal */}
       {isEditingConnection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="chat-card rounded-2xl p-8 max-w-md w-full mx-4 relative">
+          <div className="chat-card rounded-2xl p-5 sm:p-8 max-w-md w-full mx-4 relative">
             <button
               onClick={() => setIsEditingConnection(false)}
               className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
@@ -1001,7 +1001,7 @@ export default function PersonProfilePage() {
       {/* Delete Connection Confirmation Modal */}
       {isConfirmingDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-5 sm:p-8 border border-gp-glass-border">
             <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
               Delete Connection?
             </h2>

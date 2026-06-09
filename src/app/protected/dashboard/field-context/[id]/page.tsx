@@ -1130,7 +1130,7 @@ export default function FieldContextDetailsPage() {
       {/* Edit Modal */}
       {isEditMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 border border-gp-glass-border">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-5 sm:p-8 border border-gp-glass-border">
             <button
               onClick={handleEditCancel}
               className="absolute top-4 right-4 text-gp-ink-muted hover:text-gp-ink-strong transition-colors"
@@ -1203,7 +1203,7 @@ export default function FieldContextDetailsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 border border-gp-glass-border">
+          <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-5 sm:p-8 border border-gp-glass-border">
             <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
               Delete Field Context?
             </h2>
@@ -1494,7 +1494,7 @@ export default function FieldContextDetailsPage() {
         position="center"
       >
         <div className="relative z-10 w-full">
-          <div className="glass-panel rounded-3xl p-8 md:p-12 border border-gp-glass-border dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden">
+          <div className="glass-panel rounded-3xl p-5 sm:p-8 md:p-12 border border-gp-glass-border dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
@@ -1707,7 +1707,7 @@ const FieldContextSkeleton: FC = () => (
         }}
       />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />

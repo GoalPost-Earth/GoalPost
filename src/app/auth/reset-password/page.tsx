@@ -93,7 +93,7 @@ function ResetPasswordPage() {
 
         {/* Organic Cloud Container */}
         <div
-          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
+          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-6 sm:p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
           style={{
             borderRadius: '60% 40% 70% 30% / 40% 50% 60% 50%',
           }}

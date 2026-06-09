@@ -43,7 +43,7 @@ export default function SpacesPage() {
       {/* Dot grid pattern - fixed so it doesn't scroll */}
       <div className="fixed inset-0 gp-dot-grid opacity-30 dark:opacity-20 pointer-events-none" />
       <div
-        className="relative z-10 container mx-auto px-6 py-12 max-w-7xl"
+        className="relative z-10 container mx-auto px-4 py-8 sm:px-6 sm:py-12 max-w-7xl"
         data-tour="spaces-container"
       >
         <div className="text-center mb-16 z-20">

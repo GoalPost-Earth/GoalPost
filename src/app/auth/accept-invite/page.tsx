@@ -101,7 +101,7 @@ function AcceptInvitePage() {
         <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gp-accent-glow/12 dark:bg-gp-accent-glow/10 rounded-full blur-[100px]" />
 
         <div
-          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
+          className="w-full max-w-[500px] min-h-[500px] flex flex-col items-center justify-center p-6 sm:p-12 relative z-10 transition-all duration-300 bg-gp-glass-bg backdrop-blur-[40px] border border-gp-glass-border shadow-[0_24px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.55)]"
           style={{ borderRadius: '60% 40% 70% 30% / 40% 50% 60% 50%' }}
         >
           <div className="flex flex-col items-center w-full max-w-xs space-y-8">
