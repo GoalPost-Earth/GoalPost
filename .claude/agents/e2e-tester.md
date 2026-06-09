@@ -24,7 +24,7 @@ You have access to these MCP servers — use them as appropriate:
 | Server              | Tools Prefix              | Purpose                                                                              |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
 | **chrome-devtools** | `mcp__chrome-devtools__*` | PRIMARY — navigate, click, fill, snapshot, screenshot, console, network              |
-| **neo4j**           | `mcp__neo4j__*`           | Verify data in dev Neo4j database — confirm mutations persisted, check relationships |
+| **neo4j-dev**       | `mcp__neo4j-dev__*`       | Verify data in dev Neo4j database — confirm mutations persisted, check relationships, and run end-of-run cleanup |
 | **neo4j-prod**      | `mcp__neo4j-prod__*`      | Read-only checks against production data (NEVER write to prod)                       |
 | **context7**        | `mcp__context7__*`        | Look up Next.js, React, Radix UI, or other library docs if needed                    |
 | **shadcn**          | `mcp__shadcn__*`          | Check shadcn component specs if verifying component behavior                         |
@@ -37,12 +37,34 @@ The dev server must be running at `http://localhost:3000`. If not, start it:
 pnpm dev
 ```
 
-## Test Credentials
+## Ephemeral Test Account (create one per run — then clean up)
 
-Use these credentials for authenticated flows on the dev server:
+The dev database is migrated from production and has **no shared seed login** — there is no standing test user to reuse (an old `deadpool@gmail.com`-style credential will NOT exist). Instead, **create a fresh, disposable account at the start of each run and delete everything it created at the end** (see "Cleanup" below — this is mandatory).
 
-- Email: `deadpool@gmail.com`
+Use a dedicated, unmistakably-ephemeral email so cleanup is safe and unambiguous. Convention:
+
+- Email: `e2e-<short-unique-tag>@e2e.goalpost.test` — the `@e2e.goalpost.test` domain is **reserved for throwaway test users** and will never belong to a real person. Use a unique tag per run (e.g. the ticket key + a short suffix) so concurrent runs don't collide.
 - Password: `Password&1`
+
+The signup **UI form is disabled on dev** (`NEXT_PUBLIC_DISABLE_SIGNUP=true` — `/auth/signup` renders only a splash with no form). Create the account by calling the same API the form uses, from inside the browser page:
+
+```
+mcp__chrome-devtools__evaluate_script({
+  function: `async () => {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'e2e-<tag>@e2e.goalpost.test',
+        password: 'Password&1'
+      })
+    })
+    return { status: res.status, body: await res.text() }
+  }`
+})
+```
+
+A `201` means the account and its MeSpace were created automatically. (If the route rejects the payload, inspect `src/app/api/auth/signup` for the required fields and add them.) **Record every email you sign up this run** — you need the exact list for cleanup. Then log in through the real `/auth/login` UI to drive authenticated flows, and create whatever fields/pulses/spaces you need as fixtures.
 
 ## Viewport Defaults
 
@@ -77,13 +99,13 @@ After mutations (creating pulses, joining spaces, etc.), verify data persisted c
 
 ```
 # Example: Verify a pulse was created
-mcp__neo4j__neo4j-read_neo4j_cypher({
+mcp__neo4j-dev__neo4j-read_neo4j_cypher({
   query: "MATCH (p:GoalPulse {title: $title}) RETURN p",
   params: { title: "Test Goal" }
 })
 
 # Example: Verify space membership
-mcp__neo4j__neo4j-read_neo4j_cypher({
+mcp__neo4j-dev__neo4j-read_neo4j_cypher({
   query: "MATCH (u:User {id: $userId})-[:MEMBER_OF]->(s:WeSpace {id: $spaceId}) RETURN u, s",
   params: { userId: "...", spaceId: "..." }
 })
@@ -201,6 +223,47 @@ For critical pages (dashboard, spaces), use performance tracing:
 3. `mcp__chrome-devtools__performance_stop_trace` — stop and analyze
 4. Check for slow page loads, excessive re-renders, large bundles
 
+## Cleanup (MANDATORY — leave the dev DB as you found it)
+
+At the **end of every run**, delete all data your ephemeral account(s) created. Scope the delete to the **exact email(s) you signed up this run** (not a broad match), so a concurrent run is never affected:
+
+```
+mcp__neo4j-dev__neo4j-write_neo4j_cypher({
+  query: `
+    MATCH (u:User) WHERE u.email IN $emails
+    OPTIONAL MATCH (u)-[:OWNS]->(s:Space)
+    OPTIONAL MATCH (s)-[:HAS_CONTEXT]->(fc:FieldContext)
+    OPTIONAL MATCH (fc)-[:HAS_PULSE]->(p)
+    OPTIONAL MATCH (p)--(rl:ResonanceLink)
+    OPTIONAL MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)
+    OPTIONAL MATCH (u)<-[:CREATED_BY]-(x)
+    WITH collect(DISTINCT u) + collect(DISTINCT s) + collect(DISTINCT fc)
+       + collect(DISTINCT p) + collect(DISTINCT rl) + collect(DISTINCT sm)
+       + collect(DISTINCT x) AS nodes
+    UNWIND nodes AS n
+    DETACH DELETE n
+    RETURN count(n) AS deletedNodes`,
+  params: { emails: ["e2e-<tag>@e2e.goalpost.test"] }
+})
+```
+
+Then verify nothing is left:
+
+```
+mcp__neo4j-dev__neo4j-read_neo4j_cypher({
+  query: "MATCH (u:User) WHERE u.email IN $emails RETURN count(u) AS remaining",
+  params: { emails: ["e2e-<tag>@e2e.goalpost.test"] }
+})
+# remaining MUST be 0
+```
+
+Notes:
+
+- `(u)<-[:CREATED_BY]-(x)` sweeps up both the account's activity `Log` nodes and any pulses it authored; the `Space → FieldContext → HAS_PULSE` chain catches its fields and pulses; `ResonanceLink`/`SpaceMembership` cover the rest. The user node is dual-labeled `:Person:User`, so deleting it removes the Person too.
+- Because `@e2e.goalpost.test` is reserved for throwaway accounts, if a previous run aborted before cleaning up it is always safe to purge leftovers with the same query using `WHERE u.email ENDS WITH '@e2e.goalpost.test'`.
+- **NEVER** run cleanup (or any write) against `mcp__neo4j-prod__*`. Cleanup is dev-only.
+- If cleanup fails or you can't complete it, say so explicitly in your report and list the exact email(s) left behind so a human can purge them.
+
 ## Reporting
 
 For each test flow, report:
@@ -212,5 +275,7 @@ For each test flow, report:
 - **Issues found**: with snapshot evidence, page URL, and expected vs actual behavior
 - **Console errors**: any JavaScript errors caught
 - **Network issues**: any failed API calls
+
+At the end of the report, include a **Cleanup** line confirming the ephemeral account(s) were deleted (the `deletedNodes` count and `remaining = 0`), or — if cleanup could not complete — the exact email(s) left behind for a human to purge.
 
 Group results by flow. Flag any Critical issues (crashes, data loss, auth bypass) as blockers.
