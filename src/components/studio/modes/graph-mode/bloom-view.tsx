@@ -19,6 +19,7 @@ import type { MouseEventCallbacks } from '@neo4j-nvl/react'
 import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFocalEntity } from '@/contexts'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
@@ -222,6 +223,45 @@ const PULSE_COLOR: Record<
 
 const PULSE_SIZE = 32
 
+// Person nodes (pulse initiators + the field/space owner) use the same pink
+// the overlay color map already treats as 'Person' (colorToInfoEntityType),
+// so a clicked person resolves consistently however it arrived on the canvas.
+const PERSON_COLOR = '#f9a8d4'
+const PERSON_SIZE = 30
+// The root "You" hub reads slightly larger than its spokes — it's the
+// identity node every space radiates from.
+const YOU_SIZE = 44
+
+// Slate scaffolding color for the hub-and-spoke structural edges (owns /
+// member / has). Tuned for the always-dark canvas, deliberately fainter than
+// the resonance violet so the connective tissue reads as secondary to the
+// entities. NVL needs a resolved value, not a CSS variable.
+const STRUCTURAL_EDGE_COLOR = 'rgba(148, 163, 184, 0.40)'
+
+// Minimal read shape for the owner/member person fields on the space
+// queries — the generated MeSpace | WeSpace union is awkward to narrow inline.
+type RawPersonLite = {
+  id: string
+  firstName?: string | null
+  lastName?: string | null
+  name?: string | null
+}
+
+// Neo4j-GraphQL relationship fields can arrive as a single object or a
+// single-element array depending on the selection — normalize both.
+function firstOf<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : (v ?? undefined)
+}
+
+function composeName(p: {
+  firstName?: string | null
+  lastName?: string | null
+  name?: string | null
+}): string {
+  const composed = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
+  return p.name?.trim() || composed || 'Unnamed'
+}
+
 interface SpaceRecord {
   id: string
   name: string
@@ -246,6 +286,22 @@ interface ResonanceRecord {
   sourceId: string
   targetId: string
   label: string
+}
+
+interface PersonRecord {
+  id: string
+  name: string
+  // Owner is a User; field-attached people are PersonPulses. We branch the
+  // focal-entity machinery on this exactly like SpatialView does.
+  focalType: 'User' | 'PersonPulse'
+}
+
+// In-space people carry their relationship to the space so the hub-and-spoke
+// edge picks the right caption (owns vs member).
+interface SpacePersonRecord {
+  id: string
+  name: string
+  role: 'OWNER' | 'MEMBER'
 }
 
 export const BloomView: FC = () => {
@@ -331,6 +387,17 @@ export const BloomView: FC = () => {
     }
   )
 
+  // People in the active field — the parent space's owner + every Person
+  // attached via HAS_PERSON. SpatialView already runs this exact query at
+  // this route, so `cache-first` reads the warm cache (Apollo dedupes a
+  // cold load against the in-flight request). Bloom needs these to render
+  // the INITIATED_BY edges with a real person endpoint to point at.
+  const { data: fieldPeopleData } = useQuery(GET_FIELD_CONTEXT_PEOPLE, {
+    variables: { contextId: activeFieldId ?? '' },
+    skip: !activeFieldId,
+    fetchPolicy: 'cache-first',
+  })
+
   const loading = inField
     ? fieldDetailsLoading
     : inSpace
@@ -391,6 +458,59 @@ export const BloomView: FC = () => {
     ]
   }, [inField, fieldDetailsData])
 
+  // People to render alongside the pulses in-field: the parent space's
+  // owner plus any Person attached to the field. These are the endpoints
+  // the INITIATED_BY edges point at — without them NVL would drop every
+  // initiated edge as dangling. Mirrors SpatialView's `persons` memo.
+  const persons: PersonRecord[] = useMemo(() => {
+    if (!inField) return []
+    type RawPerson = {
+      id: string
+      name?: string | null
+      firstName?: string | null
+      lastName?: string | null
+    }
+    const toRecord = (
+      p: RawPerson,
+      focalType: PersonRecord['focalType']
+    ): PersonRecord => {
+      const composed = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
+      return {
+        id: p.id,
+        name: p.name?.trim() || composed || 'Unnamed',
+        focalType,
+      }
+    }
+    const fieldCtx = (
+      fieldPeopleData as
+        | {
+            fieldContexts?: Array<{
+              people?: RawPerson[]
+              meSpace?: Array<{ owner?: RawPerson[] }>
+              weSpace?: Array<{ owner?: RawPerson[] }>
+            }>
+          }
+        | undefined
+    )?.fieldContexts?.[0]
+    if (!fieldCtx) return []
+    const owner =
+      fieldCtx.meSpace?.[0]?.owner?.[0] ??
+      fieldCtx.weSpace?.[0]?.owner?.[0] ??
+      null
+    const seen = new Set<string>()
+    const records: PersonRecord[] = []
+    if (owner?.id) {
+      seen.add(owner.id)
+      records.push(toRecord(owner, 'User'))
+    }
+    for (const p of fieldCtx.people ?? []) {
+      if (!p?.id || seen.has(p.id)) continue
+      seen.add(p.id)
+      records.push(toRecord(p, 'PersonPulse'))
+    }
+    return records
+  }, [inField, fieldPeopleData])
+
   // Resonance edges between pulses inside the active field. The Apollo
   // payload only resolves `source`/`target` when both pulse subtype
   // fragments matched (i.e. both endpoints are pulse entities), so we
@@ -421,6 +541,60 @@ export const BloomView: FC = () => {
     })
   }, [inField, fieldDetailsData])
 
+  // The current user — owner of the (single) MeSpace per the one-MeSpace
+  // invariant. Drives the root "You" hub node and its owns/member edges out
+  // to every space.
+  const currentUserId = useMemo<string | null>(() => {
+    const owner = firstOf(
+      (
+        meData?.meSpaces?.[0] as
+          | { owner?: RawPersonLite | RawPersonLite[] | null }
+          | undefined
+      )?.owner
+    )
+    return owner?.id ?? null
+  }, [meData])
+
+  // In-space scope: the active space's owner + members, rendered as person
+  // spokes off the space hub. Each carries its role so the edge reads
+  // "owns" or "member".
+  const inSpacePeople = useMemo<SpacePersonRecord[]>(() => {
+    if (!inSpace) return []
+    const space = spaceDetailsData?.spaces?.[0] as
+      | {
+          owner?: RawPersonLite | RawPersonLite[] | null
+          members?: Array<{
+            member?: RawPersonLite | RawPersonLite[] | null
+          } | null> | null
+        }
+      | undefined
+    if (!space) return []
+    const out: SpacePersonRecord[] = []
+    const seen = new Set<string>()
+    const owner = firstOf(space.owner)
+    if (owner?.id) {
+      seen.add(owner.id)
+      out.push({ id: owner.id, name: composeName(owner), role: 'OWNER' })
+    }
+    for (const m of space.members ?? []) {
+      const mm = firstOf(m?.member)
+      if (!mm?.id || seen.has(mm.id)) continue
+      seen.add(mm.id)
+      out.push({ id: mm.id, name: composeName(mm), role: 'MEMBER' })
+    }
+    return out
+  }, [inSpace, spaceDetailsData])
+
+  // The space itself, rendered as the central hub in its in-space view.
+  const spaceAnchor = useMemo(() => {
+    if (!inSpace || !activeSpaceId) return null
+    const space = spaceDetailsData?.spaces?.[0]
+    if (!space) return null
+    const kind: 'MeSpace' | 'WeSpace' =
+      space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
+    return { id: activeSpaceId, name: space.name || 'Space', kind }
+  }, [inSpace, activeSpaceId, spaceDetailsData])
+
   // Native NVL nodes — caption / color / size only. NVL paints these
   // directly without any HTML container; that's the "minimal GoalPost
   // opinionation" the kb calls out.
@@ -450,7 +624,7 @@ export const BloomView: FC = () => {
       )
     }
     if (inField) {
-      return pulses.map(
+      const pulseNodes = pulses.map(
         (pulse) =>
           ({
             id: pulse.id,
@@ -459,9 +633,31 @@ export const BloomView: FC = () => {
             size: PULSE_SIZE,
           }) as Node
       )
+      const personNodes = persons.map(
+        (person) =>
+          ({
+            id: person.id,
+            caption: person.name,
+            color: PERSON_COLOR,
+            size: PERSON_SIZE,
+          }) as Node
+      )
+      return [...pulseNodes, ...personNodes]
     }
     if (inSpace) {
-      return fieldContexts.map(
+      // Hub-and-spoke: the space anchors the cluster, its field contexts and
+      // owner/members radiate off it via the structural edges below.
+      const anchorNode: Node[] = spaceAnchor
+        ? [
+            {
+              id: spaceAnchor.id,
+              caption: spaceAnchor.name,
+              color: SPACE_COLOR[spaceAnchor.kind],
+              size: SPACE_SIZE[spaceAnchor.kind],
+            } as Node,
+          ]
+        : []
+      const fieldNodes = fieldContexts.map(
         (ctx) =>
           ({
             id: ctx.id,
@@ -470,8 +666,19 @@ export const BloomView: FC = () => {
             size: FIELD_SIZE,
           }) as Node
       )
+      const peopleNodes = inSpacePeople.map(
+        (p) =>
+          ({
+            id: p.id,
+            caption: p.name,
+            color: PERSON_COLOR,
+            size: PERSON_SIZE,
+          }) as Node
+      )
+      return [...anchorNode, ...fieldNodes, ...peopleNodes]
     }
-    return spaces.map(
+    // Root: the current user is the hub; each space hangs off it.
+    const spaceNodes = spaces.map(
       (space) =>
         ({
           id: space.id,
@@ -480,7 +687,30 @@ export const BloomView: FC = () => {
           size: SPACE_SIZE[space.type],
         }) as Node
     )
-  }, [overlay, inField, pulses, inSpace, fieldContexts, spaces])
+    const youNode: Node[] =
+      currentUserId && spaces.length > 0
+        ? [
+            {
+              id: currentUserId,
+              caption: 'You',
+              color: PERSON_COLOR,
+              size: YOU_SIZE,
+            } as Node,
+          ]
+        : []
+    return [...youNode, ...spaceNodes]
+  }, [
+    overlay,
+    inField,
+    pulses,
+    persons,
+    inSpace,
+    fieldContexts,
+    spaces,
+    spaceAnchor,
+    inSpacePeople,
+    currentUserId,
+  ])
 
   const relationships: Relationship[] = useMemo(() => {
     // Dedupe defensively on `from|type|to` even when the backend should
@@ -511,30 +741,155 @@ export const BloomView: FC = () => {
         )
       )
     }
-    if (inField && resonances.length > 0) {
-      // Filter to edges whose endpoints are actually rendered — keeps
-      // NVL from drawing dangling arrows to ghost nodes when a resonance
-      // points to a pulse that didn't load (e.g. permissions on a shared
-      // pulse).
-      const pulseIds = new Set(pulses.map((p) => p.id))
-      return dedupe(
-        resonances
+    if (inField) {
+      // Endpoints that are actually rendered. Edges to anything off-screen
+      // (a resonance into an inaccessible pulse, an initiator whose person
+      // node didn't load) are dropped so NVL never draws a dangling arrow.
+      const visibleIds = new Set<string>([
+        ...pulses.map((p) => p.id),
+        ...persons.map((p) => p.id),
+      ])
+      const edges: Relationship[] = []
+
+      // RESONATES_WITH — pulse↔pulse semantic links. Built unconditionally
+      // now (previously gated on `resonances.length > 0`); the dedupe below
+      // handles the empty case, and most fields have zero resonances, so the
+      // old guard is what made Bloom look edge-less next to the Graph view.
+      for (const r of resonances) {
+        if (!visibleIds.has(r.sourceId) || !visibleIds.has(r.targetId)) continue
+        edges.push({
+          id: `resonance-${r.id}`,
+          from: r.sourceId,
+          to: r.targetId,
+          caption: r.label,
+          color: 'rgba(167, 139, 250, 0.55)',
+          width: 2,
+        } as Relationship)
+      }
+
+      // INITIATED_BY — pulse → the person who created it. This is the edge
+      // every pulse-creation path actually writes (lib/chat/hitl.ts, the
+      // create-from-conversation route, etc.), so it's the one that gives
+      // Bloom visible structure. The generated GraphQL types don't surface
+      // `initiatedBy`, so we read it through a narrow cast mirroring
+      // SpatialView's relationships builder.
+      const allPulses = [
+        ...((fieldDetailsData?.goalPulses ?? []) as Array<{
+          id: string
+          initiatedBy?: Array<{ id: string }> | null
+        }>),
+        ...((fieldDetailsData?.resourcePulses ?? []) as Array<{
+          id: string
+          initiatedBy?: Array<{ id: string }> | null
+        }>),
+        ...((fieldDetailsData?.storyPulses ?? []) as Array<{
+          id: string
+          initiatedBy?: Array<{ id: string }> | null
+        }>),
+        ...((fieldDetailsData?.carePulses ?? []) as Array<{
+          id: string
+          initiatedBy?: Array<{ id: string }> | null
+        }>),
+        ...((fieldDetailsData?.coreValuePulses ?? []) as Array<{
+          id: string
+          initiatedBy?: Array<{ id: string }> | null
+        }>),
+      ]
+      for (const pulse of allPulses) {
+        if (!visibleIds.has(pulse.id)) continue
+        const initiatorId = pulse.initiatedBy?.[0]?.id
+        if (!initiatorId || !visibleIds.has(initiatorId)) continue
+        edges.push({
+          id: `initiated-by-${pulse.id}-${initiatorId}`,
+          from: pulse.id,
+          to: initiatorId,
+          caption: 'initiated',
+          color: 'rgba(255, 255, 255, 0.22)',
+          width: 1.5,
+        } as Relationship)
+      }
+
+      return dedupe(edges)
+    }
+    if (inSpace && spaceAnchor) {
+      // Space —has→ each field context; owner/member —owns|member→ space.
+      const visibleIds = new Set<string>([
+        spaceAnchor.id,
+        ...fieldContexts.map((f) => f.id),
+        ...inSpacePeople.map((p) => p.id),
+      ])
+      const edges: Relationship[] = []
+      for (const ctx of fieldContexts) {
+        edges.push({
+          id: `has-${spaceAnchor.id}-${ctx.id}`,
+          from: spaceAnchor.id,
+          to: ctx.id,
+          caption: 'has',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+      for (const p of inSpacePeople) {
+        if (!visibleIds.has(p.id)) continue
+        const owns = p.role === 'OWNER'
+        edges.push({
+          id: `${owns ? 'owns' : 'member'}-${p.id}-${spaceAnchor.id}`,
+          from: p.id,
+          to: spaceAnchor.id,
+          caption: owns ? 'owns' : 'member',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+      return dedupe(edges)
+    }
+    if (!inField && !inSpace) {
+      // Root: the current user is the hub; each visible space hangs off it
+      // with an `owns` (MeSpace, or a WeSpace they created) or `member`
+      // (a WeSpace they only belong to) edge.
+      if (!currentUserId || spaces.length === 0) return EMPTY_RELATIONSHIPS
+      const ownedIds = new Set<string>([
+        ...(meData?.meSpaces ?? []).map((s) => s.id),
+        ...(weData?.weSpaces ?? [])
           .filter(
-            (r) => pulseIds.has(r.sourceId) && pulseIds.has(r.targetId)
+            (s) =>
+              firstOf(
+                (s as { owner?: RawPersonLite | RawPersonLite[] | null })
+                  .owner
+              )?.id === currentUserId
           )
-          .map(
-            (r) =>
-              ({
-                id: r.id,
-                from: r.sourceId,
-                to: r.targetId,
-                caption: r.label,
-              }) as Relationship
-          )
-      )
+          .map((s) => s.id),
+      ])
+      const edges: Relationship[] = spaces.map((space) => {
+        const owns = ownedIds.has(space.id)
+        return {
+          id: `${owns ? 'owns' : 'member'}-${currentUserId}-${space.id}`,
+          from: currentUserId,
+          to: space.id,
+          caption: owns ? 'owns' : 'member',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship
+      })
+      return dedupe(edges)
     }
     return EMPTY_RELATIONSHIPS
-  }, [overlay, inField, resonances, pulses])
+  }, [
+    overlay,
+    inField,
+    resonances,
+    pulses,
+    persons,
+    fieldDetailsData,
+    inSpace,
+    spaceAnchor,
+    fieldContexts,
+    inSpacePeople,
+    currentUserId,
+    spaces,
+    meData,
+    weData,
+  ])
 
   // Publish whatever Bloom is currently rendering so the assistant can
   // recognise entities by name (e.g. "show me what is in JD's Tech Lab"
@@ -558,12 +913,23 @@ export const BloomView: FC = () => {
         }))
       }
       if (inField) {
-        return pulses.map((p) => ({
-          id: p.id,
-          name: p.name,
-          type: p.focalType,
-          source: 'bloom' as const,
-        }))
+        // Pulses + the people now rendered as person nodes. Publishing
+        // people lets the assistant resolve someone who is visibly on the
+        // Bloom canvas by name instead of fail-searching.
+        return [
+          ...pulses.map((p) => ({
+            id: p.id,
+            name: p.name,
+            type: p.focalType as VisibleEntity['type'],
+            source: 'bloom' as const,
+          })),
+          ...persons.map((p) => ({
+            id: p.id,
+            name: p.name,
+            type: p.focalType as VisibleEntity['type'],
+            source: 'bloom' as const,
+          })),
+        ]
       }
       if (inSpace) {
         return fieldContexts.map((f) => ({
@@ -585,6 +951,7 @@ export const BloomView: FC = () => {
     overlay,
     inField,
     pulses,
+    persons,
     inSpace,
     fieldContexts,
     spaces,
@@ -632,10 +999,40 @@ export const BloomView: FC = () => {
             source: 'manual',
           })
           dispatchOpenInfoDrawer({ type: 'Pulse', id: pulse.id, label })
+          return
+        }
+        const person = persons.find((p) => p.id === id)
+        if (person) {
+          setFocalEntity({
+            type: person.focalType,
+            id: person.id,
+            focusedAt: new Date().toISOString(),
+            source: 'manual',
+          })
+          dispatchOpenInfoDrawer({ type: 'Person', id: person.id, label })
         }
         return
       }
       if (inSpace) {
+        if (spaceAnchor && id === spaceAnchor.id) {
+          setFocalEntity({
+            type: spaceAnchor.kind,
+            id: spaceAnchor.id,
+            focusedAt: new Date().toISOString(),
+            source: 'manual',
+          })
+          dispatchOpenInfoDrawer({
+            type: spaceAnchor.kind,
+            id: spaceAnchor.id,
+            label,
+          })
+          return
+        }
+        const person = inSpacePeople.find((p) => p.id === id)
+        if (person) {
+          dispatchOpenInfoDrawer({ type: 'Person', id: person.id, label })
+          return
+        }
         const ctx = fieldContexts.find((f) => f.id === id)
         if (ctx) {
           setFocalEntity({
@@ -652,6 +1049,11 @@ export const BloomView: FC = () => {
         }
         return
       }
+      // Root scope. The "You" hub opens the current user's Person drawer.
+      if (currentUserId && id === currentUserId) {
+        dispatchOpenInfoDrawer({ type: 'Person', id: currentUserId, label })
+        return
+      }
       const space = spaces.find((s) => s.id === id)
       if (space) {
         setFocalEntity({
@@ -663,7 +1065,19 @@ export const BloomView: FC = () => {
         dispatchOpenInfoDrawer({ type: space.type, id: space.id, label })
       }
     },
-    [overlay, inField, pulses, inSpace, fieldContexts, spaces, setFocalEntity]
+    [
+      overlay,
+      inField,
+      pulses,
+      persons,
+      inSpace,
+      spaceAnchor,
+      inSpacePeople,
+      currentUserId,
+      fieldContexts,
+      spaces,
+      setFocalEntity,
+    ]
   )
 
   // A single click drills *into* the entity by changing the route, which
@@ -687,14 +1101,20 @@ export const BloomView: FC = () => {
         if (ctx) {
           dispatchCloseInfoDrawer()
           router.push(`/protected/dashboard/field-context/${ctx.id}`)
+          return
         }
+        // Space anchor / person spoke — no drill route, open the drawer.
+        handleNodeClick(node)
         return
       }
       const space = spaces.find((s) => s.id === id)
       if (space) {
         dispatchCloseInfoDrawer()
         router.push(`/protected/dashboard/space/${space.id}`)
+        return
       }
+      // Root "You" hub — no drill route, open the drawer.
+      handleNodeClick(node)
     },
     [overlay, inField, inSpace, fieldContexts, spaces, router, handleNodeClick]
   )

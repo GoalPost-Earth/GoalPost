@@ -74,6 +74,20 @@ const GraphVisualizer = dynamic(() => visualizerChunk, {
   ),
 })
 
+// Neo4j-GraphQL relationship fields arrive as a single object or a
+// single-element array depending on selection shape — normalize both.
+function firstOf<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : (v ?? undefined)
+}
+
+type RawOwnerLite = {
+  id: string
+  firstName?: string | null
+  lastName?: string | null
+  name?: string | null
+  photo?: string | null
+}
+
 interface SpaceRecord {
   id: string
   name: string
@@ -159,6 +173,11 @@ type Descriptor =
     }
 
 const NO_RELATIONSHIPS: Relationship[] = []
+
+// Slate scaffolding color for the hub-and-spoke structural edges (owns /
+// member / has) — fainter than the resonance violet so the connective tissue
+// reads as secondary to the entities themselves.
+const STRUCTURAL_EDGE_COLOR = 'rgba(148, 163, 184, 0.40)'
 
 // Space bubbles can use the full size range — at the top level there are
 // usually only a handful of spaces, so an `xl` hero bubble reads as the
@@ -315,6 +334,25 @@ export const SpatialView: FC = () => {
     return [...me, ...we]
   }, [meData, weData])
 
+  // The current user — owner of the (single) MeSpace per the one-MeSpace
+  // invariant. Rendered as the root "You" hub that every space hangs off.
+  const currentUserRecord = useMemo<PersonRecord | null>(() => {
+    const owner = firstOf(
+      (meData?.meSpaces?.[0] as { owner?: RawOwnerLite | RawOwnerLite[] | null } | undefined)
+        ?.owner
+    )
+    if (!owner?.id) return null
+    return {
+      id: owner.id,
+      name: 'You',
+      firstName: owner.firstName ?? '',
+      lastName: owner.lastName ?? '',
+      photo: owner.photo ?? null,
+      role: 'OWNER',
+      focalType: 'User',
+    }
+  }, [meData])
+
   const fieldContexts: FieldContextRecord[] = useMemo(() => {
     if (!inSpace) return []
     const space = spaceDetailsData?.spaces?.[0]
@@ -400,14 +438,32 @@ export const SpatialView: FC = () => {
     }
 
     if (inSpace) {
-      const space = spaceDetailsData?.spaces?.[0]
+      const space = spaceDetailsData?.spaces?.[0] as
+        | {
+            owner?: RawPerson | RawPerson[] | null
+            members?: Array<{
+              member?: RawPerson | RawPerson[] | null
+            } | null> | null
+          }
+        | undefined
       if (!space) return []
-      const owner =
-        'owner' in space && Array.isArray(space.owner)
-          ? (space.owner[0] as RawPerson | undefined)
-          : undefined
-      if (!owner?.id) return []
-      return [toRecord(owner, 'OWNER', 'User')]
+      const seen = new Set<string>()
+      const records: PersonRecord[] = []
+      const owner = firstOf(space.owner)
+      if (owner?.id) {
+        seen.add(owner.id)
+        records.push(toRecord(owner, 'OWNER', 'User'))
+      }
+      // Members radiate off the space hub alongside the owner. They're real
+      // accounts (Users), rendered emerald (PERSON) to read distinct from
+      // the amber owner.
+      for (const m of space.members ?? []) {
+        const mm = firstOf(m?.member)
+        if (!mm?.id || seen.has(mm.id)) continue
+        seen.add(mm.id)
+        records.push(toRecord(mm, 'PERSON', 'User'))
+      }
+      return records
     }
 
     return []
@@ -506,9 +562,33 @@ export const SpatialView: FC = () => {
               : undefined,
         }
       })
-      return [...fieldDescriptors, ...personDescriptors(fieldContexts.length)]
+      // Hub-and-spoke: the space itself anchors the cluster, its fields and
+      // people radiate off it via the structural edges below.
+      const space = spaceDetailsData?.spaces?.[0] as
+        | { __typename?: string; name?: string | null }
+        | undefined
+      const anchorDescriptors: Descriptor[] = []
+      if (space && activeSpaceId) {
+        const isMe = space.__typename === 'MeSpace'
+        anchorDescriptors.push({
+          kind: 'space',
+          id: activeSpaceId,
+          type: isMe ? 'MeSpace' : 'WeSpace',
+          size: 'lg',
+          shape: BUBBLE_SHAPES[0],
+          icon: isMe ? 'self_improvement' : 'groups',
+          title: space.name || 'Space',
+          subtitle: isMe ? 'Inner Sanctuary' : 'Collective Field',
+        })
+      }
+      return [
+        ...anchorDescriptors,
+        ...fieldDescriptors,
+        ...personDescriptors(fieldContexts.length),
+      ]
     }
-    return spaces.map((space, idx) => {
+    // Root: the current user is the hub; each space hangs off it.
+    const spaceDescriptors: Descriptor[] = spaces.map((space, idx) => {
       const isMe = space.type === 'MeSpace'
       const contextCount = space.contexts?.length ?? 0
       const memberCount = space.members?.length ?? 0
@@ -534,7 +614,31 @@ export const SpatialView: FC = () => {
             : undefined,
       }
     })
-  }, [inField, pulses, inSpace, fieldContexts, spaces, persons])
+    const youDescriptor: Descriptor[] =
+      currentUserRecord && spaces.length > 0
+        ? [
+            {
+              kind: 'person',
+              id: currentUserRecord.id,
+              type: 'User',
+              size: 'lg',
+              shape: BUBBLE_SHAPES[0],
+              person: currentUserRecord,
+            },
+          ]
+        : []
+    return [...youDescriptor, ...spaceDescriptors]
+  }, [
+    inField,
+    pulses,
+    inSpace,
+    fieldContexts,
+    spaces,
+    persons,
+    spaceDetailsData,
+    activeSpaceId,
+    currentUserRecord,
+  ])
 
   // Purge cached containers for spaces that no longer exist.
   useEffect(() => {
@@ -580,15 +684,86 @@ export const SpatialView: FC = () => {
   }, [descriptors])
   /* eslint-enable react-hooks/refs */
 
-  // One-hop edges among visible entities. Only in-field mode produces
-  // anything today — the field scope is the only place we render two
-  // entity types (pulses + people) and have first-class relationship
-  // data (ResonanceLinks via `resonancesInContext`, CREATED_BY via
-  // each pulse's `createdBy`). Edges to off-screen endpoints are
+  // One-hop edges among the visible entities, in a hub-and-spoke shape per
+  // scope. The GoalPost data model has no same-type edges within a scope
+  // (no field↔field, no pulse↔pulse structural links), so each scope renders
+  // its connective nodes — the user, the space, owners/members, pulse authors
+  // — and links the primary bubbles to them. Edges to off-screen endpoints are
   // dropped so NVL never draws dangling arrows.
   const relationships: Relationship[] = useMemo(() => {
-    if (!inField || !fieldDetailsData) return NO_RELATIONSHIPS
     const visibleIds = new Set(descriptors.map((d) => d.id))
+
+    // ── Root: the current user is the hub; each space hangs off it with an
+    //    `owns` (MeSpace / created WeSpace) or `member` edge. ──
+    if (!inField && !inSpace) {
+      if (!currentUserRecord || !visibleIds.has(currentUserRecord.id)) {
+        return NO_RELATIONSHIPS
+      }
+      const ownedIds = new Set<string>([
+        ...(meData?.meSpaces ?? []).map((s) => s.id),
+        ...(weData?.weSpaces ?? [])
+          .filter(
+            (s) =>
+              firstOf(
+                (s as { owner?: RawOwnerLite | RawOwnerLite[] | null }).owner
+              )?.id === currentUserRecord.id
+          )
+          .map((s) => s.id),
+      ])
+      const rootEdges: Relationship[] = []
+      for (const space of spaces) {
+        if (!visibleIds.has(space.id)) continue
+        const owns = ownedIds.has(space.id)
+        rootEdges.push({
+          id: `${owns ? 'owns' : 'member'}-${currentUserRecord.id}-${space.id}`,
+          from: currentUserRecord.id,
+          to: space.id,
+          caption: owns ? 'owns' : 'member',
+          type: owns ? 'OWNS' : 'MEMBER',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+      return rootEdges
+    }
+
+    // ── In-space: the space is the hub. It `has` each field context, and its
+    //    owner/members link to it (`owns` / `member`). ──
+    if (inSpace) {
+      if (!activeSpaceId || !visibleIds.has(activeSpaceId)) {
+        return NO_RELATIONSHIPS
+      }
+      const spaceEdges: Relationship[] = []
+      for (const ctx of fieldContexts) {
+        if (!visibleIds.has(ctx.id)) continue
+        spaceEdges.push({
+          id: `has-${activeSpaceId}-${ctx.id}`,
+          from: activeSpaceId,
+          to: ctx.id,
+          caption: 'has',
+          type: 'HAS_CONTEXT',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+      for (const p of persons) {
+        if (!visibleIds.has(p.id)) continue
+        const owns = p.role === 'OWNER'
+        spaceEdges.push({
+          id: `${owns ? 'owns' : 'member'}-${p.id}-${activeSpaceId}`,
+          from: p.id,
+          to: activeSpaceId,
+          caption: owns ? 'owns' : 'member',
+          type: owns ? 'OWNS' : 'MEMBER',
+          color: STRUCTURAL_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+      return spaceEdges
+    }
+
+    // ── In-field: pulse↔pulse resonances + pulse→author INITIATED_BY. ──
+    if (!fieldDetailsData) return NO_RELATIONSHIPS
     const edges: Relationship[] = []
 
     const links = (fieldDetailsData.fieldContexts?.[0]?.resonancesInContext ??
@@ -604,11 +779,13 @@ export const SpatialView: FC = () => {
       if (!sourceId || !targetId) continue
       if (!visibleIds.has(sourceId) || !visibleIds.has(targetId)) continue
       edges.push({
+        // No `type` — `RESONATES_WITH` isn't a real Neo4j rel type; the
+        // semantic label rides on `caption` (link.label), and Bloom omits
+        // `type` on its resonance edges too. Keep the two views consistent.
         id: `resonance-${link.id}`,
         from: sourceId,
         to: targetId,
         caption: link.label ?? 'resonance',
-        type: 'RESONATES_WITH',
         color: 'rgba(167, 139, 250, 0.55)',
         width: 2,
       } as Relationship)
@@ -645,7 +822,19 @@ export const SpatialView: FC = () => {
     }
 
     return edges
-  }, [inField, descriptors, fieldDetailsData])
+  }, [
+    inField,
+    inSpace,
+    descriptors,
+    fieldDetailsData,
+    fieldContexts,
+    persons,
+    activeSpaceId,
+    currentUserRecord,
+    spaces,
+    meData,
+    weData,
+  ])
 
   // The (i) info button opens the unified EntityInfoDrawer. We pass through
   // the label we already have in hand from the descriptor so the drawer
