@@ -370,14 +370,15 @@ export const SpatialView: FC = () => {
   }, [inSpace, spaceDetailsData])
 
   // People to surface alongside the primary bubbles:
-  //   - In-field: the parent space's owner (always shown) + every Person
-  //     attached to the field via HAS_PERSON (PersonPulses created
-  //     manually or via doc ingest, plus any Users present in the field).
-  //   - In-space: the space's owner only — members are surfaced through
-  //     dedicated UI elsewhere; the spatial canvas keeps the space scope
-  //     focused on its field contexts.
-  // Owner is tagged `User`, field-attached people as `PersonPulse` so the
-  // info-drawer + focal-entity machinery branches correctly.
+  //   - In-field: the parent space's owner + every member of that space +
+  //     every Person attached to the field via HAS_PERSON (PersonPulses
+  //     created manually or via doc ingest). Members are included so a
+  //     member-authored pulse keeps its INITIATED_BY author edge — NVL drops
+  //     any edge whose person endpoint isn't a visible node.
+  //   - In-space: the space's owner + its members, radiating off the space hub.
+  // Owner and members are real accounts (tagged `User`); field-attached people
+  // are tagged `PersonPulse`, so the info-drawer + focal-entity machinery
+  // branches correctly.
   const persons: PersonRecord[] = useMemo(() => {
     type RawPerson = {
       id: string
@@ -412,22 +413,38 @@ export const SpatialView: FC = () => {
           | {
               fieldContexts?: Array<{
                 people?: RawPerson[]
-                meSpace?: Array<{ owner?: RawPerson[] }>
-                weSpace?: Array<{ owner?: RawPerson[] }>
+                meSpace?: Array<{
+                  owner?: RawPerson[]
+                  members?: Array<{ member?: RawPerson[] } | null>
+                }>
+                weSpace?: Array<{
+                  owner?: RawPerson[]
+                  members?: Array<{ member?: RawPerson[] } | null>
+                }>
               }>
             }
           | undefined
       )?.fieldContexts?.[0]
       if (!fieldCtx) return []
-      const owner =
-        fieldCtx.meSpace?.[0]?.owner?.[0] ??
-        fieldCtx.weSpace?.[0]?.owner?.[0] ??
-        null
+      // A field belongs to exactly one space (MeSpace or WeSpace).
+      const space = fieldCtx.weSpace?.[0] ?? fieldCtx.meSpace?.[0] ?? null
+      const owner = space?.owner?.[0] ?? null
       const seen = new Set<string>()
       const records: PersonRecord[] = []
       if (owner?.id) {
         seen.add(owner.id)
         records.push(toRecord(owner, 'OWNER', 'User'))
+      }
+      // Every member of the parent space participates in the field, so they
+      // ride alongside the owner as person bubbles. They're real accounts
+      // (Users) and become the endpoints the pulse→author INITIATED_BY edges
+      // point at — a member-authored pulse would otherwise drop its author
+      // edge as dangling and show no attribution in the canvas.
+      for (const m of space?.members ?? []) {
+        const mm = m?.member?.[0]
+        if (!mm?.id || seen.has(mm.id)) continue
+        seen.add(mm.id)
+        records.push(toRecord(mm, 'PERSON', 'User'))
       }
       for (const p of fieldCtx.people ?? []) {
         if (!p?.id || seen.has(p.id)) continue

@@ -459,9 +459,10 @@ export const BloomView: FC = () => {
   }, [inField, fieldDetailsData])
 
   // People to render alongside the pulses in-field: the parent space's
-  // owner plus any Person attached to the field. These are the endpoints
-  // the INITIATED_BY edges point at — without them NVL would drop every
-  // initiated edge as dangling. Mirrors SpatialView's `persons` memo.
+  // owner + every member of that space + any Person attached to the field.
+  // These are the endpoints the INITIATED_BY edges point at — without them
+  // NVL would drop every initiated edge as dangling. Mirrors SpatialView's
+  // `persons` memo.
   const persons: PersonRecord[] = useMemo(() => {
     if (!inField) return []
     type RawPerson = {
@@ -486,22 +487,36 @@ export const BloomView: FC = () => {
         | {
             fieldContexts?: Array<{
               people?: RawPerson[]
-              meSpace?: Array<{ owner?: RawPerson[] }>
-              weSpace?: Array<{ owner?: RawPerson[] }>
+              meSpace?: Array<{
+                owner?: RawPerson[]
+                members?: Array<{ member?: RawPerson[] } | null>
+              }>
+              weSpace?: Array<{
+                owner?: RawPerson[]
+                members?: Array<{ member?: RawPerson[] } | null>
+              }>
             }>
           }
         | undefined
     )?.fieldContexts?.[0]
     if (!fieldCtx) return []
-    const owner =
-      fieldCtx.meSpace?.[0]?.owner?.[0] ??
-      fieldCtx.weSpace?.[0]?.owner?.[0] ??
-      null
+    // A field belongs to exactly one space (MeSpace or WeSpace).
+    const space = fieldCtx.weSpace?.[0] ?? fieldCtx.meSpace?.[0] ?? null
+    const owner = space?.owner?.[0] ?? null
     const seen = new Set<string>()
     const records: PersonRecord[] = []
     if (owner?.id) {
       seen.add(owner.id)
       records.push(toRecord(owner, 'User'))
+    }
+    // Parent-space members participate in the field too — surface them so they
+    // appear and so member-authored pulses keep their INITIATED_BY edge (NVL
+    // drops any edge whose person endpoint isn't a visible node).
+    for (const m of space?.members ?? []) {
+      const mm = m?.member?.[0]
+      if (!mm?.id || seen.has(mm.id)) continue
+      seen.add(mm.id)
+      records.push(toRecord(mm, 'User'))
     }
     for (const p of fieldCtx.people ?? []) {
       if (!p?.id || seen.has(p.id)) continue
