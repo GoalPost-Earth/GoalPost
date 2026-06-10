@@ -41,6 +41,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           visibility
         }
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     resourcePulses(where: { id_EQ: $pulseId }) {
       id
@@ -78,6 +90,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           name
           visibility
         }
+      }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     storyPulses(where: { id_EQ: $pulseId }) {
@@ -123,6 +147,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           visibility
         }
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     carePulses(where: { id_EQ: $pulseId }) {
       id
@@ -156,6 +192,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           visibility
         }
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     coreValuePulses(where: { id_EQ: $pulseId }) {
       id
@@ -187,6 +235,18 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
           name
           visibility
         }
+      }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
   }

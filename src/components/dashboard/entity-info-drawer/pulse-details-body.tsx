@@ -14,6 +14,11 @@ import {
   Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  personDisplayName,
+  resolvePulseAuthor,
+  type PulseWithAuthor,
+} from '@/lib/pulse-author'
 import { GET_PULSE_DETAILS_WITH_CONTEXT } from '@/app/graphql/queries/PULSE_DETAILS_QUERIES'
 import {
   UPDATE_GOAL_PULSE_MUTATION,
@@ -110,6 +115,9 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     created && !Number.isNaN(created.getTime())
       ? formatDistanceToNow(created, { addSuffix: true })
       : '—'
+
+  const author = resolvePulseAuthor(pulse as PulseWithAuthor)
+  const authorName = personDisplayName(author)
 
   const goal = pulse.__typename === 'GoalPulse' ? pulse : null
   const resource = pulse.__typename === 'ResourcePulse' ? pulse : null
@@ -256,6 +264,29 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
                 >
                   {isMe ? 'Me Space' : 'We Space'} · {space.name}
                 </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-gp-ink-muted dark:text-white/55">
+              <span className="material-symbols-outlined text-[14px] shrink-0">
+                person
+              </span>
+              {author?.id ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    dispatchOpenInfoDrawer({
+                      type: 'Person',
+                      id: author.id as string,
+                      label: authorName,
+                    })
+                  }
+                  className="truncate hover:text-gp-ink-strong dark:hover:text-white/85 transition-colors cursor-pointer"
+                  title={`Open ${authorName}`}
+                >
+                  {authorName}
+                </button>
+              ) : (
+                <span className="truncate italic">Unattributed</span>
               )}
             </div>
           </div>
@@ -505,6 +536,7 @@ function buildSharablePulse(
         ? 'story'
         : 'goal'
   const ctx = pulse.context?.[0]
+  const author = resolvePulseAuthor(pulse as PulseWithAuthor)
   return {
     id: pulse.id,
     type: kind,
@@ -515,7 +547,15 @@ function buildSharablePulse(
     status: pulse.status ?? null,
     horizon: pulse.horizon ?? null,
     resourceType: pulse.resourceType ?? null,
-    createdBy: [],
+    createdBy: author
+      ? [
+          {
+            id: author.id ?? 'unknown',
+            name: personDisplayName(author),
+            kind: 'person' as const,
+          },
+        ]
+      : [],
     contexts: ctx ? [{ id: ctx.id, title: ctx.title ?? null }] : [],
   }
 }

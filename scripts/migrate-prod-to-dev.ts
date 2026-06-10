@@ -1070,6 +1070,34 @@ async function phase5_buildDevStructure(): Promise<{
       )
     }
 
+    // 5h. Authorship fallback. By now every pulse is anchored in a context (5f,
+    // 5g, fallback bucket above), but a community/migrated pulse can still lack
+    // ANY creator edge — in prod, core values and shared resources are often
+    // linked to a Community, not a Person, so 5e2's personal-authorship pass
+    // never reached them. The UI attributes every pulse to a person ("who is
+    // this from?"), so an unattributed pulse reads as orphaned in a shared
+    // space. Attribute each remaining creatorless pulse to the OWNER of its
+    // (deterministically first) space — the steward of that space. Idempotent:
+    // MERGE on both the canonical INITIATED_BY edge and the CREATED_BY alias.
+    const ownerFallback = await session.run(
+      `MATCH (pulse:FieldPulse)
+       WHERE NOT EXISTS { (pulse)-[:INITIATED_BY|CREATED_BY]->(:Person) }
+       CALL {
+         WITH pulse
+         MATCH (owner:Person)-[:OWNS]->(s:Space)
+               -[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(pulse)
+         RETURN owner ORDER BY s.name, s.id LIMIT 1
+       }
+       MERGE (pulse)-[:CREATED_BY]->(owner)
+       MERGE (pulse)-[:INITIATED_BY]->(owner)
+       RETURN count(pulse) AS c`
+    )
+    console.log(
+      `   ✓ Authorship fallback (orphan pulses → space owner): ${toInt(
+        ownerFallback.records[0].get('c')
+      )}`
+    )
+
     console.log('✅ Dev structure built\n')
     return { meSpaces, weSpaces, contexts, haspulse, cloneCountsByLabel }
   } finally {

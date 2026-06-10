@@ -867,14 +867,17 @@ function FieldDetailPage() {
       status: goal?.status ?? null,
       horizon: goal?.horizon ?? null,
       resourceType: resource?.resourceType ?? null,
-      createdBy:
-        entry.createdBy?.map((initiator) => ({
-          id: initiator.id ?? initiator.name ?? 'unknown',
-          name: initiator.name ?? 'Unknown',
-          email:
-            'email' in initiator ? (initiator.email ?? undefined) : undefined,
-          kind: 'person' as const,
-        })) ?? [],
+      // Prefer the canonical `initiatedBy` edge; fall back to the legacy
+      // `createdBy` alias for any pulse that only carries the older edge.
+      createdBy: (
+        (entry.initiatedBy?.length ? entry.initiatedBy : entry.createdBy) ?? []
+      ).map((initiator) => ({
+        id: initiator.id ?? initiator.name ?? 'unknown',
+        name: initiator.name ?? 'Unknown',
+        email:
+          'email' in initiator ? (initiator.email ?? undefined) : undefined,
+        kind: 'person' as const,
+      })),
       contexts:
         entry.context?.map((ctx) => ({
           id: ctx.id,

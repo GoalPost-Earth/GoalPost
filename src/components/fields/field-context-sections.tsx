@@ -3,6 +3,7 @@
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { formatResonanceLabel } from '@/utils/graph-utils'
+import type { PulseAuthorLike } from '@/lib/pulse-author'
 import { PulsesSection } from './pulses-section'
 import { EmptySection, getPulseTypeLabel } from './field-section-primitives'
 
@@ -12,6 +13,8 @@ type PulseRecord = {
   title: string
   content: string
   createdAt: string
+  initiatedBy?: PulseAuthorLike[] | null
+  createdBy?: PulseAuthorLike[] | null
 }
 
 type ResonancePulseRecord = {

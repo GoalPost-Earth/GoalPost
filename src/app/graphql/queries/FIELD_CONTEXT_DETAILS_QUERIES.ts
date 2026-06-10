@@ -10,6 +10,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       createdAt
       initiatedBy {
         id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -20,6 +29,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       createdAt
       initiatedBy {
         id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -30,6 +48,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       createdAt
       initiatedBy {
         id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     carePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -40,6 +67,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       createdAt
       initiatedBy {
         id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -50,6 +86,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       createdAt
       initiatedBy {
         id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
       }
     }
     fieldContexts(where: { id_EQ: $contextId }) {

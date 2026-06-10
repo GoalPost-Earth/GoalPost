@@ -62,6 +62,18 @@ const MEMBER_EMAILS = {
   jennifer: 'jenniferdamashek@protonmail.com',
 } as const
 
+// Display fallback used to repair member Users that arrive from prod with an
+// empty firstName/lastName (e.g. `jesse`). Without a name, every pulse they
+// author renders as "Unattributed" in the field surfaces. Only applied when
+// the User's firstName is blank, so members migrated with real names are
+// left untouched.
+const MEMBER_DISPLAY_NAMES: Record<MemberKey, string> = {
+  jd: 'John-Dag',
+  jesse: 'Jesse',
+  robert: 'Robert',
+  jennifer: 'Jennifer',
+}
+
 type MemberKey = keyof typeof MEMBER_EMAILS
 
 // Sample content. Each pulse references the author by member key; the script
@@ -382,6 +394,16 @@ async function resolveMemberIds(): Promise<Record<MemberKey, string>> {
     const idsByEmail: Record<string, string> = {}
     for (const r of result.records) {
       idsByEmail[r.get('email') as string] = r.get('id') as string
+    }
+    // Repair blank display names so authored pulses never read "Unattributed".
+    // Idempotent: only sets firstName when it is currently empty/whitespace.
+    for (const [key, email] of Object.entries(MEMBER_EMAILS)) {
+      await session.run(
+        `MATCH (u:User {email: $email})
+         WHERE coalesce(trim(u.firstName), '') = ''
+         SET u.firstName = $firstName`,
+        { email, firstName: MEMBER_DISPLAY_NAMES[key as MemberKey] }
+      )
     }
     const out: Partial<Record<MemberKey, string>> = {}
     for (const [key, email] of Object.entries(MEMBER_EMAILS)) {

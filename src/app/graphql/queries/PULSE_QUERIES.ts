@@ -16,6 +16,18 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       content
       type: __typename
       createdAt
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -24,6 +36,18 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       content
       type: __typename
       createdAt
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -32,6 +56,18 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       content
       type: __typename
       createdAt
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     carePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -40,6 +76,18 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       content
       type: __typename
       createdAt
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
       __typename
@@ -48,6 +96,18 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
       content
       type: __typename
       createdAt
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+      }
     }
     fieldContexts(where: { id_EQ: $contextId }) {
       id
@@ -172,6 +232,13 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
       createdBy {
         id
         firstName
@@ -193,6 +260,13 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
       createdBy {
         id
         firstName
@@ -211,6 +285,13 @@ export const GET_PULSE_DETAILS = graphql(`
       context {
         id
         title
+      }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+        email
       }
       createdBy {
         id
@@ -231,6 +312,13 @@ export const GET_PULSE_DETAILS = graphql(`
         id
         title
       }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
       createdBy {
         id
         firstName
@@ -249,6 +337,13 @@ export const GET_PULSE_DETAILS = graphql(`
       context {
         id
         title
+      }
+      initiatedBy {
+        id
+        firstName
+        lastName
+        name
+        email
       }
       createdBy {
         id

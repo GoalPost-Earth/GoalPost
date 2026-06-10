@@ -5,6 +5,11 @@ import { cn } from '@/lib/utils'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import {
+  personDisplayName,
+  resolvePulseAuthor,
+  type PulseAuthorLike,
+} from '@/lib/pulse-author'
+import {
   EmptySection,
   getEditablePulseType,
   getPulseTypeClass,
@@ -18,6 +23,8 @@ type PulseRecord = {
   title: string
   content: string
   createdAt: string
+  initiatedBy?: PulseAuthorLike[] | null
+  createdBy?: PulseAuthorLike[] | null
 }
 
 export type PulsesSectionProps = {
@@ -251,6 +258,14 @@ export function PulsesSection({
                         <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
                           {pulse.title}
                         </h4>
+                        <div className="mt-1 flex items-center gap-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                          <span className="material-symbols-outlined text-[12px] shrink-0">
+                            person
+                          </span>
+                          <span className="truncate">
+                            {personDisplayName(resolvePulseAuthor(pulse))}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     {!selectMode && (

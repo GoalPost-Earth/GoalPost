@@ -179,6 +179,19 @@ WeSpace (community precedence preserved).
 seeded content behave identically. Neither 5e2 nor 5e3 breaks Phase 6
 parity (they only *add* edges; dev counts stay ≥ prod).
 
+**Authorship fallback (Phase 5h).** 5e2/5e3 only attribute pulses reachable
+from a `:User` via `EMBRACES`/`GUIDED_BY` or an existing `CREATED_BY`. A
+community/migrated pulse linked only to a `Community` (many core values and
+shared resources) still ends up with **no creator edge at all** — yet it lives
+in a real shared WeSpace. The UI attributes every pulse to a person ("who is
+this from?"), so such a pulse reads as orphaned. Phase 5h runs **after all
+`HAS_PULSE` anchoring** (so every pulse is in a context owned by someone) and
+attributes each remaining creator-less pulse to the **owner of its
+(deterministically first) space** — that space's steward — wiring both
+`INITIATED_BY` and `CREATED_BY`. Idempotent and add-only, so Phase 6 parity is
+preserved. Invariant after 5h: **every `FieldPulse` has an `INITIATED_BY`
+edge.**
+
 **Shared-pulse split (Phase 5e2 placement + Phase 5g2).** A MeSpace is a
 *personal* space, so a pulse must not be a single node shared across several
 MeSpaces — otherwise one owner deleting it would delete it for the others. A
