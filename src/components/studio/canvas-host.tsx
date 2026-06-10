@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, type FC, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { Maximize2, Minimize2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useStudioCanvas } from './studio-canvas-context'
+import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
+import { routeHasCanvasScope } from './canvas-scope'
 import { useBloomOverlay } from './bloom-overlay-context'
 import { SpatialView } from './modes/graph-mode/spatial-view'
 import { BloomView } from './modes/graph-mode/bloom-view'
@@ -35,13 +37,24 @@ interface CanvasHostProps {
 export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const { canvasView, toggleFullscreen, setCanvasOpen } = useStudioCanvas()
   const { overlay, clearOverlay } = useBloomOverlay()
-  const showOverlayChip = canvasView === 'bloom' && overlay !== null
+  const pathname = usePathname()
+
+  // `canvasView` is the user's sticky preference (persisted). The *effective*
+  // view is what we actually render: on routes the graph/bloom surfaces can't
+  // scope to (persons, profile, settings, search) we fall back to the
+  // dashboard view for display — without overwriting the stored preference, so
+  // the user's graph/bloom view returns the moment they navigate back to a
+  // Space / FieldContext. See `routeHasCanvasScope`.
+  const effectiveView: CanvasView = routeHasCanvasScope(pathname)
+    ? canvasView
+    : 'dashboard'
+  const showOverlayChip = effectiveView === 'bloom' && overlay !== null
 
   // Lazy-mount Graph + Bloom independently; each retains state across toggles.
-  const [graphVisited, setGraphVisited] = useState(canvasView === 'graph')
-  const [bloomVisited, setBloomVisited] = useState(canvasView === 'bloom')
-  if (canvasView === 'graph' && !graphVisited) setGraphVisited(true)
-  if (canvasView === 'bloom' && !bloomVisited) setBloomVisited(true)
+  const [graphVisited, setGraphVisited] = useState(effectiveView === 'graph')
+  const [bloomVisited, setBloomVisited] = useState(effectiveView === 'bloom')
+  if (effectiveView === 'graph' && !graphVisited) setGraphVisited(true)
+  if (effectiveView === 'bloom' && !bloomVisited) setBloomVisited(true)
 
   return (
     <section
@@ -97,10 +110,12 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
         <div
           className={cn(
             'absolute inset-0',
-            canvasView !== 'dashboard' && 'pointer-events-none'
+            effectiveView !== 'dashboard' && 'pointer-events-none'
           )}
-          style={{ visibility: canvasView === 'dashboard' ? 'visible' : 'hidden' }}
-          aria-hidden={canvasView !== 'dashboard'}
+          style={{
+            visibility: effectiveView === 'dashboard' ? 'visible' : 'hidden',
+          }}
+          aria-hidden={effectiveView !== 'dashboard'}
         >
           {children}
         </div>
@@ -109,10 +124,12 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
           <div
             className={cn(
               'absolute inset-0',
-              canvasView !== 'graph' && 'pointer-events-none'
+              effectiveView !== 'graph' && 'pointer-events-none'
             )}
-            style={{ visibility: canvasView === 'graph' ? 'visible' : 'hidden' }}
-            aria-hidden={canvasView !== 'graph'}
+            style={{
+              visibility: effectiveView === 'graph' ? 'visible' : 'hidden',
+            }}
+            aria-hidden={effectiveView !== 'graph'}
           >
             <SpatialView />
           </div>
@@ -122,10 +139,12 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
           <div
             className={cn(
               'absolute inset-0',
-              canvasView !== 'bloom' && 'pointer-events-none'
+              effectiveView !== 'bloom' && 'pointer-events-none'
             )}
-            style={{ visibility: canvasView === 'bloom' ? 'visible' : 'hidden' }}
-            aria-hidden={canvasView !== 'bloom'}
+            style={{
+              visibility: effectiveView === 'bloom' ? 'visible' : 'hidden',
+            }}
+            aria-hidden={effectiveView !== 'bloom'}
           >
             <BloomView />
           </div>

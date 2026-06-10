@@ -24,6 +24,7 @@ import {
 } from '@/contexts'
 import { usePreferences } from '@/contexts/preferences-context'
 import type { FocalEntity } from '@/lib/focal-entity/types'
+import { routeHasCanvasScope } from './canvas-scope'
 import {
   fetchHydratedThread,
   type HydratedThread,
@@ -37,6 +38,7 @@ import { TourOverlay } from '@/components/onboarding/TourOverlay'
 import {
   StudioCanvasProvider,
   useStudioCanvas,
+  type CanvasView,
 } from './studio-canvas-context'
 import { BloomOverlayProvider } from './bloom-overlay-context'
 import {
@@ -92,24 +94,28 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     exitFullscreen,
     toggleFloatingChat,
     setFloatingChatOpen,
-    setCanvasView,
   } = useStudioCanvas()
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
   const pathname = usePathname()
 
-  // Content routes other than the dashboard root (profile, settings, search,
-  // and the space/field detail pages) only ever render through the dashboard
-  // canvas surface. When the user navigates to one, make sure the canvas is
-  // open, un-fullscreened, and showing that content — otherwise the page is
-  // hidden behind a closed canvas or the graph/bloom overlay and the route
-  // appears to do nothing. The dashboard root is excluded so switching to
-  // graph/bloom (which routes here) keeps its selected view.
+  // Content routes other than the dashboard root only ever render through the
+  // dashboard canvas surface. When the user navigates to one, make sure the
+  // canvas is open and un-fullscreened — otherwise the page is hidden behind a
+  // closed canvas or a fullscreened chat and the route appears to do nothing.
+  //
+  // We deliberately do NOT force the canvas *view* back to 'dashboard' here:
+  // `canvasView` is a sticky user preference (persisted in
+  // studio-canvas-context). Drilling space → field → pulse must keep whatever
+  // view the user was already in, and even routes with no graph representation
+  // (persons, profile, settings, search) must not clobber the stored
+  // preference — `CanvasHost` falls back to the dashboard view for *display*
+  // on those routes via `routeHasCanvasScope`, so returning to a Space /
+  // FieldContext restores the user's graph/bloom view intact.
   useEffect(() => {
     if (pathname === '/protected/dashboard') return
     setCanvasOpen(true)
     exitFullscreen()
-    setCanvasView('dashboard')
-  }, [pathname, setCanvasOpen, exitFullscreen, setCanvasView])
+  }, [pathname, setCanvasOpen, exitFullscreen])
 
   // Below this breakpoint the studio shows only one surface at a time. The
   // canvas takes priority when open; the user closes it to access chat.
@@ -294,6 +300,17 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   const { canvasView } = useStudioCanvas()
   const { entities: visibleEntities } = useVisibleEntities()
   const { history: navigationHistory } = useNavigationHistory()
+  const pathname = usePathname()
+
+  // What the canvas actually shows the user — the stored `canvasView`
+  // preference falls back to 'dashboard' on routes the graph/bloom surfaces
+  // can't scope to (persons, profile, settings, search). The assistant's
+  // SESSION CONTEXT must reflect this *effective* view, not the raw
+  // preference, so it never tells the user they're "in the graph" while the
+  // canvas is showing a dashboard page. Mirrors `CanvasHost`'s effective-view.
+  const effectiveCanvasView: CanvasView = routeHasCanvasScope(pathname)
+    ? canvasView
+    : 'dashboard'
 
   const sessionContextRef = useRef(sessionContext)
   useEffect(() => {
@@ -304,10 +321,10 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   // assistant-ui at submit time, outside React's render cycle) reads
   // the latest values without forcing a transport rebuild every time
   // the user clicks a node.
-  const canvasViewRef = useRef(canvasView)
+  const canvasViewRef = useRef(effectiveCanvasView)
   useEffect(() => {
-    canvasViewRef.current = canvasView
-  }, [canvasView])
+    canvasViewRef.current = effectiveCanvasView
+  }, [effectiveCanvasView])
   const visibleEntitiesRef = useRef(visibleEntities)
   useEffect(() => {
     visibleEntitiesRef.current = visibleEntities

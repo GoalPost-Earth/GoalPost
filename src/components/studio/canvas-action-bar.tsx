@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FC } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { toast } from 'sonner'
 import {
@@ -23,6 +23,7 @@ import {
   emitOpenAddSpaceMembersModal,
 } from '@/lib/simulation/pulse-creation-events'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
+import { routeHasCanvasScope } from './canvas-scope'
 import { FieldContextUploadAction } from './field-context-upload-action'
 
 /**
@@ -41,12 +42,21 @@ import { FieldContextUploadAction } from './field-context-upload-action'
  */
 export const StudioCanvasActionBar: FC = () => {
   const router = useRouter()
+  const pathname = usePathname()
   const { canvasView, setCanvasView } = useStudioCanvas()
   const { focalEntity } = useFocalEntity()
 
+  // `canvasView` is the sticky preference; the *effective* view is what the
+  // canvas actually shows. On routes the graph/bloom surfaces can't scope to
+  // (persons, profile, settings, search) the canvas falls back to dashboard
+  // for display, so the toggle highlights dashboard and Graph/Bloom are
+  // disabled there — selecting them would be a no-op against the route.
+  const scopeAvailable = routeHasCanvasScope(pathname)
+  const effectiveView: CanvasView = scopeAvailable ? canvasView : 'dashboard'
+
   // Zoom controls apply to both Graph View and Bloom Exploration — they
   // are sibling NVL surfaces per kb/01-glossary.md.
-  const inGraphSurface = canvasView === 'graph' || canvasView === 'bloom'
+  const inGraphSurface = effectiveView === 'graph' || effectiveView === 'bloom'
 
   // Route-sourced focal is the only signal we trust here. Manual /
   // persisted focals are valid for assistant scope but don't imply the
@@ -86,7 +96,11 @@ export const StudioCanvasActionBar: FC = () => {
           </div>
         )}
 
-        <ViewToggle activeView={canvasView} onChange={setCanvasView} />
+        <ViewToggle
+          activeView={effectiveView}
+          scopeAvailable={scopeAvailable}
+          onChange={setCanvasView}
+        />
 
         {/* Always mounted — the component self-gates on focal source and
             also keeps its own `pinnedFieldContextId` so an in-flight upload
@@ -307,8 +321,15 @@ const ZoomButton: FC<{
 
 const ViewToggle: FC<{
   activeView: CanvasView
+  /**
+   * Whether the current route can render the graph/bloom surfaces. When false
+   * (persons, profile, settings, search) only the dashboard view is selectable
+   * — Graph + Bloom are disabled so the toggle never dead-clicks against a
+   * route they can't scope to.
+   */
+  scopeAvailable: boolean
   onChange: (view: CanvasView) => void
-}> = ({ activeView, onChange }) => {
+}> = ({ activeView, scopeAvailable, onChange }) => {
   // Order + labels follow the kb canonical names (kb/01-glossary.md):
   // Dashboard View → Graph View → Bloom Exploration.
   const items: { id: CanvasView; label: string; Icon: typeof LayoutGrid }[] = [
@@ -325,6 +346,7 @@ const ViewToggle: FC<{
     >
       {items.map(({ id, label, Icon }, idx) => {
         const active = activeView === id
+        const disabled = !scopeAvailable && id !== 'dashboard'
         const isLast = idx === items.length - 1
         return (
           <span key={id} className="flex items-center">
@@ -332,14 +354,19 @@ const ViewToggle: FC<{
               type="button"
               role="tab"
               aria-selected={active}
+              disabled={disabled}
               onClick={() => onChange(id)}
               aria-label={label}
-              title={label}
+              title={
+                disabled ? `${label} — open a space to use this view` : label
+              }
               className={cn(
-                'cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
-                active
-                  ? 'bg-gp-primary/20 text-gp-primary'
-                  : 'text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20'
+                'size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
+                disabled
+                  ? 'opacity-40 cursor-not-allowed text-gp-ink-muted dark:text-gp-ink-soft'
+                  : active
+                    ? 'cursor-pointer bg-gp-primary/20 text-gp-primary'
+                    : 'cursor-pointer text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20'
               )}
             >
               <Icon className="w-4 h-4" />
