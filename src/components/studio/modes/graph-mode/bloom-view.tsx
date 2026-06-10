@@ -67,6 +67,10 @@ const GraphVisualizer = dynamic(() => visualizerChunk, {
 
 const EMPTY_RELATIONSHIPS: Relationship[] = []
 
+// How long to wait after a single click before treating it as a drill — long
+// enough for a double-click (drawer) to arrive and cancel it.
+const SINGLE_CLICK_DELAY = 250
+
 /**
  * Map a Neo4j label (as carried on `NVLNode.labels` from the cypher
  * generator / neighborhood route) to the drawer's `InfoEntityType`.
@@ -259,6 +263,14 @@ export const BloomView: FC = () => {
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null)
   const isHoveringNodeRef = useRef(false)
   const router = useRouter()
+  // Single-click drills, double-click opens the drawer. NVL has no built-in
+  // single-vs-double debounce — it emits raw DOM events, so a double-click
+  // fires two `onNodeClick`s then `onNodeDoubleClick`. A naive single=drill
+  // wiring would navigate away on the first click before the double-click
+  // drawer intent registers. So we hold the drill in a timer
+  // (`clickTimerRef`): if a second click (or `onNodeDoubleClick`) arrives
+  // first, we cancel the pending drill and open the drawer instead.
+  const clickTimerRef = useRef<number | null>(null)
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // Reading `sessionContext.activeSpaceId` would conflate the user's
@@ -654,16 +666,15 @@ export const BloomView: FC = () => {
     [overlay, inField, pulses, inSpace, fieldContexts, spaces, setFocalEntity]
   )
 
-  // A double click drills *into* the entity by changing the route, which
+  // A single click drills *into* the entity by changing the route, which
   // re-scopes the canvas (scope is derived strictly from the pathname via
   // focalEntityFromRoute): a top-level space → its field contexts, an
   // in-space field → its pulses. These are the same dashboard routes the
   // drawer's "Open full page" CTA uses, so the studio canvas stays mounted
   // and re-scopes inward. Overlay nodes and pulses have no page route, so a
-  // double click on them falls back to the single-click drawer behavior.
-  // NVL fires the single-click `onNodeClick` (which opens the drawer)
-  // *before* this handler, so for the navigating cases we close that drawer
-  // first — otherwise it lingers open over the freshly drilled-in scope.
+  // click on them falls back to opening the drawer. We close any drawer left
+  // open (e.g. from a prior double-click) before navigating so it doesn't
+  // linger over the freshly drilled-in scope.
   const handleNodeNavigate = useCallback(
     (node: Node) => {
       const id = String(node.id)
@@ -688,10 +699,55 @@ export const BloomView: FC = () => {
     [overlay, inField, inSpace, fieldContexts, spaces, router, handleNodeClick]
   )
 
+  // First click schedules a drill; if a second click lands before it fires,
+  // that's a double-click → cancel the drill and open the drawer instead.
+  const handleSingleClick = useCallback(
+    (node: Node) => {
+      if (clickTimerRef.current !== null) {
+        // Second click of a double-click — drill is still pending, swap to
+        // the drawer.
+        window.clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
+        handleNodeClick(node)
+        return
+      }
+      clickTimerRef.current = window.setTimeout(() => {
+        clickTimerRef.current = null
+        handleNodeNavigate(node)
+      }, SINGLE_CLICK_DELAY)
+    },
+    [handleNodeClick, handleNodeNavigate]
+  )
+
+  // Fallback for NVL builds that surface `onNodeDoubleClick` without a second
+  // `onNodeClick`: cancel the pending drill and open the drawer. If the drill
+  // was already cancelled by the second click above, the drawer is already
+  // open — re-dispatching the same entity is idempotent and harmless.
+  const handleDoubleClick = useCallback(
+    (node: Node) => {
+      if (clickTimerRef.current !== null) {
+        window.clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
+      }
+      handleNodeClick(node)
+    },
+    [handleNodeClick]
+  )
+
+  // Cancel a pending drill if the view unmounts mid-debounce so we never
+  // router.push after teardown.
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current !== null) {
+        window.clearTimeout(clickTimerRef.current)
+      }
+    }
+  }, [])
+
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
-      onNodeClick: (node) => handleNodeClick(node),
-      onNodeDoubleClick: (node) => handleNodeNavigate(node),
+      onNodeClick: (node) => handleSingleClick(node),
+      onNodeDoubleClick: (node) => handleDoubleClick(node),
       onCanvasClick: () => setSelectedNode(null),
       onHover: (_element, hitTargets: HitTargets) => {
         const hoveringNode = hitTargets.nodes.length > 0
@@ -704,7 +760,7 @@ export const BloomView: FC = () => {
       onPan: true,
       onZoom: true,
     }),
-    [handleNodeClick, handleNodeNavigate]
+    [handleSingleClick, handleDoubleClick]
   )
 
   // Bloom is a force-directed exploration surface. The pre-computed (x, y)
