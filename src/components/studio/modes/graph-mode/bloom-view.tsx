@@ -25,6 +25,16 @@ import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { GraphLoadingState } from './graph-loading-state'
+import { BloomLegend } from './bloom-legend'
+import {
+  SPACE_COLOR,
+  FIELD_COLOR,
+  PULSE_COLOR,
+  PERSON_COLOR,
+  STRUCTURAL_EDGE_COLOR,
+  RESONANCE_EDGE_COLOR,
+  INITIATED_EDGE_COLOR,
+} from './bloom-palette'
 import { useBloomOverlay } from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
@@ -187,56 +197,20 @@ function colorToInfoEntityType(
   }
 }
 
-const SPACE_COLOR = {
-  MeSpace: '#f59e0b', // amber — matches the Me Space card accent
-  WeSpace: '#14b8a6', // teal — matches the We Space card accent
-} as const
-
 const SPACE_SIZE = {
   MeSpace: 44,
   WeSpace: 48,
 } as const
 
-// Field-context bubbles inherit a softer tint of their parent's palette so
-// the in-space cluster reads as "the same space, one level deeper."
-const FIELD_COLOR = {
-  MeSpace: '#fbbf24', // amber-400 — slightly warmer than space accent
-  WeSpace: '#5eead4', // teal-300 — slightly lighter than space accent
-} as const
-
 const FIELD_SIZE = 36
-
-// Pulse palette mirrors `--gp-{goal|resource|story|care|coreValue}` from
-// globals.css so Bloom nodes read with the same semantics as everywhere
-// else in the app. Hex values are duplicated here because NVL needs
-// resolved colors at node-render time — it cannot consume CSS variables.
-const PULSE_COLOR: Record<
-  'goal' | 'resource' | 'story' | 'care' | 'coreValue',
-  string
-> = {
-  goal: '#38bdf8',
-  resource: '#4ade80',
-  story: '#c084fc',
-  care: '#10b981',
-  coreValue: '#8b5cf6',
-}
 
 const PULSE_SIZE = 32
 
-// Person nodes (pulse initiators + the field/space owner) use the same pink
-// the overlay color map already treats as 'Person' (colorToInfoEntityType),
-// so a clicked person resolves consistently however it arrived on the canvas.
-const PERSON_COLOR = '#f9a8d4'
 const PERSON_SIZE = 30
 // The root "You" hub reads slightly larger than its spokes — it's the
 // identity node every space radiates from.
 const YOU_SIZE = 44
 
-// Slate scaffolding color for the hub-and-spoke structural edges (owns /
-// member / has). Tuned for the always-dark canvas, deliberately fainter than
-// the resonance violet so the connective tissue reads as secondary to the
-// entities. NVL needs a resolved value, not a CSS variable.
-const STRUCTURAL_EDGE_COLOR = 'rgba(148, 163, 184, 0.40)'
 
 // Minimal read shape for the owner/member person fields on the space
 // queries — the generated MeSpace | WeSpace union is awkward to narrow inline.
@@ -777,7 +751,7 @@ export const BloomView: FC = () => {
           from: r.sourceId,
           to: r.targetId,
           caption: r.label,
-          color: 'rgba(167, 139, 250, 0.55)',
+          color: RESONANCE_EDGE_COLOR,
           width: 2,
         } as Relationship)
       }
@@ -819,7 +793,7 @@ export const BloomView: FC = () => {
           from: pulse.id,
           to: initiatorId,
           caption: 'initiated',
-          color: 'rgba(255, 255, 255, 0.22)',
+          color: INITIATED_EDGE_COLOR,
           width: 1.5,
         } as Relationship)
       }
@@ -1415,6 +1389,10 @@ export const BloomView: FC = () => {
             nvlCallbacks={nvlCallbacks}
           />
         )}
+
+        {/* Decodes the bare colored NVL circles. Derives its rows from the
+            same nodes/relationships above, so it only lists what's on screen. */}
+        <BloomLegend nodes={nodes} relationships={relationships} />
       </div>
 
       {/* Inline panel only for overlay nodes (chat artifacts with no
