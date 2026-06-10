@@ -551,6 +551,7 @@ async function createResonances() {
           `MATCH (source:FieldPulse {id: $sourceId})
            MATCH (target:FieldPulse {id: $targetId})
            MATCH (fr:FieldResonance {id: $resonanceId})
+           MATCH (ctx:FieldContext {id: $contextId})
            CREATE (rl:ResonanceLink {
              id: $linkId,
              label: $label,
@@ -560,11 +561,20 @@ async function createResonances() {
            })
            CREATE (rl)-[:SOURCE]->(source)
            CREATE (rl)-[:TARGET]->(target)
-           CREATE (rl)-[:RESONATES_AS]->(fr)`,
+           CREATE (rl)-[:RESONATES_AS]->(fr)
+           // Context-scope the link so it satisfies the ResonanceLink READ
+           // @authorization filter (context_SOME owner/member). Without this
+           // edge, resonancesInContext returns [] and no resonance edges ever
+           // render in the graph views. The schema's HAS_RESONANCE relation
+           // is typed [ResonanceLink!]!, so the parallel HAS_RESONANCE edges
+           // to FieldResonance nodes are ignored by that field — only this
+           // ResonanceLink edge is read.
+           CREATE (ctx)-[:HAS_RESONANCE]->(rl)`,
           {
             sourceId,
             targetId,
             resonanceId,
+            contextId: CONTEXT_ID,
             linkId,
             label: r.label,
             evidence: link.evidence,
