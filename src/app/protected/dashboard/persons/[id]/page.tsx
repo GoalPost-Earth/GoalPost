@@ -276,7 +276,7 @@ export default function PersonProfilePage() {
     const focus = saveFocusEntities([
       { type: focusType, id: person.id, name: person.name },
     ])
-    router.push(`/protected/graph?focus=${focus}`)
+    router.push(`/protected/dashboard?focus=${focus}`)
   }
 
   // Extract all pulses from all contexts across all spaces with metadata
@@ -371,10 +371,12 @@ export default function PersonProfilePage() {
             <button
               onClick={handleOpenPersonNode}
               className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border border-gp-primary/30 text-gp-primary hover:bg-gp-primary/5 transition-all dark:border-gp-primary/40 dark:hover:bg-gp-primary/10 cursor-pointer"
-              aria-label={`Open ${person.name}'s node in the graph view`}
+              aria-label={`View ${person.name} in the dashboard`}
             >
-              <span className="material-symbols-outlined text-[16px]">hub</span>
-              Open Person Node
+              <span className="material-symbols-outlined text-[16px]">
+                dashboard
+              </span>
+              View in dashboard
             </button>
           </div>
 

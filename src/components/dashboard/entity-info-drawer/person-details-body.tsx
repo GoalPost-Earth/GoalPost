@@ -130,7 +130,7 @@ export const PersonDetailsBody: FC<{
       { type: focusType, id: person.id, name: person.name },
     ])
     onClose()
-    router.push(`/protected/graph?focus=${focus}`)
+    router.push(`/protected/dashboard?focus=${focus}`)
   }
 
   const connectionEdge = (id: string) =>
@@ -376,8 +376,10 @@ export const PersonDetailsBody: FC<{
           <ArrowRight className="w-4 h-4" />
         </PrimaryCta>
         <SecondaryCta onClick={handleOpenPersonNode} className="w-full">
-          <span className="material-symbols-outlined text-[18px]">hub</span>
-          Open in graph
+          <span className="material-symbols-outlined text-[18px]">
+            dashboard
+          </span>
+          View in dashboard
         </SecondaryCta>
       </footer>
     </div>
