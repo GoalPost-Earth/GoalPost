@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
-import { usePageContext } from '@/contexts'
+import { usePageContext, useApp } from '@/contexts'
 import { useProfile, type EditableProfile, type ProfileData } from '@/hooks/use-profile'
 import { AttributeCard, InfoField } from './profile-fields'
+import { AvatarUploader } from './avatar-uploader'
 
 const EDITABLE_KEYS: Array<keyof EditableProfile> = [
   'firstName',
@@ -29,18 +30,6 @@ function toDraft(profile: ProfileData): EditableProfile {
   }, {} as EditableProfile)
 }
 
-function initialsOf(name: string): string {
-  return (
-    name
-      .split(/\s+/)
-      .map((part) => part[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || 'U'
-  )
-}
-
 const ATTRIBUTES: Array<{
   key: keyof EditableProfile
   icon: string
@@ -58,8 +47,10 @@ const ATTRIBUTES: Array<{
 export function ProfilePageClient() {
   const { profile, isLoading, error, saving, updateProfile } = useProfile()
   const { setPageTitle } = usePageContext()
+  const { user, setUser } = useApp()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableProfile | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     setPageTitle('My Profile')
@@ -93,6 +84,11 @@ export function ProfilePageClient() {
     if (!draft) return
     try {
       await updateProfile(draft)
+      // Reflect a changed photo in the shared user context so the top-bar
+      // avatar updates immediately, without waiting for a re-login.
+      if (user && draft.photo !== user.photo) {
+        setUser({ ...user, photo: draft.photo || null })
+      }
       toast.success('Profile updated')
       setEditing(false)
       setDraft(null)
@@ -133,9 +129,13 @@ export function ProfilePageClient() {
       {/* Identity header */}
       <header className="flex flex-col gap-5 rounded-3xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-2xl p-5 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-full border-2 border-gp-primary/30 bg-[color-mix(in_srgb,var(--gp-primary)_18%,transparent)] text-2xl font-bold text-gp-primary">
-            {initialsOf(profile.name)}
-          </div>
+          <AvatarUploader
+            name={profile.name}
+            photo={active ? active.photo : profile.photo}
+            editing={editing}
+            onChange={(v) => setField('photo', v)}
+            onUploadingChange={setUploadingPhoto}
+          />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-2xl sm:text-3xl font-bold text-gp-ink-strong dark:text-white">
               {profile.name}
@@ -177,7 +177,7 @@ export function ProfilePageClient() {
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || uploadingPhoto}
                   className="inline-flex items-center gap-2 rounded-full bg-gp-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
                 >
                   <span
@@ -185,7 +185,7 @@ export function ProfilePageClient() {
                   >
                     {saving ? 'progress_activity' : 'save'}
                   </span>
-                  {saving ? 'Saving…' : 'Save'}
+                  {saving ? 'Saving…' : uploadingPhoto ? 'Uploading…' : 'Save'}
                 </button>
               </>
             ) : (
@@ -225,7 +225,6 @@ export function ProfilePageClient() {
             <InfoField label="Pronouns" value={active ? active.pronouns : profile.pronouns} editing={editing} onChange={(v) => setField('pronouns', v)} placeholder="they/them" />
             <InfoField label="Location" value={active ? active.location : profile.location} editing={editing} onChange={(v) => setField('location', v)} placeholder="City, Country" />
             <InfoField label="Phone" value={active ? active.phone : profile.phone} editing={editing} onChange={(v) => setField('phone', v)} placeholder="Phone number" type="tel" />
-            <InfoField label="Photo URL" value={active ? active.photo : profile.photo} editing={editing} onChange={(v) => setField('photo', v)} placeholder="https://…" type="url" />
           </div>
         </section>
 
