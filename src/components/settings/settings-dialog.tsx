@@ -144,7 +144,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto gp-glass border-gp-glass-border">
+      {/* Solid elevated surface (not gp-glass): the overlay already applies a
+          backdrop blur, and stacking a second animated backdrop-filter on the
+          zooming content caused a visible flicker on open in Chromium. */}
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-gp-surface-strong border-gp-glass-border">
         <DialogHeader>
           <DialogTitle className="text-2xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
             User Settings
