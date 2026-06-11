@@ -500,6 +500,60 @@
     border-color: rgba(255, 255, 255, 0.2);
   }
 
+  /*
+   * Interactive row inside a menu / popover / dropdown list.
+   * Gives a clearly visible, theme-aware hover + keyboard-focus highlight in
+   * both light and dark and across all theme variants (the tint is derived
+   * from --gp-primary via color-mix, so it re-tints per theme). Use this on
+   * any menu item rather than ad-hoc `hover:bg-gp-surface-*` tints — those
+   * mix a near-background color over a same-color popover and read as no
+   * highlight at all.
+   */
+  .gp-menu-item {
+    color: var(--gp-ink-muted);
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .dark .gp-menu-item {
+    color: var(--gp-ink-soft);
+  }
+
+  .gp-menu-item:hover,
+  .gp-menu-item:focus-visible {
+    background-color: color-mix(in srgb, var(--gp-primary) 12%, transparent);
+    color: var(--gp-primary);
+  }
+
+  /* Keyboard focus gets a real ring on top of the tint, so it reads as
+     distinct from hover and clears the non-text contrast bar. */
+  .gp-menu-item:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px
+      color-mix(in srgb, var(--gp-primary) 55%, transparent);
+  }
+
+  /* Destructive variant (logout, delete) — same affordance, danger color. */
+  .gp-menu-item-destructive {
+    color: var(--destructive);
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .gp-menu-item-destructive:hover,
+  .gp-menu-item-destructive:focus-visible {
+    background-color: color-mix(in srgb, var(--destructive) 14%, transparent);
+    color: var(--destructive);
+  }
+
+  .gp-menu-item-destructive:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px
+      color-mix(in srgb, var(--destructive) 55%, transparent);
+  }
+
   .section-title {
     position: relative;
     padding-left: 1rem;

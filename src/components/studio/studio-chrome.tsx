@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { useApp } from '@/contexts'
 import {
   NotificationPanel,
@@ -56,6 +57,15 @@ export const StudioChrome: FC = () => {
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
   const unreadCount = useUnreadCount(user?.id)
+
+  const displayName =
+    user?.firstName || user?.lastName
+      ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+      : 'User'
+  const userPhoto = user?.photo || user?.picture || undefined
+  const userInitials =
+    `${user?.firstName?.charAt(0) || ''}${user?.lastName?.charAt(0) || ''}`.toUpperCase() ||
+    'U'
 
   useEffect(() => {
     const stored = localStorage.getItem('theme')
@@ -178,20 +188,23 @@ export const StudioChrome: FC = () => {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all cursor-pointer"
-                style={{
-                  backgroundImage:
-                    'url("https://api.dicebear.com/7.x/avataaars/svg?seed=User")',
-                }}
+                className="rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all cursor-pointer"
                 aria-label="User menu"
-              />
+              >
+                <Avatar className="size-full">
+                  {userPhoto && (
+                    <AvatarImage src={userPhoto} alt={displayName} />
+                  )}
+                  <AvatarFallback className="bg-[color-mix(in_srgb,var(--gp-primary)_18%,transparent)] text-gp-primary text-sm font-semibold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-black/90 border border-gp-glass-border shadow-xl py-2 z-50">
                   <div className="px-4 py-3 border-b border-gp-glass-border">
                     <p className="text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-                      {user?.firstName || user?.lastName
-                        ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
-                        : 'User'}
+                      {displayName}
                     </p>
                     <p className="text-xs text-gp-ink-muted dark:text-gp-ink-muted mt-1">
                       {user?.email || 'No email'}
@@ -200,7 +213,7 @@ export const StudioChrome: FC = () => {
                   <div className="py-1">
                     <Link
                       href="/protected/profile"
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
+                      className="gp-menu-item flex items-center gap-3 px-4 py-2 text-sm"
                       onClick={() => setShowUserMenu(false)}
                     >
                       <span className="material-symbols-outlined text-lg">
@@ -210,7 +223,7 @@ export const StudioChrome: FC = () => {
                     </Link>
                     <button
                       type="button"
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gp-ink-muted dark:text-gp-ink-soft hover:bg-gp-surface-strong/40 dark:hover:bg-gp-surface-dark/40 transition-colors"
+                      className="gp-menu-item flex items-center gap-3 w-full px-4 py-2 text-sm"
                       onClick={() => {
                         setShowUserMenu(false)
                         setShowSettings(true)
@@ -228,7 +241,7 @@ export const StudioChrome: FC = () => {
                         setShowUserMenu(false)
                         setShowLogoutConfirm(true)
                       }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="gp-menu-item-destructive flex items-center gap-3 w-full px-4 py-2 text-sm"
                     >
                       <span className="material-symbols-outlined text-lg">
                         logout

@@ -203,6 +203,21 @@ Standard shadcn library: `button`, `card`, `dialog`, `dropdown-menu`, `select`, 
 - `.nav-item` class with `::before` left-edge accent bar that animates in on `.active`
 - Section header: tiny uppercase tracking-widest label
 
+### Menu / popover items (hover + focus highlight)
+Any interactive row inside a menu, popover, or dropdown list (the user menu,
+context menus, action lists) uses the **`.gp-menu-item`** utility for its
+hover and keyboard-focus highlight — defined in `globals.css`. On hover/focus
+it paints a `color-mix(in srgb, var(--gp-primary) 12%, transparent)` tint and
+shifts the text/icon to `--gp-primary`, so the affordance is clearly visible
+in **light, dark, and every theme variant** (the tint re-derives from the
+themed primary). Use **`.gp-menu-item-destructive`** for danger rows (logout,
+delete) — same affordance keyed off `--destructive`.
+
+Do **not** hand-roll menu hovers with `hover:bg-gp-surface-strong/40` /
+`hover:bg-gp-surface-dark/40`: a popover is usually a near-white (or near-black)
+surface, so mixing the same surface color over it produces **no visible
+highlight**. Reach for `.gp-menu-item` instead.
+
 ## Tailwind conventions
 
 - **No inline styles** except where dynamic `color-mix()` / `var()` values must be computed
