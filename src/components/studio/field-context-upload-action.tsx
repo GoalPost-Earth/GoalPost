@@ -90,11 +90,25 @@ export const FieldContextUploadAction: FC = () => {
       // Step 2: PUT the file straight to S3. The bytes never traverse our
       // server. Content-Type MUST match the value used at presign time —
       // S3 binds it into the signature.
-      const putRes = await fetch(presign.uploadUrl, {
-        method: 'PUT',
-        body: input.file,
-        headers: { 'Content-Type': presign.contentType },
-      })
+      //
+      // A non-ok response (4xx/5xx from S3) and a rejected fetch are two
+      // different failures. The PUT carries a non-simple Content-Type, so
+      // the browser issues a CORS preflight first; if the bucket lacks a
+      // CORS policy for this origin the preflight is blocked and fetch
+      // rejects with a bare `TypeError: Failed to fetch`. Translate that
+      // into something a user can act on instead of leaking it raw.
+      let putRes: Response
+      try {
+        putRes = await fetch(presign.uploadUrl, {
+          method: 'PUT',
+          body: input.file,
+          headers: { 'Content-Type': presign.contentType },
+        })
+      } catch {
+        throw new Error(
+          'Upload to storage failed — the storage bucket is unreachable or misconfigured. Please try again or contact support if it persists.'
+        )
+      }
       if (!putRes.ok) {
         throw new Error(`Upload to storage failed (${putRes.status}).`)
       }
