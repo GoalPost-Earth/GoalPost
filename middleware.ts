@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self';
+    connect-src 'self' https://*.s3.amazonaws.com https://*.s3.us-east-1.amazonaws.com;
   `
     .replace(/\s{2,}/g, ' ')
     .trim()
