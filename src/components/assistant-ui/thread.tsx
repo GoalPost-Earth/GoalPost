@@ -14,6 +14,9 @@ import { MessageFeedback } from './message-feedback'
 import { VoiceProvider, useVoiceContext } from './voice-context'
 import { VoiceController } from './voice-controller'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
+import { usePreferences } from '@/contexts/preferences-context'
+import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selector'
+import { MODE_METADATA } from '@/lib/simulation'
 
 export const Thread: FC = () => {
   return (
@@ -245,27 +248,22 @@ const PendingAssistantTurn: FC = () => {
 const Composer: FC = () => {
   const composer = useComposerRuntime()
   const router = useRouter()
+  const { aiMode } = usePreferences()
   const { armVoiceReply, continuousVoice, setContinuousVoice } =
     useVoiceContext()
 
-  const {
-    isSupported,
-    status,
-    transcript,
-    interimTranscript,
-    start,
-    stop,
-  } = useSpeechRecognition({
-    continuous: false,
-    interimResults: true,
-    onFinal: (final) => {
-      const trimmed = final.trim()
-      if (!trimmed) return
-      armVoiceReply()
-      composer.setText(trimmed)
-      composer.send()
-    },
-  })
+  const { isSupported, status, transcript, interimTranscript, start, stop } =
+    useSpeechRecognition({
+      continuous: false,
+      interimResults: true,
+      onFinal: (final) => {
+        const trimmed = final.trim()
+        if (!trimmed) return
+        armVoiceReply()
+        composer.setText(trimmed)
+        composer.send()
+      },
+    })
 
   const isListening = status === 'listening'
 
@@ -292,7 +290,8 @@ const Composer: FC = () => {
   useEffect(() => {
     const onToggle = () => handleMicClick()
     window.addEventListener('goalpost:voice-mic-toggle', onToggle)
-    return () => window.removeEventListener('goalpost:voice-mic-toggle', onToggle)
+    return () =>
+      window.removeEventListener('goalpost:voice-mic-toggle', onToggle)
   }, [handleMicClick])
 
   const handleContinuousToggle = useCallback(() => {
@@ -312,76 +311,90 @@ const Composer: FC = () => {
         className="w-full px-4 py-3 bg-white/60 dark:bg-white/5 border border-gp-glass-border rounded-xl text-gp-ink-strong dark:text-white placeholder-gp-ink-soft dark:placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/40 resize-none transition-all"
         rows={1}
       />
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => router.push('/protected/dashboard/import')}
-          aria-label="Import CSV"
-          title="Import CSV (WeSpace / FieldContext / Pulse)"
-          className="border-slate-200 dark:border-white/10"
+      <div className="flex items-center justify-between gap-2">
+        {/* Active assistant mode — mirrors the mode chosen in Settings and
+            updates instantly because aiMode comes from PreferencesContext. */}
+        <div
+          className="min-w-0 shrink"
+          title={`Mode: ${MODE_METADATA[aiMode].label} — ${MODE_METADATA[aiMode].description}`}
         >
-          <Paperclip className="w-4 h-4" />
-        </Button>
-        {isSupported && (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant={continuousVoice ? 'default' : 'outline'}
-              onClick={handleContinuousToggle}
-              aria-pressed={continuousVoice}
-              aria-label={
-                continuousVoice ? 'Disable hands-free voice' : 'Enable hands-free voice'
-              }
-              title={
-                continuousVoice
-                  ? 'Hands-free voice on — every reply will be spoken'
-                  : 'Turn on hands-free voice'
-              }
-              className={
-                continuousVoice
-                  ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
-                  : 'border-slate-200 dark:border-white/10'
-              }
-            >
-              <Headphones className="w-4 h-4" />
-            </Button>
-            <div className="relative">
-              {isListening && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-gp-primary/60 animate-pulse"
-                />
-              )}
+          <AssistantModeIndicator mode={aiMode} />
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => router.push('/protected/dashboard/import')}
+            aria-label="Import CSV"
+            title="Import CSV (WeSpace / FieldContext / Pulse)"
+            className="border-slate-200 dark:border-white/10"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+          {isSupported && (
+            <>
               <Button
                 type="button"
                 size="sm"
-                variant={isListening ? 'default' : 'outline'}
-                onClick={handleMicClick}
-                aria-pressed={isListening}
-                aria-label={isListening ? 'Stop listening' : 'Speak to assistant'}
-                title={isListening ? 'Stop listening' : 'Speak to assistant'}
+                variant={continuousVoice ? 'default' : 'outline'}
+                onClick={handleContinuousToggle}
+                aria-pressed={continuousVoice}
+                aria-label={
+                  continuousVoice
+                    ? 'Disable hands-free voice'
+                    : 'Enable hands-free voice'
+                }
+                title={
+                  continuousVoice
+                    ? 'Hands-free voice on — every reply will be spoken'
+                    : 'Turn on hands-free voice'
+                }
                 className={
-                  isListening
+                  continuousVoice
                     ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
                     : 'border-slate-200 dark:border-white/10'
                 }
               >
-                <Mic className="w-4 h-4" />
+                <Headphones className="w-4 h-4" />
               </Button>
-            </div>
-          </>
-        )}
-        <ComposerPrimitive.Send asChild>
-          <Button
-            size="sm"
-            className="bg-gp-primary hover:bg-gp-primary/90 text-white"
-          >
-            <SendHorizontalIcon className="w-4 h-4" />
-          </Button>
-        </ComposerPrimitive.Send>
+              <div className="relative">
+                {isListening && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-gp-primary/60 animate-pulse"
+                  />
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isListening ? 'default' : 'outline'}
+                  onClick={handleMicClick}
+                  aria-pressed={isListening}
+                  aria-label={
+                    isListening ? 'Stop listening' : 'Speak to assistant'
+                  }
+                  title={isListening ? 'Stop listening' : 'Speak to assistant'}
+                  className={
+                    isListening
+                      ? 'bg-gp-primary hover:bg-gp-primary/90 text-white'
+                      : 'border-slate-200 dark:border-white/10'
+                  }
+                >
+                  <Mic className="w-4 h-4" />
+                </Button>
+              </div>
+            </>
+          )}
+          <ComposerPrimitive.Send asChild>
+            <Button
+              size="sm"
+              className="bg-gp-primary hover:bg-gp-primary/90 text-white"
+            >
+              <SendHorizontalIcon className="w-4 h-4" />
+            </Button>
+          </ComposerPrimitive.Send>
+        </div>
       </div>
     </ComposerPrimitive.Root>
   )
