@@ -37,8 +37,12 @@ import { getAssistantModelId } from '@/lib/llm/factory'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import {
   buildApprovedActionHashSet,
+  executeAuthorizedWriteTool,
+  isWriteToolName,
   type ApprovedAction,
+  type WriteToolName,
 } from '@/lib/chat/hitl'
+import { initGraph } from '@/modules/graph'
 import {
   isFocalEntityType,
   type FocalEntityType,
@@ -164,6 +168,15 @@ export async function POST(req: Request) {
       focalEntity?: FocalEntityPayload | null
       previousFocalEntity?: FocalEntityPayload | null
       approvedActions?: ApprovedAction[]
+      /**
+       * One-shot deterministic HITL execution (GOAL-261). Sent ONLY on the
+       * turn where the user clicks Approve on an inline approval card, carrying
+       * the exact (tool, args) captured when the action was proposed. The route
+       * executes it directly instead of relying on the model to re-emit a tool
+       * call with byte-identical args (which it does not, producing an approval
+       * loop). Never replayed — the client clears it after a single send.
+       */
+      executeAction?: { tool: string; args: Record<string, unknown> } | null
       threadId?: string
       /**
        * Which canvas surface the user is on right now (dashboard /
@@ -208,6 +221,7 @@ export async function POST(req: Request) {
       spaceId,
       fieldContextId,
       approvedActions,
+      executeAction,
       threadId,
       canvasView,
       canvasVisibleEntities,
@@ -242,6 +256,54 @@ export async function POST(req: Request) {
     let currentUserId: string | null = clientProvidedUserId || null
     if (!currentUserId) {
       currentUserId = resolveAuthenticatedUserId(req)
+    }
+
+    // Deterministic HITL execution (GOAL-261). When the user approves a pending
+    // write, the client sends the exact approved (tool, args) — captured at
+    // proposal time — as a one-shot `executeAction`. Execute it directly here
+    // rather than nudging the model to re-emit a matching tool call: the model
+    // varies its args between turns, so the hash gate never matches and the
+    // assistant re-asks for approval forever (the reported loop). Running the
+    // approved args verbatim is fully deterministic. The result is fed to the
+    // model as a note so it narrates the outcome without calling any tools; the
+    // HITL gate still blocks any accidental re-call (it would just re-prompt,
+    // never double-write).
+    let executedActionNote: string | null = null
+    if (executeAction && isWriteToolName(executeAction.tool)) {
+      try {
+        const graph = await initGraph()
+        const execResult = await executeAuthorizedWriteTool(
+          graph,
+          currentUserId,
+          executeAction.tool as WriteToolName,
+          executeAction.args || {}
+        )
+        const ok = execResult?.success === true
+        // Rule 1: a few service messages embed raw entity ids (e.g.
+        // "Update pulse pulse_…"). Scrub them before the text enters the model
+        // context — the model must never see, and so never echo, an internal id.
+        const stripIds = (text: string): string =>
+          text.replace(
+            /\b(?:pulse|context|ctx|me|ws|space|person|log|context_context)_[A-Za-z0-9-]+/g,
+            'that item'
+          )
+        const detail =
+          typeof execResult?.message === 'string' && execResult.message.trim()
+            ? stripIds(execResult.message.trim())
+            : ok
+              ? 'The change was saved.'
+              : 'The change could not be completed.'
+        executedActionNote = ok
+          ? `[ACTION COMPLETED] The user approved a change and it has just been executed successfully: ${detail} Confirm this to the user in one short, warm sentence. Do NOT call any tools — the action is already done.`
+          : `[ACTION NOT COMPLETED] The user approved a change but it could not be completed: ${detail} Briefly tell the user what happened and suggest a next step. Do NOT call a write tool again without a fresh confirmation.`
+      } catch (error) {
+        console.warn(
+          '[Chat Simulation] executeAction failed:',
+          error instanceof Error ? error.message : error
+        )
+        executedActionNote =
+          '[ACTION NOT COMPLETED] The approved change could not be executed due to a system error. Apologize briefly and suggest trying again in a moment. Do NOT call any tools.'
+      }
     }
 
     // Set mode if provided, otherwise use current mode
@@ -290,7 +352,7 @@ export async function POST(req: Request) {
       fieldContextId || null,
       currentUserId
     )
-    const systemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
+    const sessionSystemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
       currentUserId,
       spaceId: spaceId || null,
       fieldContextId: fieldContextId || null,
@@ -308,6 +370,11 @@ export async function POST(req: Request) {
         (entry) => isFocalEntityType(entry.type) && Boolean(entry.label)
       ),
     })
+    // Append the executed-action outcome (if any) so the model narrates the
+    // result of a just-approved write instead of re-proposing it (GOAL-261).
+    const systemPrompt = executedActionNote
+      ? `${sessionSystemPrompt}\n\n${executedActionNote}`
+      : sessionSystemPrompt
 
     const lastUserMessage = getLastUserMessage(convertedMessages)
 
@@ -352,6 +419,16 @@ export async function POST(req: Request) {
     console.log('📝 [DEBUG] Last user message:', lastUserMessage)
     console.log('🔍 [DEBUG] System prompt selected for mode:', currentMode)
 
+    // On an executeAction turn the approved write has ALREADY run
+    // deterministically above. The model's only job now is to narrate the
+    // outcome — so withhold the tool set entirely. This is the belt-and-
+    // suspenders that closes GOAL-261: even when the deterministic execution
+    // FAILS, the model cannot "rescue" it by re-emitting the write and
+    // rendering a fresh approval card (which is what reopened the loop). With
+    // no tools, stepCountIs(1) is the correct single-step narration budget.
+    const turnTools = executedActionNote ? undefined : tools
+    const turnStopWhen = executedActionNote ? stepCountIs(1) : stepCountIs(8)
+
     // Handle streaming
     if (shouldStream) {
       // AI SDK v5 defaults `stopWhen` to `stepCountIs(1)`, which means the
@@ -364,8 +441,8 @@ export async function POST(req: Request) {
         model,
         messages: messagesWithSimulation,
         system: systemPrompt,
-        tools,
-        stopWhen: stepCountIs(8),
+        tools: turnTools,
+        stopWhen: turnStopWhen,
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
@@ -468,8 +545,8 @@ Title:`,
       model,
       messages: messagesWithSimulation,
       system: systemPrompt,
-      tools,
-      stopWhen: stepCountIs(8),
+      tools: turnTools,
+      stopWhen: turnStopWhen,
     })
 
     return new Response(

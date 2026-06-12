@@ -31,6 +31,12 @@ export interface ApprovalEntityCardProps {
   summary: string
   /** Optional inline failure message (slice 2 partial-failure retry). */
   failureMessage?: string | null
+  /**
+   * Render expanded on mount. The batch dialog keeps rows collapsed for
+   * scannability; the inline single-card variant (GOAL-261) passes `true`
+   * so the Approve / Reject controls are visible without an extra click.
+   */
+  defaultExpanded?: boolean
   onApprove: (approvalHash: string, edits: Record<string, string>) => void
   onReject: (approvalHash: string) => void
 }
@@ -41,10 +47,11 @@ export function ApprovalEntityCard({
   args,
   summary,
   failureMessage,
+  defaultExpanded = false,
   onApprove,
   onReject,
 }: ApprovalEntityCardProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
   const [edits, setEdits] = useState<Record<string, string>>({})
 
   const kindLabel = entityKindLabel(tool, args)

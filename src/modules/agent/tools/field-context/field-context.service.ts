@@ -130,7 +130,7 @@ export async function searchFieldContexts(
         ELSE 3
       END,
       context.title ASC
-    LIMIT $limit
+    LIMIT toInteger($limit)
   `
 
   const rawResults = await graph.query<Record<string, unknown>>(cypher, {

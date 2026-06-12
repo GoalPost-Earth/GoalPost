@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type FC,
+  type MutableRefObject,
   type ReactNode,
 } from 'react'
 import { usePathname } from 'next/navigation'
@@ -50,11 +51,10 @@ import { CanvasHost } from './canvas-host'
 import { ChatHost } from './chat-host'
 import { FloatingChatTrigger } from './floating-chat-trigger'
 import { FloatingChatPanel } from './floating-chat-panel'
-
-interface ApprovedActionPayload {
-  tool: string
-  args: Record<string, unknown>
-}
+import {
+  ApprovalActionProvider,
+  type ApprovalAction,
+} from '@/components/chat/approval-action-context'
 
 const EMPTY_MESSAGES: UIMessage[] = []
 
@@ -335,7 +335,10 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   }, [navigationHistory])
 
   const lastSentFocalRef = useRef<FocalEntity | null>(null)
-  const approvedActionsRef = useRef<ApprovedActionPayload[]>([])
+  // One-shot approved write action (GOAL-261). Set when the user clicks Approve
+  // on an inline HITL card; read and cleared by resolveBody so it rides exactly
+  // one outgoing turn, then the backend executes it verbatim.
+  const pendingExecuteActionRef = useRef<ApprovalAction | null>(null)
 
   const resolveBody = useCallback(() => {
     const snapshot = sessionContextRef.current
@@ -376,7 +379,14 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
           label: entry.label,
           visitedAt: entry.visitedAt,
         })),
-      approvedActions: approvedActionsRef.current,
+      // Read-and-clear: a queued approval rides exactly one request, then the
+      // ref resets so subsequent turns never re-execute it (mirrors the
+      // lastSentFocalRef mutation pattern above).
+      executeAction: (() => {
+        const action = pendingExecuteActionRef.current
+        pendingExecuteActionRef.current = null
+        return action
+      })(),
     }
   }, [aiMode, threadId])
 
@@ -406,6 +416,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
     <AssistantRuntimeInner
       initialMessages={hydration.thread?.messages ?? EMPTY_MESSAGES}
       resolveBody={resolveBody}
+      pendingActionRef={pendingExecuteActionRef}
     >
       {children}
     </AssistantRuntimeInner>
@@ -415,12 +426,14 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
 interface AssistantRuntimeInnerProps {
   initialMessages: UIMessage[]
   resolveBody: () => Record<string, unknown>
+  pendingActionRef: MutableRefObject<ApprovalAction | null>
   children: ReactNode
 }
 
 const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
   initialMessages,
   resolveBody,
+  pendingActionRef,
   children,
 }) => {
   const transport = useMemo(
@@ -456,7 +469,9 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      {children}
+      <ApprovalActionProvider pendingActionRef={pendingActionRef}>
+        {children}
+      </ApprovalActionProvider>
     </AssistantRuntimeProvider>
   )
 }

@@ -110,7 +110,9 @@ export function describeWriteAction(
     case 'update_field_context':
       return `Update field context ${String(args.contextId || args.currentTitle || 'target')}`
     case 'create_field_context':
-      return `Create field context "${String(args.title || '')}" in ${String(args.spaceId || args.spaceName || 'selected space')}`
+      // Rule 1: never surface the raw spaceId — prefer the resolved name, fall
+      // back to a generic phrase rather than an id.
+      return `Create field context "${String(args.title || '')}" in ${String(args.spaceName || 'the selected space')}`
     case 'delete_field_context':
       return `Delete field context ${String(args.contextId || args.currentTitle || 'target context')}`
     case 'update_pulse': {
@@ -933,12 +935,16 @@ async function createPulseAuthorized(
 ): Promise<ToolExecutionResult> {
   const input = args as CreatePulseInput
   const title = input.title?.trim() || ''
-  const content = input.content?.trim() || ''
+  // A title is the only hard requirement — the UI lets users create a
+  // title-only goal/pulse. When the user gave no body, seed content from the
+  // title so the create succeeds (GOAL-261: an empty content used to fail the
+  // write, which then re-triggered the approval prompt in a loop).
+  const content = input.content?.trim() || title
 
-  if (!title || !content) {
+  if (!title) {
     return {
       success: false,
-      message: 'title and content are required to create a pulse.',
+      message: 'A title is required to create a pulse.',
     }
   }
 

@@ -16,6 +16,7 @@ import { VoiceController } from './voice-controller'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 import { usePreferences } from '@/contexts/preferences-context'
 import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selector'
+import { WriteApprovalToolPart } from '@/components/chat/write-approval-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
 export const Thread: FC = () => {
@@ -98,6 +99,11 @@ const AssistantMessage: FC = () => {
         <MessagePrimitive.Parts
           components={{
             Text: EnhancedTextPart,
+            // Generative HITL approval (GOAL-261): a single Fallback handles
+            // every tool-call part. It renders an inline approval card when a
+            // write tool returns the pending-approval shape, and nothing
+            // otherwise (read tools stay invisible as before).
+            tools: { Fallback: WriteApprovalToolPart },
           }}
         />
 
