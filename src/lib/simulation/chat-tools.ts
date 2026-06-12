@@ -502,7 +502,7 @@ export async function buildSimulationChatTools(
       ? {
           list_field_contexts_in_active_space: tool({
             description:
-              "List every Field Context in the user's active Space (activeSpaceId from SESSION CONTEXT) with pulse counts. Use this when the user asks an OVERVIEW question about what's inside the active Space — e.g. 'what's in this space', 'what are we looking at', 'what fields are here', 'list the field contexts', 'show me what's inside'. Prefer this over search_field_context when the user wants a list rather than a keyword search. Returns id, title, emergentName, and pulseCount for each Field Context.",
+              "List every Field Context in the user's active Space (activeSpaceId from SESSION CONTEXT) with pulse counts, plus the space-wide total. Use this for any OVERVIEW or COUNT question about the active Space — e.g. 'what's in this space', 'what fields are here', 'list the field contexts', AND 'how many pulses are in this space', 'how many fields does this space have'. Prefer this over search_field_context (which needs a keyword) when the user wants a list or a count rather than a keyword search. Returns totalPulses (the sum across all field contexts) and count (the number of field contexts), plus id, title, emergentName, and pulseCount for each Field Context. Answer 'how many pulses' with totalPulses.",
             inputSchema: z.object({}),
             execute: async () => {
               logToolDispatch('list_field_contexts_in_active_space', ctx, {})
@@ -538,9 +538,15 @@ export async function buildSimulationChatTools(
                     id: string
                     title: string | null
                     emergentName: string | null
-                    // Neo4j returns count() as Integer {low, high}; we
-                    // coerce below so the model never sees that shape.
-                    pulseCount: number | { low: number; high: number }
+                    // LangChain's Neo4jGraph.query stringifies every Neo4j
+                    // integer (isInt → item.toString()), so count() arrives
+                    // as a decimal string like "5" — NOT a number and NOT a
+                    // { low, high } object. Coerce with Number(... || 0)
+                    // below, mirroring asFieldContextRecord in
+                    // field-context.service.ts. The previous `.low`-based
+                    // coercion read "5".low === undefined and collapsed every
+                    // count to 0 (GOAL-258).
+                    pulseCount: number | string | null
                   }>
                 }>(cypher, { spaceId: ctx.spaceId })
                 const row = rows?.[0]
@@ -548,11 +554,12 @@ export async function buildSimulationChatTools(
                   id: fc.id,
                   title: fc.title,
                   emergentName: fc.emergentName,
-                  pulseCount:
-                    typeof fc.pulseCount === 'number'
-                      ? fc.pulseCount
-                      : Number(fc.pulseCount?.low ?? 0),
+                  pulseCount: Number(fc.pulseCount || 0),
                 }))
+                const totalPulses = fieldContexts.reduce(
+                  (sum, fc) => sum + fc.pulseCount,
+                  0
+                )
                 const spaceName =
                   row?.spaceName ?? ctx.spaceName ?? null
                 return {
@@ -560,6 +567,7 @@ export async function buildSimulationChatTools(
                   spaceId: ctx.spaceId,
                   spaceName,
                   count: fieldContexts.length,
+                  totalPulses,
                   fieldContexts,
                   message:
                     fieldContexts.length === 0
