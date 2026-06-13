@@ -70,3 +70,6 @@ Thumbs.db
 
 # Ad-hoc agent scratch files (do not let Tailwind scan)
 .profile-tmp/
+
+# e2e-tester screenshots (local verification artifacts, never tracked)
+.e2e-shots/

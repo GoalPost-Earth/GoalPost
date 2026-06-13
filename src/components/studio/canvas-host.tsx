@@ -72,11 +72,26 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
             <button
               type="button"
               onClick={clearOverlay}
-              title="Restore the default Bloom view"
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs font-medium hover:bg-amber-500/25 transition-colors cursor-pointer max-w-xs truncate"
+              aria-label="Custom view from chat — click to return to the default Bloom view"
+              title="Custom view from chat — click to return to the default Bloom view"
+              className="group flex items-center gap-1.5 shrink-0 min-w-0 max-w-[55vw] sm:max-w-xs rounded-full pl-2 pr-1.5 py-1 text-xs font-semibold bg-gp-primary text-white shadow-sm ring-1 ring-inset ring-white/20 hover:bg-[color-mix(in_srgb,var(--gp-primary)_88%,black)] transition-colors cursor-pointer"
             >
-              <span className="truncate">Custom view from chat</span>
-              <X className="w-3 h-3 shrink-0" />
+              <span
+                className="material-symbols-outlined text-[16px] leading-none shrink-0"
+                aria-hidden="true"
+              >
+                auto_awesome
+              </span>
+              <span className="truncate">
+                <span className="sm:hidden">Custom view</span>
+                <span className="hidden sm:inline">Custom view from chat</span>
+              </span>
+              <span
+                className="material-symbols-outlined text-[16px] leading-none shrink-0 opacity-80 group-hover:opacity-100"
+                aria-hidden="true"
+              >
+                close
+              </span>
             </button>
           )}
         </div>

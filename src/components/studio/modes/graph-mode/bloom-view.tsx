@@ -35,7 +35,10 @@ import {
   RESONANCE_EDGE_COLOR,
   INITIATED_EDGE_COLOR,
 } from './bloom-palette'
-import { useBloomOverlay } from '../../bloom-overlay-context'
+import {
+  useBloomOverlay,
+  type BloomOverlay,
+} from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
   type VisibleEntity,
@@ -129,7 +132,8 @@ function labelsToInfoEntityType(
  * occasional model emission that prunes the field from the BLOOM_GRAPH_OVERLAY
  * JSON). GoalPost id prefixes are stable conventions written by the
  * server-side creation paths:
- *   - `me_`       lib/validation/space-validation.ts (MeSpace)
+ *   - `me_`       lib/validation/space-validation.ts (app-created MeSpace)
+ *   - `mespace_`  scripts/migrate-prod-to-dev.ts (prod-migrated MeSpace)
  *   - `context_`  lib/chat/hitl.ts (FieldContext) — production path
  *   - `ctx_`      legacy / fixture data only; kept as a safety net
  *   - `pulse_`    api/pulse/create-from-conversation
@@ -145,7 +149,7 @@ function labelsToInfoEntityType(
  * absent from this table.)
  */
 function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
-  if (id.startsWith('me_')) return 'MeSpace'
+  if (id.startsWith('me_') || id.startsWith('mespace_')) return 'MeSpace'
   if (id.startsWith('ctx_') || id.startsWith('context_')) return 'FieldContext'
   if (id.startsWith('pulse_')) return 'Pulse'
   if (id.startsWith('rl_')) return 'ResonanceLink'
@@ -165,8 +169,8 @@ function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
  * MeSpace vs WeSpace cannot be distinguished by color alone (both
  * '#86efac'); we resolve that ambiguity by treating bare-UUID green
  * nodes as WeSpaces (the only Space type that uses bare UUIDs in prod
- * — MeSpaces are always `me_*` and would have been caught by the
- * prefix table above).
+ * — MeSpaces are always prefixed `me_*` or `mespace_*` and would have
+ * been caught by the prefix table above).
  *
  * Pulse subtypes have distinct colors but all collapse to the 'Pulse'
  * drawer type — `PulseDetailsBody` resolves the concrete __typename
@@ -195,6 +199,25 @@ function colorToInfoEntityType(
     default:
       return null
   }
+}
+
+/**
+ * Resolve an overlay node's id to an InfoEntityType using the three-tier
+ * cascade (precise labels → stable id prefix → last-resort color). Shared by
+ * `handleNodeClick` (which drawer-type it maps to) and `handleNodeNavigate`
+ * (whether it has a drill route) so the two paths can never disagree on what
+ * an overlay node *is*.
+ */
+function resolveOverlayEntityType(
+  overlay: BloomOverlay,
+  id: string
+): InfoEntityType | null {
+  const overlayNode = overlay.nodes.find((n) => n.id === id)
+  return (
+    labelsToInfoEntityType(overlayNode?.labels) ??
+    idPrefixToInfoEntityType(id) ??
+    colorToInfoEntityType(overlayNode?.color)
+  )
 }
 
 const SPACE_SIZE = {
@@ -280,7 +303,7 @@ interface SpacePersonRecord {
 
 export const BloomView: FC = () => {
   const { setFocalEntity } = useFocalEntity()
-  const { overlay } = useBloomOverlay()
+  const { overlay, clearOverlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
@@ -959,17 +982,13 @@ export const BloomView: FC = () => {
       // minimal panel — strictly safer than dispatching the drawer with
       // a guessed type.
       if (overlay) {
-        const overlayNode = overlay.nodes.find((n) => n.id === id)
-        // Three-tier resolution: labels (precise) → id prefix (stable
-        // server-side convention) → color (last-resort visual encoding).
-        // Color works for legacy bare-UUID Persons + WeSpaces that
-        // arrived through chat overlays before the labels-on-NVLNode
-        // patch landed, so a chat user clicking an old node still gets
-        // the unified drawer instead of the minimal inline panel.
-        const drawerType =
-          labelsToInfoEntityType(overlayNode?.labels) ??
-          idPrefixToInfoEntityType(id) ??
-          colorToInfoEntityType(overlayNode?.color)
+        // Three-tier resolution (labels → id prefix → color) lives in
+        // `resolveOverlayEntityType`. Color works for legacy bare-UUID
+        // Persons + WeSpaces that arrived through chat overlays before the
+        // labels-on-NVLNode patch landed, so a chat user clicking an old
+        // node still gets the unified drawer instead of the minimal inline
+        // panel.
+        const drawerType = resolveOverlayEntityType(overlay, id)
         if (drawerType) {
           dispatchOpenInfoDrawer({ type: drawerType, id, label })
           return
@@ -1074,14 +1093,42 @@ export const BloomView: FC = () => {
   // focalEntityFromRoute): a top-level space → its field contexts, an
   // in-space field → its pulses. These are the same dashboard routes the
   // drawer's "Open full page" CTA uses, so the studio canvas stays mounted
-  // and re-scopes inward. Overlay nodes and pulses have no page route, so a
-  // click on them falls back to opening the drawer. We close any drawer left
-  // open (e.g. from a prior double-click) before navigating so it doesn't
-  // linger over the freshly drilled-in scope.
+  // and re-scopes inward. A click on an overlay (chat custom-view) node that
+  // resolves to a Space/FieldContext drills the same way (and clears the
+  // overlay); pulses and people have no page route, so a click on them falls
+  // back to opening the drawer. We close any drawer left open (e.g. from a
+  // prior double-click) before navigating so it doesn't linger over the
+  // freshly drilled-in scope.
   const handleNodeNavigate = useCallback(
     (node: Node) => {
       const id = String(node.id)
-      if (overlay || inField) {
+      // A chat-driven custom view is a *starting point* for exploration, not
+      // a dead end. When a click lands on an overlay node that resolves to a
+      // navigable entity (a Space or a FieldContext), drill into its dashboard
+      // route — the same routes the default Bloom cluster and the drawer's
+      // "Open full page" CTA use — and clear the overlay so the user lands in
+      // the consistent default navigation canvas rather than staying trapped
+      // in the frozen subgraph. Nodes with no page route (pulses, people,
+      // resonance links, documents) keep drawer-on-click. Resolution mirrors
+      // handleNodeClick's three tiers: labels → id prefix → color.
+      if (overlay) {
+        const entityType = resolveOverlayEntityType(overlay, id)
+        if (entityType === 'FieldContext') {
+          dispatchCloseInfoDrawer()
+          clearOverlay()
+          router.push(`/protected/dashboard/field-context/${id}`)
+          return
+        }
+        if (entityType === 'MeSpace' || entityType === 'WeSpace') {
+          dispatchCloseInfoDrawer()
+          clearOverlay()
+          router.push(`/protected/dashboard/space/${id}`)
+          return
+        }
+        handleNodeClick(node)
+        return
+      }
+      if (inField) {
         handleNodeClick(node)
         return
       }
@@ -1105,7 +1152,16 @@ export const BloomView: FC = () => {
       // Root "You" hub — no drill route, open the drawer.
       handleNodeClick(node)
     },
-    [overlay, inField, inSpace, fieldContexts, spaces, router, handleNodeClick]
+    [
+      overlay,
+      inField,
+      inSpace,
+      fieldContexts,
+      spaces,
+      router,
+      handleNodeClick,
+      clearOverlay,
+    ]
   )
 
   // First click schedules a drill; if a second click lands before it fires,
