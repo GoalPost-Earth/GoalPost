@@ -238,8 +238,11 @@ describe('DocumentTextExtractor — mimeType allow-list', () => {
   })
 
   it('exposes the supported set so callers (validator, UI) can stay in lockstep', () => {
+    // text/* mimes come from the shared TEXT_ROUTE_MIME_TYPES; application/pdf
+    // is retained for the buffer-based PDF fallback. PDFs/images normally route
+    // to Gemini multimodal before reaching this extractor.
     expect(new Set(SUPPORTED_MIME_TYPES)).toEqual(
-      new Set(['text/plain', 'text/markdown', 'application/pdf'])
+      new Set(['text/plain', 'text/markdown', 'text/csv', 'application/pdf'])
     )
   })
 

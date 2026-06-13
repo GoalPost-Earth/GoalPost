@@ -3,6 +3,12 @@ import { driver } from '@/lib/neo4j/driver'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
 import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import {
+  SUPPORTED_INGEST_SUMMARY,
+  ingestRouteForMime,
+  maxBytesForRoute,
+  normalizeIngestMime,
+} from '@/lib/ingest/supported-file-types'
 
 /**
  * Step 1 of the direct-to-S3 upload flow.
@@ -24,15 +30,10 @@ import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
  */
 
 const PRESIGN_TTL_SECONDS = 60 * 5
-const ALLOWED_MIME = new Set([
-  'text/plain',
-  'text/markdown',
-  'application/pdf',
-])
-// Generous byte ceiling — Gemini accepts up to 100MB by reference, but we
-// cap at 50MB here so the browser can't request a presign for a runaway
-// upload that the model would then refuse.
-const MAX_BYTES = 50 * 1024 * 1024
+// Allow-list + byte ceilings live in the shared `supported-file-types` module
+// so this gate, the client modal, and the orchestrator can't drift apart. The
+// byte ceiling is per-route (office uploads are capped tighter — see
+// maxBytesForRoute) so the size check happens after the mime is resolved.
 
 function unauthorized(message = 'Authentication required') {
   return Response.json({ error: message }, { status: 401 })
@@ -60,11 +61,6 @@ function resolveBlobStore() {
     return createMemoryBlobStore()
   }
   return createS3BlobStore()
-}
-
-function normaliseMime(raw: string): string {
-  const semi = raw.indexOf(';')
-  return (semi === -1 ? raw : raw.slice(0, semi)).trim().toLowerCase()
 }
 
 function sanitizeFilename(raw: string): string {
@@ -126,10 +122,11 @@ export async function POST(req: Request) {
   const filename = String(body.filename ?? '').trim()
   if (!filename) return badRequest('filename is required.')
 
-  const mimeType = normaliseMime(String(body.mimeType ?? ''))
-  if (!ALLOWED_MIME.has(mimeType)) {
+  const mimeType = normalizeIngestMime(String(body.mimeType ?? ''))
+  const route = ingestRouteForMime(mimeType)
+  if (!route) {
     return badRequest(
-      `We don't yet support this file type ("${mimeType}"). v1 accepts .txt, .md, and .pdf.`,
+      `We don't support this file type ("${mimeType}"). We accept ${SUPPORTED_INGEST_SUMMARY}.`,
       'unsupported_mime'
     )
   }
@@ -138,9 +135,10 @@ export async function POST(req: Request) {
   if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
     return badRequest('sizeBytes must be a positive number.')
   }
-  if (sizeBytes > MAX_BYTES) {
+  const maxBytes = maxBytesForRoute(route)
+  if (sizeBytes > maxBytes) {
     return badRequest(
-      `This document is too large (${(sizeBytes / (1024 * 1024)).toFixed(1)} MB). The upload limit is ${MAX_BYTES / (1024 * 1024)} MB.`,
+      `This document is too large (${(sizeBytes / (1024 * 1024)).toFixed(1)} MB). The upload limit is ${maxBytes / (1024 * 1024)} MB.`,
       'oversize_bytes'
     )
   }

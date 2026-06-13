@@ -44,6 +44,18 @@ function resolveBlobStore() {
   return createS3BlobStore()
 }
 
+// The presign step mints keys as `documents/document_<uuid>/<sanitized-name>`.
+// Reject anything that doesn't match that server-issued shape before it
+// reaches the blob store — defense in depth against a forged/traversal key.
+// (Note: this is a shape check, not an ownership check; the document UUID is
+// server-minted and unguessable, but binding the key to the uploader at
+// presign time is a tracked follow-up.)
+const BLOB_KEY_PATTERN = /^documents\/document_[0-9a-f-]{36}\/[^/]+$/i
+
+function isValidBlobKey(key: string): boolean {
+  return BLOB_KEY_PATTERN.test(key)
+}
+
 export async function POST(req: Request) {
   const currentUserId = resolveAuthenticatedUserId(req)
   if (!currentUserId) return unauthorized()
@@ -72,6 +84,7 @@ export async function POST(req: Request) {
   const hint = hintRaw.length > 0 ? hintRaw : null
 
   if (!blobKey) return badRequest('blobKey is required.')
+  if (!isValidBlobKey(blobKey)) return badRequest('Invalid blobKey.')
   if (!fieldContextId) return badRequest('fieldContextId is required.')
   if (!filename) return badRequest('filename is required.')
   if (!mimeType) return badRequest('mimeType is required.')

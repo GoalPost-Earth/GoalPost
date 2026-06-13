@@ -1,14 +1,22 @@
 /**
- * Normalises an uploaded document into the plain-text shape the extraction
- * model consumes. v1 (slices 1–3) supports:
+ * Normalises a *text-route* upload into the plain-text shape the extraction
+ * model consumes:
  *   - text/plain
  *   - text/markdown    (passed through as plain text — no rendering)
+ *   - text/csv         (passed through as plain text)
  *   - application/pdf  (parsed via pdf-parse / pdfjs)
  *
- * The returned shape `{ text, pageCount, charCount }` is fixed across all
- * three formats so downstream callers (handler, model invoker) don't branch
- * on mimeType. Unsupported types and oversize documents throw a typed
- * `DocumentTextExtractionError` so the route layer can map cleanly to 400s.
+ * PDFs and images are read by Gemini multimodal by reference (the `multimodal`
+ * route in handle-ingest-document), so no production caller reaches the
+ * `application/pdf` branch here today — it's retained as a buffer-based
+ * fallback and is exercised by the extractor's unit tests. Office formats are
+ * handled by `office-text-extractor.ts`. See `supported-file-types.ts` for
+ * routing.
+ *
+ * The returned shape `{ text, pageCount, charCount }` is fixed across formats
+ * so downstream callers don't branch on mimeType. Unsupported types and
+ * oversize documents throw a typed `DocumentTextExtractionError` so the route
+ * layer can map cleanly to 400s.
  */
 
 // Type-only import: `pdf-parse` (and the pdfjs-dist it wraps) references
@@ -20,13 +28,20 @@
 // only evaluates when a PDF is actually parsed. The runtime globals it needs
 // are polyfilled in `instrumentation.ts`.
 import type { PDFParse } from 'pdf-parse'
+import {
+  SUPPORTED_INGEST_SUMMARY,
+  TEXT_ROUTE_MIME_TYPES,
+} from './supported-file-types'
 
 export const MAX_TEXT_CHARS = 50_000
 export const MAX_PDF_PAGES = 20
 
+// The text-route mimes come from the single source of truth; `application/pdf`
+// is appended only because the buffer-based PDF branch below can still handle
+// a PDF if called directly (today PDFs route to Gemini multimodal before
+// reaching here — see supported-file-types.ts).
 export const SUPPORTED_MIME_TYPES: ReadonlyArray<string> = [
-  'text/plain',
-  'text/markdown',
+  ...TEXT_ROUTE_MIME_TYPES,
   'application/pdf',
 ]
 
@@ -155,7 +170,7 @@ export async function extractDocumentText(
   if (!SUPPORTED_MIME_TYPES.includes(mime)) {
     throw new DocumentTextExtractionError(
       'unsupported_mime',
-      `We don't yet support this file type ("${mime}"). v1 accepts .txt, .md, and .pdf.`
+      `We don't support this file type ("${mime}"). We accept ${SUPPORTED_INGEST_SUMMARY}.`
     )
   }
 

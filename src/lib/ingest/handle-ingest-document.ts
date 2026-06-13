@@ -2,10 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 import { anchorDocument, setDocumentSummary } from './document-storage'
-import {
-  extractDocumentText,
-  DocumentTextExtractionError,
-} from './document-text-extractor'
+import { prepareExtractionInputs } from './extraction-input-preparer'
 import { loadFieldContextRoster } from './field-context-roster'
 import {
   extractEntities,
@@ -25,17 +22,6 @@ import { buildExecutedAssistantTurnParts } from './synthesized-turn-appender'
 import { appendConversationTurn } from '@/lib/simulation/conversation-thread.service'
 import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
 import { initGraph } from '@/modules/graph'
-
-/**
- * URLs Gemini fetches synchronously inside generateContent. A 15-minute TTL
- * gives the call generous headroom while keeping the leaked-URL window
- * narrow.
- */
-const GEMINI_PRESIGN_TTL_SECONDS = 60 * 15
-
-function isPdfMime(mime: string): boolean {
-  return mime.toLowerCase().split(';')[0].trim() === 'application/pdf'
-}
 
 /**
  * Creates a fresh ConversationThread for this ingest run, plus a
@@ -190,13 +176,13 @@ export interface IngestDocumentDependencies {
   driver: Driver
   blobStore: BlobStore
   /**
-   * Multimodal extractor (Gemini) used for PDFs. Reads the file by
-   * presigned URL.
+   * Multimodal extractor (Gemini) used for the `multimodal` route — PDFs and
+   * images. Reads the file by presigned URL.
    */
   pdfExtractionClient: ExtractionModelClient
   /**
-   * Text-only extractor (OpenAI) used for .txt/.md uploads. Reads the
-   * decoded document body.
+   * Text extractor (OpenAI) used for the `text` and `office` routes. Reads the
+   * document body that was decoded (text) or extracted in-process (office).
    */
   textExtractionClient: ExtractionModelClient
   /**
@@ -317,72 +303,25 @@ export async function handleIngestDocument(
   const fieldContextTitle =
     (await getFieldContextTitle(deps.driver, input.fieldContextId)) ?? ''
 
-  // The browser has already uploaded the file to S3. We prepare extractor
-  // inputs based on mime type: PDFs go to Gemini multimodal via a presigned
-  // GET URL; text/markdown is decoded server-side and sent to OpenAI as
-  // plain text.
-  let extractionModelInputExtras: {
-    documentText: string
-    documentUrl?: string
-    documentMimeType?: string
+  // The browser has already uploaded the file to S3. Prepare extractor +
+  // summarizer inputs by route (multimodal / office / text) — shared with the
+  // re-extract path so the routing can never drift. See
+  // extraction-input-preparer.ts.
+  const prepared = await prepareExtractionInputs(deps, {
+    mimeType: input.mimeType,
+    blobKey: input.blobKey,
+    filename: input.filename,
+  })
+  if (!prepared.ok) {
+    return { ok: false, reason: prepared.reason, error: prepared.error }
   }
-  let summarizerExtras: {
-    documentText: string
-    documentUrl?: string
-    documentMimeType?: string
-  }
-  let pageCount: number | null = null
-  let modelClient: ExtractionModelClient
-  let summarizerClient: DocumentSummarizerClient | null
-
-  if (isPdfMime(input.mimeType)) {
-    const url = await deps.blobStore.presignGet({
-      key: input.blobKey,
-      ttlSeconds: GEMINI_PRESIGN_TTL_SECONDS,
-    })
-    extractionModelInputExtras = {
-      documentText: '',
-      documentUrl: url,
-      documentMimeType: input.mimeType,
-    }
-    summarizerExtras = {
-      documentText: '',
-      documentUrl: url,
-      documentMimeType: input.mimeType,
-    }
-    modelClient = deps.pdfExtractionClient
-    summarizerClient = deps.pdfSummarizerClient ?? null
-  } else {
-    // Text path: pull the bytes back from blob storage and decode. The
-    // existing extractor enforces MAX_TEXT_CHARS and rejects unsupported
-    // mimes.
-    const blob = await deps.blobStore.get(input.blobKey)
-    if (!blob) {
-      return {
-        ok: false,
-        reason: 'blob_missing',
-        error: 'The uploaded file could not be read back from storage.',
-      }
-    }
-    let extracted
-    try {
-      extracted = await extractDocumentText({
-        mimeType: input.mimeType,
-        buffer: blob.buffer,
-        filename: input.filename,
-      })
-    } catch (err) {
-      if (err instanceof DocumentTextExtractionError) {
-        return { ok: false, reason: err.kind, error: err.message }
-      }
-      throw err
-    }
-    pageCount = extracted.pageCount
-    extractionModelInputExtras = { documentText: extracted.text }
-    summarizerExtras = { documentText: extracted.text }
-    modelClient = deps.textExtractionClient
-    summarizerClient = deps.textSummarizerClient ?? null
-  }
+  const {
+    extractionModelInputExtras,
+    summarizerExtras,
+    modelClient,
+    summarizerClient,
+    pageCount,
+  } = prepared
 
   // Anchor the Document node in the graph. The blob already lives at
   // input.blobKey; we record both the key and a stable identifier URL.

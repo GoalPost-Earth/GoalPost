@@ -43,7 +43,17 @@ const nextConfig: NextConfig = {
   // platform-native .node binary and supplies the browser globals (DOMMatrix
   // etc.) polyfilled in instrumentation.ts — keep it external for the same
   // reason so the native binary resolves from node_modules.
-  serverExternalPackages: ['pdf-parse', 'pdfjs-dist', '@napi-rs/canvas'],
+  // officeparser (docx/xlsx/pptx text extraction) ships ESM submodules and a
+  // nested pdfjs-dist; bundling it triggers ESM/CJS interop errors and eager
+  // evaluation of its lazy PDF/OCR parsers (which reference `document`). We
+  // never route PDFs/OCR through it, so externalising defers those submodules
+  // to runtime require where they're simply never loaded for docx/xlsx/pptx.
+  serverExternalPackages: [
+    'pdf-parse',
+    'pdfjs-dist',
+    '@napi-rs/canvas',
+    'officeparser',
+  ],
   async headers() {
     const corsOrigin =
       process.env.CORS_ORIGIN ||

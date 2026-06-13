@@ -1,32 +1,35 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import {
+  INGEST_ACCEPT_ATTRIBUTE,
+  MAX_INGEST_BYTES,
+  SUPPORTED_INGEST_SUMMARY,
+  inferIngestMimeFromExtension,
+  isSupportedIngestMime,
+  normalizeIngestMime,
+} from '@/lib/ingest/supported-file-types'
 
 /**
- * Upload-document modal for slices 1–3 (GOAL-236 / GOAL-238).
+ * Upload-document modal for the doc-ingestion flow (GOAL-236 / GOAL-238).
  *
- * v1 constraints (mirrored in `/api/ingest/document/presign/route.ts` and
- * `src/lib/ingest/document-text-extractor.ts`):
- *   - mimeType allow-list: text/plain, text/markdown, application/pdf
- *   - upload byte ceiling: 10 MB (defense-in-depth)
- *   - extraction caps: ~50K characters / ~20 PDF pages, enforced server-side
+ * The accepted file set + byte ceiling come from the shared
+ * `@/lib/ingest/supported-file-types` module, which the presign route and the
+ * orchestrator import too — so the client gate, server gate, and routing can't
+ * drift. Today that's PDF + images (Gemini multimodal), Word/Excel/PowerPoint
+ * (in-process text extraction), and plain-text formats. Extraction caps
+ * (~50K characters / ~20 PDF pages) are enforced server-side.
  *
- * The modal converts the picked File to base64 on the client and hands the
- * result back via `onSubmit`. It deliberately does no network work itself —
- * the parent page wires the mutation so loading/error state is owned where
- * the rest of the field-context state already lives.
+ * The modal hands the picked File back via `onSubmit`; it deliberately does no
+ * network work itself — the parent wires the upload so loading/error state is
+ * owned where the rest of the field-context state lives.
  *
- * Server-side rejections (oversize after extraction, unsupported sniffed
- * mime, etc.) flow back through `onSubmit` rejection and render inline below
- * the form per slice-3 AC ("not a toast that disappears").
+ * Server-side rejections (oversize after extraction, unsupported sniffed mime,
+ * parse failure) flow back through `onSubmit` rejection and render inline below
+ * the form ("not a toast that disappears").
  */
 
-const ALLOWED_MIME_TYPES = ['text/plain', 'text/markdown', 'application/pdf'] as const
-const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.pdf']
-const ACCEPT_ATTRIBUTE = `${ALLOWED_FILE_EXTENSIONS.join(',')},text/plain,text/markdown,application/pdf`
-const MAX_BYTES = 50 * 1024 * 1024
-
-type AllowedMime = (typeof ALLOWED_MIME_TYPES)[number]
+const MAX_BYTES = MAX_INGEST_BYTES
 
 export interface UploadDocumentSubmitInput {
   filename: string
@@ -44,11 +47,17 @@ interface UploadDocumentModalProps {
 }
 
 function inferMimeType(file: File): string {
-  if (file.type) return file.type
-  if (/\.txt$/i.test(file.name)) return 'text/plain'
-  if (/\.md$/i.test(file.name) || /\.markdown$/i.test(file.name)) return 'text/markdown'
-  if (/\.pdf$/i.test(file.name)) return 'application/pdf'
-  return ''
+  // Prefer a supported mime from the browser-reported type; otherwise fall
+  // back to the extension. Browsers sometimes report Office files as
+  // `application/octet-stream` or an empty type, so the extension map is the
+  // reliable signal for those — try it before giving up.
+  const fromType = file.type ? normalizeIngestMime(file.type) : ''
+  if (fromType && isSupportedIngestMime(fromType)) return fromType
+  const fromExt = inferIngestMimeFromExtension(file.name)
+  if (fromExt) return fromExt
+  // Return whatever the browser said (possibly unsupported) so the error copy
+  // can name it.
+  return fromType
 }
 
 function formatBytes(n: number): string {
@@ -85,8 +94,8 @@ export function UploadDocumentModal({
       return
     }
     const mimeType = inferMimeType(file)
-    if (!ALLOWED_MIME_TYPES.includes(mimeType as AllowedMime)) {
-      setError("We don't yet support this file type. v1 accepts .txt, .md, and .pdf.")
+    if (!isSupportedIngestMime(mimeType)) {
+      setError(`We don't support this file type. We accept ${SUPPORTED_INGEST_SUMMARY}.`)
       return
     }
     if (file.size > MAX_BYTES) {
@@ -149,12 +158,12 @@ export function UploadDocumentModal({
           <span className="text-xs text-gp-ink-muted">
             {file
               ? formatBytes(file.size)
-              : `Accepts .txt, .md, .pdf — up to ${MAX_BYTES / (1024 * 1024)} MB`}
+              : `Accepts ${SUPPORTED_INGEST_SUMMARY} — up to ${MAX_BYTES / (1024 * 1024)} MB`}
           </span>
           <input
             id="upload-document-file"
             type="file"
-            accept={ACCEPT_ATTRIBUTE}
+            accept={INGEST_ACCEPT_ATTRIBUTE}
             className="sr-only"
             onChange={(event) => {
               setError(null)

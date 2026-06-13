@@ -7,23 +7,13 @@ import {
   summarizeDocument,
   type DocumentSummarizerClient,
 } from './document-summarizer'
-import {
-  extractDocumentText,
-  DocumentTextExtractionError,
-} from './document-text-extractor'
+import { prepareExtractionInputs } from './extraction-input-preparer'
 import { loadFieldContextRoster } from './field-context-roster'
 import { extractEntities } from './extraction-model-invoker'
 import {
   appendSynthesizedIngestTurns,
   createIngestThread,
 } from './handle-ingest-document'
-
-/** Mirror of GEMINI_PRESIGN_TTL_SECONDS in handle-ingest-document.ts. */
-const GEMINI_PRESIGN_TTL_SECONDS = 60 * 15
-
-function isPdfMime(mime: string): boolean {
-  return mime.toLowerCase().split(';')[0].trim() === 'application/pdf'
-}
 
 /**
  * Slice 6 — Re-extract an existing Document.
@@ -207,67 +197,24 @@ export async function handleReExtractDocument(
     }
   }
 
-  // 4) Prepare extractor + summarizer inputs by mime. PDFs go to Gemini via
-  //    a fresh presigned URL each call; text files are pulled back and
-  //    decoded server-side. Either path short-circuits on missing blob or
-  //    unsupported mime so the model never sees garbage.
-  let extractionExtras: {
-    documentText: string
-    documentUrl?: string
-    documentMimeType?: string
+  // 4) Prepare extractor + summarizer inputs by route — shared verbatim with
+  //    the initial-upload path so re-extract handles every supported type
+  //    (PDF/images via Gemini, docx/xlsx/pptx via in-process text, plain
+  //    text decoded) identically. See extraction-input-preparer.ts.
+  const prepared = await prepareExtractionInputs(deps, {
+    mimeType: record.mimeType,
+    blobKey: record.blobKey,
+    filename: record.filename,
+  })
+  if (!prepared.ok) {
+    return { ok: false, reason: prepared.reason, error: prepared.error }
   }
-  let summarizerExtras: {
-    documentText: string
-    documentUrl?: string
-    documentMimeType?: string
-  }
-  let modelClient: ExtractionModelClient
-  let summarizerClient: DocumentSummarizerClient | null
-
-  if (isPdfMime(record.mimeType)) {
-    const url = await deps.blobStore.presignGet({
-      key: record.blobKey,
-      ttlSeconds: GEMINI_PRESIGN_TTL_SECONDS,
-    })
-    extractionExtras = {
-      documentText: '',
-      documentUrl: url,
-      documentMimeType: record.mimeType,
-    }
-    summarizerExtras = {
-      documentText: '',
-      documentUrl: url,
-      documentMimeType: record.mimeType,
-    }
-    modelClient = deps.pdfExtractionClient
-    summarizerClient = deps.pdfSummarizerClient ?? null
-  } else {
-    const blob = await deps.blobStore.get(record.blobKey)
-    if (!blob) {
-      return {
-        ok: false,
-        reason: 'blob_missing',
-        error: 'The original file for this document is no longer available.',
-      }
-    }
-    let extracted
-    try {
-      extracted = await extractDocumentText({
-        mimeType: record.mimeType,
-        buffer: blob.buffer,
-        filename: record.filename,
-      })
-    } catch (err) {
-      if (err instanceof DocumentTextExtractionError) {
-        return { ok: false, reason: err.kind, error: err.message }
-      }
-      throw err
-    }
-    extractionExtras = { documentText: extracted.text }
-    summarizerExtras = { documentText: extracted.text }
-    modelClient = deps.textExtractionClient
-    summarizerClient = deps.textSummarizerClient ?? null
-  }
+  const {
+    extractionModelInputExtras: extractionExtras,
+    summarizerExtras,
+    modelClient,
+    summarizerClient,
+  } = prepared
 
   const fieldContextTitle = await getFieldContextTitle(
     deps.driver,
