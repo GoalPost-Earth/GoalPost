@@ -46,6 +46,15 @@ function buildClient(): { client: S3Client; bucket: string } {
   const sessionToken = process.env.AWS_SESSION_TOKEN?.trim()
   const client = new S3Client({
     region,
+    // AWS SDK v3 (≥3.729) defaults to injecting a CRC32 integrity checksum
+    // (`x-amz-sdk-checksum-algorithm` + `x-amz-checksum-crc32`) into the SIGNED
+    // query string of presigned PUT URLs. A plain browser `fetch(url, {method:
+    // 'PUT', body: file})` can't reproduce that checksum header, so S3 rejects
+    // the upload with 400. `WHEN_REQUIRED` adds checksums only for operations
+    // that mandate them — keeping presigned PUTs signable by a bare browser
+    // PUT. (Our presigned PUTs already pin Content-Type; integrity is covered
+    // by TLS + the short-lived signature.)
+    requestChecksumCalculation: 'WHEN_REQUIRED',
     ...(accessKeyId && secretAccessKey
       ? {
           credentials: {
