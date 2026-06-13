@@ -73,3 +73,4 @@ Thumbs.db
 
 # e2e-tester screenshots (local verification artifacts, never tracked)
 .e2e-shots/
+.e2e-screens/

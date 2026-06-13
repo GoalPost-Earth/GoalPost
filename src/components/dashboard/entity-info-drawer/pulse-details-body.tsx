@@ -58,6 +58,8 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
   const [editWhy, setEditWhy] = useState('')
+  const [editLocation, setEditLocation] = useState('')
+  const [editTime, setEditTime] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const {
     sharePulseWithContext,
@@ -105,7 +107,10 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     location?: string | null
     time?: string | null
   }
-  const supportsWhy =
+  // why / location / time are defined on the same three pulse types, so a
+  // single guard covers reading them defensively, editing them, and writing
+  // the `*_SET` fields back through the matching update inputs.
+  const supportsFieldDetails =
     pulse.__typename === 'GoalPulse' ||
     pulse.__typename === 'ResourcePulse' ||
     pulse.__typename === 'StoryPulse'
@@ -141,6 +146,8 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     setEditTitle(pulse.title ?? '')
     setEditContent(pulse.content ?? '')
     setEditWhy(optional.why ?? '')
+    setEditLocation(optional.location ?? '')
+    setEditTime(optional.time ?? '')
     setIsEditMode(true)
   }
 
@@ -149,6 +156,8 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
     setEditTitle('')
     setEditContent('')
     setEditWhy('')
+    setEditLocation('')
+    setEditTime('')
   }
 
   const handleEditSave = async () => {
@@ -163,9 +172,12 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         title_SET: trimmedTitle,
         content_SET: editContent,
       }
-      // `why` only exists on Goal/Resource/Story update inputs.
-      if (supportsWhy) {
+      // why / location / time only exist on Goal/Resource/Story update inputs.
+      // Empty strings normalise to null so clearing a field actually unsets it.
+      if (supportsFieldDetails) {
         update.why_SET = editWhy.trim() || null
+        update.location_SET = editLocation.trim() || null
+        update.time_SET = editTime.trim() || null
       }
       const variables = { where: { id_EQ: pulseId }, update }
       const typename = pulse.__typename
@@ -360,7 +372,7 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
 
       {isEditMode ? (
         <section className="px-6 pb-5 space-y-4">
-          {supportsWhy && (
+          {supportsFieldDetails && (
             <EditTextarea
               id="pulse-edit-why"
               label="Why"
@@ -380,6 +392,26 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
             rows={6}
             disabled={isSaving}
           />
+          {supportsFieldDetails && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <EditTextInput
+                id="pulse-edit-location"
+                label="Location"
+                value={editLocation}
+                onChange={setEditLocation}
+                placeholder="Address, link, or place"
+                disabled={isSaving}
+              />
+              <EditTextInput
+                id="pulse-edit-time"
+                label="Time"
+                value={editTime}
+                onChange={setEditTime}
+                placeholder="Date or timeframe"
+                disabled={isSaving}
+              />
+            </div>
+          )}
         </section>
       ) : (
         <>
@@ -403,7 +435,7 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
         </>
       )}
 
-      {(optional.location || optional.time) && (
+      {!isEditMode && (optional.location || optional.time) && (
         <section className="px-6 pb-5 space-y-2">
           {optional.location && (
             <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
