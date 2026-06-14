@@ -75,11 +75,23 @@ export function UploadDocumentModal({
   const [file, setFile] = useState<File | null>(null)
   const [hint, setHint] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   const reset = useCallback(() => {
     setFile(null)
     setHint('')
     setError(null)
+    setIsDragging(false)
+  }, [])
+
+  // Shared by the file input and the drop zone so both go through one path:
+  // clear any prior error, take the first file. Type/size validation stays in
+  // `handleSubmit` (and the server) so a bad drop surfaces the same inline copy
+  // as a bad pick rather than failing silently.
+  const handleFileSelected = useCallback((picked: File | null) => {
+    if (!picked) return
+    setError(null)
+    setFile(picked)
   }, [])
 
   const handleClose = useCallback(() => {
@@ -147,16 +159,50 @@ export function UploadDocumentModal({
 
         <label
           htmlFor="upload-document-file"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gp-glass-border bg-gp-glass-bg/40 px-4 py-8 cursor-pointer hover:border-gp-primary transition-colors text-center"
+          onDragEnter={(event) => {
+            if (isSubmitting) return
+            event.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragOver={(event) => {
+            if (isSubmitting) return
+            event.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragLeave={(event) => {
+            // Ignore leave events bubbling up from child elements — only reset
+            // when the pointer actually exits the drop zone.
+            if (event.currentTarget.contains(event.relatedTarget as Node)) return
+            setIsDragging(false)
+          }}
+          onDrop={(event) => {
+            event.preventDefault()
+            setIsDragging(false)
+            if (isSubmitting) return
+            handleFileSelected(event.dataTransfer.files?.[0] ?? null)
+          }}
+          className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
+            isSubmitting
+              ? 'cursor-not-allowed opacity-60'
+              : 'cursor-pointer hover:border-gp-primary'
+          } ${
+            isDragging
+              ? 'border-gp-primary bg-gp-primary/10 dark:bg-gp-primary/15'
+              : 'border-gp-glass-border bg-gp-glass-bg/40'
+          }`}
         >
-          <span className="material-symbols-outlined text-3xl text-gp-ink-muted">
+          <span
+            className={`material-symbols-outlined text-3xl transition-colors ${
+              isDragging ? 'text-gp-primary' : 'text-gp-ink-muted'
+            }`}
+          >
             upload_file
           </span>
           <span className="text-sm text-gp-ink-strong dark:text-white font-medium">
-            {file ? file.name : 'Choose a file'}
+            {isDragging ? 'Drop to upload' : file ? file.name : 'Drag a file here, or click to choose'}
           </span>
           <span className="text-xs text-gp-ink-muted">
-            {file
+            {file && !isDragging
               ? formatBytes(file.size)
               : `Accepts ${SUPPORTED_INGEST_SUMMARY} — up to ${MAX_BYTES / (1024 * 1024)} MB`}
           </span>
@@ -166,8 +212,7 @@ export function UploadDocumentModal({
             accept={INGEST_ACCEPT_ATTRIBUTE}
             className="sr-only"
             onChange={(event) => {
-              setError(null)
-              setFile(event.target.files?.[0] ?? null)
+              handleFileSelected(event.target.files?.[0] ?? null)
             }}
             disabled={isSubmitting}
           />
