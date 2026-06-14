@@ -54,6 +54,27 @@ export const ALLOWED_RELATIONSHIPS = [
   'SOURCE',
   'TARGET',
   'RESONATES_AS',
+  // Semantic ontology edges between pulses (and pulse↔person/community).
+  // These are the migrated GoalPost ontology relationships — a Goal
+  // ENABLES a Story, a Goal DEPENDS_ON a Resource, a Goal is ALIGNED_TO a
+  // CoreValue, a Person PROVIDES a Resource, etc. They are PUBLIC schema
+  // surface (unlike the private internals LOGGED_FOR / CONTEXT /
+  // HAS_THREAD / HAS_TURN / HAS_CHUNK, which stay off this list), so the
+  // generator may traverse them. Node visibility is still gated by the
+  // post-execute Space auth filter in execute.ts — whitelisting an edge
+  // type never bypasses canViewContent.
+  'ENABLES',
+  'ENABLED_BY',
+  'DEPENDS_ON',
+  'APPLIED_TO',
+  'APPLIED_IN',
+  'ALIGNED_TO',
+  'CARES_FOR',
+  'MOTIVATED_BY',
+  'EMBRACES',
+  'PROVIDES',
+  'HAS_ACCESS_TO',
+  'GUIDED_BY',
 ] as const
 
 export type AllowedRelationship = (typeof ALLOWED_RELATIONSHIPS)[number]
@@ -114,6 +135,40 @@ FieldResonance { label, description } — semantic theme node.
 (Person)-[:CONNECTED_TO]-(Person)  // bidirectional
 (Community)-[:HAS_MEMBER]->(Person)  // direct community membership (no intermediary node)
 (Community)-[:OWNS]->(Space)         // a community can own a WeSpace
+
+# Semantic pulse relationships (the GoalPost ontology — directed)
+
+Pulses are NOT connected only through ResonanceLink. Migrated GoalPost
+content carries DIRECT, typed edges between pulses (and between pulses and
+the people/communities they involve). When a user asks to "expand",
+"explore", or see the "surrounding relationships" of a pulse, these are
+usually the edges they mean — alongside the structural HAS_PULSE /
+CREATED_BY edges. A query that omits them will look empty even though the
+pulse is richly connected.
+
+(GoalPulse)-[:DEPENDS_ON]->(ResourcePulse)     // a goal needs a resource ("supporting resources")
+(StoryPulse)-[:DEPENDS_ON]->(ResourcePulse)
+(GoalPulse)-[:ENABLES]->(StoryPulse)           // a goal enables a story/outcome ("enabled goals")
+(StoryPulse)-[:ENABLED_BY]->(GoalPulse)        // inverse of ENABLES
+(ResourcePulse)-[:APPLIED_TO]->(GoalPulse)     // a resource applied to a goal
+(ResourcePulse)-[:APPLIED_IN]->(StoryPulse)
+(GoalPulse)-[:ALIGNED_TO]->(CoreValuePulse)    // a goal aligned to a value
+(StoryPulse)-[:CARES_FOR]->(GoalPulse)
+(Person)-[:MOTIVATED_BY]->(GoalPulse)          // a person motivated by a goal
+(Person)-[:PROVIDES]->(ResourcePulse)          // a person provides a resource
+(Person)-[:EMBRACES]->(CoreValuePulse)         // a person embraces a value
+(Person)-[:HAS_ACCESS_TO]->(ResourcePulse)
+(StoryPulse)-[:GUIDED_BY]->(Person)
+
+These edges run in BOTH directions depending on subtype, so match them
+WITHOUT an arrow — \`(focal)-[r:ENABLES|DEPENDS_ON|…]-(other)\` — to catch
+incoming and outgoing without guessing direction.
+
+Intent phrasing → edge:
+- "enabled goals" / "what does this enable" → ENABLES / ENABLED_BY (a GoalPulse / StoryPulse)
+- "supporting resources" / "resources it depends on" → DEPENDS_ON / APPLIED_TO / APPLIED_IN (a ResourcePulse)
+- "values it aligns to" → ALIGNED_TO (a CoreValuePulse)
+- "who is motivated by / provides this" → MOTIVATED_BY / PROVIDES (a Person)
 
 NOTE on HAS_MEMBER: it has two valid domains.
   (Space)-[:HAS_MEMBER]->(SpaceMembership)  // Space membership goes through a SpaceMembership node carrying the role

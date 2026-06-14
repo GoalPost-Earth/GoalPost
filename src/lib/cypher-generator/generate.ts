@@ -102,7 +102,7 @@ ${SCHEMA_DOC}
 
 The user's natural-language intent rarely names entity types precisely. Read these mappings so you build a query that matches what they ACTUALLY want to see:
 
-- "X's relationships" / "X's connections" / "what is X connected to" / "dive into X" / "explore X" / "show me around X" / "expand X" → an EXPANSIVE sweep of every entity reachable from X in 1-2 hops that the runtime auth filter will allow. NOT just \`ResonanceLink\` nodes. For a Person, that means: spaces they own, spaces they are a member of, pulses they created, field contexts those pulses sit inside, other people they are CONNECTED_TO, and any ResonanceLinks involving their pulses. For a FieldContext or Space, that means: every child + sibling + adjacent entity.
+- "X's relationships" / "X's connections" / "what is X connected to" / "dive into X" / "explore X" / "show me around X" / "expand X" / "expand its surrounding relationships" → an EXPANSIVE sweep of every entity reachable from X in 1-2 hops that the runtime auth filter will allow. NOT just \`ResonanceLink\` nodes. For a Person, that means: spaces they own, spaces they are a member of, pulses they created, field contexts those pulses sit inside, other people they are CONNECTED_TO, and any ResonanceLinks involving their pulses. For a FieldContext or Space, that means: every child + sibling + adjacent entity. For a PULSE (a goal/resource/story/care/value — \`FieldPulse\` and its subtypes), that means: the field context it sits in, its creator, any ResonanceLinks involving it, AND — most importantly — its SEMANTIC ONTOLOGY edges to other pulses and people (goals it ENABLES, resources it DEPENDS_ON / APPLIED_TO, values it is ALIGNED_TO, people who PROVIDE / are MOTIVATED_BY it, etc. — see "Semantic pulse relationships" in the schema). For a pulse these semantic edges are usually the entire point of the request; a sweep that returns only the field context + creator and drops the semantic edges is a bug.
 - "X's resonances" / "X's resonance links" → specifically \`ResonanceLink\` nodes incident to X via SOURCE/TARGET (or via HAS_RESONANCE from a FieldContext).
 - "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
@@ -128,6 +128,27 @@ For an expansive sweep, raise your LIMIT toward 50 (the runtime cap is 60).
     LIMIT 50
 
 Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal:FieldContext\`) when the intent is rooted on a different entity type. Drop OPTIONAL MATCH branches that are not relevant to the rooted type (e.g. a Space has no CREATED_BY incoming edges from itself, but it does have HAS_CONTEXT outgoing).
+
+# Expansive-sweep canonical shape rooted on a PULSE (use this when the focal entity is a goal / resource / story / care / value)
+
+When the focal entity is a pulse and the user asks to expand / explore / see its surrounding relationships, root the sweep on the pulse's id and traverse BOTH its structural edges AND its semantic ontology edges. The semantic edges (ENABLES / DEPENDS_ON / APPLIED_TO / ALIGNED_TO / CARES_FOR / MOTIVATED_BY / PROVIDES / EMBRACES …) are what the user almost always means by "surrounding relationships" — do NOT omit them.
+
+    MATCH (user:Person {id: $userId})
+    MATCH (focal:FieldPulse {id: "<id from canvasVisibleEntities or intent>"})
+    OPTIONAL MATCH (focal)<-[hp:HAS_PULSE]-(ctx:FieldContext)
+    OPTIONAL MATCH (focal)-[cb:CREATED_BY]->(creator:Person)
+    OPTIONAL MATCH (focal)-[sem:ENABLES|ENABLED_BY|DEPENDS_ON|APPLIED_TO|APPLIED_IN|ALIGNED_TO|CARES_FOR]-(rel:FieldPulse)
+    OPTIONAL MATCH (focal)-[ppl:MOTIVATED_BY|PROVIDES|EMBRACES|HAS_ACCESS_TO|GUIDED_BY]-(per:Person)
+    OPTIONAL MATCH (focal)-[com:MOTIVATED_BY|PROVIDES|EMBRACES|HAS_ACCESS_TO]-(comm:Community)
+    OPTIONAL MATCH (focal)<-[src:SOURCE]-(rl:ResonanceLink)-[tgt:TARGET]->(rp:FieldPulse)
+    RETURN focal, hp, ctx, cb, creator, sem, rel, ppl, per, com, comm, src, rl, tgt, rp
+    LIMIT 50
+
+  - ANCHOR THE FOCAL ON THE BASE LABEL \`:FieldPulse {id: "…"}\`, NOT on a subtype label. Only \`FieldPulse(id)\` is indexed; writing \`(focal:StoryPulse {id: …})\` forces a full label scan of every StoryPulse instead of an O(1) index seek. Match the base label and let the returned node carry its subtype labels. (Filter by subtype only when the intent explicitly names a single type AND you are listing many of them, never for an id-anchored focal.)
+  - The semantic-edge MATCHes are UNDIRECTED (\`-[sem:…]-\`, \`-[ppl:…]-\`, \`-[com:…]-\`) on purpose: these edges point different ways for different subtypes, and the user wants every neighbour regardless of direction.
+  - The \`com\` branch catches semantic edges that originate from a Community rather than a Person (a Community EMBRACES a value, HAS_ACCESS_TO a resource, etc.). Communities are public, so they always survive the auth filter.
+  - Bind AND return every relationship variable (per Rule 5) so the edges render. Drop the \`ppl\` / \`com\` branches if the intent is clearly only about pulse-to-pulse links.
+  - The runtime auth filter drops any connected pulse/person the user cannot see — do NOT add visibility predicates of your own.
 
 # Shortest-path canonical shape (use this for "How is X connected to Y?" / "path between X and Y" / "how is X related to Y?")
 
