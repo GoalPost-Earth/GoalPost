@@ -220,6 +220,41 @@ safe and the existing phases are untouched.
    relationships now render and are navigable; assistant "show surrounding
    relationships" returns the weave.
 
+## 9. Decisions resolved — starting point shipped (2026-06-16)
+
+JD shipped a **starting-point** weave under GOAL-266. The open questions in §6
+were resolved as follows for this slice (Steve's map can still refine them
+later; these are forward-compatible, not final):
+
+- **§6.1 Node or edge → node (Option A).** A reified `:PromiseWeave` connector
+  node, mirroring how `ResonanceLink` is modelled.
+- **§6.3 / §6.6 Scope & relationship to resonance → standalone node, NOT a
+  StoryPulse subtype.** Despite §6.6's earlier lean toward the `:StoryPulse`
+  label set, the starting point uses a bare `:PromiseWeave` label — exactly as
+  `ResonanceLink` is its own node and not a story, even though Robert calls
+  resonance "a type of story." Complements resonance; does not replace it.
+- **Edge set simplified.** The §3 diagram's separate `WITHIN` edge was collapsed
+  into a single `HAS_WEAVE` context edge (the visibility anchor), since an
+  anti-parallel `WITHIN`/`HAS_WEAVE` pair is redundant — `ResonanceLink` likewise
+  uses only `HAS_RESONANCE`.
+- **§6.4 Lifecycle → stateless for now.** A free-text `status` (`active` on
+  migration-built weaves); no state machine, so no `kb/04` entry yet.
+- **§6.5 Authoring → migration-only.** Weaves are built by the prod→dev migration
+  (additive Phase 5d). GraphQL mutations are locked off (`@mutation(operations:
+  [])`) until the user/AI authoring + HITL slice; the Space-scoped
+  `@authorization` validate rules are already in place for that path.
+- **Neighbourhood scope → minimal.** Each weave holds its care point (`WEAVES`),
+  its creator (`WOVEN_FOR` + `CREATED_BY`), and its FieldContext (`HAS_WEAVE`).
+- **Activity Log.** Migration-built weaves are `:Log`-exempt, consistent with the
+  other Phase-5 structural builds; the §4 Log requirement applies to the runtime
+  authoring path.
+
+Shipped: `kb/01`, `kb/05` (PromiseWeave entity + `promise_weave_id` constraint),
+`schema.gql` (`PromiseWeave` type + `FieldContext.weaves`), and
+`scripts/migrate-prod-to-dev.ts` (Phase 5d). Verified on dev: 8 weaves built (one
+per migrated care point), idempotent, each authorizable via its FieldContext's
+Space owner.
+
 ---
 
 _Tracking: relates to Jira GOAL-266 (distinguish AI-generated StoryPulses /

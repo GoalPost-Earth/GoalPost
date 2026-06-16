@@ -13,6 +13,10 @@ FieldContext ──HAS_RESONANCE──▶ ResonanceLink
 ResonanceLink ──SOURCE──▶ FieldPulse
 ResonanceLink ──TARGET──▶ FieldPulse
 ResonanceLink ──RESONATES_AS──▶ FieldResonance
+FieldContext ──HAS_WEAVE──▶ PromiseWeave
+PromiseWeave ──WEAVES──▶ FieldPulse
+PromiseWeave ──WOVEN_FOR──▶ Person
+PromiseWeave ──CREATED_BY──▶ Person
 FieldPulse ──CREATED_BY──▶ Person
 FieldPulse ──HAS_CHUNK──▶ ConversationChunk
 Person ──CONNECTED_TO── Person (bidirectional)
@@ -307,6 +311,40 @@ Minimal additional fields beyond the base FieldPulse interface.
 
 ---
 
+### PromiseWeave
+
+**Neo4j Labels:** `["PromiseWeave"]`
+
+A connective container that gives a pulse (initially a migrated care point) a
+navigable neighbourhood. Modelled as a reified connector node exactly like
+ResonanceLink — its own node type, **not** a pulse subtype — and surfaced
+within a FieldContext via a `HAS_WEAVE` context edge, directly analogous to how
+ResonanceLink is surfaced via `HAS_RESONANCE`. Originates in Steve's relational
+"map" (see `docs/promise-weave-design-spike.md`, GOAL-266). Starting-point
+scope: created by the prod→dev migration to wrap each migrated care point.
+
+| Field      | Type     | Notes                                              |
+| ---------- | -------- | -------------------------------------------------- |
+| id         | string   | Unique, `weave_*` prefix                           |
+| title      | string   | Optional — human label (defaults to the woven pulse's title) |
+| status     | string   | Optional — `active` for migration-built weaves     |
+| createdAt  | datetime |                                                    |
+
+**Relationships:**
+
+- `WEAVES` → FieldPulse (1..n — the care point(s) it connects)
+- `WOVEN_FOR` → Person (whose care point / who it concerns)
+- `CREATED_BY` → Person (authorship, for attribution)
+- `HAS_WEAVE` ← FieldContext (scope + visibility anchor)
+
+**Authorization:** Scoped to the parent FieldContext's Space — readable/writable
+by the Space owner or any member, mirroring ResonanceLink. Note: a single
+`HAS_WEAVE` context edge is the canonical anchor (the design spike's separate
+`WITHIN` edge was collapsed into it, since it would be a redundant anti-parallel
+edge — ResonanceLink likewise uses only `HAS_RESONANCE`).
+
+---
+
 ### FieldResonance
 
 **Neo4j Labels:** `["FieldResonance"]`
@@ -524,6 +562,7 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `context_id`              | FieldContext.id UNIQUE        |
 | `pulse_id`                | FieldPulse.id UNIQUE          |
 | `resonance_link_id`       | ResonanceLink.id UNIQUE       |
+| `promise_weave_id`        | PromiseWeave.id UNIQUE        |
 | `conversation_thread_id`       | ConversationThread.id UNIQUE       |
 | `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
 | `assistant_feedback_id`        | AssistantFeedback.id UNIQUE        |

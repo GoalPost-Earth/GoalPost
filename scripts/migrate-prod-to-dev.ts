@@ -379,6 +379,8 @@ async function phase2_applySchema() {
        FOR (n:FieldResonance) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT resonance_link_id IF NOT EXISTS
        FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT promise_weave_id IF NOT EXISTS
+       FOR (n:PromiseWeave) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
        FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS
@@ -1241,6 +1243,70 @@ async function phase5c_buildJdTestSpace() {
 }
 
 /**
+ * Phase 5d: Build starting-point PromiseWeaves for migrated care points.
+ *
+ * A migrated CarePoint (`:FieldPulse:StoryPulse:CarePoint`) often has no
+ * navigable surrounding relationships in the source graph, so "show surrounding
+ * relationships" in Bloom returns nothing (Goalpost sync 2026-06-12, Robert
+ * Damashek; docs/promise-weave-design-spike.md, GOAL-266). A PromiseWeave is a
+ * reified connector node — modelled exactly like ResonanceLink (its own node,
+ * surfaced within a FieldContext via a HAS_WEAVE context edge analogous to
+ * HAS_RESONANCE) — that gives each care point a starting-point neighbourhood.
+ *
+ * Starting-point scope: each weave holds its care point (WEAVES), its creator
+ * (WOVEN_FOR + CREATED_BY for attribution), anchored in the care point's already
+ * resolved FieldContext via HAS_WEAVE (the visibility anchor). Placement and
+ * authorship are settled by Phase 5 — every FieldPulse is anchored (HAS_PULSE)
+ * and has a CREATED_BY edge after 5h — so we read context + creator off the
+ * graph. A care point anchored in multiple contexts (community pulses, Phase
+ * 5g2 clones) gets one weave per (care point, context) pair, keyed by a
+ * deterministic id, so each Space sees its own weave.
+ *
+ * Additive and idempotent: only NEW :PromiseWeave nodes and dev-only edges are
+ * created (the reused CREATED_BY count only rises), so Phase 6 parity
+ * (`dev >= prod`) still holds. Re-running MERGEs on the deterministic weave id.
+ *
+ * Like the other Phase 5 structural builds (MeSpace / WeSpace / FieldContext /
+ * SpaceMembership), migration-built weaves write no activity :Log row — Log
+ * capture belongs to the runtime user/AI authoring path (spike §4), not to this
+ * bulk wipe-and-rebuild.
+ */
+async function phase5d_buildPromiseWeaves(): Promise<number> {
+  console.log('━━━ Phase 5d: Build starting-point PromiseWeaves ━━━')
+  const session = devDriver.session()
+  try {
+    const res = await session.run(
+      `MATCH (cp:CarePoint)
+       MATCH (ctx:FieldContext)-[:HAS_PULSE]->(cp)
+       OPTIONAL MATCH (cp)-[:CREATED_BY]->(c:Person)
+       // Deterministic creator pick (lowest id), matching the 5g2 convention.
+       WITH cp, ctx, c ORDER BY c.id
+       WITH cp, ctx, head(collect(c)) AS creator
+       MERGE (w:PromiseWeave { id: 'weave_' + cp.id + '_' + ctx.id })
+         ON CREATE SET
+           w.title = coalesce(cp.title, cp.content),
+           w.status = 'active',
+           w.createdAt = datetime()
+       MERGE (ctx)-[:HAS_WEAVE]->(w)
+       MERGE (w)-[:WEAVES]->(cp)
+       FOREACH (_ IN CASE WHEN creator IS NULL THEN [] ELSE [1] END |
+         MERGE (w)-[:WOVEN_FOR]->(creator)
+         MERGE (w)-[:CREATED_BY]->(creator)
+       )
+       RETURN count(DISTINCT w) AS c`
+    )
+    const weaves = toInt(res.records[0].get('c'))
+    console.log(
+      `   ✓ PromiseWeaves ensured (one per migrated care point in context): ${weaves}`
+    )
+    console.log('✅ PromiseWeaves built\n')
+    return weaves
+  } finally {
+    await session.close()
+  }
+}
+
+/**
  * Phase 6: Validate parity. Compares prod and dev node/relationship counts
  * label-by-label, type-by-type.
  */
@@ -1365,6 +1431,7 @@ async function main() {
     const { cloneCountsByLabel } = await phase5_buildDevStructure()
     await phase5b_setDevLoginPassword()
     await phase5c_buildJdTestSpace()
+    await phase5d_buildPromiseWeaves()
     const { pass } = await phase6_validate(totals, relCounts, cloneCountsByLabel)
 
     if (!pass) {

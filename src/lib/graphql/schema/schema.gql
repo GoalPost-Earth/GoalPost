@@ -612,6 +612,8 @@ type FieldContext
   documents: [Document!]! @relationship(type: "HAS_DOCUMENT", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)
+  weaves: [PromiseWeave!]!
+    @relationship(type: "HAS_WEAVE", direction: OUT)
   resonancesInContext: [ResonanceLink!]!
     @cypher(
       statement: """
@@ -1360,6 +1362,97 @@ type ResonanceLink
   source: [FieldPulse!]! @relationship(type: "SOURCE", direction: OUT)
   target: [FieldPulse!]! @relationship(type: "TARGET", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_RESONANCE", direction: IN)
+}
+
+"""
+A connective container that gives a pulse (initially a migrated CarePoint) a
+navigable neighbourhood. It holds the relationships between a care point and the
+people and field it implicates, so "show surrounding relationships" returns a
+starting point rather than a dead end.
+
+Modelled as a reified connector node, mirroring ResonanceLink: it is its own
+node type (NOT a pulse subtype) and is surfaced within a FieldContext via a
+HAS_WEAVE context edge — directly analogous to how ResonanceLink is surfaced via
+HAS_RESONANCE, so it slots into the same Space-scoped authorization and Bloom
+scoping. Originates in Steve's relational "map" (see
+docs/promise-weave-design-spike.md, GOAL-266).
+
+Starting-point scope: created by the prod→dev migration to wrap each migrated
+care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
+in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+
+Multi-label: ["PromiseWeave"]
+"""
+type PromiseWeave
+  @node(labels: ["PromiseWeave"])
+  # No user-facing writes yet — weaves are migration-built only (starting point).
+  # User/AI authoring + its HITL gate arrive in a later slice (spike §6.5), which
+  # will open the needed operations. The @authorization validate rules below are
+  # already in place for that path.
+  @mutation(operations: [])
+  @authorization(
+    # READ — anyone who can see the parent FieldContext (owner or any
+    # member of the owning Me/We space) can see the weave. Mirrors ResonanceLink.
+    filter: [
+      {
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+    # WRITE — CREATE/UPDATE/DELETE require OWNER, ADMIN, or MEMBER on
+    # the owning Me/We space. GUESTs are excluded (kb/02-user-roles.md).
+    validate: [
+      {
+        operations: [CREATE, UPDATE, DELETE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  title: String
+  status: String
+  createdAt: DateTime!
+  weaves: [FieldPulse!]! @relationship(type: "WEAVES", direction: OUT)
+  wovenFor: [Person!]! @relationship(type: "WOVEN_FOR", direction: OUT)
+  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
+  context: [FieldContext!]! @relationship(type: "HAS_WEAVE", direction: IN)
 }
 
 # ============================================================================
