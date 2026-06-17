@@ -4,7 +4,7 @@ Required reading before touching any code that:
 
 - Shapes what the assistant says (`src/lib/simulation/system-prompts.ts`, `src/lib/simulation/session-context-prompt.ts`)
 - Defines or modifies assistant tools (`src/lib/simulation/chat-tools.ts`, `src/lib/chat/hitl.ts`)
-- Builds, resolves, or sends the assistant request body (`src/app/api/chat/simulation/route.ts`, `src/app/protected/assistant/page.tsx`, `src/components/ui/ai-assistant-panel.tsx`)
+- Builds, resolves, or sends the assistant request body (`src/app/api/chat/simulation/route.ts`, `src/components/studio/studio-shell.tsx`, `src/components/simulation/AidenSimulationChat.tsx`)
 - Adds a new chat surface, voice surface, or other LLM-facing entry point
 - Routes graph entities through any prompt, tool result, or model output
 
@@ -154,7 +154,7 @@ Do not move these directives into the static mode prompts — they'd fire on neu
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Assistant exposes a UUID                                             | New id added to SESSION CONTEXT without a paired name (Rule 2); or a tool returning bare ids (Rule 3) |
 | Empty assistant bubble                                               | First check `stopWhen` on the route's `streamText`/`generateText` call — if it's missing or set to `stepCountIs(1)`, the model halts after a tool call without writing text (Rule 7). Then check Rule 6 (reasoning model + tool error) and Rule 4 (tool registered when its session state is missing). |
-| Assistant asks "which space?"                                        | `activeSpaceId` not being sent in body (check the route's body resolver in `assistant/page.tsx` or `ai-assistant-panel.tsx`) |
+| Assistant asks "which space?"                                        | `activeSpaceId` not being sent in body (check the route's body resolver in `studio-shell.tsx` — `resolveBody`) |
 | Assistant insists user is in a Space when they are on a neutral surface | Some fallback (e.g. a cached id in localStorage) is being treated as "active." `activeSpaceId` may ONLY come from the user's actual current navigation (a `MeSpace`/`WeSpace` focal entity, or a Space id present in the URL). Cached/owned ids are NOT the current Space. See the FocalEntityProvider — it intentionally has no `meSpaceId` fallback. |
 | Write tool ran without user approval                                 | Tool execute bypassed `runWriteTool` and called the service directly (Rule 5)   |
 | User sees `__typename` or `GoalPulse` strings                        | Static mode prompts leaking internal labels — Rule 1                            |

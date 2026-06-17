@@ -51,7 +51,10 @@ import {
   type FocalEntityType,
 } from '@/lib/focal-entity/types'
 import { buildSystemPromptWithSessionContext } from '@/lib/simulation/session-context-prompt'
-import { resolveSessionContextNames } from '@/lib/simulation/session-context-resolve'
+import {
+  resolveSessionContextNames,
+  type ResolvedSessionContextNames,
+} from '@/lib/simulation/session-context-resolve'
 import {
   appendConversationTurn,
   setConversationThreadTitle,
@@ -175,6 +178,22 @@ export async function POST(req: Request) {
       currentUserId?: string
       spaceId?: string
       fieldContextId?: string
+      /**
+       * Phase 1a latency hints — names the client already knows for the ambient
+       * ids above. When every present id carries its hint, the route skips the
+       * server-side Neo4j name resolve entirely; otherwise it falls back to the
+       * authoritative DB query. COSMETIC-ONLY (assistant phrasing), never used
+       * for authorization — tool access stays gated by currentUserId +
+       * canViewContent server-side. An older client that omits this just gets
+       * the DB path, unchanged.
+       */
+      sessionNames?: {
+        currentUserName?: string | null
+        spaceName?: string | null
+        spaceType?: 'MeSpace' | 'WeSpace' | null
+        fieldContextTitle?: string | null
+        spaceOwnedByCurrentUser?: boolean | null
+      } | null
       focalEntity?: FocalEntityPayload | null
       previousFocalEntity?: FocalEntityPayload | null
       approvedActions?: ApprovedAction[]
@@ -357,13 +376,47 @@ export async function POST(req: Request) {
     // the model knows which Space/FieldContext to scope tool calls to.
     const currentMode = assistantModeManager.getMode()
     const basePrompt = SYSTEM_PROMPTS[currentMode]
+    // Phase 1a: prefer the client-sent name hints and skip the Neo4j resolve
+    // when every PRESENT id already carries its hint. The moment any present id
+    // is missing its name, fall back to the authoritative DB query — so the
+    // field-in-space case (space name not known client-side) and older clients
+    // that send no hints are never degraded. Hints are cosmetic (phrasing), so
+    // trusting them here cannot affect tool authorization.
+    const sessionNames = body.sessionNames ?? null
+    const hintSpaceType =
+      sessionNames?.spaceType === 'MeSpace' ||
+      sessionNames?.spaceType === 'WeSpace'
+        ? sessionNames.spaceType
+        : null
+    // The DB resolve is only worth its round-trip when it can supply something
+    // the client couldn't. A hint-capable client already sends currentUserName
+    // from the same Person.firstName the DB would return, so a missing user
+    // name does NOT justify a DB hit — only a missing Space/Field name (which
+    // the client genuinely may not know, e.g. field-in-space via URL) does.
+    // A client that sends no hints at all gets the old behavior: resolve
+    // whenever any id is present.
+    const needsDbResolve = sessionNames
+      ? (!!spaceId && !sessionNames.spaceName) ||
+        (!!fieldContextId && !sessionNames.fieldContextTitle)
+      : !!currentUserId || !!spaceId || !!fieldContextId
     const resolveStartedAt = performance.now()
-    const resolvedNames = await resolveSessionContextNames(
-      spaceId || null,
-      fieldContextId || null,
-      currentUserId
-    )
+    const resolvedNames: ResolvedSessionContextNames = needsDbResolve
+      ? await resolveSessionContextNames(
+          spaceId || null,
+          fieldContextId || null,
+          currentUserId
+        )
+      : {
+          activeSpaceName: sessionNames?.spaceName ?? null,
+          activeSpaceType: hintSpaceType,
+          activeFieldContextTitle: sessionNames?.fieldContextTitle ?? null,
+          currentUserName: sessionNames?.currentUserName ?? null,
+          activeSpaceOwnedByCurrentUser: Boolean(
+            sessionNames?.spaceOwnedByCurrentUser
+          ),
+        }
     const resolveMs = Math.round(performance.now() - resolveStartedAt)
+    const resolveSource = needsDbResolve ? 'db' : 'client-hints'
     const sessionSystemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
       currentUserId,
       spaceId: spaceId || null,
@@ -456,6 +509,7 @@ export async function POST(req: Request) {
     // us on the critical path, before the model has done anything.
     console.log('[Chat API] Pre-LLM latency (ms):', {
       resolveMs,
+      resolveSource,
       toolsMs,
       preLlmTotalMs: sinceStart(),
       reasoningEffort: assistantProviderOptions.openai.reasoningEffort,

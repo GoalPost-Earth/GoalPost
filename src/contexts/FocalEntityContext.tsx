@@ -68,6 +68,11 @@ const EMPTY_SESSION_CONTEXT: SessionContext = {
   activeSpaceId: null,
   activeFieldContextId: null,
   focalEntity: null,
+  currentUserName: null,
+  activeSpaceName: null,
+  activeSpaceType: null,
+  activeFieldContextTitle: null,
+  activeSpaceOwnedByCurrentUser: false,
 }
 
 // Permissive default so non-protected pages and tests don't crash when the
@@ -371,15 +376,24 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
 
   const sessionContext = useMemo<SessionContext>(() => {
     const currentUserId = user?.id ?? null
+    const currentUserName = user?.firstName ?? null
     let activeSpaceId: string | null = null
     let activeFieldContextId: string | null = null
+    // Phase 1a name hints (see SessionContext doc): names the client already
+    // knows, so the chat route can skip the server-side Neo4j name resolve.
+    let activeSpaceName: string | null = null
+    let activeSpaceType: 'MeSpace' | 'WeSpace' | null = null
+    let activeFieldContextTitle: string | null = null
 
     if (focalEntity) {
       if (focalEntity.type === 'MeSpace' || focalEntity.type === 'WeSpace') {
         activeSpaceId = focalEntity.id
+        activeSpaceType = focalEntity.type
+        activeSpaceName = focalEntity.label ?? null
       }
       if (focalEntity.type === 'FieldContext') {
         activeFieldContextId = focalEntity.id
+        activeFieldContextTitle = focalEntity.label ?? null
       }
     }
 
@@ -401,6 +415,28 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // When the active space id came from the URL (not the focal entity) we may
+    // still know its name + subtype from the focal entity's resolved parent
+    // chain (detail pages push this via setFocalParents). If not, these stay
+    // null and the chat route falls back to its authoritative DB resolve.
+    if (activeSpaceId && !activeSpaceName && focalEntity?.parents) {
+      const parent = focalEntity.parents.find((p) => p.id === activeSpaceId)
+      if (parent && (parent.type === 'MeSpace' || parent.type === 'WeSpace')) {
+        activeSpaceName = parent.label
+        activeSpaceType = parent.type
+      }
+    }
+
+    // Ownership is authoritative here: it comes from the user's OWN owned-space
+    // list (user.ownsSpaces), not a guess. Drives the "your space" vs
+    // "<name>'s space" phrasing only — never authorization.
+    const ownsSpaces =
+      (user as { ownsSpaces?: Array<{ id?: string }> } | undefined)
+        ?.ownsSpaces ?? []
+    const activeSpaceOwnedByCurrentUser = Boolean(
+      activeSpaceId && ownsSpaces.some((s) => s.id === activeSpaceId)
+    )
+
     // Intentionally NO localStorage('meSpaceId') fallback here. A cached
     // MeSpace id is not the user's *current* Space — it's the Space they
     // own. Pretending otherwise causes the assistant to say "This is your
@@ -410,8 +446,13 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
 
     return {
       currentUserId,
+      currentUserName,
       activeSpaceId,
       activeFieldContextId,
+      activeSpaceName,
+      activeSpaceType,
+      activeFieldContextTitle,
+      activeSpaceOwnedByCurrentUser,
       focalEntity,
     }
   }, [user, pathname, focalEntity])

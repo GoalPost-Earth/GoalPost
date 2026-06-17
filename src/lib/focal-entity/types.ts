@@ -50,6 +50,21 @@ export interface SessionContext {
   activeSpaceId: string | null
   activeFieldContextId: string | null
   focalEntity: FocalEntity | null
+  /**
+   * Phase 1a latency hints — the human-readable names the client already
+   * knows for the ambient ids above. Forwarded to the chat route so it can
+   * SKIP the server-side Neo4j name resolve on the hot path (the route falls
+   * back to the authoritative DB query whenever a present id lacks its hint).
+   *
+   * These are COSMETIC-ONLY: they affect how the assistant *phrases* replies
+   * (entity names, "your space" vs "Wade's space"), never authorization —
+   * tool access is still gated server-side by currentUserId + canViewContent.
+   */
+  currentUserName: string | null
+  activeSpaceName: string | null
+  activeSpaceType: 'MeSpace' | 'WeSpace' | null
+  activeFieldContextTitle: string | null
+  activeSpaceOwnedByCurrentUser: boolean
 }
 
 const FOCAL_ENTITY_TYPES: ReadonlySet<FocalEntityType> = new Set([

@@ -350,6 +350,17 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
       currentUserId: snapshot.currentUserId,
       spaceId: snapshot.activeSpaceId,
       fieldContextId: snapshot.activeFieldContextId,
+      // Phase 1a: forward the names the client already knows so the chat route
+      // can skip its server-side Neo4j name resolve. Cosmetic-only (phrasing,
+      // not authz); the route falls back to the DB when any present id lacks a
+      // hint, so partial/empty hints are always safe.
+      sessionNames: {
+        currentUserName: snapshot.currentUserName,
+        spaceName: snapshot.activeSpaceName,
+        spaceType: snapshot.activeSpaceType,
+        fieldContextTitle: snapshot.activeFieldContextTitle,
+        spaceOwnedByCurrentUser: snapshot.activeSpaceOwnedByCurrentUser,
+      },
       threadId,
       focalEntity: focalEntity
         ? {
