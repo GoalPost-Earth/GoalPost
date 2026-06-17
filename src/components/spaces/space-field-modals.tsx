@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { useCreateField } from '@/hooks'
@@ -42,6 +43,7 @@ export function SpaceFieldModals({
   onClosePermissions,
   onRefetch,
 }: SpaceFieldModalsProps) {
+  const router = useRouter()
   const { createField, loading: isCreatingField } = useCreateField()
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
   const [isCreating, setIsCreating] = useState(false)
@@ -83,12 +85,17 @@ export function SpaceFieldModals({
             toast.error('Failed to log field creation')
           })
       }
-      try {
-        await onRefetch()
-      } catch (refetchErr) {
+      // Refresh the space's field list in the background; don't block the
+      // redirect on it since we're navigating away from this view anyway.
+      void onRefetch().catch((refetchErr) =>
         console.error('Error refetching after field creation:', refetchErr)
-      }
+      )
       onCloseCreate()
+      // Drop the user straight into the field they just created — creating
+      // one implies wanting to be in it.
+      if (createdField?.id) {
+        router.push(`/protected/dashboard/field-context/${createdField.id}`)
+      }
     } catch (err) {
       console.error('Error creating field:', err)
       toast.error('Failed to create field context')

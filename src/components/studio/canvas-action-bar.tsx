@@ -205,10 +205,17 @@ const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
 
       toast.success('WeSpace created')
       setShowCreateWeSpaceModal(false)
-      // Refresh any active WeSpace lists (dashboard overview + WeSpace page).
-      await apolloClient.refetchQueries({
-        include: ['GetAllWeSpaces', 'GetUserWeSpaces'],
-      })
+      // Drop the user straight into the space they just created — creating
+      // one implies wanting to be in it.
+      if (data.weSpace?.id) {
+        router.push(`/protected/dashboard/space/${data.weSpace.id}`)
+      }
+      // Refresh active WeSpace lists (dashboard overview + WeSpace page) in
+      // the background so they're current on return — don't block the
+      // redirect on it.
+      apolloClient
+        .refetchQueries({ include: ['GetAllWeSpaces', 'GetUserWeSpaces'] })
+        .catch((err) => console.error('Error refetching WeSpace lists:', err))
     } catch (err) {
       toast.error(
         `Failed to create WeSpace${err instanceof Error ? `: ${err.message}` : ''}`
