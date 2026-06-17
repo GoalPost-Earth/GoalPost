@@ -51,28 +51,39 @@ export const useApp = () => {
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const isAuthRoute = pathname?.startsWith('/auth')
-  const [user, setUser] = useState<ContextUser | undefined>(() => {
-    if (typeof window !== 'undefined') {
+  // SSR-safe: start with no user on both the server and the first client
+  // paint. Reading localStorage in a lazy initializer diverges the two (server
+  // has no user, client has the stored one), which made ProtectedRoute render
+  // the spinner on the server but the full shell on first client paint —
+  // failing hydration on every protected route. The user is loaded from
+  // localStorage in the mount effect below, gated by `isHydrated`.
+  const [user, setUser] = useState<ContextUser | undefined>(undefined)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Load the persisted session after mount (never during render). Until this
+  // runs, `isLoading` is true so ProtectedRoute shows its spinner on both the
+  // server and the first client render — identical HTML, no mismatch — and the
+  // redirect-to-login effect waits rather than bouncing a logged-in user.
+  useEffect(() => {
+    try {
       const storedUser = localStorage.getItem('user')
       if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser)
-          // Extract and cache meSpaceId from user object for direct navigation
-          const meSpace = (parsedUser.ownsSpaces || []).find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (space: any) => space.__typename === 'MeSpace'
-          )
-          if (meSpace?.id) {
-            localStorage.setItem('meSpaceId', meSpace.id)
-          }
-          return parsedUser
-        } catch {
-          return undefined
+        const parsedUser = JSON.parse(storedUser)
+        const meSpace = (parsedUser.ownsSpaces || []).find(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (space: any) => space.__typename === 'MeSpace'
+        )
+        if (meSpace?.id) {
+          localStorage.setItem('meSpaceId', meSpace.id)
         }
+        setUser(parsedUser)
       }
+    } catch {
+      // corrupt/absent session → stay logged out
+    } finally {
+      setIsHydrated(true)
     }
-    return undefined
-  })
+  }, [])
 
   const setUserAndPersist = (user: ContextUser) => {
     // Drop any cached bearer token first. Without this the module-scoped
@@ -147,7 +158,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user,
     setUser: setUserAndPersist,
     isAuthenticated: !!user,
-    isLoading: false,
+    // True until the persisted session is read from localStorage post-mount.
+    // Keeps SSR and first client paint identical (both "loading") so hydration
+    // matches, and prevents ProtectedRoute from redirecting before we know.
+    isLoading: !isHydrated,
     logout: handleLogout,
   }
 
