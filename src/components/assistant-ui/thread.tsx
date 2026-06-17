@@ -314,7 +314,7 @@ const Composer: FC = () => {
               ? 'Hands-free on — tap mic to talk'
               : 'Ask about a person, pulse, or field context...'
         }
-        className="w-full px-4 py-3 bg-white/60 dark:bg-white/5 border border-gp-glass-border rounded-xl text-gp-ink-strong dark:text-white placeholder-gp-ink-soft dark:placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/40 resize-none transition-all"
+        className="w-full max-h-40 overflow-y-auto px-4 py-3 bg-white/60 dark:bg-white/5 border border-gp-glass-border rounded-xl text-gp-ink-strong dark:text-white placeholder-gp-ink-soft dark:placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary/40 resize-none transition-all"
         rows={1}
       />
       <div className="flex items-center justify-between gap-2">
