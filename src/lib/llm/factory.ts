@@ -38,6 +38,41 @@ export function getAssistantModelId(override?: string | null): string {
   return DEFAULT_ASSISTANT_MODEL
 }
 
+// Reasoning effort for the assistant chat model (gpt-5.x family). Lower effort
+// means the model "thinks" less before responding, cutting time-to-first-token
+// at the cost of less internal deliberation — for chat + tool-calling this is
+// the right trade: the tools do the heavy lifting, not the model's private
+// reasoning. `'low'` is the default; bump via OPENAI_ASSISTANT_REASONING_EFFORT
+// (none | minimal | low | medium | high | xhigh) without a code change while we
+// tune latency vs. answer quality. Passed to streamText/generateText as
+// `providerOptions.openai.reasoningEffort`.
+export type ReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+
+export const DEFAULT_ASSISTANT_REASONING_EFFORT: ReasoningEffort = 'low'
+
+const VALID_REASONING_EFFORTS: readonly ReasoningEffort[] = [
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+]
+
+export function getAssistantReasoningEffort(): ReasoningEffort {
+  const envValue = process.env.OPENAI_ASSISTANT_REASONING_EFFORT?.trim()
+  if (envValue && VALID_REASONING_EFFORTS.includes(envValue as ReasoningEffort)) {
+    return envValue as ReasoningEffort
+  }
+  return DEFAULT_ASSISTANT_REASONING_EFFORT
+}
+
 /**
  * Get an LLM provider instance
  * @param type - Provider type (defaults to LLM_PROVIDER env or 'openai')

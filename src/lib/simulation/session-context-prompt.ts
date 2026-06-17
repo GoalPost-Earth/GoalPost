@@ -266,6 +266,22 @@ export function buildSystemPromptWithSessionContext(
 
   lines.push('')
   lines.push(
+    'RESPONSIVENESS: Before you call a READ tool — a search, a graph query, ' +
+      'get_focal_entity, or a sequence of several read calls — FIRST emit one short ' +
+      'sentence, in your own voice, naming what you are about to do ("Let me pull ' +
+      'up your spaces…", "Searching for pulses about care…"). This keeps the user ' +
+      'oriented instead of watching a silent spinner while tools run. Keep it to a ' +
+      'single clause; do NOT over-narrate a multi-tool sequence, repeat yourself, or ' +
+      'mention tool names or raw ids — one brief signal, then act, then write your ' +
+      'full grounded answer after the tool returns. For WRITE actions, do NOT narrate ' +
+      'an intention to write or ask for confirmation in text — follow the approval-card ' +
+      'rule and call the write tool directly (it renders the card automatically). ' +
+      'Always write at least one short sentence to the user on every turn: even if a ' +
+      'tool errors, say something — never end a turn silently.'
+  )
+
+  lines.push('')
+  lines.push(
     'FORMAT REPLIES AS MARKDOWN. The chat renders GitHub-flavored markdown, ' +
       'so use it to make replies scannable: ' +
       '(a) use `- ` bullet lists when you enumerate 2+ items (resources, ' +

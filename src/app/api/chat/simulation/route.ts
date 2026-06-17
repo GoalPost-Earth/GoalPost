@@ -33,7 +33,10 @@ import type {
   AssistantMode,
 } from '@/lib/simulation'
 import { buildSimulationChatTools } from '@/lib/simulation/chat-tools'
-import { getAssistantModelId } from '@/lib/llm/factory'
+import {
+  getAssistantModelId,
+  getAssistantReasoningEffort,
+} from '@/lib/llm/factory'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import {
   buildApprovedActionHashSet,
@@ -157,6 +160,13 @@ async function emitAutoSignals(
 }
 
 export async function POST(req: Request) {
+  // Phase 0 latency instrumentation. We want to know how much wall-clock the
+  // request spends BEFORE the model starts streaming — that pre-LLM overhead
+  // (session-context Neo4j resolve + tool-registry build) is the budget any
+  // future latency work (parallelising/caching the resolve) can claw back. The
+  // model's own time-to-first-token is logged separately via onChunk below.
+  const requestStartedAt = performance.now()
+  const sinceStart = () => Math.round(performance.now() - requestStartedAt)
   try {
     const body = (await req.json()) as {
       messages: IncomingMessage[]
@@ -347,11 +357,13 @@ export async function POST(req: Request) {
     // the model knows which Space/FieldContext to scope tool calls to.
     const currentMode = assistantModeManager.getMode()
     const basePrompt = SYSTEM_PROMPTS[currentMode]
+    const resolveStartedAt = performance.now()
     const resolvedNames = await resolveSessionContextNames(
       spaceId || null,
       fieldContextId || null,
       currentUserId
     )
+    const resolveMs = Math.round(performance.now() - resolveStartedAt)
     const sessionSystemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
       currentUserId,
       spaceId: spaceId || null,
@@ -402,6 +414,7 @@ export async function POST(req: Request) {
       })
     }
 
+    const toolsStartedAt = performance.now()
     const tools = await buildSimulationChatTools({
       currentUserId,
       spaceId: spaceId || null,
@@ -414,6 +427,7 @@ export async function POST(req: Request) {
       canvasView: canvasView ?? null,
       canvasVisibleEntities: canvasVisibleEntities ?? [],
     })
+    const toolsMs = Math.round(performance.now() - toolsStartedAt)
 
     console.log('🔍 [DEBUG] Current mode:', currentMode)
     console.log('📝 [DEBUG] Last user message:', lastUserMessage)
@@ -429,8 +443,27 @@ export async function POST(req: Request) {
     const turnTools = executedActionNote ? undefined : tools
     const turnStopWhen = executedActionNote ? stepCountIs(1) : stepCountIs(8)
 
+    // gpt-5.x assistant models reason internally before answering, which adds
+    // to time-to-first-token. Cap that deliberation low for chat (the tools do
+    // the work, not the model's private reasoning). Tunable via env without a
+    // code change — see getAssistantReasoningEffort.
+    const assistantProviderOptions = {
+      openai: { reasoningEffort: getAssistantReasoningEffort() },
+    }
+
+    // Pre-LLM overhead: everything between request arrival and handing off to
+    // the model. This is the latency budget the resolve/tool-build steps cost
+    // us on the critical path, before the model has done anything.
+    console.log('[Chat API] Pre-LLM latency (ms):', {
+      resolveMs,
+      toolsMs,
+      preLlmTotalMs: sinceStart(),
+      reasoningEffort: assistantProviderOptions.openai.reasoningEffort,
+    })
+
     // Handle streaming
     if (shouldStream) {
+      let firstChunkLogged = false
       // AI SDK v5 defaults `stopWhen` to `stepCountIs(1)`, which means the
       // stream halts after the model emits a single tool call — the model
       // never gets a follow-up step to write the user-visible text response
@@ -443,6 +476,15 @@ export async function POST(req: Request) {
         system: systemPrompt,
         tools: turnTools,
         stopWhen: turnStopWhen,
+        providerOptions: assistantProviderOptions,
+        // Phase 0: stamp time-to-first-token once. Includes the pre-LLM
+        // overhead logged above plus the model's own latency to its first
+        // emitted part — the headline number latency work should move.
+        onChunk: () => {
+          if (firstChunkLogged) return
+          firstChunkLogged = true
+          console.log('[Chat API] Time-to-first-token (ms):', sinceStart())
+        },
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
@@ -547,6 +589,7 @@ Title:`,
       system: systemPrompt,
       tools: turnTools,
       stopWhen: turnStopWhen,
+      providerOptions: assistantProviderOptions,
     })
 
     return new Response(
