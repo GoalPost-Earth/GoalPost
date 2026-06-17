@@ -12,7 +12,25 @@
       "Bash(pkill -9 -f \"user-data-dir=/Users/jd/.cache/chrome-devtools-mcp/chrome-profile\")",
       "Bash(rm -f /Users/jd/.cache/chrome-devtools-mcp/chrome-profile/Singleton*)",
       "Bash(rm -f \"/Users/jd/.cache/chrome-devtools-mcp/chrome-profile/Default/Sessions/\"*)",
-      "Read(//Users/jd/.cache/chrome-devtools-mcp/chrome-profile/**)"
+      "Read(//Users/jd/.cache/chrome-devtools-mcp/chrome-profile/**)",
+      "mcp__neo4j-prod__neo4j-read_neo4j_cypher",
+      "mcp__neo4j-dev__neo4j-write_neo4j_cypher",
+      "Bash(echo \"exit $?\")",
+      "Bash(cp /tmp/profile_notif.mjs /Users/jd/Documents/dev/client-work/GoalPost/.profile_notif.mjs)",
+      "Bash(node .profile_notif.mjs)",
+      "Bash(grep -rn \"suggestions/\\\\${.*}/accept\\\\|/accept\\\\`\\\\|onAccept\\\\|handleAccept\" src)",
+      "Bash(grep -vE '//|console|message:|title:|link:|`/')",
+      "Bash(npx eslint *)",
+      "Bash(echo \"=== eslint exit $? ===\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/auth/login --max-time 10)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/auth/login --max-time 8)",
+      "Read(//private/tmp/**)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"pnpm dev\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/auth/login --max-time 15)",
+      "Bash(NODE_OPTIONS=--max-http-header-size=32768 nohup ./node_modules/.bin/next dev)",
+      "Bash(disown)",
+      "Bash(echo \"started pid $!\")"
     ]
   },
   "enabledMcpjsonServers": [
