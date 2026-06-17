@@ -13,6 +13,7 @@ import {
   sendSpaceInviteEmail,
 } from '@/app/api/auth/utils'
 import { createLog } from '@/lib/activity-logs/create-log'
+import { createNotification } from '@/lib/notifications/create-notification'
 import { hashAuthToken } from '@/lib/auth/token-hash'
 import { rateLimit } from '@/lib/auth/rate-limit'
 import { GraphQLError } from 'graphql'
@@ -367,6 +368,28 @@ async function addPersonToSpace(
       ' Member added, but the notification email could not be sent.'
   }
 
+  // Recipient-addressed notification for the bell (distinct from the audit
+  // Log above). Best-effort and self-notify-guarded inside createNotification.
+  // Existing users get a MEMBERSHIP "added" ping; not-yet-registered invitees
+  // get an INVITE — the node persists so it surfaces once they accept and can
+  // log in. Raw ids stay in metadata, never in the message (KB Rule 1).
+  const recipientName = (record.get('name') as string | null) || 'you'
+  createNotification({
+    recipientId: memberId,
+    actorId: currentUserId,
+    type: isExistingUser ? 'MEMBERSHIP' : 'INVITE',
+    title: isExistingUser ? `Added to "${spaceName}"` : `Invited to "${spaceName}"`,
+    message: isExistingUser
+      ? `${inviterName} added ${recipientName} to "${spaceName}" as ${role}`
+      : `${inviterName} invited you to join "${spaceName}"`,
+    link: `/protected/dashboard/space/${spaceId}`,
+    metadata: {
+      spaceId,
+      role,
+      event: isExistingUser ? 'member_added' : 'space_invite_sent',
+    },
+  }).catch((err) => console.warn('Failed to create membership notification:', err))
+
   const conversionNote = isMeSpace
     ? ' Space converted from MeSpace to WeSpace.'
     : ''
@@ -638,14 +661,15 @@ export const spaceMembershipResolvers = {
           `
           MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $memberId})
           SET sm.role = $role
-          RETURN 
-            sm.id as id, 
-            sm.role as role, 
+          RETURN
+            sm.id as id,
+            sm.role as role,
             sm.addedAt as addedAt,
             member.id as memberId,
             member.name as memberName,
             member.email as memberEmail,
-            labels(member) as memberLabels
+            labels(member) as memberLabels,
+            space.name as spaceName
           `,
           { spaceId, memberId, role }
         )
@@ -661,6 +685,22 @@ export const spaceMembershipResolvers = {
       const record = result.records[0]
       const memberLabels = record.get('memberLabels')
       const isPersonType = memberLabels.includes('Person')
+      const roleSpaceName =
+        (record.get('spaceName') as string | null) || 'a space'
+
+      // Notify the affected member that their role changed (best-effort,
+      // self-notify-guarded). Raw ids stay in metadata, never the message.
+      createNotification({
+        recipientId: memberId,
+        actorId: currentUserId,
+        type: 'ROLE_CHANGE',
+        title: `Your role changed in "${roleSpaceName}"`,
+        message: `Your role in "${roleSpaceName}" was changed to ${role}`,
+        link: `/protected/dashboard/space/${spaceId}`,
+        metadata: { spaceId, role },
+      }).catch((err) =>
+        console.warn('Failed to create role-change notification:', err)
+      )
 
       return {
         success: true,

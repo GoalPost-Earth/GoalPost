@@ -15,6 +15,10 @@ import {
   documentTypeResolvers,
 } from './document-resolver'
 import { assistantFeedbackMutations } from './assistant-feedback-resolver'
+import {
+  notificationMutations,
+  notificationQueries,
+} from './notification-resolver'
 import { driver } from '@/lib/neo4j/driver'
 
 const resolvers = {
@@ -455,6 +459,7 @@ const resolvers = {
     ...activityLogMutations,
     ...documentMutations,
     ...assistantFeedbackMutations,
+    ...notificationMutations,
   },
   Query: {
     ...relatedPeopleResolvers,
@@ -462,6 +467,7 @@ const resolvers = {
     ...userLookupResolvers,
     ...activityLogQueries,
     ...documentQueries,
+    ...notificationQueries,
   },
 }
 

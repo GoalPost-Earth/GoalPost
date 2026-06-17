@@ -17,7 +17,7 @@ FieldContext ──HAS_WEAVE──▶ PromiseWeave
 PromiseWeave ──WEAVES──▶ FieldPulse
 PromiseWeave ──WOVEN_FOR──▶ Person
 PromiseWeave ──CREATED_BY──▶ Person
-FieldPulse ──CREATED_BY──▶ Person
+FieldPulse ──INITIATED_BY──▶ Person   (canonical author edge; CREATED_BY is a legacy alias — see src/lib/pulse-author.ts)
 FieldPulse ──HAS_CHUNK──▶ ConversationChunk
 Person ──CONNECTED_TO── Person (bidirectional)
 Log ──CREATED_BY──▶ Person
@@ -450,6 +450,56 @@ existing exemption for `ConversationChunk` writes.
 
 - `CREATED_BY` → Person
 - `LOGGED_FOR` → GoalPulse / ResourcePulse / FieldPulse
+
+### Notification
+
+**Neo4j Labels:** `["Notification"]`
+
+Recipient-addressed, per-person notification with server-side read state.
+**Distinct from `Log`:** a `Log` is the immutable, space-wide _audit trail_ of
+everything that happened (including your own actions); a `Notification` is owned
+by exactly one recipient, concerns _them specifically_ (you were invited, your
+role changed, a resonance was found on your pulse, you were mentioned), and
+carries its own read/unread flag. Notifications back the bell popover; the audit
+`Log` backs the dedicated activity-log page. Emission is decoupled (see
+`src/lib/notifications/create-notification.ts`) so an email/Resend channel can
+layer on later without touching call sites.
+
+| Field     | Type     | Notes                                                                |
+| --------- | -------- | -------------------------------------------------------------------- |
+| id        | string   | Required, unique (`ntf_<ts>_<rand>`)                                 |
+| type      | string   | Enum: `INVITE`, `ROLE_CHANGE`, `MEMBERSHIP`, `RESONANCE`, `MENTION`  |
+| title     | string   | Short headline, e.g. "New resonance on your pulse"                   |
+| message   | string   | Human-readable body. Never embed raw internal IDs (Rule 1).         |
+| link      | string   | Optional in-app route for click-through                             |
+| read      | boolean  | Server-side read state. Defaults `false`.                           |
+| readAt    | datetime | Set when first marked read; null while unread.                      |
+| createdAt | datetime | Immutable, set on create.                                           |
+| metadata  | string   | JSON-serialized optional contextual data (spaceId, pulseId, role…). |
+
+**Relationships:**
+
+- `NOTIFIES` → Person (the recipient; exactly one)
+- `TRIGGERED_BY` → Person (the actor who caused it; optional — system events
+  may have none)
+
+**Authorization:** readable ONLY by the recipient. Enforced via the
+`@authorization` filter on the `Notification` `@node` type
+(`{ where: { node: { recipient_SOME: { id_EQ: "$jwt.user.id" } } } }`), which
+gates the library-generated read query. The mark-read mutations additionally
+re-check `context.jwt.user.id` server-side (the recipient MATCH is the auth gate).
+
+**Emission rules:**
+
+- Never notify the actor about their own action — `createNotification` drops any
+  notification whose `recipientId === actorId`.
+- Marking a notification read does NOT write to the `Log` audit stream (avoids
+  audit-feed spam).
+
+**Lifecycle:** forward-only. No backfill of historical events; the bell shows
+nothing until new events fire. Read state is sticky — there is no "mark unread"
+in v1. `@mention` notifications are plumbed (`type: MENTION`) but have no
+production caller until a mention-authoring surface exists.
 
 ### Document
 

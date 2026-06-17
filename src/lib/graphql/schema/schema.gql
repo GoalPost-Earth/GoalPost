@@ -1484,6 +1484,59 @@ type Log @node(labels: ["Log"]) {
 }
 
 # ============================================================================
+# NOTIFICATION (recipient-addressed, per-person read state)
+# ============================================================================
+
+"""
+The kind of event that produced a Notification. MENTION is plumbed but has no
+production emitter until a mention-authoring surface exists.
+"""
+enum NotificationType {
+  INVITE
+  ROLE_CHANGE
+  MEMBERSHIP
+  RESONANCE
+  MENTION
+}
+
+"""
+A recipient-addressed notification with server-side read state.
+
+Distinct from Log: a Log is the immutable, space-wide audit trail of everything
+that happened; a Notification is owned by exactly one recipient, concerns them
+specifically, and is individually read/unread. Notifications back the bell
+popover; the audit Log backs the dedicated activity-log page.
+
+Created ONLY by the trusted server-side createNotification service (never via a
+client mutation), so the library-generated create/update/delete operations are
+disabled here. Read access is restricted to the single recipient via the
+@authorization filter below; the mark-read mutations re-check the JWT user id.
+"""
+type Notification
+  @node(labels: ["Notification"])
+  @mutation(operations: [])
+  @authorization(
+    # READ — a Notification is visible ONLY to its single recipient.
+    filter: [
+      { where: { node: { recipient_SOME: { id_EQ: "$jwt.user.id" } } } }
+    ]
+  ) {
+  id: ID! @id
+  type: NotificationType!
+  title: String!
+  message: String!
+  link: String
+  read: Boolean!
+  readAt: DateTime
+  createdAt: DateTime!
+    @timestamp(operations: [CREATE])
+    @settable(onCreate: true, onUpdate: false)
+  metadata: String
+  recipient: [Person!]! @relationship(type: "NOTIFIES", direction: OUT)
+  actor: [Person!]! @relationship(type: "TRIGGERED_BY", direction: OUT)
+}
+
+# ============================================================================
 # SEARCH LAYER (Cross-Entity Discovery)
 # ============================================================================
 
@@ -1870,6 +1923,31 @@ extend type Mutation {
     rating: AssistantFeedbackRating!
     userComment: String
   ): SubmitAssistantFeedbackResponse!
+
+  """
+  Mark a single notification read. No-op if already read or not owned by the
+  caller. Recipient-scoped: only the notification's recipient may mark it (the
+  resolver re-checks the JWT user id, and the recipient MATCH is the auth gate).
+  Does NOT write to the activity Log stream. Returns the caller's fresh unread
+  count.
+  """
+  markNotificationRead(id: ID!): MarkNotificationResponse!
+
+  """
+  Mark all of the current user's notifications read. Recipient-scoped via the
+  JWT user id. Returns the new unread count (0).
+  """
+  markAllNotificationsRead: MarkNotificationResponse!
+}
+
+"""
+Result of a mark-read mutation, carrying the caller's refreshed unread count so
+the bell badge can update without a second round-trip.
+"""
+type MarkNotificationResponse {
+  success: Boolean!
+  message: String!
+  unreadCount: Int!
 }
 
 # ============================================================================
@@ -2066,4 +2144,20 @@ type Query {
   Returns: Array of Log objects, sorted by recency
   """
   getMyRecentLogs(limit: Int = 30): [Log!]!
+
+  """
+  The current user's notifications, newest first. Recipient-scoped via the JWT
+  user id inside the resolver — the client never builds a recipient filter.
+  Backs the bell popover (distinct from the getMy*Logs audit queries above).
+
+  Args:
+    - limit: Maximum number of notifications to return (default: 20, max 100)
+  """
+  myNotifications(limit: Int = 20): [Notification!]!
+
+  """
+  Count of the current user's unread notifications. Recipient-scoped via the
+  JWT user id (Cypher count, coerced with Number()). Backs the bell badge.
+  """
+  unreadNotificationCount: Int!
 }

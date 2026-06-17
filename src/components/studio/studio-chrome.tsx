@@ -56,7 +56,7 @@ export const StudioChrome: FC = () => {
   const [showNotifications, setShowNotifications] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
-  const unreadCount = useUnreadCount(user?.id)
+  const unreadCount = useUnreadCount()
 
   const displayName =
     user?.firstName || user?.lastName
@@ -139,7 +139,7 @@ export const StudioChrome: FC = () => {
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 data-notification-button
-                className="hidden md:flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
+                className="flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
                 aria-label="Notifications"
               >
                 {isMounted && <NotificationIcon />}

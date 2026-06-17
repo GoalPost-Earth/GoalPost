@@ -113,6 +113,11 @@ async function initializeDatabase() {
       // /dev/ai-quality triage dashboard and the daily classify cron.
       `CREATE CONSTRAINT assistant_feedback_id IF NOT EXISTS
        FOR (n:AssistantFeedback) REQUIRE n.id IS UNIQUE`,
+      // Recipient-addressed notifications (bell popover). Distinct from Log
+      // (the immutable, space-wide audit trail): one Notification is owned by
+      // exactly one recipient and carries its own server-side read flag.
+      `CREATE CONSTRAINT notification_id IF NOT EXISTS
+       FOR (n:Notification) REQUIRE n.id IS UNIQUE`,
     ]
 
     // Drop deprecated standalone indexes that now conflict with a constraint.
@@ -256,6 +261,14 @@ async function initializeDatabase() {
        FOR (p:Person) ON (p.inviteTokenHash)`,
       `CREATE INDEX person_reset_token_hash IF NOT EXISTS
        FOR (p:Person) ON (p.resetTokenHash)`,
+      // Notification bell query is "my notifications, newest first" plus an
+      // unread count. Index createdAt (ORDER BY ... DESC) and read (the
+      // unread-count predicate) so the planner seeks rather than scanning the
+      // whole Notification label as it grows.
+      `CREATE INDEX notification_createdAt IF NOT EXISTS
+       FOR (n:Notification) ON (n.createdAt)`,
+      `CREATE INDEX notification_read IF NOT EXISTS
+       FOR (n:Notification) ON (n.read)`,
       // NOTE: no separate index on Person.email — the person_email_unique
       // constraint above provides its own backing index for the exact-match
       // email lookups (login, signup guard, findUserByEmail, invite).
