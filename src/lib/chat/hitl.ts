@@ -1150,10 +1150,10 @@ async function createPersonAuthorized(
   const documentId = input.documentId?.trim() || null
   const conversationThreadId = input.conversationThreadId?.trim() || null
 
-  if (!firstName || !lastName) {
+  if (!firstName) {
     return {
       success: false,
-      message: 'create_person requires both firstName and lastName.',
+      message: 'create_person requires at least a firstName.',
     }
   }
   if (!contextId) {
@@ -1176,7 +1176,10 @@ async function createPersonAuthorized(
     : null
   const personId = `person_${randomUUID()}`
   const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
-  const name = `${firstName} ${lastName}`
+  // lastName is optional — people are often known by a single name. The `name`
+  // field is the canonical display string used everywhere downstream, so it
+  // collapses to just the firstName when no surname was provided.
+  const name = lastName ? `${firstName} ${lastName}` : firstName
   const where = contextTitle || 'this field context'
   const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
   const description = `Added ${name} to ${where}${filenameSuffix}`

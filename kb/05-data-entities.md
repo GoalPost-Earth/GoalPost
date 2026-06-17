@@ -167,6 +167,7 @@ Same fields as MeSpace.
 
 - `HAS_CONTEXT` ← Space (MeSpace or WeSpace)
 - `HAS_PULSE` → FieldPulse
+- `HAS_PERSON` → Person (`:Person:PersonPulse`) — people attached to this context
 - `HAS_RESONANCE` → ResonanceLink
 - `CREATED_BY` → Person
 

@@ -338,7 +338,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   // One-shot approved write action (GOAL-261). Set when the user clicks Approve
   // on an inline HITL card; read and cleared by resolveBody so it rides exactly
   // one outgoing turn, then the backend executes it verbatim.
-  const pendingExecuteActionRef = useRef<ApprovalAction | null>(null)
+  const pendingExecuteActionRef = useRef<ApprovalAction[] | null>(null)
 
   const resolveBody = useCallback(() => {
     const snapshot = sessionContextRef.current
@@ -390,13 +390,14 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
           label: entry.label,
           visitedAt: entry.visitedAt,
         })),
-      // Read-and-clear: a queued approval rides exactly one request, then the
-      // ref resets so subsequent turns never re-execute it (mirrors the
-      // lastSentFocalRef mutation pattern above).
-      executeAction: (() => {
-        const action = pendingExecuteActionRef.current
+      // Read-and-clear: queued approvals ride exactly one request, then the
+      // ref resets so subsequent turns never re-execute them (mirrors the
+      // lastSentFocalRef mutation pattern above). Always an array — a single
+      // approval is a one-element batch; multi-select accept sends N together.
+      executeActions: (() => {
+        const actions = pendingExecuteActionRef.current
         pendingExecuteActionRef.current = null
-        return action
+        return actions
       })(),
     }
   }, [aiMode, threadId])
@@ -437,7 +438,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
 interface AssistantRuntimeInnerProps {
   initialMessages: UIMessage[]
   resolveBody: () => Record<string, unknown>
-  pendingActionRef: MutableRefObject<ApprovalAction | null>
+  pendingActionRef: MutableRefObject<ApprovalAction[] | null>
   children: ReactNode
 }
 

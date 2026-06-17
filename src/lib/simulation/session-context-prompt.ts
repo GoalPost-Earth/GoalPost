@@ -295,6 +295,34 @@ export function buildSystemPromptWithSessionContext(
       'them only if the user-visible answer depends on the failure.'
   )
 
+  // PULSE SUGGESTIONS (GOAL-272): emitted whenever an active FieldContext is
+  // present — the exact condition under which the suggest_pulses tool is
+  // registered (chat-tools.ts). (activeSpaceId is null on the field-context
+  // route, so we do NOT gate on it; the tool resolves the owning Space for
+  // dedup itself.) Keeping the directive runtime-conditional — like the
+  // focal-entity rules below (Rule 8, kb/07) — means the model is never told to
+  // call a tool that isn't in its tool list.
+  if (ctx.fieldContextId) {
+    const where = ctx.fieldContextTitle
+      ? `the field context "${ctx.fieldContextTitle}"`
+      : 'the active field context'
+    lines.push('')
+    lines.push(
+      'PULSE SUGGESTIONS: As the conversation unfolds, watch for things worth adding to ' +
+        `${where} — anything that fits its purpose. These can be any living-system type: ` +
+        'people (person), goals (goal), resources (resource), stories (story), care ' +
+        'practices (care), or core values (value). When the dialogue clearly surfaces a ' +
+        'concrete, substantive candidate that fits this field context and is not obviously ' +
+        'already in the space, call suggest_pulses with it (type + a concise name/title + a ' +
+        'short verbatim source quote; for non-person types also a one-line content). The user ' +
+        'gets one-tap cards to add or dismiss — you NEVER create anything yourself, and you ' +
+        'never need approval to call suggest_pulses (it only proposes). Be selective: do NOT ' +
+        'suggest vague references ("a friend", "something"), the current user, things that do ' +
+        "not fit this field context, or items already mentioned/added this conversation. " +
+        'After calling, keep your reply brief and refer to entities by name only (never an id).'
+    )
+  }
+
   if (ctx.focalEntity) {
     lines.push('')
     lines.push(

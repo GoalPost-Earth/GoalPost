@@ -206,6 +206,17 @@ export async function POST(req: Request) {
        * loop). Never replayed — the client clears it after a single send.
        */
       executeAction?: { tool: string; args: Record<string, unknown> } | null
+      /**
+       * Batch variant of executeAction (GOAL-272 multi-select pulse accept).
+       * Multiple approved (tool, args) executed together on ONE turn — firing a
+       * separate turn per action races assistant-ui's MessageRepository
+       * (duplicate message id → crash). A single approval arrives as a
+       * one-element array. Legacy `executeAction` (single) is still accepted.
+       */
+      executeActions?: Array<{
+        tool: string
+        args: Record<string, unknown>
+      }> | null
       threadId?: string
       /**
        * Which canvas surface the user is on right now (dashboard /
@@ -251,6 +262,7 @@ export async function POST(req: Request) {
       fieldContextId,
       approvedActions,
       executeAction,
+      executeActions,
       threadId,
       canvasView,
       canvasVisibleEntities,
@@ -297,42 +309,86 @@ export async function POST(req: Request) {
     // model as a note so it narrates the outcome without calling any tools; the
     // HITL gate still blocks any accidental re-call (it would just re-prompt,
     // never double-write).
+    // Normalize the single (legacy) and batch (GOAL-272) forms into one list of
+    // approved writes to run this turn. Each is executed verbatim; results are
+    // summarized into a single note the model narrates without calling tools.
+    const pendingWrites = (
+      executeActions && executeActions.length > 0
+        ? executeActions
+        : executeAction
+          ? [executeAction]
+          : []
+    ).filter((a) => a && isWriteToolName(a.tool))
+
     let executedActionNote: string | null = null
-    if (executeAction && isWriteToolName(executeAction.tool)) {
+    if (pendingWrites.length > 0) {
+      // Rule 1: a few service messages embed raw entity ids (e.g. "Update pulse
+      // pulse_…"). Scrub them before the text enters the model context — the
+      // model must never see, and so never echo, an internal id.
+      const stripIds = (text: string): string =>
+        text.replace(
+          /\b(?:pulse|context|ctx|me|ws|space|person|log|context_context)_[A-Za-z0-9-]+/g,
+          'that item'
+        )
+      const successes: string[] = []
+      const failures: string[] = []
       try {
         const graph = await initGraph()
-        const execResult = await executeAuthorizedWriteTool(
-          graph,
-          currentUserId,
-          executeAction.tool as WriteToolName,
-          executeAction.args || {}
-        )
-        const ok = execResult?.success === true
-        // Rule 1: a few service messages embed raw entity ids (e.g.
-        // "Update pulse pulse_…"). Scrub them before the text enters the model
-        // context — the model must never see, and so never echo, an internal id.
-        const stripIds = (text: string): string =>
-          text.replace(
-            /\b(?:pulse|context|ctx|me|ws|space|person|log|context_context)_[A-Za-z0-9-]+/g,
-            'that item'
-          )
-        const detail =
-          typeof execResult?.message === 'string' && execResult.message.trim()
-            ? stripIds(execResult.message.trim())
-            : ok
-              ? 'The change was saved.'
-              : 'The change could not be completed.'
-        executedActionNote = ok
-          ? `[ACTION COMPLETED] The user approved a change and it has just been executed successfully: ${detail} Confirm this to the user in one short, warm sentence. Do NOT call any tools — the action is already done.`
-          : `[ACTION NOT COMPLETED] The user approved a change but it could not be completed: ${detail} Briefly tell the user what happened and suggest a next step. Do NOT call a write tool again without a fresh confirmation.`
+        for (const action of pendingWrites) {
+          try {
+            const execResult = await executeAuthorizedWriteTool(
+              graph,
+              currentUserId,
+              action.tool as WriteToolName,
+              action.args || {}
+            )
+            const detail =
+              typeof execResult?.message === 'string' &&
+              execResult.message.trim()
+                ? stripIds(execResult.message.trim())
+                : execResult?.success === true
+                  ? 'The change was saved.'
+                  : 'The change could not be completed.'
+            if (execResult?.success === true) successes.push(detail)
+            else failures.push(detail)
+          } catch (error) {
+            console.warn(
+              '[Chat Simulation] executeAction failed:',
+              error instanceof Error ? error.message : error
+            )
+            failures.push('One change could not be completed due to an error.')
+          }
+        }
       } catch (error) {
         console.warn(
-          '[Chat Simulation] executeAction failed:',
+          '[Chat Simulation] executeAction batch failed:',
           error instanceof Error ? error.message : error
         )
-        executedActionNote =
-          '[ACTION NOT COMPLETED] The approved change could not be executed due to a system error. Apologize briefly and suggest trying again in a moment. Do NOT call any tools.'
+        failures.push('The changes could not be executed due to a system error.')
       }
+
+      // Build one note covering all writes so the model confirms in a single
+      // short reply (whether 1 or N succeeded, and whether any failed).
+      const parts: string[] = []
+      if (successes.length > 0) {
+        parts.push(
+          `[ACTIONS COMPLETED] The user approved ${successes.length} ${
+            successes.length === 1 ? 'change' : 'changes'
+          } and ${successes.length === 1 ? 'it has' : 'they have'} just been executed successfully: ${successes.join(
+            ' '
+          )} Confirm this to the user in one short, warm sentence (you may list what was added by name). Do NOT call any tools — the actions are already done.`
+        )
+      }
+      if (failures.length > 0) {
+        parts.push(
+          `[ACTIONS NOT COMPLETED] ${failures.length} ${
+            failures.length === 1 ? 'change' : 'changes'
+          } could not be completed: ${failures.join(
+            ' '
+          )} Briefly tell the user what happened and suggest a next step. Do NOT call a write tool again without a fresh confirmation.`
+        )
+      }
+      executedActionNote = parts.join('\n\n') || null
     }
 
     // Set mode if provided, otherwise use current mode

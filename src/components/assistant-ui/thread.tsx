@@ -17,6 +17,7 @@ import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 import { usePreferences } from '@/contexts/preferences-context'
 import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selector'
 import { WriteApprovalToolPart } from '@/components/chat/write-approval-tool-ui'
+import { PulseSuggestionsToolPart } from '@/components/chat/pulse-suggestions-tool-ui'
 import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
@@ -105,11 +106,20 @@ const AssistantMessage: FC = () => {
             // card when a write tool returns the pending-approval shape, and
             // nothing otherwise.
             //
+            // Pulse suggestions (GOAL-272): the read-only `suggest_pulses` tool
+            // gets a dedicated by_name renderer that shows inline add/dismiss
+            // person cards instead of staying invisible.
+            //
             // Read-tool status chips (Phase 2b): every read tool gets a live
             // "Searching pulses…" → "Searched pulses" chip so a multi-step
-            // lookup isn't a silent spinner.
+            // lookup isn't a silent spinner. Spread last; suggest_pulses keeps
+            // its richer renderer because object keys after it would override —
+            // so it's listed AFTER the spread to win.
             tools: {
-              by_name: { ...READ_TOOL_STATUS_COMPONENTS },
+              by_name: {
+                ...READ_TOOL_STATUS_COMPONENTS,
+                suggest_pulses: PulseSuggestionsToolPart,
+              },
               Fallback: WriteApprovalToolPart,
             },
           }}

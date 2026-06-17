@@ -252,6 +252,167 @@ async function getFocalRecord(
   }
 }
 
+/**
+ * Short, model-facing keys for the living-system entity types a conversation
+ * can surface. `person` maps to a PersonPulse (HAS_PERSON); every other key
+ * maps to a FieldPulse subtype (HAS_PULSE). Extensible per GOAL-267 — adding a
+ * new living-system type is a single entry here plus its create mapping.
+ */
+export type SuggestionTypeKey =
+  | 'person'
+  | 'goal'
+  | 'resource'
+  | 'story'
+  | 'care'
+  | 'value'
+
+interface SuggestionTypeConfig {
+  /** Which HITL write tool an accept dispatches. */
+  writeTool: 'create_person' | 'create_pulse'
+  /** create_pulse pulseType, or null for person (create_person). */
+  pulseType:
+    | 'GoalPulse'
+    | 'ResourcePulse'
+    | 'StoryPulse'
+    | 'CarePulse'
+    | 'CoreValuePulse'
+    | null
+  /** User-facing label for the type chip. */
+  label: string
+}
+
+export const SUGGESTION_TYPES: Record<SuggestionTypeKey, SuggestionTypeConfig> =
+  {
+    person: { writeTool: 'create_person', pulseType: null, label: 'person' },
+    goal: { writeTool: 'create_pulse', pulseType: 'GoalPulse', label: 'goal' },
+    resource: {
+      writeTool: 'create_pulse',
+      pulseType: 'ResourcePulse',
+      label: 'resource',
+    },
+    story: {
+      writeTool: 'create_pulse',
+      pulseType: 'StoryPulse',
+      label: 'story',
+    },
+    care: { writeTool: 'create_pulse', pulseType: 'CarePulse', label: 'care' },
+    value: {
+      writeTool: 'create_pulse',
+      pulseType: 'CoreValuePulse',
+      label: 'core value',
+    },
+  }
+
+/** Map a stored node label (e.g. "GoalPulse") to its short suggestion key. */
+function labelToSuggestionKey(label: string | null): SuggestionTypeKey | null {
+  switch (label) {
+    case 'person':
+      return 'person'
+    case 'GoalPulse':
+      return 'goal'
+    case 'ResourcePulse':
+      return 'resource'
+    case 'StoryPulse':
+      return 'story'
+    case 'CarePulse':
+      return 'care'
+    case 'CoreValuePulse':
+      return 'value'
+    default:
+      return null
+  }
+}
+
+/**
+ * A single conversation-derived pulse suggestion, ready for the inline
+ * suggestion card. `createArgs` is the exact, internal payload the UI hands
+ * back as a one-shot `executeAction` on accept — it carries the contextId
+ * (an internal artifact the card never renders) so the write is fully
+ * deterministic. Everything the user sees (`name`, `typeLabel`,
+ * `sourceSnippet`) is human-readable per Rule 1/3 (kb/07).
+ */
+export interface PulseSuggestion {
+  /** Human-readable display name — a person's name or a pulse title. */
+  name: string
+  /** Short living-system type key. */
+  type: SuggestionTypeKey
+  /** User-facing label for the type chip ("person", "goal", …). */
+  typeLabel: string
+  /** Short verbatim quote from the dialogue that triggered the suggestion. */
+  sourceSnippet: string | null
+  /** Which HITL write tool the card dispatches on accept. */
+  writeTool: 'create_person' | 'create_pulse'
+  /** Exact write args executed verbatim on accept (carries ids). */
+  createArgs: Record<string, unknown>
+}
+
+/**
+ * Collect canonical "type:name" keys for every pulse already living anywhere
+ * in the given Space — people (by name) and field pulses (by title), each
+ * tagged with its short type. Used to suppress duplicate suggestions (AC: name
+ * match + type match) before they reach the user.
+ *
+ * Space-wide on purpose: an entity already added under a sibling FieldContext
+ * is still a duplicate from the user's perspective. The caller authorizes the
+ * Space read via assertCanViewSpace before invoking this.
+ */
+async function fetchExistingPulseKeys(
+  graph: Neo4jGraph,
+  spaceId: string
+): Promise<Set<string>> {
+  const rows = await graph.query<{
+    ptype: string | null
+    pname: string | null
+  }>(
+    `
+    MATCH (s:Space {id: $spaceId})-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(p:Person:PersonPulse)
+    RETURN 'person' AS ptype, p.name AS pname
+    UNION
+    MATCH (s:Space {id: $spaceId})-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(fp:FieldPulse)
+    RETURN head([l IN labels(fp)
+      WHERE l IN ['GoalPulse', 'ResourcePulse', 'StoryPulse', 'CarePulse', 'CoreValuePulse']
+    ]) AS ptype, fp.title AS pname
+    `,
+    { spaceId }
+  )
+  const keys = new Set<string>()
+  for (const row of rows ?? []) {
+    const key = labelToSuggestionKey(row.ptype)
+    // Canonicalize here — the SAME helper the suggestion side uses — so a stored
+    // "Sarah  Chen" and a candidate "Sarah Chen" produce identical keys. Doing
+    // it in JS (not Cypher) keeps a single source of truth for the dedup form.
+    const name = canonicalizeName(row.pname ?? '')
+    if (key && name) keys.add(`${key}:${name}`)
+  }
+  return keys
+}
+
+function canonicalizeName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Resolve the parent Space id for a FieldContext. On the field-context route
+ * the request body carries activeFieldContextId but NOT activeSpaceId (the
+ * focal scope is the context, not the space), so dedup needs to derive the
+ * owning Space itself. Authorization is enforced separately by the caller via
+ * assertCanViewSpace on the resolved id.
+ */
+async function resolveSpaceIdForContext(
+  graph: Neo4jGraph,
+  fieldContextId: string
+): Promise<string | null> {
+  const rows = await graph.query<{ spaceId: string | null }>(
+    `
+    MATCH (s:Space)-[:HAS_CONTEXT]->(:FieldContext {id: $fieldContextId})
+    RETURN s.id AS spaceId
+    LIMIT 1
+    `,
+    { fieldContextId }
+  )
+  return rows?.[0]?.spaceId ?? null
+}
+
 export async function buildSimulationChatTools(
   context: SimulationChatToolContext = {
     currentUserId: null,
@@ -986,6 +1147,218 @@ export async function buildSimulationChatTools(
                 }
               } catch (error) {
                 return toErrorResult('Failed to fetch focal entity', error)
+              }
+            },
+          }),
+        }
+      : {}),
+
+    // suggest_pulses only makes sense when there is an active FieldContext to
+    // create into — without one there is nowhere to put an accepted pulse, so
+    // it is omitted entirely (Rule 4, kb/07). NOTE: on the field-context route
+    // the body carries activeFieldContextId but NOT activeSpaceId, so we gate
+    // on the context alone and resolve the owning Space for dedup at call time
+    // (resolveSpaceIdForContext). It is READ-ONLY: it never writes. It returns
+    // conversation-derived candidates (deduped Space-wide) for the inline
+    // suggestion card, which performs the actual create via the deterministic
+    // executeAction path.
+    ...(ctx.fieldContextId
+      ? {
+          suggest_pulses: tool({
+            description:
+              "Surface pulses worth creating from the ongoing conversation as one-tap suggestions the user can add to their active field context. Suggest ANY living-system type that fits this field context's purpose: people (person), goals (goal), resources (resource), stories (story), care practices (care), and core values (value). Call this PROACTIVELY — but only when the dialogue clearly surfaces a concrete, substantive candidate that fits the active field context and is not obviously already in the space. For each candidate give its type, a concise human name/title, and a short verbatim source quote; for non-person pulses also give a one-line `content`. Do NOT suggest vague references ('a friend', 'something'), the current user, duplicates, or filler just to be chatty. The user sees inline cards and chooses to add or dismiss each — you never create anything yourself. After calling, keep your reply brief (e.g. 'I noticed a few things worth adding — add them if you'd like.').",
+            inputSchema: z.object({
+              candidates: z
+                .array(
+                  z.object({
+                    type: z
+                      .enum([
+                        'person',
+                        'goal',
+                        'resource',
+                        'story',
+                        'care',
+                        'value',
+                      ])
+                      .describe(
+                        'Living-system type that best fits this candidate and the active field context.'
+                      ),
+                    name: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        'For person: full name ("Sarah Chen", "Tom"). For other types: a concise pulse title ("Ship the beta", "Community kitchen").'
+                      ),
+                    content: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'For non-person pulses: a one-line description/body. Ignored for person.'
+                      ),
+                    firstName: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Person only — given name, if cleanly separable. Optional; the name is split automatically when omitted.'
+                      ),
+                    lastName: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Person only — surname, if known. Optional; many people are known by a single name.'
+                      ),
+                    sourceSnippet: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Short verbatim quote from the conversation that surfaced this candidate (~140 chars). Helps the user recognise why it surfaced.'
+                      ),
+                  })
+                )
+                .min(1)
+                .max(6)
+                .describe('Up to 6 candidate pulses surfaced from the dialogue.'),
+            }),
+            execute: async ({
+              candidates,
+            }: {
+              candidates: Array<{
+                type: SuggestionTypeKey
+                name: string
+                content?: string
+                firstName?: string
+                lastName?: string
+                sourceSnippet?: string
+              }>
+            }) => {
+              logToolDispatch('suggest_pulses', ctx, {
+                count: candidates?.length ?? 0,
+              })
+              if (!ctx.currentUserId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'You need to be signed in before I can suggest pulses to add.',
+                }
+              }
+              if (!ctx.fieldContextId) {
+                // Defensive — the tool is only registered when a FieldContext
+                // is active, so this should be unreachable.
+                return {
+                  status: 'error' as const,
+                  message:
+                    'Open a field context first and I can suggest pulses to add to it.',
+                }
+              }
+              try {
+                const graph = await initGraph()
+                // On the field-context route activeSpaceId is null, so derive
+                // the owning Space from the field context for dedup.
+                const effectiveSpaceId =
+                  ctx.spaceId ||
+                  (await resolveSpaceIdForContext(graph, ctx.fieldContextId))
+                // Authorize the Space read (and, by extension, the create
+                // target) before touching its data.
+                if (effectiveSpaceId) {
+                  const canView = await assertCanViewSpace(ctx, effectiveSpaceId)
+                  if (canView !== true) return canView
+                }
+                const existing = effectiveSpaceId
+                  ? await fetchExistingPulseKeys(graph, effectiveSpaceId)
+                  : new Set<string>()
+                const seen = new Set<string>()
+                const suggestions: PulseSuggestion[] = []
+                let suppressedDuplicates = 0
+
+                for (const candidate of candidates) {
+                  // The Zod enum already constrains type; if an unknown value
+                  // ever slips through (schema drift), skip it rather than
+                  // silently mis-creating a PersonPulse from non-person content.
+                  const typeConfig = SUGGESTION_TYPES[candidate.type]
+                  if (!typeConfig) continue
+                  const typeKey = candidate.type
+                  const rawName = (candidate.name || '').trim()
+                  if (!rawName) continue
+
+                  const sourceSnippet =
+                    (candidate.sourceSnippet || '').trim().slice(0, 200) || null
+
+                  // Build the per-type display name + write payload.
+                  let displayName = rawName
+                  let createArgs: Record<string, unknown>
+
+                  if (typeKey === 'person') {
+                    const explicitFirst = (candidate.firstName || '').trim()
+                    const explicitLast = (candidate.lastName || '').trim()
+                    const parts = rawName.split(/\s+/).filter(Boolean)
+                    const firstName = explicitFirst || parts[0] || ''
+                    const lastName = explicitLast || parts.slice(1).join(' ')
+                    if (!firstName) continue
+                    // Use the SAME composed name the write persists
+                    // (createPersonAuthorized: name = firstName [+ lastName]) so
+                    // the card label, the created entity, and the dedup key all
+                    // agree.
+                    displayName = lastName
+                      ? `${firstName} ${lastName}`
+                      : firstName
+                    createArgs = {
+                      firstName,
+                      ...(lastName ? { lastName } : {}),
+                      contextId: ctx.fieldContextId,
+                      ...(ctx.fieldContextTitle
+                        ? { contextTitle: ctx.fieldContextTitle }
+                        : {}),
+                    }
+                  } else {
+                    const content = (candidate.content || '').trim()
+                    createArgs = {
+                      pulseType: typeConfig.pulseType,
+                      title: displayName,
+                      // createPulseAuthorized defaults content to the title when
+                      // empty (GOAL-261), so only forward a real description.
+                      ...(content ? { content } : {}),
+                      contextId: ctx.fieldContextId,
+                      ...(ctx.fieldContextTitle
+                        ? { contextTitle: ctx.fieldContextTitle }
+                        : {}),
+                      ...(ctx.spaceName ? { spaceName: ctx.spaceName } : {}),
+                    }
+                  }
+
+                  const dedupKey = `${typeKey}:${canonicalizeName(displayName)}`
+                  if (existing.has(dedupKey) || seen.has(dedupKey)) {
+                    suppressedDuplicates++
+                    continue
+                  }
+                  seen.add(dedupKey)
+
+                  suggestions.push({
+                    name: displayName,
+                    type: typeKey,
+                    typeLabel: typeConfig.label,
+                    sourceSnippet,
+                    writeTool: typeConfig.writeTool,
+                    createArgs,
+                  })
+                }
+
+                return {
+                  status: 'ok' as const,
+                  suggestions,
+                  suppressedDuplicates,
+                  fieldContextTitle: ctx.fieldContextTitle ?? null,
+                  message:
+                    suggestions.length > 0
+                      ? `Surfacing ${suggestions.length} ${
+                          suggestions.length === 1 ? 'suggestion' : 'suggestions'
+                        } you might want to add.`
+                      : 'No new pulses to suggest right now.',
+                }
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to prepare pulse suggestions',
+                  error
+                )
               }
             },
           }),
