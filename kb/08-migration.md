@@ -18,9 +18,11 @@ npm run seed:build-space
 
 The migration script (`scripts/migrate-prod-to-dev.ts`) is **idempotent**,
 **safe to re-run**, and **refuses to run if PROD and DEV point at the same
-URI**. It preserves every prod node and edge 1:1 (with the new ontology
-layered on top) and ends with a parity report that compares prod and dev
-counts label-by-label and relationship-by-relationship.
+URI**. It preserves every prod node and edge 1:1 (with the new ontology layered
+on top) **except pulses it cannot attribute to any owner**, which are dropped
+(Phase 5h — see below). It ends with a parity report that compares prod and dev
+counts label-by-label and relationship-by-relationship, accounting for the
+intentional drop.
 
 The seed script (`scripts/seed-build-space.ts`) runs against dev only and
 must be run **after** the migration — it references the four migrated
@@ -161,16 +163,23 @@ via one of `EMBRACES`, `MOTIVATED_BY`, `PROVIDES`, or `HAS_ACCESS_TO`
 
 **Personal-authorship attribution (Phase 5e2).** Pulse placement keys off
 `CREATED_BY`, but in prod a person's own pulses are not always linked that
-way — **core values especially are linked by
-`(Person)-[:EMBRACES|GUIDED_BY]->(CoreValue)`**, not `CREATED_BY`. Left
-unattributed, those pulses have no recognized creator and fall through to
-the *"Migrated (unattributed)"* fallback WeSpace instead of the owner's
-MeSpace. Phase 5e2 fixes this: for any creator-less, non-community pulse
-that an auth-capable `:User` embraces or is guided by, it wires
-`CREATED_BY` **and** `INITIATED_BY` from that user, so the standard
-MeSpace placement (5g) anchors it in their MeSpace. Community-owned pulses
-are excluded, so community `EMBRACES` still routes to the community
-WeSpace (community precedence preserved).
+way. They are often linked by one of:
+
+- `(Person)-[:EMBRACES|GUIDED_BY]->(CoreValue)` — values they hold,
+- `(Person)-[:PROVIDES]->(Resource)` — resources they offer,
+- `(Person)-[:MOTIVATED_BY]->(Goal)` — goals that drive them.
+
+All four are equally strong "this is mine" signals. Left unattributed, those
+pulses have no recognized creator and are **dropped as unattributable** (Phase
+5h) instead of anchoring in the owner's MeSpace. Phase 5e2 fixes this: for any
+creator-less, non-community pulse that an auth-capable `:User` embraces, is
+guided by, provides, or is motivated by, it wires `CREATED_BY` **and**
+`INITIATED_BY` from that user, so the standard MeSpace placement (5g) anchors it
+in their MeSpace. A pulse offered/embraced by several `:User`s gains one
+`CREATED_BY` per user; 5g anchors it in each MeSpace and 5g2 then splits it into
+independent per-owner copies. Community-owned pulses are excluded, so a community
+`EMBRACES`/`PROVIDES`/`MOTIVATED_BY` still routes to the community WeSpace
+(community precedence preserved).
 
 **`INITIATED_BY` mirror (Phase 5e3).** Migrated pulses carry only the prod
 `CREATED_BY` edge, but dev surfaces (e.g. "my pulses", resonance) read
@@ -179,18 +188,30 @@ WeSpace (community precedence preserved).
 seeded content behave identically. Neither 5e2 nor 5e3 breaks Phase 6
 parity (they only *add* edges; dev counts stay ≥ prod).
 
-**Authorship fallback (Phase 5h).** 5e2/5e3 only attribute pulses reachable
-from a `:User` via `EMBRACES`/`GUIDED_BY` or an existing `CREATED_BY`. A
-community/migrated pulse linked only to a `Community` (many core values and
-shared resources) still ends up with **no creator edge at all** — yet it lives
-in a real shared WeSpace. The UI attributes every pulse to a person ("who is
-this from?"), so such a pulse reads as orphaned. Phase 5h runs **after all
-`HAS_PULSE` anchoring** (so every pulse is in a context owned by someone) and
-attributes each remaining creator-less pulse to the **owner of its
-(deterministically first) space** — that space's steward — wiring both
-`INITIATED_BY` and `CREATED_BY`. Idempotent and add-only, so Phase 6 parity is
-preserved. Invariant after 5h: **every `FieldPulse` has an `INITIATED_BY`
-edge.**
+**Drop unattributable pulses (Phase 5h).** After community anchoring (5f),
+MeSpace anchoring (5g), and the per-owner split (5g2), any `FieldPulse` that
+still lacks a `HAS_PULSE` anchor cannot be tied to a real owner: no community
+owns it, and it has no creator-with-MeSpace (covers pulses with no creator at
+all, pulses whose only author is a non-`:User` `Person`, and pulses carrying
+only structural/log edges). **Per the migration directive these are LEFT OUT of
+dev — `DETACH DELETE`d, not parked in a fallback bucket.** Earlier revisions
+routed them into a *"Migrated (unattributed)"* fallback WeSpace; that bucket has
+been retired. Before deleting, Phase 5h records what it drops (count per node
+label and per incident relationship type) and hands those maps to Phase 6 so the
+parity report subtracts the intentional loss. This is the **one deliberate
+exception** to the "no data loss" mandate. Invariant after 5h: **no `FieldPulse`
+is left unanchored** (the drop targeted exactly that set; a nonzero remainder
+aborts the run as an anchoring bug).
+
+**Community authorship attribution (Phase 5i).** Every remaining pulse is now
+anchored, but a **community** pulse linked only to a `Community` (many core
+values and shared resources) can still have **no creator edge at all** — yet it
+lives in a real shared WeSpace, and the UI attributes every pulse to a person
+("who is this from?"). Phase 5i attributes each remaining creator-less pulse to
+the **owner of its (deterministically first) space** — that space's steward —
+wiring both `INITIATED_BY` and `CREATED_BY`. Personal MeSpace pulses already have
+a creator (5g keys off it), so in practice this only touches community-anchored
+pulses. Idempotent and add-only, so Phase 6 parity is preserved.
 
 **Shared-pulse split (Phase 5e2 placement + Phase 5g2).** A MeSpace is a
 *personal* space, so a pulse must not be a single node shared across several
@@ -234,25 +255,23 @@ The structures, in order:
      communities is anchored in both);
    - non-community pulses created by a user → that creator's MeSpace
      FieldContext (a pulse with multiple creators lands in each).
-6. **Fallback WeSpace** (`id = 'wespace_migrated_unattributed'`,
-   "Migrated (unattributed)") owned by and shared with the **migration
-   stewards** (`FALLBACK_STEWARD_EMAILS` in the script — currently JD Addy
-   `jaedagy@gmail.com` and Robert Damashek `robert.damashek@gmail.com`).
-   The first present steward (by list priority) owns the space; every
-   present steward — owner included — gets an `ADMIN` `SpaceMembership` so
-   they can triage and **move orphaned content into the right spaces**. If
-   no steward exists in the dataset, ownership falls back to the first
-   `:User` by id. Every pulse still unanchored after the steps above (true
-   orphans with no creator and no community, plus any pulse whose only
-   creator has no MeSpace) is wired into its FieldContext so nothing
-   disappears from the app.
+6. **Drop unattributable pulses** (Phase 5h). Every pulse still unanchored
+   after the steps above (true orphans with no creator and no community, plus
+   any pulse whose only creator has no MeSpace) is **`DETACH DELETE`d — left out
+   of dev**, not bucketed. There is no longer a "Migrated (unattributed)"
+   fallback WeSpace; that structure and `FALLBACK_STEWARD_EMAILS` have been
+   removed. The dropped counts (by label and rel-type) feed Phase 6 so parity
+   stays meaningful.
 
 The MeSpace is required for auth even when the user has no pulses
 (otherwise they can't log in cleanly).
 
 Current prod distribution (sanity check for the parity of Phase 5):
 ~104 pulses → creators' MeSpaces, ~18 community pulses → 2 community
-WeSpaces, ~42 orphans → the fallback WeSpace.
+WeSpaces, and the remaining unattributable pulses (previously ~42, now fewer
+since Phase 5e2 also attributes `PROVIDES`/`MOTIVATED_BY` from a `:User`) are
+**dropped**. Re-run the migration to see the exact dropped count in the Phase 6
+report; clean any stray edgeless fixtures with `npm run clean:orphan-pulses`.
 
 ### Phase 5b — known dev login password
 
@@ -345,16 +364,22 @@ seeds.
 
 ## Validating the result
 
-Phase 6 of the migration prints a parity report. Every prod label must
-have an equal or greater dev count, and every prod relationship type
-must have the exact same count in dev. Three "merge" rows verify the
-pulse renames:
+Phase 6 of the migration prints a parity report. Every prod label must have a
+dev count `≥ prod − dropped`, and every prod relationship type a dev count
+`≥ prod − dropped`, where `dropped` is the number of nodes/edges Phase 5h left
+out as unattributable (shown inline as `(−N dropped)`). The three "merge" rows
+verify the pulse renames and assert the exact identity `dev = prod + clones −
+dropped`:
 
 ```
-✓ StoryPulse merge: prod(CarePoint+CoreValue)=31, dev=31
-✓ GoalPulse merge: prod(Goal)=49, dev=49
-✓ ResourcePulse merge: prod(Resource)=84, dev=84
+✓ StoryPulse merge: prod(CarePoint+CoreValue)=31, dev=29 −2 dropped
+✓ GoalPulse merge: prod(Goal)=49, dev=48 −1 dropped
+✓ ResourcePulse merge: prod(Resource)=84, dev=80 −4 dropped
 ```
+
+(Counts illustrative — the actual dropped numbers print at run time. Before the
+"leave out unattributable" change, dev equalled prod exactly; now it is lower by
+the dropped count, and that gap is expected, not a failure.)
 
 If parity fails, the script exits non-zero. The most common failure
 modes:

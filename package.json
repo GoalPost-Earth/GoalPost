@@ -22,6 +22,7 @@
     "normalize:person-emails": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/normalize-person-emails.ts",
     "seed:build-space": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/seed-build-space.ts",
     "backfill:resonance-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-resonance-created-at.ts",
+    "clean:orphan-pulses": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/clean-dev-orphan-pulses.ts",
     "setup:env": "bash scripts/setup-environment.sh",
     "workers": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx src/lib/jobs/workers.ts"
   },

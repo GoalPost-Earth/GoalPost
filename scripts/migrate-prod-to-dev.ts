@@ -2,12 +2,16 @@
  * Migration Script: Production DB → Development DB (1:1)
  *
  * Mandate (from user):
- *   - No data loss. Every node and every relationship in prod must appear in dev.
+ *   - No data loss, with ONE deliberate exception: pulses that cannot be
+ *     attributed to any owner (no creator-with-MeSpace and no community) are
+ *     LEFT OUT of dev rather than parked in a fallback bucket (see Phase 5h).
+ *     Every other prod node and relationship must appear in dev. Phase 6's
+ *     parity report subtracts the intentional drop from its expectations.
  *   - Nothing is ever written to or deleted from prod.
- *   - Map legacy prod ontology (CarePoint / Resource / Goal / CoreValue) to the
- *     new dev pulse ontology (FieldPulse + StoryPulse / ResourcePulse /
- *     GoalPulse). Preserve original labels alongside the new ones so the prod
- *     provenance survives.
+ *   - Map legacy prod ontology to the new dev ontology: Resource / Goal /
+ *     CoreValue → pulses (FieldPulse + ResourcePulse / GoalPulse / StoryPulse),
+ *     and CarePoint → a PromiseWeave connector node (NOT a pulse). Preserve
+ *     original labels alongside the new ones so the prod provenance survives.
  *   - Do not invent data. The schema-driven adaptations are:
  *       - `name` is mirrored to both `content` and `title` on pulses (dev's
  *         pulse types require both as non-null; this is a 1:1 rename, not new
@@ -18,9 +22,10 @@
  *         backfilled to a neutral default, and modifiedAt mirrors createdAt.
  *         Without these the detail drawer query nulls out (non-null
  *         propagation) and shows "entity no longer available".
- *       - Personal-authorship attribution (Phase 5e2): person-embraced /
- *         guided core values gain CREATED_BY + INITIATED_BY so they anchor in
- *         the owner's MeSpace instead of the unattributed fallback.
+ *       - Personal-authorship attribution (Phase 5e2): pulses a :User embraces,
+ *         is guided by, provides, or is motivated by gain CREATED_BY +
+ *         INITIATED_BY so they anchor in the owner's MeSpace instead of being
+ *         dropped as unattributable.
  *       - Each migrated User gets a MeSpace (auth requirement; one per
  *         Person invariant), now with a FieldContext for pulse anchoring.
  *       - Each prod Community becomes a WeSpace (one per Community),
@@ -33,10 +38,10 @@
  *             person is preserved by the migrated CREATED_BY edge.
  *           · "Belongs to a community" = a Community points at the pulse via
  *             EMBRACES / MOTIVATED_BY / PROVIDES / HAS_ACCESS_TO in prod.
- *           · Pulses with no creator and no community (orphans) are placed
- *             in a single system fallback WeSpace ("Migrated (unattributed)")
- *             owned by and shared (ADMIN) with the migration stewards
- *             (FALLBACK_STEWARD_EMAILS) so they remain visible and movable.
+ *           · Pulses with no creator-with-MeSpace and no community (orphans /
+ *             unattributable) are LEFT OUT of dev entirely — DETACH DELETEd in
+ *             Phase 5h rather than parked in a fallback bucket. Phase 6 records
+ *             the intentional drop so parity stays meaningful.
  *
  * Behavior:
  *   - Wipes dev entirely, applies the schema (idempotent), then re-fills from
@@ -52,7 +57,7 @@
  *   - Person:User            → Person:User:LifeSensor:RelationalEntity
  *   - Person:Member:User     → Person:User:LifeSensor:RelationalEntity  (drop :Member)
  *   - Community              → Community:LifeSensor:RelationalEntity
- *   - CarePoint              → FieldPulse:StoryPulse:CarePoint
+ *   - CarePoint              → PromiseWeave:CarePoint   (connector, NOT a pulse)
  *   - CoreValue              → FieldPulse:StoryPulse:CoreValue
  *   - Goal                   → FieldPulse:GoalPulse:Goal
  *   - Resource               → FieldPulse:ResourcePulse:Resource
@@ -133,16 +138,28 @@ if (DEV_URI && PROD_URI && DEV_URI === PROD_URI) {
 }
 
 // Pulse-like prod labels and their dev label mappings.
-// We preserve the original prod label (`:CarePoint`, `:CoreValue`, etc.) on
-// each dev node alongside the new ontology labels — labels are free metadata
-// that future maintainers will need to trace which dev StoryPulse came from
-// a prod CarePoint vs a CoreValue (the new model merges the two).
+// We preserve the original prod label (`:CoreValue`, `:Goal`, etc.) on each dev
+// node alongside the new ontology labels — labels are free metadata that future
+// maintainers use to trace which dev StoryPulse came from a prod CoreValue, etc.
+//
+// NOTE: `CarePoint` is intentionally absent here — it is NOT a pulse. A prod
+// CarePoint becomes a `PromiseWeave` connector node (see CAREPOINT_WEAVE_LABELS
+// and Phase 5d), per the promise-weave design (kb/05-data-entities.md, GOAL-266).
 const PULSE_LABEL_MAP: Record<string, string[]> = {
-  CarePoint: ['FieldPulse', 'StoryPulse', 'CarePoint'],
   CoreValue: ['FieldPulse', 'StoryPulse', 'CoreValue'],
   Goal: ['FieldPulse', 'GoalPulse', 'Goal'],
   Resource: ['FieldPulse', 'ResourcePulse', 'Resource'],
 }
+
+// A prod `CarePoint` migrates to a bare `PromiseWeave` connector node (its own
+// label, like `ResonanceLink` — NOT a pulse subtype). The prod `:CarePoint`
+// label is kept for provenance. Phase 5d anchors each weave in its FieldContext
+// via `HAS_WEAVE` and wires `WOVEN_FOR` / `WEAVES`.
+const CAREPOINT_WEAVE_LABELS = ['PromiseWeave', 'CarePoint']
+
+// PromiseWeave lifecycle status seeded on migrated care points (spike §6.5:
+// proposed → active → fulfilled | dissolved). Migrated weaves start `active`.
+const DEFAULT_WEAVE_STATUS = 'active'
 
 // Default for ResourcePulse.resourceType — prod `Resource` nodes carry no
 // resource-type concept, but dev's schema declares `resourceType: String!`
@@ -188,17 +205,6 @@ const COMMUNITY_PULSE_RELS = [
   'HAS_ACCESS_TO',
 ]
 
-// Stewards of the fallback ("Migrated (unattributed)") WeSpace. Orphaned pulses
-// land here, and these users get ADMIN access so they can triage and move the
-// content into the right spaces. Matched by email (these accounts have no
-// `name` property). The first one present (in this order) owns the space; the
-// rest are added as ADMIN members. If none exist in the dataset, ownership
-// falls back to the first :User by id.
-const FALLBACK_STEWARD_EMAILS = [
-  'jaedagy@gmail.com', // JD Addy
-  'robert.damashek@gmail.com', // Robert Damashek
-]
-
 // Dedicated, single-member test WeSpace rebuilt on every migration run (Phase
 // 5c). Owned SOLELY by JD — no other members — so the team can exercise the
 // invite-by-email flow against a clean, isolated space. GoalPost visibility
@@ -240,8 +246,8 @@ function devLabelsForProdLabels(prodLabels: string[]): string[] {
         out.add('RelationalEntity')
         break
       case 'CarePoint':
-        out.add('FieldPulse')
-        out.add('StoryPulse')
+        // CarePoint is a PromiseWeave connector in dev, not a pulse.
+        out.add('PromiseWeave')
         out.add('CarePoint')
         break
       case 'CoreValue':
@@ -583,6 +589,25 @@ async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }
     console.log(`   ✓ ${prodLabel} → ${devLabels.join(':')} (${count})`)
   }
 
+  // 3c2. CarePoints → PromiseWeave connector nodes (NOT pulses). The dev
+  // `PromiseWeave` type carries `title`, `status`, `createdAt`, `modifiedAt`
+  // (no `content`/`resourceType`). Seed `title` from the legacy `name`, default
+  // `status` to active, and mirror `modifiedAt` from `createdAt` like the seed.
+  const carePoints = await migrateNodesByLabel(
+    'CarePoint',
+    CAREPOINT_WEAVE_LABELS,
+    (props) => {
+      const patch: Record<string, unknown> = {}
+      if (props.name != null && props.title == null) patch.title = props.name
+      if (props.status == null) patch.status = DEFAULT_WEAVE_STATUS
+      if (props.modifiedAt == null && props.createdAt != null)
+        patch.modifiedAt = props.createdAt
+      return patch
+    }
+  )
+  totals.CarePoint = carePoints
+  console.log(`   ✓ CarePoint → ${CAREPOINT_WEAVE_LABELS.join(':')} (${carePoints})`)
+
   // 3d. Pass-through nodes (Log, Session, Response, Movie, Test, ...).
   for (const label of PASSTHROUGH_LABELS) {
     const count = await migrateNodesByLabel(label, [label])
@@ -663,8 +688,8 @@ async function phase4_migrateRelationships(): Promise<Record<string, number>> {
  *   - A pulse that belongs to a community → anchored in that community's
  *     WeSpace. Its CREATED_BY edge (migrated in Phase 4) preserves the link
  *     back to the authoring Person.
- *   - Orphan pulses (no creator and no community) → anchored in a single
- *     system fallback WeSpace so they stay visible in the app.
+ *   - Orphan / unattributable pulses (no creator-with-MeSpace and no community)
+ *     → LEFT OUT of dev: DETACH DELETEd in Phase 5h, not bucketed anywhere.
  *
  * Structures built:
  *   - One MeSpace per :User (auth + one-per-Person invariant), each with a
@@ -673,7 +698,6 @@ async function phase4_migrateRelationships(): Promise<Record<string, number>> {
  *     community's creator, with members wired via the canonical
  *     Space -[:HAS_MEMBER]-> SpaceMembership -[:IS_MEMBER]-> Person pattern,
  *     and a FieldContext anchoring the community's pulses.
- *   - One fallback WeSpace (`wespace_migrated_unattributed`) for orphans.
  */
 async function phase5_buildDevStructure(): Promise<{
   meSpaces: number
@@ -681,6 +705,8 @@ async function phase5_buildDevStructure(): Promise<{
   contexts: number
   haspulse: number
   cloneCountsByLabel: Record<string, number>
+  droppedByLabel: Record<string, number>
+  droppedByRelType: Record<string, number>
 }> {
   console.log('━━━ Phase 5: Build dev Space/Context scaffolding ━━━')
   const session = devDriver.session()
@@ -807,16 +833,22 @@ async function phase5_buildDevStructure(): Promise<{
     console.log(`   ✓ Community FieldContexts created: ${toInt(wsCtx.records[0].get('c'))}`)
 
     // 5e2. Personal-authorship attribution. In prod, a person's own pulses are
-    // not always linked by CREATED_BY — core values especially are linked by
-    // (Person)-[:EMBRACES|GUIDED_BY]->(CoreValue). Without a recognized creator,
-    // 5g can't place them in the owner's MeSpace and they fall through to the
-    // "Migrated (unattributed)" fallback. Wire CREATED_BY + INITIATED_BY from the
-    // authoring :User so the existing 5g placement anchors them in that user's
+    // not always linked by CREATED_BY — they are often linked by one of:
+    //   (Person)-[:EMBRACES|GUIDED_BY]->(CoreValue)   — values they hold
+    //   (Person)-[:PROVIDES]->(Resource)              — resources they offer
+    //   (Person)-[:MOTIVATED_BY]->(Goal)              — goals that drive them
+    // All four are equally strong "this is mine" signals. Without a recognized
+    // creator, 5g can't place the pulse in the owner's MeSpace and it would be
+    // dropped as unattributable (5h). Wire CREATED_BY + INITIATED_BY from the
+    // authoring :User so the existing 5g placement anchors it in that user's
     // MeSpace. Only :User persons (auth-capable, guaranteed a MeSpace via 5a)
-    // qualify. Community-owned pulses are excluded so community EMBRACES still
-    // routes to the community WeSpace (5f) — i.e. community precedence is kept.
+    // qualify. Community-owned pulses are excluded so a community EMBRACES /
+    // PROVIDES / MOTIVATED_BY still routes to the community WeSpace (5f) — i.e.
+    // community precedence is kept. A pulse offered/embraced by several :Users
+    // gains one CREATED_BY per user; 5g anchors it in each MeSpace and 5g2 then
+    // splits it into independent per-owner copies (same path as shared values).
     const attributed = await session.run(
-      `MATCH (person:Person:User)-[:EMBRACES|GUIDED_BY]->(pulse:FieldPulse)
+      `MATCH (person:Person:User)-[:EMBRACES|GUIDED_BY|PROVIDES|MOTIVATED_BY]->(pulse:FieldPulse)
        WHERE NOT (pulse)-[:CREATED_BY]->(:Person)
          AND NOT EXISTS {
            MATCH (c:Community)-[r]->(pulse) WHERE type(r) IN $rels
@@ -828,7 +860,7 @@ async function phase5_buildDevStructure(): Promise<{
       { rels }
     )
     console.log(
-      `   ✓ Personal-authorship attributions (EMBRACES/GUIDED_BY → CREATED_BY): ${toInt(
+      `   ✓ Personal-authorship attributions (EMBRACES/GUIDED_BY/PROVIDES/MOTIVATED_BY → CREATED_BY): ${toInt(
         attributed.records[0].get('c')
       )}`
     )
@@ -974,113 +1006,77 @@ async function phase5_buildDevStructure(): Promise<{
       `   ✓ Shared MeSpace pulses split into per-owner copies: ${clonesCreated} clone(s)`
     )
 
-    // 5h. Fallback WeSpace for orphans (no creator-with-MeSpace, no community).
-    // Owned by and shared with the migration stewards (FALLBACK_STEWARD_EMAILS)
-    // so they have ADMIN access to triage and move orphaned content into the
-    // right spaces. Ownership goes to the first present steward (by priority);
-    // if none exist in the dataset, it falls back to the first :User by id.
-    const ownerRes = await session.run(
-      `MATCH (u:User)
-       WITH u ORDER BY u.id
-       WITH collect(u) AS users
-       RETURN [e IN $emails WHERE e IN [x IN users | x.email]][0] AS ownerEmail,
-              users[0].id AS firstUserId`,
-      { emails: FALLBACK_STEWARD_EMAILS }
-    )
-    const ownerEmail = ownerRes.records[0]?.get('ownerEmail') ?? null
-    const firstUserId = ownerRes.records[0]?.get('firstUserId') ?? null
+    // 5h. Drop unattributable pulses. Per the migration directive, a pulse we
+    // cannot tie to a real owner is LEFT OUT of dev rather than parked in a
+    // "Migrated (unattributed)" fallback bucket. After community anchoring (5f),
+    // MeSpace anchoring (5g) and the per-owner split (5g2), any FieldPulse that
+    // still lacks a HAS_PULSE anchor is exactly that set: no community owns it,
+    // and it has no creator-with-MeSpace (covers pulses with no creator at all,
+    // pulses whose only author is a non-:User Person, and pulses carrying only
+    // structural/log edges). We record what we drop — by node label and by
+    // incident relationship type — so Phase 6 can subtract the intentional loss
+    // from its parity expectations, then DETACH DELETE so no dangling edges
+    // remain. This INTENTIONALLY relaxes strict prod→dev parity for the dropped
+    // nodes/edges; Phase 6 accounts for it explicitly.
+    const UNANCHORED = `MATCH (pulse:FieldPulse)
+       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_PULSE]->(pulse) }`
 
-    const fb = await session.run(
-      `MATCH (owner:User)
-       WHERE ($ownerEmail IS NOT NULL AND owner.email = $ownerEmail)
-          OR ($ownerEmail IS NULL AND owner.id = $firstUserId)
-       WITH owner LIMIT 1
-       WHERE NOT EXISTS { MATCH (:WeSpace {id: 'wespace_migrated_unattributed'}) }
-       CREATE (ws:Space:WeSpace {
-         id: 'wespace_migrated_unattributed',
-         name: 'Migrated (unattributed)',
-         visibility: 'SHARED',
-         createdAt: datetime()
-       })
-       CREATE (owner)-[:OWNS]->(ws)
-       CREATE (ctx:FieldContext {
-         id: 'context_migrated_unattributed',
-         title: 'Unattributed migrated content',
-         createdAt: datetime()
-       })
-       CREATE (ws)-[:HAS_CONTEXT]->(ctx)
-       RETURN count(ws) AS c`,
-      { ownerEmail, firstUserId }
+    const droppedByLabel: Record<string, number> = {}
+    const dropLabelsRes = await session.run(
+      `${UNANCHORED}
+       UNWIND labels(pulse) AS label
+       RETURN label, count(*) AS c`
     )
-    const fallbackCreated = toInt(fb.records[0].get('c'))
-    weSpaces += fallbackCreated
-    contexts += fallbackCreated
-    if (fallbackCreated > 0) {
-      console.log(`   ✓ Fallback WeSpace created for orphans`)
+    for (const r of dropLabelsRes.records) {
+      droppedByLabel[r.get('label') as string] = toInt(r.get('c'))
     }
 
-    // Grant ADMIN to the owner plus every present steward, so each can move
-    // orphaned pulses out of the fallback space. Idempotent: SpaceMembership is
-    // MERGEd on its unique id, so a re-run (or owner == steward) never dupes.
-    if (fallbackCreated > 0) {
-      const adminRes = await session.run(
-        `MATCH (ws:WeSpace {id: 'wespace_migrated_unattributed'})
-         MATCH (owner:User)-[:OWNS]->(ws)
-         MATCH (u:User)
-         WHERE u = owner OR u.email IN $emails
-         MERGE (ws)-[:HAS_MEMBER]->(sm:SpaceMembership {
-           id: 'membership_' + u.id + '_migrated_unattributed'
-         })
-           ON CREATE SET sm.role = 'ADMIN', sm.addedAt = datetime()
-         MERGE (sm)-[:IS_MEMBER]->(u)
-         RETURN count(DISTINCT u) AS c`,
-        { emails: FALLBACK_STEWARD_EMAILS }
-      )
-      const admins = toInt(adminRes.records[0].get('c'))
-      console.log(`   ✓ Fallback WeSpace ADMINs (stewards): ${admins}`)
+    // count(DISTINCT rel) so an edge between two dropped pulses (traversed from
+    // both ends) is counted once — matching the single directed edge Phase 6's
+    // relationship parity counts and removes.
+    const droppedByRelType: Record<string, number> = {}
+    const dropRelsRes = await session.run(
+      `${UNANCHORED}
+       MATCH (pulse)-[rel]-()
+       RETURN type(rel) AS relType, count(DISTINCT rel) AS c`
+    )
+    for (const r of dropRelsRes.records) {
+      droppedByRelType[r.get('relType') as string] = toInt(r.get('c'))
     }
 
-    // Anchor every still-unanchored pulse (the 42 true orphans + any pulse
-    // whose only creator has no MeSpace) into the fallback context.
-    const hpOrphan = await session.run(
-      `MATCH (ctx:FieldContext {id: 'context_migrated_unattributed'})
-       MATCH (pulse:FieldPulse)
-       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_PULSE]->(pulse) }
-       MERGE (ctx)-[:HAS_PULSE]->(pulse)
-       RETURN count(*) AS c`
+    const dropRes = await session.run(
+      `${UNANCHORED}
+       DETACH DELETE pulse
+       RETURN count(pulse) AS c`
     )
-    const hpOrphans = toInt(hpOrphan.records[0].get('c'))
-    haspulse += hpOrphans
-    console.log(`   ✓ HAS_PULSE (orphan pulses → fallback): ${hpOrphans}`)
+    const dropped = toInt(dropRes.records[0].get('c'))
+    console.log(`   ✓ Unattributable pulses dropped (left out of dev): ${dropped}`)
 
-    // Invariant: after fallback anchoring, NO pulse may be left unanchored.
-    // The only way to reach here with stragglers is a degenerate prod with no
-    // :User (so the fallback space was never created). Fail loudly rather than
-    // let pulses silently disappear from the app — the migration's contract is
-    // "no data loss".
+    // Invariant: the drop targeted exactly the unanchored set, so zero pulses
+    // may remain unanchored. A nonzero count means a pulse was created without
+    // anchoring AND survived the drop filter (a logic bug) — fail loudly rather
+    // than ship a pulse the UI can never surface.
     const unanchored = await session.run(
-      `MATCH (pulse:FieldPulse)
-       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_PULSE]->(pulse) }
+      `${UNANCHORED}
        RETURN count(pulse) AS c`
     )
     const stragglers = toInt(unanchored.records[0].get('c'))
     if (stragglers > 0) {
       throw new Error(
-        `Phase 5 left ${stragglers} FieldPulse(s) unanchored (no HAS_PULSE). ` +
-          `The fallback WeSpace requires at least one :User to exist. Aborting ` +
-          `to avoid silently dropping pulses.`
+        `Phase 5 left ${stragglers} FieldPulse(s) unanchored after the ` +
+          `unattributable-drop step — anchoring logic bug. Aborting.`
       )
     }
 
-    // 5h. Authorship fallback. By now every pulse is anchored in a context (5f,
-    // 5g, fallback bucket above), but a community/migrated pulse can still lack
-    // ANY creator edge — in prod, core values and shared resources are often
-    // linked to a Community, not a Person, so 5e2's personal-authorship pass
-    // never reached them. The UI attributes every pulse to a person ("who is
-    // this from?"), so an unattributed pulse reads as orphaned in a shared
-    // space. Attribute each remaining creatorless pulse to the OWNER of its
-    // (deterministically first) space — the steward of that space. Idempotent:
-    // MERGE on both the canonical INITIATED_BY edge and the CREATED_BY alias.
+    // 5i. Community authorship attribution. Every remaining pulse is now anchored
+    // (5f community, 5g MeSpace), but a COMMUNITY pulse can still lack any creator
+    // edge — in prod, core values and shared resources are often linked to a
+    // Community, not a Person, so 5e2's personal-authorship pass never reached
+    // them. The UI attributes every pulse to a person ("who is this from?"), so
+    // attribute each remaining creatorless pulse to the OWNER of its
+    // (deterministically first) space — that space's steward. Personal MeSpace
+    // pulses already have a creator (5g keys off it), so in practice this only
+    // touches community-anchored pulses. Idempotent: MERGE on both edges.
     const ownerFallback = await session.run(
       `MATCH (pulse:FieldPulse)
        WHERE NOT EXISTS { (pulse)-[:INITIATED_BY|CREATED_BY]->(:Person) }
@@ -1095,13 +1091,21 @@ async function phase5_buildDevStructure(): Promise<{
        RETURN count(pulse) AS c`
     )
     console.log(
-      `   ✓ Authorship fallback (orphan pulses → space owner): ${toInt(
+      `   ✓ Community authorship attribution (creatorless pulses → space owner): ${toInt(
         ownerFallback.records[0].get('c')
       )}`
     )
 
     console.log('✅ Dev structure built\n')
-    return { meSpaces, weSpaces, contexts, haspulse, cloneCountsByLabel }
+    return {
+      meSpaces,
+      weSpaces,
+      contexts,
+      haspulse,
+      cloneCountsByLabel,
+      droppedByLabel,
+      droppedByRelType,
+    }
   } finally {
     await session.close()
   }
@@ -1243,64 +1247,113 @@ async function phase5c_buildJdTestSpace() {
 }
 
 /**
- * Phase 5d: Build starting-point PromiseWeaves for migrated care points.
+ * Phase 5d: Anchor migrated care-point PromiseWeaves.
  *
- * A migrated CarePoint (`:FieldPulse:StoryPulse:CarePoint`) often has no
- * navigable surrounding relationships in the source graph, so "show surrounding
- * relationships" in Bloom returns nothing (Goalpost sync 2026-06-12, Robert
- * Damashek; docs/promise-weave-design-spike.md, GOAL-266). A PromiseWeave is a
- * reified connector node — modelled exactly like ResonanceLink (its own node,
- * surfaced within a FieldContext via a HAS_WEAVE context edge analogous to
- * HAS_RESONANCE) — that gives each care point a starting-point neighbourhood.
+ * A prod CarePoint migrates (Phase 3c2) to a bare `:PromiseWeave:CarePoint`
+ * connector node — modelled exactly like ResonanceLink (its own node, NOT a
+ * pulse subtype), surfaced within a FieldContext via a HAS_WEAVE context edge
+ * analogous to HAS_RESONANCE (docs/promise-weave-design-spike.md, GOAL-266;
+ * decision: the care point *is* the weave, per GOAL sync 2026-06-16).
  *
- * Starting-point scope: each weave holds its care point (WEAVES), its creator
- * (WOVEN_FOR + CREATED_BY for attribution), anchored in the care point's already
- * resolved FieldContext via HAS_WEAVE (the visibility anchor). Placement and
- * authorship are settled by Phase 5 — every FieldPulse is anchored (HAS_PULSE)
- * and has a CREATED_BY edge after 5h — so we read context + creator off the
- * graph. A care point anchored in multiple contexts (community pulses, Phase
- * 5g2 clones) gets one weave per (care point, context) pair, keyed by a
- * deterministic id, so each Space sees its own weave.
+ * Because a weave is not a `:FieldPulse`, the Phase 5 pulse placement (HAS_PULSE)
+ * and the 5h unattributable drop never touch it. This phase gives weaves the
+ * parallel treatment pulses get:
+ *   - HAS_WEAVE placement (community context, else creator's MeSpace context),
+ *   - WOVEN_FOR (the person each weave concerns — mirrored from CREATED_BY),
+ *   - WEAVES → the care point's neighbour pulses (its navigable neighbourhood,
+ *     drawn from the already-migrated prod edges),
+ *   - and the same "leave out unattributable" drop: a weave with no community
+ *     and no creator-with-MeSpace has no HAS_WEAVE anchor and is DETACH DELETEd.
  *
- * Additive and idempotent: only NEW :PromiseWeave nodes and dev-only edges are
- * created (the reused CREATED_BY count only rises), so Phase 6 parity
- * (`dev >= prod`) still holds. Re-running MERGEs on the deterministic weave id.
+ * The `CREATED_BY` edge already exists (migrated 1:1 in Phase 4). HAS_WEAVE /
+ * WOVEN_FOR / WEAVES are dev-only edge types (absent in prod), so they never
+ * affect prod→dev relationship parity. Dropped-weave counts (by label and
+ * rel-type) are returned so Phase 6 subtracts them, exactly like the pulse drop.
  *
- * Like the other Phase 5 structural builds (MeSpace / WeSpace / FieldContext /
- * SpaceMembership), migration-built weaves write no activity :Log row — Log
- * capture belongs to the runtime user/AI authoring path (spike §4), not to this
- * bulk wipe-and-rebuild.
+ * Like the other Phase 5 structural builds, this writes no activity :Log row.
  */
-async function phase5d_buildPromiseWeaves(): Promise<number> {
-  console.log('━━━ Phase 5d: Build starting-point PromiseWeaves ━━━')
+async function phase5d_buildPromiseWeaves(): Promise<{
+  built: number
+  droppedByLabel: Record<string, number>
+  droppedByRelType: Record<string, number>
+}> {
+  console.log('━━━ Phase 5d: Anchor migrated care-point PromiseWeaves ━━━')
   const session = devDriver.session()
+  const rels = COMMUNITY_PULSE_RELS
   try {
-    const res = await session.run(
-      `MATCH (cp:CarePoint)
-       MATCH (ctx:FieldContext)-[:HAS_PULSE]->(cp)
-       OPTIONAL MATCH (cp)-[:CREATED_BY]->(c:Person)
-       // Deterministic creator pick (lowest id), matching the 5g2 convention.
-       WITH cp, ctx, c ORDER BY c.id
-       WITH cp, ctx, head(collect(c)) AS creator
-       MERGE (w:PromiseWeave { id: 'weave_' + cp.id + '_' + ctx.id })
-         ON CREATE SET
-           w.title = coalesce(cp.title, cp.content),
-           w.status = 'active',
-           w.createdAt = datetime()
+    // 5d-a. Community weaves → their community's FieldContext (HAS_WEAVE).
+    const wcom = await session.run(
+      `MATCH (c:Community)-[r]->(w:PromiseWeave)
+       WHERE type(r) IN $rels
+       MATCH (ws:WeSpace {id: 'wespace_' + c.id})-[:HAS_CONTEXT]->(ctx:FieldContext)
+       WITH DISTINCT ctx, w
        MERGE (ctx)-[:HAS_WEAVE]->(w)
-       MERGE (w)-[:WEAVES]->(cp)
-       FOREACH (_ IN CASE WHEN creator IS NULL THEN [] ELSE [1] END |
-         MERGE (w)-[:WOVEN_FOR]->(creator)
-         MERGE (w)-[:CREATED_BY]->(creator)
-       )
-       RETURN count(DISTINCT w) AS c`
+       RETURN count(*) AS c`,
+      { rels }
     )
-    const weaves = toInt(res.records[0].get('c'))
+    // 5d-b. Non-community weaves created by a user → that creator's MeSpace
+    // FieldContext. A weave with multiple creators anchors in each (shared
+    // connector — weaves are not split per-owner the way personal pulses are).
+    const wme = await session.run(
+      `MATCH (w:PromiseWeave)-[:CREATED_BY]->(:Person)-[:OWNS]->(:MeSpace)-[:HAS_CONTEXT]->(ctx:FieldContext)
+       WHERE NOT EXISTS { MATCH (cc:Community)-[r]->(w) WHERE type(r) IN $rels }
+       WITH DISTINCT ctx, w
+       MERGE (ctx)-[:HAS_WEAVE]->(w)
+       RETURN count(*) AS c`,
+      { rels }
+    )
+    const anchored = toInt(wcom.records[0].get('c')) + toInt(wme.records[0].get('c'))
+    console.log(`   ✓ HAS_WEAVE anchored (care-point weaves): ${anchored}`)
+
+    // 5d-c. Drop unattributable weaves (no community, no creator-with-MeSpace)
+    // — same rule as the Phase 5h pulse drop. Capture counts for Phase 6.
+    const UNANCHORED_W = `MATCH (w:PromiseWeave)
+       WHERE NOT EXISTS { MATCH (:FieldContext)-[:HAS_WEAVE]->(w) }`
+    const droppedByLabel: Record<string, number> = {}
+    const dl = await session.run(
+      `${UNANCHORED_W} UNWIND labels(w) AS label RETURN label, count(*) AS c`
+    )
+    for (const r of dl.records) {
+      droppedByLabel[r.get('label') as string] = toInt(r.get('c'))
+    }
+    const droppedByRelType: Record<string, number> = {}
+    const dr = await session.run(
+      `${UNANCHORED_W} MATCH (w)-[rel]-() RETURN type(rel) AS relType, count(DISTINCT rel) AS c`
+    )
+    for (const r of dr.records) {
+      droppedByRelType[r.get('relType') as string] = toInt(r.get('c'))
+    }
+    const dropRes = await session.run(
+      `${UNANCHORED_W} DETACH DELETE w RETURN count(w) AS c`
+    )
+    const droppedW = toInt(dropRes.records[0].get('c'))
+    if (droppedW > 0) {
+      console.log(`   ✓ Unattributable weaves dropped (left out of dev): ${droppedW}`)
+    }
+
+    // 5d-d. WOVEN_FOR mirror — the person each surviving weave concerns.
+    await session.run(
+      `MATCH (w:PromiseWeave)-[:CREATED_BY]->(p:Person)
+       WHERE NOT (w)-[:WOVEN_FOR]->(p)
+       MERGE (w)-[:WOVEN_FOR]->(p)`
+    )
+
+    // 5d-e. WEAVES → the care point's neighbour pulses (its navigable
+    // neighbourhood), drawn from the already-migrated prod relationships. Only
+    // :FieldPulse neighbours qualify (Goals/Resources the care point cares for,
+    // depends on, or enables) — this is what `PromiseWeave.weaves` surfaces.
+    const wv = await session.run(
+      `MATCH (w:PromiseWeave)-[nbr]-(p:FieldPulse)
+       WHERE type(nbr) IN ['CARES_FOR','DEPENDS_ON','ENABLES','ENABLED_BY','APPLIED_IN']
+       MERGE (w)-[:WEAVES]->(p)
+       RETURN count(DISTINCT p) AS c`
+    )
     console.log(
-      `   ✓ PromiseWeaves ensured (one per migrated care point in context): ${weaves}`
+      `   ✓ WEAVES neighbourhood edges wired: ${toInt(wv.records[0].get('c'))}`
     )
-    console.log('✅ PromiseWeaves built\n')
-    return weaves
+
+    console.log('✅ Care-point PromiseWeaves anchored\n')
+    return { built: anchored, droppedByLabel, droppedByRelType }
   } finally {
     await session.close()
   }
@@ -1313,7 +1366,9 @@ async function phase5d_buildPromiseWeaves(): Promise<number> {
 async function phase6_validate(
   expectedNodeTotals: Record<string, number>,
   relCounts: Record<string, number>,
-  cloneCountsByLabel: Record<string, number> = {}
+  cloneCountsByLabel: Record<string, number> = {},
+  droppedByLabel: Record<string, number> = {},
+  droppedByRelType: Record<string, number> = {}
 ): Promise<{ pass: boolean; report: string[] }> {
   console.log('━━━ Phase 6: Validate parity ━━━')
   const prodSession = prodDriver.session()
@@ -1321,11 +1376,10 @@ async function phase6_validate(
   const report: string[] = []
   let pass = true
   try {
-    // All prod labels are preserved in dev for traceability — no expected drops.
-    const DROPPED_LABELS = new Set<string>()
-
-    // Node parity: every prod label should have ≥ that many nodes in dev,
-    // except for labels we intentionally drop.
+    // Node parity: every prod label should have ≥ that many nodes in dev, minus
+    // any pulses we intentionally dropped in Phase 5h (unattributable). Dropped
+    // nodes keep their prod labels, so a label that appeared on N dropped pulses
+    // legitimately shows up to N fewer in dev.
     const labelsResult = await prodSession.run(
       `CALL db.labels() YIELD label
        CALL { WITH label MATCH (n) WHERE label IN labels(n) RETURN count(n) AS c }
@@ -1339,22 +1393,22 @@ async function phase6_validate(
         { label }
       )
       const devCount = toInt(devCountRes.records[0].get('c'))
-      if (DROPPED_LABELS.has(label)) {
-        report.push(
-          `  • ${label}: prod=${prodCount}, dev=${devCount} (intentionally dropped)`
-        )
-        continue
-      }
-      const ok = devCount >= prodCount
+      const dropped = droppedByLabel[label] ?? 0
+      const ok = devCount >= prodCount - dropped
       if (!ok) pass = false
       const mark = ok ? '✓' : '✗'
-      report.push(`  ${mark} ${label}: prod=${prodCount}, dev=${devCount}`)
+      const dropNote = dropped > 0 ? ` (−${dropped} dropped)` : ''
+      report.push(
+        `  ${mark} ${label}: prod=${prodCount}, dev=${devCount}${dropNote}`
+      )
     }
 
     // Validate the merged dev pulse counts match the sum of their prod
     // sources. This is the real "no data loss" check for the renamed nodes.
+    // NOTE: CarePoint is NOT here — it migrates to a PromiseWeave (checked
+    // separately below), so StoryPulse derives from CoreValue alone now.
     const pulseMerges = [
-      { devLabel: 'StoryPulse', prodLabels: ['CarePoint', 'CoreValue'] },
+      { devLabel: 'StoryPulse', prodLabels: ['CoreValue'] },
       { devLabel: 'GoalPulse', prodLabels: ['Goal'] },
       { devLabel: 'ResourcePulse', prodLabels: ['Resource'] },
     ]
@@ -1372,16 +1426,47 @@ async function phase6_validate(
       )
       const devTotal = toInt(devTotalResult.records[0].get('c'))
       // Phase 5g2 intentionally clones shared personal pulses (one copy per
-      // MeSpace owner), so dev legitimately exceeds the prod source count by
-      // the number of clones carrying this label.
+      // MeSpace owner), so dev gains `clones` of this label; Phase 5h drops
+      // unattributable pulses, so dev loses `dropped`. The exact expectation is
+      // prod + clones − dropped. IMPORTANT: count drops by the PROD source
+      // labels, not the dev pulse label — a dev DB shared with the test suite can
+      // hold dev-only fixture pulses (e.g. a `GoalPulse` with no `Goal` label)
+      // that Phase 5h also drops; those never came from prod and aren't in dev
+      // anymore, so they must not be subtracted from the prod→dev merge identity.
       const clones = cloneCountsByLabel[m.devLabel] ?? 0
-      const expected = prodTotal + clones
+      const dropped = m.prodLabels.reduce(
+        (n, l) => n + (droppedByLabel[l] ?? 0),
+        0
+      )
+      const expected = prodTotal + clones - dropped
       const ok = devTotal === expected
       if (!ok) pass = false
       const mark = ok ? '✓' : '✗'
-      const cloneNote = clones > 0 ? ` (+${clones} per-owner clone(s))` : ''
+      const cloneNote = clones > 0 ? ` +${clones} clone(s)` : ''
+      const dropNote = dropped > 0 ? ` −${dropped} dropped` : ''
       report.push(
-        `  ${mark} ${m.devLabel} merge: prod(${m.prodLabels.join('+')})=${prodTotal}, dev=${devTotal}${cloneNote}`
+        `  ${mark} ${m.devLabel} merge: prod(${m.prodLabels.join('+')})=${prodTotal}, dev=${devTotal}${cloneNote}${dropNote}`
+      )
+    }
+
+    // PromiseWeave: a prod CarePoint migrates 1:1 to a `:PromiseWeave:CarePoint`
+    // connector (Phase 3c2 / 5d), minus any dropped as unattributable. dev
+    // PromiseWeave count must equal prod CarePoint count − dropped.
+    {
+      const prodCpRes = await prodSession.run(
+        `MATCH (n:CarePoint) RETURN count(n) AS c`
+      )
+      const prodCp = toInt(prodCpRes.records[0].get('c'))
+      const devPwRes = await devSession.run(
+        `MATCH (n:PromiseWeave) RETURN count(n) AS c`
+      )
+      const devPw = toInt(devPwRes.records[0].get('c'))
+      const dropped = droppedByLabel['PromiseWeave'] ?? 0
+      const ok = devPw === prodCp - dropped
+      if (!ok) pass = false
+      const dropNote = dropped > 0 ? ` −${dropped} dropped` : ''
+      report.push(
+        `  ${ok ? '✓' : '✗'} PromiseWeave: prod(CarePoint)=${prodCp}, dev=${devPw}${dropNote}`
       )
     }
 
@@ -1400,11 +1485,35 @@ async function phase6_validate(
         { relType }
       )
       const devCount = toInt(devCountRes.records[0].get('c'))
-      const ok = devCount >= prodCount
+      // DETACH DELETE in Phase 5h removes edges incident to dropped pulses, so
+      // dev legitimately loses `dropped` edges of this type.
+      const dropped = droppedByRelType[relType] ?? 0
+      const ok = devCount >= prodCount - dropped
       if (!ok) pass = false
       const mark = ok ? '✓' : '✗'
-      report.push(`  ${mark} :${relType}: prod=${prodCount}, dev=${devCount}`)
+      const dropNote = dropped > 0 ? ` (−${dropped} dropped)` : ''
+      report.push(
+        `  ${mark} :${relType}: prod=${prodCount}, dev=${devCount}${dropNote}`
+      )
     }
+
+    // Invariant: no orphaned (edgeless) FieldPulse. A correct migration either
+    // anchors every pulse with a HAS_PULSE edge (Phase 5f/5g) or drops the
+    // unanchored ones (Phase 5h), so any FieldPulse with zero relationships is
+    // dev cruft (a stray test/spike fixture) that slipped past the wipe. It
+    // pollutes pulse counts and is unreachable in the app — fail parity so it
+    // can't masquerade as migrated content. Clean stray fixtures with
+    // `npm run clean:orphan-pulses`.
+    report.push('')
+    const orphanRes = await devSession.run(
+      `MATCH (p:FieldPulse) WHERE NOT (p)--() RETURN count(p) AS c`
+    )
+    const orphanPulses = toInt(orphanRes.records[0].get('c'))
+    const orphanOk = orphanPulses === 0
+    if (!orphanOk) pass = false
+    report.push(
+      `  ${orphanOk ? '✓' : '✗'} No orphaned (edgeless) FieldPulse: ${orphanPulses}`
+    )
 
     // Suppress unused-warning for the prepared inputs.
     void expectedNodeTotals
@@ -1428,11 +1537,25 @@ async function main() {
     await phase2_applySchema()
     const { totals } = await phase3_migrateNodes()
     const relCounts = await phase4_migrateRelationships()
-    const { cloneCountsByLabel } = await phase5_buildDevStructure()
+    const { cloneCountsByLabel, droppedByLabel, droppedByRelType } =
+      await phase5_buildDevStructure()
     await phase5b_setDevLoginPassword()
     await phase5c_buildJdTestSpace()
-    await phase5d_buildPromiseWeaves()
-    const { pass } = await phase6_validate(totals, relCounts, cloneCountsByLabel)
+    const weave = await phase5d_buildPromiseWeaves()
+    // Fold the care-point-weave drops into the same maps Phase 6 subtracts, so
+    // parity accounts for both the pulse drop (5h) and the weave drop (5d).
+    const mergeCounts = (a: Record<string, number>, b: Record<string, number>) => {
+      for (const [k, v] of Object.entries(b)) a[k] = (a[k] ?? 0) + v
+    }
+    mergeCounts(droppedByLabel, weave.droppedByLabel)
+    mergeCounts(droppedByRelType, weave.droppedByRelType)
+    const { pass } = await phase6_validate(
+      totals,
+      relCounts,
+      cloneCountsByLabel,
+      droppedByLabel,
+      droppedByRelType
+    )
 
     if (!pass) {
       console.log(
