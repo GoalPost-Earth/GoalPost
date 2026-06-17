@@ -1,4 +1,4 @@
-import { tool } from 'ai'
+import { tool, type Tool, type ToolSet } from 'ai'
 import { z } from 'zod'
 import { initGraph } from '@/modules/graph'
 import { getLangChainEmbeddings } from '@/lib/llm/adapters/langchain-adapter'
@@ -413,6 +413,87 @@ async function resolveSpaceIdForContext(
   return rows?.[0]?.spaceId ?? null
 }
 
+/**
+ * Hard ceiling for any single tool call (Phase 3). Generous on purpose: normal
+ * tool calls finish in well under a second, so this only trips on a genuinely
+ * hung query (a runaway Cypher, a stuck connection). Without it, one stuck tool
+ * stalls the whole turn until the route's 60s maxDuration — a frozen UI. With
+ * it, the call resolves to a narratable tool-error and the model recovers.
+ *
+ * Safe for the rare write that runs inside a tool body (an already-approved
+ * runWriteTool): the timeout uses Promise.race and never aborts the orphaned
+ * promise, and the underlying Neo4j writes auto-commit per statement — so an
+ * orphaned write still lands atomically server-side, never half-committed. The
+ * only anomaly would be narrating "took too long" while the write actually
+ * succeeded, which is theoretical at 25s.
+ */
+const TOOL_TIMEOUT_MS = 25_000
+
+/** Only log tool calls slower than this — surfaces the ones worth a look
+ * (this is also the per-tool duration data Phase 0 didn't capture) without
+ * spamming a line for every sub-second call. */
+const TOOL_SLOW_LOG_MS = 1_000
+
+/**
+ * Wrap every tool's `execute` with a generous timeout + a slow-call duration
+ * log. Behaviour-preserving on the happy path: on success the original result
+ * passes straight through. On timeout it resolves (never rejects) to the same
+ * `{ status: 'error', message }` shape tools already return, so the model
+ * narrates it like any other tool failure. A post-timeout rejection from the
+ * orphaned promise is swallowed into a tool-error to avoid an unhandled
+ * rejection.
+ *
+ * Assumes promise-returning tools. AI SDK also supports an execute that returns
+ * an AsyncIterable (streamed/preliminary output); a tool written that way would
+ * be collapsed to a single awaited value here. No current tool streams, but a
+ * future streaming tool would need to bypass this wrapper.
+ */
+function instrumentTools<T extends ToolSet>(tools: T): T {
+  const out: Record<string, Tool> = {}
+  for (const [name, definition] of Object.entries(tools)) {
+    const original = (definition as Tool).execute
+    if (typeof original !== 'function') {
+      out[name] = definition as Tool
+      continue
+    }
+    const exec = original as (
+      args: unknown,
+      options: unknown
+    ) => Promise<unknown>
+    out[name] = {
+      ...(definition as Tool),
+      execute: async (args: unknown, options: unknown) => {
+        const startedAt = performance.now()
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const guarded = exec(args, options).catch((error) =>
+          toErrorResult(`Tool ${name} failed`, error)
+        )
+        try {
+          const timeout = new Promise<ToolError>((resolve) => {
+            timer = setTimeout(
+              () =>
+                resolve({
+                  status: 'error',
+                  message:
+                    'This step took too long and was stopped. Tell the user briefly and suggest narrowing or retrying — do not silently give up.',
+                }),
+              TOOL_TIMEOUT_MS
+            )
+          })
+          return await Promise.race([guarded, timeout])
+        } finally {
+          if (timer) clearTimeout(timer)
+          const ms = Math.round(performance.now() - startedAt)
+          if (ms >= TOOL_SLOW_LOG_MS) {
+            console.log(`[Chat API] tool ${name} took ${ms}ms`)
+          }
+        }
+      },
+    } as Tool
+  }
+  return out as T
+}
+
 export async function buildSimulationChatTools(
   context: SimulationChatToolContext = {
     currentUserId: null,
@@ -430,7 +511,7 @@ export async function buildSimulationChatTools(
   const embeddings = getLangChainEmbeddings()
   const ctx = context
 
-  return {
+  return instrumentTools({
     get_my_spaces: tool({
       description:
         "Get every Space (MeSpace or WeSpace) the current authenticated user is a member of or owns. Use this when the user mentions 'my spaces' / 'my space' / 'my pulses' and no activeSpaceId is set.",
@@ -1422,5 +1503,5 @@ export async function buildSimulationChatTools(
         }
       },
     }),
-  }
+  })
 }
