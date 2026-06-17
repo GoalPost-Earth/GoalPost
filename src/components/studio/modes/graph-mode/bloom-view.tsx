@@ -34,6 +34,8 @@ import {
   STRUCTURAL_EDGE_COLOR,
   RESONANCE_EDGE_COLOR,
   INITIATED_EDGE_COLOR,
+  WEAVE_NODE_COLOR,
+  WEAVE_EDGE_COLOR,
 } from './bloom-palette'
 import {
   useBloomOverlay,
@@ -113,6 +115,7 @@ const LABEL_TO_INFO_TYPE: Record<string, InfoEntityType> = {
   PersonPulse: 'Person',
   Document: 'Document',
   ResonanceLink: 'ResonanceLink',
+  PromiseWeave: 'PromiseWeave',
 }
 
 function labelsToInfoEntityType(
@@ -196,6 +199,8 @@ function colorToInfoEntityType(
     case '#d8b4fe':
     case '#e9d5ff':
       return 'ResonanceLink'
+    case '#2dd4bf':
+      return 'PromiseWeave'
     default:
       return null
   }
@@ -283,6 +288,15 @@ interface ResonanceRecord {
   sourceId: string
   targetId: string
   label: string
+}
+
+// A PromiseWeave rendered in-field: the connector node plus the ids of the
+// pulses it weaves. Unlike a resonance (a pulse↔pulse edge), a weave is its
+// own hub node with WEAVES spokes to each pulse it connects.
+interface WeaveRecord {
+  id: string
+  name: string
+  wovenPulseIds: string[]
 }
 
 interface PersonRecord {
@@ -553,6 +567,24 @@ export const BloomView: FC = () => {
     })
   }, [inField, fieldDetailsData])
 
+  // PromiseWeaves anchored in the active field. Each becomes a teal hub node
+  // with WEAVES spokes to the pulses it connects (built in the memos below).
+  // Read off the same GET_FIELD_CONTEXT_DETAILS payload as pulses/resonances.
+  const weaves: WeaveRecord[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0]
+    const list = (context?.weaves ?? []) as Array<{
+      id: string
+      title?: string | null
+      weaves?: Array<{ id?: string | null } | null> | null
+    }>
+    return list.map((w) => ({
+      id: w.id,
+      name: w.title || 'Promise weave',
+      wovenPulseIds: (w.weaves ?? []).flatMap((p) => (p?.id ? [p.id] : [])),
+    }))
+  }, [inField, fieldDetailsData])
+
   // The current user — owner of the (single) MeSpace per the one-MeSpace
   // invariant. Drives the root "You" hub node and its owns/member edges out
   // to every space.
@@ -654,7 +686,16 @@ export const BloomView: FC = () => {
             size: PERSON_SIZE,
           }) as Node
       )
-      return [...pulseNodes, ...personNodes]
+      const weaveNodes = weaves.map(
+        (weave) =>
+          ({
+            id: weave.id,
+            caption: weave.name,
+            color: WEAVE_NODE_COLOR,
+            size: PULSE_SIZE,
+          }) as Node
+      )
+      return [...pulseNodes, ...personNodes, ...weaveNodes]
     }
     if (inSpace) {
       // Hub-and-spoke: the space anchors the cluster, its field contexts and
@@ -716,6 +757,7 @@ export const BloomView: FC = () => {
     inField,
     pulses,
     persons,
+    weaves,
     inSpace,
     fieldContexts,
     spaces,
@@ -821,6 +863,23 @@ export const BloomView: FC = () => {
         } as Relationship)
       }
 
+      // WEAVES — each PromiseWeave hub → the pulses it connects. The weave node
+      // is always rendered (added to `nodes` above), so we only guard the pulse
+      // endpoint against the visible set to avoid a dangling spoke.
+      for (const w of weaves) {
+        for (const pid of w.wovenPulseIds) {
+          if (!visibleIds.has(pid)) continue
+          edges.push({
+            id: `weaves-${w.id}-${pid}`,
+            from: w.id,
+            to: pid,
+            caption: 'weaves',
+            color: WEAVE_EDGE_COLOR,
+            width: 1.5,
+          } as Relationship)
+        }
+      }
+
       return dedupe(edges)
     }
     if (inSpace && spaceAnchor) {
@@ -892,6 +951,7 @@ export const BloomView: FC = () => {
     resonances,
     pulses,
     persons,
+    weaves,
     fieldDetailsData,
     inSpace,
     spaceAnchor,
@@ -1018,6 +1078,13 @@ export const BloomView: FC = () => {
             source: 'manual',
           })
           dispatchOpenInfoDrawer({ type: 'Person', id: person.id, label })
+          return
+        }
+        // PromiseWeave hub — open the read-only weave drawer. Not a focal
+        // entity type (drill-into-weave is a later slice), so no setFocalEntity.
+        const weave = weaves.find((w) => w.id === id)
+        if (weave) {
+          dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
         }
         return
       }
@@ -1078,6 +1145,7 @@ export const BloomView: FC = () => {
       inField,
       pulses,
       persons,
+      weaves,
       inSpace,
       spaceAnchor,
       inSpacePeople,
@@ -1403,7 +1471,7 @@ export const BloomView: FC = () => {
     !overlay &&
     !loading &&
     (inField
-      ? pulses.length === 0
+      ? pulses.length === 0 && weaves.length === 0
       : inSpace
         ? fieldContexts.length === 0
         : spaces.length === 0)

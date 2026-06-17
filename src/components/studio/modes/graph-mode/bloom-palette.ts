@@ -45,6 +45,11 @@ export const PULSE_COLOR: Record<
 // so a clicked person resolves consistently however it arrived on the canvas.
 export const PERSON_COLOR = '#f9a8d4'
 
+// PromiseWeave connector nodes — teal, deliberately outside the violet
+// resonance/story/coreValue cluster so a weave reads as its own kind of
+// connector. Migrated care points surface here (see kb/05-data-entities.md).
+export const WEAVE_NODE_COLOR = '#2dd4bf'
+
 // Slate scaffolding color for the hub-and-spoke structural edges (owns /
 // member / has). Tuned for the always-dark canvas, deliberately fainter than
 // the resonance violet so the connective tissue reads as secondary.
@@ -55,3 +60,7 @@ export const STRUCTURAL_EDGE_COLOR = 'rgba(148, 163, 184, 0.40)'
 // INITIATED_BY is the faint white initiator connector.
 export const RESONANCE_EDGE_COLOR = 'rgba(167, 139, 250, 0.55)'
 export const INITIATED_EDGE_COLOR = 'rgba(255, 255, 255, 0.22)'
+// WEAVES — the teal connector edges from a PromiseWeave hub out to the
+// pulses it weaves. Matches WEAVE_NODE_COLOR so the hub + its spokes read as
+// one unit, distinct from the resonance violet.
+export const WEAVE_EDGE_COLOR = 'rgba(45, 212, 191, 0.55)'

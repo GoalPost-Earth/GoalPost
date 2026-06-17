@@ -381,6 +381,7 @@ export default function FieldContextDetailsPage() {
       new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
   )
   const resonances = context?.resonancesInContext || []
+  const weaves = context?.weaves || []
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -1391,6 +1392,7 @@ export default function FieldContextDetailsPage() {
             createdDate={createdDate}
             pulses={pulses}
             resonances={resonances}
+            weaves={weaves}
             people={people}
             space={space}
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
@@ -1411,6 +1413,12 @@ export default function FieldContextDetailsPage() {
             onPersonClick={handlePersonClick}
             onPulseClick={(pulseId) =>
               dispatchOpenInfoDrawer({ type: 'Pulse', id: pulseId })
+            }
+            onWeaveClick={(weaveId) =>
+              dispatchOpenInfoDrawer({
+                type: 'PromiseWeave',
+                id: weaveId,
+              })
             }
             onResonanceClick={(resonanceId) =>
               dispatchOpenInfoDrawer({

@@ -29,6 +29,7 @@ import { PersonDetailsBody } from './person-details-body'
 import { FieldContextDetailsBody } from './field-context-details-body'
 import { DocumentDetailsBody } from './document-details-body'
 import { ResonanceDetailsBody } from './resonance-details-body'
+import { PromiseWeaveDetailsBody } from './promise-weave-details-body'
 
 export { dispatchOpenInfoDrawer, dispatchCloseInfoDrawer } from './types'
 export type { InfoEntity, InfoEntityType } from './types'
@@ -41,6 +42,7 @@ const TYPE_LABEL: Record<InfoEntityType, string> = {
   Person: 'Person',
   Document: 'Document',
   ResonanceLink: 'Resonance',
+  PromiseWeave: 'Promise weave',
 }
 
 /**
@@ -209,6 +211,8 @@ const DrawerBody: FC<{ entity: InfoEntity; onClose: () => void }> = ({
       return <DocumentDetailsBody documentId={entity.id} />
     case 'ResonanceLink':
       return <ResonanceDetailsBody resonanceId={entity.id} />
+    case 'PromiseWeave':
+      return <PromiseWeaveDetailsBody weaveId={entity.id} />
   }
 }
 

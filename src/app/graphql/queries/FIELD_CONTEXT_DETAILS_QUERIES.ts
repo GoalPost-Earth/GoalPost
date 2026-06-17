@@ -184,6 +184,23 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
           }
         }
       }
+      weaves {
+        id
+        title
+        status
+        createdAt
+        weaves {
+          id
+          __typename
+          title
+        }
+        wovenFor {
+          id
+          name
+          firstName
+          lastName
+        }
+      }
       space {
         id
         name

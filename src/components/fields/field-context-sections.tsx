@@ -36,6 +36,27 @@ type ResonanceRecord = {
   target?: ResonancePulseRecord[] | null
 }
 
+type WeavePulseRecord = {
+  __typename?: string | null
+  id: string
+  title?: string | null
+}
+
+type WeaveRecord = {
+  id: string
+  title?: string | null
+  status?: string | null
+  weaves?: WeavePulseRecord[] | null
+  wovenFor?:
+    | Array<{
+        id: string
+        name?: string | null
+        firstName?: string | null
+        lastName?: string | null
+      }>
+    | null
+}
+
 type SpaceRecord = {
   __typename?: string | null
   name?: string | null
@@ -56,6 +77,7 @@ type FieldContextSectionsProps = {
   createdDate: string
   pulses: PulseRecord[]
   resonances: ResonanceRecord[]
+  weaves?: WeaveRecord[]
   space?: SpaceRecord | null
   people?: PersonRecord[]
   onAddPulse: () => void
@@ -86,7 +108,25 @@ type FieldContextSectionsProps = {
   ) => void
   onPulseClick: (pulseId: string) => void
   onResonanceClick: (resonanceId: string) => void
+  onWeaveClick?: (weaveId: string) => void
   onPersonClick?: (personId: string) => void
+}
+
+function getWeaveEndpointLabel(pulse?: WeavePulseRecord): string {
+  if (!pulse) return 'Unknown pulse'
+  return `${getPulseTypeLabel(pulse.__typename ?? '')}: ${
+    pulse.title ?? 'Untitled'
+  }`
+}
+
+function composeWeavePersonName(p?: {
+  name?: string | null
+  firstName?: string | null
+  lastName?: string | null
+}): string {
+  if (!p) return ''
+  const composed = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
+  return p.name?.trim() || composed || ''
 }
 
 function getResonanceEndpointLabel(pulse?: ResonancePulseRecord): string {
@@ -98,6 +138,7 @@ export function FieldContextSections({
   createdDate,
   pulses,
   resonances,
+  weaves = [],
   space,
   people,
   onAddPulse,
@@ -110,6 +151,7 @@ export function FieldContextSections({
   onDeletePulse,
   onPulseClick,
   onResonanceClick,
+  onWeaveClick,
   onPersonClick,
 }: FieldContextSectionsProps) {
   return (
@@ -314,6 +356,57 @@ export function FieldContextSections({
           </ProfileCard>
         )}
       </div>
+
+      {weaves.length > 0 && (
+        <div className="flex flex-col gap-4 md:col-span-2">
+          <SectionHeader icon="account_tree" title="Promise weaves" />
+          <ProfileCard>
+            <div className="space-y-3">
+              {weaves.map((weave, idx) => {
+                const woven = weave.weaves ?? []
+                const personName = composeWeavePersonName(
+                  weave.wovenFor?.[0] ?? undefined
+                )
+                return (
+                  <div
+                    key={weave.id}
+                    onClick={() => onWeaveClick?.(weave.id)}
+                    className={
+                      idx > 0
+                        ? 'border-t border-gp-glass-border pt-3 cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                        : 'cursor-pointer hover:bg-gp-glass-bg/50 dark:hover:bg-white/5 transition-colors rounded px-2 -mx-2'
+                    }
+                  >
+                    <div className="flex justify-between items-start gap-3 mb-1">
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <span className="text-[9px] uppercase font-semibold text-gp-primary block">
+                          Weave{personName ? ` · ${personName}` : ''}
+                        </span>
+                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white leading-relaxed">
+                          {weave.title || 'Promise weave'}
+                        </h4>
+                      </div>
+                      {weave.status && (
+                        <span className="shrink-0 text-[9px] uppercase font-semibold text-gp-ink-muted dark:text-gp-ink-soft border border-gp-glass-border rounded-full px-2 py-0.5">
+                          {weave.status}
+                        </span>
+                      )}
+                    </div>
+                    {woven.length > 0 && (
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
+                        Weaves{' '}
+                        {woven
+                          .map((p) => getWeaveEndpointLabel(p))
+                          .join(', ')}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </ProfileCard>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 md:col-span-2">
         <SectionHeader icon="summarize" title="Summary" />

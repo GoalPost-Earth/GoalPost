@@ -11,6 +11,8 @@ import {
   STRUCTURAL_EDGE_COLOR,
   RESONANCE_EDGE_COLOR,
   INITIATED_EDGE_COLOR,
+  WEAVE_NODE_COLOR,
+  WEAVE_EDGE_COLOR,
 } from './bloom-palette'
 
 /**
@@ -76,6 +78,7 @@ const LEGEND_NODES: LegendItem[] = [
   { label: 'Core value', swatch: PULSE_COLOR.coreValue, colors: [PULSE_COLOR.coreValue] },
   { label: 'Pulse', swatch: OVERLAY_PULSE[0], colors: OVERLAY_PULSE },
   { label: 'Resonance', swatch: OVERLAY_RESONANCE[0], colors: OVERLAY_RESONANCE },
+  { label: 'Promise weave', swatch: WEAVE_NODE_COLOR, colors: [WEAVE_NODE_COLOR] },
   { label: 'Person', swatch: PERSON_COLOR, colors: [PERSON_COLOR] },
 ]
 
@@ -86,6 +89,7 @@ const LEGEND_NODES: LegendItem[] = [
 // co-occur, so a shared slate swatch is unambiguous.
 const LEGEND_EDGES: LegendItem[] = [
   { label: 'Resonance', swatch: '#a78bfa', colors: [RESONANCE_EDGE_COLOR] },
+  { label: 'Weaves', swatch: '#2dd4bf', colors: [WEAVE_EDGE_COLOR] },
   { label: 'Initiated by', swatch: '#94a3b8', colors: [INITIATED_EDGE_COLOR] },
   { label: 'Structure', swatch: '#94a3b8', colors: [STRUCTURAL_EDGE_COLOR] },
 ]

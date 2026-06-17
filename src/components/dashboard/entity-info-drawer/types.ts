@@ -15,6 +15,7 @@ export type InfoEntityType =
   | 'Person'
   | 'Document'
   | 'ResonanceLink'
+  | 'PromiseWeave'
 
 export interface InfoEntity {
   type: InfoEntityType
@@ -36,6 +37,7 @@ const INFO_ENTITY_TYPES: ReadonlySet<InfoEntityType> = new Set([
   'Person',
   'Document',
   'ResonanceLink',
+  'PromiseWeave',
 ])
 
 export function isInfoEntityType(value: unknown): value is InfoEntityType {

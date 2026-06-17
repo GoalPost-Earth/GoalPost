@@ -171,6 +171,25 @@ type Descriptor =
       shape: (typeof BUBBLE_SHAPES)[number]
       person: PersonRecord
     }
+  | {
+      kind: 'weave'
+      id: string
+      // PromiseWeave is an InfoEntityType (drawer) but deliberately not a
+      // FocalEntityType — drill-into-weave is a later slice.
+      type: 'PromiseWeave'
+      size: BubbleSize
+      shape: (typeof BUBBLE_SHAPES)[number]
+      icon: string
+      title: string
+      subtitle: string
+      badge?: { text: string; variant: 'accent' | 'primary' }
+    }
+
+interface WeaveRecord {
+  id: string
+  title: string
+  wovenPulseIds: string[]
+}
 
 const NO_RELATIONSHIPS: Relationship[] = []
 
@@ -515,6 +534,23 @@ export const SpatialView: FC = () => {
     ]
   }, [inField, fieldDetailsData])
 
+  // PromiseWeaves anchored in the active field — connector bubbles with WEAVES
+  // spokes to the pulses they connect (built in `relationships` below). Same
+  // GET_FIELD_CONTEXT_DETAILS payload as pulses/resonances.
+  const weaves: WeaveRecord[] = useMemo(() => {
+    if (!inField || !fieldDetailsData) return []
+    const list = (fieldDetailsData.fieldContexts?.[0]?.weaves ?? []) as Array<{
+      id: string
+      title?: string | null
+      weaves?: Array<{ id?: string | null } | null> | null
+    }>
+    return list.map((w) => ({
+      id: w.id,
+      title: w.title || 'Promise weave',
+      wovenPulseIds: (w.weaves ?? []).flatMap((p) => (p?.id ? [p.id] : [])),
+    }))
+  }, [inField, fieldDetailsData])
+
   // Stable descriptors. In-field mode produces pulse bubbles; in-space
   // mode produces field-context bubbles; top-level mode produces space
   // bubbles. Person bubbles (owner + field people) ride alongside the
@@ -550,7 +586,28 @@ export const SpatialView: FC = () => {
           subtitle: config.label,
         }
       })
-      return [...pulseDescriptors, ...personDescriptors(pulses.length)]
+      const weaveDescriptors: Descriptor[] = weaves.map((weave, idx) => {
+        const slot = pulses.length + idx
+        const count = weave.wovenPulseIds.length
+        return {
+          kind: 'weave',
+          id: weave.id,
+          type: 'PromiseWeave',
+          size: FIELD_BUBBLE_SIZES[slot % FIELD_BUBBLE_SIZES.length],
+          shape: BUBBLE_SHAPES[slot % BUBBLE_SHAPES.length],
+          icon: 'account_tree',
+          title: weave.title,
+          subtitle:
+            count > 0
+              ? `weaves ${count} pulse${count === 1 ? '' : 's'}`
+              : 'Promise weave',
+        }
+      })
+      return [
+        ...pulseDescriptors,
+        ...weaveDescriptors,
+        ...personDescriptors(pulses.length + weaveDescriptors.length),
+      ]
     }
     if (inSpace) {
       const fieldDescriptors: Descriptor[] = fieldContexts.map((ctx, idx) => {
@@ -648,6 +705,7 @@ export const SpatialView: FC = () => {
   }, [
     inField,
     pulses,
+    weaves,
     inSpace,
     fieldContexts,
     spaces,
@@ -838,6 +896,24 @@ export const SpatialView: FC = () => {
       } as Relationship)
     }
 
+    // WEAVES — each PromiseWeave bubble → the pulses it connects. The weave
+    // bubble is a visible descriptor, so both endpoints are on screen; we
+    // still guard each pulse endpoint against the visible set.
+    for (const w of weaves) {
+      if (!visibleIds.has(w.id)) continue
+      for (const pid of w.wovenPulseIds) {
+        if (!visibleIds.has(pid)) continue
+        edges.push({
+          id: `weaves-${w.id}-${pid}`,
+          from: w.id,
+          to: pid,
+          caption: 'weaves',
+          color: 'rgba(45, 212, 191, 0.55)',
+          width: 1.5,
+        } as Relationship)
+      }
+    }
+
     return edges
   }, [
     inField,
@@ -846,6 +922,7 @@ export const SpatialView: FC = () => {
     fieldDetailsData,
     fieldContexts,
     persons,
+    weaves,
     activeSpaceId,
     currentUserRecord,
     spaces,
