@@ -17,6 +17,7 @@ import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 import { usePreferences } from '@/contexts/preferences-context'
 import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selector'
 import { WriteApprovalToolPart } from '@/components/chat/write-approval-tool-ui'
+import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
 export const Thread: FC = () => {
@@ -99,11 +100,18 @@ const AssistantMessage: FC = () => {
         <MessagePrimitive.Parts
           components={{
             Text: EnhancedTextPart,
-            // Generative HITL approval (GOAL-261): a single Fallback handles
-            // every tool-call part. It renders an inline approval card when a
-            // write tool returns the pending-approval shape, and nothing
-            // otherwise (read tools stay invisible as before).
-            tools: { Fallback: WriteApprovalToolPart },
+            // Generative HITL approval (GOAL-261): the Fallback handles every
+            // tool-call part not matched by_name. It renders an inline approval
+            // card when a write tool returns the pending-approval shape, and
+            // nothing otherwise.
+            //
+            // Read-tool status chips (Phase 2b): every read tool gets a live
+            // "Searching pulses…" → "Searched pulses" chip so a multi-step
+            // lookup isn't a silent spinner.
+            tools: {
+              by_name: { ...READ_TOOL_STATUS_COMPONENTS },
+              Fallback: WriteApprovalToolPart,
+            },
           }}
         />
 
