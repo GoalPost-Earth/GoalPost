@@ -3,21 +3,21 @@ import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 const DASHBOARD_ROOT = '/protected/dashboard'
 
 /**
- * Whether the studio's Graph View / Bloom Exploration can scope to the given
- * route. True for the dashboard root (top-level spaces) and for Space /
- * FieldContext detail routes — the only routes the NVL surfaces re-scope to.
- * (See `spatial-view` / `bloom-view`: their `activeSpaceId` / `activeFieldId`
- * derivation only resolves `MeSpace`, `WeSpace`, and `FieldContext` from the
- * pathname; everything else renders the default top-level cluster, which
- * wouldn't match the route the user navigated to.)
+ * Whether the studio's Bloom Exploration can scope to the given route. True
+ * for the dashboard root (top-level spaces) and for Space / FieldContext
+ * detail routes — the only routes the NVL surface re-scopes to.
+ * (See `bloom-view`: its `activeSpaceId` / `activeFieldId` derivation only
+ * resolves `MeSpace`, `WeSpace`, and `FieldContext` from the pathname;
+ * everything else renders the default top-level cluster, which wouldn't match
+ * the route the user navigated to.)
  *
  * Every other content route — persons, profile, settings, search — has no
- * graph/bloom representation, so the canvas falls back to the Dashboard view
+ * bloom representation, so the canvas falls back to the Dashboard view
  * there. This lets the selected `canvasView` be a *sticky preference*: it
  * survives navigation between scopeable routes (drilling space → field stays
- * in graph) and is never overwritten, while leaf routes transparently show
+ * in bloom) and is never overwritten, while leaf routes transparently show
  * their page content via an effective-view fallback in `CanvasHost` and have
- * Graph/Bloom disabled in the view toggle. Returning to a Space / FieldContext
+ * Bloom disabled in the view toggle. Returning to a Space / FieldContext
  * restores the stored view.
  *
  * MeSpace-vs-WeSpace disambiguation is irrelevant here (both are scopeable),

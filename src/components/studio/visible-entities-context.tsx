@@ -11,7 +11,7 @@ import {
 
 /**
  * VisibleEntities — every entity currently rendered somewhere on the
- * canvas (Bloom cluster, Graph nodes, Dashboard cards). Published by
+ * canvas (Bloom cluster, Dashboard cards). Published by
  * the view components, consumed by the assistant runtime so the chat
  * model has the same "what is on the screen right now?" context the
  * user does.
@@ -29,7 +29,7 @@ import {
  * Neo4j label list, just the surface kind.
  */
 
-export type VisibleEntitySource = 'dashboard' | 'graph' | 'bloom'
+export type VisibleEntitySource = 'dashboard' | 'bloom'
 
 export interface VisibleEntity {
   id: string
@@ -58,7 +58,7 @@ export function VisibleEntitiesProvider({ children }: { children: ReactNode }) {
   // wipes another view's slice. Flattened on read.
   const [slices, setSlices] = useState<
     Record<VisibleEntitySource, VisibleEntity[]>
-  >({ dashboard: [], graph: [], bloom: [] })
+  >({ dashboard: [], bloom: [] })
 
   const publish = useCallback<VisibleEntitiesContextValue['publish']>(
     (source, next) => {
@@ -88,7 +88,7 @@ export function VisibleEntitiesProvider({ children }: { children: ReactNode }) {
   )
 
   const entities = useMemo<VisibleEntity[]>(
-    () => [...slices.dashboard, ...slices.graph, ...slices.bloom],
+    () => [...slices.dashboard, ...slices.bloom],
     [slices]
   )
 

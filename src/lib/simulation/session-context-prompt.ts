@@ -36,19 +36,19 @@ export interface SessionContextPromptInput {
    * assistant say "the FieldContext on your Bloom canvas" instead of
    * generic "the FieldContext."
    */
-  canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+  canvasView?: 'dashboard' | 'bloom' | null
   /**
    * Everything currently rendered on the canvas (Bloom cluster,
-   * Graph nodes, Dashboard cards). The model should resolve user
-   * mentions against this list BEFORE issuing a fresh graph search
-   * — if "JD's Tech Lab" is already on screen, there's no need to
-   * call query_for_bloom or search_space.
+   * Dashboard cards). The model should resolve user mentions against
+   * this list BEFORE issuing a fresh graph search — if "JD's Tech Lab"
+   * is already on screen, there's no need to call query_for_bloom or
+   * search_space.
    */
   canvasVisibleEntities?: Array<{
     id: string
     name: string
     type: string
-    source: 'dashboard' | 'graph' | 'bloom'
+    source: 'dashboard' | 'bloom'
   }>
   /**
    * Temporal trail of entities the user has focused this session, oldest
@@ -165,9 +165,7 @@ export function buildSystemPromptWithSessionContext(
         )
       }
     }
-    if (
-      (ctx.canvasVisibleEntities?.length ?? 0) > visible.length
-    ) {
+    if ((ctx.canvasVisibleEntities?.length ?? 0) > visible.length) {
       lines.push(
         `  - …${(ctx.canvasVisibleEntities?.length ?? 0) - visible.length} more entities visible on the canvas, not listed`
       )
@@ -186,7 +184,7 @@ export function buildSystemPromptWithSessionContext(
         'When the user says "dive into X", "explore X", "X\'s relationships", "X\'s connections", ' +
         '"what is X connected to", "expand X", or any phrasing that asks for MORE around an ' +
         'entity already on screen — call query_for_bloom with an intent that names the focal ' +
-        'entity AND its id, and asks for an expansive sweep. Read the Cypher generator\'s Intent ' +
+        "entity AND its id, and asks for an expansive sweep. Read the Cypher generator's Intent " +
         'Glossary for what "X\'s relationships" should mean (NOT just ResonanceLink nodes — ' +
         'everything reachable in 1-2 hops the current user can see).'
     )
@@ -196,7 +194,7 @@ export function buildSystemPromptWithSessionContext(
         'between X and Y?", "how is X related to Y?") is ALSO query_for_bloom, not graph_rag_search. ' +
         'Pass an intent like "shortest path between <X name> and <Y name>". The generator emits a ' +
         '`shortestPath` query that ALWAYS returns both endpoint nodes — even when no path exists ' +
-        'in the user\'s visible graph — so the canvas shows X and Y side-by-side regardless. When ' +
+        "in the user's visible graph — so the canvas shows X and Y side-by-side regardless. When " +
         'no path is found, narrate "I can see both X and Y, but I can\'t see a connection between ' +
         'them in your graph"; do NOT claim a tool failure.'
     )
@@ -318,7 +316,7 @@ export function buildSystemPromptWithSessionContext(
         'gets one-tap cards to add or dismiss — you NEVER create anything yourself, and you ' +
         'never need approval to call suggest_pulses (it only proposes). Be selective: do NOT ' +
         'suggest vague references ("a friend", "something"), the current user, things that do ' +
-        "not fit this field context, or items already mentioned/added this conversation. " +
+        'not fit this field context, or items already mentioned/added this conversation. ' +
         'After calling, keep your reply brief and refer to entities by name only (never an id).'
     )
   }

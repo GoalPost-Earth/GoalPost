@@ -13,16 +13,14 @@ import {
 export type FullscreenSide = 'canvas' | 'chat' | null
 export type ChatLayout = 'docked' | 'floating'
 /**
- * Three canonical canvas surfaces — see kb/01-glossary.md.
+ * Two canonical canvas surfaces — see kb/01-glossary.md.
  * - `dashboard` → Dashboard View (cards of spaces / route content)
- * - `graph`     → Graph View (GoalPost-curated NVL, focal-entity centered)
  * - `bloom`     → Bloom Exploration (native NVL, open-ended)
  *
- * The kb is explicit: Graph View and Bloom Exploration are NOT
- * synonymous and must never be conflated. They live as sibling top-level
- * options, not as a sub-toggle of "Graph."
+ * The legacy Graph View (a GoalPost-curated NVL surface) has been
+ * deprecated and removed; Bloom Exploration is now the sole graph surface.
  */
-export type CanvasView = 'dashboard' | 'graph' | 'bloom'
+export type CanvasView = 'dashboard' | 'bloom'
 
 interface CanvasState {
   canvasOpen: boolean
@@ -84,9 +82,8 @@ function readStored(): CanvasState | null {
       // boots closed so a refresh doesn't pop it open unexpectedly.
       floatingChatOpen: false,
       canvasView:
-        parsed.canvasView === 'graph' ||
-        parsed.canvasView === 'bloom' ||
-        parsed.canvasView === 'dashboard'
+        // Migrate any persisted legacy 'graph' preference onto 'dashboard'.
+        parsed.canvasView === 'bloom' || parsed.canvasView === 'dashboard'
           ? parsed.canvasView
           : DEFAULT_STATE.canvasView,
     }
@@ -160,7 +157,8 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
             ...prev,
             chatLayout: layout,
             // Switching away from floating closes any open floating panel.
-            floatingChatOpen: layout === 'floating' ? prev.floatingChatOpen : false,
+            floatingChatOpen:
+              layout === 'floating' ? prev.floatingChatOpen : false,
             // Switching away from docked clears any fullscreen-side flag since
             // there's no longer a split to fullscreen.
             fullscreenSide: layout === 'docked' ? prev.fullscreenSide : null,
@@ -174,7 +172,9 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
 
   const setFloatingChatOpen = useCallback((open: boolean) => {
     setState((prev) =>
-      prev.floatingChatOpen === open ? prev : { ...prev, floatingChatOpen: open }
+      prev.floatingChatOpen === open
+        ? prev
+        : { ...prev, floatingChatOpen: open }
     )
   }, [])
 

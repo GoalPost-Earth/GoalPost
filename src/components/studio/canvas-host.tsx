@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
 import { routeHasCanvasScope } from './canvas-scope'
 import { useBloomOverlay } from './bloom-overlay-context'
-import { SpatialView } from './modes/graph-mode/spatial-view'
 import { BloomView } from './modes/graph-mode/bloom-view'
 import { StudioCanvasActionBar } from './canvas-action-bar'
 import { StudioBreadcrumb } from './studio-breadcrumb'
@@ -21,18 +20,17 @@ interface CanvasHostProps {
 }
 
 /**
- * The canvas pane — hosts one of the three canonical surfaces:
+ * The canvas pane — hosts one of the two canonical surfaces:
  *  - Dashboard View (route content: cards, detail pages)
- *  - Graph View (curated NVL, GoalPost-styled — see kb/01-glossary.md)
  *  - Bloom Exploration (native NVL, open-ended — see kb/01-glossary.md)
  *
  * The view selector + create actions live in the floating
  * `StudioCanvasActionBar` pinned to the bottom-center; the header only
  * carries fullscreen + close.
  *
- * Graph and Bloom are each lazy-mounted on first visit and kept alive
- * via `visibility:hidden` so pan / zoom / focal state survives flipping
- * between any two views.
+ * Bloom is lazy-mounted on first visit and kept alive via
+ * `visibility:hidden` so pan / zoom / focal state survives flipping
+ * back to the dashboard.
  */
 export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const { canvasView, toggleFullscreen, setCanvasOpen } = useStudioCanvas()
@@ -40,20 +38,18 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const pathname = usePathname()
 
   // `canvasView` is the user's sticky preference (persisted). The *effective*
-  // view is what we actually render: on routes the graph/bloom surfaces can't
+  // view is what we actually render: on routes the bloom surface can't
   // scope to (persons, profile, settings, search) we fall back to the
   // dashboard view for display — without overwriting the stored preference, so
-  // the user's graph/bloom view returns the moment they navigate back to a
+  // the user's bloom view returns the moment they navigate back to a
   // Space / FieldContext. See `routeHasCanvasScope`.
   const effectiveView: CanvasView = routeHasCanvasScope(pathname)
     ? canvasView
     : 'dashboard'
   const showOverlayChip = effectiveView === 'bloom' && overlay !== null
 
-  // Lazy-mount Graph + Bloom independently; each retains state across toggles.
-  const [graphVisited, setGraphVisited] = useState(effectiveView === 'graph')
+  // Lazy-mount Bloom; it retains its state across toggles back to dashboard.
   const [bloomVisited, setBloomVisited] = useState(effectiveView === 'bloom')
-  if (effectiveView === 'graph' && !graphVisited) setGraphVisited(true)
   if (effectiveView === 'bloom' && !bloomVisited) setBloomVisited(true)
 
   return (
@@ -135,21 +131,6 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
           {children}
         </div>
 
-        {graphVisited && (
-          <div
-            className={cn(
-              'absolute inset-0',
-              effectiveView !== 'graph' && 'pointer-events-none'
-            )}
-            style={{
-              visibility: effectiveView === 'graph' ? 'visible' : 'hidden',
-            }}
-            aria-hidden={effectiveView !== 'graph'}
-          >
-            <SpatialView />
-          </div>
-        )}
-
         {bloomVisited && (
           <div
             className={cn(
@@ -169,10 +150,10 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
       </div>
 
       {/* The info drawer sits OUTSIDE the per-view visibility cascade — when
-          canvasView is graph or bloom, the dashboard subtree above is
+          canvasView is bloom, the dashboard subtree above is
           `visibility: hidden`, which would otherwise hide the drawer too
           even though it's `position: fixed`. Mounting it at the canvas-host
-          level means the drawer works across all three views. */}
+          level means the drawer works across both views. */}
       <EntityInfoDrawer />
     </section>
   )

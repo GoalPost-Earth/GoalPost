@@ -149,16 +149,16 @@
 
 ## ADR-011: Canvas Views Share One Apollo Cache — Toggling Never Refetches
 
-**Decision:** The three canonical canvas surfaces (Dashboard View, Graph View, Bloom Exploration) are pure visual transforms of the **same Apollo-cached data**. Flipping between them MUST be a zero-network frontend change.
+**Decision:** The canonical canvas surfaces (Dashboard View, Bloom Exploration) are pure visual transforms of the **same Apollo-cached data**. Flipping between them MUST be a zero-network frontend change. (The former Graph View was deprecated and removed; the same rule applied to it.)
 
 **Rules:**
 
-- All three views consume the same Apollo queries (currently `GET_ALL_ME_SPACES` + `GET_ALL_WE_SPACES`) with `fetchPolicy: 'cache-first'`.
+- All views consume the same Apollo queries (currently `GET_ALL_ME_SPACES` + `GET_ALL_WE_SPACES`) with `fetchPolicy: 'cache-first'`.
 - Bloom Exploration is NOT allowed to fetch its own data. It is "native NVL rendering," not "native NVL fetching."
 - New view modes must reuse the queries the first-mounted view already warmed.
-- Loading skeletons may render only on a genuinely cold cache (first ever mount of any of the three).
+- Loading skeletons may render only on a genuinely cold cache (first ever mount of any view).
 
-**Why:** Toggling a view is a presentational concern. A second network round-trip on toggle produced confusing loading flashes and made the surfaces feel unrelated. Sharing the cache also keeps the three views structurally honest — they show the same things, just differently.
+**Why:** Toggling a view is a presentational concern. A second network round-trip on toggle produced confusing loading flashes and made the surfaces feel unrelated. Sharing the cache also keeps the views structurally honest — they show the same things, just differently.
 
 **Where this bites if violated:**
 

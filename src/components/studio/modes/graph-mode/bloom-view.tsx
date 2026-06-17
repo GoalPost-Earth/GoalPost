@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC,
+} from 'react'
 import dynamic from 'next/dynamic'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -37,10 +44,7 @@ import {
   WEAVE_NODE_COLOR,
   WEAVE_EDGE_COLOR,
 } from './bloom-palette'
-import {
-  useBloomOverlay,
-  type BloomOverlay,
-} from '../../bloom-overlay-context'
+import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
   type VisibleEntity,
@@ -55,13 +59,13 @@ import {
  *
  * Architectural rule (set by the user): Bloom does NOT fetch — it is a
  * pure visual transform of the same Apollo-cached data the Dashboard
- * cards and Graph view already loaded. Toggling between the three
- * canvas views is therefore a zero-network frontend change.
+ * cards already loaded. Toggling between the two canvas views is
+ * therefore a zero-network frontend change.
  *
- * Visual differentiation from Graph view:
- *   - Graph view → custom `EntityBubble` HTML nodes (GoalPost-styled).
- *   - Bloom view → native NVL nodes (caption + color + size only),
- *     letting NVL render and interact with them as it would by default.
+ * Bloom renders native NVL nodes (caption + color + size only), letting
+ * NVL render and interact with them as it would by default. (The former
+ * Graph View, which mounted custom `EntityBubble` HTML nodes, has been
+ * deprecated and removed; Bloom is now the sole graph surface.)
  */
 
 // Warm the NVL chunk as soon as this module is parsed. The fetch runs in
@@ -239,7 +243,6 @@ const PERSON_SIZE = 30
 // identity node every space radiates from.
 const YOU_SIZE = 44
 
-
 // Minimal read shape for the owner/member person fields on the space
 // queries — the generated MeSpace | WeSpace union is awkward to narrow inline.
 type RawPersonLite = {
@@ -303,7 +306,7 @@ interface PersonRecord {
   id: string
   name: string
   // Owner is a User; field-attached people are PersonPulses. We branch the
-  // focal-entity machinery on this exactly like SpatialView does.
+  // focal-entity machinery on this distinction.
   focalType: 'User' | 'PersonPulse'
 }
 
@@ -322,8 +325,8 @@ export const BloomView: FC = () => {
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   // Hover-driven cursor. NVL renders native canvas nodes, so there's no
-  // HTML element we can put `cursor: pointer` on the way we do for the
-  // EntityBubble in SpatialView. We bind a wrapper ref + an `onHover`
+  // HTML element we can put `cursor: pointer` on. We bind a wrapper ref +
+  // an `onHover`
   // callback and mutate `style.cursor` directly when the mouse is over
   // a node — going through React state for every mousemove would
   // re-render the canvas chunk on every pixel.
@@ -360,7 +363,7 @@ export const BloomView: FC = () => {
   const inSpace = !!activeSpaceId && !overlay
   const inField = !!activeFieldId && !overlay
 
-  // Identical Apollo queries to SpacesOverview + SpatialView. `cache-first`
+  // Identical Apollo queries to SpacesOverview. `cache-first`
   // hits the warm cache on every flip — zero network round-trip.
   const { data: meData, loading: meLoading } = useQuery(GET_ALL_ME_SPACES, {
     fetchPolicy: 'cache-first',
@@ -399,10 +402,10 @@ export const BloomView: FC = () => {
   )
 
   // People in the active field — the parent space's owner + every Person
-  // attached via HAS_PERSON. SpatialView already runs this exact query at
-  // this route, so `cache-first` reads the warm cache (Apollo dedupes a
-  // cold load against the in-flight request). Bloom needs these to render
-  // the INITIATED_BY edges with a real person endpoint to point at.
+  // attached via HAS_PERSON. `cache-first` reads the warm cache when the
+  // route has already loaded these (Apollo dedupes a cold load against the
+  // in-flight request). Bloom needs these to render the INITIATED_BY edges
+  // with a real person endpoint to point at.
   const { data: fieldPeopleData } = useQuery(GET_FIELD_CONTEXT_PEOPLE, {
     variables: { contextId: activeFieldId ?? '' },
     skip: !activeFieldId,
@@ -433,8 +436,7 @@ export const BloomView: FC = () => {
     if (!inSpace) return []
     const space = spaceDetailsData?.spaces?.[0]
     if (!space) return []
-    const spaceKind =
-      space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
+    const spaceKind = space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
     const contexts = ('contexts' in space ? space.contexts : undefined) ?? []
     return contexts.map((ctx) => ({
       id: ctx.id,
@@ -461,19 +463,14 @@ export const BloomView: FC = () => {
       ...make(fieldDetailsData.resourcePulses, 'resource', 'ResourcePulse'),
       ...make(fieldDetailsData.storyPulses, 'story', 'StoryPulse'),
       ...make(fieldDetailsData.carePulses, 'care', 'CarePulse'),
-      ...make(
-        fieldDetailsData.coreValuePulses,
-        'coreValue',
-        'CoreValuePulse'
-      ),
+      ...make(fieldDetailsData.coreValuePulses, 'coreValue', 'CoreValuePulse'),
     ]
   }, [inField, fieldDetailsData])
 
   // People to render alongside the pulses in-field: the parent space's
   // owner + every member of that space + any Person attached to the field.
   // These are the endpoints the INITIATED_BY edges point at — without them
-  // NVL would drop every initiated edge as dangling. Mirrors SpatialView's
-  // `persons` memo.
+  // NVL would drop every initiated edge as dangling.
   const persons: PersonRecord[] = useMemo(() => {
     if (!inField) return []
     type RawPerson = {
@@ -825,8 +822,7 @@ export const BloomView: FC = () => {
       // every pulse-creation path actually writes (lib/chat/hitl.ts, the
       // create-from-conversation route, etc.), so it's the one that gives
       // Bloom visible structure. The generated GraphQL types don't surface
-      // `initiatedBy`, so we read it through a narrow cast mirroring
-      // SpatialView's relationships builder.
+      // `initiatedBy`, so we read it through a narrow cast.
       const allPulses = [
         ...((fieldDetailsData?.goalPulses ?? []) as Array<{
           id: string
@@ -925,8 +921,7 @@ export const BloomView: FC = () => {
           .filter(
             (s) =>
               firstOf(
-                (s as { owner?: RawPersonLite | RawPersonLite[] | null })
-                  .owner
+                (s as { owner?: RawPersonLite | RawPersonLite[] | null }).owner
               )?.id === currentUserId
           )
           .map((s) => s.id),
@@ -1385,9 +1380,7 @@ export const BloomView: FC = () => {
           err instanceof Error ? err.message : err
         )
         if (attempt < 2) {
-          timers.push(
-            window.setTimeout(() => tryRestart(attempt + 1), 400)
-          )
+          timers.push(window.setTimeout(() => tryRestart(attempt + 1), 400))
         }
       }
     }
@@ -1434,8 +1427,8 @@ export const BloomView: FC = () => {
     [fitToScope]
   )
 
-  // Listen for zoom commands from the floating canvas action bar — same
-  // contract SpatialView honors.
+  // Listen for zoom commands from the floating canvas action bar
+  // (`goalpost:graph-zoom-*` events).
   useEffect(() => {
     const adjust = (factor: number) => {
       const ref = nvlRef.current
@@ -1445,7 +1438,12 @@ export const BloomView: FC = () => {
     }
     const fit = () => {
       const ref = nvlRef.current
-      if (!ref || typeof ref.getNodes !== 'function' || typeof ref.fit !== 'function') return
+      if (
+        !ref ||
+        typeof ref.getNodes !== 'function' ||
+        typeof ref.fit !== 'function'
+      )
+        return
       const allNodes = ref.getNodes()
       const ids = allNodes.map((n) => n.id)
       if (ids.length <= 1) {

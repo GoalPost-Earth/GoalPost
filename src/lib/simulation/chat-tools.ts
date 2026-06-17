@@ -58,12 +58,12 @@ export interface SimulationChatToolContext {
    * `query_for_bloom` so the Cypher generator can prefer a
    * canvas-known id over a fresh keyword search.
    */
-  canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+  canvasView?: 'dashboard' | 'bloom' | null
   canvasVisibleEntities?: Array<{
     id: string
     name: string
     type: string
-    source: 'dashboard' | 'graph' | 'bloom'
+    source: 'dashboard' | 'bloom'
   }>
 }
 
@@ -802,8 +802,7 @@ export async function buildSimulationChatTools(
                   (sum, fc) => sum + fc.pulseCount,
                   0
                 )
-                const spaceName =
-                  row?.spaceName ?? ctx.spaceName ?? null
+                const spaceName = row?.spaceName ?? ctx.spaceName ?? null
                 return {
                   status: 'ok' as const,
                   spaceId: ctx.spaceId,
@@ -1298,7 +1297,9 @@ export async function buildSimulationChatTools(
                 )
                 .min(1)
                 .max(6)
-                .describe('Up to 6 candidate pulses surfaced from the dialogue.'),
+                .describe(
+                  'Up to 6 candidate pulses surfaced from the dialogue.'
+                ),
             }),
             execute: async ({
               candidates,
@@ -1341,7 +1342,10 @@ export async function buildSimulationChatTools(
                 // Authorize the Space read (and, by extension, the create
                 // target) before touching its data.
                 if (effectiveSpaceId) {
-                  const canView = await assertCanViewSpace(ctx, effectiveSpaceId)
+                  const canView = await assertCanViewSpace(
+                    ctx,
+                    effectiveSpaceId
+                  )
                   if (canView !== true) return canView
                 }
                 const existing = effectiveSpaceId
@@ -1431,7 +1435,9 @@ export async function buildSimulationChatTools(
                   message:
                     suggestions.length > 0
                       ? `Surfacing ${suggestions.length} ${
-                          suggestions.length === 1 ? 'suggestion' : 'suggestions'
+                          suggestions.length === 1
+                            ? 'suggestion'
+                            : 'suggestions'
                         } you might want to add.`
                       : 'No new pulses to suggest right now.',
                 }

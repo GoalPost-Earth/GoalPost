@@ -220,10 +220,10 @@ export async function POST(req: Request) {
       threadId?: string
       /**
        * Which canvas surface the user is on right now (dashboard /
-       * graph / bloom). Surfaced into SESSION CONTEXT so the
-       * assistant can describe actions in terms the user sees.
+       * bloom). Surfaced into SESSION CONTEXT so the assistant can
+       * describe actions in terms the user sees.
        */
-      canvasView?: 'dashboard' | 'graph' | 'bloom' | null
+      canvasView?: 'dashboard' | 'bloom' | null
       /**
        * Flat list of every entity currently rendered somewhere on
        * the canvas, published by the view components via
@@ -235,7 +235,7 @@ export async function POST(req: Request) {
         id: string
         name: string
         type: string
-        source: 'dashboard' | 'graph' | 'bloom'
+        source: 'dashboard' | 'bloom'
       }>
       /**
        * Temporal trail of focal entities the user has visited in this
@@ -364,7 +364,9 @@ export async function POST(req: Request) {
           '[Chat Simulation] executeAction batch failed:',
           error instanceof Error ? error.message : error
         )
-        failures.push('The changes could not be executed due to a system error.')
+        failures.push(
+          'The changes could not be executed due to a system error.'
+        )
       }
 
       // Build one note covering all writes so the model confirms in a single
@@ -473,24 +475,27 @@ export async function POST(req: Request) {
         }
     const resolveMs = Math.round(performance.now() - resolveStartedAt)
     const resolveSource = needsDbResolve ? 'db' : 'client-hints'
-    const sessionSystemPrompt = buildSystemPromptWithSessionContext(basePrompt, {
-      currentUserId,
-      spaceId: spaceId || null,
-      fieldContextId: fieldContextId || null,
-      spaceName: resolvedNames.activeSpaceName,
-      spaceType: resolvedNames.activeSpaceType,
-      fieldContextTitle: resolvedNames.activeFieldContextTitle,
-      currentUserName: resolvedNames.currentUserName,
-      activeSpaceOwnedByCurrentUser:
-        resolvedNames.activeSpaceOwnedByCurrentUser,
-      focalEntity,
-      previousFocalEntity,
-      canvasView: canvasView ?? null,
-      canvasVisibleEntities: canvasVisibleEntities ?? [],
-      navigationHistory: (navigationHistory ?? []).filter(
-        (entry) => isFocalEntityType(entry.type) && Boolean(entry.label)
-      ),
-    })
+    const sessionSystemPrompt = buildSystemPromptWithSessionContext(
+      basePrompt,
+      {
+        currentUserId,
+        spaceId: spaceId || null,
+        fieldContextId: fieldContextId || null,
+        spaceName: resolvedNames.activeSpaceName,
+        spaceType: resolvedNames.activeSpaceType,
+        fieldContextTitle: resolvedNames.activeFieldContextTitle,
+        currentUserName: resolvedNames.currentUserName,
+        activeSpaceOwnedByCurrentUser:
+          resolvedNames.activeSpaceOwnedByCurrentUser,
+        focalEntity,
+        previousFocalEntity,
+        canvasView: canvasView ?? null,
+        canvasVisibleEntities: canvasVisibleEntities ?? [],
+        navigationHistory: (navigationHistory ?? []).filter(
+          (entry) => isFocalEntityType(entry.type) && Boolean(entry.label)
+        ),
+      }
+    )
     // Append the executed-action outcome (if any) so the model narrates the
     // result of a just-approved write instead of re-proposing it (GOAL-261).
     const systemPrompt = executedActionNote
@@ -511,11 +516,15 @@ export async function POST(req: Request) {
     // saved from streamText's onFinish callback below.
     const incomingMessage = body.messages[body.messages.length - 1]
     if (currentUserId && lastUserMessage) {
-      void appendConversationTurn(currentUserId, {
-        role: 'user',
-        content: lastUserMessage,
-        parts: incomingMessage?.parts ?? incomingMessage?.content ?? null,
-      }, threadId).catch((error) => {
+      void appendConversationTurn(
+        currentUserId,
+        {
+          role: 'user',
+          content: lastUserMessage,
+          parts: incomingMessage?.parts ?? incomingMessage?.content ?? null,
+        },
+        threadId
+      ).catch((error) => {
         console.warn(
           '[Chat Simulation] Failed to persist user turn:',
           error instanceof Error ? error.message : error
@@ -678,13 +687,23 @@ Title:`,
               ],
             })
               .then(({ text }) => {
-                const title = text.trim().replace(/^["'`]|["'`]$/g, '').slice(0, 80)
+                const title = text
+                  .trim()
+                  .replace(/^["'`]|["'`]$/g, '')
+                  .slice(0, 80)
                 if (title) {
-                  return setConversationThreadTitle(currentUserId!, threadId, title)
+                  return setConversationThreadTitle(
+                    currentUserId!,
+                    threadId,
+                    title
+                  )
                 }
               })
               .catch((err) => {
-                console.warn('[Chat Simulation] Title generation failed:', err instanceof Error ? err.message : err)
+                console.warn(
+                  '[Chat Simulation] Title generation failed:',
+                  err instanceof Error ? err.message : err
+                )
               })
           }
         },

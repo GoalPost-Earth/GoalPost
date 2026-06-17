@@ -4,14 +4,7 @@ import { useState, type FC } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { toast } from 'sonner'
-import {
-  LayoutGrid,
-  Network,
-  Plus,
-  PlusCircle,
-  UserPlus,
-  Workflow,
-} from 'lucide-react'
+import { LayoutGrid, Plus, PlusCircle, UserPlus, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GET_ALL_ME_SPACES } from '@/app/graphql/queries'
 import { LOG_SPACE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
@@ -47,16 +40,15 @@ export const StudioCanvasActionBar: FC = () => {
   const { focalEntity } = useFocalEntity()
 
   // `canvasView` is the sticky preference; the *effective* view is what the
-  // canvas actually shows. On routes the graph/bloom surfaces can't scope to
+  // canvas actually shows. On routes the bloom surface can't scope to
   // (persons, profile, settings, search) the canvas falls back to dashboard
-  // for display, so the toggle highlights dashboard and Graph/Bloom are
-  // disabled there — selecting them would be a no-op against the route.
+  // for display, so the toggle highlights dashboard and Bloom is disabled
+  // there — selecting it would be a no-op against the route.
   const scopeAvailable = routeHasCanvasScope(pathname)
   const effectiveView: CanvasView = scopeAvailable ? canvasView : 'dashboard'
 
-  // Zoom controls apply to both Graph View and Bloom Exploration — they
-  // are sibling NVL surfaces per kb/01-glossary.md.
-  const inGraphSurface = effectiveView === 'graph' || effectiveView === 'bloom'
+  // Zoom controls apply to the Bloom Exploration NVL surface.
+  const inGraphSurface = effectiveView === 'bloom'
 
   // Route-sourced focal is the only signal we trust here. Manual /
   // persisted focals are valid for assistant scope but don't imply the
@@ -329,19 +321,18 @@ const ZoomButton: FC<{
 const ViewToggle: FC<{
   activeView: CanvasView
   /**
-   * Whether the current route can render the graph/bloom surfaces. When false
+   * Whether the current route can render the bloom surface. When false
    * (persons, profile, settings, search) only the dashboard view is selectable
-   * — Graph + Bloom are disabled so the toggle never dead-clicks against a
-   * route they can't scope to.
+   * — Bloom is disabled so the toggle never dead-clicks against a route it
+   * can't scope to.
    */
   scopeAvailable: boolean
   onChange: (view: CanvasView) => void
 }> = ({ activeView, scopeAvailable, onChange }) => {
   // Order + labels follow the kb canonical names (kb/01-glossary.md):
-  // Dashboard View → Graph View → Bloom Exploration.
+  // Dashboard View → Bloom Exploration.
   const items: { id: CanvasView; label: string; Icon: typeof LayoutGrid }[] = [
     { id: 'dashboard', label: 'Dashboard view', Icon: LayoutGrid },
-    { id: 'graph', label: 'Graph view', Icon: Network },
     { id: 'bloom', label: 'Bloom exploration', Icon: Workflow },
   ]
 
