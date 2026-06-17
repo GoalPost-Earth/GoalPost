@@ -380,8 +380,8 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               className={cn(
                 'size-16 rounded-3xl border flex items-center justify-center shadow-lg',
                 isMe
-                  ? 'bg-amber-500/20 border-amber-300/40 text-amber-200'
-                  : 'bg-teal-500/20 border-teal-300/40 text-teal-200'
+                  ? 'bg-amber-500/20 border-amber-300/40 text-amber-700 dark:text-amber-200'
+                  : 'bg-teal-500/20 border-teal-300/40 text-teal-700 dark:text-teal-200'
               )}
             >
               <span className="material-symbols-outlined text-4xl">
@@ -393,8 +393,8 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
                 className={cn(
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border',
                   isMe
-                    ? 'bg-amber-500/20 border-amber-400/40 text-amber-100'
-                    : 'bg-teal-500/20 border-teal-400/40 text-teal-100'
+                    ? 'bg-amber-500/20 border-amber-400/40 text-amber-900 dark:text-amber-100'
+                    : 'bg-teal-500/20 border-teal-400/40 text-teal-900 dark:text-teal-100'
                 )}
               >
                 {isMe ? 'Me Space' : 'We Space'}

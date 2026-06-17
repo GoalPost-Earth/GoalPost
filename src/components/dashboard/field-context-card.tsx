@@ -97,8 +97,8 @@ export function FieldContextCard({
           className={cn(
             'size-12 rounded-2xl border flex items-center justify-center shadow-md group-hover:scale-110 transition-transform',
             isMe
-              ? 'bg-amber-500/20 border-amber-300/40 text-amber-200'
-              : 'bg-teal-500/20 border-teal-300/40 text-teal-200'
+              ? 'bg-amber-500/20 border-amber-300/40 text-amber-700 dark:text-amber-200'
+              : 'bg-teal-500/20 border-teal-300/40 text-teal-700 dark:text-teal-200'
           )}
         >
           <span className="material-symbols-outlined text-2xl">category</span>
@@ -136,7 +136,9 @@ export function FieldContextCard({
         <span
           className={cn(
             'material-symbols-outlined text-base transition-transform group-hover:translate-x-1',
-            isMe ? 'text-amber-300/70' : 'text-teal-300/70'
+            isMe
+              ? 'text-amber-600/80 dark:text-amber-300/70'
+              : 'text-teal-600/80 dark:text-teal-300/70'
           )}
         >
           arrow_forward
