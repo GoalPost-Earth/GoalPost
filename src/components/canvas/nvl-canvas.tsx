@@ -10,6 +10,7 @@ import type {
 } from '@neo4j-nvl/base'
 import type { InteractiveNvlWrapperProps } from '@neo4j-nvl/react'
 import { useAnimations } from '@/contexts'
+import { useNvlPinchZoom } from '@/hooks'
 import { cn } from '@/lib/utils'
 
 export interface NvlCanvasProps {
@@ -322,10 +323,22 @@ export function NvlCanvas({
     }
   }, [triggerReLayout])
 
+  // Pinch-to-zoom for touch devices (iPad / phones). NVL's built-in zoom only
+  // listens to `wheel` events, which touch never emits for a pinch — this hook
+  // bridges the gesture into NVL's own setZoom(). The returned callback ref
+  // goes on the wrapping element, which carries `touch-action: none` (below)
+  // so the browser hands us the gesture.
+  const pinchSurfaceRef = useNvlPinchZoom({ nvlRef: wrapperRef, onScaleChange })
+
   return (
     <main
       className={cn(
-        'relative flex-1 w-screen h-screen min-h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors cursor-grab active:cursor-grabbing',
+        // Fill the host container, not the viewport: NvlCanvas always mounts
+        // inside CanvasHost's bounded slot (viewport minus studio chrome).
+        // `w-screen h-screen` overflowed that slot — clipping the bottom zoom
+        // controls off-screen on mobile and overflowing horizontally in the
+        // docked split view.
+        'relative flex-1 w-full h-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors cursor-grab active:cursor-grabbing',
         className
       )}
       style={{
@@ -344,20 +357,29 @@ export function NvlCanvas({
         </>
       )}
 
-      <InteractiveNvlWrapper
-        ref={wrapperRef}
-        nodes={nodes}
-        rels={relationships}
-        layout={layout}
-        layoutOptions={finalLayoutOptions}
-        nvlOptions={finalNvlOptions as any}
-        interactionOptions={finalInteractionOptions}
-        mouseEventCallbacks={mouseEventCallbacks}
-        nvlCallbacks={nvlCallbacks}
-        onInitializationError={(error) => {
-          console.error('NVL Initialization Error:', error)
-        }}
-      />
+      {/* touch-action:none lets our pinch handler claim the gesture before the
+          browser turns it into a native page zoom; NVL drives pan/drag in JS so
+          disabling native touch scrolling here is correct. */}
+      <div
+        ref={pinchSurfaceRef}
+        className="absolute inset-0"
+        style={{ touchAction: 'none' }}
+      >
+        <InteractiveNvlWrapper
+          ref={wrapperRef}
+          nodes={nodes}
+          rels={relationships}
+          layout={layout}
+          layoutOptions={finalLayoutOptions}
+          nvlOptions={finalNvlOptions as any}
+          interactionOptions={finalInteractionOptions}
+          mouseEventCallbacks={mouseEventCallbacks}
+          nvlCallbacks={nvlCallbacks}
+          onInitializationError={(error) => {
+            console.error('NVL Initialization Error:', error)
+          }}
+        />
+      </div>
 
       {/* Empty State */}
       {!isLoading && nodes.length === 0 && emptyState && (
@@ -368,7 +390,10 @@ export function NvlCanvas({
 
       {/* Controls and Toolbar */}
       {(enableZoomControls || actionButton || toolbar) && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30 pointer-events-none">
+        // `flex-wrap` + a viewport-bounded max-width keep the row from
+        // overflowing (and clipping the zoom pill) on narrow screens where the
+        // zoom controls + a wide action button can't sit on one centered line.
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-2 sm:gap-4 max-w-[calc(100%-1.5rem)] z-30 pointer-events-none">
           {enableZoomControls && (
             <div className="relative z-40 flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass shadow-xl pointer-events-auto">
               <button

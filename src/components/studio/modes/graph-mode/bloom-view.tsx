@@ -28,6 +28,7 @@ import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFocalEntity } from '@/contexts'
+import { useNvlPinchZoom } from '@/hooks'
 import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
@@ -1427,6 +1428,14 @@ export const BloomView: FC = () => {
     [fitToScope]
   )
 
+  // Two-finger pinch-to-zoom for touch devices. The floating action bar's
+  // zoom buttons cover desktop/click; NVL ignores touch pinches on its own,
+  // so this hook bridges them into the same setZoom() the buttons drive. The
+  // returned callback ref attaches to the canvas wrapper (which is rendered
+  // conditionally once data loads — a callback ref binds the listeners the
+  // moment that element mounts).
+  const pinchSurfaceRef = useNvlPinchZoom({ nvlRef })
+
   // Listen for zoom commands from the floating canvas action bar
   // (`goalpost:graph-zoom-*` events).
   useEffect(() => {
@@ -1502,14 +1511,23 @@ export const BloomView: FC = () => {
             </p>
           </div>
         ) : (
-          <GraphVisualizer
-            ref={nvlRef}
-            nodes={nodes}
-            relationships={relationships}
-            mouseEventCallbacks={mouseEventCallbacks}
-            nvlOptions={nvlOptions}
-            nvlCallbacks={nvlCallbacks}
-          />
+          // touch-action:none lets the pinch handler claim two-finger gestures
+          // before the browser turns them into a native page zoom; NVL drives
+          // pan/drag in JS so disabling native touch scrolling here is correct.
+          <div
+            ref={pinchSurfaceRef}
+            className="absolute inset-0"
+            style={{ touchAction: 'none' }}
+          >
+            <GraphVisualizer
+              ref={nvlRef}
+              nodes={nodes}
+              relationships={relationships}
+              mouseEventCallbacks={mouseEventCallbacks}
+              nvlOptions={nvlOptions}
+              nvlCallbacks={nvlCallbacks}
+            />
+          </div>
         )}
 
         {/* Decodes the bare colored NVL circles. Derives its rows from the

@@ -380,7 +380,7 @@ export default function WeSpaceFieldsPage() {
 
   // Graph view (default)
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors">
       {queryError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
           <p className="text-sm text-red-700 dark:text-red-400">

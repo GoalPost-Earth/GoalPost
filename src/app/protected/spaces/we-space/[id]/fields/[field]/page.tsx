@@ -2010,7 +2010,7 @@ function FieldDetailPage() {
           </main>
         </div>
       ) : (
-        <div className="relative overflow-hidden">
+        <div className="relative h-full w-full overflow-hidden">
           <NvlCanvas
             nodes={nvlNodes}
             relationships={nvlRelationships}
