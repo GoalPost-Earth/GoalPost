@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useParams } from 'next/navigation'
 import { SpaceDashboardView } from '@/components/dashboard/space-dashboard-view'
+import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 import { usePageContext } from '@/contexts'
 
 /**
@@ -15,14 +15,17 @@ import { usePageContext } from '@/contexts'
  * app.
  */
 export default function SpacePage() {
-  const params = useParams()
-  const spaceId = params?.id as string
+  // Scope is derived from the URL through the shared `useRouteFocalScope`
+  // hook — the same single source the Bloom canvas reads — so the Dashboard
+  // and Bloom views can never resolve to different Spaces after a view
+  // switch (GOAL-271).
+  const { activeSpaceId } = useRouteFocalScope()
   const { setPageTitle } = usePageContext()
 
   useEffect(() => {
     setPageTitle('Space')
   }, [setPageTitle])
 
-  if (!spaceId) return null
-  return <SpaceDashboardView spaceId={spaceId} />
+  if (!activeSpaceId) return null
+  return <SpaceDashboardView spaceId={activeSpaceId} />
 }

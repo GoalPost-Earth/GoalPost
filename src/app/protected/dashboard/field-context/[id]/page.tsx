@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useEffect, useState, useMemo, type FC } from 'react'
 import { toast } from 'sonner'
@@ -73,14 +73,19 @@ import {
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
+import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 
 export default function FieldContextDetailsPage() {
-  const params = useParams()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
   const { setFocalLabel, setFocalParents } = useFocalEntity()
   const { user } = useApp()
-  const contextId = params?.id as string
+  // Scope is derived from the URL through the shared `useRouteFocalScope`
+  // hook — the same single source the Bloom canvas reads — so the Dashboard
+  // and Bloom views can never resolve to different Fields after a view
+  // switch (GOAL-271).
+  const { activeFieldId } = useRouteFocalScope()
+  const contextId = activeFieldId ?? ''
   const { animationsEnabled } = useAnimations()
   const [isCreatePulseModalOpen, setIsCreatePulseModalOpen] = useState(false)
   const [editingPulseId, setEditingPulseId] = useState<string | null>(null)

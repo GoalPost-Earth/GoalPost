@@ -9,7 +9,7 @@ import {
   type FC,
 } from 'react'
 import dynamic from 'next/dynamic'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
   dispatchOpenInfoDrawer,
   dispatchCloseInfoDrawer,
@@ -29,7 +29,7 @@ import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_D
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFocalEntity } from '@/contexts'
 import { useNvlPinchZoom } from '@/hooks'
-import { focalEntityFromRoute } from '@/lib/focal-entity/route-matcher'
+import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { GraphLoadingState } from './graph-loading-state'
@@ -347,20 +347,11 @@ export const BloomView: FC = () => {
   // Reading `sessionContext.activeSpaceId` would conflate the user's
   // *persisted* last-space with the *current route* — at the dashboard
   // root that would render field contexts when we should be showing
-  // top-level spaces. Drive the scope strictly from the pathname.
+  // top-level spaces. Drive the scope strictly from the pathname, through
+  // the shared `useRouteFocalScope` hook so this surface and the Dashboard
+  // pages derive scope from one source and can't diverge (GOAL-271).
   // Overlay still takes priority over both modes.
-  const pathname = usePathname()
-  const { activeSpaceId, activeFieldId } = useMemo(() => {
-    const match = focalEntityFromRoute(pathname)
-    if (!match) return { activeSpaceId: null, activeFieldId: null }
-    if (match.type === 'MeSpace' || match.type === 'WeSpace') {
-      return { activeSpaceId: match.id, activeFieldId: null }
-    }
-    if (match.type === 'FieldContext') {
-      return { activeSpaceId: null, activeFieldId: match.id }
-    }
-    return { activeSpaceId: null, activeFieldId: null }
-  }, [pathname])
+  const { activeSpaceId, activeFieldId } = useRouteFocalScope()
   const inSpace = !!activeSpaceId && !overlay
   const inField = !!activeFieldId && !overlay
 
