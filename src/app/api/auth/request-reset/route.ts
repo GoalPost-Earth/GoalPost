@@ -11,6 +11,48 @@ const resetPasswordSchema = z.object({
   email: z.string().email(),
 })
 
+function isLocalhostUrl(value: string): boolean {
+  try {
+    const { hostname } = new URL(value)
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1'
+    )
+  } catch {
+    // Unparseable → treat as unusable so we fall through to a safer source.
+    return true
+  }
+}
+
+/**
+ * Resolves the public origin for the password-reset link from TRUSTED server
+ * configuration ONLY. Request headers (host / x-forwarded-host / -proto) are
+ * deliberately NOT consulted: they are attacker-controllable and trusting them
+ * enables host-header poisoning — an attacker could have a victim emailed a
+ * valid reset token pointing at an attacker-controlled domain.
+ *
+ * Precedence:
+ *   1. An explicit, non-localhost NEXT_PUBLIC_BASE_URL.
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel-injected, server-side, and not
+ *      client-controllable — resolved to https://<host>.
+ *   3. The raw NEXT_PUBLIC_BASE_URL (or localhost) so local dev still works.
+ */
+function resolveBaseUrl(): string {
+  const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  if (envBaseUrl && !isLocalhostUrl(envBaseUrl)) {
+    return envBaseUrl.replace(/\/+$/, '')
+  }
+
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+  if (vercelHost) {
+    const host = vercelHost.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    return `https://${host}`
+  }
+
+  return (envBaseUrl || 'http://localhost:3000').replace(/\/+$/, '')
+}
+
 export async function POST(req: NextRequest) {
   // Per-IP burst on top of the per-email policy below — guards against a
   // single attacker iterating through an email list from one IP. Both
@@ -92,7 +134,7 @@ export async function POST(req: NextRequest) {
     if (result.records.length > 0) {
       // Send email with reset link
       const encodedEmail = encodeURIComponent(normalizedEmail)
-      const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${encodedEmail}`
+      const resetLink = `${resolveBaseUrl()}/auth/reset-password?token=${token}&email=${encodedEmail}`
 
       if (process.env.NODE_ENV === 'development') {
         console.log('Reset link:', resetLink)
