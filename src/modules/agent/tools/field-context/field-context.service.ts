@@ -14,6 +14,15 @@ export interface FieldContextRecord {
 
 export interface FieldContextSearchInput {
   query: string
+  /**
+   * The authenticated caller's Person id (from the request JWT). REQUIRED for
+   * authorization: results are anchored to FieldContexts whose parent Space the
+   * user OWNS or is a MEMBER of, mirroring `canViewContent` in
+   * `src/lib/permissions/space-permissions.ts`. When `null`/absent (e.g. the
+   * legacy agent path that carries no user identity) the search fails closed and
+   * returns no results rather than leaking cross-tenant FieldContexts.
+   */
+  userId?: string | null
   spaceName?: string
   spaceId?: string
   limit?: number
@@ -89,19 +98,48 @@ export async function searchFieldContexts(
     }
   }
 
+  // Fail closed: without an authenticated user we cannot scope results to the
+  // caller's Spaces, so we must NOT run a graph-wide FieldContext search (that
+  // would leak cross-tenant MeSpace/WeSpace metadata — GOAL-273). The legacy
+  // agent path (src/modules/agent/tools/index.ts) carries no user identity and
+  // hits this branch.
+  const userId = input.userId?.trim() || null
+  if (!userId) {
+    return {
+      found: false,
+      count: 0,
+      contexts: [],
+      needsDisambiguation: false,
+      message:
+        'I could not identify the current user, so I cannot search field contexts. Please sign in and try again.',
+    }
+  }
+
   const limit = normalizeLimit(input.limit)
   const spaceName = input.spaceName?.trim() || null
   const spaceId = input.spaceId?.trim() || null
 
+  // The space scope is the PRIMARY authorization guarantee. We only ever match
+  // FieldContexts whose parent Space the user OWNS or is a MEMBER of, mirroring
+  // `canViewContent` in src/lib/permissions/space-permissions.ts
+  // (OWNS, or HAS_MEMBER -> SpaceMembership -> IS_MEMBER -> user). This filter
+  // applies even when $spaceId / $spaceName are null, so the name-only path is
+  // also safe.
   const cypher = `
-    MATCH (context:FieldContext)
-    OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(context)
+    MATCH (user:Person {id: $userId})
+    MATCH (space:Space)-[:HAS_CONTEXT]->(context:FieldContext)
     WHERE (
-      toLower(coalesce(context.title, '')) CONTAINS toLower($query)
-      OR toLower(coalesce(context.emergentName, '')) CONTAINS toLower($query)
-      OR toLower(coalesce(context.title, '')) STARTS WITH toLower($query)
-      OR toLower(coalesce(context.emergentName, '')) STARTS WITH toLower($query)
-    )
+        EXISTS { MATCH (user)-[:OWNS]->(space) }
+        OR EXISTS {
+          MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(user)
+        }
+      )
+      AND (
+        toLower(coalesce(context.title, '')) CONTAINS toLower($query)
+        OR toLower(coalesce(context.emergentName, '')) CONTAINS toLower($query)
+        OR toLower(coalesce(context.title, '')) STARTS WITH toLower($query)
+        OR toLower(coalesce(context.emergentName, '')) STARTS WITH toLower($query)
+      )
       AND (
         $spaceName IS NULL
         OR toLower(coalesce(space.name, '')) CONTAINS toLower($spaceName)
@@ -134,6 +172,7 @@ export async function searchFieldContexts(
   `
 
   const rawResults = await graph.query<Record<string, unknown>>(cypher, {
+    userId,
     query,
     spaceName,
     spaceId,

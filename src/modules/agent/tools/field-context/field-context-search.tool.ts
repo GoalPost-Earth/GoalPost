@@ -18,8 +18,22 @@ const FieldContextSearchSchema = z.object({
     .describe('Optional maximum number of results (default 10, max 25).'),
 })
 
+/**
+ * Creates the legacy `search_field_context` tool.
+ *
+ * Results are scoped to FieldContexts whose parent Space the authenticated user
+ * OWNS or is a MEMBER of, per the Space-based authorization model in
+ * `kb/02-user-roles.md`. The `userId` is threaded into `searchFieldContexts`,
+ * which anchors the Cypher on it. Passing `userId = null` is treated as an
+ * unauthenticated call: the service fails closed and returns no results rather
+ * than leaking cross-tenant FieldContexts (GOAL-273). The legacy agent path
+ * (`src/modules/agent/tools/index.ts`) has no user identity and passes `null`;
+ * the active chat surface (`src/lib/simulation/chat-tools.ts`) does not use this
+ * factory — it calls `searchFieldContexts` directly with the JWT-resolved id.
+ */
 export function createFieldContextSearchTool(
-  graph: Neo4jGraph
+  graph: Neo4jGraph,
+  userId: string | null
 ): DynamicStructuredTool {
   return new DynamicStructuredTool({
     name: 'search_field_context',
@@ -27,7 +41,7 @@ export function createFieldContextSearchTool(
       'Search for field contexts by title or emergent name. Use this before editing a field context or when users ask what fields exist.',
     schema: FieldContextSearchSchema as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     func: async (input: z.infer<typeof FieldContextSearchSchema>) => {
-      const result = await searchFieldContexts(graph, input)
+      const result = await searchFieldContexts(graph, { ...input, userId })
       return JSON.stringify(result)
     },
   })

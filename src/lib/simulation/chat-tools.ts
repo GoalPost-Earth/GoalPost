@@ -718,6 +718,10 @@ export async function buildSimulationChatTools(
           resolvedSpaceId,
           limit,
         })
+        // Defense in depth: when a Space is resolved, gate on it explicitly.
+        // The PRIMARY guarantee is the $userId anchor inside searchFieldContexts
+        // (see field-context.service.ts) — it scopes the name-only path too, so
+        // an undefined resolvedSpaceId can no longer leak cross-tenant contexts.
         if (resolvedSpaceId) {
           const check = await assertCanViewSpace(ctx, resolvedSpaceId)
           if (check !== true) return check
@@ -726,6 +730,7 @@ export async function buildSimulationChatTools(
           const graph = await initGraph()
           return await searchFieldContexts(graph, {
             query,
+            userId: ctx.currentUserId,
             spaceName,
             spaceId: resolvedSpaceId,
             limit,

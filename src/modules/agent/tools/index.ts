@@ -34,7 +34,10 @@ export default async function initTools(
   // the resolved userId from the request JWT, which is the path Robert hits.
   const spaceSearchTool = createSpaceSearchTool(graph, null)
   const spaceRenameTool = createSpaceRenameTool(graph)
-  const fieldContextSearchTool = createFieldContextSearchTool(graph)
+  // Same rationale as spaceSearchTool above: the legacy path carries no user
+  // identity, so we pass null. searchFieldContexts then fails closed and returns
+  // no results rather than leaking cross-tenant FieldContexts (GOAL-273).
+  const fieldContextSearchTool = createFieldContextSearchTool(graph, null)
   const fieldContextUpdateTool = createFieldContextUpdateTool(graph)
   const pulseSearchTool = createPulseSearchTool(graph)
   const pulseUpdateTool = createPulseUpdateTool(graph)
