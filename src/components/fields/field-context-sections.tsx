@@ -47,14 +47,12 @@ type WeaveRecord = {
   title?: string | null
   status?: string | null
   weaves?: WeavePulseRecord[] | null
-  wovenFor?:
-    | Array<{
-        id: string
-        name?: string | null
-        firstName?: string | null
-        lastName?: string | null
-      }>
-    | null
+  wovenFor?: Array<{
+    id: string
+    name?: string | null
+    firstName?: string | null
+    lastName?: string | null
+  }> | null
 }
 
 type SpaceRecord = {
@@ -208,38 +206,35 @@ export function FieldContextSections({
             )}
           </div>
           {people.length > 0 ? (
-            <ProfileCard>
-              <div className="space-y-3">
-                {people.map((person, idx) => (
-                  <div
-                    key={person.id}
-                    onClick={() => onPersonClick?.(person.id)}
-                    className={
-                      idx > 0
-                        ? 'border-t border-gp-glass-border pt-3 rounded px-2 -mx-2'
-                        : 'rounded px-2 -mx-2'
-                    }
-                  >
-                    <div className="flex justify-between items-center gap-4 p-2">
-                      <div>
-                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                          {person.name ||
-                            `${person.firstName} ${person.lastName}`.trim()}
-                        </h4>
-                        <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                          {person.role}
-                        </p>
-                      </div>
-                      {onPersonClick && (
-                        <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft text-sm">
-                          arrow_forward_ios
-                        </span>
-                      )}
+            <div className="space-y-3">
+              {people.map((person) => (
+                <ProfileCard
+                  key={person.id}
+                  hover={!!onPersonClick}
+                  stretch={false}
+                  onClick={
+                    onPersonClick ? () => onPersonClick(person.id) : undefined
+                  }
+                >
+                  <div className="flex justify-between items-center gap-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                        {person.name ||
+                          `${person.firstName} ${person.lastName}`.trim()}
+                      </h4>
+                      <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        {person.role}
+                      </p>
                     </div>
+                    {onPersonClick && (
+                      <span className="material-symbols-outlined text-gp-ink-muted dark:text-gp-ink-soft text-sm">
+                        arrow_forward_ios
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-            </ProfileCard>
+                </ProfileCard>
+              ))}
+            </div>
           ) : (
             <EmptySection
               icon="groups"
@@ -247,7 +242,11 @@ export function FieldContextSections({
               body="People you add show up here with their role inside this field."
               cta={
                 onAddPerson
-                  ? { label: 'Add a person', icon: 'person_add', onClick: onAddPerson }
+                  ? {
+                      label: 'Add a person',
+                      icon: 'person_add',
+                      onClick: onAddPerson,
+                    }
                   : undefined
               }
             />
@@ -292,9 +291,7 @@ export function FieldContextSections({
           <EmptySection
             icon="hub"
             title={
-              pulses.length < 2
-                ? 'No resonances yet'
-                : 'No resonances yet'
+              pulses.length < 2 ? 'No resonances yet' : 'No resonances yet'
             }
             body={
               pulses.length < 2
@@ -395,9 +392,7 @@ export function FieldContextSections({
                     {woven.length > 0 && (
                       <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
                         Weaves{' '}
-                        {woven
-                          .map((p) => getWeaveEndpointLabel(p))
-                          .join(', ')}
+                        {woven.map((p) => getWeaveEndpointLabel(p)).join(', ')}
                       </p>
                     )}
                   </div>
@@ -434,4 +429,3 @@ export function FieldContextSections({
     </div>
   )
 }
-

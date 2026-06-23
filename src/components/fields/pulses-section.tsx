@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import {
@@ -212,139 +217,150 @@ export function PulsesSection({
           }
         />
       ) : (
-        <ProfileCard>
-          <div className="space-y-3">
-            {pulses.map((pulse, idx) => {
-              const pulseType = getEditablePulseType(pulse.__typename)
-              // Every recognized pulse type (Goal, Resource, Story, Care,
-              // Core Value) is editable/deletable — see GOAL-252.
-              const canEditPulse = pulseType !== null
-              const selected = selectedIds.has(pulse.id)
+        <div className="space-y-3">
+          {pulses.map((pulse) => {
+            const pulseType = getEditablePulseType(pulse.__typename)
+            // Every recognized pulse type (Goal, Resource, Story, Care,
+            // Core Value) is editable/deletable — see GOAL-252.
+            const canEditPulse = pulseType !== null
+            const selected = selectedIds.has(pulse.id)
 
-              return (
-                <div
-                  key={pulse.id}
-                  onClick={() =>
-                    selectMode
-                      ? toggleSelected(pulse.id)
-                      : onPulseClick(pulse.id)
-                  }
-                  className={cn(
-                    'cursor-pointer rounded px-2 -mx-2 transition-colors',
-                    idx > 0 && 'border-t border-gp-glass-border pt-3',
-                    selected
-                      ? 'bg-gp-primary/5 dark:bg-gp-primary/10'
-                      : 'hover:bg-gp-glass-bg/50 dark:hover:bg-white/5'
-                  )}
-                >
-                  <div className="flex justify-between items-start gap-4 mb-1 p-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {selectMode && (
-                        <span
-                          className={cn(
-                            'material-symbols-outlined mt-0.5 shrink-0 text-[18px]',
-                            selected ? 'text-gp-primary' : 'text-gp-ink-muted'
-                          )}
-                        >
-                          {selected ? 'check_box' : 'check_box_outline_blank'}
+            return (
+              <ProfileCard
+                key={pulse.id}
+                hover={!selected}
+                stretch={false}
+                onClick={() =>
+                  selectMode ? toggleSelected(pulse.id) : onPulseClick(pulse.id)
+                }
+                className={cn(
+                  selected &&
+                    'ring-2 ring-gp-primary/40 bg-gp-primary/5 dark:bg-gp-primary/10'
+                )}
+              >
+                <div className="flex justify-between items-start gap-4 mb-1">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {selectMode && (
+                      <span
+                        className={cn(
+                          'material-symbols-outlined mt-0.5 shrink-0 text-[18px]',
+                          selected ? 'text-gp-primary' : 'text-gp-ink-muted'
+                        )}
+                      >
+                        {selected ? 'check_box' : 'check_box_outline_blank'}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <span
+                        className={`text-[9px] uppercase font-semibold block mb-0.5 ${getPulseTypeClass(pulse.__typename)}`}
+                      >
+                        {getPulseTypeLabel(pulse.__typename)}
+                      </span>
+                      <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
+                        {pulse.title}
+                      </h4>
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        <span className="material-symbols-outlined text-[12px] shrink-0">
+                          person
                         </span>
-                      )}
-                      <div className="min-w-0">
-                        <span
-                          className={`text-[9px] uppercase font-semibold block mb-0.5 ${getPulseTypeClass(pulse.__typename)}`}
-                        >
-                          {getPulseTypeLabel(pulse.__typename)}
+                        <span className="truncate">
+                          {personDisplayName(resolvePulseAuthor(pulse))}
                         </span>
-                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white">
-                          {pulse.title}
-                        </h4>
-                        <div className="mt-1 flex items-center gap-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                          <span className="material-symbols-outlined text-[12px] shrink-0">
-                            person
-                          </span>
-                          <span className="truncate">
-                            {personDisplayName(resolvePulseAuthor(pulse))}
-                          </span>
-                        </div>
                       </div>
                     </div>
-                    {!selectMode && (
-                      <div
-                        className="flex items-start gap-2 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {richSharing && (
-                          <button
-                            onClick={() => onOpenShare?.([pulse.id], 'share')}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gp-primary/30 bg-gp-primary/10 text-gp-primary transition-all hover:bg-gp-primary/20 dark:border-gp-primary/40 dark:bg-gp-primary/15 dark:hover:bg-gp-primary/25 cursor-pointer"
-                            aria-label={`Move or share ${pulse.title}`}
-                          >
-                            <span
-                              className="material-symbols-outlined"
-                              style={{ fontSize: '14px' }}
-                            >
-                              share
-                            </span>
-                          </button>
-                        )}
-                        {canEditPulse && pulseType && (
-                          <>
+                  </div>
+                  {!selectMode && (
+                    <div
+                      className="flex items-start gap-2 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {richSharing && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <button
-                              onClick={(e) =>
-                                onEditPulse(
-                                  e,
-                                  pulse.id,
-                                  pulseType,
-                                  pulse.title,
-                                  pulse.content
-                                )
-                              }
-                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/60 bg-white/50 text-gp-ink-strong transition-all hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:text-gp-ink-strong dark:hover:bg-white/10"
-                              aria-label={`Edit ${pulse.title}`}
-                            >
-                              <span
-                                className="material-symbols-outlined cursor-pointer"
-                                style={{ fontSize: '14px' }}
-                              >
-                                edit
-                              </span>
-                            </button>
-                            <button
-                              onClick={(e) =>
-                                onDeletePulse(e, pulse.id, pulseType)
-                              }
-                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-red-300 bg-red-50 text-red-600 transition-all hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 cursor-pointer"
-                              aria-label={`Delete ${pulse.title}`}
+                              onClick={() => onOpenShare?.([pulse.id], 'share')}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gp-primary/30 bg-gp-primary/10 text-gp-primary transition-all hover:bg-gp-primary/20 dark:border-gp-primary/40 dark:bg-gp-primary/15 dark:hover:bg-gp-primary/25 cursor-pointer"
+                              aria-label={`Move or share ${pulse.title}`}
                             >
                               <span
                                 className="material-symbols-outlined"
                                 style={{ fontSize: '14px' }}
                               >
-                                delete
+                                share
                               </span>
                             </button>
-                          </>
-                        )}
-                        <span className="pt-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                          {new Date(pulse.createdAt).toLocaleDateString(
-                            'en-US',
-                            { month: 'short', day: 'numeric', year: 'numeric' }
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  {pulse.content && (
-                    <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1 px-4 pb-4">
-                      {pulse.content.substring(0, 150)}
-                      {pulse.content.length > 150 ? '...' : ''}
-                    </p>
+                          </TooltipTrigger>
+                          <TooltipContent>Move or share</TooltipContent>
+                        </Tooltip>
+                      )}
+                      {canEditPulse && pulseType && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) =>
+                                  onEditPulse(
+                                    e,
+                                    pulse.id,
+                                    pulseType,
+                                    pulse.title,
+                                    pulse.content
+                                  )
+                                }
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/60 bg-white/50 text-gp-ink-strong transition-all hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:text-gp-ink-strong dark:hover:bg-white/10 cursor-pointer"
+                                aria-label={`Edit ${pulse.title}`}
+                              >
+                                <span
+                                  className="material-symbols-outlined"
+                                  style={{ fontSize: '14px' }}
+                                >
+                                  edit
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) =>
+                                  onDeletePulse(e, pulse.id, pulseType)
+                                }
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-red-300 bg-red-50 text-red-600 transition-all hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 cursor-pointer"
+                                aria-label={`Delete ${pulse.title}`}
+                              >
+                                <span
+                                  className="material-symbols-outlined"
+                                  style={{ fontSize: '14px' }}
+                                >
+                                  delete
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        </>
+                      )}
+                      <span className="pt-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                        {new Date(pulse.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
                   )}
                 </div>
-              )
-            })}
-          </div>
-        </ProfileCard>
+                {pulse.content && (
+                  <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed mt-1">
+                    {pulse.content.substring(0, 150)}
+                    {pulse.content.length > 150 ? '...' : ''}
+                  </p>
+                )}
+              </ProfileCard>
+            )
+          })}
+        </div>
       )}
     </div>
   )

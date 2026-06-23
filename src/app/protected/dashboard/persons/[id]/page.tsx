@@ -381,6 +381,20 @@ export default function PersonProfilePage() {
 
           <EntityProvenance documents={provenanceDocuments} />
 
+          {/* Description — a short relational note about who this person is.
+              Edited inline from the Person panel; shown here read-only. */}
+          {person.description && (
+            <div className="mb-12 flex flex-col gap-4">
+              <SectionHeader icon="notes" title="Description" />
+              <ProfileCard>
+                <LinkifiedText
+                  text={person.description}
+                  className="text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed"
+                />
+              </ProfileCard>
+            </div>
+          )}
+
           {/* Profile Attributes Section */}
           {(person.traits ||
             person.passions ||

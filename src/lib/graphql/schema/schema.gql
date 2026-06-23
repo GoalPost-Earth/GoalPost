@@ -159,13 +159,18 @@ type Person implements PersonInterface
   gender: String
   
   # Rich profile content
+  # `description` is a short relational note about a PersonPulse — who they are
+  # in the user's world. Distinct from the CONNECTED_TO `why` (how the user
+  # relates to them). Populated by the assistant at create time and editable via
+  # the authorized `updatePersonPulse` mutation (NOT the self-gated updatePeople).
+  description: String
   careManual: String
   favorites: String
   passions: String
   traits: String
   fieldsOfCare: String
   interests: String
-  
+
   # Authentication properties (for users)
   password: String @private
   refreshToken: String @private
@@ -1639,6 +1644,15 @@ type DeletePersonConnectionResponse {
 }
 
 """
+Response when editing a PersonPulse via `updatePersonPulse`.
+"""
+type UpdatePersonPulseResponse {
+  success: Boolean!
+  message: String!
+  person: Person
+}
+
+"""
 Input for logging pulse-related activities.
 """
 input LogPulseInput {
@@ -1738,6 +1752,28 @@ type Mutation {
     fromPersonId: ID!
     toPersonId: ID!
   ): DeletePersonConnectionResponse!
+
+  """
+  Edit a PersonPulse (a non-user :Person:PersonPulse) — its identity, its
+  relational `description` note, and the caller's relationship to it.
+
+  Authorization (enforced server-side, NOT via @authorization since this is a
+  custom resolver): the target must NOT carry the User label, and the caller
+  must own or be a member of a Space that has a FieldContext attached to this
+  person. This is the same reach used by the assistant's create_person, so
+  create and edit are symmetric. Editing a real User's node is rejected — that
+  flows through the self-gated updatePeople instead.
+
+  Only non-null arguments are applied. `relationshipWhy` MERGEs/updates a
+  CONNECTED_TO edge from the caller to the person (empty string clears the why).
+  """
+  updatePersonPulse(
+    personId: ID!
+    firstName: String
+    lastName: String
+    description: String
+    relationshipWhy: String
+  ): UpdatePersonPulseResponse!
 
   """
   Add a member to a space with a specific role.

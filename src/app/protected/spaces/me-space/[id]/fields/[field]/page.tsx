@@ -24,6 +24,7 @@ import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { PulsePanel, type PulseDetails } from '@/components/ui/pulse-panel'
 import { PersonPanel } from '@/components/ui/person-panel'
+import { resolveRelationshipWhy } from '@/lib/people/resolve-relationship-why'
 import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
@@ -110,6 +111,11 @@ type FieldContextPeopleResult = {
       name?: string | null
       email?: string | null
       photo?: string | null
+      description?: string | null
+      connectionEdges?: Array<{
+        connectedPersonId?: string | null
+        why?: string | null
+      }> | null
     }>
     meSpace?: Array<{
       owner?: Array<{ id: string }>
@@ -183,6 +189,8 @@ function FieldDetailPage() {
       email: string | null
       photo: string | null
       role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+      description: string | null
+      relationshipWhy: string | null
     }>
   >([])
   const [selectedPerson, setSelectedPerson] = useState<{
@@ -193,6 +201,8 @@ function FieldDetailPage() {
     email: string | null
     photo: string | null
     role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    description: string | null
+    relationshipWhy: string | null
   } | null>(null)
   const [pulseData, setPulseData] = useState<
     Array<{
@@ -422,6 +432,11 @@ function FieldDetailPage() {
       name?: string | null
       email?: string | null
       photo?: string | null
+      description?: string | null
+      connectionEdges?: Array<{
+        connectedPersonId?: string | null
+        why?: string | null
+      }> | null
     }>
 
     type FieldMembership = {
@@ -461,10 +476,15 @@ function FieldDetailPage() {
       email: person.email || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
+      description: person.description || null,
+      relationshipWhy: resolveRelationshipWhy(
+        person.connectionEdges,
+        user?.id
+      ),
     }))
 
     setPersonData(normalizedPeople)
-  }, [fieldPeopleData])
+  }, [fieldPeopleData, user?.id])
 
   // Fetch field name with pulse count
   useEffect(() => {
@@ -722,6 +742,8 @@ function FieldDetailPage() {
             email: person.email,
             photo: person.photo,
             role: person.role,
+            description: person.description,
+            relationshipWhy: person.relationshipWhy,
           })
           setIsPersonPanelOpen(true)
           setIsPulsePanelOpen(false)
@@ -1636,6 +1658,8 @@ function FieldDetailPage() {
                     email: person.email,
                     photo: person.photo,
                     role: person.role,
+                    description: person.description,
+                    relationshipWhy: person.relationshipWhy,
                   })
                   setIsPersonPanelOpen(true)
                 }}
@@ -1859,8 +1883,13 @@ function FieldDetailPage() {
         }}
         person={selectedPerson}
         connectedPersons={[]}
+        description={selectedPerson?.description ?? null}
+        relationshipWhy={selectedPerson?.relationshipWhy ?? null}
         onRemoveFromField={handleRemovePersonFromField}
         isRemovingFromField={isRemovingPersonFromField}
+        onPersonUpdated={() => {
+          refetchFieldPeople()
+        }}
       />
 
       {/* Offering Modal for creating new pulses */}

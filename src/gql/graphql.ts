@@ -300,6 +300,11 @@ export type CarePulseContextAggregateInput = {
 
 export type CarePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -341,6 +346,26 @@ export type CarePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -369,6 +394,8 @@ export type CarePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<CarePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type CarePulseCreateInput = {
@@ -397,6 +424,11 @@ export type CarePulseCreatedByAggregateInput = {
 
 export type CarePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -468,6 +500,21 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -543,6 +590,26 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -798,6 +865,8 @@ export type CarePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CarePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type CarePulseDeleteInput = {
@@ -848,6 +917,11 @@ export type CarePulseExtractedFromAggregateInput = {
 
 export type CarePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -909,6 +983,26 @@ export type CarePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1017,6 +1111,8 @@ export type CarePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<CarePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CarePulseFieldContextContextAggregationSelection = {
@@ -1048,6 +1144,11 @@ export type CarePulseInitiatedByAggregateInput = {
 
 export type CarePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -1119,6 +1220,21 @@ export type CarePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1194,6 +1310,26 @@ export type CarePulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1449,6 +1585,8 @@ export type CarePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<CarePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type CarePulsePersonCreatedByAggregationSelection = {
@@ -1463,6 +1601,7 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -1501,6 +1640,7 @@ export type CarePulsePersonInitiatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -1929,6 +2069,11 @@ export type CoreValuePulseContextAggregateInput = {
 
 export type CoreValuePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -1970,6 +2115,26 @@ export type CoreValuePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1998,6 +2163,8 @@ export type CoreValuePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type CoreValuePulseCreateInput = {
@@ -2025,6 +2192,11 @@ export type CoreValuePulseCreatedByAggregateInput = {
 
 export type CoreValuePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -2096,6 +2268,21 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2171,6 +2358,26 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2426,6 +2633,8 @@ export type CoreValuePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type CoreValuePulseDeleteInput = {
@@ -2476,6 +2685,11 @@ export type CoreValuePulseExtractedFromAggregateInput = {
 
 export type CoreValuePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -2537,6 +2751,26 @@ export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2645,6 +2879,8 @@ export type CoreValuePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CoreValuePulseFieldContextContextAggregationSelection = {
@@ -2676,6 +2912,11 @@ export type CoreValuePulseInitiatedByAggregateInput = {
 
 export type CoreValuePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -2747,6 +2988,21 @@ export type CoreValuePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2822,6 +3078,26 @@ export type CoreValuePulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3077,6 +3353,8 @@ export type CoreValuePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type CoreValuePulsePersonCreatedByAggregationSelection = {
@@ -3091,6 +3369,7 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -3129,6 +3408,7 @@ export type CoreValuePulsePersonInitiatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -3588,6 +3868,12 @@ export type CreateUpdatePersonConnectionResponsesMutationResponse = {
   __typename?: 'CreateUpdatePersonConnectionResponsesMutationResponse'
   info: CreateInfo
   updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
+}
+
+export type CreateUpdatePersonPulseResponsesMutationResponse = {
+  __typename?: 'CreateUpdatePersonPulseResponsesMutationResponse'
+  info: CreateInfo
+  updatePersonPulseResponses: Array<UpdatePersonPulseResponse>
 }
 
 export type CreateUpdateSpaceMemberRoleResponsesMutationResponse = {
@@ -4141,6 +4427,11 @@ export type DocumentExtractedPeopleAggregateInput = {
 
 export type DocumentExtractedPeopleConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -4241,6 +4532,21 @@ export type DocumentExtractedPeopleNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4316,6 +4622,26 @@ export type DocumentExtractedPeopleNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4577,6 +4903,8 @@ export type DocumentExtractedPeopleUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentExtractedPeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentExtractedPeopleDisconnectFieldInput>>
   update?: InputMaybe<DocumentExtractedPeopleUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentExtractedPeopleUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
 }
 
 export type DocumentExtractedPulsesAggregateInput = {
@@ -4663,6 +4991,26 @@ export type DocumentExtractedPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4717,6 +5065,8 @@ export type DocumentExtractedPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentExtractedPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentExtractedPulsesDisconnectFieldInput>>
   update?: InputMaybe<DocumentExtractedPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentExtractedPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
 }
 
 export type DocumentFieldContextAggregateInput = {
@@ -4733,6 +5083,11 @@ export type DocumentFieldContextAggregateInput = {
 
 export type DocumentFieldContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -4824,6 +5179,26 @@ export type DocumentFieldContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4858,6 +5233,8 @@ export type DocumentFieldContextUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentFieldContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentFieldContextDisconnectFieldInput>>
   update?: InputMaybe<DocumentFieldContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentFieldContextUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
 }
 
 export type DocumentFieldPulseExtractedPulsesAggregateSelection = {
@@ -4990,6 +5367,7 @@ export type DocumentPersonExtractedPeopleNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -5034,6 +5412,7 @@ export type DocumentPersonUploadedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -5111,6 +5490,11 @@ export type DocumentUploadedByAggregateInput = {
 
 export type DocumentUploadedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -5211,6 +5595,21 @@ export type DocumentUploadedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5286,6 +5685,26 @@ export type DocumentUploadedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5547,6 +5966,8 @@ export type DocumentUploadedByUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentUploadedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentUploadedByDisconnectFieldInput>>
   update?: InputMaybe<DocumentUploadedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentUploadedByUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
 }
 
 export type DocumentWhere = {
@@ -6246,6 +6667,11 @@ export type FieldContextCreatedByAggregateInput = {
 
 export type FieldContextCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -6346,6 +6772,21 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6421,6 +6862,26 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6682,6 +7143,8 @@ export type FieldContextCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldContextCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
 }
 
 export type FieldContextDeleteInput = {
@@ -6747,6 +7210,11 @@ export type FieldContextDocumentsAggregateInput = {
 
 export type FieldContextDocumentsConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -6837,6 +7305,26 @@ export type FieldContextDocumentsNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6951,6 +7439,8 @@ export type FieldContextDocumentsUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextDocumentsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextDocumentsDisconnectFieldInput>>
   update?: InputMaybe<FieldContextDocumentsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextDocumentsUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
 }
 
 export type FieldContextEdge = {
@@ -6995,6 +7485,11 @@ export type FieldContextMeSpaceAggregateInput = {
 
 export type FieldContextMeSpaceConnectFieldInput = {
   connect?: InputMaybe<Array<MeSpaceConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<MeSpaceConnectWhere>
 }
 
@@ -7107,6 +7602,26 @@ export type FieldContextMeSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7216,6 +7731,8 @@ export type FieldContextMeSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   update?: InputMaybe<FieldContextMeSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextMeSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
 }
 
 export type FieldContextPeopleAggregateInput = {
@@ -7232,6 +7749,11 @@ export type FieldContextPeopleAggregateInput = {
 
 export type FieldContextPeopleConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -7332,6 +7854,21 @@ export type FieldContextPeopleNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7407,6 +7944,26 @@ export type FieldContextPeopleNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7668,6 +8225,8 @@ export type FieldContextPeopleUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
   update?: InputMaybe<FieldContextPeopleUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextPeopleUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
 }
 
 export type FieldContextPersonCreatedByAggregateSelection = {
@@ -7688,6 +8247,7 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -7732,6 +8292,7 @@ export type FieldContextPersonPeopleNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -7863,6 +8424,26 @@ export type FieldContextPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7917,6 +8498,8 @@ export type FieldContextPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextPulsesConnectionWhere>
 }
 
 export type FieldContextResonanceLinkResonancesAggregateSelection = {
@@ -7957,6 +8540,11 @@ export type FieldContextResonancesAggregateInput = {
 
 export type FieldContextResonancesConnectFieldInput = {
   connect?: InputMaybe<Array<ResonanceLinkConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<ResonanceLinkConnectWhere>
 }
 
@@ -8062,6 +8650,26 @@ export type FieldContextResonancesNodeAggregationWhereInput = {
   evidence_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   evidence_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   evidence_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8111,6 +8719,8 @@ export type FieldContextResonancesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextResonancesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextResonancesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
 }
 
 /** Fields to sort FieldContexts by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldContextSort object. */
@@ -8149,6 +8759,11 @@ export type FieldContextWeSpaceAggregateInput = {
 
 export type FieldContextWeSpaceConnectFieldInput = {
   connect?: InputMaybe<Array<WeSpaceConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<WeSpaceConnectWhere>
 }
 
@@ -8234,6 +8849,26 @@ export type FieldContextWeSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8343,6 +8978,8 @@ export type FieldContextWeSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
   update?: InputMaybe<FieldContextWeSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextWeSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
 }
 
 export type FieldContextWeSpaceWeSpaceAggregateSelection = {
@@ -8386,6 +9023,11 @@ export type FieldContextWeavesAggregateInput = {
 
 export type FieldContextWeavesConnectFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PromiseWeaveConnectWhere>
 }
 
@@ -8441,6 +9083,26 @@ export type FieldContextWeavesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8490,6 +9152,8 @@ export type FieldContextWeavesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextWeavesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextWeavesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextWeavesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextWeavesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextWeavesConnectionWhere>
 }
 
 export type FieldContextWhere = {
@@ -8809,6 +9473,11 @@ export type FieldPulseContextAggregateInput = {
 
 export type FieldPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -8873,6 +9542,26 @@ export type FieldPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8907,6 +9596,8 @@ export type FieldPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type FieldPulseCreateInput = {
@@ -8931,6 +9622,11 @@ export type FieldPulseCreatedByAggregateInput = {
 
 export type FieldPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -9025,6 +9721,21 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9100,6 +9811,26 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9361,6 +10092,8 @@ export type FieldPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type FieldPulseDeleteInput = {
@@ -9397,6 +10130,11 @@ export type FieldPulseExtractedFromAggregateInput = {
 
 export type FieldPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -9481,6 +10219,26 @@ export type FieldPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9595,6 +10353,8 @@ export type FieldPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export enum FieldPulseImplementation {
@@ -9619,6 +10379,11 @@ export type FieldPulseInitiatedByAggregateInput = {
 
 export type FieldPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -9713,6 +10478,21 @@ export type FieldPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9788,6 +10568,26 @@ export type FieldPulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10049,6 +10849,8 @@ export type FieldPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 /** Fields to sort FieldPulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldPulseSort object. */
@@ -10176,6 +10978,8 @@ export type FieldPulseWhere = {
   title_IN?: InputMaybe<Array<Scalars['String']['input']>>
   title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename?: InputMaybe<Array<FieldPulseImplementation>>
+  /** @deprecated The typename_IN filter is deprecated, please use the typename filter instead */
+  typename_IN?: InputMaybe<Array<FieldPulseImplementation>>
 }
 
 export type FieldPulsesConnection = {
@@ -10437,6 +11241,11 @@ export type GoalPulseContextAggregateInput = {
 
 export type GoalPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -10478,6 +11287,26 @@ export type GoalPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10506,6 +11335,8 @@ export type GoalPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type GoalPulseCreateInput = {
@@ -10542,6 +11373,11 @@ export type GoalPulseCreatedByAggregateInput = {
 
 export type GoalPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -10613,6 +11449,21 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10688,6 +11539,26 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10943,6 +11814,8 @@ export type GoalPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type GoalPulseDeleteInput = {
@@ -11000,6 +11873,11 @@ export type GoalPulseExtractedFromAggregateInput = {
 
 export type GoalPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -11061,6 +11939,26 @@ export type GoalPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11169,6 +12067,8 @@ export type GoalPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type GoalPulseFieldContextContextAggregationSelection = {
@@ -11200,6 +12100,11 @@ export type GoalPulseInitiatedByAggregateInput = {
 
 export type GoalPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -11271,6 +12176,21 @@ export type GoalPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11346,6 +12266,26 @@ export type GoalPulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11601,6 +12541,8 @@ export type GoalPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type GoalPulsePersonCreatedByAggregationSelection = {
@@ -11615,6 +12557,7 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -11653,6 +12596,7 @@ export type GoalPulsePersonInitiatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -12292,6 +13236,11 @@ export type LogCreatedByAggregateInput = {
 
 export type LogCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -12392,6 +13341,21 @@ export type LogCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12467,6 +13431,26 @@ export type LogCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12728,6 +13712,8 @@ export type LogCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<LogCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogCreatedByDisconnectFieldInput>>
   update?: InputMaybe<LogCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<LogCreatedByConnectionWhere>
 }
 
 export type LogDeleteInput = {
@@ -12818,6 +13804,11 @@ export type LogGoalsAggregateInput = {
 
 export type LogGoalsConnectFieldInput = {
   connect?: InputMaybe<Array<GoalPulseConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<GoalPulseConnectWhere>
 }
 
@@ -12903,6 +13894,26 @@ export type LogGoalsNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13047,6 +14058,8 @@ export type LogGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<LogGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogGoalsDisconnectFieldInput>>
   update?: InputMaybe<LogGoalsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogGoalsUpdateConnectionInput" instead */
+  where?: InputMaybe<LogGoalsConnectionWhere>
 }
 
 /** Input for logging member-related activities. */
@@ -13079,6 +14092,7 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -13199,6 +14213,26 @@ export type LogPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13253,6 +14287,8 @@ export type LogPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogPulsesDisconnectFieldInput>>
   update?: InputMaybe<LogPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<LogPulsesConnectionWhere>
 }
 
 /** Input for logging resonance-related activities. */
@@ -13310,6 +14346,11 @@ export type LogResourcesAggregateInput = {
 
 export type LogResourcesConnectFieldInput = {
   connect?: InputMaybe<Array<ResourcePulseConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<ResourcePulseConnectWhere>
 }
 
@@ -13400,6 +14441,26 @@ export type LogResourcesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13529,6 +14590,8 @@ export type LogResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogResourcesDisconnectFieldInput>>
   update?: InputMaybe<LogResourcesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogResourcesUpdateConnectionInput" instead */
+  where?: InputMaybe<LogResourcesConnectionWhere>
 }
 
 /** Fields to sort Logs by. The order in which sorts are applied is not guaranteed when specifying many fields in one LogSort object. */
@@ -13945,6 +15008,11 @@ export type MeSpaceContextsAggregateInput = {
 
 export type MeSpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -13986,6 +15054,26 @@ export type MeSpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14014,6 +15102,8 @@ export type MeSpaceContextsUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type MeSpaceCreateInput = {
@@ -14079,6 +15169,11 @@ export type MeSpaceMembersAggregateInput = {
 
 export type MeSpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -14105,6 +15200,26 @@ export type MeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type MeSpaceMembersUpdateConnectionInput = {
@@ -14118,6 +15233,8 @@ export type MeSpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type MeSpaceOwnerAggregateInput = {
@@ -14134,6 +15251,11 @@ export type MeSpaceOwnerAggregateInput = {
 
 export type MeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -14205,6 +15327,21 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14280,6 +15417,26 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14535,6 +15692,8 @@ export type MeSpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type MeSpacePersonOwnerAggregationSelection = {
@@ -14549,6 +15708,7 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -14774,6 +15934,7 @@ export type Mutation = {
   createStoryPulses: CreateStoryPulsesMutationResponse
   createSubmitAssistantFeedbackResponses: CreateSubmitAssistantFeedbackResponsesMutationResponse
   createUpdatePersonConnectionResponses: CreateUpdatePersonConnectionResponsesMutationResponse
+  createUpdatePersonPulseResponses: CreateUpdatePersonPulseResponsesMutationResponse
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
@@ -14818,6 +15979,7 @@ export type Mutation = {
   deleteStoryPulses: DeleteInfo
   deleteSubmitAssistantFeedbackResponses: DeleteInfo
   deleteUpdatePersonConnectionResponses: DeleteInfo
+  deleteUpdatePersonPulseResponses: DeleteInfo
   deleteUpdateSpaceMemberRoleResponses: DeleteInfo
   deleteUpdateUserAiResponses: DeleteInfo
   deleteUsers: DeleteInfo
@@ -14951,6 +16113,21 @@ export type Mutation = {
    */
   updatePersonConnection: UpdatePersonConnectionResponse
   updatePersonConnectionEdges: UpdatePersonConnectionEdgesMutationResponse
+  /**
+   * Edit a PersonPulse (a non-user :Person:PersonPulse) — its identity, its
+   * relational `description` note, and the caller's relationship to it.
+   *
+   * Authorization (enforced server-side, NOT via @authorization since this is a
+   * custom resolver): the target must NOT carry the User label, and the caller
+   * must own or be a member of a Space that has a FieldContext attached to this
+   * person. This is the same reach used by the assistant's create_person, so
+   * create and edit are symmetric. Editing a real User's node is rejected — that
+   * flows through the self-gated updatePeople instead.
+   *
+   * Only non-null arguments are applied. `relationshipWhy` MERGEs/updates a
+   * CONNECTED_TO edge from the caller to the person (empty string clears the why).
+   */
+  updatePersonPulse: UpdatePersonPulseResponse
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
@@ -14964,6 +16141,7 @@ export type Mutation = {
   updateStoryPulses: UpdateStoryPulsesMutationResponse
   updateSubmitAssistantFeedbackResponses: UpdateSubmitAssistantFeedbackResponsesMutationResponse
   updateUpdatePersonConnectionResponses: UpdateUpdatePersonConnectionResponsesMutationResponse
+  updateUpdatePersonPulseResponses: UpdateUpdatePersonPulseResponsesMutationResponse
   updateUpdateSpaceMemberRoleResponses: UpdateUpdateSpaceMemberRoleResponsesMutationResponse
   updateUpdateUserAiResponses: UpdateUpdateUserAiResponsesMutationResponse
   /**
@@ -15086,6 +16264,10 @@ export type MutationCreateSubmitAssistantFeedbackResponsesArgs = {
 
 export type MutationCreateUpdatePersonConnectionResponsesArgs = {
   input: Array<UpdatePersonConnectionResponseCreateInput>
+}
+
+export type MutationCreateUpdatePersonPulseResponsesArgs = {
+  input: Array<UpdatePersonPulseResponseCreateInput>
 }
 
 export type MutationCreateUpdateSpaceMemberRoleResponsesArgs = {
@@ -15223,6 +16405,10 @@ export type MutationDeleteSubmitAssistantFeedbackResponsesArgs = {
 
 export type MutationDeleteUpdatePersonConnectionResponsesArgs = {
   where?: InputMaybe<UpdatePersonConnectionResponseWhere>
+}
+
+export type MutationDeleteUpdatePersonPulseResponsesArgs = {
+  where?: InputMaybe<UpdatePersonPulseResponseWhere>
 }
 
 export type MutationDeleteUpdateSpaceMemberRoleResponsesArgs = {
@@ -15394,6 +16580,14 @@ export type MutationUpdatePersonConnectionEdgesArgs = {
   where?: InputMaybe<PersonConnectionEdgeWhere>
 }
 
+export type MutationUpdatePersonPulseArgs = {
+  description?: InputMaybe<Scalars['String']['input']>
+  firstName?: InputMaybe<Scalars['String']['input']>
+  lastName?: InputMaybe<Scalars['String']['input']>
+  personId: Scalars['ID']['input']
+  relationshipWhy?: InputMaybe<Scalars['String']['input']>
+}
+
 export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
   update?: InputMaybe<RemoveSpaceMemberResponseUpdateInput>
   where?: InputMaybe<RemoveSpaceMemberResponseWhere>
@@ -15438,6 +16632,11 @@ export type MutationUpdateSubmitAssistantFeedbackResponsesArgs = {
 export type MutationUpdateUpdatePersonConnectionResponsesArgs = {
   update?: InputMaybe<UpdatePersonConnectionResponseUpdateInput>
   where?: InputMaybe<UpdatePersonConnectionResponseWhere>
+}
+
+export type MutationUpdateUpdatePersonPulseResponsesArgs = {
+  update?: InputMaybe<UpdatePersonPulseResponseUpdateInput>
+  where?: InputMaybe<UpdatePersonPulseResponseWhere>
 }
 
 export type MutationUpdateUpdateSpaceMemberRoleResponsesArgs = {
@@ -15703,6 +16902,21 @@ export type NotificationActorNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15778,6 +16992,26 @@ export type NotificationActorNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16083,6 +17317,7 @@ export type NotificationPersonActorNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -16127,6 +17362,7 @@ export type NotificationPersonRecipientNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -16243,6 +17479,21 @@ export type NotificationRecipientNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16318,6 +17569,26 @@ export type NotificationRecipientNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16721,6 +17992,7 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<PersonPersonCreatedByAggregationSelection>
   createdByConnection: PersonCreatedByConnection
+  description?: Maybe<Scalars['String']['output']>
   email?: Maybe<Scalars['String']['output']>
   embedding?: Maybe<Array<Scalars['Float']['output']>>
   /**
@@ -16978,6 +18250,7 @@ export type PersonAggregateNode = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -17011,6 +18284,7 @@ export type PersonAggregateSelection = {
   careManual: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -17149,6 +18423,11 @@ export type PersonContextsAggregateInput = {
 
 export type PersonContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -17219,6 +18498,26 @@ export type PersonContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17253,6 +18552,8 @@ export type PersonContextsUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
   update?: InputMaybe<PersonContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonContextsConnectionWhere>
 }
 
 export type PersonCreateInput = {
@@ -17261,6 +18562,7 @@ export type PersonCreateInput = {
   careManual?: InputMaybe<Scalars['String']['input']>
   contexts?: InputMaybe<PersonContextsFieldInput>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
+  description?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
   embedding?: InputMaybe<Array<Scalars['Float']['input']>>
   extractedFrom?: InputMaybe<PersonExtractedFromFieldInput>
@@ -17306,6 +18608,11 @@ export type PersonCreatedByAggregateInput = {
 
 export type PersonCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -17406,6 +18713,21 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17481,6 +18803,26 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17742,6 +19084,8 @@ export type PersonCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   update?: InputMaybe<PersonCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonCreatedByConnectionWhere>
 }
 
 export type PersonDeleteInput = {
@@ -17807,6 +19151,11 @@ export type PersonExtractedFromAggregateInput = {
 
 export type PersonExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -17897,6 +19246,26 @@ export type PersonExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18011,6 +19380,8 @@ export type PersonExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<PersonExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
 }
 
 export type PersonFieldContextContextsAggregateSelection = {
@@ -18169,6 +19540,8 @@ export type PersonInterfaceWhere = {
   pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename?: InputMaybe<Array<PersonInterfaceImplementation>>
+  /** @deprecated The typename_IN filter is deprecated, please use the typename filter instead */
+  typename_IN?: InputMaybe<Array<PersonInterfaceImplementation>>
   updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -18199,6 +19572,11 @@ export type PersonMemberOfAggregateInput = {
 
 export type PersonMemberOfConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -18254,6 +19632,26 @@ export type PersonMemberOfNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type PersonMemberOfRelationship = {
@@ -18273,6 +19671,8 @@ export type PersonMemberOfUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   update?: InputMaybe<PersonMemberOfUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonMemberOfUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonMemberOfConnectionWhere>
 }
 
 export type PersonOwnsSpacesAggregateInput = {
@@ -18374,6 +19774,26 @@ export type PersonOwnsSpacesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18483,6 +19903,8 @@ export type PersonOwnsSpacesUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
   update?: InputMaybe<PersonOwnsSpacesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonOwnsSpacesUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonOwnsSpacesConnectionWhere>
 }
 
 export type PersonPersonCreatedByAggregateSelection = {
@@ -18503,6 +19925,7 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -18535,6 +19958,7 @@ export type PersonSort = {
   avatar?: InputMaybe<SortDirection>
   careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
+  description?: InputMaybe<SortDirection>
   email?: InputMaybe<SortDirection>
   favorites?: InputMaybe<SortDirection>
   fieldsOfCare?: InputMaybe<SortDirection>
@@ -18616,6 +20040,7 @@ export type PersonUpdateInput = {
   careManual_SET?: InputMaybe<Scalars['String']['input']>
   contexts?: InputMaybe<Array<PersonContextsUpdateFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
+  description_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
   embedding_POP?: InputMaybe<Scalars['Int']['input']>
   embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
@@ -18722,6 +20147,11 @@ export type PersonWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return People where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  description_EQ?: InputMaybe<Scalars['String']['input']>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   email_CONTAINS?: InputMaybe<Scalars['String']['input']>
   email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   email_EQ?: InputMaybe<Scalars['String']['input']>
@@ -19300,6 +20730,11 @@ export type PromiseWeaveContextAggregateInput = {
 
 export type PromiseWeaveContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -19370,6 +20805,26 @@ export type PromiseWeaveContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -19404,6 +20859,8 @@ export type PromiseWeaveContextUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveContextDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveContextUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveContextConnectionWhere>
 }
 
 export type PromiseWeaveCreateInput = {
@@ -19430,6 +20887,11 @@ export type PromiseWeaveCreatedByAggregateInput = {
 
 export type PromiseWeaveCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -19530,6 +20992,21 @@ export type PromiseWeaveCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -19605,6 +21082,26 @@ export type PromiseWeaveCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -19866,6 +21363,8 @@ export type PromiseWeaveCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveCreatedByDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
 }
 
 export type PromiseWeaveDeleteInput = {
@@ -19949,6 +21448,7 @@ export type PromiseWeavePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -19993,6 +21493,7 @@ export type PromiseWeavePersonWovenForNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -20121,6 +21622,26 @@ export type PromiseWeaveWeavesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20175,6 +21696,8 @@ export type PromiseWeaveWeavesUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveWeavesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWeavesDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveWeavesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveWeavesUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
 }
 
 export type PromiseWeaveWhere = {
@@ -20286,6 +21809,11 @@ export type PromiseWeaveWovenForAggregateInput = {
 
 export type PromiseWeaveWovenForConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -20386,6 +21914,21 @@ export type PromiseWeaveWovenForNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20461,6 +22004,26 @@ export type PromiseWeaveWovenForNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20722,6 +22285,8 @@ export type PromiseWeaveWovenForUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveWovenForDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWovenForDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveWovenForUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveWovenForUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
 }
 
 export type PromiseWeavesConnection = {
@@ -20982,6 +22547,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "updatePersonConnectionResponsesConnection" instead */
   updatePersonConnectionResponsesAggregate: UpdatePersonConnectionResponseAggregateSelection
   updatePersonConnectionResponsesConnection: UpdatePersonConnectionResponsesConnection
+  updatePersonPulseResponses: Array<UpdatePersonPulseResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "updatePersonPulseResponsesConnection" instead */
+  updatePersonPulseResponsesAggregate: UpdatePersonPulseResponseAggregateSelection
+  updatePersonPulseResponsesConnection: UpdatePersonPulseResponsesConnection
   updateSpaceMemberRoleResponses: Array<UpdateSpaceMemberRoleResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "updateSpaceMemberRoleResponsesConnection" instead */
   updateSpaceMemberRoleResponsesAggregate: UpdateSpaceMemberRoleResponseAggregateSelection
@@ -21616,6 +23185,24 @@ export type QueryUpdatePersonConnectionResponsesConnectionArgs = {
   where?: InputMaybe<UpdatePersonConnectionResponseWhere>
 }
 
+export type QueryUpdatePersonPulseResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdatePersonPulseResponseSort>>
+  where?: InputMaybe<UpdatePersonPulseResponseWhere>
+}
+
+export type QueryUpdatePersonPulseResponsesAggregateArgs = {
+  where?: InputMaybe<UpdatePersonPulseResponseWhere>
+}
+
+export type QueryUpdatePersonPulseResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<UpdatePersonPulseResponseSort>>
+  where?: InputMaybe<UpdatePersonPulseResponseWhere>
+}
+
 export type QueryUpdateSpaceMemberRoleResponsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -22126,6 +23713,11 @@ export type ResonanceLinkContextAggregateInput = {
 
 export type ResonanceLinkContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -22196,6 +23788,26 @@ export type ResonanceLinkContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22230,6 +23842,8 @@ export type ResonanceLinkContextUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkContextDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkContextUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
 }
 
 export type ResonanceLinkCreateInput = {
@@ -22422,6 +24036,26 @@ export type ResonanceLinkSourceNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22476,6 +24110,8 @@ export type ResonanceLinkSourceUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkSourceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkSourceUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
 }
 
 export type ResonanceLinkTargetAggregateInput = {
@@ -22562,6 +24198,26 @@ export type ResonanceLinkTargetNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22616,6 +24272,8 @@ export type ResonanceLinkTargetUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkTargetUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkTargetUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
 }
 
 export type ResonanceLinkUpdateInput = {
@@ -22968,6 +24626,11 @@ export type ResourcePulseContextAggregateInput = {
 
 export type ResourcePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -23009,6 +24672,26 @@ export type ResourcePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23037,6 +24720,8 @@ export type ResourcePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type ResourcePulseCreateInput = {
@@ -23070,6 +24755,11 @@ export type ResourcePulseCreatedByAggregateInput = {
 
 export type ResourcePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -23141,6 +24831,21 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23216,6 +24921,26 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23471,6 +25196,8 @@ export type ResourcePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type ResourcePulseDeleteInput = {
@@ -23528,6 +25255,11 @@ export type ResourcePulseExtractedFromAggregateInput = {
 
 export type ResourcePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -23589,6 +25321,26 @@ export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23697,6 +25449,8 @@ export type ResourcePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type ResourcePulseFieldContextContextAggregationSelection = {
@@ -23728,6 +25482,11 @@ export type ResourcePulseInitiatedByAggregateInput = {
 
 export type ResourcePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -23799,6 +25558,21 @@ export type ResourcePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23874,6 +25648,26 @@ export type ResourcePulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24129,6 +25923,8 @@ export type ResourcePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type ResourcePulsePersonCreatedByAggregationSelection = {
@@ -24143,6 +25939,7 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -24181,6 +25978,7 @@ export type ResourcePulsePersonInitiatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -24575,6 +26373,11 @@ export type SpaceContextsAggregateInput = {
 
 export type SpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -24639,6 +26442,26 @@ export type SpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24673,6 +26496,8 @@ export type SpaceContextsUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<SpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type SpaceCreateInput = {
@@ -24717,6 +26542,11 @@ export type SpaceMembersAggregateInput = {
 
 export type SpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -24766,6 +26596,26 @@ export type SpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type SpaceMembersRelationship = {
@@ -24785,6 +26635,8 @@ export type SpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 /**
@@ -24940,6 +26792,11 @@ export type SpaceMembershipMemberAggregateInput = {
 
 export type SpaceMembershipMemberConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -25040,6 +26897,21 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25115,6 +26987,26 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25376,6 +27268,8 @@ export type SpaceMembershipMemberUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembershipMemberDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembershipMemberDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembershipMemberUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembershipMemberUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
 }
 
 export type SpaceMembershipPersonMemberAggregateSelection = {
@@ -25396,6 +27290,7 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -25528,6 +27423,26 @@ export type SpaceMembershipSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25664,6 +27579,8 @@ export type SpaceMembershipSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembershipSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembershipSpaceDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembershipSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembershipSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembershipSpaceConnectionWhere>
 }
 
 export type SpaceMembershipUpdateInput = {
@@ -25748,6 +27665,11 @@ export type SpaceOwnerAggregateInput = {
 
 export type SpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -25842,6 +27764,21 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25917,6 +27854,26 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26178,6 +28135,8 @@ export type SpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<SpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export enum SpaceRole {
@@ -26325,6 +28284,8 @@ export type SpaceWhere = {
   time_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   time_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename?: InputMaybe<Array<SpaceImplementation>>
+  /** @deprecated The typename_IN filter is deprecated, please use the typename filter instead */
+  typename_IN?: InputMaybe<Array<SpaceImplementation>>
   visibility_EQ?: InputMaybe<SpaceVisibility>
   visibility_IN?: InputMaybe<Array<SpaceVisibility>>
   why_CONTAINS?: InputMaybe<Scalars['String']['input']>
@@ -26606,6 +28567,11 @@ export type StoryPulseContextAggregateInput = {
 
 export type StoryPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -26647,6 +28613,26 @@ export type StoryPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26675,6 +28661,8 @@ export type StoryPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type StoryPulseCreateInput = {
@@ -26718,6 +28706,11 @@ export type StoryPulseCreatedByAggregateInput = {
 
 export type StoryPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -26789,6 +28782,21 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26864,6 +28872,26 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -27119,6 +29147,8 @@ export type StoryPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type StoryPulseDeleteInput = {
@@ -27169,6 +29199,11 @@ export type StoryPulseExtractedFromAggregateInput = {
 
 export type StoryPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -27230,6 +29265,26 @@ export type StoryPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -27338,6 +29393,8 @@ export type StoryPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type StoryPulseFieldContextContextAggregationSelection = {
@@ -27369,6 +29426,11 @@ export type StoryPulseInitiatedByAggregateInput = {
 
 export type StoryPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -27440,6 +29502,21 @@ export type StoryPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -27515,6 +29592,26 @@ export type StoryPulseInitiatedByNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -27770,6 +29867,8 @@ export type StoryPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type StoryPulsePersonCreatedByAggregationSelection = {
@@ -27784,6 +29883,7 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -27822,6 +29922,7 @@ export type StoryPulsePersonInitiatedByNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -28375,6 +30476,73 @@ export type UpdatePersonConnectionResponsesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+/** Response when editing a PersonPulse via `updatePersonPulse`. */
+export type UpdatePersonPulseResponse = {
+  __typename?: 'UpdatePersonPulseResponse'
+  message: Scalars['String']['output']
+  person?: Maybe<Person>
+  success: Scalars['Boolean']['output']
+}
+
+export type UpdatePersonPulseResponseAggregate = {
+  __typename?: 'UpdatePersonPulseResponseAggregate'
+  count: Count
+  node: UpdatePersonPulseResponseAggregateNode
+}
+
+export type UpdatePersonPulseResponseAggregateNode = {
+  __typename?: 'UpdatePersonPulseResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type UpdatePersonPulseResponseAggregateSelection = {
+  __typename?: 'UpdatePersonPulseResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type UpdatePersonPulseResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type UpdatePersonPulseResponseEdge = {
+  __typename?: 'UpdatePersonPulseResponseEdge'
+  cursor: Scalars['String']['output']
+  node: UpdatePersonPulseResponse
+}
+
+/** Fields to sort UpdatePersonPulseResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one UpdatePersonPulseResponseSort object. */
+export type UpdatePersonPulseResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type UpdatePersonPulseResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdatePersonPulseResponseWhere = {
+  AND?: InputMaybe<Array<UpdatePersonPulseResponseWhere>>
+  NOT?: InputMaybe<UpdatePersonPulseResponseWhere>
+  OR?: InputMaybe<Array<UpdatePersonPulseResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type UpdatePersonPulseResponsesConnection = {
+  __typename?: 'UpdatePersonPulseResponsesConnection'
+  aggregate: UpdatePersonPulseResponseAggregate
+  edges: Array<UpdatePersonPulseResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
   __typename?: 'UpdateRemoveSpaceMemberResponsesMutationResponse'
   info: UpdateInfo
@@ -28488,6 +30656,12 @@ export type UpdateUpdatePersonConnectionResponsesMutationResponse = {
   __typename?: 'UpdateUpdatePersonConnectionResponsesMutationResponse'
   info: UpdateInfo
   updatePersonConnectionResponses: Array<UpdatePersonConnectionResponse>
+}
+
+export type UpdateUpdatePersonPulseResponsesMutationResponse = {
+  __typename?: 'UpdateUpdatePersonPulseResponsesMutationResponse'
+  info: UpdateInfo
+  updatePersonPulseResponses: Array<UpdatePersonPulseResponse>
 }
 
 export type UpdateUpdateSpaceMemberRoleResponsesMutationResponse = {
@@ -28822,6 +30996,26 @@ export type UserOwnsSpacesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -28931,6 +31125,8 @@ export type UserOwnsSpacesUpdateFieldInput = {
   delete?: InputMaybe<Array<UserOwnsSpacesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<UserOwnsSpacesDisconnectFieldInput>>
   update?: InputMaybe<UserOwnsSpacesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "UserOwnsSpacesUpdateConnectionInput" instead */
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
 }
 
 /** Fields to sort Users by. The order in which sorts are applied is not guaranteed when specifying many fields in one UserSort object. */
@@ -29376,6 +31572,11 @@ export type WeSpaceContextsAggregateInput = {
 
 export type WeSpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -29417,6 +31618,26 @@ export type WeSpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -29445,6 +31666,8 @@ export type WeSpaceContextsUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type WeSpaceCreateInput = {
@@ -29510,6 +31733,11 @@ export type WeSpaceMembersAggregateInput = {
 
 export type WeSpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -29536,6 +31764,26 @@ export type WeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type WeSpaceMembersUpdateConnectionInput = {
@@ -29549,6 +31797,8 @@ export type WeSpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type WeSpaceOwnerAggregateInput = {
@@ -29565,6 +31815,11 @@ export type WeSpaceOwnerAggregateInput = {
 
 export type WeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -29636,6 +31891,21 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -29711,6 +31981,26 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   gender_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   gender_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   interests_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   interests_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -29966,6 +32256,8 @@ export type WeSpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type WeSpacePersonOwnerAggregationSelection = {
@@ -29980,6 +32272,7 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   avatar: StringAggregateSelection
   careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   email: StringAggregateSelection
   favorites: StringAggregateSelection
   fieldsOfCare: StringAggregateSelection
@@ -30579,6 +32872,31 @@ export type UpdatePersonMutation = {
           }
       >
     }>
+  }
+}
+
+export type UpdatePersonPulseMutationVariables = Exact<{
+  personId: Scalars['ID']['input']
+  firstName?: InputMaybe<Scalars['String']['input']>
+  lastName?: InputMaybe<Scalars['String']['input']>
+  description?: InputMaybe<Scalars['String']['input']>
+  relationshipWhy?: InputMaybe<Scalars['String']['input']>
+}>
+
+export type UpdatePersonPulseMutation = {
+  __typename?: 'Mutation'
+  updatePersonPulse: {
+    __typename?: 'UpdatePersonPulseResponse'
+    success: boolean
+    message: string
+    person?: {
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      description?: string | null
+    } | null
   }
 }
 
@@ -31950,6 +34268,12 @@ export type GetFieldContextPeopleQuery = {
       name: string
       email?: string | null
       photo?: string | null
+      description?: string | null
+      connectionEdges: Array<{
+        __typename?: 'PersonConnectionEdge'
+        connectedPersonId: string
+        why?: string | null
+      }>
     }>
     meSpace: Array<{
       __typename?: 'MeSpace'
@@ -33374,7 +35698,6 @@ export type MyNotificationsQuery = {
     read: boolean
     readAt?: any | null
     createdAt: any
-    metadata?: string | null
     actor: Array<{
       __typename?: 'Person'
       id: string
@@ -33444,6 +35767,7 @@ export type GetPersonProfileQuery = {
     name: string
     email?: string | null
     photo?: string | null
+    description?: string | null
     traits?: string | null
     passions?: string | null
     fieldsOfCare?: string | null
@@ -35035,6 +37359,57 @@ export type GetPersonConnectionsQuery = {
       connectedPersonId: string
       why?: string | null
       interests?: string | null
+    }>
+  }>
+}
+
+export type DocumentByIdQueryVariables = Exact<{
+  documentId: Scalars['ID']['input']
+}>
+
+export type DocumentByIdQuery = {
+  __typename?: 'Query'
+  documents: Array<{
+    __typename?: 'Document'
+    id: string
+    filename: string
+    mimeType: string
+    sizeBytes: number
+    pageCount?: number | null
+    userHint?: string | null
+    summary?: string | null
+    concepts?: Array<string> | null
+    uploadedAt: any
+    uploadedBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+    }>
+    fieldContext: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+    }>
+    extractedPeople: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+    }>
+    extractedPulses: Array<
+      | { __typename: 'CarePulse'; id: string; title: string }
+      | { __typename: 'CoreValuePulse'; id: string; title: string }
+      | { __typename: 'GoalPulse'; id: string; title: string }
+      | { __typename: 'ResourcePulse'; id: string; title: string }
+      | { __typename: 'StoryPulse'; id: string; title: string }
+    >
+    ingestThreads: Array<{
+      __typename?: 'DocumentIngestThread'
+      id: string
+      title: string
+      createdAt: string
     }>
   }>
 }
@@ -36952,6 +39327,145 @@ export const UpdatePersonDocument = {
 } as unknown as DocumentNode<
   UpdatePersonMutation,
   UpdatePersonMutationVariables
+>
+export const UpdatePersonPulseDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdatePersonPulse' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'firstName' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'lastName' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'description' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'relationshipWhy' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePersonPulse' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'firstName' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'firstName' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'lastName' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'lastName' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'description' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'description' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'relationshipWhy' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'relationshipWhy' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'person' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdatePersonPulseMutation,
+  UpdatePersonPulseMutationVariables
 >
 export const DeletePersonDocument = {
   kind: 'Document',
@@ -43061,6 +45575,30 @@ export const GetFieldContextPeopleDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectionEdges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: {
+                                kind: 'Name',
+                                value: 'connectedPersonId',
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'why' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -48685,7 +51223,6 @@ export const MyNotificationsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'read' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'readAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'actor' },
@@ -48876,6 +51413,7 @@ export const GetPersonProfileDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
                 {
@@ -54211,3 +56749,146 @@ export const GetPersonConnectionsDocument = {
   GetPersonConnectionsQuery,
   GetPersonConnectionsQueryVariables
 >
+export const DocumentByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DocumentById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'documentId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'documents' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'documentId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mimeType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pageCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userHint' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'concepts' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'uploadedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'uploadedBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'fieldContext' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedPeople' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'extractedPulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestThreads' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DocumentByIdQuery, DocumentByIdQueryVariables>

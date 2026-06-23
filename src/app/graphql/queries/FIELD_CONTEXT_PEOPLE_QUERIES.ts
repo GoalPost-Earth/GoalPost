@@ -14,6 +14,13 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
         name
         email
         photo
+        description
+        # The current user's relationship to this person lives on the
+        # CONNECTED_TO edge; match the edge whose other end is the user.
+        connectionEdges {
+          connectedPersonId
+          why
+        }
       }
       meSpace {
         id

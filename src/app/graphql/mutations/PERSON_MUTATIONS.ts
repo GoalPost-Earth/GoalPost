@@ -46,6 +46,40 @@ export const UPDATE_PERSON_MUTATION = graphql(`
   }
 `)
 
+/**
+ * Edit a PersonPulse (a non-user :Person:PersonPulse). Unlike updatePeople
+ * (self-gated to the caller's own node), this routes through an authorized
+ * custom resolver that lets the caller edit people they can reach through a
+ * Space they belong to. Folds in the relationship `why` as well.
+ */
+export const UPDATE_PERSON_PULSE_MUTATION = graphql(`
+  mutation UpdatePersonPulse(
+    $personId: ID!
+    $firstName: String
+    $lastName: String
+    $description: String
+    $relationshipWhy: String
+  ) {
+    updatePersonPulse(
+      personId: $personId
+      firstName: $firstName
+      lastName: $lastName
+      description: $description
+      relationshipWhy: $relationshipWhy
+    ) {
+      success
+      message
+      person {
+        id
+        firstName
+        lastName
+        name
+        description
+      }
+    }
+  }
+`)
+
 export const DELETE_PERSON_MUTATION = graphql(`
   mutation DeletePerson($id: ID!) {
     deletePeople(where: { id_EQ: $id }) {

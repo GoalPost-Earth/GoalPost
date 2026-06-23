@@ -12,6 +12,7 @@ import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { ResonanceLinkModal } from '@/components/ui/resonance-link-modal'
 import { BulkPulseShareModal } from '@/components/ui/bulk-pulse-share-modal'
 import { PersonPanel } from '@/components/ui/person-panel'
+import { resolveRelationshipWhy } from '@/lib/people/resolve-relationship-why'
 import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
@@ -144,6 +145,8 @@ export default function FieldContextDetailsPage() {
     email: string | null
     photo: string | null
     role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    description: string | null
+    relationshipWhy: string | null
   } | null>(null)
 
   // Set page title
@@ -274,6 +277,11 @@ export default function FieldContextDetailsPage() {
               name?: string | null
               email?: string | null
               photo?: string | null
+              description?: string | null
+              connectionEdges?: Array<{
+                connectedPersonId?: string | null
+                why?: string | null
+              }> | null
             }>
             meSpace?: Array<{
               owner?: Array<{ id: string }>
@@ -345,8 +353,13 @@ export default function FieldContextDetailsPage() {
       email: person.email || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
+      description: person.description || null,
+      relationshipWhy: resolveRelationshipWhy(
+        person.connectionEdges,
+        user?.id
+      ),
     }))
-  }, [peopleContext])
+  }, [peopleContext, user?.id])
 
   // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
   // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
@@ -1607,8 +1620,13 @@ export default function FieldContextDetailsPage() {
         }}
         person={selectedPerson}
         connectedPersons={[]}
+        description={selectedPerson?.description ?? null}
+        relationshipWhy={selectedPerson?.relationshipWhy ?? null}
         onRemoveFromField={handleRemovePersonFromField}
         isRemovingFromField={isRemovingPersonFromField}
+        onPersonUpdated={() => {
+          refetchFieldPeople()
+        }}
       />
 
       <AddPersonToFieldModal

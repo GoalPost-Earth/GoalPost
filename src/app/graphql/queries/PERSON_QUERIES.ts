@@ -30,6 +30,7 @@ export const GET_PERSON_PROFILE = graphql(`
       name
       email
       photo
+      description
       traits
       passions
       fieldsOfCare

@@ -30,6 +30,7 @@ import {
 import { ResonancePanel } from '@/components/ui/resonance-panel'
 import { ConnectionPanel } from '@/components/ui/connection-panel'
 import { PersonPanel } from '@/components/ui/person-panel'
+import { resolveRelationshipWhy } from '@/lib/people/resolve-relationship-why'
 import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
@@ -165,6 +166,8 @@ function FieldDetailPage() {
     email: string | null
     photo: string | null
     role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    description: string | null
+    relationshipWhy: string | null
   }
   const [personData, setPersonData] = useState<PersonData[]>([])
   const [isConnectionPanelOpen, setIsConnectionPanelOpen] = useState(false)
@@ -178,6 +181,8 @@ function FieldDetailPage() {
     email: string | null
     photo: string | null
     role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST' | 'PERSON'
+    description: string | null
+    relationshipWhy: string | null
   } | null>(null)
   const [selectedConnection, setSelectedConnection] = useState<{
     person1: {
@@ -534,6 +539,11 @@ function FieldDetailPage() {
                 name?: string | null
                 email?: string | null
                 photo?: string | null
+                description?: string | null
+                connectionEdges?: Array<{
+                  connectedPersonId?: string | null
+                  why?: string | null
+                }> | null
               }>
               weSpace?: Array<{
                 owner?: Array<{ id: string }>
@@ -556,6 +566,11 @@ function FieldDetailPage() {
         name?: string | null
         email?: string | null
         photo?: string | null
+        description?: string | null
+        connectionEdges?: Array<{
+          connectedPersonId?: string | null
+          why?: string | null
+        }> | null
       }>
 
       type FieldMembership = {
@@ -598,6 +613,11 @@ function FieldDetailPage() {
           email: person.email ?? null,
           photo: person.photo ?? null,
           role: roleById.get(person.id) || 'PERSON',
+          description: person.description || null,
+          relationshipWhy: resolveRelationshipWhy(
+            person.connectionEdges,
+            user?.id
+          ),
         })
       })
 
@@ -612,7 +632,7 @@ function FieldDetailPage() {
     } catch (error) {
       console.error('Error processing members data:', error)
     }
-  }, [fieldPeopleData])
+  }, [fieldPeopleData, user?.id])
 
   // Fetch person connections when members data is available
   useEffect(() => {
@@ -908,6 +928,8 @@ function FieldDetailPage() {
             email: person.email,
             photo: person.photo,
             role: person.role,
+            description: person.description,
+            relationshipWhy: person.relationshipWhy,
           })
           setIsPersonPanelOpen(true)
           setIsPulsePanelOpen(false)
@@ -1674,6 +1696,8 @@ function FieldDetailPage() {
         email: clickedPerson.email,
         photo: clickedPerson.photo,
         role: clickedPerson.role,
+        description: clickedPerson.description,
+        relationshipWhy: clickedPerson.relationshipWhy,
       })
       setIsPersonPanelOpen(true)
     },
@@ -2267,8 +2291,13 @@ function FieldDetailPage() {
             : []
         }
         onConnectionClick={handleViewConnectionFromPanel}
+        description={selectedPerson?.description ?? null}
+        relationshipWhy={selectedPerson?.relationshipWhy ?? null}
         onRemoveFromField={handleRemovePersonFromField}
         isRemovingFromField={isRemovingPersonFromField}
+        onPersonUpdated={() => {
+          refetchFieldPeople()
+        }}
       />
 
       {/* Offering Modal for creating new pulses */}
