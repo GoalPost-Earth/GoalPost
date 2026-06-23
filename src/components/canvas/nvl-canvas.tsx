@@ -9,7 +9,6 @@ import type {
   ExternalCallbacks,
 } from '@neo4j-nvl/base'
 import type { InteractiveNvlWrapperProps } from '@neo4j-nvl/react'
-import { useAnimations } from '@/contexts'
 import { useNvlPinchZoom } from '@/hooks'
 import { cn } from '@/lib/utils'
 
@@ -62,7 +61,6 @@ export function NvlCanvas({
   maxInitialZoom = 1.4,
 }: NvlCanvasProps) {
   const wrapperRef = useRef<any>(null)
-  const { animationsEnabled } = useAnimations()
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isDraggingRef = useRef(false)
   const isInitialLayoutRef = useRef(true)
@@ -489,7 +487,7 @@ export function NvlCanvas({
             <div
               className={cn(
                 'text-gp-primary dark:text-gp-primary',
-                animationsEnabled && 'animate-spin'
+                'motion-safe:animate-spin'
               )}
             >
               <span className="material-symbols-outlined text-5xl md:text-6xl">

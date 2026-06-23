@@ -5,7 +5,6 @@ import { DraggableFieldBubble } from '@/components/canvas/draggable-field-bubble
 import { GenericCanvas } from '@/components/canvas/generic-canvas'
 import { useCallback, useEffect, useState } from 'react'
 import { CreateFieldModal } from '@/components/canvas/create-field-modal'
-import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 type BubbleSize = NonNullable<FieldBubbleProps['size']>
@@ -53,7 +52,6 @@ export function FieldsCanvas({
   onRefetch,
   memberButton,
 }: FieldsCanvasProps) {
-  const { animationsEnabled } = useAnimations()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
@@ -305,7 +303,7 @@ export function FieldsCanvas({
               <span
                 className={cn(
                   'material-symbols-outlined text-5xl text-gp-primary',
-                  animationsEnabled && 'animate-spin'
+                  'motion-safe:animate-spin'
                 )}
               >
                 hourglass_bottom

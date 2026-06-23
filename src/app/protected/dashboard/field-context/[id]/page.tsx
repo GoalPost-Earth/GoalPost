@@ -59,7 +59,6 @@ import {
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
 import { cn } from '@/lib/utils'
 import {
-  useAnimations,
   useApp,
   useFocalEntity,
   usePageContext,
@@ -86,7 +85,6 @@ export default function FieldContextDetailsPage() {
   // switch (GOAL-271).
   const { activeFieldId } = useRouteFocalScope()
   const contextId = activeFieldId ?? ''
-  const { animationsEnabled } = useAnimations()
   const [isCreatePulseModalOpen, setIsCreatePulseModalOpen] = useState(false)
   const [editingPulseId, setEditingPulseId] = useState<string | null>(null)
   const [editingPulseData, setEditingPulseData] = useState<{
@@ -1192,7 +1190,7 @@ export default function FieldContextDetailsPage() {
                     <span
                       className={cn(
                         'material-symbols-outlined text-base',
-                        animationsEnabled && 'animate-spin'
+                        'motion-safe:animate-spin'
                       )}
                     >
                       hourglass_bottom
@@ -1253,7 +1251,7 @@ export default function FieldContextDetailsPage() {
                     <span
                       className={cn(
                         'material-symbols-outlined text-base',
-                        animationsEnabled && 'animate-spin'
+                        'motion-safe:animate-spin'
                       )}
                     >
                       hourglass_bottom

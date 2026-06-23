@@ -15,7 +15,7 @@ import {
   LOG_MEMBER_ACTIVITY,
   LOG_SPACE_ACTIVITY,
 } from '@/app/graphql/mutations'
-import { useAnimations, useApp } from '@/contexts'
+import { useApp } from '@/contexts'
 import { SpaceDetailsHeader } from './space-details-header'
 import { SpaceDetailsSections } from './space-details-sections'
 import { SpaceDetailsActions } from './space-details-actions'
@@ -61,7 +61,6 @@ export function SpaceDetailsView({
   getContextHref,
 }: SpaceDetailsViewProps) {
   const router = useRouter()
-  const { animationsEnabled } = useAnimations()
   const { user } = useApp()
 
   const [isEditMode, setIsEditMode] = useState(false)
@@ -322,7 +321,7 @@ export function SpaceDetailsView({
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <span
-            className={`material-symbols-outlined text-5xl text-gp-primary ${animationsEnabled ? 'animate-spin' : ''}`}
+            className="material-symbols-outlined text-5xl text-gp-primary motion-safe:animate-spin"
           >
             hourglass_bottom
           </span>
@@ -375,7 +374,6 @@ export function SpaceDetailsView({
         showMemberDeleteConfirm={showMemberDeleteConfirm}
         memberToDelete={memberToDelete}
         isMemberActionLoading={isMemberActionLoading}
-        animationsEnabled={animationsEnabled}
         onEditStart={handleEditStart}
         onEditCancel={handleEditCancel}
         onEditSave={handleEditSave}

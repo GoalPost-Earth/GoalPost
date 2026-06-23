@@ -71,7 +71,6 @@ import {
   LOG_RESONANCE_ACTIVITY,
 } from '@/app/graphql/mutations'
 import {
-  useAnimations,
   useApp,
   useFocalEntity,
   usePageContext,
@@ -106,7 +105,6 @@ function FieldDetailPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { animationsEnabled } = useAnimations()
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false)
@@ -1894,7 +1892,7 @@ function FieldDetailPage() {
           <div
             className={cn(
               'text-gp-primary dark:text-gp-primary',
-              animationsEnabled && 'animate-spin'
+              'motion-safe:animate-spin'
             )}
           >
             <span className="material-symbols-outlined text-5xl md:text-6xl">

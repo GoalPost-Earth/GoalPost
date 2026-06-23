@@ -1,7 +1,6 @@
 'use client'
 
 import { GenericCanvas, type GenericCanvasProps } from './generic-canvas'
-import { useAnimations } from '@/contexts/animation-context'
 import { cn } from '@/lib/utils'
 
 export interface GenericSpaceCanvasProps extends Omit<
@@ -31,7 +30,6 @@ export function GenericSpaceCanvas({
     subtitle: undefined,
   },
 }: GenericSpaceCanvasProps) {
-  const { animationsEnabled } = useAnimations()
   return (
     <GenericCanvas
       canvasScale={5}
@@ -51,7 +49,7 @@ export function GenericSpaceCanvas({
             <span
               className={cn(
                 'material-symbols-outlined text-5xl text-gp-primary',
-                animationsEnabled && 'animate-spin'
+                'motion-safe:animate-spin'
               )}
             >
               hourglass_bottom

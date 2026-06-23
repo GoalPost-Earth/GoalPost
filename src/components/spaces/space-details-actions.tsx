@@ -17,7 +17,6 @@ interface SpaceDetailsActionsProps {
   showMemberDeleteConfirm: boolean
   memberToDelete: { id: string; name: string } | null
   isMemberActionLoading: boolean
-  animationsEnabled: boolean
   onEditStart: () => void
   onEditCancel: () => void
   onEditSave: () => void
@@ -41,7 +40,6 @@ export function SpaceDetailsActions({
   showMemberDeleteConfirm,
   memberToDelete,
   isMemberActionLoading,
-  animationsEnabled,
   onEditStart,
   onEditCancel,
   onEditSave,
@@ -120,7 +118,7 @@ export function SpaceDetailsActions({
                     <span
                       className={cn(
                         'material-symbols-outlined text-base',
-                        animationsEnabled && 'animate-spin'
+                        'motion-safe:animate-spin'
                       )}
                     >
                       hourglass_bottom
@@ -179,7 +177,7 @@ export function SpaceDetailsActions({
                     <span
                       className={cn(
                         'material-symbols-outlined text-base',
-                        animationsEnabled && 'animate-spin'
+                        'motion-safe:animate-spin'
                       )}
                     >
                       hourglass_bottom

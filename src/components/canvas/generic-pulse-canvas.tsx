@@ -190,7 +190,7 @@ export function GenericPulseCanvas({
                         <span
                           className={cn(
                             'material-symbols-outlined text-5xl text-gp-primary',
-                            animationsEnabled && 'animate-spin'
+                            'motion-safe:animate-spin'
                           )}
                         >
                           hourglass_bottom

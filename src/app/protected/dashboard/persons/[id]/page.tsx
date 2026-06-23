@@ -14,7 +14,7 @@ import {
   DELETE_PERSON_CONNECTION_MUTATION,
 } from '@/app/graphql/mutations/PERSON_MUTATIONS'
 import { cn } from '@/lib/utils'
-import { useAnimations, useFocalEntity, usePageContext } from '@/contexts'
+import { useFocalEntity, usePageContext } from '@/contexts'
 import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
 import type { PivotEntityType } from '@/lib/simulation/entity-collector'
 import Image from 'next/image'
@@ -36,7 +36,6 @@ interface PersonSelectOption {
 export default function PersonProfilePage() {
   const params = useParams()
   const personId = params?.id as string
-  const { animationsEnabled } = useAnimations()
   const router = useRouter()
   const { setPageTitle } = usePageContext()
   const { setFocalLabel } = useFocalEntity()
@@ -314,7 +313,7 @@ export default function PersonProfilePage() {
           <span
             className={cn(
               'material-symbols-outlined text-5xl text-gp-primary',
-              animationsEnabled && 'animate-spin'
+              'motion-safe:animate-spin'
             )}
           >
             hourglass_bottom
@@ -1030,7 +1029,7 @@ export default function PersonProfilePage() {
                   <span
                     className={cn(
                       'material-symbols-outlined text-base',
-                      animationsEnabled && 'animate-spin'
+                      'motion-safe:animate-spin'
                     )}
                   >
                     hourglass_bottom
