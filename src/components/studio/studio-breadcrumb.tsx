@@ -1,7 +1,7 @@
 'use client'
 
 import { useSyncExternalStore, type FC } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useFocalEntity } from '@/contexts'
 import type {
@@ -70,18 +70,28 @@ interface Crumb {
   isCurrent: boolean
 }
 
-function buildCrumbs(routeFocal: FocalEntity | null): Crumb[] {
+const DASHBOARD_HREF = '/protected/dashboard'
+
+function buildCrumbs(
+  routeFocal: FocalEntity | null,
+  onDashboard: boolean
+): Crumb[] {
   // `routeFocal` is the route-derived focal (see
   // FocalEntityContext.routeFocalEntity) — the user's *location*, not the
   // manual/persisted focal that node taps in Bloom/Graph mutate. The
   // breadcrumb must not lie about location, so it tracks the route alone.
+  //
+  // Dashboard is "current" (non-clickable) only when we're actually on the
+  // dashboard route. The studio shell wraps every protected surface, so many
+  // routes (search, profile, audit) have no route focal yet aren't the
+  // dashboard — there, Dashboard must stay a clickable link home.
   const crumbs: Crumb[] = [
     {
       key: 'dashboard',
       type: 'Dashboard',
       label: 'Dashboard',
-      href: '/protected/dashboard',
-      isCurrent: !routeFocal,
+      href: DASHBOARD_HREF,
+      isCurrent: onDashboard,
     },
   ]
 
@@ -123,6 +133,7 @@ export const StudioBreadcrumb: FC = () => {
   const isMounted = useSyncExternalStore(NOOP_SUBSCRIBE, GET_TRUE, GET_FALSE)
   const { routeFocalEntity } = useFocalEntity()
   const router = useRouter()
+  const pathname = usePathname()
 
   if (!isMounted) {
     return (
@@ -138,7 +149,8 @@ export const StudioBreadcrumb: FC = () => {
     )
   }
 
-  const crumbs = buildCrumbs(routeFocalEntity)
+  const onDashboard = pathname === DASHBOARD_HREF
+  const crumbs = buildCrumbs(routeFocalEntity, onDashboard)
 
   return (
     <nav
@@ -147,6 +159,7 @@ export const StudioBreadcrumb: FC = () => {
     >
       {crumbs.map((crumb, idx) => {
         const isFirst = idx === 0
+        const isLastInList = idx === crumbs.length - 1
         const isLast = crumb.isCurrent
         const style =
           crumb.type === 'Dashboard'
@@ -223,7 +236,7 @@ export const StudioBreadcrumb: FC = () => {
                 {chipInner}
               </span>
             )}
-            {!isLast && (
+            {!isLastInList && (
               <span
                 className="material-symbols-outlined shrink-0 text-[14px] leading-none text-gp-ink-muted/60 dark:text-gp-ink-soft/60"
                 aria-hidden="true"
