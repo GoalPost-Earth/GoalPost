@@ -7,7 +7,10 @@ import {
   fetchThreadList,
   type ThreadSummary,
 } from '@/lib/simulation/conversation-thread-client'
-import { onAssistantThreadUpdated } from '@/lib/simulation/assistant-panel-events'
+import {
+  onAssistantMessageSent,
+  onAssistantThreadUpdated,
+} from '@/lib/simulation/assistant-panel-events'
 
 interface ThreadsSidebarProps {
   activeThreadId: string | null
@@ -100,6 +103,14 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
       timeouts.forEach((id) => window.clearTimeout(id))
     }
   }, [fetchThreads])
+
+  // Once the user asks a question, collapse into focus mode so the chat gets
+  // the room. We set state directly (not via toggleCollapsed) so this does NOT
+  // persist to localStorage — it's a per-session focus behavior that leaves the
+  // user's stored expand/collapse default untouched.
+  useEffect(() => {
+    return onAssistantMessageSent(() => setCollapsed(true))
+  }, [])
 
   const handleNewThread = useCallback(async (): Promise<string | null> => {
     setCreating(true)

@@ -15,6 +15,7 @@
  * Subscribers:
  *   - StudioShell                → opens the panel on receipt
  *   - AIAssistantPanel           → re-hydrates with the named thread
+ *   - ThreadsSidebar             → refetches on thread-updated
  *   - CanvasGraphSync            → refetches the canvas on graph-data-changed
  *
  * Producers:
@@ -27,6 +28,7 @@
 const OPEN_THREAD_EVENT = 'gp:open-assistant-thread' as const
 const THREAD_UPDATED_EVENT = 'gp:assistant-thread-updated' as const
 const GRAPH_DATA_CHANGED_EVENT = 'gp:assistant-graph-data-changed' as const
+const MESSAGE_SENT_EVENT = 'gp:assistant-message-sent' as const
 
 export interface OpenAssistantThreadDetail {
   /** ConversationThread.id to switch to once the panel mounts. */
@@ -97,4 +99,23 @@ export function onAssistantGraphDataChanged(handler: () => void): () => void {
   const wrapped = () => handler()
   window.addEventListener(GRAPH_DATA_CHANGED_EVENT, wrapped)
   return () => window.removeEventListener(GRAPH_DATA_CHANGED_EVENT, wrapped)
+}
+
+/**
+ * Emit the moment the user submits a question (composer send), before the
+ * stream starts. The threads sidebar listens so it can collapse into focus
+ * mode once the conversation is underway — giving the chat room without the
+ * user having to manually minimise the pane.
+ */
+export function emitAssistantMessageSent(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(MESSAGE_SENT_EVENT))
+}
+
+/** Subscribe to user-message-sent notifications. */
+export function onAssistantMessageSent(handler: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = () => handler()
+  window.addEventListener(MESSAGE_SENT_EVENT, wrapped)
+  return () => window.removeEventListener(MESSAGE_SENT_EVENT, wrapped)
 }

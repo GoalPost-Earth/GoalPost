@@ -39,6 +39,7 @@ import {
 import {
   emitAssistantThreadUpdated,
   emitAssistantGraphDataChanged,
+  emitAssistantMessageSent,
   onOpenAssistantThread,
 } from '@/lib/simulation/assistant-panel-events'
 import { CanvasGraphSync } from './canvas-graph-sync'
@@ -629,6 +630,9 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
   // the sidebar's existing +2.5s retry catches any final state.
   useEffect(() => {
     const unsubscribe = runtime.thread.composer.unstable_on('send', () => {
+      // Collapse the threads sidebar into focus mode the moment a question is
+      // asked (fires immediately, ahead of the 600ms thread-list refetch).
+      emitAssistantMessageSent()
       window.setTimeout(emitAssistantThreadUpdated, 600)
     })
     return () => unsubscribe()
