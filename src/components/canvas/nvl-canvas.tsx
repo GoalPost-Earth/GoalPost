@@ -482,20 +482,16 @@ export function NvlCanvas({
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm z-40 pointer-events-none">
-          <div className="flex flex-col items-center gap-4">
-            <div
-              className={cn(
-                'text-gp-primary dark:text-gp-primary',
-                'motion-safe:animate-spin'
-              )}
-            >
-              <span className="material-symbols-outlined text-5xl md:text-6xl">
-                hourglass_bottom
-              </span>
+        <div className="absolute inset-0 flex items-center justify-center bg-gp-surface/60 dark:bg-gp-surface-dark/60 backdrop-blur-sm z-40 pointer-events-none">
+          <div className="flex flex-col items-center gap-5">
+            {/* Graph-flavored loader: a brand node pulsing inside a spinning ring */}
+            <div className="relative size-12 sm:size-14">
+              <div className="absolute inset-0 rounded-full bg-gp-primary/15 motion-safe:animate-pulse-slow" />
+              <div className="absolute inset-0 rounded-full border-2 border-gp-primary/20 border-t-gp-primary motion-safe:animate-spin" />
+              <span className="absolute inset-0 m-auto size-2.5 rounded-full bg-gp-primary motion-safe:animate-pulse-slow" />
             </div>
-            <p className="text-sm md:text-base font-medium text-gp-ink-muted dark:text-gp-ink-soft animate-pulse">
-              Loading space details...
+            <p className="text-sm sm:text-base font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+              Loading space details…
             </p>
           </div>
         </div>
