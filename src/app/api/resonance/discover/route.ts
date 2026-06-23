@@ -8,12 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  discoverGlobalResonances,
-  discoverResonancesForSpace,
-} from '@/lib/resonance/discovery/pattern-detector'
+import { discoverResonancesForSpace } from '@/lib/resonance/discovery/pattern-detector'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
 import { initGraph } from '@/modules/graph'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
+import { getSession, initializeDB } from '@/app/api/auth/neo4j'
+import { canEditContent } from '@/lib/permissions/space-permissions'
 
 interface DiscoverRequest {
   spaceId?: string // Optional: if provided, discovery is scoped to this space only
@@ -38,8 +38,44 @@ export async function POST(request: NextRequest) {
 
     const { spaceId, lastRunTimestamp } = body
 
+    // Manual discovery reads pulse content and writes suggestions within a
+    // Space, so it requires an authenticated caller who can edit that Space.
+    // Global (no-spaceId) discovery is a system sweep — it stays cron-only
+    // (src/app/api/cron/discover-resonances) and is rejected here, otherwise
+    // any caller could trigger a full-graph scan and seed suggestions DB-wide.
+    if (!spaceId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'spaceId is required. Global discovery runs only as a scheduled job.',
+        },
+        { status: 400 }
+      )
+    }
+    const userId = resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    initializeDB()
+    const permSession = getSession()
+    try {
+      const allowed = await canEditContent(permSession, userId, spaceId)
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
+    } finally {
+      await permSession.close()
+    }
+
     console.log('[Resonance Discovery API] Starting discovery workflow...', {
-      scope: spaceId ? `space: ${spaceId}` : 'global',
+      scope: `space: ${spaceId}`,
       lastRunTimestamp: lastRunTimestamp || 'all pulses',
     })
 
@@ -48,12 +84,12 @@ export async function POST(request: NextRequest) {
 
     const pulsesWithoutEmbeddings = await graph.query<{ id: string }>(
       `
-      MATCH (p:FieldPulse)
+      MATCH (:Space {id: $spaceId})-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
       WHERE p.embedding IS NULL
       RETURN p.id as id
       LIMIT 100
     `,
-      {}
+      { spaceId }
     )
 
     // Neo4jGraph returns plain array, not {records: []}
@@ -90,9 +126,10 @@ export async function POST(request: NextRequest) {
       '[Resonance Discovery API] Discovering resonance suggestions...'
     )
 
-    const resonances = spaceId
-      ? await discoverResonancesForSpace(spaceId, lastRunTimestamp)
-      : await discoverGlobalResonances(lastRunTimestamp)
+    const resonances = await discoverResonancesForSpace(
+      spaceId,
+      lastRunTimestamp
+    )
 
     console.log(
       `[Resonance Discovery API] Discovered ${resonances.length} resonance suggestions`
@@ -101,7 +138,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Resonance discovery completed (suggestions created)',
-      scope: spaceId || 'global',
+      scope: spaceId,
       suggestionsCreated: resonances.length,
       suggestions: resonances.map((r) => ({
         id: r.linkId,

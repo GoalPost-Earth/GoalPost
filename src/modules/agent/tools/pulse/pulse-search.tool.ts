@@ -35,7 +35,13 @@ const PulseSearchSchema = z.object({
 })
 
 export function createPulseSearchTool(
-  graph: Neo4jGraph
+  graph: Neo4jGraph,
+  // The caller's id, bound at tool-creation time. Pulse search is Space-scoped
+  // to this user; the legacy agent path carries no identity and passes null, so
+  // searchPulses fails closed (returns nothing) rather than leaking every
+  // Space's pulses. Mirrors createSpaceSearchTool / createFieldContextSearchTool
+  // (GOAL-273).
+  userId: string | null
 ): DynamicStructuredTool {
   return new DynamicStructuredTool({
     name: 'search_pulse',
@@ -43,7 +49,7 @@ export function createPulseSearchTool(
       'Search for pulses by title/content, with optional context and pulse type filters. Use this before editing pulses.',
     schema: PulseSearchSchema as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     func: async (input: z.infer<typeof PulseSearchSchema>) => {
-      const result = await searchPulses(graph, input)
+      const result = await searchPulses(graph, { ...input, userId })
       return JSON.stringify(result)
     },
   })

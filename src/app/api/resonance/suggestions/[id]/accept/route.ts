@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initGraph } from '@/modules/graph'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
+import { getSession, initializeDB } from '@/app/api/auth/neo4j'
+import { canEditContent } from '@/lib/permissions/space-permissions'
 import { createNotification } from '@/lib/notifications/create-notification'
 
 export async function POST(
@@ -73,6 +75,38 @@ export async function POST(
 
     const { suggestion, sourcePulseId, targetPulseId, contextId } =
       suggestionResult[0]
+
+    // Promoting a suggestion to a ResonanceLink is a content write within the
+    // suggestion's Space — gate it on the caller being able to edit that Space
+    // (owner / ADMIN / MEMBER), resolved from the suggestion's FieldContext.
+    const spaceRows = await graph.query<{ spaceId: string | null }>(
+      `
+      MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext {id: $contextId})
+      RETURN space.id AS spaceId
+      LIMIT 1
+      `,
+      { contextId }
+    )
+    const spaceId = spaceRows?.[0]?.spaceId || null
+    if (!spaceId) {
+      return NextResponse.json(
+        { success: false, error: 'Suggestion not found' },
+        { status: 404 }
+      )
+    }
+    initializeDB()
+    const permSession = getSession()
+    try {
+      const allowed = await canEditContent(permSession, actorId, spaceId)
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
+    } finally {
+      await permSession.close()
+    }
 
     // Create the ResonanceLink from the suggestion
     const linkResult = await graph.query<{ linkId: string }>(

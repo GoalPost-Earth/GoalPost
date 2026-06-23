@@ -290,13 +290,20 @@ export async function POST(req: Request) {
       )
     }
 
-    // Resolve current user from request body first, then fall back to the
-    // canonical Authorization-header-or-cookie resolver. Mirrors what the
-    // legacy `/api/chat/route.ts` already does so tool authorization can
-    // attach to a real user regardless of which transport the client uses.
-    let currentUserId: string | null = clientProvidedUserId || null
-    if (!currentUserId) {
-      currentUserId = resolveAuthenticatedUserId(req)
+    // Resolve current user ONLY from the verified Authorization header / cookie.
+    // NEVER trust a client-supplied user id from the body: tool authorization
+    // (and Space-scoped pulse/people reads) attach to this id, so honoring a
+    // body value would let any caller act as — and read the private data of —
+    // any user. The body's `currentUserId`, if present and mismatched, is a
+    // spoofing signal we log and ignore.
+    const currentUserId: string | null = resolveAuthenticatedUserId(req)
+    if (
+      clientProvidedUserId &&
+      clientProvidedUserId !== currentUserId
+    ) {
+      console.warn(
+        '[chat/simulation] Ignoring body currentUserId that does not match the authenticated user.'
+      )
     }
 
     // Deterministic HITL execution (GOAL-261). When the user approves a pending

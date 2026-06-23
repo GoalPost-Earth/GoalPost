@@ -1,4 +1,5 @@
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
+import { viewablePulsePredicate } from '@/lib/permissions/pulse-visibility'
 
 export type PulseType =
   | 'GoalPulse'
@@ -32,6 +33,12 @@ export interface PulseRecord {
 
 export interface PulseSearchInput {
   query: string
+  /**
+   * The authenticated caller's id. REQUIRED — results are restricted to pulses
+   * in Spaces this user can view. A missing/empty userId returns nothing
+   * (fail closed), never the whole graph.
+   */
+  userId?: string | null
   contextId?: string
   contextTitle?: string
   pulseType?: PulseType
@@ -194,6 +201,19 @@ export async function searchPulses(
   const contextTitle = input.contextTitle?.trim() || null
   const pulseType = input.pulseType || null
   const limit = normalizeLimit(input.limit)
+  const currentUserId = input.userId?.trim() || null
+
+  // Fail closed: without an authenticated caller we never search pulses, so an
+  // unauthenticated/spoofed request can't enumerate the graph.
+  if (!currentUserId) {
+    return {
+      found: false,
+      count: 0,
+      pulses: [],
+      needsDisambiguation: false,
+      message: 'You need to be signed in to search pulses.',
+    }
+  }
 
   const cypher = `
     MATCH (pulse:FieldPulse)
@@ -202,6 +222,7 @@ export async function searchPulses(
       OR toLower(coalesce(pulse.content, '')) CONTAINS toLower($query)
       OR toLower(coalesce(pulse.title, '')) STARTS WITH toLower($query)
     )
+      AND ${viewablePulsePredicate('pulse', 'currentUserId')}
       AND (
         $contextId IS NULL
         OR EXISTS {
@@ -244,6 +265,7 @@ export async function searchPulses(
     contextTitle,
     pulseType,
     limit,
+    currentUserId,
   })
 
   const pulses = (raw || []).map(mapPulseRecord)

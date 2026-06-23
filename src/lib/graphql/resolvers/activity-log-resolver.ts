@@ -4,6 +4,11 @@ import {
   getContextLogs,
   getUserLogs,
 } from '@/lib/activity-logs/create-log'
+import { initGraph } from '@/modules/graph'
+import {
+  canViewContext,
+  viewablePulsePredicate,
+} from '@/lib/permissions/pulse-visibility'
 
 interface LogPulseInput {
   action: string
@@ -126,29 +131,36 @@ async function getContextAndSpaceDetails(
 }
 
 async function getPulseTitles(
-  session: any,
+  session: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   sourceId: string,
-  targetId: string
+  targetId: string,
+  // The actor logging the resonance. Titles are only revealed for pulses this
+  // user can view (the predicate filters the OPTIONAL MATCH); unviewable or
+  // missing pulses fall back to a generic label — never the raw id (Rule 1).
+  userId: string
 ): Promise<{ sourceTitle: string; targetTitle: string }> {
   const result = await session.run(
     `
     OPTIONAL MATCH (source:FieldPulse {id: $sourceId})
+      WHERE ${viewablePulsePredicate('source', 'userId')}
     OPTIONAL MATCH (target:FieldPulse {id: $targetId})
+      WHERE ${viewablePulsePredicate('target', 'userId')}
     RETURN
-      coalesce(source.title, source.name, source.id) as sourceTitle,
-      coalesce(target.title, target.name, target.id) as targetTitle
+      coalesce(source.title, source.name) as sourceTitle,
+      coalesce(target.title, target.name) as targetTitle
     `,
-    { sourceId, targetId }
+    { sourceId, targetId, userId }
   )
 
+  const fallback = 'a pulse'
   if (result.records.length === 0) {
-    return { sourceTitle: sourceId, targetTitle: targetId }
+    return { sourceTitle: fallback, targetTitle: fallback }
   }
 
   const record = result.records[0]
   return {
-    sourceTitle: record.get('sourceTitle') || sourceId,
-    targetTitle: record.get('targetTitle') || targetId,
+    sourceTitle: record.get('sourceTitle') || fallback,
+    targetTitle: record.get('targetTitle') || fallback,
   }
 }
 
@@ -637,7 +649,8 @@ export const activityLogMutations = {
       const { sourceTitle, targetTitle } = await getPulseTitles(
         session,
         sourceId,
-        targetId
+        targetId,
+        userId
       )
       const contextDetails = await getContextAndSpaceDetails(session, contextId)
       const contextLabel = contextDetails.contextName
@@ -725,9 +738,10 @@ export const activityLogQueries = {
     { limit = 30 }: { limit?: number },
     context: Context
   ) => {
-    // Extract user ID from JWT claims
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (context.jwt as any)?.sub
+    // The login JWT payload is { user: { id } } — there is no `sub` claim, so
+    // read the canonical id field (matches every $jwt.user.id authorization
+    // filter and the sibling getUserLogs/getContextLogs resolvers).
+    const userId = context.jwt?.user?.id
 
     if (!userId) {
       throw new Error('Unauthorized: Must be logged in to view activity logs')
@@ -770,9 +784,18 @@ export const activityLogQueries = {
    */
   getUserLogs: async (
     _source: unknown,
-    { userId, limit = 30 }: { userId: string; limit?: number },
-    _context: Context
+    { limit = 30 }: { userId?: string; limit?: number },
+    context: Context
   ) => {
+    // The user feed is per-person and embeds pulse titles in its descriptions,
+    // so it is ALWAYS scoped to the authenticated caller. The `userId` argument
+    // is intentionally ignored — honoring a client-supplied id was an IDOR that
+    // let anyone read another person's activity (the client only ever passes
+    // its own id anyway).
+    const userId = context.jwt?.user?.id
+    if (!userId) {
+      throw new Error('Unauthorized: Must be logged in to view activity logs')
+    }
     try {
       const normalizedLimit = Math.max(
         1,
@@ -811,9 +834,24 @@ export const activityLogQueries = {
   getContextLogs: async (
     _source: unknown,
     { contextId, limit = 30 }: { contextId: string; limit?: number },
-    _context: Context
+    context: Context
   ) => {
+    // Context logs embed pulse titles, so they are visible only to people who
+    // can access the context's Space. Require an authenticated caller who can
+    // view the context — the prior code took an arbitrary contextId with no
+    // check at all.
+    const userId = context.jwt?.user?.id
+    if (!userId) {
+      throw new Error('Unauthorized: Must be logged in to view activity logs')
+    }
     try {
+      const graph = await initGraph()
+      const allowed = await canViewContext(graph, userId, contextId)
+      if (!allowed) {
+        // Fail closed — same empty result whether the context is missing or
+        // simply not visible to this user.
+        return []
+      }
       const normalizedLimit = Math.max(
         1,
         Math.min(Number.parseInt(String(limit), 10) || 30, 100)

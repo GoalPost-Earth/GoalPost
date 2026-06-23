@@ -5,6 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { initGraph } from '@/modules/graph'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
+import { getSession, initializeDB } from '@/app/api/auth/neo4j'
+import { canViewContent } from '@/lib/permissions/space-permissions'
 
 interface ResonanceSuggestion {
   id: string
@@ -35,24 +38,37 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Resonance suggestions embed pulse content, so they are visible ONLY to
+    // people who can access the Space. Require an authenticated caller who owns
+    // or is a member of the Space (kb/02-user-roles.md) — the prior code only
+    // checked that the Space existed, which leaked pulse content to anyone.
+    const userId = resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    initializeDB()
+    const permSession = getSession()
+    try {
+      const allowed = await canViewContent(permSession, userId, spaceId)
+      if (!allowed) {
+        // Don't distinguish "not a member" from "no such space" — both 403.
+        return NextResponse.json(
+          { success: false, error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
+    } finally {
+      await permSession.close()
+    }
+
     console.log(
       `[Resonance Suggestions] Fetching ${status} suggestions for space ${spaceId}`
     )
 
     const graph = await initGraph()
-
-    // Verify space exists
-    const spaceResult = await graph.query<{ spaceId: string }>(
-      `MATCH (space:WeSpace {id: $spaceId}) RETURN space.id as spaceId`,
-      { spaceId }
-    )
-
-    if (!Array.isArray(spaceResult) || spaceResult.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Space not found' },
-        { status: 404 }
-      )
-    }
 
     // Get suggestions with their pulses and context
     const suggestionsResult = await graph.query<ResonanceSuggestion>(

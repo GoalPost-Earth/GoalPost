@@ -5,6 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { initGraph } from '@/modules/graph'
+import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
+import { getSession, initializeDB } from '@/app/api/auth/neo4j'
+import { canEditContent } from '@/lib/permissions/space-permissions'
 
 export async function POST(
   request: NextRequest,
@@ -15,15 +18,27 @@ export async function POST(
 
     console.log(`[Resonance Decline] Processing suggestion: ${suggestionId}`)
 
+    // Declining mutates a suggestion within its Space — require an authenticated
+    // caller who can edit that Space (resolved from the suggestion's context).
+    const actorId = resolveAuthenticatedUserId(request)
+    if (!actorId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const graph = await initGraph()
 
-    // Get the suggestion to verify it exists
+    // Get the suggestion (verify existence) and resolve its enclosing Space.
     const suggestionResult = await graph.query<{
       status: string
+      spaceId: string | null
     }>(
       `
       MATCH (suggestion:ResonanceSuggestion {id: $suggestionId})
-      RETURN suggestion.status as status
+      OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
+      RETURN suggestion.status as status, space.id AS spaceId
     `,
       { suggestionId }
     )
@@ -33,6 +48,27 @@ export async function POST(
         { success: false, error: 'Suggestion not found' },
         { status: 404 }
       )
+    }
+
+    const spaceId = suggestionResult[0]?.spaceId || null
+    if (!spaceId) {
+      return NextResponse.json(
+        { success: false, error: 'Suggestion not found' },
+        { status: 404 }
+      )
+    }
+    initializeDB()
+    const permSession = getSession()
+    try {
+      const allowed = await canEditContent(permSession, actorId, spaceId)
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
+    } finally {
+      await permSession.close()
     }
 
     // Mark suggestion as declined

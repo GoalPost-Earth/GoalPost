@@ -39,7 +39,10 @@ export default async function initTools(
   // no results rather than leaking cross-tenant FieldContexts (GOAL-273).
   const fieldContextSearchTool = createFieldContextSearchTool(graph, null)
   const fieldContextUpdateTool = createFieldContextUpdateTool(graph)
-  const pulseSearchTool = createPulseSearchTool(graph)
+  // Legacy path carries no user identity → pass null so pulse search fails
+  // closed instead of leaking every Space's pulses (same rationale as the
+  // space/field-context search tools above).
+  const pulseSearchTool = createPulseSearchTool(graph, null)
   const pulseUpdateTool = createPulseUpdateTool(graph)
   const pulseContextLinkTool = createPulseContextLinkTool(graph)
   const graphRagSearchTool = createGraphRagSearchTool(graph, embeddings)

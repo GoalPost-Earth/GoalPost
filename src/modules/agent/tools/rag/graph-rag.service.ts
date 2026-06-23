@@ -32,6 +32,7 @@
 
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { Embeddings } from '@langchain/core/embeddings'
+import { viewablePulsePredicate } from '@/lib/permissions/pulse-visibility'
 
 export type GraphRagScope = 'people' | 'pulses' | 'chunks' | 'all'
 
@@ -203,12 +204,21 @@ async function searchPulsesByVector(
   graph: Neo4jGraph,
   embedding: number[],
   limit: number,
+  userId: string,
   contextId?: string
 ): Promise<GraphRagMatch[]> {
+  // The vector index returns its top-K by similarity, and the Space-scope
+  // predicate then prunes that set — so asking the index for exactly `limit`
+  // would under-return (often zero) whenever a caller's nearest neighbours are
+  // other tenants' pulses. Over-fetch from the index, filter, then re-LIMIT.
+  const topK = Math.min(Math.max(limit * 10, limit), 500)
   const cypher = `
-    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit, $embedding)
+    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $topK, $embedding)
     YIELD node, score
     WHERE node:FieldPulse
+      // Space-scope: only pulses the caller can view (raw Cypher bypasses the
+      // GraphQL @authorization filter).
+      AND ${viewablePulsePredicate('node', 'currentUserId')}
       AND (
         $contextId IS NULL
         OR EXISTS {
@@ -258,7 +268,9 @@ async function searchPulsesByVector(
   const rows = await graph.query<Record<string, unknown>>(cypher, {
     embedding,
     limit,
+    topK,
     contextId: contextId?.trim() || null,
+    currentUserId: userId,
   })
 
   return (rows || []).map(mapMatch)
@@ -325,17 +337,26 @@ export async function graphRagSearch(
   }
 
   if (scope === 'all' || scope === 'pulses') {
-    try {
-      pulseMatches = await searchPulsesByVector(
-        graph,
-        embedding,
-        limit,
-        input.contextId
-      )
-    } catch (error) {
+    // Pulses are Space-scoped: without an authenticated userId we cannot filter
+    // to the caller's viewable Spaces, so skip rather than leak every pulse.
+    if (!input.userId) {
       warnings.push(
-        `Pulse vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        'Pulse vector search skipped: pulses are visible only to people with access to their Space and require an authenticated session.'
       )
+    } else {
+      try {
+        pulseMatches = await searchPulsesByVector(
+          graph,
+          embedding,
+          limit,
+          input.userId,
+          input.contextId
+        )
+      } catch (error) {
+        warnings.push(
+          `Pulse vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      }
     }
   }
 
