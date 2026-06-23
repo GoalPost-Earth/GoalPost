@@ -26,6 +26,7 @@ export function entityKindLabel(
   args: Record<string, unknown>
 ): string {
   if (tool === 'create_person') return 'person'
+  if (tool === 'create_connection') return 'connection'
   if (tool === 'create_pulse') {
     const pulseType = String(args.pulseType ?? '').trim()
     switch (pulseType) {
@@ -51,11 +52,43 @@ interface FieldSpec {
   label: string
   multiline?: boolean
   numeric?: boolean
+  /**
+   * Render this field even when the arg is absent/empty, so the user is
+   * PROMPTED to fill it in before approving (an empty input rather than a
+   * hidden field). Used for the relationship `why` on person/connection
+   * creation — we always ask, but the user may leave it blank (skippable).
+   */
+  alwaysShow?: boolean
 }
 
 const PERSON_FIELDS: FieldSpec[] = [
   { fieldName: 'firstName', label: 'First name' },
   { fieldName: 'lastName', label: 'Last name' },
+  {
+    // A short note about who this person is — persisted on the PersonPulse.
+    // Always shown so the user can write/refine it before adding, even when the
+    // model did not infer one from the conversation.
+    fieldName: 'description',
+    label: 'Description',
+    multiline: true,
+    alwaysShow: true,
+  },
+  {
+    fieldName: 'relationshipWhy',
+    label: 'Your relationship',
+    multiline: true,
+    alwaysShow: true,
+  },
+]
+
+const CONNECTION_FIELDS: FieldSpec[] = [
+  {
+    fieldName: 'why',
+    label: 'Your relationship',
+    multiline: true,
+    alwaysShow: true,
+  },
+  { fieldName: 'interests', label: 'Shared interests' },
 ]
 
 const PULSE_COMMON_FIELDS: FieldSpec[] = [
@@ -94,13 +127,15 @@ function specToField(
   args: Record<string, unknown>
 ): EditableField | null {
   const raw = args[spec.fieldName]
-  if (raw === undefined || raw === null) return null
-  const value = String(raw).trim()
-  if (value.length === 0) return null
+  const isEmpty =
+    raw === undefined || raw === null || String(raw).trim().length === 0
+  // Normally an absent/empty field is hidden; an alwaysShow field renders with
+  // an empty value so the user can fill it in (the always-ask relationship).
+  if (isEmpty && !spec.alwaysShow) return null
   return {
     fieldName: spec.fieldName,
     label: spec.label,
-    value: String(raw),
+    value: isEmpty ? '' : String(raw),
     multiline: Boolean(spec.multiline),
   }
 }
@@ -117,6 +152,11 @@ export function getEditableFields(
 ): EditableField[] {
   if (tool === 'create_person') {
     return PERSON_FIELDS.map((spec) => specToField(spec, args)).filter(
+      (f): f is EditableField => f !== null
+    )
+  }
+  if (tool === 'create_connection') {
+    return CONNECTION_FIELDS.map((spec) => specToField(spec, args)).filter(
       (f): f is EditableField => f !== null
     )
   }

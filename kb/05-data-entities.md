@@ -76,7 +76,7 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 
 - `OWNS` → Space
 - `IS_MEMBER` → SpaceMembership
-- `CONNECTED_TO` ↔ Person (bidirectional, with edge metadata: `why`, `interests`)
+- `CONNECTED_TO` ↔ Person (bidirectional, with edge metadata: `why`, `interests`). Written by the person-detail UI, the GraphQL `createPersonConnection` mutation, **and** the AI assistant: `create_connection` (direct/proactive) and `create_person` (which MERGEs a `CONNECTED_TO` from the current user to the new person whenever a `relationshipWhy` is supplied). See `kb/07-ai-assistant-ux.md` Rule 5.
 - `CREATED_BY` ← FieldPulse, Log
 
 ---

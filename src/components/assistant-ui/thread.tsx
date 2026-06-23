@@ -18,6 +18,7 @@ import { usePreferences } from '@/contexts/preferences-context'
 import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selector'
 import { WriteApprovalToolPart } from '@/components/chat/write-approval-tool-ui'
 import { PulseSuggestionsToolPart } from '@/components/chat/pulse-suggestions-tool-ui'
+import { ConnectionSuggestionsToolPart } from '@/components/chat/connection-suggestions-tool-ui'
 import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
@@ -119,6 +120,7 @@ const AssistantMessage: FC = () => {
               by_name: {
                 ...READ_TOOL_STATUS_COMPONENTS,
                 suggest_pulses: PulseSuggestionsToolPart,
+                suggest_connections: ConnectionSuggestionsToolPart,
               },
               Fallback: WriteApprovalToolPart,
             },

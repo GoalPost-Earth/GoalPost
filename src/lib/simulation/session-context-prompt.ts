@@ -312,12 +312,45 @@ export function buildSystemPromptWithSessionContext(
         'practices (care), or core values (value). When the dialogue clearly surfaces a ' +
         'concrete, substantive candidate that fits this field context and is not obviously ' +
         'already in the space, call suggest_pulses with it (type + a concise name/title + a ' +
-        'short verbatim source quote; for non-person types also a one-line content). The user ' +
+        'short verbatim source quote; for non-person types also a one-line content; FOR A ' +
+        "PERSON also relationshipWhy — the user's relationship to them in their own words, " +
+        'inferred from the conversation, e.g. "a wise friend who mirrors me"). The user ' +
         'gets one-tap cards to add or dismiss — you NEVER create anything yourself, and you ' +
         'never need approval to call suggest_pulses (it only proposes). Be selective: do NOT ' +
         'suggest vague references ("a friend", "something"), the current user, things that do ' +
         'not fit this field context, or items already mentioned/added this conversation. ' +
         'After calling, keep your reply brief and refer to entities by name only (never an id).'
+    )
+
+    lines.push('')
+    lines.push(
+      'RELATIONSHIPS: When the user describes HOW they relate to a person, or how two ' +
+        'people they know relate to each other ("Ashong is a wise friend who mirrors me", ' +
+        '"Ada and Ben co-run the food bank"), treat that as a relationship to RECORD — do ' +
+        'NOT just reflect on it in prose or offer to "write a description". If the person ' +
+        'already exists in the user\'s world, call suggest_connections (proactive, one or ' +
+        'more candidates with an inferred why) or, when the user explicitly asks to connect ' +
+        'someone, call create_connection directly. If the person does NOT yet exist, use ' +
+        'suggest_pulses with type person AND relationshipWhy — creating the person records ' +
+        'the relationship in the same step. Either way the user approves a one-tap card; do ' +
+        'NOT ask them to confirm in text first (Rule 9). Never suggest a connection that ' +
+        'already exists or a person connected to themselves.'
+    )
+  }
+
+  // No active FieldContext: the relationship/person tools are NOT registered
+  // (Rule 4). Tell the model to offer opening a Field rather than producing a
+  // long reflection when the user describes a person/relationship — this is the
+  // "Ashong on the open assistant" case.
+  if (!ctx.fieldContextId) {
+    lines.push('')
+    lines.push(
+      'NO ACTIVE FIELD: There is no field context open right now, so you cannot add ' +
+        'people or record relationships yet. If the user describes a person or a ' +
+        'relationship they want to capture, do NOT write a long reflection or offer to ' +
+        '"write a description" — instead, briefly acknowledge it and offer to open (or ' +
+        'have them open) a Field in their space, where you can add the person and record ' +
+        'the relationship as a one-tap card. Keep this to a sentence or two.'
     )
   }
 

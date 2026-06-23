@@ -347,6 +347,27 @@ export interface PulseSuggestion {
 }
 
 /**
+ * A single conversation-derived connection suggestion, ready for the inline
+ * connection card. Mirrors PulseSuggestion: everything the user sees (`name`,
+ * `why`, `sourceSnippet`) is human-readable per Rule 1/3 (kb/07); `createArgs`
+ * carries the resolved person ids (internal artifacts the card never renders)
+ * so the accepted write is fully deterministic. Always dispatches
+ * `create_connection`.
+ */
+export interface ConnectionSuggestion {
+  /** Display label — the other person's name, or "Ada ↔ Ben" for two others. */
+  name: string
+  /** The relationship in the user's words, inferred from the dialogue. */
+  why: string | null
+  /** Short verbatim quote from the dialogue that triggered the suggestion. */
+  sourceSnippet: string | null
+  /** Always create_connection. */
+  writeTool: 'create_connection'
+  /** Exact write args executed verbatim on accept (carries resolved ids). */
+  createArgs: Record<string, unknown>
+}
+
+/**
  * Collect canonical "type:name" keys for every pulse already living anywhere
  * in the given Space — people (by name) and field pulses (by title), each
  * tagged with its short type. Used to suppress duplicate suggestions (AC: name
@@ -411,6 +432,64 @@ async function resolveSpaceIdForContext(
     { fieldContextId }
   )
   return rows?.[0]?.spaceId ?? null
+}
+
+/**
+ * Resolve a non-user person (PersonPulse) by name, scoped to the people living
+ * in Spaces the current user owns or is a member of. Used by suggest_connections
+ * to turn a conversational name into a resolvable id WITHOUT leaking people the
+ * user cannot see. Returns 'ambiguous' when a name matches more than one such
+ * person (the model should search/disambiguate), 'none' when nothing matches.
+ */
+async function resolvePersonInUserScope(
+  graph: Neo4jGraph,
+  userId: string,
+  name: string
+): Promise<
+  | { status: 'ok'; id: string; name: string }
+  | { status: 'none' }
+  | { status: 'ambiguous' }
+> {
+  const rows = await graph.query<{ id: string; name: string | null }>(
+    `
+    MATCH (target:Person:PersonPulse)
+    WHERE toLower(trim(coalesce(target.name, ''))) = toLower(trim($name))
+    MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(target)
+    OPTIONAL MATCH (owner:Person)-[:OWNS]->(space)
+    OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person)
+    WITH target,
+      [id IN collect(DISTINCT owner.id) WHERE id IS NOT NULL] AS ownerIds,
+      [id IN collect(DISTINCT member.id) WHERE id IS NOT NULL] AS memberIds
+    WHERE $userId IN ownerIds OR $userId IN memberIds
+    RETURN DISTINCT target.id AS id, target.name AS name
+    LIMIT 5
+    `,
+    { name, userId }
+  )
+  if (!rows || rows.length === 0) return { status: 'none' }
+  if (rows.length > 1) return { status: 'ambiguous' }
+  return { status: 'ok', id: rows[0].id, name: rows[0].name || name }
+}
+
+/**
+ * True when a CONNECTED_TO edge already links two people (either direction).
+ * Both ids must already be authorized by the caller (resolvePersonInUserScope)
+ * — this is an id-anchored dedup check, not a Space-scoped authorization gate.
+ */
+async function connectionExists(
+  graph: Neo4jGraph,
+  aId: string,
+  bId: string
+): Promise<boolean> {
+  const rows = await graph.query<{ connected: boolean }>(
+    `
+    MATCH (a:Person {id: $aId})
+    MATCH (b:Person {id: $bId})
+    RETURN EXISTS( (a)-[:CONNECTED_TO]-(b) ) AS connected
+    `,
+    { aId, bId }
+  )
+  return Boolean(rows?.[0]?.connected)
 }
 
 /**
@@ -1292,6 +1371,18 @@ export async function buildSimulationChatTools(
                       .describe(
                         'Person only — surname, if known. Optional; many people are known by a single name.'
                       ),
+                    relationshipWhy: z
+                      .string()
+                      .optional()
+                      .describe(
+                        "Person only — the current user's relationship to this person in their own words (\"a mentor and close friend\", \"my neighbour who runs the food bank\"), inferred from the conversation. Pre-fills the relationship field on the card; the user can edit or clear it before adding. ALWAYS provide this for a person when the dialogue reveals how the user relates to them."
+                      ),
+                    description: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Person only — a short note describing WHO this person is (role, what they do, what they care about), in the third person ("an elder in the housing-justice circle who mentors new organizers"). Distinct from relationshipWhy, which is how the USER relates to them. Pre-fills the description field on the card; the user can edit it before adding.'
+                      ),
                     sourceSnippet: z
                       .string()
                       .optional()
@@ -1315,6 +1406,8 @@ export async function buildSimulationChatTools(
                 content?: string
                 firstName?: string
                 lastName?: string
+                relationshipWhy?: string
+                description?: string
                 sourceSnippet?: string
               }>
             }) => {
@@ -1391,6 +1484,12 @@ export async function buildSimulationChatTools(
                     displayName = lastName
                       ? `${firstName} ${lastName}`
                       : firstName
+                    const relationshipWhy = (
+                      candidate.relationshipWhy || ''
+                    ).trim()
+                    const personDescription = (
+                      candidate.description || ''
+                    ).trim()
                     createArgs = {
                       firstName,
                       ...(lastName ? { lastName } : {}),
@@ -1398,6 +1497,13 @@ export async function buildSimulationChatTools(
                       ...(ctx.fieldContextTitle
                         ? { contextTitle: ctx.fieldContextTitle }
                         : {}),
+                      // A short note about who this person is → PersonPulse
+                      // description on accept. Surfaced as an editable field.
+                      ...(personDescription ? { description: personDescription } : {}),
+                      // The user's relationship to this person → CONNECTED_TO.why
+                      // on accept. The card surfaces this as an editable field so
+                      // the user can confirm, edit, or clear it (always-ask).
+                      ...(relationshipWhy ? { relationshipWhy } : {}),
                     }
                   } else {
                     const content = (candidate.content || '').trim()
@@ -1449,6 +1555,237 @@ export async function buildSimulationChatTools(
               } catch (error) {
                 return toErrorResult(
                   'Failed to prepare pulse suggestions',
+                  error
+                )
+              }
+            },
+          }),
+        }
+      : {}),
+
+    // create_connection + suggest_connections need people to resolve against,
+    // and people live inside FieldContexts — so per Rule 4 (kb/07) they are
+    // only registered when a FieldContext is active. On a neutral surface the
+    // model has no relationship tools and the prompt nudges the user to open a
+    // Field instead of producing a reflective essay (the Ashong case).
+    ...(ctx.fieldContextId
+      ? {
+          create_connection: tool({
+            description:
+              'Create a direct relationship — a connection — between the current user and another person, or between two people the user knows, carrying a short "why" describing the relationship in plain words. Call this when the user explicitly asks to connect or relate people ("connect me with Ashong", "link Ada and Ben as co-organisers"). This write is HUMAN-IN-THE-LOOP: calling it renders an inline approval card the user approves with one tap — do NOT ask them to confirm in text first (Rule 9). Both people must already exist in the user\'s world; to add a NEW person use the person-suggestion flow, which captures the relationship automatically.',
+            inputSchema: z.object({
+              toPersonName: z
+                .string()
+                .min(1)
+                .describe(
+                  'The person to connect to. Pass the name exactly as the user wrote it.'
+                ),
+              fromPersonName: z
+                .string()
+                .optional()
+                .describe(
+                  'Who the connection is FROM. Defaults to the current user ("you"). Only set this to connect two OTHER people the user knows.'
+                ),
+              why: z
+                .string()
+                .optional()
+                .describe(
+                  'The relationship in the user\'s own words ("a mentor and close friend"). Strongly encouraged — infer it from the conversation.'
+                ),
+              interests: z
+                .string()
+                .optional()
+                .describe('Optional shared interests or themes.'),
+            }),
+            execute: async (args: {
+              toPersonName: string
+              fromPersonName?: string
+              why?: string
+              interests?: string
+            }) => {
+              // The relationship `why`/`interests` are sensitive relational
+              // free-text — log only their presence, not their content.
+              logToolDispatch('create_connection', ctx, {
+                toPersonName: args.toPersonName,
+                fromPersonName: args.fromPersonName,
+                hasWhy: Boolean(args.why),
+                hasInterests: Boolean(args.interests),
+              })
+              return runWriteTool('create_connection', { ...args }, ctx)
+            },
+          }),
+
+          suggest_connections: tool({
+            description:
+              "Surface relationships worth recording as one-tap suggestions. Call this PROACTIVELY when the conversation reveals how the user relates to a person already in their world (\"Ashong is a wise friend who mirrors me\"), or how two people they know relate to each other. Each candidate proposes a connection (a CONNECTED_TO link) with an inferred 'why'. READ-ONLY: it never writes — the user approves each card, which creates the connection through the same approval path as everything else. Do NOT suggest connections that already exist, connections of a person to themselves, the current user to themselves, or vague references. For a person who does NOT yet exist, use suggest_pulses instead (creating a person already captures the relationship). After calling, keep your reply brief (e.g. 'I noticed a relationship worth recording — add it if you'd like.').",
+            inputSchema: z.object({
+              candidates: z
+                .array(
+                  z.object({
+                    toPersonName: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        "The person to connect — must ALREADY exist in the user's world. Pass the name exactly as known."
+                      ),
+                    fromPersonName: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Who the connection is FROM. Defaults to the current user ("you"). Only set to connect two OTHER people the user knows.'
+                      ),
+                    why: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'The relationship in the user\'s words ("a wise friend and mirror"), inferred from the conversation.'
+                      ),
+                    interests: z
+                      .string()
+                      .optional()
+                      .describe('Optional shared interests or themes.'),
+                    sourceSnippet: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Short verbatim quote from the conversation that surfaced this connection (~140 chars).'
+                      ),
+                  })
+                )
+                .min(1)
+                .max(6)
+                .describe(
+                  "Up to 6 candidate connections surfaced from the dialogue. Only people who ALREADY exist in the user's world."
+                ),
+            }),
+            execute: async ({
+              candidates,
+            }: {
+              candidates: Array<{
+                toPersonName: string
+                fromPersonName?: string
+                why?: string
+                interests?: string
+                sourceSnippet?: string
+              }>
+            }) => {
+              logToolDispatch('suggest_connections', ctx, {
+                count: candidates?.length ?? 0,
+              })
+              if (!ctx.currentUserId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'You need to be signed in before I can suggest connections.',
+                }
+              }
+              try {
+                const graph = await initGraph()
+                const userId = ctx.currentUserId
+                const SELF_TOKENS = new Set([
+                  'you',
+                  'me',
+                  'myself',
+                  'i',
+                  'self',
+                ])
+
+                // Resolve every candidate's endpoints (+ existing-edge check) in
+                // PARALLEL — each is independent. Dedup is then applied in a
+                // sequential pass so batch ordering stays deterministic.
+                const resolved = await Promise.all(
+                  candidates.map(async (candidate) => {
+                    const toName = (candidate.toPersonName || '').trim()
+                    if (!toName) return null
+                    const fromNameRaw = (candidate.fromPersonName || '').trim()
+                    const fromIsUser =
+                      !fromNameRaw || SELF_TOKENS.has(fromNameRaw.toLowerCase())
+
+                    // Resolve the "from" endpoint (defaults to the current user).
+                    let fromId = userId
+                    let fromDisplay = 'you'
+                    if (!fromIsUser) {
+                      const from = await resolvePersonInUserScope(
+                        graph,
+                        userId,
+                        fromNameRaw
+                      )
+                      if (from.status !== 'ok') return null
+                      fromId = from.id
+                      fromDisplay = from.name
+                    }
+
+                    const to = await resolvePersonInUserScope(graph, userId, toName)
+                    if (to.status !== 'ok') return null
+                    if (to.id === fromId) return null
+
+                    const exists = await connectionExists(graph, fromId, to.id)
+                    return {
+                      candidate,
+                      fromIsUser,
+                      fromId,
+                      fromDisplay,
+                      toId: to.id,
+                      toName: to.name,
+                      exists,
+                    }
+                  })
+                )
+
+                const suggestions: ConnectionSuggestion[] = []
+                const seen = new Set<string>()
+                let skipped = 0
+                for (const r of resolved) {
+                  // Skip unresolved/ambiguous/self candidates, dedup within the
+                  // batch (order-independent), and skip already-connected pairs.
+                  if (!r) {
+                    skipped++
+                    continue
+                  }
+                  const pairKey = [r.fromId, r.toId].sort().join('::')
+                  if (seen.has(pairKey) || r.exists) {
+                    skipped++
+                    continue
+                  }
+                  seen.add(pairKey)
+
+                  const why = (r.candidate.why || '').trim() || null
+                  const interests = (r.candidate.interests || '').trim() || null
+                  const sourceSnippet =
+                    (r.candidate.sourceSnippet || '').trim().slice(0, 200) ||
+                    null
+                  const display = r.fromIsUser
+                    ? r.toName
+                    : `${r.fromDisplay} ↔ ${r.toName}`
+
+                  suggestions.push({
+                    name: display,
+                    why,
+                    sourceSnippet,
+                    writeTool: 'create_connection',
+                    createArgs: {
+                      toPersonId: r.toId,
+                      ...(r.fromIsUser ? {} : { fromPersonId: r.fromId }),
+                      ...(why ? { why } : {}),
+                      ...(interests ? { interests } : {}),
+                    },
+                  })
+                }
+
+                return {
+                  status: 'ok' as const,
+                  suggestions,
+                  skipped,
+                  message:
+                    suggestions.length > 0
+                      ? `Surfacing ${suggestions.length} connection${
+                          suggestions.length === 1 ? '' : 's'
+                        } you might want to make.`
+                      : 'No new connections to suggest right now.',
+                }
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to prepare connection suggestions',
                   error
                 )
               }

@@ -279,3 +279,112 @@ describe('hitl — update_pulse copy carries doc-ingest enrichment (slice 4)', (
     expect(summary.toLowerCase()).toContain('update')
   })
 })
+
+describe('hitl — create_connection write tool (assistant relationships)', () => {
+  describe('isWriteToolName', () => {
+    it('recognises create_connection as a registered write tool', () => {
+      expect(isWriteToolName('create_connection')).toBe(true)
+    })
+  })
+
+  describe('describeWriteAction("create_connection", …)', () => {
+    it('uses the person name and the relationship why; never echoes a raw id (Rule 1)', () => {
+      const summary = describeWriteAction('create_connection', {
+        toPersonId: 'person_a87c5bf1-6ab3-42f6-bb61-14d5e884fda4',
+        toPersonName: 'Ashong',
+        why: 'a wise friend',
+      })
+      expect(summary).toContain('Ashong')
+      expect(summary).toContain('a wise friend')
+      expect(summary).not.toContain('person_')
+      expect(summary).not.toContain('a87c5bf1')
+    })
+
+    it('renders "Connect you with <name> …" when fromPersonName is "you"', () => {
+      const summary = describeWriteAction('create_connection', {
+        fromPersonName: 'you',
+        toPersonName: 'Ashong',
+        why: 'a wise friend',
+      })
+      expect(summary).toContain('Connect you with Ashong')
+      expect(summary).toContain('a wise friend')
+    })
+
+    it('names a non-self from-endpoint explicitly ("Connect <A> with <B>")', () => {
+      const summary = describeWriteAction('create_connection', {
+        fromPersonName: 'Sarah',
+        toPersonName: 'Ashong',
+      })
+      expect(summary).toContain('Connect Sarah with Ashong')
+    })
+
+    it('still produces a summary with no why and no names (defaults to "you with someone")', () => {
+      const summary = describeWriteAction('create_connection', {})
+      expect(summary).toContain('Connect you with someone')
+      // No dangling relationship em-dash clause when why is absent.
+      expect(summary).not.toContain('—')
+    })
+  })
+
+  describe('describeWriteAction("create_person", { relationshipWhy }) ', () => {
+    it('mentions the relationship in plain words and never leaks ids', () => {
+      const summary = describeWriteAction('create_person', {
+        firstName: 'Ashong',
+        relationshipWhy: 'a wise friend',
+        contextId: 'ctx_a87c5bf1-6ab3-42f6-bb61-14d5e884fda4',
+        contextTitle: 'People',
+      })
+      expect(summary).toContain('Ashong')
+      expect(summary).toContain('People')
+      expect(summary).toContain('a wise friend')
+      expect(summary).not.toContain('ctx_')
+      expect(summary).not.toContain('a87c5bf1')
+    })
+
+    it('omits the relationship clause entirely when relationshipWhy is absent', () => {
+      const summary = describeWriteAction('create_person', {
+        firstName: 'Ashong',
+        contextTitle: 'People',
+      })
+      expect(summary).toContain('Ashong')
+      expect(summary).toContain('People')
+      expect(summary).not.toContain('connected to you')
+    })
+  })
+
+  describe('createApprovalHash("create_connection", …)', () => {
+    it('is deterministic and order-independent on the args object', () => {
+      const a = createApprovalHash('create_connection', {
+        toPersonId: 'person_2',
+        why: 'a mentor',
+        interests: 'climbing',
+      })
+      const b = createApprovalHash('create_connection', {
+        interests: 'climbing',
+        why: 'a mentor',
+        toPersonId: 'person_2',
+      })
+      expect(a).toBe(b)
+    })
+  })
+
+  describe('buildPendingApprovalResult("create_connection", …)', () => {
+    const args = {
+      toPersonId: 'person_2',
+      toPersonName: 'Ashong',
+      why: 'a wise friend',
+    }
+
+    it('returns the same shape as a runtime-emitted pending result', () => {
+      const result = buildPendingApprovalResult('create_connection', args)
+      expect(result.success).toBe(false)
+      expect(result.approvalRequired).toBe(true)
+      expect(result.tool).toBe('create_connection')
+      expect(result.args).toEqual(args)
+      expect(result.approvalHash).toBe(
+        createApprovalHash('create_connection', args)
+      )
+      expect(result.summary).toBe(describeWriteAction('create_connection', args))
+    })
+  })
+})

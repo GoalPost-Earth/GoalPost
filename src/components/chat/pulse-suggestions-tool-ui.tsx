@@ -94,6 +94,35 @@ export const PulseSuggestionsToolPart: ToolCallMessagePartComponent = ({
     })
     return initial
   })
+  // Per-person relationship text, seeded from the inferred relationshipWhy in
+  // createArgs. The user can edit or clear it before adding — always-ask but
+  // skippable. Only person cards surface this input.
+  const [whyEdits, setWhyEdits] = useState<Record<number, string>>(() => {
+    const initial: Record<number, string> = {}
+    suggestions.forEach((s, index) => {
+      const why =
+        typeof s.createArgs?.relationshipWhy === 'string'
+          ? (s.createArgs.relationshipWhy as string)
+          : ''
+      initial[index] = why.trim()
+    })
+    return initial
+  })
+  // Per-person description, seeded from the inferred description in createArgs.
+  // A short note about who this person is, editable before adding. Person only.
+  const [descriptionEdits, setDescriptionEdits] = useState<
+    Record<number, string>
+  >(() => {
+    const initial: Record<number, string> = {}
+    suggestions.forEach((s, index) => {
+      const description =
+        typeof s.createArgs?.description === 'string'
+          ? (s.createArgs.description as string)
+          : ''
+      initial[index] = description.trim()
+    })
+    return initial
+  })
 
   const recordFeedback = useCallback(
     (rating: 'POSITIVE' | 'NEGATIVE', label: string, verb: string) => {
@@ -147,10 +176,21 @@ export const PulseSuggestionsToolPart: ToolCallMessagePartComponent = ({
     if (chosen.length === 0) return
 
     approval?.requestExecuteActions(
-      chosen.map(({ s }) => ({
-        tool: s.writeTool as string,
-        args: s.createArgs as Record<string, unknown>,
-      }))
+      chosen.map(({ index, s }) => {
+        const args = { ...(s.createArgs as Record<string, unknown>) }
+        // For a person, fold the (possibly edited) relationship into the write.
+        // A blank relationship omits the field entirely (skippable) rather than
+        // persisting empty text → no CONNECTED_TO edge gets created.
+        if (s.type === 'person') {
+          const why = (whyEdits[index] ?? '').trim()
+          if (why) args.relationshipWhy = why
+          else delete args.relationshipWhy
+          const description = (descriptionEdits[index] ?? '').trim()
+          if (description) args.description = description
+          else delete args.description
+        }
+        return { tool: s.writeTool as string, args }
+      })
     )
 
     const names = chosen.map(({ s }) => (s.name || '').trim())
@@ -177,6 +217,8 @@ export const PulseSuggestionsToolPart: ToolCallMessagePartComponent = ({
     selected,
     setDecision,
     suggestions,
+    whyEdits,
+    descriptionEdits,
   ])
 
   const handleDismiss = useCallback(
@@ -269,6 +311,45 @@ export const PulseSuggestionsToolPart: ToolCallMessagePartComponent = ({
                   <p className="mt-0.5 line-clamp-2 text-xs italic text-gp-ink-muted dark:text-white/50">
                     “{suggestion.sourceSnippet}”
                   </p>
+                ) : null}
+
+                {suggestion.type === 'person' && decision === 'pending' ? (
+                  <>
+                    <label className="mt-2 block">
+                      <span className="mb-1 block text-[11px] font-medium text-gp-ink-muted dark:text-white/55">
+                        Description
+                      </span>
+                      <textarea
+                        rows={2}
+                        value={descriptionEdits[index] ?? ''}
+                        onChange={(e) =>
+                          setDescriptionEdits((prev) => ({
+                            ...prev,
+                            [index]: e.target.value,
+                          }))
+                        }
+                        placeholder={`Who is ${name}? e.g. an elder in the housing-justice circle`}
+                        className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs text-gp-ink-strong outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:text-white"
+                      />
+                    </label>
+                    <label className="mt-2 block">
+                      <span className="mb-1 block text-[11px] font-medium text-gp-ink-muted dark:text-white/55">
+                        Your relationship to {name}
+                      </span>
+                      <textarea
+                        rows={2}
+                        value={whyEdits[index] ?? ''}
+                        onChange={(e) =>
+                          setWhyEdits((prev) => ({
+                            ...prev,
+                            [index]: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. a wise friend who mirrors me"
+                        className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs text-gp-ink-strong outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:text-white"
+                      />
+                    </label>
+                  </>
                 ) : null}
               </div>
 

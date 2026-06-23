@@ -25,6 +25,7 @@ export type WriteToolName =
   | 'delete_my_profile'
   | 'create_person'
   | 'update_person'
+  | 'create_connection'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -50,6 +51,7 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'delete_my_profile',
   'create_person',
   'update_person',
+  'create_connection',
 ])
 
 function stableStringify(value: unknown): string {
@@ -151,7 +153,23 @@ export function describeWriteAction(
       const where =
         String(args.contextTitle || args.contextName || '').trim() ||
         'this field context'
-      return `Add ${full} to ${where}`
+      // Rule 1: surface the relationship in plain words, never an id.
+      const why = String(args.relationshipWhy || '').trim()
+      const whyClause = why ? ` — connected to you as "${why}"` : ''
+      return `Add ${full} to ${where}${whyClause}`
+    }
+    case 'create_connection': {
+      // Names only (Rule 1). The model passes person NAMES; never echo an id.
+      const to =
+        String(args.toPersonName || args.toName || '').trim() || 'someone'
+      const fromRaw = String(args.fromPersonName || '').trim()
+      const fromClause =
+        fromRaw && fromRaw.toLowerCase() !== 'you' && fromRaw.toLowerCase() !== 'me'
+          ? `${fromRaw} with `
+          : 'you with '
+      const why = String(args.why || '').trim()
+      const whyClause = why ? ` — "${why}"` : ''
+      return `Connect ${fromClause}${to}${whyClause}`
     }
     case 'update_person': {
       const first = String(args.firstName || '').trim()
@@ -1141,6 +1159,21 @@ interface CreatePersonAuthorizedInput {
   contextTitle?: string
   documentId?: string
   conversationThreadId?: string
+  /**
+   * The current user's relationship to this person, captured at creation and
+   * persisted as the `why` on a CONNECTED_TO edge from the user to the new
+   * person (GOAL-XXX). Optional — the approval card always ASKS for it, but the
+   * user may skip it, in which case no connection edge is created.
+   */
+  relationshipWhy?: string
+  /** Optional shared interests, persisted as CONNECTED_TO.interests. */
+  interests?: string
+  /**
+   * A short relational note about who this person is — persisted on the
+   * PersonPulse node's `description`. Distinct from `relationshipWhy` (which
+   * captures how the user relates to them). Optional.
+   */
+  description?: string
 }
 
 async function createPersonAuthorized(
@@ -1155,6 +1188,13 @@ async function createPersonAuthorized(
   const contextTitle = input.contextTitle?.trim() || ''
   const documentId = input.documentId?.trim() || null
   const conversationThreadId = input.conversationThreadId?.trim() || null
+  // The user's relationship to this person — modeled as CONNECTED_TO.why from
+  // the current user to the new person. Skippable (null = no edge created).
+  const relationshipWhy = input.relationshipWhy?.trim() || null
+  const relationshipInterests = input.interests?.trim() || null
+  // A short note describing who this person is, stored on the node itself.
+  // (Named distinctly from the activity-log `description` built below.)
+  const personDescription = input.description?.trim() || null
 
   if (!firstName) {
     return {
@@ -1188,7 +1228,12 @@ async function createPersonAuthorized(
   const name = lastName ? `${firstName} ${lastName}` : firstName
   const where = contextTitle || 'this field context'
   const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
-  const description = `Added ${name} to ${where}${filenameSuffix}`
+  // Fold the relationship into the activity log so the audit trail records why
+  // the person matters to the user, not just that they were added.
+  const connectionClause = relationshipWhy
+    ? ` (connected to you as "${relationshipWhy}")`
+    : ''
+  const description = `Added ${name} to ${where}${filenameSuffix}${connectionClause}`
   const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
 
   const rows = await graph.query<{ id: string; name: string }>(
@@ -1203,7 +1248,19 @@ async function createPersonAuthorized(
       name: $name,
       createdAt: datetime()
     })
+    FOREACH (_ IN CASE WHEN $personDescription IS NULL THEN [] ELSE [1] END |
+      SET p.description = $personDescription
+    )
     CREATE (c)-[:HAS_PERSON]->(p)
+    // Model the user's relationship to the new person as a CONNECTED_TO edge
+    // carrying the why. Only when a relationship was provided — a skipped
+    // relationship leaves the person unconnected (per the always-ask-but-
+    // skippable decision). MERGE keeps it idempotent on accidental re-runs.
+    FOREACH (_ IN CASE WHEN $relationshipWhy IS NULL THEN [] ELSE [1] END |
+      MERGE (u)-[rc:CONNECTED_TO]-(p)
+      SET rc.why = $relationshipWhy,
+          rc.interests = coalesce($relationshipInterests, rc.interests)
+    )
     CREATE (log:Log {
       id: $logId,
       description: $description,
@@ -1229,7 +1286,10 @@ async function createPersonAuthorized(
       name,
       logId,
       description,
+      personDescription,
       metadata,
+      relationshipWhy,
+      relationshipInterests,
     }
   )
 
@@ -1246,7 +1306,11 @@ async function createPersonAuthorized(
     name: rows[0].name,
     contextId,
     documentId,
-    message: `Added ${rows[0].name} to ${where}.`,
+    connectedToYou: Boolean(relationshipWhy),
+    relationshipWhy,
+    message: relationshipWhy
+      ? `Added ${rows[0].name} to ${where} and connected them to you as "${relationshipWhy}".`
+      : `Added ${rows[0].name} to ${where}.`,
   }
 }
 
@@ -1394,6 +1458,231 @@ async function updatePersonAuthorized(
     contextId,
     documentId,
     message: `Updated ${rows[0].name || displayName} in ${where}.`,
+  }
+}
+
+interface PersonLocatorInput {
+  personId?: string
+  personName?: string
+}
+
+/**
+ * Resolve a Person the current user is allowed to connect, by id or name.
+ * "Allowed" = the current user THEMSELVES (the from-endpoint default), OR a
+ * `PersonPulse` (a relational-world person, never another registered User)
+ * attached (HAS_PERSON) to a FieldContext inside a Space the user owns or is a
+ * member of. Restricting non-self targets to `PersonPulse` keeps the assistant
+ * from writing an undirected CONNECTED_TO edge onto another real account that
+ * never consented — and matches the scoping suggest_connections already uses.
+ *
+ * Two query shapes: an index-seek by id (the hot path — the suggestion-accept
+ * card always passes resolved ids) and a name scan (PersonPulse only) that also
+ * returns the owning Space name so same-name matches can be disambiguated by
+ * the model (Rule 1 — names only, never ids).
+ */
+async function resolveEditablePerson(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  input: PersonLocatorInput
+): Promise<
+  | { ok: true; personId: string; name: string }
+  | { ok: false; result: ToolExecutionResult }
+> {
+  const personId = input.personId?.trim() || null
+  const personName = input.personName?.trim() || null
+
+  if (!personId && !personName) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        message: 'Provide a person id or name to identify who to connect.',
+      },
+    }
+  }
+
+  if (personId) {
+    const rows = await graph.query<{ id: string; name: string | null }>(
+      `
+      MATCH (target:Person {id: $personId})
+      WHERE target.id = $currentUserId
+         OR (target:PersonPulse AND EXISTS {
+              MATCH (target)<-[:HAS_PERSON]-(:FieldContext)<-[:HAS_CONTEXT]-(space:Space)
+              WHERE (space)<-[:OWNS]-(:Person {id: $currentUserId})
+                 OR (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $currentUserId})
+            })
+      RETURN target.id AS id, target.name AS name
+      LIMIT 1
+      `,
+      { personId, currentUserId }
+    )
+    if (!rows || rows.length === 0) {
+      return {
+        ok: false,
+        result: {
+          success: false,
+          message:
+            'That person could not be found, or you do not have access to them.',
+        },
+      }
+    }
+    return { ok: true, personId: rows[0].id, name: rows[0].name || 'person' }
+  }
+
+  const rows = await graph.query<{
+    id: string
+    name: string | null
+    spaceName: string | null
+  }>(
+    `
+    MATCH (target:Person:PersonPulse)
+    WHERE toLower(trim(coalesce(target.name, ''))) = toLower(trim($personName))
+    MATCH (target)<-[:HAS_PERSON]-(:FieldContext)<-[:HAS_CONTEXT]-(space:Space)
+    WHERE (space)<-[:OWNS]-(:Person {id: $currentUserId})
+       OR (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $currentUserId})
+    WITH target, head(collect(DISTINCT space.name)) AS spaceName
+    RETURN target.id AS id, target.name AS name, spaceName
+    LIMIT 5
+    `,
+    { personName, currentUserId }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        message: `No person named "${personName}" that you can connect was found.`,
+      },
+    }
+  }
+
+  if (rows.length > 1) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        requiresDisambiguation: true,
+        message: `More than one person named "${personName}" — tell me which one (e.g. the one in a particular space) or open their profile and connect from there.`,
+        // Names + owning-space names only (Rule 1 — never ids) so the model can
+        // help the user pick between same-named people.
+        candidates: rows.map((r) => ({ name: r.name, space: r.spaceName })),
+      },
+    }
+  }
+
+  return { ok: true, personId: rows[0].id, name: rows[0].name || 'person' }
+}
+
+interface CreateConnectionAuthorizedInput {
+  fromPersonId?: string
+  fromPersonName?: string
+  toPersonId?: string
+  toPersonName?: string
+  why?: string
+  interests?: string
+}
+
+/**
+ * Create (or refresh) a CONNECTED_TO edge between two people the current user
+ * is allowed to connect. `from` defaults to the current user — the common case
+ * is "connect me to <person>" with a relationship why. Both endpoints are
+ * authorized via resolveEditablePerson. Writes a single activity Log attributed
+ * to the user (the GraphQL connection resolver skips logging; the assistant
+ * path must not — activity logging is mandatory on mutations).
+ *
+ * `why` / `interests` are coalesced, so re-connecting without re-stating the
+ * metadata never wipes an existing edge's why.
+ */
+async function createConnectionAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreateConnectionAuthorizedInput
+  const why = input.why?.trim() || null
+  const interests = input.interests?.trim() || null
+
+  // `from` defaults to the current user when neither id nor name is given.
+  const fromHasLocator = Boolean(
+    input.fromPersonId?.trim() || input.fromPersonName?.trim()
+  )
+  const fromResolved = await resolveEditablePerson(
+    graph,
+    currentUserId,
+    fromHasLocator
+      ? { personId: input.fromPersonId, personName: input.fromPersonName }
+      : { personId: currentUserId }
+  )
+  if (!fromResolved.ok) return fromResolved.result
+
+  const toResolved = await resolveEditablePerson(graph, currentUserId, {
+    personId: input.toPersonId,
+    personName: input.toPersonName,
+  })
+  if (!toResolved.ok) return toResolved.result
+
+  if (fromResolved.personId === toResolved.personId) {
+    return {
+      success: false,
+      message: 'You cannot connect a person to themselves.',
+    }
+  }
+
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const whyClause = why ? ` — "${why}"` : ''
+  const description = `Connected ${fromResolved.name} with ${toResolved.name}${whyClause}`
+
+  const rows = await graph.query<{
+    fromName: string | null
+    toName: string | null
+    why: string | null
+  }>(
+    // Both endpoint ids are already authorized above via resolveEditablePerson
+    // (self or a PersonPulse in an editable Space), so this id-anchored write is
+    // safe; it does not re-scope by Space.
+    `
+    MATCH (from:Person {id: $fromId})
+    MATCH (to:Person {id: $toId})
+    MATCH (actor:Person {id: $currentUserId})
+    MERGE (from)-[r:CONNECTED_TO]-(to)
+    SET r.why = coalesce($why, r.why),
+        r.interests = coalesce($interests, r.interests)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    CREATE (log)-[:CREATED_BY]->(actor)
+    RETURN from.name AS fromName, to.name AS toName, r.why AS why
+    LIMIT 1
+    `,
+    {
+      fromId: fromResolved.personId,
+      toId: toResolved.personId,
+      currentUserId,
+      why,
+      interests,
+      logId,
+      description,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: 'Failed to create the connection.',
+    }
+  }
+
+  const fromName = rows[0].fromName || fromResolved.name
+  const toName = rows[0].toName || toResolved.name
+  return {
+    success: true,
+    fromName,
+    toName,
+    why: rows[0].why ?? null,
+    message: `Connected ${fromName} with ${toName}.`,
   }
 }
 
@@ -1616,6 +1905,10 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'update_person') {
     return await updatePersonAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_connection') {
+    return await createConnectionAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {

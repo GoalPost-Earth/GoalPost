@@ -97,6 +97,10 @@ The model will call any tool whose description matches its current intent. If a 
 
 **Never bypass this gate.** Calling `updatePulse(graph, input)` directly from a tool's execute (instead of via `runWriteTool('update_pulse', ...)`) means the user never sees an approval prompt and the audit chain is broken.
 
+**Read-only suggestion surfaces are ALSO a HITL gate.** `suggest_pulses` and `suggest_connections` never write — they return conversation-derived candidates for inline cards. The card's accept dispatches the matching write (`create_person` / `create_pulse` / `create_connection`) via the deterministic `executeActions` path, which re-authorizes server-side. So the card IS the gate: nothing is created until an explicit accept. Both tools are registered ONLY when a `FieldContext` is active (Rule 4) — people and the relationships between them live inside Fields, so on a neutral surface the model has no creation tools and the runtime prompt nudges the user to open a Field instead of writing prose.
+
+**Relationships (`CONNECTED_TO`) are first-class writes.** The assistant can create person-to-person connections (`create_connection`) carrying a relationship `why`, and surface them proactively (`suggest_connections`). Separately, **every assistant-created person carries the user's relationship**: `create_person` accepts a `relationshipWhy` and, when provided, MERGEs a `CONNECTED_TO` edge from the current user to the new person in the same write. The approval/suggestion card ALWAYS surfaces a "Your relationship" field (an `alwaysShow` field in `approval-display.ts`, or an inline input on the person/connection card) — we always ask, but the user may leave it blank (the edge is then skipped). Like every other write, these route through `runWriteTool` and write an activity `Log` (the GraphQL `connection-resolver` does not log — the assistant path must).
+
 ---
 
 ## Rule 6 — Choose a non-reasoning model for the chat assistant.
