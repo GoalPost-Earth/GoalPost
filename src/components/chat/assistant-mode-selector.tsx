@@ -94,6 +94,20 @@ export function AssistantModeSelector({
           {MODE_METADATA[selectedMode].subtitle}
         </div>
       )}
+
+      {/* Persistent clarification: this is voice/tone, not model power */}
+      <div className="flex items-start gap-1.5 pt-2 border-t border-gp-glass-border text-[10px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+        <span
+          className="material-symbols-outlined text-[13px]! leading-none mt-px shrink-0"
+          aria-hidden="true"
+        >
+          info
+        </span>
+        <span>
+          Changes the assistant&apos;s voice and tone — not its capability. Every
+          style uses the same AI model.
+        </span>
+      </div>
     </div>
   )
 }
@@ -132,6 +146,19 @@ export function AssistantModeInfo() {
       <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-gp-ink-muted dark:text-gp-ink-soft">
         How modes work
       </h3>
+
+      <p className="flex items-start gap-1.5 text-xs text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
+        <span
+          className="material-symbols-outlined text-[15px]! leading-none mt-0.5 shrink-0"
+          aria-hidden="true"
+        >
+          info
+        </span>
+        <span>
+          Each mode changes the assistant&apos;s voice and tone — how it
+          responds, not how capable it is. All three run on the same AI model.
+        </span>
+      </p>
 
       {Object.entries(MODE_METADATA).map(([key, metadata]) => (
         <div
