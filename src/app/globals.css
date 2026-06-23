@@ -1,3 +1,12 @@
+/* Order `gp-icons` as the lowest cascade layer (below Tailwind's theme/base/
+   components/utilities). Google's Material Symbols stylesheet ships
+   `.material-symbols-outlined { font-size: 24px }` UNLAYERED, which — per CSS
+   cascade-layer rules (unlayered beats layered) — overrode every Tailwind size
+   utility, so icons rendered at a fixed 24px everywhere and ignored
+   `text-[...]`/`text-Nxl`. We instead self-declare the @font-face + base class
+   inside `gp-icons` (see bottom of file) so 24px is just the default and any
+   explicit size utility wins. The <link> in layout.tsx was dropped for this. */
+@layer gp-icons, theme, base, components, utilities;
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -604,5 +613,38 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Material Symbols icon font, self-declared in the lowest cascade layer
+   (`gp-icons`, ordered at the top of this file) so its default `font-size:24px`
+   no longer overrides Tailwind size utilities. The woff2 is self-hosted at
+   `public/fonts/` (variable, weight 100–700) so icons never depend on a
+   third-party fetch — a remote `@font-face` under `font-display: swap` renders
+   the literal ligature text (e.g. "flag", "person") whenever the download is
+   in flight, blocked, or unavailable. See the layer note at the top. */
+@layer gp-icons {
+  @font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: 100 700;
+    font-display: block;
+    src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+  }
+
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
   }
 }

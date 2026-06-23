@@ -57,10 +57,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        {/* Material Symbols is self-hosted (see the `@font-face` in
+            globals.css) and declared in a low cascade layer so Tailwind size
+            utilities can override its default 24px. Preload the woff2 so icon
+            ligatures paint on first render rather than flashing literal text. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/material-symbols-outlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
         <script
           id="gp-theme-init"
