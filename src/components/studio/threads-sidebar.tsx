@@ -26,16 +26,35 @@ interface ThreadsSidebarProps {
 
 const COLLAPSED_KEY = 'goalpost.studio.threadsSidebarCollapsed'
 
+/**
+ * Relative "time ago" label for a thread's last activity. Granular at the
+ * bottom (seconds/minutes) so a just-created or just-answered thread reads
+ * "just now" / "2 minutes ago" instead of a flat "Today", then coarsens to
+ * hours, days, and finally an absolute date past a week. Re-evaluated on the
+ * sidebar's `nowTick` so labels age in place while the panel stays open.
+ */
 function formatDate(iso: string | null): string {
   if (!iso) return ''
   try {
-    const d = new Date(iso)
-    const now = new Date()
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000)
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 7) return `${diffDays}d ago`
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    const then = new Date(iso).getTime()
+    if (Number.isNaN(then)) return ''
+    const diffMs = Date.now() - then
+    // Guard against clock skew / future timestamps — never show "-3s ago".
+    if (diffMs < 0) return 'just now'
+    const sec = Math.floor(diffMs / 1000)
+    if (sec < 5) return 'just now'
+    if (sec < 60) return `${sec} second${sec === 1 ? '' : 's'} ago`
+    const min = Math.floor(sec / 60)
+    if (min < 60) return `${min} minute${min === 1 ? '' : 's'} ago`
+    const hr = Math.floor(min / 60)
+    if (hr < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`
+    const days = Math.floor(hr / 24)
+    if (days === 1) return 'yesterday'
+    if (days < 7) return `${days} days ago`
+    return new Date(then).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
   } catch {
     return ''
   }
@@ -50,6 +69,14 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  // Re-render every 10s so the relative "time ago" labels age in place — a
+  // thread that read "just now" becomes "2 minutes ago" without needing a
+  // refetch or a new turn. `formatDate` reads the wall clock on each render.
+  const [, setNowTick] = useState(0)
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 10_000)
+    return () => window.clearInterval(id)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
