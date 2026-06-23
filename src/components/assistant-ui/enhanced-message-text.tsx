@@ -5,6 +5,7 @@ import {
   TextMessagePartProvider,
 } from '@assistant-ui/react'
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
+import { defaultComponents } from './markdown-text'
 import { PersonCard, PersonProfileData } from './person-card'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Workflow } from 'lucide-react'
@@ -284,6 +285,7 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
               <MarkdownTextPrimitive
                 remarkPlugins={[remarkGfm]}
                 className="aui-md"
+                components={defaultComponents}
               />
             </TextMessagePartProvider>
           )
@@ -299,6 +301,7 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
         <MarkdownTextPrimitive
           remarkPlugins={[remarkGfm]}
           className="aui-md"
+          components={defaultComponents}
         />
       </TextMessagePartProvider>
       <BloomOverlayButtons overlays={storedOverlays} onOpen={reopenOverlay} />

@@ -63,11 +63,18 @@ const useCopyToClipboard = ({
   return { isCopied, copyToClipboard }
 }
 
-const defaultComponents = memoizeMarkdownComponents({
+// Chat-tuned markdown components. Sizes are deliberately restrained for a
+// message bubble (not document-scale): headings step down gently, paragraphs
+// and lists carry generous vertical rhythm, and every element references theme
+// tokens (`text-foreground`, `text-muted-foreground`, `border-border`,
+// `bg-muted`, `gp-primary`) so the rendering reads correctly in light, dark,
+// and every theme variant. Exported so the live `EnhancedTextPart` renderer
+// shares the exact same styling.
+export const defaultComponents = memoizeMarkdownComponents({
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
-        'mb-8 scroll-m-20 text-4xl font-extrabold tracking-tight last:mb-0',
+        'mt-6 mb-3 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -76,7 +83,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h2: ({ className, ...props }) => (
     <h2
       className={cn(
-        'mt-8 mb-4 scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-6 mb-3 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -85,7 +92,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h3: ({ className, ...props }) => (
     <h3
       className={cn(
-        'mt-6 mb-4 scroll-m-20 text-2xl font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-5 mb-2 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -94,7 +101,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h4: ({ className, ...props }) => (
     <h4
       className={cn(
-        'mt-6 mb-4 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-5 mb-2 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -103,7 +110,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h5: ({ className, ...props }) => (
     <h5
       className={cn(
-        'my-4 text-lg font-semibold first:mt-0 last:mb-0',
+        'my-3 text-sm font-semibold first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -111,45 +118,63 @@ const defaultComponents = memoizeMarkdownComponents({
   ),
   h6: ({ className, ...props }) => (
     <h6
-      className={cn('my-4 font-semibold first:mt-0 last:mb-0', className)}
+      className={cn(
+        'my-3 text-sm font-semibold text-muted-foreground first:mt-0 last:mb-0',
+        className
+      )}
       {...props}
     />
   ),
   p: ({ className, ...props }) => (
     <p
-      className={cn('mt-5 mb-5 leading-7 first:mt-0 last:mb-0', className)}
+      className={cn('my-4 leading-7 first:mt-0 last:mb-0', className)}
       {...props}
     />
   ),
   a: ({ className, ...props }) => (
     <a
       className={cn(
-        'text-primary font-medium underline underline-offset-4',
+        'text-gp-primary font-medium underline underline-offset-4 hover:opacity-80',
         className
       )}
       {...props}
     />
   ),
+  strong: ({ className, ...props }) => (
+    <strong
+      className={cn('font-semibold text-foreground', className)}
+      {...props}
+    />
+  ),
   blockquote: ({ className, ...props }) => (
     <blockquote
-      className={cn('border-l-2 pl-6 italic', className)}
+      className={cn(
+        'my-4 border-l-2 border-gp-primary/40 pl-4 text-muted-foreground italic [&>p]:my-2',
+        className
+      )}
       {...props}
     />
   ),
   ul: ({ className, ...props }) => (
     <ul
-      className={cn('my-5 ml-6 list-disc [&>li]:mt-2', className)}
+      className={cn(
+        'my-4 ml-5 list-disc marker:text-muted-foreground [&>li]:mt-1.5 [&>li]:leading-7',
+        className
+      )}
       {...props}
     />
   ),
   ol: ({ className, ...props }) => (
     <ol
-      className={cn('my-5 ml-6 list-decimal [&>li]:mt-2', className)}
+      className={cn(
+        'my-4 ml-5 list-decimal marker:text-muted-foreground [&>li]:mt-1.5 [&>li]:leading-7',
+        className
+      )}
       {...props}
     />
   ),
   hr: ({ className, ...props }) => (
-    <hr className={cn('my-5 border-b', className)} {...props} />
+    <hr className={cn('my-6 border-border', className)} {...props} />
   ),
   table: ({ className, ...props }) => (
     <table
@@ -172,7 +197,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        'border-b border-l px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right',
+        'border-b border-l border-border px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right',
         className
       )}
       {...props}
@@ -181,7 +206,7 @@ const defaultComponents = memoizeMarkdownComponents({
   tr: ({ className, ...props }) => (
     <tr
       className={cn(
-        'm-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg',
+        'm-0 border-b border-border p-0 first:border-t [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg',
         className
       )}
       {...props}
