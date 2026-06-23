@@ -9,7 +9,7 @@ import { ChatMode } from './modes/chat-mode'
 interface ChatHostProps {
   fullscreen: boolean
   selectedThreadId: string | null
-  onSelectThread: (id: string) => void
+  onSelectThread: (id: string, opts?: { isNew?: boolean }) => void
   /** Hide the thread switcher sidebar (narrow viewports). */
   compact?: boolean
 }

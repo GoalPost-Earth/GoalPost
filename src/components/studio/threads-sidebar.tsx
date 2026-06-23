@@ -11,7 +11,7 @@ import { onAssistantThreadUpdated } from '@/lib/simulation/assistant-panel-event
 
 interface ThreadsSidebarProps {
   activeThreadId: string | null
-  onSelectThread: (id: string) => void
+  onSelectThread: (id: string, opts?: { isNew?: boolean }) => void
   /**
    * Create a new thread. Resolves to the new threadId on success, or
    * `null` if the create failed — the auto-create useEffect checks the
@@ -155,7 +155,13 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
             'disabled:opacity-40 disabled:cursor-not-allowed'
           )}
         >
-          <Plus className="w-4 h-4" />
+          {creating ? (
+            <span className="material-symbols-outlined text-[18px] leading-none animate-spin">
+              progress_activity
+            </span>
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
         </button>
       </aside>
     )
@@ -181,8 +187,13 @@ export const ThreadsSidebar: FC<ThreadsSidebarProps> = ({
               'disabled:opacity-40 disabled:cursor-not-allowed'
             )}
           >
-            <span className="material-symbols-outlined text-[16px] leading-none">
-              {creating ? 'hourglass_empty' : 'add'}
+            <span
+              className={cn(
+                'material-symbols-outlined text-[16px] leading-none',
+                creating && 'animate-spin'
+              )}
+            >
+              {creating ? 'progress_activity' : 'add'}
             </span>
           </button>
           <button

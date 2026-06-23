@@ -11,7 +11,13 @@ import {
   type ReactNode,
 } from 'react'
 import { usePathname } from 'next/navigation'
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  type ImperativePanelHandle,
+} from 'react-resizable-panels'
+import { cn } from '@/lib/utils'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import {
   AssistantChatTransport,
@@ -32,8 +38,10 @@ import {
 } from '@/lib/simulation/conversation-thread-client'
 import {
   emitAssistantThreadUpdated,
+  emitAssistantGraphDataChanged,
   onOpenAssistantThread,
 } from '@/lib/simulation/assistant-panel-events'
+import { CanvasGraphSync } from './canvas-graph-sync'
 import { TourController } from '@/components/onboarding/TourController'
 import { TourOverlay } from '@/components/onboarding/TourOverlay'
 import {
@@ -96,6 +104,30 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     setFloatingChatOpen,
   } = useStudioCanvas()
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  // A thread we just created client-side is known to be empty, so opening it
+  // must not trigger a hydration fetch or a loading flash — the chat runtime
+  // mounts straight into an empty conversation. We track only the single most
+  // recently created thread; it's cleared once a mount has consumed the hint
+  // (see `consumeFreshThread`) so re-selecting it later — after it has
+  // accumulated turns — hydrates normally.
+  const [freshThreadId, setFreshThreadId] = useState<string | null>(null)
+  const selectThread = useCallback(
+    (id: string | null, opts?: { isNew?: boolean }) => {
+      if (id && opts?.isNew) setFreshThreadId(id)
+      setSelectedThreadId(id)
+    },
+    []
+  )
+  const consumeFreshThread = useCallback((id: string) => {
+    setFreshThreadId((current) => (current === id ? null : current))
+  }, [])
+  // Both docked panels stay mounted at all times; fullscreen/closed states are
+  // expressed by *collapsing* a panel rather than swapping the layout tree.
+  // That keeps the chat runtime (and the canvas route) alive across every
+  // fullscreen toggle — only a thread switch remounts the chat, and only the
+  // chat, because the runtime boundary lives inside the chat panel.
+  const chatPanelRef = useRef<ImperativePanelHandle>(null)
+  const canvasPanelRef = useRef<ImperativePanelHandle>(null)
   const pathname = usePathname()
 
   // Content routes other than the dashboard root only ever render through the
@@ -219,40 +251,98 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     setFloatingChatOpen,
   ])
 
+  // The canvas renders the active route and lives OUTSIDE the assistant
+  // runtime boundary: nothing in the canvas tree consumes the chat runtime, so
+  // it must never be torn down just because the user switched chat threads.
   const canvasNode = (
     <CanvasHost fullscreen={fullscreenSide === 'canvas'}>{children}</CanvasHost>
   )
 
+  // The runtime boundary is keyed by thread so switching threads re-hydrates
+  // the conversation. By wrapping ONLY the chat surface (not the whole body),
+  // a thread switch remounts just the chat — the canvas stays put and the
+  // loading state is scoped to the chat panel instead of the whole screen.
+  const threadKey = selectedThreadId ?? 'active'
+  const skipHydration = !!selectedThreadId && selectedThreadId === freshThreadId
+
   const chatNode = (
-    <ChatHost
-      fullscreen={fullscreenSide === 'chat'}
-      selectedThreadId={selectedThreadId}
-      onSelectThread={setSelectedThreadId}
-      compact={isMobile}
-    />
+    <div className="relative h-full w-full">
+      <AssistantRuntimeBoundary
+        key={threadKey}
+        threadId={selectedThreadId ?? undefined}
+        skipHydration={skipHydration}
+        onConsumeFresh={consumeFreshThread}
+      >
+        <ChatHost
+          fullscreen={fullscreenSide === 'chat'}
+          selectedThreadId={selectedThreadId}
+          onSelectThread={selectThread}
+          compact={isMobile}
+        />
+      </AssistantRuntimeBoundary>
+    </div>
   )
+
+  // Reconcile the docked panels with the fullscreen/closed state by collapsing
+  // one panel instead of unmounting it. Runs after layout/state changes; no-op
+  // in floating layout (the panels aren't mounted there).
+  const isDocked = effectiveLayout !== 'floating'
+  useEffect(() => {
+    if (!isDocked) return
+    const chat = chatPanelRef.current
+    const canvas = canvasPanelRef.current
+    if (!chat || !canvas) return
+    if (fullscreenSide === 'canvas') {
+      chat.collapse()
+      canvas.expand()
+    } else if (fullscreenSide === 'chat' || !canvasOpen) {
+      canvas.collapse()
+      chat.expand()
+    } else {
+      chat.expand()
+      canvas.expand()
+    }
+  }, [isDocked, fullscreenSide, canvasOpen])
 
   const mainView = (() => {
     // Floating layout (desktop pref OR mobile): canvas always takes the full
     // viewport; chat is summoned via the floating trigger.
     if (effectiveLayout === 'floating') return canvasNode
 
-    // Docked: classic split with fullscreen shortcuts.
-    if (fullscreenSide === 'canvas') return canvasNode
-    if (fullscreenSide === 'chat') return chatNode
-    if (!canvasOpen) return chatNode
-
+    // Docked: both panels stay mounted; fullscreen/closed states collapse a
+    // panel (see the effect above) so neither the chat runtime nor the canvas
+    // route is torn down when the user toggles fullscreen.
+    const hideHandle = fullscreenSide !== null || !canvasOpen
     return (
       <PanelGroup
         direction="horizontal"
         autoSaveId="goalpost.studio.chat35-canvas65.v1"
         className="h-full w-full"
       >
-        <Panel defaultSize={35} minSize={20} order={1}>
+        <Panel
+          ref={chatPanelRef}
+          defaultSize={35}
+          minSize={20}
+          collapsible
+          collapsedSize={0}
+          order={1}
+        >
           {chatNode}
         </Panel>
-        <PanelResizeHandle className="w-1.5 bg-gp-glass-border hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize" />
-        <Panel defaultSize={65} minSize={25} order={2}>
+        <PanelResizeHandle
+          className={cn(
+            'w-1.5 bg-gp-glass-border hover:bg-gp-primary/40 transition-colors data-[resize-handle-state=drag]:bg-gp-primary/60 cursor-col-resize',
+            hideHandle && 'hidden'
+          )}
+        />
+        <Panel
+          ref={canvasPanelRef}
+          defaultSize={65}
+          minSize={25}
+          collapsible
+          collapsedSize={0}
+          order={2}
+        >
           {canvasNode}
         </Panel>
       </PanelGroup>
@@ -261,26 +351,32 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark">
+      <CanvasGraphSync />
       <StudioChrome />
 
       <div className="relative flex-1 overflow-hidden">
-        <AssistantRuntimeBoundary
-          key={selectedThreadId ?? 'active'}
-          threadId={selectedThreadId ?? undefined}
-        >
-          {mainView}
+        {mainView}
 
-          {effectiveLayout === 'floating' && (
-            <>
-              <FloatingChatTrigger />
+        {effectiveLayout === 'floating' && (
+          <>
+            {/* The trigger needs no runtime — keep it outside the boundary so
+                it stays mounted while the chat thread re-hydrates. */}
+            <FloatingChatTrigger />
+            <AssistantRuntimeBoundary
+              key={threadKey}
+              threadId={selectedThreadId ?? undefined}
+              skipHydration={skipHydration}
+              onConsumeFresh={consumeFreshThread}
+              showLoadingOverlay={false}
+            >
               <FloatingChatPanel
                 fullViewport={isMobile}
                 selectedThreadId={selectedThreadId}
-                onSelectThread={setSelectedThreadId}
+                onSelectThread={selectThread}
               />
-            </>
-          )}
-        </AssistantRuntimeBoundary>
+            </AssistantRuntimeBoundary>
+          </>
+        )}
       </div>
 
       <TourController />
@@ -294,7 +390,36 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
  * conversation thread first so messages hydrate before the runtime is
  * created (`useChatRuntime` reads `messages` only at init).
  */
-const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> = ({ children, threadId }) => {
+const AssistantRuntimeBoundary: FC<{
+  children: ReactNode
+  threadId?: string
+  /**
+   * Skip the hydration fetch and mount straight into an empty conversation.
+   * Set for threads we just created client-side — they have no turns yet, so
+   * fetching them is wasted work and the loading flash is pure noise.
+   */
+  skipHydration?: boolean
+  /**
+   * Called once, at mount, after a `skipHydration` mount has consumed the
+   * hint — lets the parent forget the thread is "fresh" so re-selecting it
+   * later (once it has turns) hydrates normally.
+   */
+  onConsumeFresh?: (threadId: string) => void
+  /**
+   * Render the loading state as an absolute overlay that fills the nearest
+   * positioned ancestor. True for the docked chat panel (the overlay is
+   * scoped to the panel); false for the floating panel, where the chat is
+   * a closed slide-out during initial load and an overlay would cover the
+   * canvas behind it.
+   */
+  showLoadingOverlay?: boolean
+}> = ({
+  children,
+  threadId,
+  skipHydration = false,
+  onConsumeFresh,
+  showLoadingOverlay = true,
+}) => {
   const { aiMode } = usePreferences()
   const { sessionContext } = useFocalEntity()
   const { canvasView } = useStudioCanvas()
@@ -339,6 +464,10 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
   // on an inline HITL card; read and cleared by resolveBody so it rides exactly
   // one outgoing turn, then the backend executes it verbatim.
   const pendingExecuteActionRef = useRef<ApprovalAction[] | null>(null)
+  // Set true by resolveBody whenever the outgoing turn carries approved
+  // writes; read-and-cleared by the runtime's onFinish to decide whether to
+  // refetch the canvas (so newly created entities surface on the right).
+  const turnHadWriteRef = useRef(false)
 
   const resolveBody = useCallback(() => {
     const snapshot = sessionContextRef.current
@@ -397,26 +526,41 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
       executeActions: (() => {
         const actions = pendingExecuteActionRef.current
         pendingExecuteActionRef.current = null
+        // Remember that this turn approved a write so onFinish can refetch the
+        // canvas once the server-side mutation has landed.
+        if (actions && actions.length > 0) turnHadWriteRef.current = true
         return actions
       })(),
     }
   }, [aiMode, threadId])
 
+  // Capture `skipHydration` at mount. The boundary is keyed by thread, so every
+  // thread gets a fresh mount with the right value; reading it from a ref keeps
+  // the fetch effect from re-running when the parent clears the "fresh" hint.
+  const skipHydrationRef = useRef(skipHydration)
   const [hydration, setHydration] = useState<
     | { status: 'loading' }
     | { status: 'ready'; thread: HydratedThread | null }
-  >({ status: 'loading' })
+  >(skipHydration ? { status: 'ready', thread: null } : { status: 'loading' })
 
   useEffect(() => {
+    if (skipHydrationRef.current) {
+      // Empty new thread — nothing to fetch. Let the parent forget it's fresh
+      // so a later re-selection (once it has turns) hydrates normally.
+      if (threadId) onConsumeFresh?.(threadId)
+      return
+    }
     const controller = new AbortController()
     fetchHydratedThread(controller.signal, threadId).then((thread) => {
       if (controller.signal.aborted) return
       setHydration({ status: 'ready', thread })
     })
     return () => controller.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId])
 
   if (hydration.status === 'loading') {
+    if (!showLoadingOverlay) return null
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-gp-surface dark:bg-gp-surface-dark">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gp-ink-soft/40" />
@@ -429,6 +573,7 @@ const AssistantRuntimeBoundary: FC<{ children: ReactNode; threadId?: string }> =
       initialMessages={hydration.thread?.messages ?? EMPTY_MESSAGES}
       resolveBody={resolveBody}
       pendingActionRef={pendingExecuteActionRef}
+      turnHadWriteRef={turnHadWriteRef}
     >
       {children}
     </AssistantRuntimeInner>
@@ -439,6 +584,7 @@ interface AssistantRuntimeInnerProps {
   initialMessages: UIMessage[]
   resolveBody: () => Record<string, unknown>
   pendingActionRef: MutableRefObject<ApprovalAction[] | null>
+  turnHadWriteRef: MutableRefObject<boolean>
   children: ReactNode
 }
 
@@ -446,6 +592,7 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
   initialMessages,
   resolveBody,
   pendingActionRef,
+  turnHadWriteRef,
   children,
 }) => {
   const transport = useMemo(
@@ -460,7 +607,15 @@ const AssistantRuntimeInner: FC<AssistantRuntimeInnerProps> = ({
   const runtime = useChatRuntime({
     transport,
     messages: initialMessages,
-    onFinish: () => emitAssistantThreadUpdated(),
+    onFinish: () => {
+      emitAssistantThreadUpdated()
+      // If this turn approved a graph write, the server-side mutation has now
+      // landed — refetch the canvas so the new entities appear on the right.
+      if (turnHadWriteRef.current) {
+        turnHadWriteRef.current = false
+        emitAssistantGraphDataChanged()
+      }
+    },
   })
 
   // Wake the threads sidebar the moment the user clicks send / hits Enter.

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 interface ChatModeProps {
   visible: boolean
   activeThreadId: string | null
-  onSelectThread: (id: string) => void
+  onSelectThread: (id: string, opts?: { isNew?: boolean }) => void
   /** Hide the threads sidebar (e.g. on narrow panes). */
   compact?: boolean
 }
@@ -27,7 +27,9 @@ export const ChatMode: FC<ChatModeProps> = ({
   // on the placeholder forever.
   const handleNewThread = useCallback(async (): Promise<string | null> => {
     const threadId = await createConversationThread()
-    if (threadId) onSelectThread(threadId)
+    // Mark the selection as new so the runtime mounts straight into an empty
+    // conversation — no hydration fetch, no full-panel loading flash.
+    if (threadId) onSelectThread(threadId, { isNew: true })
     return threadId
   }, [onSelectThread])
 

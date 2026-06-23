@@ -10,7 +10,7 @@ interface FloatingChatPanelProps {
   /** When true, the panel takes the full viewport (mobile). */
   fullViewport: boolean
   selectedThreadId: string | null
-  onSelectThread: (id: string) => void
+  onSelectThread: (id: string, opts?: { isNew?: boolean }) => void
 }
 
 /**
