@@ -74,7 +74,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
-        'mt-6 mb-3 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-4 mb-2 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -83,7 +83,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h2: ({ className, ...props }) => (
     <h2
       className={cn(
-        'mt-6 mb-3 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-4 mb-2 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -92,7 +92,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h3: ({ className, ...props }) => (
     <h3
       className={cn(
-        'mt-5 mb-2 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-4 mb-1.5 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h4: ({ className, ...props }) => (
     <h4
       className={cn(
-        'mt-5 mb-2 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
+        'mt-4 mb-1.5 scroll-m-20 text-sm font-semibold tracking-tight first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -110,7 +110,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h5: ({ className, ...props }) => (
     <h5
       className={cn(
-        'my-3 text-sm font-semibold first:mt-0 last:mb-0',
+        'my-2 text-sm font-semibold first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -119,7 +119,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   h6: ({ className, ...props }) => (
     <h6
       className={cn(
-        'my-3 text-sm font-semibold text-muted-foreground first:mt-0 last:mb-0',
+        'my-2 text-sm font-semibold text-muted-foreground first:mt-0 last:mb-0',
         className
       )}
       {...props}
@@ -127,7 +127,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   ),
   p: ({ className, ...props }) => (
     <p
-      className={cn('my-4 leading-7 first:mt-0 last:mb-0', className)}
+      className={cn('my-2.5 leading-6 first:mt-0 last:mb-0', className)}
       {...props}
     />
   ),
@@ -149,7 +149,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   blockquote: ({ className, ...props }) => (
     <blockquote
       className={cn(
-        'my-4 border-l-2 border-gp-primary/40 pl-4 text-muted-foreground italic [&>p]:my-2',
+        'my-2.5 border-l-2 border-gp-primary/40 pl-4 text-muted-foreground italic [&>p]:my-1',
         className
       )}
       {...props}
@@ -158,7 +158,7 @@ export const defaultComponents = memoizeMarkdownComponents({
   ul: ({ className, ...props }) => (
     <ul
       className={cn(
-        'my-4 ml-5 list-disc marker:text-muted-foreground [&>li]:mt-1.5 [&>li]:leading-7',
+        'my-2.5 ml-5 list-disc marker:text-muted-foreground [&>li]:mt-1 [&>li]:leading-6',
         className
       )}
       {...props}
@@ -167,14 +167,14 @@ export const defaultComponents = memoizeMarkdownComponents({
   ol: ({ className, ...props }) => (
     <ol
       className={cn(
-        'my-4 ml-5 list-decimal marker:text-muted-foreground [&>li]:mt-1.5 [&>li]:leading-7',
+        'my-2.5 ml-5 list-decimal marker:text-muted-foreground [&>li]:mt-1 [&>li]:leading-6',
         className
       )}
       {...props}
     />
   ),
   hr: ({ className, ...props }) => (
-    <hr className={cn('my-6 border-border', className)} {...props} />
+    <hr className={cn('my-4 border-border', className)} {...props} />
   ),
   table: ({ className, ...props }) => (
     <table
