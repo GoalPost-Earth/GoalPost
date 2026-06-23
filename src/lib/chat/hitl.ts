@@ -1047,7 +1047,13 @@ async function createPulseAuthorized(
     metadata,
     title,
     content,
-    status: input.status?.trim() || null,
+    // GoalPulse.status is non-nullable (GoalStatus!) in the schema. A GoalPulse
+    // created without an explicit status must default to ACTIVE, otherwise the
+    // node has no status property and every later query of it fails with
+    // "Cannot return null for non-nullable field GoalPulse.status".
+    status:
+      input.status?.trim() ||
+      (pulseType === 'GoalPulse' ? 'ACTIVE' : null),
     intensity:
       typeof input.intensity === 'number' && Number.isFinite(input.intensity)
         ? input.intensity

@@ -101,9 +101,15 @@ export async function POST(request: NextRequest) {
       optionalProps.push('pulse.why = $why')
       params.why = why
     }
-    if (status) {
+    // GoalPulse.status is non-nullable (GoalStatus!) in the schema, so a
+    // GoalPulse created without an explicit status must default to ACTIVE —
+    // otherwise the node has no status property and every later query of it
+    // fails with "Cannot return null for non-nullable field GoalPulse.status".
+    const resolvedStatus =
+      status ?? (pulseType === 'GoalPulse' ? 'ACTIVE' : undefined)
+    if (resolvedStatus) {
       optionalProps.push('pulse.status = $status')
-      params.status = status
+      params.status = resolvedStatus
     }
     if (horizon) {
       optionalProps.push('pulse.horizon = $horizon')
