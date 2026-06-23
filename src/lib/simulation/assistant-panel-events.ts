@@ -15,14 +15,18 @@
  * Subscribers:
  *   - StudioShell                → opens the panel on receipt
  *   - AIAssistantPanel           → re-hydrates with the named thread
+ *   - CanvasGraphSync            → refetches the canvas on graph-data-changed
  *
  * Producers:
  *   - FieldContext upload handler (after a successful uploadDocument
- *     mutation) → emit with the returned threadId.
+ *     mutation) → emit open-thread with the returned threadId.
+ *   - StudioShell runtime onFinish → emit thread-updated every turn, and
+ *     graph-data-changed when the turn approved a HITL write.
  */
 
 const OPEN_THREAD_EVENT = 'gp:open-assistant-thread' as const
 const THREAD_UPDATED_EVENT = 'gp:assistant-thread-updated' as const
+const GRAPH_DATA_CHANGED_EVENT = 'gp:assistant-graph-data-changed' as const
 
 export interface OpenAssistantThreadDetail {
   /** ConversationThread.id to switch to once the panel mounts. */
@@ -71,4 +75,26 @@ export function onAssistantThreadUpdated(handler: () => void): () => void {
   const wrapped = () => handler()
   window.addEventListener(THREAD_UPDATED_EVENT, wrapped)
   return () => window.removeEventListener(THREAD_UPDATED_EVENT, wrapped)
+}
+
+/**
+ * Emit when an assistant turn performed a graph write (an approved HITL
+ * action — create / update / delete of a Space, FieldContext, Pulse, Person,
+ * etc.). All assistant writes flow through the one-shot `executeActions`
+ * approval path, so the studio shell emits this the moment such a turn
+ * finishes streaming. Subscribers refetch the canvas's Apollo queries so the
+ * freshly created entities appear on the right (Dashboard view + cache-first
+ * Bloom) without a manual reload.
+ */
+export function emitAssistantGraphDataChanged(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(GRAPH_DATA_CHANGED_EVENT))
+}
+
+/** Subscribe to assistant graph-write notifications. */
+export function onAssistantGraphDataChanged(handler: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = () => handler()
+  window.addEventListener(GRAPH_DATA_CHANGED_EVENT, wrapped)
+  return () => window.removeEventListener(GRAPH_DATA_CHANGED_EVENT, wrapped)
 }
