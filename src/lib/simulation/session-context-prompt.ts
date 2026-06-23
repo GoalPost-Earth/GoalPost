@@ -293,13 +293,35 @@ export function buildSystemPromptWithSessionContext(
       'them only if the user-visible answer depends on the failure.'
   )
 
-  // PULSE SUGGESTIONS (GOAL-272): emitted whenever an active FieldContext is
-  // present — the exact condition under which the suggest_pulses tool is
-  // registered (chat-tools.ts). (activeSpaceId is null on the field-context
-  // route, so we do NOT gate on it; the tool resolves the owning Space for
-  // dedup itself.) Keeping the directive runtime-conditional — like the
-  // focal-entity rules below (Rule 8, kb/07) — means the model is never told to
-  // call a tool that isn't in its tool list.
+  // Relationship recording/updating works on people who ALREADY exist, so it is
+  // available on every authenticated surface (create_connection is registered
+  // whenever ctx.currentUserId is set). Gate this directive on the same
+  // condition so we never tell the model to call a tool it doesn't have
+  // (Rule 4/8, kb/07) — but keep the HITL-integrity rule below always-on.
+  if (ctx.currentUserId) {
+    lines.push('')
+    lines.push(
+      'RELATIONSHIPS: When the user describes how they relate to a person who already exists ' +
+        'in their world, or asks to record / update / change / add to a relationship ' +
+        '("update my relationship with Ashong to …", "add this to the relationship: …", ' +
+        '"connect me with Ashong"), CALL create_connection. It both creates a new connection ' +
+        'and UPDATES an existing one — a provided `why` overwrites the stored relationship note, ' +
+        'so it is also the update path. Do NOT merely reflect in prose or offer to "write a ' +
+        'description". (create_connection works for people who already exist; adding a brand-new ' +
+        'person needs an open Field via suggest_pulses.)'
+    )
+  }
+  lines.push('')
+  lines.push(
+    'HUMAN-IN-THE-LOOP INTEGRITY: An inline approval card appears ONLY because you actually ' +
+      'called a write tool in this turn — it is never something you produce with words. NEVER ' +
+      'tell the user to "approve the card", and never claim you have "drafted", "submitted", ' +
+      '"recorded", "updated", or "connected" something, unless you invoked the matching write ' +
+      'tool in THIS turn. If you cannot perform the action (a required tool is not available on ' +
+      'this surface), say so plainly and tell the user what they can do instead — do NOT narrate ' +
+      'an approval step that did not happen.'
+  )
+
   if (ctx.fieldContextId) {
     const where = ctx.fieldContextTitle
       ? `the field context "${ctx.fieldContextTitle}"`
@@ -324,33 +346,29 @@ export function buildSystemPromptWithSessionContext(
 
     lines.push('')
     lines.push(
-      'RELATIONSHIPS: When the user describes HOW they relate to a person, or how two ' +
-        'people they know relate to each other ("Ashong is a wise friend who mirrors me", ' +
-        '"Ada and Ben co-run the food bank"), treat that as a relationship to RECORD — do ' +
-        'NOT just reflect on it in prose or offer to "write a description". If the person ' +
-        'already exists in the user\'s world, call suggest_connections (proactive, one or ' +
-        'more candidates with an inferred why) or, when the user explicitly asks to connect ' +
-        'someone, call create_connection directly. If the person does NOT yet exist, use ' +
-        'suggest_pulses with type person AND relationshipWhy — creating the person records ' +
-        'the relationship in the same step. Either way the user approves a one-tap card; do ' +
-        'NOT ask them to confirm in text first (Rule 9). Never suggest a connection that ' +
-        'already exists or a person connected to themselves.'
+      'PROACTIVE CONNECTIONS: When the conversation reveals how two people already in this ' +
+        'field relate to each other ("Ada and Ben co-run the food bank"), you may also call ' +
+        'suggest_connections (read-only — one or more candidates, each with an inferred why) to ' +
+        'surface one-tap connection cards. (For an explicit request to connect or update a ' +
+        'relationship, use create_connection directly per the RELATIONSHIPS rule above.) For a ' +
+        'person who does NOT yet exist, use suggest_pulses with type person AND relationshipWhy ' +
+        'so creating them records the relationship in the same step. Never suggest a connection ' +
+        'that already exists or a person connected to themselves.'
     )
   }
 
-  // No active FieldContext: the relationship/person tools are NOT registered
-  // (Rule 4). Tell the model to offer opening a Field rather than producing a
-  // long reflection when the user describes a person/relationship — this is the
-  // "Ashong on the open assistant" case.
+  // No active FieldContext: create_connection still works (it links/updates
+  // people who already exist), but creating a NEW person needs a Field — so the
+  // nudge is only about adding someone who doesn't exist yet.
   if (!ctx.fieldContextId) {
     lines.push('')
     lines.push(
-      'NO ACTIVE FIELD: There is no field context open right now, so you cannot add ' +
-        'people or record relationships yet. If the user describes a person or a ' +
-        'relationship they want to capture, do NOT write a long reflection or offer to ' +
-        '"write a description" — instead, briefly acknowledge it and offer to open (or ' +
-        'have them open) a Field in their space, where you can add the person and record ' +
-        'the relationship as a one-tap card. Keep this to a sentence or two.'
+      'NO ACTIVE FIELD: No field context is open. You can STILL record or update a ' +
+        'relationship between people who already exist — call create_connection (it renders ' +
+        'an approval card). You just cannot create a brand-new person here: if the user wants ' +
+        'to add someone who is not yet in their world, briefly offer to open a Field in their ' +
+        'space, where new people can be added as one-tap cards. Either way, do not write a long ' +
+        'reflection or offer to "write a description".'
     )
   }
 

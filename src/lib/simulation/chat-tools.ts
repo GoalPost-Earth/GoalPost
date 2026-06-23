@@ -8,6 +8,10 @@ import { searchFieldContexts } from '@/modules/agent/tools/field-context/field-c
 import { searchPulses } from '@/modules/agent/tools/pulse/pulse.service'
 import { graphRagSearch } from '@/modules/agent/tools/rag/graph-rag.service'
 import { canViewContent } from '@/lib/permissions/space-permissions'
+import {
+  canViewPulse,
+  canViewContext,
+} from '@/lib/permissions/pulse-visibility'
 import { driver } from '@/lib/neo4j/driver'
 import {
   buildPendingApprovalResult,
@@ -1045,6 +1049,9 @@ export async function buildSimulationChatTools(
           return await searchPulses(graph, {
             ...input,
             contextId: resolvedContextId,
+            // Scope results to Spaces this caller can view (raw Cypher bypasses
+            // the GraphQL @authorization filter). Fails closed when absent.
+            userId: ctx.currentUserId,
           })
         } catch (error) {
           return toErrorResult('Failed to search pulse', error)
@@ -1295,12 +1302,45 @@ export async function buildSimulationChatTools(
               }
               try {
                 const graph = await initGraph()
+                // Authorize the read BEFORE fetching — raw Cypher bypasses the
+                // GraphQL @authorization filter. Pulses/contexts/spaces are
+                // Space-scoped; person profiles are readable by any authed user
+                // (kb/02). Unauthorized + not-found return the same generic
+                // message so we don't leak which entities exist (and no raw id,
+                // per Rule 1).
+                const notFound = {
+                  status: 'error' as const,
+                  message: `Could not find ${focal.label ?? 'that entity'}.`,
+                }
+                if (focal.type === 'MeSpace' || focal.type === 'WeSpace') {
+                  const check = await assertCanViewSpace(ctx, focal.id)
+                  if (check !== true) return notFound
+                } else if (focal.type === 'FieldContext') {
+                  const ok = await canViewContext(
+                    graph,
+                    ctx.currentUserId,
+                    focal.id
+                  )
+                  if (!ok) return notFound
+                } else if (
+                  focal.type === 'GoalPulse' ||
+                  focal.type === 'ResourcePulse' ||
+                  focal.type === 'StoryPulse' ||
+                  focal.type === 'CarePulse' ||
+                  focal.type === 'CoreValuePulse'
+                ) {
+                  const ok = await canViewPulse(
+                    graph,
+                    ctx.currentUserId,
+                    focal.id
+                  )
+                  if (!ok) return notFound
+                }
+                // User / PersonPulse: profiles are open to any authenticated
+                // user, so no Space gate.
                 const record = await getFocalRecord(graph, focal)
                 if (!record) {
-                  return {
-                    status: 'error' as const,
-                    message: `Could not find ${focal.type} ${focal.id}.`,
-                  }
+                  return notFound
                 }
                 return {
                   status: 'ok' as const,
@@ -1563,16 +1603,15 @@ export async function buildSimulationChatTools(
         }
       : {}),
 
-    // create_connection + suggest_connections need people to resolve against,
-    // and people live inside FieldContexts — so per Rule 4 (kb/07) they are
-    // only registered when a FieldContext is active. On a neutral surface the
-    // model has no relationship tools and the prompt nudges the user to open a
-    // Field instead of producing a reflective essay (the Ashong case).
-    ...(ctx.fieldContextId
+    // create_connection links/updates relationships between people that ALREADY
+    // exist (resolved across the user's spaces, fully auth-scoped), so it does
+    // NOT need an active FieldContext — registered on every authenticated
+    // surface so a relationship can be recorded or updated from anywhere.
+    ...(ctx.currentUserId
       ? {
           create_connection: tool({
             description:
-              'Create a direct relationship — a connection — between the current user and another person, or between two people the user knows, carrying a short "why" describing the relationship in plain words. Call this when the user explicitly asks to connect or relate people ("connect me with Ashong", "link Ada and Ben as co-organisers"). This write is HUMAN-IN-THE-LOOP: calling it renders an inline approval card the user approves with one tap — do NOT ask them to confirm in text first (Rule 9). Both people must already exist in the user\'s world; to add a NEW person use the person-suggestion flow, which captures the relationship automatically.',
+              'Create OR UPDATE a direct relationship — a connection — between the current user and another person, or between two people the user knows, carrying a short "why" describing the relationship in plain words. Call this whenever the user asks to connect, relate, OR change/add to/update the relationship between people ("connect me with Ashong", "update my relationship with Ashong to …", "add this to the relationship: …", "link Ada and Ben as co-organisers"). Passing a `why` overwrites the stored relationship note, so it doubles as the update path. This write is HUMAN-IN-THE-LOOP: ACTUALLY CALLING this tool is what renders the inline approval card — never tell the user to "approve the card" or that you have "drafted/submitted" the change unless you have called this tool in the same turn. Do NOT ask them to confirm in text first (Rule 9). Both people must already exist in the user\'s world; to add a NEW person use the person-suggestion flow, which captures the relationship automatically.',
             inputSchema: z.object({
               toPersonName: z
                 .string()
@@ -1614,7 +1653,13 @@ export async function buildSimulationChatTools(
               return runWriteTool('create_connection', { ...args }, ctx)
             },
           }),
+        }
+      : {}),
 
+    // suggest_connections is proactive and benefits from an active FieldContext
+    // for relevance + dedup, so it stays Field-gated (Rule 4, kb/07).
+    ...(ctx.fieldContextId
+      ? {
           suggest_connections: tool({
             description:
               "Surface relationships worth recording as one-tap suggestions. Call this PROACTIVELY when the conversation reveals how the user relates to a person already in their world (\"Ashong is a wise friend who mirrors me\"), or how two people they know relate to each other. Each candidate proposes a connection (a CONNECTED_TO link) with an inferred 'why'. READ-ONLY: it never writes — the user approves each card, which creates the connection through the same approval path as everything else. Do NOT suggest connections that already exist, connections of a person to themselves, the current user to themselves, or vague references. For a person who does NOT yet exist, use suggest_pulses instead (creating a person already captures the relationship). After calling, keep your reply brief (e.g. 'I noticed a relationship worth recording — add it if you'd like.').",

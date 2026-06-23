@@ -29,7 +29,7 @@ AVAILABLE TOOLS (consult the tool list the runtime actually exposes — not ever
 - search_field_context / update_field_context: Search and edit field contexts
 - search_pulse / create_pulse / update_pulse / delete_pulse: Search and manage pulses
 - edit_pulse_context_link: Link or unlink pulses to field contexts
-- create_connection: Record a relationship (CONNECTED_TO, with a "why") between the user and a person, or between two people they know — call on an explicit request to connect/relate people (only registered with an active field context)
+- create_connection: Record OR UPDATE a relationship (CONNECTED_TO, with a "why") between the user and a person, or between two people they know — call on any request to connect/relate people or to change/add to an existing relationship (a provided why overwrites the stored note). Available on every surface; only ACTUALLY calling it renders the approval card.
 - suggest_connections: Proactively surface relationships worth recording as one-tap cards when the conversation reveals how people relate (read-only; only registered with an active field context)
 - graph_rag_search: Vector + graph retrieval across people and pulses
 - query_for_bloom: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only)
@@ -150,7 +150,7 @@ Consult the tool list the runtime actually exposes — not every tool below is r
 - **search_field_context / update_field_context**: Search and edit field contexts
 - **search_pulse / create_pulse / update_pulse / delete_pulse**: Search and manage pulses
 - **edit_pulse_context_link**: Link/unlink pulses to field contexts
-- **create_connection**: Record a relationship (CONNECTED_TO, carrying a "why") between the user and a person, or between two people they know — call when the field asks to relate people explicitly (only registered with an active field context)
+- **create_connection**: Record OR UPDATE a relationship (CONNECTED_TO, carrying a "why") between the user and a person, or between two people they know — call when the field asks to relate people or to change/add to an existing relationship (a provided why overwrites the stored note). Available on every surface; only ACTUALLY calling it renders the approval card.
 - **suggest_connections**: Proactively surface relationships worth recording as one-tap cards when the dialogue reveals how people relate (read-only; only registered with an active field context)
 - **graph_rag_search**: Semantic vector + graph retrieval for people/pulses patterns
 - **query_for_bloom**: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only). Use whenever the user wants to visualize / show / pull up something, OR the conversation drifts to an entity not yet on the canvas. After it returns, emit a BLOOM_GRAPH_OVERLAY marker followed by the JSON payload — the frontend renders the nodes in Bloom.
@@ -301,7 +301,7 @@ AVAILABLE TOOLS (consult the tool list the runtime actually exposes — not ever
 - search_field_context / update_field_context: Search and edit field contexts.
 - search_pulse / create_pulse / update_pulse / delete_pulse: Search and manage pulses.
 - edit_pulse_context_link: Link/unlink pulses to field contexts.
-- create_connection: Record a relationship (CONNECTED_TO, with a "why") between the user and a person, or between two people they know — when the user asks to relate people (only registered with an active field context).
+- create_connection: Record OR UPDATE a relationship (CONNECTED_TO, with a "why") between the user and a person, or between two people they know — when the user asks to relate people or change/add to an existing relationship (a provided why overwrites the stored note). Available on every surface; only ACTUALLY calling it renders the approval card.
 - suggest_connections: Proactively surface relationships worth recording as one-tap cards when the conversation reveals how people relate (read-only; only registered with an active field context).
 - graph_rag_search: Semantic vector + graph retrieval for people and pulses.
 - query_for_bloom: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only). Use whenever the user wants to visualize / show / pull up something, OR the conversation drifts to an entity not yet on the canvas. After it returns, emit a BLOOM_GRAPH_OVERLAY marker followed by the JSON payload.
