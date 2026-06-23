@@ -64,3 +64,7 @@ export const INITIATED_EDGE_COLOR = 'rgba(255, 255, 255, 0.22)'
 // pulses it weaves. Matches WEAVE_NODE_COLOR so the hub + its spokes read as
 // one unit, distinct from the resonance violet.
 export const WEAVE_EDGE_COLOR = 'rgba(45, 212, 191, 0.55)'
+// CONNECTED_TO — interpersonal relationship edges between people (the current
+// user and the people in their world, or two people they know). Rose to echo
+// the person node color and stay distinct from resonance violet / weave teal.
+export const CONNECTED_EDGE_COLOR = 'rgba(244, 114, 182, 0.55)'

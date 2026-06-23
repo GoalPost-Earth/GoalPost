@@ -13,6 +13,7 @@ import {
   INITIATED_EDGE_COLOR,
   WEAVE_NODE_COLOR,
   WEAVE_EDGE_COLOR,
+  CONNECTED_EDGE_COLOR,
 } from './bloom-palette'
 
 /**
@@ -90,6 +91,7 @@ const LEGEND_NODES: LegendItem[] = [
 const LEGEND_EDGES: LegendItem[] = [
   { label: 'Resonance', swatch: '#a78bfa', colors: [RESONANCE_EDGE_COLOR] },
   { label: 'Weaves', swatch: '#2dd4bf', colors: [WEAVE_EDGE_COLOR] },
+  { label: 'Connected', swatch: '#f472b6', colors: [CONNECTED_EDGE_COLOR] },
   { label: 'Initiated by', swatch: '#94a3b8', colors: [INITIATED_EDGE_COLOR] },
   { label: 'Structure', swatch: '#94a3b8', colors: [STRUCTURAL_EDGE_COLOR] },
 ]

@@ -44,6 +44,7 @@ import {
   INITIATED_EDGE_COLOR,
   WEAVE_NODE_COLOR,
   WEAVE_EDGE_COLOR,
+  CONNECTED_EDGE_COLOR,
 } from './bloom-palette'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
@@ -526,6 +527,49 @@ export const BloomView: FC = () => {
     return records
   }, [inField, fieldPeopleData])
 
+  // CONNECTED_TO edges among the field's people. The relationship lives on the
+  // edge (connectionEdges → connectedPersonId + why); each field person carries
+  // the edges they're part of. We collect ordered id-pairs here and draw them
+  // in the in-field relationships memo, filtered to people actually on canvas
+  // (the owner/user is rendered as a field person too, so a user↔person
+  // relationship — e.g. "your wife" — has both endpoints visible).
+  const connections: Array<{ fromId: string; toId: string; why: string | null }> =
+    useMemo(() => {
+      if (!inField) return []
+      const fieldCtx = (
+        fieldPeopleData as
+          | {
+              fieldContexts?: Array<{
+                people?: Array<{
+                  id: string
+                  connectionEdges?: Array<{
+                    connectedPersonId?: string | null
+                    why?: string | null
+                  }> | null
+                }>
+              }>
+            }
+          | undefined
+      )?.fieldContexts?.[0]
+      if (!fieldCtx?.people) return []
+      const seenPairs = new Set<string>()
+      const out: Array<{ fromId: string; toId: string; why: string | null }> = []
+      for (const p of fieldCtx.people) {
+        if (!p?.id) continue
+        for (const edge of p.connectionEdges ?? []) {
+          const other = edge?.connectedPersonId
+          if (!other || other === p.id) continue
+          // CONNECTED_TO is undirected — key on the sorted id-pair so the same
+          // relationship surfaced from both endpoints is drawn once.
+          const key = [p.id, other].sort().join('::')
+          if (seenPairs.has(key)) continue
+          seenPairs.add(key)
+          out.push({ fromId: p.id, toId: other, why: edge?.why?.trim() || null })
+        }
+      }
+      return out
+    }, [inField, fieldPeopleData])
+
   // Resonance edges between pulses inside the active field. The Apollo
   // payload only resolves `source`/`target` when both pulse subtype
   // fragments matched (i.e. both endpoints are pulse entities), so we
@@ -868,6 +912,22 @@ export const BloomView: FC = () => {
         }
       }
 
+      // CONNECTED_TO — interpersonal relationships between the people in this
+      // field (including the user↔person relationships, e.g. "your wife"). Both
+      // endpoints must be on canvas; the owner/user is rendered as a field
+      // person so user↔person relationships draw correctly.
+      for (const c of connections) {
+        if (!visibleIds.has(c.fromId) || !visibleIds.has(c.toId)) continue
+        edges.push({
+          id: `connected-${[c.fromId, c.toId].sort().join('-')}`,
+          from: c.fromId,
+          to: c.toId,
+          caption: 'connected',
+          color: CONNECTED_EDGE_COLOR,
+          width: 1.5,
+        } as Relationship)
+      }
+
       return dedupe(edges)
     }
     if (inSpace && spaceAnchor) {
@@ -939,6 +999,7 @@ export const BloomView: FC = () => {
     pulses,
     persons,
     weaves,
+    connections,
     fieldDetailsData,
     inSpace,
     spaceAnchor,

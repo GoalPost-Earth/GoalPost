@@ -983,6 +983,105 @@ async function createPulseAuthorized(
     ? (input.pulseType as PulseCreationType) || 'FieldPulse'
     : 'FieldPulse'
   const pulseLabel = pulseType === 'FieldPulse' ? '' : `:${pulseType}`
+
+  // Idempotency (enrich, don't duplicate): a pulse with the same title AND type
+  // already in this context is enriched (fill-gaps-only), never duplicated.
+  // Dedup is deliberately TYPE-scoped ($pulseType IN labels(p)) — a Goal and a
+  // Story that happen to share a title are different pulses and must NOT merge.
+  // (Consequence: a generic FieldPulse add matches any same-titled pulse, while
+  // a typed add only matches its own subtype — intentional, not a bug.)
+  const existingPulseRows = await graph.query<{
+    id: string
+    title: string | null
+  }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
+    WHERE toLower(trim(coalesce(p.title, ''))) = toLower(trim($title))
+      AND $pulseType IN labels(p)
+    RETURN p.id AS id, p.title AS title
+    LIMIT 1
+    `,
+    { contextId: resolvedContext.contextId, title, pulseType }
+  )
+  if (existingPulseRows?.[0]) {
+    const ep = existingPulseRows[0]
+    const enrichWhere = input.contextTitle?.trim() || ''
+    const humanLabelExisting = pulseTypeLabel(pulseType)
+    const enrichLogId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+    const enrichDescription = enrichWhere
+      ? `Updated ${humanLabelExisting} "${ep.title ?? title}" in ${enrichWhere}`
+      : `Updated ${humanLabelExisting} "${ep.title ?? title}"`
+    // Only a substantive body fills a gap — never the title-seeded placeholder.
+    const newContent = input.content?.trim() || null
+    await graph.query(
+      `
+      MATCH (p:FieldPulse {id: $existingId})
+      MATCH (u:Person {id: $currentUserId})
+      // Fill the body only when the existing one is empty or was just the title
+      // (the title-seeded placeholder) — never overwrite a real existing body.
+      FOREACH (_ IN CASE
+        WHEN $newContent IS NULL
+          OR (trim(coalesce(p.content, '')) <> ''
+              AND toLower(trim(coalesce(p.content, ''))) <> toLower(trim(coalesce(p.title, ''))))
+        THEN [] ELSE [1] END |
+        SET p.content = $newContent
+      )
+      SET p.status = coalesce(p.status, $status),
+          p.intensity = coalesce(p.intensity, $intensity),
+          p.horizon = coalesce(p.horizon, $horizon),
+          p.resourceType = coalesce(p.resourceType, $resourceType),
+          p.availability = coalesce(p.availability, $availability),
+          p.why = coalesce(p.why, $why),
+          p.location = coalesce(p.location, $location),
+          p.time = coalesce(p.time, $time),
+          p.updatedAt = datetime()
+      CREATE (log:Log {
+        id: $enrichLogId,
+        description: $enrichDescription,
+        createdAt: datetime()
+      })
+      CREATE (log)-[:CREATED_BY]->(u)
+      CREATE (log)-[:LOGGED_FOR]->(p)
+      `,
+      {
+        existingId: ep.id,
+        currentUserId,
+        newContent,
+        status:
+          input.status?.trim() ||
+          (pulseType === 'GoalPulse' ? 'ACTIVE' : null),
+        intensity:
+          typeof input.intensity === 'number' &&
+          Number.isFinite(input.intensity)
+            ? input.intensity
+            : null,
+        horizon: input.horizon?.trim() || null,
+        resourceType: input.resourceType?.trim() || null,
+        availability:
+          typeof input.availability === 'number' &&
+          Number.isFinite(input.availability)
+            ? input.availability
+            : null,
+        why: input.why?.trim() || null,
+        location: input.location?.trim() || null,
+        time: input.time?.trim() || null,
+        enrichLogId,
+        enrichDescription,
+      }
+    )
+    return {
+      success: true,
+      pulseId: ep.id,
+      title: ep.title ?? title,
+      pulseType,
+      contextId: resolvedContext.contextId,
+      alreadyExisted: true,
+      message: `${humanLabelExisting} "${ep.title ?? title}" is already in ${
+        enrichWhere || 'this field'
+      } — I kept it and filled in any missing details rather than adding a duplicate.`,
+    }
+  }
+
   const documentId = input.documentId?.trim() || null
   const conversationThreadId = input.conversationThreadId?.trim() || null
   const documentFilename = documentId
@@ -1217,16 +1316,95 @@ async function createPersonAuthorized(
     }
   }
 
+  const name = lastName ? `${firstName} ${lastName}` : firstName
+  const where = contextTitle || 'this field context'
+
+  // Idempotency (enrich, don't duplicate): if a person with this name already
+  // lives in the target field context, ENRICH them instead of creating a second
+  // node. Re-adding "Naa" to North Star twice must not produce two Naa nodes.
+  // Matched by canonical name within the context (the unit a person is added to).
+  const existingRows = await graph.query<{
+    id: string
+    name: string | null
+    hasDescription: boolean
+    hasWhy: boolean
+  }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})-[:HAS_PERSON]->(p:Person:PersonPulse)
+    WHERE toLower(trim(coalesce(p.name, ''))) = toLower(trim($name))
+    OPTIONAL MATCH (u:Person {id: $currentUserId})-[rc:CONNECTED_TO]-(p)
+    RETURN p.id AS id, p.name AS name,
+           (p.description IS NOT NULL AND trim(p.description) <> '') AS hasDescription,
+           (rc.why IS NOT NULL AND trim(rc.why) <> '') AS hasWhy
+    LIMIT 1
+    `,
+    { contextId, name, currentUserId }
+  )
+  const existing = existingRows?.[0] ?? null
+
+  if (existing) {
+    // Fill-gaps-only enrichment: only set the description when the existing node
+    // has none, and only fill the connection `why`/`interests` when absent
+    // (coalesce) — never overwrite a richer existing note with a terser re-add.
+    // The CONNECTED_TO edge is ensured either way.
+    const setDescription = Boolean(personDescription) && !existing.hasDescription
+    const enrichLogId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+    const enrichDescription = `Updated ${existing.name ?? name} in ${where}`
+    await graph.query(
+      `
+      MATCH (p:Person:PersonPulse {id: $existingId})
+      MATCH (u:Person {id: $currentUserId})
+      FOREACH (_ IN CASE WHEN $setDescription THEN [1] ELSE [] END |
+        SET p.description = $personDescription
+      )
+      SET p.updatedAt = datetime()
+      FOREACH (_ IN CASE WHEN $relationshipWhy IS NULL THEN [] ELSE [1] END |
+        MERGE (u)-[rc:CONNECTED_TO]-(p)
+        SET rc.why = coalesce(rc.why, $relationshipWhy),
+            rc.interests = coalesce(rc.interests, $relationshipInterests)
+      )
+      CREATE (log:Log {
+        id: $enrichLogId,
+        description: $enrichDescription,
+        createdAt: datetime()
+      })
+      CREATE (log)-[:CREATED_BY]->(u)
+      `,
+      {
+        existingId: existing.id,
+        currentUserId,
+        setDescription,
+        personDescription,
+        relationshipWhy,
+        relationshipInterests,
+        enrichLogId,
+        enrichDescription,
+      }
+    )
+    const connectedNow = Boolean(relationshipWhy) || existing.hasWhy
+    return {
+      success: true,
+      personId: existing.id,
+      name: existing.name ?? name,
+      contextId,
+      alreadyExisted: true,
+      connectedToYou: connectedNow,
+      // Tell the model the person already existed so it confirms an enrichment
+      // ("already here, kept their details") rather than a fresh add — and never
+      // claims a duplicate was created.
+      message: `${existing.name ?? name} is already in ${where}${
+        connectedNow ? ' and connected to you' : ''
+      } — I kept their existing details rather than adding a duplicate.`,
+    }
+  }
+
   const documentFilename = documentId
     ? await lookupDocumentFilename(graph, documentId)
     : null
   const personId = `person_${randomUUID()}`
   const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
-  // lastName is optional — people are often known by a single name. The `name`
-  // field is the canonical display string used everywhere downstream, so it
-  // collapses to just the firstName when no surname was provided.
-  const name = lastName ? `${firstName} ${lastName}` : firstName
-  const where = contextTitle || 'this field context'
+  // `name` (canonical display string) and `where` are computed above the
+  // idempotency check so both the enrich and create paths share them.
   const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
   // Fold the relationship into the activity log so the audit trail records why
   // the person matters to the user, not just that they were added.
