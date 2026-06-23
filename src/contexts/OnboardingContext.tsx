@@ -405,7 +405,7 @@ export function OnboardingProvider({
       // Check if next step is on a different page
       const nextStepObj = steps[currentStepIndex + 1]
       if (nextStepObj) {
-        // Handle dynamic routes like /protected/spaces/me-space/[id]
+        // Handle dynamic routes like /protected/dashboard/space/[id]
         const nextPageBase = nextStepObj.page
         const isCurrentlyOnNextPage = pathname === nextPageBase
 
@@ -413,47 +413,18 @@ export function OnboardingProvider({
           // Need to navigate
           let navigationUrl = nextPageBase
 
-          // Handle me-space pages that need the meSpaceId
-          if (nextPageBase.includes('/me-space')) {
+          // Space-detail steps carry `[id]`; fill it with the user's MeSpace —
+          // the only id-bearing onboarding page now that the tour runs entirely
+          // on the studio dashboard routes. (Legacy /protected/spaces/* removed.)
+          if (nextPageBase.includes('[id]')) {
             const meSpaceId =
               typeof window !== 'undefined'
                 ? localStorage.getItem('meSpaceId')
                 : null
             if (meSpaceId) {
               navigationUrl = nextPageBase.replace('[id]', meSpaceId)
-            }
-          }
-
-          // Handle we-space pages that need the weSpaceId
-          if (
-            nextPageBase.includes('/we-space') &&
-            nextPageBase !== '/protected/spaces/we-space' &&
-            !nextPageBase.includes('[id]')
-          ) {
-            const weSpaceId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('weSpaceId')
-                : null
-            if (weSpaceId) {
-              navigationUrl = `/protected/spaces/we-space/${weSpaceId}`
-            }
-          }
-
-          // Handle field detail pages that need the meSpaceId and fieldId
-          if (nextPageBase.includes('/fields')) {
-            const meSpaceId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('meSpaceId')
-                : null
-            const fieldId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('lastCreatedFieldId')
-                : null
-
-            if (meSpaceId && fieldId) {
-              navigationUrl = `/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`
-            } else if (meSpaceId) {
-              // If no field created yet, go back to me-space to create one
+            } else {
+              // No MeSpace yet — advance without routing to an unfilled URL.
               setCurrentStepIndex(currentStepIndex + 1)
               return
             }
@@ -500,46 +471,16 @@ export function OnboardingProvider({
           // Need to navigate to previous page
           let navigationUrl = previousPageBase
 
-          // Handle me-space pages that need the meSpaceId
-          if (previousPageBase.includes('/me-space')) {
+          // Space-detail steps carry `[id]`; fill it with the user's MeSpace
+          // (the only id-bearing onboarding page). Legacy /protected/spaces/*
+          // routes were removed — the tour runs on the studio dashboard now.
+          if (previousPageBase.includes('[id]')) {
             const meSpaceId =
               typeof window !== 'undefined'
                 ? localStorage.getItem('meSpaceId')
                 : null
             if (meSpaceId) {
               navigationUrl = previousPageBase.replace('[id]', meSpaceId)
-            }
-          }
-
-          // Handle we-space detail pages that need the weSpaceId
-          // Only add ID if the page path has more content after /we-space (not just the listing)
-          if (
-            previousPageBase.includes('/we-space') &&
-            previousPageBase !== '/protected/spaces/we-space' &&
-            !previousPageBase.includes('[id]')
-          ) {
-            const weSpaceId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('weSpaceId')
-                : null
-            if (weSpaceId) {
-              navigationUrl = `/protected/spaces/we-space/${weSpaceId}`
-            }
-          }
-
-          // Handle field detail pages that need the meSpaceId and fieldId
-          if (previousPageBase.includes('/fields')) {
-            const meSpaceId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('meSpaceId')
-                : null
-            const fieldId =
-              typeof window !== 'undefined'
-                ? localStorage.getItem('lastCreatedFieldId')
-                : null
-
-            if (meSpaceId && fieldId) {
-              navigationUrl = `/protected/spaces/me-space/${meSpaceId}/fields/${fieldId}`
             }
           }
 

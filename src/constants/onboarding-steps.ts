@@ -24,7 +24,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'What are Fields?',
     description:
       'Fields organize your ideas and contributions. Think of them as buckets that hold related pulses (messages) on specific topics.',
-    page: '/protected/spaces/me-space/[id]',
+    page: '/protected/dashboard/space/[id]',
     position: 'center',
   },
   {
@@ -32,7 +32,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Three Types of Pulses',
     description:
       'Create Goal Pulses (aspirations), Resource Pulses (supportive elements), or Story Pulses (narratives) within the field context. Each contributes to discovering patterns.',
-    page: '/protected/spaces/me-space/[id]',
+    page: '/protected/dashboard/space/[id]',
     position: 'center',
   },
   {
@@ -40,7 +40,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Understanding WeSpaces',
     description:
       'WeSpaces are collaborative spaces where you can work with your community. Explore existing WeSpaces where you are a member, owner, or admin.',
-    page: '/protected/spaces/we-space',
+    page: '/protected/dashboard',
     position: 'center',
   },
   {
@@ -48,7 +48,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'WeSpace Fields',
     description:
       'Just like MeSpace, WeSpaces have fields for organizing collaborative content and contexts. Create and share fields with your community.',
-    page: '/protected/spaces/we-space',
+    page: '/protected/dashboard',
     position: 'center',
   },
   {
@@ -56,7 +56,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Create Your Own WeSpace',
     description:
       'Ready to collaborate? Click here to create your own WeSpace and invite your community to join.',
-    page: '/protected/spaces/we-space',
+    page: '/protected/dashboard',
     position: 'top',
     selector: '[data-tour="create-wespace-button"]',
   },

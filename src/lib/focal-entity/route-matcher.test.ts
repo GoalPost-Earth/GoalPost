@@ -97,26 +97,28 @@ const cases: Case[] = [
     description: 'dashboard space not matching meSpaceIds → WeSpace',
   },
 
-  // Spaces detail routes
+  // Legacy /protected/spaces/* detail routes were removed — they no longer
+  // resolve to a focal entity (spaces now live at /protected/dashboard/space/[id]
+  // and fields at /protected/dashboard/field-context/[id]).
   {
     pathname: '/protected/spaces/me-space/ms-1',
-    expected: { type: 'MeSpace', id: 'ms-1' },
-    description: 'me-space detail',
+    expected: null,
+    description: 'legacy me-space detail → null (route removed)',
   },
   {
     pathname: '/protected/spaces/we-space/ws-1',
-    expected: { type: 'WeSpace', id: 'ws-1' },
-    description: 'we-space detail',
+    expected: null,
+    description: 'legacy we-space detail → null (route removed)',
   },
   {
     pathname: '/protected/spaces/me-space/ms-1/fields/f-9',
-    expected: { type: 'FieldContext', id: 'f-9' },
-    description: 'me-space field nested → FieldContext (field id)',
+    expected: null,
+    description: 'legacy me-space field nested → null (route removed)',
   },
   {
     pathname: '/protected/spaces/we-space/ws-1/fields/f-9',
-    expected: { type: 'FieldContext', id: 'f-9' },
-    description: 'we-space field nested → FieldContext (field id)',
+    expected: null,
+    description: 'legacy we-space field nested → null (route removed)',
   },
 
   // Profile (self-focal needs hint)

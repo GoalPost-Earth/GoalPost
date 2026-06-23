@@ -43,8 +43,8 @@ interface SpaceDashboardViewProps {
  *
  * Owns field-context navigation, the "Details" info drawer trigger,
  * and — for WeSpace owners — the member-management modal. The legacy
- * `/protected/spaces/we-space/[id]` page is no longer reachable; this
- * view is the page-level route.
+ * `/protected/spaces/*` space + field pages have been removed; this view,
+ * rendered at /protected/dashboard/space/[id], is the page-level route.
  */
 export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   spaceId,

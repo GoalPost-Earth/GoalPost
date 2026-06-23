@@ -16,6 +16,9 @@ export type InfoEntityType =
   | 'Document'
   | 'ResonanceLink'
   | 'PromiseWeave'
+  // An interpersonal CONNECTED_TO relationship. Its `id` is a composite
+  // `personAId__personBId` (sorted) — see ConnectionDetailsBody.
+  | 'Connection'
 
 export interface InfoEntity {
   type: InfoEntityType
@@ -38,6 +41,7 @@ const INFO_ENTITY_TYPES: ReadonlySet<InfoEntityType> = new Set([
   'Document',
   'ResonanceLink',
   'PromiseWeave',
+  'Connection',
 ])
 
 export function isInfoEntityType(value: unknown): value is InfoEntityType {

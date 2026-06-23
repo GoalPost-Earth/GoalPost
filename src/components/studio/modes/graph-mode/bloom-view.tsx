@@ -1325,10 +1325,39 @@ export const BloomView: FC = () => {
     }
   }, [])
 
+  // Clicking a relationship opens its inspection drawer. Two edge kinds are
+  // addressable:
+  //   - `connected-*`  → the interpersonal CONNECTED_TO Connection drawer
+  //                       (replaces the legacy ConnectionPanel). The edge id
+  //                       encodes both person ids; we re-sort them into the
+  //                       composite key the drawer expects.
+  //   - `resonance-*`  → the ResonanceLink drawer, keyed by the suffix id.
+  // Structural edges (owns/member/has/initiated/weaves) have no inspection
+  // target, so they stay inert.
+  const handleRelationshipClick = useCallback((rel: Relationship) => {
+    const id = String(rel.id ?? '')
+    const from = String(rel.from ?? '')
+    const to = String(rel.to ?? '')
+    if (id.startsWith('connected-') && from && to) {
+      dispatchOpenInfoDrawer({
+        type: 'Connection',
+        id: [from, to].sort().join('__'),
+      })
+      return
+    }
+    if (id.startsWith('resonance-')) {
+      const resonanceId = id.slice('resonance-'.length)
+      if (resonanceId) {
+        dispatchOpenInfoDrawer({ type: 'ResonanceLink', id: resonanceId })
+      }
+    }
+  }, [])
+
   const mouseEventCallbacks: MouseEventCallbacks = useMemo(
     () => ({
       onNodeClick: (node) => handleSingleClick(node),
       onNodeDoubleClick: (node) => handleDoubleClick(node),
+      onRelationshipClick: (rel) => handleRelationshipClick(rel),
       onCanvasClick: () => setSelectedNode(null),
       onHover: (_element, hitTargets: HitTargets) => {
         const hoveringNode = hitTargets.nodes.length > 0
@@ -1341,7 +1370,7 @@ export const BloomView: FC = () => {
       onPan: true,
       onZoom: true,
     }),
-    [handleSingleClick, handleDoubleClick]
+    [handleSingleClick, handleDoubleClick, handleRelationshipClick]
   )
 
   // Bloom is a force-directed exploration surface. The pre-computed (x, y)

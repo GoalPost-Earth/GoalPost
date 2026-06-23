@@ -36,10 +36,11 @@ import { dispatchOpenInfoDrawer } from './types'
 
 /**
  * Field context inspection — pulse counts, recent pulses, resonances,
- * people, documents, parent space. Heavy mutation surfaces from the
- * deleted route (create-pulse modal, add-person flow, doc-upload UI)
- * are not reproduced here; the assistant and the nested fields routes
- * under /protected/spaces remain the entry points for those workflows.
+ * people, documents, parent space. This drawer is a lightweight inspector;
+ * the heavy mutation surfaces (create-pulse, add-person, doc-upload,
+ * resonance discovery) live on the full-page route
+ * /protected/dashboard/field-context/[id], which is the entry point for
+ * those workflows (alongside the assistant).
  */
 export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
   contextId,

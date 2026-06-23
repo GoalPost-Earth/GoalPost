@@ -3,6 +3,7 @@
 import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { formatResonanceLabel } from '@/utils/graph-utils'
+import { cn } from '@/lib/utils'
 import type { PulseAuthorLike } from '@/lib/pulse-author'
 import { PulsesSection } from './pulses-section'
 import { EmptySection, getPulseTypeLabel } from './field-section-primitives'
@@ -81,6 +82,13 @@ type FieldContextSectionsProps = {
   onAddPulse: () => void
   onAddPerson?: () => void
   onAddResonance: () => void
+  /** AI resonance discovery entry attached to the Resonances section header.
+   *  Scans the parent Space's pulses and opens the suggestions review modal.
+   *  Omit to hide the affordance (e.g. surfaces without a resolved Space). */
+  onDiscoverResonances?: () => void
+  /** True while a discovery run is in flight — disables the Discover button and
+   *  swaps its icon for a spinner. */
+  isDiscoveringResonances?: boolean
   /** Legacy bulk-share entry attached to the Pulses section header. Used only
    *  when `onOpenShare` is not provided (surfaces not yet wired for the richer
    *  select-and-share flow). Omit to hide. */
@@ -142,6 +150,8 @@ export function FieldContextSections({
   onAddPulse,
   onAddPerson,
   onAddResonance,
+  onDiscoverResonances,
+  isDiscoveringResonances = false,
   onSharePulses,
   onOpenShare,
   onUploadDocument,
@@ -266,26 +276,53 @@ export function FieldContextSections({
       />
 
       <div className="flex flex-col gap-4 md:col-span-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <SectionHeader icon="hub" title="Resonances" />
-          <button
-            onClick={() => onAddResonance()}
-            disabled={pulses.length < 2}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-primary/10 cursor-pointer"
-            aria-label={
-              pulses.length < 2
-                ? 'Add at least 2 pulses to link'
-                : 'Link pulses'
-            }
-            title={
-              pulses.length < 2
-                ? 'Add at least 2 pulses to create a resonance link'
-                : ''
-            }
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            Link Pulses
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onDiscoverResonances ? (
+              <button
+                onClick={() => onDiscoverResonances()}
+                disabled={isDiscoveringResonances}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-accent-glow/40 bg-gp-accent-glow/10 hover:bg-gp-accent-glow/20 text-gp-ink-strong dark:text-white transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-accent-glow/10 cursor-pointer"
+                aria-label="Discover resonances"
+                // Discovery scans the whole parent Space's pulses (WF-06), so it
+                // isn't gated on this field's pulse count the way manual linking
+                // is — a field with few pulses can still surface cross-field
+                // resonances in the same Space.
+                title="Let AI suggest resonances across this space"
+              >
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-sm',
+                    isDiscoveringResonances && 'animate-spin'
+                  )}
+                >
+                  {isDiscoveringResonances ? 'progress_activity' : 'auto_awesome'}
+                </span>
+                <span className="hidden sm:inline">
+                  {isDiscoveringResonances ? 'Discovering…' : 'Discover'}
+                </span>
+              </button>
+            ) : null}
+            <button
+              onClick={() => onAddResonance()}
+              disabled={pulses.length < 2}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-primary/10 cursor-pointer"
+              aria-label={
+                pulses.length < 2
+                  ? 'Add at least 2 pulses to link'
+                  : 'Link pulses'
+              }
+              title={
+                pulses.length < 2
+                  ? 'Add at least 2 pulses to create a resonance link'
+                  : ''
+              }
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              <span className="hidden sm:inline">Link Pulses</span>
+            </button>
+          </div>
         </div>
         {resonances.length === 0 ? (
           <EmptySection

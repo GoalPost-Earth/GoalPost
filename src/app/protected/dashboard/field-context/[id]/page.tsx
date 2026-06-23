@@ -10,6 +10,7 @@ import { OfferingModal } from '@/components/ui/offering-modal'
 import { OfferingInput } from '@/components/ui/offering-input'
 import { PulseEditModal } from '@/components/ui/pulse-edit-modal'
 import { ResonanceLinkModal } from '@/components/ui/resonance-link-modal'
+import { ResonanceSuggestionsModal } from '@/components/ui/resonance-suggestions-modal'
 import { BulkPulseShareModal } from '@/components/ui/bulk-pulse-share-modal'
 import { PersonPanel } from '@/components/ui/person-panel'
 import { resolveRelationshipWhy } from '@/lib/people/resolve-relationship-why'
@@ -74,6 +75,8 @@ import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
+import { useResonanceDiscovery } from '@/hooks/useResonanceDiscovery'
+import { useResonanceSuggestions } from '@/hooks/useResonanceSuggestions'
 
 export default function FieldContextDetailsPage() {
   const router = useRouter()
@@ -110,6 +113,7 @@ export default function FieldContextDetailsPage() {
   } | null>(null)
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
+  const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false)
   const [editingResonance, setEditingResonance] = useState<{
     id: string
     label: string
@@ -240,6 +244,28 @@ export default function FieldContextDetailsPage() {
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
+  // Resonance discovery is Space-scoped (WF-06): it scans the parent Space's
+  // pulses and writes `pending` ResonanceSuggestions for human review (WF-07).
+  // Empty until the field's parent Space resolves — the hooks no-op on a blank
+  // id, and the Discover affordance stays hidden until then.
+  const spaceId = space?.id ?? ''
+
+  const {
+    suggestions: resonanceSuggestions,
+    loading: resonanceSuggestionsLoading,
+    refetch: refetchSuggestions,
+    acceptSuggestion,
+    declineSuggestion,
+  } = useResonanceSuggestions({ spaceId, filter: 'all', enabled: false })
+
+  const { triggerDiscovery, isLoading: isDiscoveringResonances } =
+    useResonanceDiscovery({
+      spaceId,
+      onSuccess: () => {
+        setIsDiscoverModalOpen(true)
+        void refetchSuggestions()
+      },
+    })
 
   // Supply the resolved FieldContext title to the focal-entity primitive so the
   // assistant can speak of it by name.
@@ -1414,6 +1440,12 @@ export default function FieldContextDetailsPage() {
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
             onAddPerson={() => setIsAddPersonModalOpen(true)}
             onAddResonance={() => setIsResonanceLinkModalOpen(true)}
+            onDiscoverResonances={
+              canEditContent && spaceId
+                ? () => void triggerDiscovery()
+                : undefined
+            }
+            isDiscoveringResonances={isDiscoveringResonances}
             onOpenShare={(pulseIds, mode) => {
               setBulkInitialPulseIds(pulseIds)
               setBulkInitialMode(mode)
@@ -1642,6 +1674,24 @@ export default function FieldContextDetailsPage() {
         onClose={() => setIsUploadDocumentModalOpen(false)}
         onSubmit={handleUploadDocument}
       />
+
+      {spaceId ? (
+        <ResonanceSuggestionsModal
+          isOpen={isDiscoverModalOpen}
+          onClose={() => setIsDiscoverModalOpen(false)}
+          spaceId={spaceId}
+          suggestions={resonanceSuggestions}
+          loading={resonanceSuggestionsLoading}
+          // Accepting a suggestion writes a real ResonanceLink server-side, so
+          // refetch the field details to surface it in the Resonances section.
+          onAccept={async (id) => {
+            await acceptSuggestion(id)
+            await refetch()
+          }}
+          onDecline={declineSuggestion}
+          onRefresh={refetchSuggestions}
+        />
+      ) : null}
     </div>
   )
 }

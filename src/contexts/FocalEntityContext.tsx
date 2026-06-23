@@ -397,23 +397,11 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // For /protected/spaces/(me|we)-space/[id]/fields/[field], pull the parent
-    // space id from the path. Focal is FieldContext but ambient should still
-    // surface the enclosing Space so assistant tools that scope by spaceId
-    // (search_field_context, search_pulse) work without forcing the user to
-    // restate it.
-    if (pathname) {
-      const segments = pathname.split(/[?#]/)[0].split('/').filter(Boolean)
-      if (
-        segments[0] === 'protected' &&
-        segments[1] === 'spaces' &&
-        (segments[2] === 'me-space' || segments[2] === 'we-space') &&
-        segments[3] &&
-        segments[4] === 'fields'
-      ) {
-        if (!activeSpaceId) activeSpaceId = segments[3]
-      }
-    }
+    // The enclosing Space for an active FieldContext is surfaced via the
+    // focal entity's resolved parent chain (the field-context page pushes it
+    // through setFocalParents) — see below. The legacy
+    // /protected/spaces/*/fields/[field] path-parsing fallback was removed
+    // with those routes.
 
     // When the active space id came from the URL (not the focal entity) we may
     // still know its name + subtype from the focal entity's resolved parent
@@ -455,7 +443,7 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
       activeSpaceOwnedByCurrentUser,
       focalEntity,
     }
-  }, [user, pathname, focalEntity])
+  }, [user, focalEntity])
 
   const value = useMemo<FocalEntityContextValue>(
     () => ({

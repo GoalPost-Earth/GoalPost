@@ -12,15 +12,11 @@
  *
  * Add-pulse subscribers:
  *   - /protected/dashboard/field-context/[id]/page.tsx
- *   - /protected/spaces/me-space/[id]/fields/[field]/page.tsx
- *   - /protected/spaces/we-space/[id]/fields/[field]/page.tsx
  *
  * Add-field-context subscribers:
  *   - components/dashboard/space-dashboard-view.tsx
  *     (rendered by /protected/dashboard/space/[id] — the canonical
  *     destination of every "open this space" interaction)
- *   - /protected/spaces/me-space/[id]/page.tsx (legacy)
- *   - /protected/spaces/we-space/[id]/page.tsx (legacy)
  *
  * Add-space-members subscribers:
  *   - components/dashboard/space-dashboard-view.tsx

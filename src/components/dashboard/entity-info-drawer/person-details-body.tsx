@@ -279,6 +279,12 @@ export const PersonDetailsBody: FC<{
                         {edge.why}
                       </p>
                     )}
+                    {edge?.interests && (
+                      <p className="mt-1 text-[11px] text-gp-ink-muted dark:text-white/45 leading-relaxed line-clamp-1">
+                        <span className="font-semibold">Interests:</span>{' '}
+                        {edge.interests}
+                      </p>
+                    )}
                   </button>
                 </li>
               )

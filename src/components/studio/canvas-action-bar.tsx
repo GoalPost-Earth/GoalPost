@@ -223,7 +223,7 @@ const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
         {canCreateMeSpace && (
           <button
             type="button"
-            onClick={() => router.push('/protected/spaces/me-space')}
+            onClick={() => router.push('/protected/dashboard')}
             className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
             aria-label="Create MeSpace"
           >

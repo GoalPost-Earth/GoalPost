@@ -54,20 +54,5 @@ export function focalEntityFromRoute(
     }
   }
 
-  if (segments[1] === 'spaces') {
-    const spaceFlavor = segments[2]
-    const spaceId = segments[3]
-    if (!spaceFlavor || !spaceId) return null
-
-    // /protected/spaces/(me|we)-space/[id]/fields/[field]
-    if (segments[4] === 'fields' && segments[5]) {
-      return { type: 'FieldContext', id: segments[5] }
-    }
-
-    if (spaceFlavor === 'me-space') return { type: 'MeSpace', id: spaceId }
-    if (spaceFlavor === 'we-space') return { type: 'WeSpace', id: spaceId }
-    return null
-  }
-
   return null
 }

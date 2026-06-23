@@ -42,9 +42,10 @@ function styleFor(type: FocalEntityType): TypeStyle {
 function hrefFor(type: FocalEntityType, id: string): string | null {
   switch (type) {
     case 'MeSpace':
-      return `/protected/spaces/me-space/${id}`
     case 'WeSpace':
-      return `/protected/spaces/we-space/${id}`
+      // Both space kinds resolve to the unified studio space route. The legacy
+      // /protected/spaces/* graph pages were removed — Bloom is the graph now.
+      return `/protected/dashboard/space/${id}`
     case 'FieldContext':
       return `/protected/dashboard/field-context/${id}`
     case 'PersonPulse':
