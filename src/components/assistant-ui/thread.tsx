@@ -19,6 +19,7 @@ import { AssistantModeIndicator } from '@/components/chat/assistant-mode-selecto
 import { WriteApprovalToolPart } from '@/components/chat/write-approval-tool-ui'
 import { PulseSuggestionsToolPart } from '@/components/chat/pulse-suggestions-tool-ui'
 import { ConnectionSuggestionsToolPart } from '@/components/chat/connection-suggestions-tool-ui'
+import { ResonanceSuggestionsToolPart } from '@/components/chat/resonance-suggestions-tool-ui'
 import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
@@ -121,6 +122,7 @@ const AssistantMessage: FC = () => {
                 ...READ_TOOL_STATUS_COMPONENTS,
                 suggest_pulses: PulseSuggestionsToolPart,
                 suggest_connections: ConnectionSuggestionsToolPart,
+                suggest_resonances: ResonanceSuggestionsToolPart,
               },
               Fallback: WriteApprovalToolPart,
             },
