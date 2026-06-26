@@ -1319,10 +1319,90 @@ async function createPersonAuthorized(
   const name = lastName ? `${firstName} ${lastName}` : firstName
   const where = contextTitle || 'this field context'
 
+  // Self-link (don't duplicate yourself): a document the user uploads almost
+  // always names the uploader. The current user already exists as their own
+  // Person node, but it's reached through OWNS / INITIATED — not necessarily
+  // HAS_PERSON — so the roster-based matcher upstream can't see it and the
+  // model proposes a fresh create_person. Catch that here: if the extracted
+  // name is the current user, attach THEIR existing node to this context
+  // instead of minting a duplicate. We never mutate the account's identity
+  // fields and never self-connect (no CONNECTED_TO from you to you). Name match
+  // falls back to firstName+lastName because account nodes can have a null
+  // `name`. This branch runs before the in-context check so you always win.
+  //
+  // Authorization note: the `canEditContext` gate above is load-bearing for
+  // this write — the self-match query is a global lookup by id with no edge to
+  // the context, so a reorder that dropped the gate would let a write land in a
+  // context the caller can't edit. Keep the gate first.
+  const selfRows = await graph.query<{ id: string; name: string }>(
+    `
+    MATCH (u:Person {id: $currentUserId})
+    WITH u, toLower(trim(coalesce(u.name, trim(coalesce(u.firstName, '') + ' ' + coalesce(u.lastName, ''))))) AS userKey
+    WHERE userKey <> '' AND trim($name) <> '' AND userKey = toLower(trim($name))
+    RETURN u.id AS id,
+           coalesce(u.name, trim(coalesce(u.firstName, '') + ' ' + coalesce(u.lastName, ''))) AS name
+    LIMIT 1
+    `,
+    { currentUserId, name }
+  )
+  const self = selfRows?.[0] ?? null
+
+  if (self) {
+    const selfDocumentFilename = documentId
+      ? await lookupDocumentFilename(graph, documentId)
+      : null
+    const selfFilenameSuffix = selfDocumentFilename
+      ? ` (from ${selfDocumentFilename})`
+      : ''
+    const selfLogId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+    const selfDescription = `Linked ${self.name} (you) to ${where}${selfFilenameSuffix}`
+    const selfMetadata = buildIngestLogMetadata(documentId, conversationThreadId)
+    await graph.query(
+      `
+      MATCH (c:FieldContext {id: $contextId})
+      MATCH (u:Person {id: $currentUserId})
+      OPTIONAL MATCH (d:Document {id: $documentId})
+      MERGE (c)-[:HAS_PERSON]->(u)
+      FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+        MERGE (u)-[:EXTRACTED_FROM]->(d)
+      )
+      CREATE (log:Log {
+        id: $selfLogId,
+        description: $selfDescription,
+        createdAt: datetime()
+      })
+      FOREACH (_ IN CASE WHEN $selfMetadata IS NULL THEN [] ELSE [1] END |
+        SET log.metadata = $selfMetadata
+      )
+      CREATE (log)-[:CREATED_BY]->(u)
+      `,
+      {
+        contextId,
+        currentUserId,
+        documentId,
+        selfLogId,
+        selfDescription,
+        selfMetadata,
+      }
+    )
+    return {
+      success: true,
+      personId: self.id,
+      name: self.name,
+      contextId,
+      documentId,
+      alreadyExisted: true,
+      // Tell the model this is the uploader's own profile so it confirms a link
+      // ("that's you, linked it here") rather than claiming a new person.
+      message: `That's you — I linked your profile to ${where} instead of adding a duplicate.`,
+    }
+  }
+
   // Idempotency (enrich, don't duplicate): if a person with this name already
   // lives in the target field context, ENRICH them instead of creating a second
   // node. Re-adding "Naa" to North Star twice must not produce two Naa nodes.
   // Matched by canonical name within the context (the unit a person is added to).
+  // Falls back to firstName+lastName so migrated nodes with a null `name` match.
   const existingRows = await graph.query<{
     id: string
     name: string | null
@@ -1331,7 +1411,7 @@ async function createPersonAuthorized(
   }>(
     `
     MATCH (c:FieldContext {id: $contextId})-[:HAS_PERSON]->(p:Person:PersonPulse)
-    WHERE toLower(trim(coalesce(p.name, ''))) = toLower(trim($name))
+    WHERE toLower(trim(coalesce(p.name, trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))))) = toLower(trim($name))
     OPTIONAL MATCH (u:Person {id: $currentUserId})-[rc:CONNECTED_TO]-(p)
     RETURN p.id AS id, p.name AS name,
            (p.description IS NOT NULL AND trim(p.description) <> '') AS hasDescription,

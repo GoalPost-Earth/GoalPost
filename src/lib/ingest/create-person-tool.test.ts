@@ -178,6 +178,70 @@ describe('executeAuthorizedWriteTool — create_person', () => {
     }
   })
 
+  itIf(true)('self-link: reuses the uploader\'s own node instead of duplicating them', async () => {
+    if (!neo4jAvailable) return
+    const graph = await initGraph()
+
+    // The document names the uploader ("Test Uploader"). The matcher must link
+    // the existing User node into the context, not mint a second Person node.
+    const result = await executeAuthorizedWriteTool(graph, ids.user, 'create_person', {
+      firstName: 'Test',
+      lastName: 'Uploader',
+      contextId: ids.fieldContext,
+      contextTitle: 'Care Practices',
+      documentId: ids.document,
+    })
+    expect(result.success).toBe(true)
+    expect((result as { alreadyExisted?: boolean }).alreadyExisted).toBe(true)
+    // Reuses the existing account node — same id, not a fresh person_ uuid.
+    expect((result as { personId?: string }).personId).toBe(ids.user)
+    expect(String(result.message || '')).toMatch(/that's you/i)
+
+    const session = driver.session()
+    try {
+      // The uploader's own node is now attached to the context + document.
+      const linked = await session.run(
+        `
+        MATCH (c:FieldContext {id: $ctxId})-[:HAS_PERSON]->(u:Person {id: $userId})
+        MATCH (u)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
+        RETURN u.id AS id
+        `,
+        { ctxId: ids.fieldContext, userId: ids.user, docId: ids.document }
+      )
+      expect(linked.records).toHaveLength(1)
+
+      // No duplicate Person was created for the uploader's name.
+      const dupes = await session.run(
+        `
+        MATCH (p:Person)
+        WHERE p.id <> $userId
+          AND toLower(trim(coalesce(p.name, ''))) = 'test uploader'
+        RETURN count(p) AS c
+        `,
+        { userId: ids.user }
+      )
+      expect(Number(dupes.records[0].get('c'))).toBe(0)
+
+      // Never self-connect: no CONNECTED_TO from the user to themselves.
+      const selfEdge = await session.run(
+        `MATCH (u:Person {id: $userId})-[r:CONNECTED_TO]-(u) RETURN count(r) AS c`,
+        { userId: ids.user }
+      )
+      expect(Number(selfEdge.records[0].get('c'))).toBe(0)
+
+      // Identity untouched: the account keeps :User and never gains :PersonPulse.
+      const labelRows = await session.run(
+        `MATCH (u:Person {id: $userId}) RETURN labels(u) AS labels`,
+        { userId: ids.user }
+      )
+      const userLabels = labelRows.records[0].get('labels') as string[]
+      expect(userLabels).toContain('User')
+      expect(userLabels).not.toContain('PersonPulse')
+    } finally {
+      await session.close()
+    }
+  })
+
   itIf(true)('refuses when the user cannot edit the FieldContext (no graph mutation)', async () => {
     if (!neo4jAvailable) return
     const graph = await initGraph()
