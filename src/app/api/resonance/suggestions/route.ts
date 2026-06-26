@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Get suggestions with their pulses and context
     const suggestionsResult = await graph.query<ResonanceSuggestion>(
       `
-      MATCH (space:WeSpace {id: $spaceId})-[:HAS_SUGGESTION]->(suggestion:ResonanceSuggestion {status: $status})
+      MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(suggestion:ResonanceSuggestion {status: $status})
       MATCH (suggestion)-[:SOURCE]->(source:FieldPulse)
       MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
       MATCH (context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)

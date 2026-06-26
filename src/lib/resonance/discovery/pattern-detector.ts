@@ -196,7 +196,7 @@ async function createResonanceSuggestionsInDatabase(
     // Create ResonanceSuggestion and connect it to the space, context, source, and target
     const suggestionResult = await graph.query<{ suggestionId: string }>(
       `
-      MATCH (space:WeSpace {id: $spaceId})
+      MATCH (space:Space {id: $spaceId})
       MATCH (context:FieldContext {id: $contextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
@@ -277,7 +277,7 @@ export async function discoverResonancesForPulse(
   }>(
     spaceId
       ? `
-        MATCH (space:WeSpace {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
+        MATCH (space:Space {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
         RETURN {
           id: p.id,
           content: p.content,
@@ -360,7 +360,7 @@ export async function discoverResonancesForSpace(
 
   // Verify space exists
   const spaceResult = await graph.query<{ spaceId: string }>(
-    `MATCH (space:WeSpace {id: $spaceId}) RETURN space.id as spaceId`,
+    `MATCH (space:Space {id: $spaceId}) RETURN space.id as spaceId`,
     { spaceId }
   )
 
@@ -375,7 +375,7 @@ export async function discoverResonancesForSpace(
     contextTitle: string
   }>(
     `
-    MATCH (space:WeSpace {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)
+    MATCH (space:Space {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)
     RETURN context.id as contextId, context.title as contextTitle
   `,
     { spaceId }
@@ -476,7 +476,7 @@ export async function discoverGlobalResonances(
     spaceName: string
   }>(
     `
-    MATCH (space:WeSpace)
+    MATCH (space:Space)
     RETURN space.id as spaceId, space.name as spaceName
   `,
     {}
