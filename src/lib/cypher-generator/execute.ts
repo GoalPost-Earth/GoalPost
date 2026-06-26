@@ -259,29 +259,18 @@ async function mapNodesToEnclosingSpaces(
     }
 
     if (labels.includes('Person')) {
-      // A Person is visible to the current user when they share any
-      // Space OR any Community. Communities are public collectives
-      // (see PUBLIC_LABELS comment), so being a fellow Community member
-      // is sufficient anchor — the synthetic "__public__" anchor lets
-      // the post-filter accept the Person regardless of Space overlap.
-      const r = await runRead(
-        `
-        MATCH (p:Person {id: $id})
-        OPTIONAL MATCH (p)-[:OWNS]->(s1:Space)
-        OPTIONAL MATCH (p)<-[:IS_MEMBER]-(:SpaceMembership)<-[:HAS_MEMBER]-(s2:Space)
-        OPTIONAL MATCH (p)<-[:CREATED_BY]-(:FieldPulse)<-[:HAS_PULSE]-(:FieldContext)<-[:HAS_CONTEXT]-(s3:Space)
-        OPTIONAL MATCH (p)<-[:HAS_MEMBER]-(c:Community)
-        WITH collect(DISTINCT s1.id) + collect(DISTINCT s2.id) + collect(DISTINCT s3.id) AS sids,
-             count(c) > 0 AS inAnyCommunity
-        RETURN [sid IN sids WHERE sid IS NOT NULL] AS sids, inAnyCommunity
-        `,
-        { id }
-      )
-      const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
-      for (const sid of sids) anchors.add(sid)
-      if (r.records[0]?.get('inAnyCommunity') === true) {
-        anchors.add(PUBLIC_ANCHOR)
-      }
+      // Per kb/02-user-roles.md, Person nodes are readable by ANY
+      // authenticated user (no Space filter) — search_person,
+      // get_focal_entity, and the profile page all expose a person
+      // regardless of Space overlap. The Bloom canvas MUST match that
+      // model. The old space/community anchor check broke for a personal
+      // contact who is only CONNECTED_TO the user (e.g. a spouse or
+      // friend who owns no Space and joins no Community): they have no
+      // anchor, so the post-filter dropped them and the user saw a graph
+      // with only themselves on it ("the graph is not showing anything").
+      // Mark every Person universally visible via the synthetic public
+      // anchor, consistent with how Communities are handled above.
+      anchors.add(PUBLIC_ANCHOR)
       result.set(id, anchors)
       continue
     }
