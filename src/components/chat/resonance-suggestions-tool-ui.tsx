@@ -72,22 +72,22 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
     })
     return initial
   })
-  const [selected, setSelected] = useState<Record<number, boolean>>(() => {
-    const initial: Record<number, boolean> = {}
-    suggestions.forEach((_, index) => {
-      initial[index] = true
-    })
-    return initial
-  })
-  // The "why they resonate" text per card, seeded from the inferred why. The
-  // user can edit or clear it before accepting (skippable).
-  const [whyEdits, setWhyEdits] = useState<Record<number, string>>(() => {
-    const initial: Record<number, string> = {}
-    suggestions.forEach((s, index) => {
-      initial[index] = (s.why || '').trim()
-    })
-    return initial
-  })
+  // Selection + why edits are keyed by index and DEFAULTED AT READ TIME rather
+  // than pre-seeded: the tool result streams in after first mount, so a useState
+  // initializer would run over an empty `suggestions` and never re-seed. An
+  // absent selection means "selected" (default-on); an absent why falls back to
+  // the model's inferred why. Toggling/editing writes an explicit override.
+  const [selected, setSelected] = useState<Record<number, boolean>>({})
+  const isSelected = useCallback(
+    (index: number) => selected[index] ?? true,
+    [selected]
+  )
+  const [whyEdits, setWhyEdits] = useState<Record<number, string>>({})
+  const whyValue = useCallback(
+    (s: ResonanceSuggestionShape, index: number) =>
+      whyEdits[index] ?? (s.why || '').trim(),
+    [whyEdits]
+  )
 
   const recordFeedback = useCallback(
     (rating: 'POSITIVE' | 'NEGATIVE', label: string, verb: string) => {
@@ -125,12 +125,12 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
   const argsWithWhy = useCallback(
     (s: ResonanceSuggestionShape, index: number): Record<string, unknown> => {
       const base = { ...(s.createArgs as Record<string, unknown>) }
-      const why = (whyEdits[index] ?? '').trim()
+      const why = whyValue(s, index).trim()
       if (why) base.why = why
       else delete base.why
       return base
     },
-    [whyEdits]
+    [whyValue]
   )
 
   const handleAddSelected = useCallback(() => {
@@ -139,7 +139,7 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
     suggestions.forEach((s, index) => {
       if (
         (decisions[index] ?? 'pending') === 'pending' &&
-        selected[index] &&
+        isSelected(index) &&
         s.createArgs &&
         (s.sourceName || '').trim() &&
         (s.targetName || '').trim()
@@ -182,9 +182,9 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
     argsWithWhy,
     decisions,
     isRunning,
+    isSelected,
     pairLabel,
     recordFeedback,
-    selected,
     setDecision,
     suggestions,
   ])
@@ -212,7 +212,7 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
     (_, i) => (decisions[i] ?? 'pending') === 'pending'
   ).length
   const selectedCount = suggestions.filter(
-    (_, i) => (decisions[i] ?? 'pending') === 'pending' && selected[i]
+    (_, i) => (decisions[i] ?? 'pending') === 'pending' && isSelected(i)
   ).length
 
   return (
@@ -228,7 +228,7 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
         const decision = decisions[index] ?? 'pending'
         const source = (suggestion.sourceName || '').trim() || 'a pulse'
         const target = (suggestion.targetName || '').trim() || 'another pulse'
-        const isChecked = decision === 'pending' && !!selected[index]
+        const isChecked = decision === 'pending' && isSelected(index)
         return (
           <div
             key={`resonance-${index}`}
@@ -295,7 +295,7 @@ export const ResonanceSuggestionsToolPart: ToolCallMessagePartComponent = ({
                     </span>
                     <textarea
                       rows={2}
-                      value={whyEdits[index] ?? ''}
+                      value={whyValue(suggestion, index)}
                       onChange={(e) =>
                         setWhyEdits((prev) => ({
                           ...prev,
