@@ -98,7 +98,7 @@ export function AssistantModeSelector({
       {/* Persistent clarification: this is voice/tone, not model power */}
       <div className="flex items-start gap-1.5 pt-2 border-t border-gp-glass-border text-[10px] text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
         <span
-          className="material-symbols-outlined text-[13px]! leading-none mt-px shrink-0"
+          className="material-symbols-outlined text-[13px] leading-none mt-px shrink-0"
           aria-hidden="true"
         >
           info
@@ -149,7 +149,7 @@ export function AssistantModeInfo() {
 
       <p className="flex items-start gap-1.5 text-xs text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
         <span
-          className="material-symbols-outlined text-[15px]! leading-none mt-0.5 shrink-0"
+          className="material-symbols-outlined text-[15px] leading-none mt-0.5 shrink-0"
           aria-hidden="true"
         >
           info
