@@ -86,6 +86,8 @@ async function initializeDatabase() {
        FOR (n:FieldResonance) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT resonance_link_id IF NOT EXISTS
        FOR (n:ResonanceLink) REQUIRE n.id IS UNIQUE`,
+      `CREATE CONSTRAINT resonance_suggestion_id IF NOT EXISTS
+       FOR (n:ResonanceSuggestion) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_thread_id IF NOT EXISTS
        FOR (n:ConversationThread) REQUIRE n.id IS UNIQUE`,
       `CREATE CONSTRAINT conversation_turn_id IF NOT EXISTS

@@ -9,6 +9,7 @@ import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { getSession, initializeDB } from '@/app/api/auth/neo4j'
 import { canEditContent } from '@/lib/permissions/space-permissions'
 import { createNotification } from '@/lib/notifications/create-notification'
+import { createLog } from '@/lib/activity-logs/create-log'
 
 export async function POST(
   request: NextRequest,
@@ -159,6 +160,30 @@ export async function POST(
     console.log(
       `[Resonance Accept] ✓ Promoted suggestion ${suggestionId} to link ${linkId}`
     )
+
+    // Audit log for the promotion, attributed to the accepting user. Linking
+    // both pulses (LOGGED_FOR) surfaces this in the context's activity feed;
+    // source and target always share a context (enforced at suggestion create),
+    // so this stays within the suggestion's Space. Best-effort — a log hiccup
+    // must not fail a successful accept — but awaited so the write actually
+    // flushes before the serverless response returns (a floating promise can be
+    // dropped when the function freezes).
+    try {
+      await createLog({
+        userId: actorId,
+        description: `Accepted resonance "${suggestion.label}"`,
+        pulseIds: [sourcePulseId, targetPulseId],
+        contextId,
+        metadata: {
+          event: 'resonance_accepted',
+          linkId,
+          suggestionId,
+          contextId,
+        },
+      })
+    } catch (logErr) {
+      console.warn('[Resonance Accept] Failed to write activity log:', logErr)
+    }
 
     // Notify the authors of the two connected pulses that a resonance was
     // discovered on their pulse. Best-effort: a notification failure must not

@@ -8,6 +8,7 @@ import { initGraph } from '@/modules/graph'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { getSession, initializeDB } from '@/app/api/auth/neo4j'
 import { canEditContent } from '@/lib/permissions/space-permissions'
+import { createLog } from '@/lib/activity-logs/create-log'
 
 export async function POST(
   request: NextRequest,
@@ -31,14 +32,27 @@ export async function POST(
     const graph = await initGraph()
 
     // Get the suggestion (verify existence) and resolve its enclosing Space.
+    // Also pull the label, context and connected pulses so the audit log can
+    // describe what was declined and surface in the context activity feed.
     const suggestionResult = await graph.query<{
       status: string
+      label: string | null
       spaceId: string | null
+      contextId: string | null
+      sourcePulseId: string | null
+      targetPulseId: string | null
     }>(
       `
       MATCH (suggestion:ResonanceSuggestion {id: $suggestionId})
-      OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
-      RETURN suggestion.status as status, space.id AS spaceId
+      OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
+      OPTIONAL MATCH (suggestion)-[:SOURCE]->(source:FieldPulse)
+      OPTIONAL MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
+      RETURN suggestion.status as status,
+             suggestion.label as label,
+             space.id AS spaceId,
+             context.id AS contextId,
+             source.id AS sourcePulseId,
+             target.id AS targetPulseId
     `,
       { suggestionId }
     )
@@ -84,6 +98,30 @@ export async function POST(
     console.log(
       `[Resonance Decline] ✓ Marked suggestion ${suggestionId} as declined`
     )
+
+    // Audit log for the decline, attributed to the actor. Best-effort — a log
+    // hiccup must not fail a successful decline — but awaited so the write
+    // flushes before the serverless response returns (a floating promise can be
+    // dropped when the function freezes).
+    const { label, contextId, sourcePulseId, targetPulseId } =
+      suggestionResult[0]
+    try {
+      await createLog({
+        userId: actorId,
+        description: `Declined resonance "${label ?? 'suggestion'}"`,
+        pulseIds: [sourcePulseId, targetPulseId].filter(
+          (id): id is string => Boolean(id)
+        ),
+        contextId: contextId ?? undefined,
+        metadata: {
+          event: 'resonance_declined',
+          suggestionId,
+          ...(contextId ? { contextId } : {}),
+        },
+      })
+    } catch (logErr) {
+      console.warn('[Resonance Decline] Failed to write activity log:', logErr)
+    }
 
     return NextResponse.json({
       success: true,

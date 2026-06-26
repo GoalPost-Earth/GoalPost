@@ -470,17 +470,30 @@ export async function discoverGlobalResonances(
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Get all spaces
-  const spacesResult = await graph.query<{
-    spaceId: string
-    spaceName: string
-  }>(
-    `
-    MATCH (space:Space)
-    RETURN space.id as spaceId, space.name as spaceName
-  `,
-    {}
-  )
+  // Enumerate the spaces to sweep. Every registered user owns a MeSpace, so a
+  // global fan-out over every space runs an LLM-backed analysis across the whole
+  // user base. On an incremental run (a lastRunTimestamp is supplied) we anchor
+  // on the FieldPulse.modifiedAt / createdAt range indexes to find only spaces
+  // with recent pulse activity — this scales with the change window, not the
+  // total graph. On a full sweep (no timestamp) we process all spaces.
+  const spacesResult = lastRunTimestamp
+    ? await graph.query<{ spaceId: string; spaceName: string }>(
+        `
+        MATCH (p:FieldPulse)
+        WHERE p.modifiedAt > datetime($lastRunTimestamp)
+           OR p.createdAt > datetime($lastRunTimestamp)
+        MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(p)
+        RETURN DISTINCT space.id as spaceId, space.name as spaceName
+      `,
+        { lastRunTimestamp }
+      )
+    : await graph.query<{ spaceId: string; spaceName: string }>(
+        `
+        MATCH (space:Space)
+        RETURN space.id as spaceId, space.name as spaceName
+      `,
+        {}
+      )
 
   if (!Array.isArray(spacesResult) || spacesResult.length === 0) {
     console.log('[Global Discovery] No spaces found')
