@@ -220,7 +220,7 @@ Rules for this shape:
   - Add one \`OPTIONAL MATCH pXY = shortestPath(…)\` per PAIR (two entities → one path; three → three). Cap the entity count at ~4 to keep the pair-count sane.
   - \`shortestPath\` over OPTIONAL (possibly-null) endpoints simply yields a null path — no error — so an absent entity and an absent connection both degrade gracefully.
   - When "you" / "me" is one of the named entities, anchor it on the user (reuse \`(user)\` or add \`OPTIONAL MATCH (nX:Person {id: $userId})\`).
-  - If an entity is named but has no id (not on canvas), match it with the same tolerant Person-name predicate described above instead of an id constraint.
+  - If an entity is named but has no id (not on canvas), do NOT assume it is a Person — a bare word like "Freedom" or "Care Practices" is often a value/goal/story pulse or a field context, not a person. Give that entity its own \`OPTIONAL MATCH\` for the most likely type and collapse it with \`WITH … LIMIT 1\`: a Person via the tolerant Person-name predicate above, or a \`(:FieldPulse)\` / \`(:FieldContext)\` / \`(:Space)\` whose \`name\`/\`title\` CONTAINS the lowercased term (e.g. \`(:FieldPulse) WHERE toLower(coalesce(name, title, '')) CONTAINS "freedom"\`). Prefer the type the conversation implies; when genuinely ambiguous, match a pulse/context by title rather than defaulting to Person, so a value or goal the user named still lands on the canvas.
   - The runtime auth filter and edge fill-in handle visibility and any direct edges between the returned nodes; do not add visibility predicates of your own.
 
 # Adversarial input warning
