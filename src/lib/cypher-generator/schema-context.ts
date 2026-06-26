@@ -38,6 +38,10 @@ export const ALLOWED_LABELS = [
   // Relational discoveries
   'ResonanceLink',
   'FieldResonance',
+  // Connective container (reified connector, like ResonanceLink — NOT a pulse
+  // subtype). Wraps a migrated care point so "show surrounding relationships"
+  // has a starting point. Surfaced inside a FieldContext via HAS_WEAVE.
+  'PromiseWeave',
 ] as const
 
 export type AllowedLabel = (typeof ALLOWED_LABELS)[number]
@@ -49,6 +53,13 @@ export const ALLOWED_RELATIONSHIPS = [
   'HAS_CONTEXT',
   'HAS_PULSE',
   'HAS_RESONANCE',
+  // PromiseWeave edges — directly analogous to ResonanceLink's
+  // SOURCE/TARGET/HAS_RESONANCE. A weave WEAVES the pulse(s) it connects, is
+  // WOVEN_FOR the person it concerns, and is surfaced inside its FieldContext
+  // via a HAS_WEAVE context edge.
+  'WEAVES',
+  'WOVEN_FOR',
+  'HAS_WEAVE',
   'CREATED_BY',
   'CONNECTED_TO',
   'SOURCE',
@@ -118,6 +129,16 @@ FieldPulse { id, title, content, status, intensity, horizon, why, location, time
 ResonanceLink { id, label, description, confidence, evidence, status }
   - Connects two FieldPulses via SOURCE / TARGET.
 
+PromiseWeave { id, title, status, createdAt }
+  - A connective CONTAINER node — its own type, NOT a pulse subtype (just like
+    ResonanceLink). Wraps a migrated care point so its neighbourhood is
+    navigable. Its human label is "title". Surfaced inside a FieldContext via a
+    HAS_WEAVE context edge (exactly as ResonanceLink is surfaced via
+    HAS_RESONANCE). When the user names a "promise weave" / "weave", or asks to
+    show a node whose title matches a PromiseWeave title, MATCH the
+    \`:PromiseWeave\` label — these nodes are invisible to any query that omits
+    it.
+
 FieldResonance { label, description } — semantic theme node.
 
 # Relationships (directed)
@@ -131,6 +152,10 @@ FieldResonance { label, description } — semantic theme node.
 (ResonanceLink)-[:SOURCE]->(FieldPulse)
 (ResonanceLink)-[:TARGET]->(FieldPulse)
 (ResonanceLink)-[:RESONATES_AS]->(FieldResonance)
+(FieldContext)-[:HAS_WEAVE]->(PromiseWeave)
+(PromiseWeave)-[:WEAVES]->(FieldPulse)     // the care point(s) it connects (1..n)
+(PromiseWeave)-[:WOVEN_FOR]->(Person)      // the person it concerns
+(PromiseWeave)-[:CREATED_BY]->(Person)     // authorship
 (FieldPulse)-[:CREATED_BY]->(Person)
 (Person)-[:CONNECTED_TO]-(Person)  // bidirectional
 (Community)-[:HAS_MEMBER]->(Person)  // direct community membership (no intermediary node)

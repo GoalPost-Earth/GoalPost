@@ -152,6 +152,27 @@ Do not move these directives into the static mode prompts — they'd fire on neu
 
 ---
 
+## Rule 9 — `query_for_bloom`'s generator only knows the labels in `schema-context.ts`. New node/edge types must be whitelisted there or they are invisible.
+
+**The bug this prevents:** the user asks "show the node *Enable use of generative AI…*" — a `PromiseWeave` node — and the assistant replies "I couldn't find any." The node exists and the user can see it, but the assistant's graph tool returned `found: false`.
+
+The `query_for_bloom` tool generates Cypher with an LLM whose entire schema vocabulary is `src/lib/cypher-generator/schema-context.ts`. That file's `ALLOWED_LABELS` / `ALLOWED_RELATIONSHIPS` arrays do **double duty**:
+
+1. They are injected into the generator's prompt (`SCHEMA_DOC`) — the model can only name labels/edges it has been told exist.
+2. They are the validator's whitelist — any `:Label` or `[:REL]` token in generated Cypher that is **not** in these arrays is rejected before execution.
+
+So a label/edge that exists in Neo4j but is absent from this file is doubly invisible: the generator won't emit it, and a lucky guess gets rejected. The tool returns `found: false` for every request about that entity type — a silent dead end, not an error.
+
+**When you add a new node label or relationship type to the graph** (a migration, a new feature, a reified connector like `PromiseWeave`/`ResonanceLink`), update the generator in the SAME change:
+
+1. Add the label to `ALLOWED_LABELS` and each edge to `ALLOWED_RELATIONSHIPS` in `schema-context.ts`.
+2. Document the node (its props + the human-label field) and its edge directions in `SCHEMA_DOC`, and add an Intent-Glossary line in `cypher-generator/generate.ts` so the model knows what phrasing maps to it.
+3. In `cypher-generator/execute.ts`, add a `NODE_STYLE` entry **and** an auth-anchor branch in `mapNodesToEnclosingSpaces` that maps the node to its enclosing Space — otherwise the post-execute `canViewContent` filter can't resolve a Space for it and silently drops it (fail-closed). Connector nodes anchor through their context edge, e.g. `(:PromiseWeave {id})<-[:HAS_WEAVE]-(:FieldContext)<-[:HAS_CONTEXT]-(:Space)`, mirroring how `ResonanceLink` anchors via `HAS_RESONANCE`.
+
+Whitelisting an edge never bypasses authorization — node visibility is always re-gated by the Space post-filter in `execute.ts`. The whitelist only controls what the generator may *traverse*.
+
+---
+
 ## Where to look when something goes wrong
 
 | Symptom                                                              | Likely culprit                                                                  |
@@ -163,6 +184,7 @@ Do not move these directives into the static mode prompts — they'd fire on neu
 | Write tool ran without user approval                                 | Tool execute bypassed `runWriteTool` and called the service directly (Rule 5)   |
 | User sees `__typename` or `GoalPulse` strings                        | Static mode prompts leaking internal labels — Rule 1                            |
 | Approval Dialog summary contains an id                               | `describeWriteAction` formatting an id; fix to use name (Rule 1 + Rule 3)       |
+| Assistant says "couldn't find" a node/entity the user can clearly see | The node's label or an edge to it is missing from `cypher-generator/schema-context.ts` — `query_for_bloom` can neither name nor return it (Rule 9). Also check `execute.ts` has an auth-anchor branch for the label, or the Space post-filter drops it. |
 
 ---
 

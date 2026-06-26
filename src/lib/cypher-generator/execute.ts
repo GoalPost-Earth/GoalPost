@@ -47,6 +47,10 @@ const NODE_STYLE: Record<string, { color: string; size: number }> = {
   PersonPulse: { color: '#f9a8d4', size: 26 },
   ResonanceLink: { color: '#d8b4fe', size: 22 },
   FieldResonance: { color: '#e9d5ff', size: 22 },
+  // Connective container, styled as a sibling of ResonanceLink (both are
+  // reified connector nodes) but with a distinct fuchsia hue so the two are
+  // tellable apart on the canvas.
+  PromiseWeave: { color: '#f0abfc', size: 22 },
   SpaceMembership: { color: '#cbd5e1', size: 18 },
 }
 
@@ -232,6 +236,20 @@ async function mapNodesToEnclosingSpaces(
     if (labels.includes('FieldContext')) {
       const r = await runRead(
         `MATCH (:FieldContext {id: $id})<-[:HAS_CONTEXT]-(s:Space) RETURN collect(DISTINCT s.id) AS sids`,
+        { id }
+      )
+      const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
+      for (const sid of sids) anchors.add(sid)
+      result.set(id, anchors)
+      continue
+    }
+
+    if (labels.includes('PromiseWeave')) {
+      // A PromiseWeave is anchored to its FieldContext's Space via the
+      // HAS_WEAVE context edge — directly analogous to how a ResonanceLink
+      // anchors via HAS_RESONANCE.
+      const r = await runRead(
+        `MATCH (:PromiseWeave {id: $id})<-[:HAS_WEAVE]-(:FieldContext)<-[:HAS_CONTEXT]-(s:Space) RETURN collect(DISTINCT s.id) AS sids`,
         { id }
       )
       const sids = (r.records[0]?.get('sids') as string[] | null) ?? []

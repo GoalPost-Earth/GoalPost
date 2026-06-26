@@ -2,6 +2,13 @@
 
 All entities in GoalPost — their fields, relationships, and storage details. Database is Neo4j (graph).
 
+> **Adding a new node label or relationship type?** Also add it to the AI Cypher
+> generator's whitelist in `src/lib/cypher-generator/schema-context.ts`
+> (`ALLOWED_LABELS` / `ALLOWED_RELATIONSHIPS` + `SCHEMA_DOC`), or the assistant's
+> `query_for_bloom` tool can neither name nor return the new entity and will tell
+> users it "couldn't find" something they can plainly see. Full checklist in
+> `kb/07-ai-assistant-ux.md` Rule 9.
+
 ## Entity Relationship Overview
 
 ```

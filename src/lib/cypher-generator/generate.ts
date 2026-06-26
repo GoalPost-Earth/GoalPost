@@ -104,10 +104,12 @@ The user's natural-language intent rarely names entity types precisely. Read the
 
 - "X's relationships" / "X's connections" / "what is X connected to" / "dive into X" / "explore X" / "show me around X" / "expand X" / "expand its surrounding relationships" → an EXPANSIVE sweep of every entity reachable from X in 1-2 hops that the runtime auth filter will allow. NOT just \`ResonanceLink\` nodes. For a Person, that means: spaces they own, spaces they are a member of, pulses they created, field contexts those pulses sit inside, other people they are CONNECTED_TO, and any ResonanceLinks involving their pulses. For a FieldContext or Space, that means: every child + sibling + adjacent entity. For a PULSE (a goal/resource/story/care/value — \`FieldPulse\` and its subtypes), that means: the field context it sits in, its creator, any ResonanceLinks involving it, AND — most importantly — its SEMANTIC ONTOLOGY edges to other pulses and people (goals it ENABLES, resources it DEPENDS_ON / APPLIED_TO, values it is ALIGNED_TO, people who PROVIDE / are MOTIVATED_BY it, etc. — see "Semantic pulse relationships" in the schema). For a pulse these semantic edges are usually the entire point of the request; a sweep that returns only the field context + creator and drops the semantic edges is a bug.
 - "X's resonances" / "X's resonance links" → specifically \`ResonanceLink\` nodes incident to X via SOURCE/TARGET (or via HAS_RESONANCE from a FieldContext).
+- "promise weave" / "weave" / "X's weaves", or "show the node <title>" where the title is a PromiseWeave's → \`PromiseWeave\` nodes (MATCH the \`:PromiseWeave\` label). Reach them via \`(ctx:FieldContext)-[hw:HAS_WEAVE]->(w:PromiseWeave)\`, and include the weave's own edges (\`(w)-[wv:WEAVES]->(:FieldPulse)\`, \`(w)-[wf:WOVEN_FOR]->(:Person)\`) so the connected pulses/person render too. PromiseWeave nodes are INVISIBLE to any query that omits the \`:PromiseWeave\` label — never substitute a FieldPulse keyword match for them.
 - "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
 - "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, or co-members of any shared Space.
 - "How is X connected to Y?" / "How is X related to Y?" / "What's the path between X and Y?" / "Show me how X and Y are connected" / "Shortest path from X to Y" → a SHORTEST-PATH query between two named entities. Return the path so the runtime renders both endpoints plus every node and edge along the connecting chain. Use Neo4j's \`shortestPath()\` with a type-restricted variable-length relationship — anonymous \`[*..N]\` is REJECTED by the validator.
+- "Show my connection to X and Y" / "Show how I'm connected to X, Y and Z" / "connections among X, Y and Z" / "show me X, Y and Z together" — TWO OR MORE named or canvas-visible entities, of ANY type (Person, pulse, Space, …) → a MULTI-ENTITY co-visualization. The point of these requests is to SEE the entities on the canvas. Anchor EACH entity by its id (use ids from canvasVisibleEntities or the intent whenever present) in its OWN OPTIONAL MATCH so the node is GUARANTEED to come back, then OPTIONAL MATCH a shortestPath between each pair. A missing connection between the entities must NEVER drop the entities themselves — returning them with no edges ("here they are; they don't appear connected") is the CORRECT, desired result, not a failure. See the multi-entity canonical shape below.
 
 When the canvas already shows the focal entity (it appears in canvasVisibleEntities) and the user asks to expand / explore / dive into it, that is NOT a duplicate of the existing view — it is a request for MORE. Build an expansive query rooted at the entity's id; the runtime de-dupes returned nodes against what is already on the canvas.
 
@@ -197,6 +199,29 @@ Rules for this shape:
   - \`RETURN p\` returns a Path; the runtime walks every segment and renders endpoints + intermediates + each labelled edge along the chain.
   - The endpoint type does not have to be \`Person\` — it can be any entity (e.g. \`(a:FieldPulse)\` ↔ \`(b:FieldPulse)\` for "how are these two goals connected?"). The query stays the same shape.
   - Communities are valuable BRIDGE NODES. Two Persons who share no Space still connect via \`(a)<-[:HAS_MEMBER]-(c:Community)-[:HAS_MEMBER]->(b)\`. Include \`HAS_MEMBER\` in your relationship disjunction by default — the path-finder needs it to discover Community-mediated connections.
+
+# Multi-entity canonical shape (use this for "show my connection to X and Y", "connections among X, Y and Z", any request naming TWO OR MORE entities to co-visualize)
+
+When the request names two or more entities — especially ones already in canvasVisibleEntities, where you already hold their ids — do NOT require a connecting path to exist. Anchor each entity by its id in its OWN OPTIONAL MATCH (so one stale or unmatched id can't drop the others), then OPTIONAL MATCH a shortestPath between every pair. Return all entity variables AND all path variables. This GUARANTEES the entities render even when nothing connects them — which is exactly the desired UX ("here are the three; they don't appear connected").
+
+    MATCH (user:Person {id: $userId})
+    OPTIONAL MATCH (n0:Person {id: "<id of first entity>"})
+    OPTIONAL MATCH (n1:FieldPulse {id: "<id of second entity>"})
+    OPTIONAL MATCH (n2:Person {id: "<id of third entity>"})
+    OPTIONAL MATCH p01 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n1))
+    OPTIONAL MATCH p02 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    OPTIONAL MATCH p12 = shortestPath((n1)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    RETURN n0, n1, n2, p01, p02, p12
+    LIMIT 1
+
+Rules for this shape:
+  - Set each anchor node's LABEL to the entity's ACTUAL type (Person / FieldPulse / FieldContext / Space / Community / ResonanceLink). Anchor a pulse on the base label \`:FieldPulse {id: "…"}\` and a space on the base label \`:Space {id: "…"}\`, never a subtype label — only \`FieldPulse(id)\` and \`Space(id)\` carry an id index (the \`MeSpace\`/\`WeSpace\`/pulse-subtype labels do not, so a subtype anchor forces a full label scan).
+  - Give each entity its OWN \`OPTIONAL MATCH (nX:Label {id: "…"})\`. A single required \`MATCH (a {…}), (b {…}), (c {…})\` is WRONG here: if any one id is stale the whole query returns zero rows and the user sees NOTHING — the exact failure this shape exists to prevent.
+  - Add one \`OPTIONAL MATCH pXY = shortestPath(…)\` per PAIR (two entities → one path; three → three). Cap the entity count at ~4 to keep the pair-count sane.
+  - \`shortestPath\` over OPTIONAL (possibly-null) endpoints simply yields a null path — no error — so an absent entity and an absent connection both degrade gracefully.
+  - When "you" / "me" is one of the named entities, anchor it on the user (reuse \`(user)\` or add \`OPTIONAL MATCH (nX:Person {id: $userId})\`).
+  - If an entity is named but has no id (not on canvas), match it with the same tolerant Person-name predicate described above instead of an id constraint.
+  - The runtime auth filter and edge fill-in handle visibility and any direct edges between the returned nodes; do not add visibility predicates of your own.
 
 # Adversarial input warning
 
