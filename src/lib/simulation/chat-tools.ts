@@ -439,6 +439,87 @@ async function resolveSpaceIdForContext(
 }
 
 /**
+ * A single assistant-surfaced resonance between two existing pulses, ready for
+ * the inline resonance card. Everything the user sees (`sourceName`,
+ * `targetName`, `why`, qualitative `strength`) is human-readable per Rule 1/3
+ * (kb/07); `createArgs` carries the resolved pulse ids (internal artifacts the
+ * card never renders) so the accepted write is deterministic. Always dispatches
+ * `create_resonance`.
+ */
+export interface ResonanceSuggestion {
+  /** Display label for the source pulse (its title). */
+  sourceName: string
+  /** Display label for the target pulse (its title). */
+  targetName: string
+  /** Short theme of the resonance ("a shared sense of belonging"). */
+  label: string | null
+  /** One-line description of why the two resonate, in plain words. */
+  why: string | null
+  /** Qualitative strength — never a raw score (Rule 1). */
+  strength: 'loose' | 'moderate' | 'strong'
+  /** Short verbatim quote from the dialogue that surfaced the resonance. */
+  sourceSnippet: string | null
+  /** Always create_resonance. */
+  writeTool: 'create_resonance'
+  /** Exact write args executed verbatim on accept (carries resolved ids). */
+  createArgs: Record<string, unknown>
+}
+
+/**
+ * Read the resonance-relevant state of a FieldContext in one round-trip: the
+ * FieldPulses living in it (for name→id resolution) and the set of pulse pairs
+ * that ALREADY have a ResonanceLink (for symmetric dedup). Resonances connect
+ * FieldPulses within a single context, so resolution is context-scoped. The
+ * caller authorizes the owning Space (assertCanViewSpace) before invoking.
+ */
+async function fetchContextResonanceState(
+  graph: Neo4jGraph,
+  fieldContextId: string
+): Promise<{
+  pulses: Array<{ id: string; name: string }>
+  existingPairs: Set<string>
+}> {
+  const [pulseRows, pairRows] = await Promise.all([
+    graph.query<{ id: string; name: string | null }>(
+      `
+      MATCH (:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(p:FieldPulse)
+      RETURN p.id AS id, coalesce(p.title, p.content) AS name
+      LIMIT 500
+      `,
+      { fieldContextId }
+    ),
+    graph.query<{ sourceId: string; targetId: string }>(
+      // Anchor on the context's pulses and walk inward to the ResonanceLinks
+      // that actually touch them — avoids a full label scan over every link.
+      `
+      MATCH (:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(p:FieldPulse)<-[:SOURCE|TARGET]-(l:ResonanceLink)
+      MATCH (l)-[:SOURCE]->(s:FieldPulse)
+      MATCH (l)-[:TARGET]->(t:FieldPulse)
+      RETURN DISTINCT s.id AS sourceId, t.id AS targetId
+      `,
+      { fieldContextId }
+    ),
+  ])
+
+  const pulses = (pulseRows ?? [])
+    .filter((r) => r.id && (r.name ?? '').trim())
+    .map((r) => ({ id: r.id, name: (r.name as string).trim() }))
+
+  const existingPairs = new Set<string>()
+  for (const row of pairRows ?? []) {
+    if (row.sourceId && row.targetId) {
+      existingPairs.add(resonancePairKey(row.sourceId, row.targetId))
+    }
+  }
+  return { pulses, existingPairs }
+}
+
+/** Order-independent key for a pulse pair (resonances are symmetric). */
+function resonancePairKey(a: string, b: string): string {
+  return [a, b].sort().join('|')
+}
+
+/**
  * Resolve a non-user person (PersonPulse) by name, scoped to the people living
  * in Spaces the current user owns or is a member of. Used by suggest_connections
  * to turn a conversational name into a resolvable id WITHOUT leaking people the
@@ -1595,6 +1676,209 @@ export async function buildSimulationChatTools(
               } catch (error) {
                 return toErrorResult(
                   'Failed to prepare pulse suggestions',
+                  error
+                )
+              }
+            },
+          }),
+        }
+      : {}),
+
+    // suggest_resonances surfaces meaningful connections (resonances) BETWEEN
+    // two pulses that already live in the active field context. Like
+    // suggest_pulses / suggest_connections it is READ-ONLY: it resolves the
+    // model's named pairs to ids, dedups against resonances that already exist,
+    // and returns cards. The card's accept dispatches create_resonance through
+    // the same HITL path. Field-gated (Rule 4): resonances are discovered within
+    // a context, so without one there is nothing to relate.
+    ...(ctx.fieldContextId
+      ? {
+          suggest_resonances: tool({
+            description:
+              "Surface RESONANCES — meaningful thematic connections between two pulses that ALREADY exist in the user's active field context (e.g. a goal that echoes a value, two stories that share a thread of belonging). Call this PROACTIVELY when the conversation reveals that two existing pulses speak to each other, OR when the user asks what connects or resonates here. For each pair give the two pulse names exactly as they exist in this field, a short theme (`label`), a one-line `why` in plain words, and a qualitative `strength`. READ-ONLY: it never writes — the user approves each card, which records the resonance through the same approval path as everything else. Do NOT suggest a pulse resonating with itself, pairs that are already connected, or vague/forced links just to be chatty. Both pulses must already exist here — to add a NEW pulse use suggest_pulses first. After calling, keep your reply brief (e.g. 'I noticed a couple of resonances worth recording — connect them if you'd like.').",
+            inputSchema: z.object({
+              candidates: z
+                .array(
+                  z.object({
+                    sourcePulseName: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        'Name/title of the first pulse, exactly as it exists in this field context.'
+                      ),
+                    targetPulseName: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        'Name/title of the second pulse, exactly as it exists in this field context.'
+                      ),
+                    label: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Short theme of the resonance ("a shared sense of belonging", "both build momentum").'
+                      ),
+                    why: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'One-line description of why these two resonate, in plain words inferred from the dialogue.'
+                      ),
+                    strength: z
+                      .enum(['loose', 'moderate', 'strong'])
+                      .describe(
+                        'Qualitative strength of the resonance. Never a numeric score.'
+                      ),
+                    sourceSnippet: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Short verbatim quote from the conversation that surfaced this resonance (~140 chars).'
+                      ),
+                  })
+                )
+                .min(1)
+                .max(6)
+                .describe(
+                  'Up to 6 candidate resonances surfaced from the dialogue.'
+                ),
+            }),
+            execute: async ({
+              candidates,
+            }: {
+              candidates: Array<{
+                sourcePulseName: string
+                targetPulseName: string
+                label?: string
+                why?: string
+                strength: 'loose' | 'moderate' | 'strong'
+                sourceSnippet?: string
+              }>
+            }) => {
+              logToolDispatch('suggest_resonances', ctx, {
+                count: candidates?.length ?? 0,
+              })
+              if (!ctx.currentUserId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'You need to be signed in before I can surface resonances.',
+                }
+              }
+              if (!ctx.fieldContextId) {
+                // Defensive — the tool is only registered with an active Field.
+                return {
+                  status: 'error' as const,
+                  message:
+                    'Open a field context first and I can surface resonances within it.',
+                }
+              }
+              try {
+                const graph = await initGraph()
+                const effectiveSpaceId =
+                  ctx.spaceId ||
+                  (await resolveSpaceIdForContext(graph, ctx.fieldContextId))
+                if (effectiveSpaceId) {
+                  const canView = await assertCanViewSpace(
+                    ctx,
+                    effectiveSpaceId
+                  )
+                  if (canView !== true) return canView
+                }
+
+                const { pulses, existingPairs } =
+                  await fetchContextResonanceState(graph, ctx.fieldContextId)
+
+                // Build a canonical-name → pulse lookup. When two pulses share a
+                // canonicalized title the name is ambiguous, so drop it from the
+                // resolver rather than guess (the model can disambiguate).
+                const byName = new Map<string, { id: string; name: string }>()
+                const ambiguous = new Set<string>()
+                for (const p of pulses) {
+                  const key = canonicalizeName(p.name)
+                  if (!key) continue
+                  if (byName.has(key)) ambiguous.add(key)
+                  else byName.set(key, p)
+                }
+                for (const key of ambiguous) byName.delete(key)
+
+                const seen = new Set<string>()
+                const suggestions: ResonanceSuggestion[] = []
+                let suppressedDuplicates = 0
+                let unresolved = 0
+
+                for (const candidate of candidates) {
+                  const sourceKey = canonicalizeName(
+                    candidate.sourcePulseName || ''
+                  )
+                  const targetKey = canonicalizeName(
+                    candidate.targetPulseName || ''
+                  )
+                  const source = sourceKey ? byName.get(sourceKey) : undefined
+                  const target = targetKey ? byName.get(targetKey) : undefined
+                  // Both endpoints must resolve to a real pulse in this field —
+                  // a resonance cannot be recorded against something that does
+                  // not exist yet.
+                  if (!source || !target) {
+                    unresolved++
+                    continue
+                  }
+                  if (source.id === target.id) continue
+
+                  const pairKey = resonancePairKey(source.id, target.id)
+                  if (existingPairs.has(pairKey) || seen.has(pairKey)) {
+                    suppressedDuplicates++
+                    continue
+                  }
+                  seen.add(pairKey)
+
+                  const label = (candidate.label || '').trim() || null
+                  const why = (candidate.why || '').trim() || null
+                  const sourceSnippet =
+                    (candidate.sourceSnippet || '').trim().slice(0, 200) || null
+
+                  suggestions.push({
+                    sourceName: source.name,
+                    targetName: target.name,
+                    label,
+                    why,
+                    strength: candidate.strength,
+                    sourceSnippet,
+                    writeTool: 'create_resonance',
+                    createArgs: {
+                      sourcePulseId: source.id,
+                      targetPulseId: target.id,
+                      // The active context anchors HAS_RESONANCE on accept so
+                      // the link is visible through Space-scoped reads.
+                      contextId: ctx.fieldContextId,
+                      ...(label ? { label } : {}),
+                      ...(why ? { why } : {}),
+                      // Display-only names so the approval card copy is
+                      // human-readable (Rule 1); the write re-reads titles.
+                      sourceName: source.name,
+                      targetName: target.name,
+                    },
+                  })
+                }
+
+                return {
+                  status: 'ok' as const,
+                  suggestions,
+                  suppressedDuplicates,
+                  unresolved,
+                  fieldContextTitle: ctx.fieldContextTitle ?? null,
+                  message:
+                    suggestions.length > 0
+                      ? `Surfacing ${suggestions.length} ${
+                          suggestions.length === 1
+                            ? 'resonance'
+                            : 'resonances'
+                        } you might want to record.`
+                      : 'No new resonances to surface right now.',
+                }
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to prepare resonance suggestions',
                   error
                 )
               }

@@ -26,6 +26,7 @@ export type WriteToolName =
   | 'create_person'
   | 'update_person'
   | 'create_connection'
+  | 'create_resonance'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -52,6 +53,7 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'create_person',
   'update_person',
   'create_connection',
+  'create_resonance',
 ])
 
 function stableStringify(value: unknown): string {
@@ -170,6 +172,15 @@ export function describeWriteAction(
       const why = String(args.why || '').trim()
       const whyClause = why ? ` — "${why}"` : ''
       return `Connect ${fromClause}${to}${whyClause}`
+    }
+    case 'create_resonance': {
+      // Names only (Rule 1). The suggestion card resolves pulse titles and
+      // passes them as sourceName/targetName; never echo a pulse id.
+      const source = String(args.sourceName || '').trim() || 'a pulse'
+      const target = String(args.targetName || '').trim() || 'another pulse'
+      const why = String(args.why || args.label || '').trim()
+      const whyClause = why ? ` — "${why}"` : ''
+      return `Connect "${source}" and "${target}" as a resonance${whyClause}`
     }
     case 'update_person': {
       const first = String(args.firstName || '').trim()
@@ -465,7 +476,10 @@ async function canEditContext(
   const query = `
     MATCH (space:Space)-[:HAS_CONTEXT]->(context:FieldContext {id: $contextId})
     OPTIONAL MATCH (owner:Person)-[:OWNS]->(space)
-    OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person)
+    // Only ADMIN/MEMBER can edit — GUEST is view-only (kb/02). Mirrors the
+    // canonical canEditContent in space-permissions.ts.
+    OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:Person)
+    WHERE sm.role IN ['ADMIN', 'MEMBER']
     WITH [id IN collect(DISTINCT owner.id) WHERE id IS NOT NULL] AS ownerIds,
          [id IN collect(DISTINCT member.id) WHERE id IS NOT NULL] AS memberIds
     RETURN ($currentUserId IN ownerIds OR $currentUserId IN memberIds) AS allowed
@@ -488,7 +502,10 @@ async function canEditPulse(
   const query = `
     MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(pulse:FieldPulse {id: $pulseId})
     OPTIONAL MATCH (owner:Person)-[:OWNS]->(space)
-    OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person)
+    // Only ADMIN/MEMBER can edit — GUEST is view-only (kb/02). Mirrors the
+    // canonical canEditContent in space-permissions.ts.
+    OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member:Person)
+    WHERE sm.role IN ['ADMIN', 'MEMBER']
     WITH [id IN collect(DISTINCT owner.id) WHERE id IS NOT NULL] AS ownerIds,
          [id IN collect(DISTINCT member.id) WHERE id IS NOT NULL] AS memberIds
     RETURN ($currentUserId IN ownerIds OR $currentUserId IN memberIds) AS allowed
@@ -1944,6 +1961,184 @@ async function createConnectionAuthorized(
   }
 }
 
+interface CreateResonanceAuthorizedInput {
+  sourcePulseId?: string
+  targetPulseId?: string
+  // The active field context — preferred anchor for HAS_RESONANCE so the link is
+  // visible through Space-scoped reads. The write falls back to any context that
+  // holds both pulses if this is absent or doesn't hold both.
+  contextId?: string
+  label?: string
+  why?: string
+  // sourceName/targetName are display-only (used for the approval card copy via
+  // describeWriteAction); the write itself reads titles from the graph.
+  sourceName?: string
+  targetName?: string
+}
+
+/**
+ * Promote an assistant-surfaced resonance between two existing pulses into a
+ * ResonanceLink. Mirrors the accept-suggestion endpoint's link creation, but is
+ * driven directly by the HITL card (the card IS the gate) so it does not require
+ * a pre-existing ResonanceSuggestion. Both endpoints are authorized via
+ * canEditPulse; the write is idempotent (symmetric dedup) and logs an activity
+ * entry attributed to the acting user.
+ */
+async function createResonanceAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreateResonanceAuthorizedInput
+  const sourcePulseId = String(input.sourcePulseId || '').trim()
+  const targetPulseId = String(input.targetPulseId || '').trim()
+  const contextId = String(input.contextId || '').trim() || null
+  // ResonanceLink.label is non-null in the schema (String!), so never persist
+  // null — fall back to a generic theme when the model gave only a `why`.
+  const label = (input.label || '').trim() || 'Resonance'
+  const why = (input.why || '').trim() || null
+
+  if (!sourcePulseId || !targetPulseId) {
+    return {
+      success: false,
+      message: 'Two pulses are needed to record a resonance.',
+    }
+  }
+  if (sourcePulseId === targetPulseId) {
+    return {
+      success: false,
+      message: 'A pulse cannot resonate with itself.',
+    }
+  }
+
+  // Authorize BOTH endpoints — each pulse must live in a Space the user can
+  // edit (owner / ADMIN / MEMBER). Same gate every other pulse write uses.
+  const [canSource, canTarget] = await Promise.all([
+    canEditPulse(graph, currentUserId, sourcePulseId),
+    canEditPulse(graph, currentUserId, targetPulseId),
+  ])
+  if (!canSource || !canTarget) {
+    return {
+      success: false,
+      message: 'You can only connect pulses in spaces you belong to.',
+    }
+  }
+
+  const linkId = `rl_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+
+  // Resonances are semantically symmetric — dedup in BOTH directions. If a link
+  // already exists, treat as an idempotent success rather than duplicating it.
+  // The Log description is built from the pulses' own titles server-side so no
+  // id ever reaches the activity feed (Rule 1).
+  const rows = await graph.query<{
+    sourceName: string | null
+    targetName: string | null
+    alreadyLinked: boolean
+    anchored: boolean
+  }>(
+    `
+    MATCH (source:FieldPulse {id: $sourcePulseId})
+    MATCH (target:FieldPulse {id: $targetPulseId})
+    MATCH (actor:Person {id: $currentUserId})
+
+    // Anchor context for HAS_RESONANCE (required for the link to be visible
+    // through Space-scoped reads). Prefer the active context when it holds both
+    // pulses, else any context that holds both.
+    OPTIONAL MATCH (preferred:FieldContext {id: $contextId})
+    WHERE (preferred)-[:HAS_PULSE]->(source) AND (preferred)-[:HAS_PULSE]->(target)
+    OPTIONAL MATCH (shared:FieldContext)-[:HAS_PULSE]->(source)
+    WHERE (shared)-[:HAS_PULSE]->(target)
+
+    // Symmetric existence check, anchored on the two (index-bound) pulses — a
+    // ResonanceLink touching BOTH is a duplicate regardless of direction.
+    OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(existing:ResonanceLink)-[:SOURCE|TARGET]->(target)
+
+    WITH source, target, actor, existing,
+         coalesce(preferred, shared) AS ctx,
+         coalesce(source.title, source.content, 'a pulse') AS sourceLabel,
+         coalesce(target.title, target.content, 'another pulse') AS targetLabel
+    FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
+      CREATE (link:ResonanceLink {
+        id: $linkId,
+        label: $label,
+        description: $why,
+        status: 'confirmed',
+        reviewedBy: $currentUserId,
+        reviewedAt: datetime(),
+        createdAt: datetime(),
+        createdVia: 'assistant'
+      })
+      CREATE (link)-[:SOURCE]->(source)
+      CREATE (link)-[:TARGET]->(target)
+      // Anchor to the shared context so the resonance is visible (HAS_RESONANCE).
+      FOREACH (c IN CASE WHEN ctx IS NULL THEN [] ELSE [ctx] END |
+        CREATE (c)-[:HAS_RESONANCE]->(link)
+      )
+      CREATE (log:Log {
+        id: $logId,
+        description: 'Recorded a resonance between "' + sourceLabel + '" and "' + targetLabel + '"',
+        createdAt: datetime()
+      })
+      CREATE (log)-[:CREATED_BY]->(actor)
+      CREATE (log)-[:LOGGED_FOR]->(source)
+      CREATE (log)-[:LOGGED_FOR]->(target)
+    )
+    RETURN sourceLabel AS sourceName,
+           targetLabel AS targetName,
+           existing IS NOT NULL AS alreadyLinked,
+           ctx IS NOT NULL AS anchored
+    LIMIT 1
+    `,
+    {
+      sourcePulseId,
+      targetPulseId,
+      currentUserId,
+      contextId,
+      linkId,
+      label,
+      why,
+      logId,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: 'Could not find both pulses to connect.',
+    }
+  }
+
+  const sourceName = rows[0].sourceName || 'a pulse'
+  const targetName = rows[0].targetName || 'another pulse'
+  if (!rows[0].alreadyLinked && !rows[0].anchored) {
+    // Created without a HAS_RESONANCE anchor — the two pulses share no common
+    // FieldContext, so the link will not surface through Space-scoped reads.
+    // Should not happen via suggest_resonances (it resolves both within one
+    // context); log for ops if it ever does.
+    console.warn(
+      `[create_resonance] Linked "${sourceName}" and "${targetName}" with no shared context — resonance will be invisible until anchored.`
+    )
+  }
+  if (rows[0].alreadyLinked) {
+    return {
+      success: true,
+      sourceName,
+      targetName,
+      alreadyLinked: true,
+      message: `"${sourceName}" and "${targetName}" are already connected.`,
+    }
+  }
+
+  return {
+    success: true,
+    sourceName,
+    targetName,
+    why,
+    message: `Connected "${sourceName}" and "${targetName}" as a resonance.`,
+  }
+}
+
 async function deleteMyProfileAuthorized(
   graph: Neo4jGraph,
   currentUserId: string,
@@ -2167,6 +2362,10 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'create_connection') {
     return await createConnectionAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_resonance') {
+    return await createResonanceAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {

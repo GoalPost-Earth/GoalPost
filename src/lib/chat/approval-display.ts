@@ -27,6 +27,7 @@ export function entityKindLabel(
 ): string {
   if (tool === 'create_person') return 'person'
   if (tool === 'create_connection') return 'connection'
+  if (tool === 'create_resonance') return 'resonance'
   if (tool === 'create_pulse') {
     const pulseType = String(args.pulseType ?? '').trim()
     switch (pulseType) {
@@ -89,6 +90,18 @@ const CONNECTION_FIELDS: FieldSpec[] = [
     alwaysShow: true,
   },
   { fieldName: 'interests', label: 'Shared interests' },
+]
+
+const RESONANCE_FIELDS: FieldSpec[] = [
+  { fieldName: 'label', label: 'Theme' },
+  {
+    // The plain-words "why these resonate" — always shown so the user can
+    // refine or add it before recording, even when none was inferred.
+    fieldName: 'why',
+    label: 'Why they resonate',
+    multiline: true,
+    alwaysShow: true,
+  },
 ]
 
 const PULSE_COMMON_FIELDS: FieldSpec[] = [
@@ -157,6 +170,11 @@ export function getEditableFields(
   }
   if (tool === 'create_connection') {
     return CONNECTION_FIELDS.map((spec) => specToField(spec, args)).filter(
+      (f): f is EditableField => f !== null
+    )
+  }
+  if (tool === 'create_resonance') {
+    return RESONANCE_FIELDS.map((spec) => specToField(spec, args)).filter(
       (f): f is EditableField => f !== null
     )
   }
