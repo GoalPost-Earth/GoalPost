@@ -9,7 +9,7 @@ import type {
   ExternalCallbacks,
 } from '@neo4j-nvl/base'
 import type { InteractiveNvlWrapperProps } from '@neo4j-nvl/react'
-import { useNvlPinchZoom } from '@/hooks'
+import { useNvlTouchGestures } from '@/hooks'
 import { cn } from '@/lib/utils'
 
 export interface NvlCanvasProps {
@@ -321,12 +321,13 @@ export function NvlCanvas({
     }
   }, [triggerReLayout])
 
-  // Pinch-to-zoom for touch devices (iPad / phones). NVL's built-in zoom only
-  // listens to `wheel` events, which touch never emits for a pinch — this hook
-  // bridges the gesture into NVL's own setZoom(). The returned callback ref
-  // goes on the wrapping element, which carries `touch-action: none` (below)
-  // so the browser hands us the gesture.
-  const pinchSurfaceRef = useNvlPinchZoom({ nvlRef: wrapperRef, onScaleChange })
+  // Touch gestures for iPad / phones: two-finger pinch-to-zoom plus one-finger
+  // pan on empty canvas. NVL's built-in zoom only listens to `wheel` (never
+  // emitted by a touch pinch) and it doesn't pan on a single-finger touch
+  // drag — this hook bridges both into NVL's own setZoom()/setPan(). The
+  // returned callback ref goes on the wrapping element, which carries
+  // `touch-action: none` (below) so the browser hands us the gesture.
+  const touchSurfaceRef = useNvlTouchGestures({ nvlRef: wrapperRef, onScaleChange })
 
   return (
     <main
@@ -355,11 +356,12 @@ export function NvlCanvas({
         </>
       )}
 
-      {/* touch-action:none lets our pinch handler claim the gesture before the
-          browser turns it into a native page zoom; NVL drives pan/drag in JS so
-          disabling native touch scrolling here is correct. */}
+      {/* touch-action:none lets our touch-gesture handler claim pinch and
+          single-finger pan before the browser turns them into a native page
+          zoom/scroll; NVL drives pan/drag/zoom in JS so disabling native touch
+          scrolling here is correct. */}
       <div
-        ref={pinchSurfaceRef}
+        ref={touchSurfaceRef}
         className="absolute inset-0"
         style={{ touchAction: 'none' }}
       >

@@ -21,6 +21,15 @@ interface GraphVisualizerProps {
 export interface NvlRefHandle {
   getScale: () => number
   setZoom: (zoom: number) => void
+  /** Current viewport pan in world coordinates. */
+  getPan: () => { x: number; y: number }
+  /** Sets the viewport pan in world coordinates. */
+  setPan: (panX: number, panY: number) => void
+  /** Hit-tests a pointer position against nodes/relationships (touch pan gating). */
+  getHits: (
+    evt: { clientX: number; clientY: number },
+    targets?: ('node' | 'relationship')[]
+  ) => { nvlTargets: { nodes: unknown[]; relationships: unknown[] } }
   fit: (nodeIds: string[], opts?: Record<string, unknown>) => void
   getNodes: () => Node[]
   /** Re-kicks the layout simulation. Required after mount because NVL's force layout doesn't always converge from a cold start without an explicit nudge. */
