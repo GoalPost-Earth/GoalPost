@@ -28,6 +28,7 @@ export function entityKindLabel(
   if (tool === 'create_person') return 'person'
   if (tool === 'create_connection') return 'connection'
   if (tool === 'create_resonance') return 'resonance'
+  if (tool === 'create_resonant_pulse') return 'resonance'
   if (tool === 'create_pulse') {
     const pulseType = String(args.pulseType ?? '').trim()
     switch (pulseType) {
@@ -173,7 +174,7 @@ export function getEditableFields(
       (f): f is EditableField => f !== null
     )
   }
-  if (tool === 'create_resonance') {
+  if (tool === 'create_resonance' || tool === 'create_resonant_pulse') {
     return RESONANCE_FIELDS.map((spec) => specToField(spec, args)).filter(
       (f): f is EditableField => f !== null
     )

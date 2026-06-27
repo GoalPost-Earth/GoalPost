@@ -27,6 +27,7 @@ export type WriteToolName =
   | 'update_person'
   | 'create_connection'
   | 'create_resonance'
+  | 'create_resonant_pulse'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -54,6 +55,7 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'update_person',
   'create_connection',
   'create_resonance',
+  'create_resonant_pulse',
 ])
 
 function stableStringify(value: unknown): string {
@@ -181,6 +183,18 @@ export function describeWriteAction(
       const why = String(args.why || args.label || '').trim()
       const whyClause = why ? ` — "${why}"` : ''
       return `Connect "${source}" and "${target}" as a resonance${whyClause}`
+    }
+    case 'create_resonant_pulse': {
+      // Names only (Rule 1). The card resolves the existing pulse title and
+      // carries the new pulse's title; never echo an id.
+      const newName =
+        String(args.title || args.newPulseName || '').trim() || 'a new pulse'
+      const existing =
+        String(args.resonateWithName || '').trim() || 'another pulse'
+      const kind = pulseTypeLabel(args.pulseType)
+      const why = String(args.why || args.label || '').trim()
+      const whyClause = why ? ` — "${why}"` : ''
+      return `Capture ${kind} "${newName}" and connect it to "${existing}" as a resonance${whyClause}`
     }
     case 'update_person': {
       const first = String(args.firstName || '').trim()
@@ -2139,6 +2153,107 @@ async function createResonanceAuthorized(
   }
 }
 
+interface CreateResonantPulseAuthorizedInput {
+  // New pulse (created via createPulseAuthorized — inherits its validation,
+  // type allow-list, idempotency, auth and logging).
+  pulseType?: string
+  title?: string
+  content?: string
+  contextId?: string
+  contextTitle?: string
+  spaceName?: string
+  // Existing pulse to resonate the new one with.
+  resonateWithPulseId?: string
+  resonateWithName?: string
+  // Resonance metadata.
+  label?: string
+  why?: string
+}
+
+/**
+ * Capture a NEW pulse from the conversation AND connect it as a resonance to an
+ * EXISTING pulse, in one human-approved action. Composes the two already-audited
+ * authorized writes: createPulseAuthorized (creates/enriches the pulse, gated on
+ * the context) then createResonanceAuthorized (links it, gated on both pulses).
+ * Both steps log; the resonance is anchored to the context (HAS_RESONANCE).
+ *
+ * Not atomic by design: if the link step fails the captured pulse still stands
+ * (a valid outcome — the user can link it later), and we say so rather than
+ * rolling back a legitimately-created pulse.
+ */
+async function createResonantPulseAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreateResonantPulseAuthorizedInput
+  const resonateWithPulseId = String(input.resonateWithPulseId || '').trim()
+  if (!resonateWithPulseId) {
+    return {
+      success: false,
+      message: 'No existing pulse to connect the new one to.',
+    }
+  }
+
+  // 1. Create (or idempotently enrich) the new pulse. Pulse-level fields only —
+  //    the resonance `why`/`label` belong to the link, not the pulse body.
+  const pulseResult = await createPulseAuthorized(graph, currentUserId, {
+    pulseType: input.pulseType,
+    title: input.title,
+    content: input.content,
+    contextId: input.contextId,
+    contextTitle: input.contextTitle,
+    spaceName: input.spaceName,
+  })
+  if (!pulseResult.success) return pulseResult
+
+  const newPulseId =
+    typeof pulseResult.pulseId === 'string' ? pulseResult.pulseId : ''
+  const newName =
+    typeof pulseResult.title === 'string' && pulseResult.title.trim()
+      ? pulseResult.title.trim()
+      : (input.title || 'the new pulse').trim()
+  if (!newPulseId) {
+    return {
+      success: false,
+      message: 'Could not create the pulse to connect.',
+    }
+  }
+
+  // 2. Link the new pulse to the existing one via the reviewed resonance write.
+  const resoResult = await createResonanceAuthorized(graph, currentUserId, {
+    sourcePulseId: newPulseId,
+    targetPulseId: resonateWithPulseId,
+    contextId: input.contextId,
+    label: input.label,
+    why: input.why,
+  })
+
+  const existingName =
+    typeof resoResult.targetName === 'string' && resoResult.targetName.trim()
+      ? resoResult.targetName.trim()
+      : (input.resonateWithName || 'the other pulse').trim()
+
+  if (!resoResult.success) {
+    // Pulse created, link failed — surface the partial outcome honestly.
+    return {
+      success: true,
+      partial: true,
+      pulseId: newPulseId,
+      sourceName: newName,
+      message: `Captured "${newName}", but couldn't connect it as a resonance — you can link it from the field.`,
+    }
+  }
+
+  return {
+    success: true,
+    pulseId: newPulseId,
+    sourceName: newName,
+    targetName: existingName,
+    message: `Captured "${newName}" and connected it to "${existingName}" as a resonance.`,
+  }
+}
+
 async function deleteMyProfileAuthorized(
   graph: Neo4jGraph,
   currentUserId: string,
@@ -2366,6 +2481,10 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'create_resonance') {
     return await createResonanceAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_resonant_pulse') {
+    return await createResonantPulseAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {

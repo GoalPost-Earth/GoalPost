@@ -466,6 +466,37 @@ export interface ResonanceSuggestion {
 }
 
 /**
+ * A single assistant-surfaced "capture and resonate" candidate: a NEW pulse the
+ * dialogue surfaced, to be created AND connected as a resonance to an EXISTING
+ * pulse in the active field. Powers the conversation↔pulse card. Everything the
+ * user sees is human-readable (Rule 1/3); `createArgs` carries the resolved
+ * existing-pulse id for the deterministic write. Always dispatches
+ * `create_resonant_pulse`.
+ */
+export interface ResonantPulseSuggestion {
+  /** Title of the new pulse to capture from the conversation. */
+  newPulseName: string
+  /** Living-system type of the new pulse. */
+  newPulseType: SuggestionTypeKey
+  /** User-facing label for the new pulse's type chip. */
+  newPulseTypeLabel: string
+  /** Title of the existing pulse it resonates with. */
+  existingPulseName: string
+  /** Short theme of the resonance. */
+  label: string | null
+  /** One-line plain-words description of why they resonate. */
+  why: string | null
+  /** Qualitative strength — never a raw score (Rule 1). */
+  strength: 'loose' | 'moderate' | 'strong'
+  /** Short verbatim quote from the dialogue that surfaced it. */
+  sourceSnippet: string | null
+  /** Always create_resonant_pulse. */
+  writeTool: 'create_resonant_pulse'
+  /** Exact write args executed verbatim on accept (carries resolved ids). */
+  createArgs: Record<string, unknown>
+}
+
+/**
  * Read the resonance-relevant state of a FieldContext in one round-trip: the
  * FieldPulses living in it (for name→id resolution) and the set of pulse pairs
  * that ALREADY have a ResonanceLink (for symmetric dedup). Resonances connect
@@ -1775,16 +1806,20 @@ export async function buildSimulationChatTools(
               }
               try {
                 const graph = await initGraph()
+                // Fail CLOSED: if the owning Space can't be resolved we cannot
+                // authorize the read, so deny rather than expose pulse titles.
                 const effectiveSpaceId =
                   ctx.spaceId ||
                   (await resolveSpaceIdForContext(graph, ctx.fieldContextId))
-                if (effectiveSpaceId) {
-                  const canView = await assertCanViewSpace(
-                    ctx,
-                    effectiveSpaceId
-                  )
-                  if (canView !== true) return canView
+                if (!effectiveSpaceId) {
+                  return {
+                    status: 'error' as const,
+                    message:
+                      "I couldn't resolve which space this field belongs to, so I can't surface resonances here.",
+                  }
                 }
+                const canView = await assertCanViewSpace(ctx, effectiveSpaceId)
+                if (canView !== true) return canView
 
                 const { pulses, existingPairs } =
                   await fetchContextResonanceState(graph, ctx.fieldContextId)
@@ -1875,6 +1910,209 @@ export async function buildSimulationChatTools(
                             : 'resonances'
                         } you might want to record.`
                       : 'No new resonances to surface right now.',
+                }
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to prepare resonance suggestions',
+                  error
+                )
+              }
+            },
+          }),
+        }
+      : {}),
+
+    // suggest_resonant_pulses is the conversation↔pulse path: when something the
+    // user SAYS resonates with an existing pulse but isn't a pulse yet, this
+    // surfaces a "capture and connect" card — create the new pulse AND link it
+    // as a resonance to the existing one. READ-ONLY; accept dispatches the
+    // compound create_resonant_pulse write. Field-gated (Rule 4).
+    ...(ctx.fieldContextId
+      ? {
+          suggest_resonant_pulses: tool({
+            description:
+              "Surface a CAPTURE-AND-RESONATE card when something the user SAYS in the conversation clearly resonates with a pulse that ALREADY exists in their active field, but the thing they said is not yet a pulse. Each candidate proposes creating a NEW pulse from the dialogue (its type + a concise title + optional one-line content) AND connecting it as a resonance to the named existing pulse. Call this PROACTIVELY when the dialogue surfaces a fresh value/goal/story/care/resource that echoes an existing pulse. READ-ONLY: the user approves each card, which creates the pulse and records the resonance through the same approval path. Use suggest_resonances instead when BOTH pulses already exist; use suggest_pulses when there is nothing existing to resonate with. Do NOT force a connection or duplicate an existing pulse. After calling, keep your reply brief.",
+            inputSchema: z.object({
+              candidates: z
+                .array(
+                  z.object({
+                    newPulseName: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        'A concise title for the NEW pulse to capture from the dialogue ("A need for belonging").'
+                      ),
+                    newPulseType: z
+                      .enum(['goal', 'resource', 'story', 'care', 'value'])
+                      .describe(
+                        'Living-system type of the new pulse that best fits the active field.'
+                      ),
+                    newPulseContent: z
+                      .string()
+                      .optional()
+                      .describe('Optional one-line body for the new pulse.'),
+                    existingPulseName: z
+                      .string()
+                      .min(1)
+                      .describe(
+                        'Name/title of the EXISTING pulse it resonates with, exactly as it exists in this field context.'
+                      ),
+                    label: z
+                      .string()
+                      .optional()
+                      .describe('Short theme of the resonance.'),
+                    why: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'One-line description of why they resonate, in plain words.'
+                      ),
+                    strength: z
+                      .enum(['loose', 'moderate', 'strong'])
+                      .describe(
+                        'Qualitative strength of the resonance. Never a numeric score.'
+                      ),
+                    sourceSnippet: z
+                      .string()
+                      .optional()
+                      .describe(
+                        'Short verbatim quote from the conversation that surfaced this (~140 chars).'
+                      ),
+                  })
+                )
+                .min(1)
+                .max(6)
+                .describe(
+                  'Up to 6 capture-and-resonate candidates surfaced from the dialogue.'
+                ),
+            }),
+            execute: async ({
+              candidates,
+            }: {
+              candidates: Array<{
+                newPulseName: string
+                newPulseType: 'goal' | 'resource' | 'story' | 'care' | 'value'
+                newPulseContent?: string
+                existingPulseName: string
+                label?: string
+                why?: string
+                strength: 'loose' | 'moderate' | 'strong'
+                sourceSnippet?: string
+              }>
+            }) => {
+              logToolDispatch('suggest_resonant_pulses', ctx, {
+                count: candidates?.length ?? 0,
+              })
+              if (!ctx.currentUserId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'You need to be signed in before I can surface resonances.',
+                }
+              }
+              if (!ctx.fieldContextId) {
+                return {
+                  status: 'error' as const,
+                  message:
+                    'Open a field context first and I can surface resonances within it.',
+                }
+              }
+              try {
+                const graph = await initGraph()
+                // Fail CLOSED: if the owning Space can't be resolved we cannot
+                // authorize the read, so deny rather than expose pulse titles.
+                const effectiveSpaceId =
+                  ctx.spaceId ||
+                  (await resolveSpaceIdForContext(graph, ctx.fieldContextId))
+                if (!effectiveSpaceId) {
+                  return {
+                    status: 'error' as const,
+                    message:
+                      "I couldn't resolve which space this field belongs to, so I can't surface resonances here.",
+                  }
+                }
+                const canView = await assertCanViewSpace(ctx, effectiveSpaceId)
+                if (canView !== true) return canView
+
+                const { pulses } = await fetchContextResonanceState(
+                  graph,
+                  ctx.fieldContextId
+                )
+                const byName = new Map<string, { id: string; name: string }>()
+                const ambiguous = new Set<string>()
+                for (const p of pulses) {
+                  const key = canonicalizeName(p.name)
+                  if (!key) continue
+                  if (byName.has(key)) ambiguous.add(key)
+                  else byName.set(key, p)
+                }
+                for (const key of ambiguous) byName.delete(key)
+
+                const suggestions: ResonantPulseSuggestion[] = []
+                let unresolved = 0
+
+                for (const candidate of candidates) {
+                  const typeConfig = SUGGESTION_TYPES[candidate.newPulseType]
+                  if (!typeConfig || !typeConfig.pulseType) continue
+                  const newName = (candidate.newPulseName || '').trim()
+                  if (!newName) continue
+
+                  const existing = byName.get(
+                    canonicalizeName(candidate.existingPulseName || '')
+                  )
+                  // The existing side must resolve to a real pulse in this field.
+                  if (!existing) {
+                    unresolved++
+                    continue
+                  }
+
+                  const label = (candidate.label || '').trim() || null
+                  const why = (candidate.why || '').trim() || null
+                  const content = (candidate.newPulseContent || '').trim()
+                  const sourceSnippet =
+                    (candidate.sourceSnippet || '').trim().slice(0, 200) || null
+
+                  suggestions.push({
+                    newPulseName: newName,
+                    newPulseType: candidate.newPulseType,
+                    newPulseTypeLabel: typeConfig.label,
+                    existingPulseName: existing.name,
+                    label,
+                    why,
+                    strength: candidate.strength,
+                    sourceSnippet,
+                    writeTool: 'create_resonant_pulse',
+                    createArgs: {
+                      pulseType: typeConfig.pulseType,
+                      title: newName,
+                      ...(content ? { content } : {}),
+                      contextId: ctx.fieldContextId,
+                      ...(ctx.fieldContextTitle
+                        ? { contextTitle: ctx.fieldContextTitle }
+                        : {}),
+                      ...(ctx.spaceName ? { spaceName: ctx.spaceName } : {}),
+                      resonateWithPulseId: existing.id,
+                      // Display-only names so the card copy is human-readable
+                      // (Rule 1); the write re-reads titles from the graph.
+                      resonateWithName: existing.name,
+                      newPulseName: newName,
+                      ...(label ? { label } : {}),
+                      ...(why ? { why } : {}),
+                    },
+                  })
+                }
+
+                return {
+                  status: 'ok' as const,
+                  suggestions,
+                  unresolved,
+                  fieldContextTitle: ctx.fieldContextTitle ?? null,
+                  message:
+                    suggestions.length > 0
+                      ? `Surfacing ${suggestions.length} ${
+                          suggestions.length === 1 ? 'resonance' : 'resonances'
+                        } worth capturing.`
+                      : 'No new resonances to capture right now.',
                 }
               } catch (error) {
                 return toErrorResult(
