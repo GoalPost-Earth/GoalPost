@@ -12,6 +12,13 @@ import { Workflow } from 'lucide-react'
 import remarkGfm from 'remark-gfm'
 import { useBloomOverlay } from '@/components/studio/bloom-overlay-context'
 import { useStudioCanvas } from '@/components/studio/studio-canvas-context'
+import {
+  PERSON_MARKER,
+  BLOOM_MARKER,
+  stripMarker,
+  collectPayloads,
+  parsePersonElements,
+} from './marker-strip'
 import type {
   NVLNode,
   NVLRelationship,
@@ -33,53 +40,6 @@ import type {
  * pattern is the same hook PersonCard already uses — proven and
  * isolated.
  */
-
-interface MarkerExtraction {
-  json: string
-  endIndex: number
-}
-
-/**
- * Find the next balanced JSON object inside `text` that starts at or
- * after `searchFrom`. Skips strings + escaped quotes correctly. Returns
- * null when no closing brace is found (streaming is still in flight).
- */
-function extractBalancedJson(
-  text: string,
-  searchFrom: number
-): MarkerExtraction | null {
-  const braceStart = text.indexOf('{', searchFrom)
-  if (braceStart === -1) return null
-
-  let braceCount = 0
-  let inString = false
-  let escapeNext = false
-
-  for (let i = braceStart; i < text.length; i++) {
-    const ch = text[i]
-    if (escapeNext) {
-      escapeNext = false
-      continue
-    }
-    if (ch === '\\') {
-      escapeNext = true
-      continue
-    }
-    if (ch === '"') {
-      inString = !inString
-      continue
-    }
-    if (inString) continue
-    if (ch === '{') braceCount++
-    else if (ch === '}') {
-      braceCount--
-      if (braceCount === 0) {
-        return { json: text.substring(braceStart, i + 1), endIndex: i + 1 }
-      }
-    }
-  }
-  return null
-}
 
 interface BloomOverlayPayload {
   summary: string
@@ -104,87 +64,6 @@ function parseBloomPayload(raw: string): BloomOverlayPayload | null {
   }
 }
 
-const PERSON_MARKER = 'PERSON_PROFILE_FOUND:'
-const BLOOM_MARKER = 'BLOOM_GRAPH_OVERLAY:'
-
-/**
- * Strip every well-formed marker + JSON block of `marker` from `text`.
- * Markers whose JSON isn't yet closed (mid-stream) are left alone so the
- * partial token doesn't briefly flash before being cleaned up.
- */
-function stripMarker(text: string, marker: string): string {
-  if (!text.includes(marker)) return text
-  let cleaned = text
-  let cursor = cleaned.indexOf(marker)
-  while (cursor !== -1) {
-    const extraction = extractBalancedJson(cleaned, cursor + marker.length)
-    if (!extraction) break
-    cleaned =
-      cleaned.substring(0, cursor) + cleaned.substring(extraction.endIndex)
-    cursor = cleaned.indexOf(marker)
-  }
-  return cleaned
-}
-
-/**
- * Walk through `text` and return every closed JSON payload that follows
- * `marker`. Used by the Bloom side-effect that pushes overlays into
- * context — we want every overlay the model emitted, not just the
- * first.
- */
-function collectPayloads(text: string, marker: string): string[] {
-  const payloads: string[] = []
-  let cursor = text.indexOf(marker)
-  while (cursor !== -1) {
-    const extraction = extractBalancedJson(text, cursor + marker.length)
-    if (!extraction) break
-    payloads.push(extraction.json)
-    cursor = text.indexOf(marker, extraction.endIndex)
-  }
-  return payloads
-}
-
-interface ParsedElement {
-  type: 'text' | 'person'
-  content: string | PersonProfileData
-}
-
-/**
- * Split `rawText` on PERSON_PROFILE_FOUND markers (keeping the existing
- * inline-PersonCard render behavior). The Bloom marker is handled
- * separately as a side effect — it has no inline visual.
- */
-function parsePersonElements(rawText: string, cleaned: string): ParsedElement[] {
-  const elements: ParsedElement[] = []
-  const parts = rawText.split(PERSON_MARKER)
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i]
-    if (i === 0) {
-      if (part.trim()) elements.push({ type: 'text', content: part.trim() })
-      continue
-    }
-    const trimmed = part.trimStart()
-    if (trimmed.startsWith('{')) {
-      const extraction = extractBalancedJson(trimmed, 0)
-      if (extraction) {
-        try {
-          const person = JSON.parse(extraction.json) as PersonProfileData
-          elements.push({ type: 'person', content: person })
-        } catch (err) {
-          console.error('Failed to parse person JSON:', err)
-        }
-        const remainder = trimmed.substring(extraction.endIndex).trim()
-        if (remainder) elements.push({ type: 'text', content: remainder })
-      } else if (trimmed) {
-        elements.push({ type: 'text', content: trimmed })
-      }
-    } else if (trimmed) {
-      elements.push({ type: 'text', content: trimmed })
-    }
-  }
-  return elements.length > 0 ? elements : [{ type: 'text', content: cleaned }]
-}
-
 export const EnhancedTextPart = memo(function EnhancedTextPart() {
   const { text: rawTextContent, status } = useMessagePartText()
   const isRunning = status.type === 'running'
@@ -201,16 +80,20 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
     []
   )
 
-  // Strip both marker types from the visible text. Person markers are
-  // still split out below so PersonCard can render inline.
-  const personStripped = useMemo(
-    () => stripMarker(rawTextContent, PERSON_MARKER),
+  // Hide the Bloom overlay marker first — including a still-streaming or
+  // never-closed payload — so the raw NVL JSON never appears in the bubble
+  // (GOAL-280). Person markers are stripped next and split out below so
+  // PersonCard can still render inline; doing Bloom first means the payload is
+  // gone even in the PersonCard branch.
+  const bloomStripped = useMemo(
+    () => stripMarker(rawTextContent, BLOOM_MARKER, true),
     [rawTextContent]
   )
-  const textContent = useMemo(
-    () => stripMarker(personStripped, BLOOM_MARKER).trim(),
-    [personStripped]
+  const personStripped = useMemo(
+    () => stripMarker(bloomStripped, PERSON_MARKER),
+    [bloomStripped]
   )
+  const textContent = useMemo(() => personStripped.trim(), [personStripped])
 
   // Bloom-overlay side effect — runs whenever a fresh BLOOM_GRAPH_OVERLAY
   // payload appears. Dedup via a ref-tracked set keyed on the raw JSON
@@ -254,9 +137,14 @@ export const EnhancedTextPart = memo(function EnhancedTextPart() {
     [setOverlay, setCanvasOpen, setCanvasView]
   )
 
+  // Parse person cards off `bloomStripped` (Bloom marker already hidden, PERSON
+  // marker still present) — NOT `personStripped`, which has the PERSON marker
+  // stripped out, leaving nothing for parsePersonElements to split on (that
+  // silently broke card rendering). `textContent` is the fully-stripped
+  // fallback when no marker is present.
   const parsedContent = useMemo(
-    () => parsePersonElements(personStripped, textContent),
-    [personStripped, textContent]
+    () => parsePersonElements(bloomStripped, textContent),
+    [bloomStripped, textContent]
   )
 
   const hasPersonProfile = parsedContent.some((el) => el.type === 'person')
