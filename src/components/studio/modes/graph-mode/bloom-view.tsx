@@ -70,22 +70,25 @@ import {
  * deprecated and removed; Bloom is now the sole graph surface.)
  */
 
-// Warm the NVL chunk as soon as this module is parsed. The fetch runs in
-// parallel with the Apollo queries above so by the time the cache resolves
-// the chunk is cached and next/dynamic skips the "Preparing canvas" flash
-// that otherwise stacks behind the data skeleton.
-const visualizerChunk = import('@/components/graph/visualizer').then(
-  (mod) => mod.GraphVisualizer
+// NVL renders only in the browser — `@neo4j-nvl/base` references `document` at
+// module-evaluation, so its module must never load on the server. Keep the
+// import INSIDE the dynamic() factory, which `ssr: false` skips server-side. A
+// previous module-level `const visualizerChunk = import('.../visualizer')` (to
+// warm the chunk) defeated `ssr: false` — it executed during SSR too and threw
+// "ReferenceError: document is not defined" on every protected route. next/dynamic
+// already lazy-loads + caches the chunk on first client render, so the warm was
+// redundant. (GOAL-280 investigation.)
+const GraphVisualizer = dynamic(
+  () => import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative w-full h-full bg-slate-950">
+        <GraphLoadingState label="Preparing canvas" />
+      </div>
+    ),
+  }
 )
-
-const GraphVisualizer = dynamic(() => visualizerChunk, {
-  ssr: false,
-  loading: () => (
-    <div className="relative w-full h-full bg-slate-950">
-      <GraphLoadingState label="Preparing canvas" />
-    </div>
-  ),
-})
 
 const EMPTY_RELATIONSHIPS: Relationship[] = []
 
